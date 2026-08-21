@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-var appVersion = "0.5.0"
+var appVersion = "0.6.0"
 
 type appState = int32
 
@@ -57,9 +57,11 @@ type App struct {
 	sessionCfg     *Config
 	sessionProfile string
 	sessionCancel  context.CancelFunc
+	sessionTarget  uintptr
 
-	updVer string
-	updURL string
+	lastResult string
+	updVer     string
+	updURL     string
 }
 
 var logFile *rotatingWriter
@@ -104,11 +106,26 @@ func main() {
 	app.startCore()
 	go cleanupWebViewProfiles()
 	go app.startupUpdateCheck()
-	for _, arg := range os.Args[1:] {
+	args := os.Args[1:]
+	for i, arg := range args {
 		if arg == "-settings" {
 			go func() {
 				time.Sleep(2 * time.Second)
 				app.openSettings("proc")
+			}()
+		}
+		if arg == "-testpaste" && i+1 < len(args) {
+			text := args[i+1]
+			go func() {
+				time.Sleep(5 * time.Second)
+				tw, _, _ := procGetForegroundWindow.Call()
+				if strings.HasPrefix(text, "@mismatch ") {
+					text = strings.TrimPrefix(text, "@mismatch ")
+					tw = 1
+				}
+				log.Printf("testpaste: цель захвачена, вставка через 6 секунд")
+				time.Sleep(6 * time.Second)
+				app.insertResult(context.Background(), app.snapshot(), time.Now(), text, "", tw)
 			}()
 		}
 	}
@@ -369,6 +386,8 @@ func (a *App) handleCancel() {
 		}
 		a.refreshIdleUI()
 	case stProcessing:
+		tdAbort()
+		fdAbort()
 		if a.sessionCancel != nil {
 			a.sessionCancel()
 		}
@@ -397,6 +416,7 @@ func (a *App) handleDown(profileID string) {
 	a.gen++
 	a.sessionCfg = cfg
 	a.sessionProfile = profileID
+	a.sessionTarget, _, _ = procGetForegroundWindow.Call()
 	a.state.Store(stRecording)
 	traySetIcon(trayRecording)
 	a.setStatus(tr("status.recording"))
@@ -439,7 +459,7 @@ func (a *App) handleStop(expectGen int) {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	a.sessionCancel = cancel
-	go a.process(ctx, pcm, a.gen, a.sessionCfg, a.sessionProfile)
+	go a.process(ctx, pcm, a.gen, a.sessionCfg, a.sessionProfile, a.sessionTarget)
 }
 
 func (a *App) handleDone(gen int) {
@@ -452,7 +472,7 @@ func (a *App) handleDone(gen int) {
 
 var onlyNoise = regexp.MustCompile(`^[\s.,!?\*\[\]\(\)«»"'…·♪♫~-]*$|^\[[^\]]*\]$|^\([^\)]*\)$`)
 
-func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, profileID string) {
+func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, profileID string, targetWnd uintptr) {
 	defer a.post(ptEvent{kind: evDone, gen: gen})
 
 	minBytes := sampleRate * 2 * cfg.MinRecordMs / 1000
@@ -538,6 +558,7 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 		return
 	}
 
+	skipped := ""
 	if chain := chainProfiles(cfg, profileID); len(chain) > 0 && llmInstalled(cfg) {
 		for i, prof := range chain {
 			label := prof.Name
@@ -560,6 +581,48 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 				return
 			}
 			log.Printf("профиль %s не применился, продолжаю с текущим текстом: %v", prof.ID, lerr)
+			if skipped == "" {
+				skipped = prof.Name
+			}
+		}
+	}
+
+	a.insertResult(ctx, cfg, start, text, skipped, targetWnd)
+}
+
+func (a *App) insertResult(ctx context.Context, cfg *Config, start time.Time, text, skipped string, targetWnd uintptr) {
+	a.mu.Lock()
+	a.lastResult = text
+	a.mu.Unlock()
+
+	allowEnter := cfg.AutoEnter && skipped == ""
+	if targetWnd != 0 {
+		cur, _, _ := procGetForegroundWindow.Call()
+		if cur != targetWnd {
+			log.Printf("фокус сменился во время обработки — спрашиваю")
+			switch askFocusMismatch() {
+			case "here":
+				allowEnter = false
+			case "copy":
+				if err := setClipboardText(text); err != nil {
+					log.Printf("копирование: %v", err)
+					return
+				}
+				log.Printf("результат скопирован в буфер по выбору пользователя")
+				if cfg.Overlay {
+					overlaySet(ovFlashOK, tr("ov.copied"))
+				}
+				return
+			default:
+				log.Printf("вставка отменена, текст сохранён в последнем результате")
+				if cfg.Overlay {
+					overlaySet(ovFlashErr, tr("ov.kept"))
+				}
+				return
+			}
+			if ctx.Err() != nil {
+				return
+			}
 		}
 	}
 
@@ -571,7 +634,7 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 		}
 		return
 	}
-	if cfg.AutoEnter {
+	if allowEnter {
 		time.Sleep(150 * time.Millisecond)
 		if err := pressEnter(); err != nil {
 			log.Printf("auto-enter: %v", err)
@@ -579,7 +642,11 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 	}
 	log.Printf("готово за %.1fс: %d символов", time.Since(start).Seconds(), len([]rune(text)))
 	if cfg.Overlay {
-		overlaySet(ovFlashOK, trf("ov.inserted", len([]rune(text))))
+		if skipped != "" {
+			overlaySet(ovFlashErr, trf("ov.llm.skipped", skipped))
+		} else {
+			overlaySet(ovFlashOK, trf("ov.inserted", len([]rune(text))))
+		}
 	}
 }
 
@@ -629,7 +696,15 @@ func chainProfiles(cfg *Config, profileID string) []*Profile {
 	if profileID != "" {
 		ids = []string{profileID}
 	} else {
-		ids = cfg.ActiveProfiles
+		active := map[string]bool{}
+		for _, id := range cfg.ActiveProfiles {
+			active[id] = true
+		}
+		for i := range cfg.Profiles {
+			if active[cfg.Profiles[i].ID] {
+				ids = append(ids, cfg.Profiles[i].ID)
+			}
+		}
 	}
 	var out []*Profile
 	for _, id := range ids {

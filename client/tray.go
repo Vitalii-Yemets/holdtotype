@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"runtime"
 	"sync"
 	"syscall"
@@ -46,6 +47,7 @@ const (
 	cmdOpenLog
 	cmdAbout
 	cmdQuit
+	cmdLastCopy
 )
 
 var (
@@ -183,11 +185,15 @@ func trayShowMenu(hwnd uintptr) {
 	if !enabled {
 		toggleText = tr("menu.enable")
 	}
+	a.mu.Lock()
+	last := a.lastResult
+	a.mu.Unlock()
 	items := []tmItem{
 		{text: status, id: cmdStatus, grayed: true},
 		{sep: true},
 		{text: tr("menu.settings"), id: cmdSettings},
 		{text: toggleText, id: cmdToggle},
+		{text: tr("menu.lastcopy"), id: cmdLastCopy, grayed: last == ""},
 		{sep: true},
 		{text: tr("menu.reload"), id: cmdReload},
 		{text: tr("menu.open.config"), id: cmdOpenConfig},
@@ -199,6 +205,15 @@ func trayShowMenu(hwnd uintptr) {
 	cmd := showTrayMenu(items)
 
 	switch cmd {
+	case cmdLastCopy:
+		a.mu.Lock()
+		text := a.lastResult
+		a.mu.Unlock()
+		if text != "" {
+			if err := setClipboardText(text); err != nil {
+				log.Printf("копирование последнего результата: %v", err)
+			}
+		}
 	case cmdSettings:
 		go a.openSettings("general")
 	case cmdToggle:

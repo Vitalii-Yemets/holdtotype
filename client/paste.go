@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"log"
 	"strings"
 	"time"
 	"unicode/utf16"
@@ -171,6 +172,86 @@ func getClipboardText() (string, bool) {
 	return windows.UTF16ToString(u), true
 }
 
+type clipFormat struct {
+	id   uint32
+	data []byte
+}
+
+var clipSkipFormats = map[uint32]bool{
+	2: true, 3: true, 9: true, 14: true,
+	0x0080: true, 0x0082: true, 0x0083: true, 0x008E: true,
+}
+
+func snapshotClipboard() ([]clipFormat, bool) {
+	if err := openClipboardRetry(); err != nil {
+		return nil, false
+	}
+	defer procCloseClipboard.Call()
+	var out []clipFormat
+	total := 0
+	complete := true
+	fmtID := uintptr(0)
+	for {
+		fmtID, _, _ = procEnumClipboardFormats.Call(fmtID)
+		if fmtID == 0 {
+			break
+		}
+		id := uint32(fmtID)
+		if clipSkipFormats[id] {
+			continue
+		}
+		h, _, _ := procGetClipboardData.Call(fmtID)
+		if h == 0 {
+			complete = false
+			continue
+		}
+		size, _, _ := procGlobalSize.Call(h)
+		if size == 0 {
+			continue
+		}
+		total += int(size)
+		if total > 64<<20 {
+			complete = false
+			break
+		}
+		p, _, _ := procGlobalLock.Call(h)
+		if p == 0 {
+			complete = false
+			continue
+		}
+		buf := make([]byte, size)
+		copy(buf, unsafe.Slice((*byte)(unsafe.Pointer(p)), size))
+		procGlobalUnlock.Call(h)
+		out = append(out, clipFormat{id: id, data: buf})
+	}
+	return out, complete
+}
+
+func restoreClipboard(fmts []clipFormat) error {
+	if err := openClipboardRetry(); err != nil {
+		return err
+	}
+	defer procCloseClipboard.Call()
+	procEmptyClipboard.Call()
+	for _, f := range fmts {
+		h, _, _ := procGlobalAlloc.Call(gmemMoveable, uintptr(len(f.data)))
+		if h == 0 {
+			continue
+		}
+		p, _, _ := procGlobalLock.Call(h)
+		if p == 0 {
+			procGlobalFree.Call(h)
+			continue
+		}
+		copy(unsafe.Slice((*byte)(unsafe.Pointer(p)), len(f.data)), f.data)
+		procGlobalUnlock.Call(h)
+		if r, _, _ := procSetClipboardData.Call(uintptr(f.id), h); r == 0 {
+			procGlobalFree.Call(h)
+		}
+	}
+	return nil
+}
+
 func pasteText(cfg *Config, text string) error {
 	waitModifiersReleased(3 * time.Second)
 
@@ -178,9 +259,14 @@ func pasteText(cfg *Config, text string) error {
 		return typeUnicode(text)
 	}
 
-	old, hadOld := "", false
+	var snap []clipFormat
 	if cfg.RestoreClipboard {
-		old, hadOld = getClipboardText()
+		var complete bool
+		snap, complete = snapshotClipboard()
+		if !complete {
+			log.Printf("буфер обмена не удаётся сохранить полностью — вставляю посимвольно, буфер не трогаю")
+			return typeUnicode(text)
+		}
 	}
 	if err := setClipboardText(text); err != nil {
 		return err
@@ -189,10 +275,10 @@ func pasteText(cfg *Config, text string) error {
 	if err := sendCtrlV(); err != nil {
 		return err
 	}
-	if cfg.RestoreClipboard && hadOld {
+	if cfg.RestoreClipboard && len(snap) > 0 {
 		time.Sleep(400 * time.Millisecond)
 		if cur, ok := getClipboardText(); ok && cur == text {
-			_ = setClipboardText(old)
+			_ = restoreClipboard(snap)
 		}
 	}
 	return nil
