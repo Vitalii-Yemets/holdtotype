@@ -351,7 +351,14 @@ var settingsStrings = map[string]map[string]string{
 			"</ul>" +
 			"<p class=\"wh\">Диалог выбора языка</p>" +
 			"<div class=\"mock\"><div style=\"display:flex;justify-content:space-between;margin-bottom:8px\"><b>Переводить на: (3)</b><span class=\"mock-x\">✕</span></div><div style=\"display:flex;gap:8px\"><span class=\"mock-btn on\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">ES</span></div></div>" +
-			"<p>Появляется над оверлеем после отпускания хоткея в режимах «Спрашивать всегда/с таймаутом». Набор кнопок — «Языки в диалоге», подсвечен целевой язык. В режиме с таймаутом в заголовке идёт отсчёт секунд, по истечении применяется целевой язык. Крестик или Esc — вставить без перевода.</p>" +
+			"<p>Появляется над оверлеем после отпускания хоткея в режимах «Спрашивать всегда/с таймаутом». Набор кнопок — «Языки в диалоге», подсвечен целевой язык. В режиме с таймаутом в заголовке идёт отсчёт секунд, по истечении применяется целевой язык. Крестик диалога — вставить без перевода; крестик оверлея отменяет операцию целиком.</p>" +
+			"<p class=\"wh\">Безопасная вставка</p>" +
+			"<div class=\"mock\"><div style=\"display:flex;justify-content:space-between;margin-bottom:8px\"><b style=\"color:var(--amber)\">Фокус сменился — вставить? (30)</b><span class=\"mock-x\">✕</span></div><div style=\"display:flex;gap:8px\"><span class=\"mock-btn on\">Вставить сюда</span><span class=\"mock-btn\">Копировать</span></div></div>" +
+			"<ul>" +
+			"<li>Окно-цель запоминается в момент нажатия хоткея. Если за время обработки фокус сменился, текст не вставляется — появляется диалог: <b>Вставить сюда</b> (в текущее окно), <b>Копировать</b> (в буфер обмена) или ✕. По истечении отсчёта вставка отменяется, текст остаётся в «Последнем результате».</li>" +
+			"<li>Enter после вставки нажимается только если окно-цель не менялось.</li>" +
+			"<li><b>Последний результат</b> — финальный текст каждой диктовки хранится в памяти до следующей; в меню трея есть пункт «Копировать последний результат». Ошибка вставки или смена фокуса не теряют надиктованное.</li>" +
+			"</ul>" +
 			"<p class=\"wh\">Основные</p>" +
 			"<ul>" +
 			"<li><b>Сочетание клавиш</b> — главный хоткей диктовки. Захватывается любая комбинация, различаются левые/правые модификаторы.</li>" +
@@ -359,7 +366,7 @@ var settingsStrings = map[string]map[string]string{
 			"<li><b>Язык распознавания</b> — подсказка Whisper; «авто» определяет язык по речи.</li>" +
 			"<li><b>Звук</b> — сигналы начала/конца записи: несколько тем + системные звуки Windows, кнопка ▶ — предпрослушивание.</li>" +
 			"<li><b>Enter после вставки</b> — автоматически отправляет надиктованное (удобно в мессенджерах).</li>" +
-			"<li><b>Восстанавливать буфер обмена</b> — после вставки возвращает прежнее содержимое буфера.</li>" +
+			"<li><b>Восстанавливать буфер обмена</b> — после вставки возвращает прежнее содержимое буфера целиком, включая картинки, файлы и форматированный текст. Если содержимое сохранить нельзя, буфер не трогается, а текст вводится посимвольно.</li>" +
 			"<li><b>Оверлей и анимация</b> — индикатор состояния внизу экрана; анимацию можно отключить.</li>" +
 			"<li><b>Посимвольный ввод</b> — вставка имитацией клавиатуры вместо Ctrl+V, для полей, где вставка из буфера не работает.</li>" +
 			"</ul>" +
@@ -394,6 +401,7 @@ var settingsStrings = map[string]map[string]string{
 			"<li>Отмеченные чекбоксами применяются к каждой диктовке по очереди, сверху вниз (цепочкой: результат первого идёт на вход второму); ничего не отмечено — текст вставляется как распознан.</li>" +
 			"<li>У промпта может быть личный хоткей: диктовка этим хоткеем применяет только его, разово. Карандаш ✎ открывает редактор: имя, текст промпта, хоткей и поле проверки ▶ — прогон примера через живую модель прямо из настроек.</li>" +
 			"<li>Совет: маленьким моделям помогают примеры «вход → выход» прямо в тексте промпта — все пресеты так и написаны.</li>" +
+			"<li>Если профиль не сработал (модель не ответила), текст вставляется без него: оверлей покажет «Вставлено без профиля …», а Enter после вставки в этом случае не нажимается.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Зависимости</p>" +
 			"<ul>" +
@@ -410,7 +418,7 @@ var settingsStrings = map[string]map[string]string{
 			"<li>Требования: Windows 10/11 x64, CPU с AVX2 (~2013+), WebView2 Runtime для окна настроек (в Windows 11 есть).</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Трей и файлы</p>" +
-			"<div class=\"mock\" style=\"max-width:250px\"><div class=\"mock-mi dim\">Vox Terminal — Готов…</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Настройки…</div><div class=\"mock-mi\">Выключить</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Перечитать config.json</div><div class=\"mock-mi\">Открыть config.json</div><div class=\"mock-mi\">Открыть лог</div><div class=\"mock-mi\">О приложении</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Выход</div></div>" +
+			"<div class=\"mock\" style=\"max-width:290px\"><div class=\"mock-mi dim\">Vox Terminal — Готов…</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Настройки…</div><div class=\"mock-mi\">Выключить</div><div class=\"mock-mi\">Копировать последний результат</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Перечитать config.json</div><div class=\"mock-mi\">Открыть config.json</div><div class=\"mock-mi\">Открыть лог</div><div class=\"mock-mi\">О приложении</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Выход</div></div>" +
 			"<ul>" +
 			"<li>Левый клик по иконке в трее — настройки; правый — меню. Цвет иконки: зелёный — готов, красный — запись, оранжевый — распознавание, серый — выключено или ошибка.</li>" +
 			"<li><b>config.json</b> — все настройки; правки вручную применяются через «Перечитать config.json» в трее.</li>" +
@@ -559,7 +567,14 @@ var settingsStrings = map[string]map[string]string{
 			"</ul>" +
 			"<p class=\"wh\">Language dialog</p>" +
 			"<div class=\"mock\"><div style=\"display:flex;justify-content:space-between;margin-bottom:8px\"><b>Translate to: (3)</b><span class=\"mock-x\">✕</span></div><div style=\"display:flex;gap:8px\"><span class=\"mock-btn on\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">ES</span></div></div>" +
-			"<p>Appears above the overlay after releasing the hotkey in the \"always ask\" / \"ask with timeout\" modes. The button set comes from \"Languages in the dialog\"; the target language is highlighted. In timeout mode the title counts down and the target is applied when time runs out. ✕ or Esc — insert without translation.</p>" +
+			"<p>Appears above the overlay after releasing the hotkey in the \"always ask\" / \"ask with timeout\" modes. The button set comes from \"Languages in the dialog\"; the target language is highlighted. In timeout mode the title counts down and the target is applied when time runs out. The dialog ✕ inserts without translation; the overlay ✕ cancels the whole operation.</p>" +
+			"<p class=\"wh\">Safe insertion</p>" +
+			"<div class=\"mock\"><div style=\"display:flex;justify-content:space-between;margin-bottom:8px\"><b style=\"color:var(--amber)\">Focus changed — insert? (30)</b><span class=\"mock-x\">✕</span></div><div style=\"display:flex;gap:8px\"><span class=\"mock-btn on\">Insert here</span><span class=\"mock-btn\">Copy</span></div></div>" +
+			"<ul>" +
+			"<li>The target window is captured the moment you press the hotkey. If focus changed while the speech was being processed, nothing is pasted — a dialog offers <b>Insert here</b> (into the current window), <b>Copy</b> (to the clipboard) or ✕. When the countdown expires the insertion is cancelled and the text stays in Last Result.</li>" +
+			"<li>Enter after paste is pressed only when the target window has not changed.</li>" +
+			"<li><b>Last Result</b> — the final text of every dictation is kept in memory until the next one; the tray menu has \"Copy last result\". A failed paste or focus change never loses a dictation.</li>" +
+			"</ul>" +
 			"<p class=\"wh\">General</p>" +
 			"<ul>" +
 			"<li><b>Keyboard shortcut</b> — the main dictation hotkey. Any combination can be captured; left/right modifiers are distinguished.</li>" +
@@ -567,7 +582,7 @@ var settingsStrings = map[string]map[string]string{
 			"<li><b>Recognition language</b> — a hint for Whisper; \"auto\" detects the language from speech.</li>" +
 			"<li><b>Sound</b> — start/stop recording cues: several themes plus Windows system sounds, ▶ previews.</li>" +
 			"<li><b>Enter after paste</b> — automatically sends the dictated text (handy in messengers).</li>" +
-			"<li><b>Restore clipboard</b> — puts the previous clipboard content back after pasting.</li>" +
+			"<li><b>Restore clipboard</b> — puts the previous clipboard content back in full after pasting, including images, files and rich text. When the content cannot be snapshotted, the clipboard is left untouched and the text is typed character by character.</li>" +
 			"<li><b>Overlay and animation</b> — the status indicator at the bottom of the screen; animation can be turned off.</li>" +
 			"<li><b>Type mode</b> — inserts text by simulating keystrokes instead of Ctrl+V, for fields where clipboard paste does not work.</li>" +
 			"</ul>" +
@@ -602,6 +617,7 @@ var settingsStrings = map[string]map[string]string{
 			"<li>Checked prompts apply to every dictation in order, top to bottom (as a chain: the output of one feeds the next); nothing checked — text is inserted as transcribed.</li>" +
 			"<li>A prompt can have its own hotkey: dictating with it applies only that prompt, once. The ✎ pencil opens the editor: name, prompt text, hotkey and a ▶ test field that runs a sample through the live model right from Settings.</li>" +
 			"<li>Tip: small models work much better with \"input → output\" examples inside the prompt — all presets are written that way.</li>" +
+			"<li>If a profile fails (the model did not respond), the text is inserted without it: the overlay shows \"Inserted without the … profile\" and Enter after paste is not pressed in that case.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Dependencies</p>" +
 			"<ul>" +
@@ -618,7 +634,7 @@ var settingsStrings = map[string]map[string]string{
 			"<li>Requirements: Windows 10/11 x64, a CPU with AVX2 (~2013+), WebView2 Runtime for the settings window (included in Windows 11).</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Tray and files</p>" +
-			"<div class=\"mock\" style=\"max-width:250px\"><div class=\"mock-mi dim\">Vox Terminal — Ready…</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Settings…</div><div class=\"mock-mi\">Disable</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Reload config.json</div><div class=\"mock-mi\">Open config.json</div><div class=\"mock-mi\">Open log</div><div class=\"mock-mi\">About</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Quit</div></div>" +
+			"<div class=\"mock\" style=\"max-width:290px\"><div class=\"mock-mi dim\">Vox Terminal — Ready…</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Settings…</div><div class=\"mock-mi\">Disable</div><div class=\"mock-mi\">Copy last result</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Reload config.json</div><div class=\"mock-mi\">Open config.json</div><div class=\"mock-mi\">Open log</div><div class=\"mock-mi\">About</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Quit</div></div>" +
 			"<ul>" +
 			"<li>Left-click the tray icon — settings; right-click — the menu. Icon colors: green — ready, red — recording, orange — transcribing, grey — disabled or error.</li>" +
 			"<li><b>config.json</b> — all settings; manual edits apply via \"Reload config.json\" in the tray menu.</li>" +
