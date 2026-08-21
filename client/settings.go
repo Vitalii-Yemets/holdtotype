@@ -342,6 +342,22 @@ func (a *App) applySettings(f *settingsForm) string {
 	if _, err := parseHotkey(f.Hotkey); err != nil {
 		return err.Error()
 	}
+	used := map[string]bool{}
+	for _, hk := range append([]string{f.Hotkey, f.TranslateHotkey}, func() []string {
+		var hs []string
+		for _, p := range f.Profiles {
+			hs = append(hs, p.Hotkey)
+		}
+		return hs
+	}()...) {
+		if hk == "" {
+			continue
+		}
+		if used[hk] {
+			return trf("err.hotkey.dup", hk)
+		}
+		used[hk] = true
+	}
 
 	a.mu.Lock()
 	old := a.cfg
@@ -770,6 +786,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
   </div>
   <div id="rec-translate" class="spage">
   <div style="color:var(--faint);font-size:12px;margin-bottom:6px">{{S_TR_HINT}}</div>
+  <div id="tr_warn" style="display:none;color:var(--amber);font-size:12px;margin-bottom:6px">{{S_TR_TURBO}}</div>
   <div class="row"><label>{{S_TR_DEFAULT}}</label><input type="checkbox" id="tr_default"></div>
   <div class="row"><label>{{S_TR_TARGET}}</label>
    <select id="translate_target">
@@ -1311,6 +1328,7 @@ function load(){
   trd.checked = translateDefault;
   trd.onchange = ()=>{ translateDefault = trd.checked; syncTrControls(); };
   document.getElementById("translate_ask").onchange = syncTrControls;
+  if ((CFG.model || "").indexOf("turbo") >= 0) document.getElementById("tr_warn").style.display = "block";
   updTrHotkey();
   document.getElementById("tr_set").onclick = ()=>{ captureFor = "__wt"; appCaptureCombo(); };
   document.getElementById("tr_clear").onclick = ()=>{ translateHotkey = ""; updTrHotkey(); };
@@ -1337,7 +1355,7 @@ function load(){
 function syncTrControls(){
   const always = document.getElementById("tr_default").checked;
   const mode = document.getElementById("translate_ask").value;
-  document.getElementById("translate_target").disabled = !always;
+  document.getElementById("translate_target").disabled = !always && mode !== "timeout";
   document.getElementById("translate_ask").disabled = always;
   document.getElementById("translate_ask_seconds").disabled = always || mode !== "timeout";
   trAll.forEach(l=>{ document.getElementById("tl_"+l).disabled = always || mode === "never"; });

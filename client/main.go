@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-var appVersion = "0.6.0"
+var appVersion = "0.6.1"
 
 type appState = int32
 
@@ -522,6 +522,9 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 		}
 	}
 	fastTranslate := target == "en"
+	if fastTranslate && strings.Contains(cfg.Model, "turbo") {
+		log.Printf("предупреждение: модель turbo не обучена переводу — результат может оказаться транскрипцией")
+	}
 	recLang := cfg.Language
 	if target != "" && !fastTranslate {
 		recLang = target

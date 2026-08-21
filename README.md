@@ -32,6 +32,8 @@ Hold a hotkey — speak. Release — the transcribed text is pasted right where 
 ## ✨ Features
 
 - 🎙️ **Dictation at the cursor** — a global configurable hotkey (left/right modifiers are distinguished); text is inserted via the clipboard or typed character-by-character (for paste-blocked fields), with optional auto-Enter.
+- 🎯 **Safe insertion** — the target window is captured when you press the hotkey; if focus changes while the speech is processed, nothing is pasted — a dialog offers *Insert here* / *Copy* instead, and auto-Enter fires only when the target still matches. The final transcript always stays available in the tray (*Copy last result*), so a failed paste never loses a dictation.
+- 📋 **Clipboard-friendly** — restoring the clipboard after insertion preserves **all** formats (images, files, rich text); when a snapshot is impossible the clipboard is left untouched and the text is typed instead.
 - 📟 **On-screen overlay** — a pill at the bottom of the screen: live voice level while recording, processing stages, the result; the ✕ cancels at any stage; input focus is never stolen.
 - 🌍 **Translation powered by Whisper** — to English via the native translate mode, to Ukrainian / German / French / Spanish / Italian / Polish / Russian by forcing the output language. Three modes: always translate to the target language, ask with a dialog before every dictation, or ask with a countdown.
 - 🤖 **Local LLM post-processing** (llama.cpp) — a chain of prompts removes filler words, changes style, formats text; each prompt can have its own hotkey; a test field runs a sample through the live model right from Settings.
@@ -83,6 +85,12 @@ Icon colors: green — ready, red — recording, orange — transcribing, grey �
 
 A full description of every feature lives in the **About → Guide** tab inside the app (a mini-wiki with illustrations).
 
+### Safe insertion
+
+<p align="center"><img src="docs/focus-dialog.png" alt="Focus changed dialog" width="364"></p>
+
+Speech processing takes a few seconds — if you switch windows in the meantime, Vox Terminal notices that the focus no longer matches the window you dictated into. Nothing is pasted blindly: the dialog above appears with a countdown, offering to insert into the current window, copy the text to the clipboard, or do nothing. The result is also kept in memory — the tray menu's *Copy last result* recovers any dictation whose insertion failed.
+
 ## ⚙️ Settings
 
 Left-click the tray icon to open the settings window:
@@ -107,7 +115,9 @@ All translation is done by Whisper itself — no second neural network needed:
 | Target | Mechanism | Quality |
 |---|---|---|
 | English | native `translate` mode | excellent |
-| other languages | forced output language | depends on the language pair; better into major languages |
+| other languages | forced output language (**experimental**) | depends on the language pair; better into major languages |
+
+Note: the Turbo model is not trained for the translation task — the app shows a warning on the Translation tab when Turbo is active; pick Base/Small/Medium for translating.
 
 Modes: "always translate to the target language" (a checkbox, no questions), "always ask" and "ask with a timeout" — a language dialog appears above the overlay before transcription; when the countdown expires the target language is applied, ✕/Esc inserts without translation.
 
@@ -156,6 +166,8 @@ The pipeline: MinGW-w64 cross-compilation of whisper.cpp and llama.cpp inside a 
 ```
 
 The servers are hidden child processes tied to a Job Object: they die together with the app. They listen on localhost only. The Whisper model stays in memory between phrases; the LLM starts on first use.
+
+**Data boundary:** everything is processed locally. The only exception is the optional *External server URL* setting (Recognition → Server) — when set, recorded audio is sent to that server instead of the local one. Use it only with hosts you trust; leave it empty for a fully offline setup.
 
 Files next to the exe: `config.json` (all settings; manual edits apply via "Reload config.json" in the tray menu), `voxterminal.log` (rotated, never exceeds ~2 MB on disk), `models/`.
 

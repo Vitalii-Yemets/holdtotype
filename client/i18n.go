@@ -127,6 +127,7 @@ var msgs = map[string]map[string]string{
 		"cap.prompt":            "Нажмите новое сочетание клавиш…\n\n(сейчас: %s)\n\nEsc — отмена",
 		"cap.selected":          "Выбрано: %s",
 		"cap.cancelled":         "Отменено",
+		"err.hotkey.dup":        "Сочетание «%s» назначено дважды — хоткеи не должны совпадать",
 		"un.title":              "Vox Terminal — удаление",
 		"un.confirm":            "Удалить Vox Terminal с этого компьютера?",
 		"un.data":               "Удалить также настройки и скачанные модели?",
@@ -197,6 +198,7 @@ var msgs = map[string]map[string]string{
 		"cap.prompt":            "Press a new key combination…\n\n(current: %s)\n\nEsc — cancel",
 		"cap.selected":          "Selected: %s",
 		"cap.cancelled":         "Cancelled",
+		"err.hotkey.dup":        "The \"%s\" shortcut is assigned twice — hotkeys must be unique",
 		"un.title":              "Vox Terminal — Uninstall",
 		"un.confirm":            "Remove Vox Terminal from this computer?",
 		"un.data":               "Also delete settings and downloaded models?",
@@ -221,7 +223,8 @@ var settingsStrings = map[string]map[string]string{
 		"S_TAB_REC":     "Распознавание",
 		"S_TAB_PROC":    "Постобработка",
 		"S_TR":          "Перевод",
-		"S_TR_HINT":     "Перевод выполняет Whisper: на английский — штатным режимом, на остальные языки — принудительным языком вывода (качество зависит от языка).",
+		"S_TR_HINT":     "Перевод выполняет Whisper: на английский — штатным режимом, на остальные языки — экспериментально, принудительным языком вывода (качество зависит от пары языков).",
+		"S_TR_TURBO":    "⚠ Активная модель Turbo не обучена переводу на английский — для перевода выберите другую модель на вкладке «Модели».",
 		"S_TR_DEFAULT":  "Всегда переводить на целевой язык",
 		"S_TR_TARGET":   "Целевой язык",
 		"S_TR_ASK":      "Выбор языка",
@@ -361,7 +364,7 @@ var settingsStrings = map[string]map[string]string{
 			"</ul>" +
 			"<p class=\"wh\">Основные</p>" +
 			"<ul>" +
-			"<li><b>Сочетание клавиш</b> — главный хоткей диктовки. Захватывается любая комбинация, различаются левые/правые модификаторы.</li>" +
+			"<li><b>Сочетание клавиш</b> — главный хоткей диктовки. Захватывается любая комбинация, различаются левые/правые модификаторы. Хоткеи диктовки, перевода и профилей не должны совпадать — дубликат не даст сохранить настройки.</li>" +
 			"<li><b>Язык интерфейса</b> — переключается мгновенно, «как в системе» берёт язык Windows.</li>" +
 			"<li><b>Язык распознавания</b> — подсказка Whisper; «авто» определяет язык по речи.</li>" +
 			"<li><b>Звук</b> — сигналы начала/конца записи: несколько тем + системные звуки Windows, кнопка ▶ — предпрослушивание.</li>" +
@@ -380,7 +383,7 @@ var settingsStrings = map[string]map[string]string{
 			"<li><b>Словарь</b> — термины, имена и аббревиатуры через запятую. Это подсказка «слуху» Whisper, чтобы редкие слова распознавались правильно; это не команды.</li>" +
 			"<li><b>Параметры</b> — потоки CPU (больше — быстрее распознавание), минимальная длительность записи (отсекает случайные нажатия), максимальная (автостоп записи).</li>" +
 			"<li><b>Сервер</b> — whisper-server запускается автоматически и работает локально. Можно сменить порт или указать URL внешнего сервера — тогда локальный не используется.</li>" +
-			"<li><b>Перевод</b> — весь перевод выполняет Whisper: на английский — встроенным режимом перевода, на остальные языки — принудительным языком вывода (качество зависит от пары языков). «Всегда переводить на целевой язык» — каждая диктовка основным сочетанием переводится на выбранную цель без вопросов. Со снятым чекбоксом работает режим «Спрашивать»: всегда или с таймаутом — перед распознаванием появляется диалог выбора языка, по истечении секунд берётся целевой. Отдельный хоткей перевода переводит разово, не трогая обычную диктовку. Неприменимые при текущем режиме настройки автоматически гаснут серым.</li>" +
+			"<li><b>Перевод</b> — весь перевод выполняет Whisper: на английский — встроенным режимом перевода, на остальные языки — <b>экспериментально</b>, принудительным языком вывода (качество зависит от пары языков; на крупные языки лучше). Модель Turbo переводу не обучена — при ней настройки покажут предупреждение. «Всегда переводить на целевой язык» — каждая диктовка основным сочетанием переводится на выбранную цель без вопросов. Со снятым чекбоксом работает режим «Спрашивать»: всегда или с таймаутом — перед распознаванием появляется диалог выбора языка, по истечении секунд берётся целевой. Отдельный хоткей перевода переводит разово, не трогая обычную диктовку. Неприменимые при текущем режиме настройки автоматически гаснут серым.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Постобработка (LLM)</p>" +
 			"<p>Второй, необязательный слой: локальная языковая модель (llama.cpp) редактирует уже распознанный текст по вашим промптам — чистит речь от слов-паразитов, меняет стиль, форматирует. Работает полностью офлайн на CPU.</p>" +
@@ -437,7 +440,8 @@ var settingsStrings = map[string]map[string]string{
 		"S_TAB_REC":     "Recognition",
 		"S_TAB_PROC":    "Post-processing",
 		"S_TR":          "Translation",
-		"S_TR_HINT":     "Translation is done by Whisper: to English — native mode, to other languages — by forcing the output language (quality varies by language).",
+		"S_TR_HINT":     "Translation is done by Whisper: to English — native mode, to other languages — experimentally, by forcing the output language (quality depends on the language pair).",
+		"S_TR_TURBO":    "⚠ The active Turbo model is not trained for translation to English — pick another model on the Models tab for translating.",
 		"S_TR_DEFAULT":  "Always translate to the target language",
 		"S_TR_TARGET":   "Target language",
 		"S_TR_ASK":      "Language choice",
@@ -577,7 +581,7 @@ var settingsStrings = map[string]map[string]string{
 			"</ul>" +
 			"<p class=\"wh\">General</p>" +
 			"<ul>" +
-			"<li><b>Keyboard shortcut</b> — the main dictation hotkey. Any combination can be captured; left/right modifiers are distinguished.</li>" +
+			"<li><b>Keyboard shortcut</b> — the main dictation hotkey. Any combination can be captured; left/right modifiers are distinguished. Dictation, translation and profile hotkeys must be unique — a duplicate blocks saving.</li>" +
 			"<li><b>UI language</b> — switches instantly; \"Same as system\" follows Windows.</li>" +
 			"<li><b>Recognition language</b> — a hint for Whisper; \"auto\" detects the language from speech.</li>" +
 			"<li><b>Sound</b> — start/stop recording cues: several themes plus Windows system sounds, ▶ previews.</li>" +
@@ -596,7 +600,7 @@ var settingsStrings = map[string]map[string]string{
 			"<li><b>Dictionary</b> — comma-separated terms, names and abbreviations. A hint for Whisper's \"ear\" so rare words are recognized correctly; not commands.</li>" +
 			"<li><b>Parameters</b> — CPU threads (more = faster transcription), minimum recording length (filters accidental presses), maximum length (auto-stop).</li>" +
 			"<li><b>Server</b> — whisper-server starts automatically and runs locally. You can change the port or point to an external server URL — then the local one is not used.</li>" +
-			"<li><b>Translation</b> — all translation is done by Whisper: to English via its native translate mode, to other languages by forcing the output language (quality depends on the language pair). \"Always translate to the target language\" makes every main-hotkey dictation translate to the chosen target with no questions. With the checkbox off, the ask mode applies: always or with a timeout — a language dialog appears before transcription and the target is used when time runs out. The separate translation hotkey translates once without affecting normal dictation. Settings that do not apply in the current mode are greyed out automatically.</li>" +
+			"<li><b>Translation</b> — all translation is done by Whisper: to English via its native translate mode, to other languages <b>experimentally</b>, by forcing the output language (quality depends on the language pair; major languages work best). The Turbo model is not trained for translation — the settings show a warning when it is active. \"Always translate to the target language\" makes every main-hotkey dictation translate to the chosen target with no questions. With the checkbox off, the ask mode applies: always or with a timeout — a language dialog appears before transcription and the target is used when time runs out. The separate translation hotkey translates once without affecting normal dictation. Settings that do not apply in the current mode are greyed out automatically.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Post-processing (LLM)</p>" +
 			"<p>An optional second layer: a local language model (llama.cpp) edits the transcribed text according to your prompts — removes filler words, changes style, formats. Fully offline, CPU only.</p>" +
