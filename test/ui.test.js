@@ -40,6 +40,13 @@ const dom = new JSDOM(html, {
     }
     window.appSave = async () => "";
     window.appModelDel = async () => "ok";
+    window.appMics = async () =>
+      JSON.stringify([
+        { id: "dev1", name: "Headset (USB)", default: false },
+        { id: "dev2", name: "Webcam microphone", default: false },
+      ]);
+    window.appMicLevel = async () => 0.42;
+    window.appMicSelect = async () => "";
     window.appUpdateStatus = async () => JSON.stringify({ current: "0.0.0", latest: "", url: "" });
     window.appCheckUpdate = async () => JSON.stringify({ current: "0.0.0", latest: "v0.0.0", newer: false });
   },
@@ -69,6 +76,16 @@ function check(name, actual, expected) {
   tab("rec"); await sleep(80);
   check("recognition opens on Models", visible("rec-models"), true);
   check("whisper models listed", d.querySelectorAll('#rec-models input[name="mdl"]').length, 2);
+  sub("rec", "params"); await sleep(120);
+  const mic = d.getElementById("mic_device");
+  check("microphone list has default plus devices", mic.options.length, 3);
+  check("default option is localized", mic.options[0].textContent, "System default");
+  check("system default selected initially", mic.value, "");
+  mic.value = "dev1"; mic.dispatchEvent(new w.Event("change")); await sleep(30);
+  check("microphone selection kept", mic.value, "dev1");
+  await sleep(200);
+  check("input level meter moves", d.getElementById("mic_bar").style.width !== "" && d.getElementById("mic_bar").style.width !== "0%", true);
+
   sub("rec", "dict"); await sleep(30);
   check("dictionary textarea is large", d.getElementById("whisper_prompt").getAttribute("rows"), "14");
   sub("rec", "server"); await sleep(30);
@@ -128,6 +145,8 @@ function check(name, actual, expected) {
     process.exit(1);
   }
   console.log("\nall UI checks passed");
+  dom.window.close();
+  process.exit(0);
 })().catch((e) => {
   console.error("harness crashed:", e.message);
   process.exit(1);

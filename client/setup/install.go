@@ -29,7 +29,7 @@ const (
 	runValue  = "VoxTerminal"
 )
 
-var appVersion = "0.8.0"
+var appVersion = "0.9.0"
 
 func existingInstall() string {
 	k, err := registry.OpenKey(registry.CURRENT_USER, uninstKey, registry.QUERY_VALUE)

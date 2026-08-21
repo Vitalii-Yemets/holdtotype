@@ -57,7 +57,7 @@ const strings = {
   nollmp: "no models for prompts", upd: "updated", pedit: "Edit", pclose: "Collapse",
   confirmdel: 'Delete the "%s" model?', free: "free", updnone: "latest",
   updavail: "Version %s available.", updgo: "Update", upderr: "Check failed",
-  upddl: "Downloading",
+  upddl: "Downloading", micdefault: "System default", micquiet: "quiet",
 };
 
 let html = src.slice(start, end);

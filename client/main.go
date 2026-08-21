@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-var appVersion = "0.8.0"
+var appVersion = "0.9.0"
 
 type appState = int32
 
@@ -86,6 +86,21 @@ func main() {
 		}
 	}
 	setupLog()
+
+	for _, arg := range os.Args[1:] {
+		if arg == "-listmics" {
+			rec, rerr := NewRecorder("")
+			if rerr != nil {
+				log.Printf("микрофоны недоступны: %v", rerr)
+				return
+			}
+			for _, d := range rec.devices() {
+				log.Printf("микрофон: %s (id=%s)", d.Name, d.ID)
+			}
+			rec.Close()
+			return
+		}
+	}
 
 	if !acquireSingleInstance() {
 		msgBox(tr("app.name"), tr("already.running"))
@@ -180,7 +195,7 @@ func (a *App) startCore() {
 }
 
 func (a *App) initBackend() {
-	rec, err := NewRecorder()
+	rec, err := NewRecorder(a.snapshot().MicDevice)
 	if err != nil {
 		a.fatal(trf("err.mic", err.Error()))
 		return
@@ -413,6 +428,10 @@ func (a *App) handleDown(profileID string) {
 	}
 	if err := rec.Start(); err != nil {
 		log.Printf("ошибка старта записи: %v", err)
+		if cfg.Overlay {
+			overlaySet(ovFlashErr, tr("ov.err.mic"))
+		}
+		playCue(cfg.Beep, cfg.SoundTheme, cueError)
 		return
 	}
 	a.gen++
@@ -482,6 +501,13 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 		log.Printf("запись слишком короткая (%d мс), пропускаю", len(pcm)*1000/(sampleRate*2))
 		if cfg.Overlay {
 			overlayHide()
+		}
+		return
+	}
+	if peak := pcmPeak(pcm); pcmIsSilent(pcm) {
+		log.Printf("тишина в записи (пик %.3f) — распознавание пропущено", peak)
+		if cfg.Overlay {
+			overlaySet(ovFlashErr, tr("ov.silence"))
 		}
 		return
 	}

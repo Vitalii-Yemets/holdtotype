@@ -92,6 +92,8 @@ type settingsForm struct {
 	MaxRecordSeconds int    `json:"max_record_seconds"`
 	ServerAutostart  bool   `json:"server_autostart"`
 	CheckUpdates     bool   `json:"check_updates"`
+	MicDevice        string `json:"mic_device"`
+	MicDeviceName    string `json:"mic_device_name"`
 	ServerPort       int    `json:"server_port"`
 	ServerExe        string `json:"server_exe"`
 	ServerURL        string `json:"server_url"`
@@ -307,6 +309,38 @@ func (a *App) settingsThread(tab string, attempt int) {
 				})
 			}()
 		})
+		_ = w.Bind("appMics", func() string {
+			a.mu.Lock()
+			rec := a.rec
+			a.mu.Unlock()
+			if rec == nil {
+				return "[]"
+			}
+			out, _ := json.Marshal(rec.devices())
+			return string(out)
+		})
+		_ = w.Bind("appMicLevel", func() float64 {
+			a.mu.Lock()
+			rec := a.rec
+			a.mu.Unlock()
+			if rec == nil {
+				return 0
+			}
+			return rec.Level()
+		})
+		_ = w.Bind("appMicSelect", func(id string) string {
+			a.mu.Lock()
+			rec := a.rec
+			a.mu.Unlock()
+			if rec == nil {
+				return ""
+			}
+			if err := rec.SetDevice(id); err != nil {
+				log.Printf("выбор микрофона: %v", err)
+				return err.Error()
+			}
+			return ""
+		})
 		_ = w.Bind("appJSError", func(msg string) {
 			log.Printf("ошибка страницы настроек: %s", msg)
 		})
@@ -415,6 +449,8 @@ func (a *App) applySettings(f *settingsForm) string {
 	}
 	c.ServerAutostart = f.ServerAutostart
 	c.CheckUpdates = f.CheckUpdates
+	c.MicDevice = f.MicDevice
+	c.MicDeviceName = f.MicDeviceName
 	if f.ServerPort > 0 {
 		c.ServerPort = f.ServerPort
 	}
@@ -548,6 +584,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"max_record_seconds": cfg.MaxRecordSeconds,
 		"server_autostart":   cfg.ServerAutostart,
 		"check_updates":      cfg.CheckUpdates,
+		"mic_device":         cfg.MicDevice,
 		"server_port":        cfg.ServerPort,
 		"server_exe":         cfg.ServerExe,
 		"server_url":         cfg.ServerURL,
@@ -583,6 +620,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"ram": "S_RAM", "hfph": "S_HF_PH", "nollm": "S_NO_LLM", "nollmp": "S_NO_LLM_PROF",
 		"upd": "S_UPDATED", "pedit": "S_PROF_EDIT", "pclose": "S_PROF_CLOSE",
 		"confirmdel": "S_CONFIRM_DEL", "free": "S_FREE", "updnone": "S_UPD_NONE",
+		"micdefault": "S_MIC_DEFAULT", "micquiet": "S_MIC_QUIET",
 		"updavail": "S_UPD_AVAIL", "updgo": "S_UPD_GO", "upderr": "S_UPD_ERR", "upddl": "S_UPD_DL",
 	} {
 		lMap[jsKey] = str(sKey)
@@ -671,6 +709,8 @@ button.mini.danger:hover{color:#ff7b6b;border-color:#7a2e2e;box-shadow:0 0 7px r
 .ramline .dot{margin-left:12px;font-size:10px}
 .subhead{color:var(--dim);font-size:11px;letter-spacing:1px;text-transform:uppercase;margin:14px 0 2px;padding-top:10px;border-top:1px solid #12241a}
 #hf_results{max-height:44vh;overflow-y:auto;overscroll-behavior:contain}
+.miclevel{flex:1;min-width:120px;height:14px;border:1px solid var(--line);background:#08100b;position:relative;overflow:hidden}
+.miclevel i{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,var(--faint),var(--green));box-shadow:var(--glow);transition:width .08s linear}
 .subtabs{display:flex;flex-wrap:wrap;gap:2px;align-items:flex-end;border-bottom:1px solid var(--line);margin-bottom:10px}
 button.stab{padding:9px 11px;border:1px solid transparent;border-bottom:none;background:none;font:inherit;color:var(--dim);cursor:pointer;letter-spacing:1px;text-transform:uppercase;font-size:12px}
 button.stab:hover{color:var(--green)}
@@ -804,6 +844,12 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
    <button class="stab" data-s="translate">{{S_SUB_TR}}</button>
   </div>
   <div id="rec-params" class="spage">
+  <div class="row"><label>{{S_MIC}}</label>
+   <select id="mic_device"><option value="">{{S_MIC_DEFAULT}}</option></select>
+   <button class="iconbtn" id="mic_refresh" title="{{S_MIC_REFRESH}}">&#8635;</button></div>
+  <div class="row"><label>{{S_MIC_LEVEL}}</label>
+   <span class="miclevel"><i id="mic_bar"></i></span>
+   <span class="mpct" id="mic_hint"></span></div>
   <div class="row"><label>{{S_THREADS}}</label><span class="val" id="threads_v"></span><input type="range" id="threads" min="1" max="16" step="1"></div>
   <div class="row"><label>{{S_MINMS}}</label><span class="val" id="min_record_ms_v"></span><input type="range" id="min_record_ms" min="0" max="1000" step="50"></div>
   <div class="row"><label>{{S_MAXSEC}}</label><span class="val" id="max_record_seconds_v"></span><input type="range" id="max_record_seconds" min="10" max="300" step="10"></div>
@@ -1207,6 +1253,36 @@ async function updCheck(){
 function updProgress(p){ document.getElementById("upd_out").textContent = L.upddl + " " + p + "%"; }
 function updError(e){ document.getElementById("upd_out").textContent = L.upderr + ": " + e; }
 
+let micTimer = null;
+async function refreshMics(){
+  const sel = document.getElementById("mic_device");
+  const mics = JSON.parse(await appMics());
+  const chosen = sel.value || CFG.mic_device || "";
+  sel.innerHTML = '<option value="">' + L.micdefault + '</option>';
+  mics.forEach(m=>{
+    const o = document.createElement("option");
+    o.value = m.id;
+    o.textContent = m.name;
+    sel.appendChild(o);
+  });
+  sel.value = [...sel.options].some(o=>o.value===chosen) ? chosen : "";
+}
+function startMicMeter(){
+  if(micTimer) return;
+  micTimer = setInterval(async ()=>{
+    const bar = document.getElementById("mic_bar");
+    if(!bar) return;
+    const page = document.getElementById("rec-params");
+    if(!page || !page.classList.contains("on") || !document.getElementById("p-rec").classList.contains("active")){
+      bar.style.width = "0%";
+      return;
+    }
+    const lvl = await appMicLevel();
+    bar.style.width = Math.min(100, Math.round(lvl * 130)) + "%";
+    document.getElementById("mic_hint").textContent = lvl > 0.02 ? "" : L.micquiet;
+  }, 120);
+}
+
 function updTrHotkey(){
   const el = document.getElementById("tr_hotkey");
   if(el) el.textContent = translateHotkey || L.nohot;
@@ -1357,6 +1433,11 @@ function load(){
   trd.checked = translateDefault;
   trd.onchange = ()=>{ translateDefault = trd.checked; syncTrControls(); };
   document.getElementById("translate_ask").onchange = syncTrControls;
+  const micSel = document.getElementById("mic_device");
+  micSel.onchange = async ()=>{ const e = await appMicSelect(micSel.value); if(e) toast(e); };
+  document.getElementById("mic_refresh").onclick = refreshMics;
+  refreshMics();
+  startMicMeter();
   if ((CFG.model || "").indexOf("turbo") >= 0) document.getElementById("tr_warn").style.display = "block";
   updTrHotkey();
   document.getElementById("tr_set").onclick = ()=>{ captureFor = "__wt"; appCaptureCombo(); };
@@ -1395,7 +1476,10 @@ function setHotkey(s){
   if(baseline !== null){ const b=JSON.parse(baseline); b.hotkey=s; baseline=JSON.stringify(b); }
 }
 async function doSave(){
+  const micSel = document.getElementById("mic_device");
   const f={hotkey:CFG.hotkey, model_id:selModel||"",
+    mic_device: micSel.value,
+    mic_device_name: micSel.value ? micSel.options[micSel.selectedIndex].textContent : "",
     whisper_prompt: document.getElementById("whisper_prompt").value,
     translate_hotkey: translateHotkey,
     translate_ask_langs: trAll.filter(l=>document.getElementById("tl_"+l).checked),

@@ -40,6 +40,7 @@ Hold a hotkey — speak. Release — the transcribed text is pasted right where 
 - 🌍 **Translation powered by Whisper** — to English via the native translate mode, to Ukrainian / German / French / Spanish / Italian / Polish / Russian by forcing the output language. Three modes: always translate to the target language, ask with a dialog before every dictation, or ask with a countdown.
 - 🤖 **Local LLM post-processing** (llama.cpp) — a chain of prompts removes filler words, changes style, formats text; each prompt can have its own hotkey; a test field runs a sample through the live model right from Settings.
 - 📦 **Built-in model catalog** — Whisper models download in one click; GGUF models for the LLM are searched on Hugging Face with last-update date, download counts and a color indicator showing whether the model fits your RAM.
+- 🎚️ **Microphone control** — pick the input device from the settings, watch a live level meter before dictating, and keep working when a headset is unplugged (the app falls back to the system default automatically). Silent recordings are never sent to recognition, so background noise can't turn into invented text.
 - 📖 **Recognition dictionary** — terms and abbreviations hint rare words to Whisper; a multilingual starter set is preinstalled.
 - 🗣️ **8 UI languages** — English, Ukrainian, Russian, German, French, Spanish, Italian, Polish; switching is instant, "Same as system" follows Windows.
 - 🔊 **Sound themes** — several synthesized cue sets plus Windows system sounds, with preview.
@@ -102,7 +103,7 @@ Left-click the tray icon to open the settings window:
 | **General** | hotkey, UI and recognition languages, sound themes, auto-Enter, clipboard restore, overlay and animation, type mode |
 | **Recognition → Models** | the Whisper catalog: Base / Small / Medium / Turbo, one-click download and switching |
 | **Recognition → Dictionary** | a recognition hint: terms, names, abbreviations, comma-separated |
-| **Recognition → Parameters** | CPU threads, min/max recording duration |
+| **Recognition → Parameters** | microphone selection with a live level meter, CPU threads, min/max recording duration |
 | **Recognition → Server** | whisper-server autostart, port, external server URL |
 | **Recognition → Translation** | target language, translation modes, dialog languages, a separate translation hotkey |
 | **Post-processing** | LLM models (installed + Hugging Face search) and the prompt chain with checkboxes |

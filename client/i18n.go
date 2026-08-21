@@ -114,6 +114,7 @@ var msgs = map[string]map[string]string{
 		"ov.speak":              "Говорите…",
 		"ov.transcribing":       "Распознаю",
 		"ov.inserted":           "Вставлено: %d симв.",
+		"ov.err.mic":            "Микрофон недоступен — проверьте устройство в настройках",
 		"ov.err.recognize":      "Ошибка распознавания (см. лог)",
 		"ov.err.paste":          "Ошибка вставки (см. лог)",
 		"ov.silence":            "Тишина — текст не распознан",
@@ -187,6 +188,7 @@ var msgs = map[string]map[string]string{
 		"ov.speak":              "Speak…",
 		"ov.transcribing":       "Transcribing",
 		"ov.inserted":           "Inserted: %d chars",
+		"ov.err.mic":            "Microphone unavailable — check the device in Settings",
 		"ov.err.recognize":      "Recognition error (see log)",
 		"ov.err.paste":          "Paste error (see log)",
 		"ov.silence":            "Silence — nothing recognized",
@@ -304,6 +306,11 @@ var settingsStrings = map[string]map[string]string{
 		"S_M_TURBO":     "максимум точности на CPU",
 		"S_M_CUSTOM":    "пользовательская (из config.json)",
 		"S_MODEL":       "Файл модели",
+		"S_MIC":         "Микрофон",
+		"S_MIC_DEFAULT": "Системный по умолчанию",
+		"S_MIC_REFRESH": "Обновить список",
+		"S_MIC_LEVEL":   "Уровень сигнала",
+		"S_MIC_QUIET":   "тихо",
 		"S_THREADS":     "Потоки CPU",
 		"S_MINMS":       "Минимальная запись, мс",
 		"S_MAXSEC":      "Максимальная запись, сек",
@@ -387,7 +394,7 @@ var settingsStrings = map[string]map[string]string{
 			"<li><b>Модели</b> — каталог моделей Whisper: Base (быстрая, для слабых ПК), Small (баланс), Medium и Turbo (точнее и медленнее; «q5» — квантованная версия: чуть меньше и быстрее почти без потери качества). Радиокнопка выбирает активную (применяется по «Сохранить», распознаватель перезапустится); клик по радио нескачанной модели сразу загружает её с официального репозитория whisper.cpp на Hugging Face. Одна модель обслуживает и распознавание, и перевод.</li>" +
 			"<li>Модель держится в памяти сервером whisper-server между фразами — поэтому первая диктовка после запуска чуть дольше (загрузка), дальше распознавание занимает 1–3 секунды.</li>" +
 			"<li><b>Словарь</b> — термины, имена и аббревиатуры через запятую. Это подсказка «слуху» Whisper, чтобы редкие слова распознавались правильно; это не команды.</li>" +
-			"<li><b>Параметры</b> — потоки CPU (больше — быстрее распознавание), минимальная длительность записи (отсекает случайные нажатия), максимальная (автостоп записи).</li>" +
+			"<li><b>Параметры</b> — выбор микрофона со шкалой уровня (говорите — полоса двигается, значит устройство слышит), потоки CPU (больше — быстрее распознавание), минимальная длительность записи (отсекает случайные нажатия), максимальная (автостоп записи). Если выбранное устройство отключить, приложение само переключится на системное; запись без речи не отправляется на распознавание — покажет «Тишина».</li>" +
 			"<li><b>Сервер</b> — whisper-server запускается автоматически и работает локально. Можно сменить порт или указать URL внешнего сервера — тогда локальный не используется.</li>" +
 			"<li><b>Перевод</b> — весь перевод выполняет Whisper: на английский — встроенным режимом перевода, на остальные языки — <b>экспериментально</b>, принудительным языком вывода (качество зависит от пары языков; на крупные языки лучше). Модель Turbo переводу не обучена — при ней настройки покажут предупреждение. «Всегда переводить на целевой язык» — каждая диктовка основным сочетанием переводится на выбранную цель без вопросов. Со снятым чекбоксом работает режим «Спрашивать»: всегда или с таймаутом — перед распознаванием появляется диалог выбора языка, по истечении секунд берётся целевой. Отдельный хоткей перевода переводит разово, не трогая обычную диктовку. Неприменимые при текущем режиме настройки автоматически гаснут серым.</li>" +
 			"</ul>" +
@@ -523,6 +530,11 @@ var settingsStrings = map[string]map[string]string{
 		"S_M_TURBO":     "best accuracy on CPU",
 		"S_M_CUSTOM":    "custom (from config.json)",
 		"S_MODEL":       "Model file",
+		"S_MIC":         "Microphone",
+		"S_MIC_DEFAULT": "System default",
+		"S_MIC_REFRESH": "Refresh list",
+		"S_MIC_LEVEL":   "Input level",
+		"S_MIC_QUIET":   "quiet",
 		"S_THREADS":     "CPU threads",
 		"S_MINMS":       "Min recording, ms",
 		"S_MAXSEC":      "Max recording, s",
@@ -606,7 +618,7 @@ var settingsStrings = map[string]map[string]string{
 			"<li><b>Models</b> — the Whisper catalog: Base (fast, weak PCs), Small (balanced), Medium and Turbo (more accurate, slower; \"q5\" means a quantized build — slightly smaller and faster with almost no quality loss). The radio selects the active one (applied on Save; the recognizer restarts); clicking the radio of a missing model downloads it from the official whisper.cpp repository on Hugging Face. One model serves both recognition and translation.</li>" +
 			"<li>whisper-server keeps the model in memory between phrases — the first dictation after startup is slower (loading), afterwards recognition takes 1–3 seconds.</li>" +
 			"<li><b>Dictionary</b> — comma-separated terms, names and abbreviations. A hint for Whisper's \"ear\" so rare words are recognized correctly; not commands.</li>" +
-			"<li><b>Parameters</b> — CPU threads (more = faster transcription), minimum recording length (filters accidental presses), maximum length (auto-stop).</li>" +
+			"<li><b>Parameters</b> — microphone selection with a live level meter (speak and the bar moves, so you know the device is heard), CPU threads (more = faster transcription), minimum recording length (filters accidental presses), maximum length (auto-stop). If the chosen device is unplugged the app falls back to the system default; a recording with no speech is never sent for recognition — it reports \"Silence\" instead.</li>" +
 			"<li><b>Server</b> — whisper-server starts automatically and runs locally. You can change the port or point to an external server URL — then the local one is not used.</li>" +
 			"<li><b>Translation</b> — all translation is done by Whisper: to English via its native translate mode, to other languages <b>experimentally</b>, by forcing the output language (quality depends on the language pair; major languages work best). The Turbo model is not trained for translation — the settings show a warning when it is active. \"Always translate to the target language\" makes every main-hotkey dictation translate to the chosen target with no questions. With the checkbox off, the ask mode applies: always or with a timeout — a language dialog appears before transcription and the target is used when time runs out. The separate translation hotkey translates once without affecting normal dictation. Settings that do not apply in the current mode are greyed out automatically.</li>" +
 			"</ul>" +

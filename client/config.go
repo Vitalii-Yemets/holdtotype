@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"log"
 	"os"
 	"sync"
 )
@@ -50,6 +51,8 @@ type Config struct {
 	SettingsW      int       `json:"settings_width"`
 	SettingsH      int       `json:"settings_height"`
 	CheckUpdates   bool      `json:"check_updates"`
+	MicDevice      string    `json:"mic_device"`
+	MicDeviceName  string    `json:"mic_device_name"`
 }
 
 func presetProfiles() []Profile {
@@ -118,7 +121,8 @@ func saveConfig(path string, cfg *Config) error {
 func loadConfig(path string) (*Config, error) {
 	cfg := defaultConfig()
 	data, err := os.ReadFile(path)
-	if os.IsNotExist(err) {
+	firstRun := os.IsNotExist(err)
+	if firstRun {
 		if def, defErr := os.ReadFile("config.default.json"); defErr == nil {
 			data = def
 			_ = os.WriteFile(path, def, 0o644)
@@ -216,6 +220,13 @@ func loadConfig(path string) (*Config, error) {
 		langs = []string{"en", "de"}
 	}
 	cfg.TranslateAskLangs = langs
+	if firstRun {
+		if sys := systemLang(); sys != "" && sys != cfg.Language {
+			log.Printf("первый запуск: язык распознавания по системе — %s", sys)
+			cfg.Language = sys
+			_ = saveConfig(path, cfg)
+		}
+	}
 	return cfg, nil
 }
 
