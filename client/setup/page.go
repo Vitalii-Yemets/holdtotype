@@ -110,7 +110,7 @@ function setupDone(err, warn, dir){
     return;
   }
   document.getElementById("outdir").textContent = dir;
-  if(warn) document.getElementById("outwarn").textContent = "{{WARNMODEL}}";
+  if(warn) document.getElementById("outwarn").textContent = {{WARNMODEL_JS}};
   show("st-done");
 }
 setTimeout(()=>{ if(window.appReady) appReady(); }, 60);

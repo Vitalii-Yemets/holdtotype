@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-var appVersion = "0.7.1"
+var appVersion = "0.7.2"
 
 type appState = int32
 

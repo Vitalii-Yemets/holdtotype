@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -306,9 +305,12 @@ func (a *App) settingsThread(tab string, attempt int) {
 				})
 			}()
 		})
+		_ = w.Bind("appJSError", func(msg string) {
+			log.Printf("ошибка страницы настроек: %s", msg)
+		})
 		_ = w.Bind("appReload", func(tabName string) {
 			w.Dispatch(func() {
-				w.Navigate("data:text/html;charset=utf-8," + url.PathEscape(settingsHTML(a.snapshot(), tabName)))
+				w.SetHtml(settingsHTML(a.snapshot(), tabName))
 			})
 		})
 		_ = w.Bind("appModelDel", func(id string) string {
@@ -334,7 +336,7 @@ func (a *App) settingsThread(tab string, attempt int) {
 			time.Sleep(2 * time.Second)
 			reveal()
 		}()
-		w.Navigate("data:text/html;charset=utf-8," + url.PathEscape(settingsHTML(a.snapshot(), tab)))
+		w.SetHtml(settingsHTML(a.snapshot(), tab))
 		w.Run()
 		log.Printf("openSettings: окно закрыто")
 		if lastWndW >= 500 && lastWndH >= 400 {
@@ -572,14 +574,31 @@ func settingsHTML(cfg *Config, tab string) string {
 	}
 	cfgJSON, _ := json.Marshal(cfgMap)
 
-	pairs := []string{"{{CFG}}", string(cfgJSON)}
 	cur := settingsStrings[lang()]
-	for k, enV := range settingsStrings["en"] {
-		v := cur[k]
-		if v == "" {
-			v = enV
+	str := func(key string) string {
+		if v := cur[key]; v != "" {
+			return v
 		}
-		pairs = append(pairs, "{{"+k+"}}", v)
+		return settingsStrings["en"][key]
+	}
+	lMap := map[string]string{"nohot": "—"}
+	for jsKey, sKey := range map[string]string{
+		"dl": "S_DL", "del": "S_DEL", "hint": "S_APPLY_HINT", "add": "S_PROF_ADD",
+		"pname": "S_PROF_NAME", "pprompt": "S_PROF_PROMPT", "phot": "S_PROF_HOTKEY",
+		"pset": "S_PROF_SET", "pclr": "S_PROF_CLEAR", "ptest": "S_PROF_TEST",
+		"fitok": "S_FIT_OK", "fitwarn": "S_FIT_WARN", "fitbad": "S_FIT_BAD",
+		"ram": "S_RAM", "hfph": "S_HF_PH", "nollm": "S_NO_LLM", "nollmp": "S_NO_LLM_PROF",
+		"upd": "S_UPDATED", "pedit": "S_PROF_EDIT", "pclose": "S_PROF_CLOSE",
+		"confirmdel": "S_CONFIRM_DEL", "free": "S_FREE", "updnone": "S_UPD_NONE",
+		"updavail": "S_UPD_AVAIL", "updgo": "S_UPD_GO", "upderr": "S_UPD_ERR", "upddl": "S_UPD_DL",
+	} {
+		lMap[jsKey] = str(sKey)
+	}
+	lJSON, _ := json.Marshal(lMap)
+
+	pairs := []string{"{{CFG}}", string(cfgJSON), "{{L_JSON}}", string(lJSON)}
+	for k := range settingsStrings["en"] {
+		pairs = append(pairs, "{{"+k+"}}", str(k))
 	}
 	return strings.NewReplacer(pairs...).Replace(settingsPage)
 }
@@ -906,20 +925,14 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
 </div>
 
 <script>
+window.onerror = function(m, s, l, c){ if(window.appJSError) appJSError(String(m) + " @line " + l + ":" + c); };
 const CFG = {{CFG}};
 const bools = ["beep","auto_enter","restore_clipboard","overlay","animation","type_mode","server_autostart","check_updates"];
 const texts = ["server_exe","server_url"];
 const nums  = ["threads","min_record_ms","max_record_seconds","translate_ask_seconds","server_port"];
 const sels  = ["ui_language","language","sound_theme","translate_target","translate_ask"];
 const trAll = ["en","de","fr","es","it","pl","ru","uk"];
-const L = {dl:"{{S_DL}}", del:"{{S_DEL}}", hint:"{{S_APPLY_HINT}}",
-  add:"{{S_PROF_ADD}}", pname:"{{S_PROF_NAME}}", pprompt:"{{S_PROF_PROMPT}}", phot:"{{S_PROF_HOTKEY}}",
-  pset:"{{S_PROF_SET}}", pclr:"{{S_PROF_CLEAR}}", ptest:"{{S_PROF_TEST}}",
-  nohot:"—", fitok:"{{S_FIT_OK}}", fitwarn:"{{S_FIT_WARN}}", fitbad:"{{S_FIT_BAD}}",
-  ram:"{{S_RAM}}", hfph:"{{S_HF_PH}}", nollm:"{{S_NO_LLM}}",
-  nollmp:"{{S_NO_LLM_PROF}}", upd:"{{S_UPDATED}}", pedit:"{{S_PROF_EDIT}}", pclose:"{{S_PROF_CLOSE}}",
-  confirmdel:"{{S_CONFIRM_DEL}}", free:"{{S_FREE}}",
-  updnone:"{{S_UPD_NONE}}", updavail:"{{S_UPD_AVAIL}}", updgo:"{{S_UPD_GO}}", upderr:"{{S_UPD_ERR}}", upddl:"{{S_UPD_DL}}"};
+const L = {{L_JSON}};
 const I_DL = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12"/><path d="M6 11l6 6 6-6"/><path d="M4 21h16"/></svg>';
 const I_FIND = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="15.5" y1="15.5" x2="21" y2="21"/></svg>';
 

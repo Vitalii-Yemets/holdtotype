@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -137,7 +136,7 @@ func page(updateDir string) string {
 		"{{PROG}}":     tr("prog"),
 		"{{DONE}}":     tr("done"),
 		"{{DONEAT}}":   tr("doneat"),
-		"{{WARNMODEL}}": tr("warnmodel"),
+		"{{WARNMODEL_JS}}": template_jsstr(tr("warnmodel")),
 		"{{FINISH}}":   tr("finish"),
 		"{{VERSION}}":  appVersion,
 		"{{DEFDIR}}":   template_jsstr(defDir),
@@ -291,6 +290,6 @@ func main() {
 		w.Dispatch(func() { w.Terminate() })
 	})
 
-	w.Navigate("data:text/html;charset=utf-8," + url.PathEscape(page(updateDir)))
+	w.SetHtml(page(updateDir))
 	w.Run()
 }
