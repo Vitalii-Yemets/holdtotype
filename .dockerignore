@@ -1,0 +1,4 @@
+dist/
+.git/
+build.ps1
+*.log

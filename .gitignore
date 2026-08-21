@@ -1,0 +1,7 @@
+dist/
+*.log
+client/setup/payload.zip
+client/setup/app.ico
+client/setup/app.rc
+client/setup/app.manifest
+client/setup/resources.syso
