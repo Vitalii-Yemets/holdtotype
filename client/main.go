@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-var appVersion = "0.7.0"
+var appVersion = "0.7.1"
 
 type appState = int32
 
@@ -71,6 +71,7 @@ func main() {
 	if err == nil {
 		_ = os.Chdir(filepath.Dir(exe))
 	}
+	_ = os.Setenv("WEBVIEW2_DEFAULT_BACKGROUND_COLOR", "FF0B0F0C")
 	initLang("auto")
 	for _, arg := range os.Args[1:] {
 		if arg == "-uninstall" {

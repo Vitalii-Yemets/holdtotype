@@ -113,5 +113,6 @@ function setupDone(err, warn, dir){
   if(warn) document.getElementById("outwarn").textContent = "{{WARNMODEL}}";
   show("st-done");
 }
+setTimeout(()=>{ if(window.appReady) appReady(); }, 60);
 </script>
 </body></html>`

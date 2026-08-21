@@ -29,6 +29,12 @@ func tryCreateWebView(width, height int) (w webview.WebView) {
 			log.Printf("createWebView: panic: %v", r)
 			w = nil
 		}
+		if w != nil {
+			hwnd := uintptr(w.Window())
+			procSetWindowPos.Call(hwnd, 0, offscreenPos(), offscreenPos(), 0, 0, 0x0001|0x0004|0x0010)
+			setDarkClientBackground(hwnd)
+			applyDarkCaption(hwnd)
+		}
 	}()
 	return webview.NewWithOptions(webview.WebViewOptions{
 		DataPath:  filepath.Join(os.TempDir(), fmt.Sprintf("voxterminal-webview-%d", os.Getpid())),
@@ -139,7 +145,9 @@ func (a *App) settingsThread(tab string, attempt int) {
 			winW, winH = c.SettingsW, c.SettingsH
 		}
 		lastWndW, lastWndH = 0, 0
+		stopHider := hideWebViewWindowEarly(settingsStrings[lang()]["S_TITLE"])
 		w := createWebView(winW, winH)
+		stopHider()
 		if w == nil {
 			log.Printf("WebView2 недоступен")
 			if tab == "about" {
@@ -310,11 +318,22 @@ func (a *App) settingsThread(tab string, attempt int) {
 		log.Printf("openSettings: WebView2 создан, открываю страницу")
 		settingsHwnd.Store(hwnd)
 		defer settingsHwnd.Store(0)
+		setDarkClientBackground(hwnd)
 		applyDarkCaption(hwnd)
 		makeBorderless(hwnd)
 		applyMinSize(hwnd, 500, 400)
-		procShowWindow.Call(hwnd, 5)
-		procSetForegroundWnd.Call(hwnd)
+		var shown atomic.Bool
+		reveal := func() {
+			if !shown.CompareAndSwap(false, true) {
+				return
+			}
+			w.Dispatch(func() { revealWindowCentered(hwnd, winW, winH) })
+		}
+		_ = w.Bind("appReady", reveal)
+		go func() {
+			time.Sleep(2 * time.Second)
+			reveal()
+		}()
 		w.Navigate("data:text/html;charset=utf-8," + url.PathEscape(settingsHTML(a.snapshot(), tab)))
 		w.Run()
 		log.Printf("openSettings: окно закрыто")
@@ -1418,10 +1437,12 @@ load();
   await refreshModels();
   await refreshLLM();
   baseline = formState();
+  if(window.appReady) appReady();
 })();
 showSub("rec", "models");
 showSub("about", "info");
 show(["about","rec","proc","server"].includes(CFG._tab) ? (CFG._tab==="server" ? "rec" : CFG._tab) : "general");
 if(CFG._tab === "server") showSub("rec", "server");
+setTimeout(()=>{ if(window.appReady) appReady(); }, 400);
 </script>
 </body></html>`

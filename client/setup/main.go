@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync/atomic"
+	"time"
 
 	webview "github.com/jchv/go-webview2"
 	"golang.org/x/sys/windows"
@@ -153,6 +155,7 @@ func template_jsstr(s string) string {
 }
 
 func main() {
+	_ = os.Setenv("WEBVIEW2_DEFAULT_BACKGROUND_COLOR", "FF0B0F0C")
 	args := os.Args[1:]
 	silent := false
 	update := false
@@ -208,6 +211,7 @@ func main() {
 	if err := windows.CoInitializeEx(0, windows.COINIT_APARTMENTTHREADED); err != nil {
 		_ = err
 	}
+	stopHider := hideWebViewWindowEarly(tr("title"))
 	w := webview.NewWithOptions(webview.WebViewOptions{
 		DataPath:  filepath.Join(os.TempDir(), fmt.Sprintf("voxterminal-setup-%d", os.Getpid())),
 		AutoFocus: true,
@@ -219,6 +223,7 @@ func main() {
 			Center: true,
 		},
 	})
+	stopHider()
 	if w == nil {
 		msgBox(tr("err"), tr("webview"))
 		shellOpenURL("https://developer.microsoft.com/en-us/microsoft-edge/webview2/")
@@ -227,10 +232,21 @@ func main() {
 	defer w.Destroy()
 
 	hwnd := uintptr(w.Window())
+	setDarkClientBackground(hwnd)
 	applyDarkCaption(hwnd)
 	makeBorderless(hwnd)
-	procShowWindow.Call(hwnd, 5)
-	procSetForegroundWnd.Call(hwnd)
+	var shown int32
+	reveal := func() {
+		if !atomic.CompareAndSwapInt32(&shown, 0, 1) {
+			return
+		}
+		w.Dispatch(func() { revealWindowCentered(hwnd, 560, 560) })
+	}
+	_ = w.Bind("appReady", reveal)
+	go func() {
+		time.Sleep(3 * time.Second)
+		reveal()
+	}()
 
 	installedDir := ""
 	_ = w.Bind("appDrag", func() { beginWindowDrag(hwnd) })

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"time"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
@@ -23,6 +24,13 @@ var (
 	procDwmSetWindowAttribute = dwmapi.NewProc("DwmSetWindowAttribute")
 	procShellExecuteW         = shell32.NewProc("ShellExecuteW")
 	procGetUserDefaultUILang  = kernel32.NewProc("GetUserDefaultUILanguage")
+
+	gdi32                = windows.NewLazySystemDLL("gdi32.dll")
+	procCreateSolidBrush = gdi32.NewProc("CreateSolidBrush")
+	procSetClassLongPtrW = user32.NewProc("SetClassLongPtrW")
+	procFindWindowW           = user32.NewProc("FindWindowW")
+	procGetWindowRect         = user32.NewProc("GetWindowRect")
+	procSystemParametersInfoW = user32.NewProc("SystemParametersInfoW")
 
 	ole32                    = windows.NewLazySystemDLL("ole32.dll")
 	procSHBrowseForFolderW   = shell32.NewProc("SHBrowseForFolderW")
@@ -85,6 +93,57 @@ func applyDarkCaption(hwnd uintptr) {
 	procDwmSetWindowAttribute.Call(hwnd, 34, uintptr(unsafe.Pointer(&border)), 4)
 	corner := int32(2)
 	procDwmSetWindowAttribute.Call(hwnd, 33, uintptr(unsafe.Pointer(&corner)), 4)
+}
+
+func setDarkClientBackground(hwnd uintptr) {
+	br, _, _ := procCreateSolidBrush.Call(0x0C0F0B)
+	procSetClassLongPtrW.Call(hwnd, ^uintptr(9), br)
+}
+
+const offscreenXY int32 = -32000
+
+func offscreenPos() uintptr {
+	v := offscreenXY
+	return uintptr(uint32(v))
+}
+
+type winRect struct{ Left, Top, Right, Bottom int32 }
+
+func hideWebViewWindowEarly(title string) func() {
+	done := make(chan struct{})
+	go func() {
+		cls, _ := windows.UTF16PtrFromString("webview")
+		t, _ := windows.UTF16PtrFromString(title)
+		for {
+			select {
+			case <-done:
+				return
+			default:
+			}
+			h, _, _ := procFindWindowW.Call(uintptr(unsafe.Pointer(cls)), uintptr(unsafe.Pointer(t)))
+			if h != 0 {
+				var rc winRect
+				procGetWindowRect.Call(h, uintptr(unsafe.Pointer(&rc)))
+				if rc.Left > offscreenXY+1000 {
+					procSetWindowPos.Call(h, 0, offscreenPos(), offscreenPos(), 0, 0, 0x0001|0x0004|0x0010)
+				}
+				setDarkClientBackground(h)
+				applyDarkCaption(h)
+			}
+			time.Sleep(2 * time.Millisecond)
+		}
+	}()
+	return func() { close(done) }
+}
+
+func revealWindowCentered(hwnd uintptr, w, h int) {
+	var wa winRect
+	procSystemParametersInfoW.Call(0x30, 0, uintptr(unsafe.Pointer(&wa)), 0)
+	x := wa.Left + (wa.Right-wa.Left-int32(w))/2
+	y := wa.Top + (wa.Bottom-wa.Top-int32(h))/2
+	procSetWindowPos.Call(hwnd, 0, uintptr(uint32(x)), uintptr(uint32(y)), uintptr(w), uintptr(h), 0x0004|0x0010)
+	procShowWindow.Call(hwnd, 5)
+	procSetForegroundWnd.Call(hwnd)
 }
 
 func makeBorderless(hwnd uintptr) {
