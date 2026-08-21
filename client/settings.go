@@ -139,8 +139,8 @@ func (a *App) settingsThread(tab string, attempt int) {
 			}
 		}()
 		log.Printf("openSettings: создаю WebView2")
-		winW, winH := 640, 560
-		if c := a.snapshot(); c.SettingsW >= 500 && c.SettingsH >= 400 {
+		winW, winH := 720, 600
+		if c := a.snapshot(); c.SettingsW >= 660 && c.SettingsH >= 420 {
 			winW, winH = c.SettingsW, c.SettingsH
 		}
 		lastWndW, lastWndH = 0, 0
@@ -323,7 +323,7 @@ func (a *App) settingsThread(tab string, attempt int) {
 		setDarkClientBackground(hwnd)
 		applyDarkCaption(hwnd)
 		makeBorderless(hwnd)
-		applyMinSize(hwnd, 500, 400)
+		applyMinSize(hwnd, 660, 420)
 		var shown atomic.Bool
 		reveal := func() {
 			if !shown.CompareAndSwap(false, true) {
@@ -339,7 +339,7 @@ func (a *App) settingsThread(tab string, attempt int) {
 		w.SetHtml(settingsHTML(a.snapshot(), tab))
 		w.Run()
 		log.Printf("openSettings: окно закрыто")
-		if lastWndW >= 500 && lastWndH >= 400 {
+		if lastWndW >= 660 && lastWndH >= 420 {
 			nw, nh := int(lastWndW), int(lastWndH)
 			a.mu.Lock()
 			changed := a.cfg.SettingsW != nw || a.cfg.SettingsH != nh
