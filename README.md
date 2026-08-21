@@ -165,7 +165,7 @@ The pipeline: MinGW-w64 cross-compilation of whisper.cpp and llama.cpp inside a 
    └────────────────┘            └────────────────┘
 ```
 
-The servers are hidden child processes tied to a Job Object: they die together with the app. They listen on localhost only. The Whisper model stays in memory between phrases; the LLM starts on first use.
+The servers are hidden child processes tied to a Job Object: they die together with the app. They listen on localhost only, and llama-server is additionally protected with a per-session API key, so other local programs cannot use it. The Whisper model stays in memory between phrases; the LLM starts on first use.
 
 **Data boundary:** everything is processed locally. The only exception is the optional *External server URL* setting (Recognition → Server) — when set, recorded audio is sent to that server instead of the local one. Use it only with hosts you trust; leave it empty for a fully offline setup.
 

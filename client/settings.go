@@ -899,6 +899,7 @@ const L = {dl:"{{S_DL}}", del:"{{S_DEL}}", hint:"{{S_APPLY_HINT}}",
   nohot:"—", fitok:"{{S_FIT_OK}}", fitwarn:"{{S_FIT_WARN}}", fitbad:"{{S_FIT_BAD}}",
   ram:"{{S_RAM}}", hfph:"{{S_HF_PH}}", nollm:"{{S_NO_LLM}}",
   nollmp:"{{S_NO_LLM_PROF}}", upd:"{{S_UPDATED}}", pedit:"{{S_PROF_EDIT}}", pclose:"{{S_PROF_CLOSE}}",
+  confirmdel:"{{S_CONFIRM_DEL}}", free:"{{S_FREE}}",
   updnone:"{{S_UPD_NONE}}", updavail:"{{S_UPD_AVAIL}}", updgo:"{{S_UPD_GO}}", upderr:"{{S_UPD_ERR}}", upddl:"{{S_UPD_DL}}"};
 const I_DL = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12"/><path d="M6 11l6 6 6-6"/><path d="M4 21h16"/></svg>';
 const I_FIND = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="15.5" y1="15.5" x2="21" y2="21"/></svg>';
@@ -973,6 +974,7 @@ async function refreshLLM(){
   body.querySelectorAll("button[data-a='ldel']").forEach(b=>{
     b.onclick = async ()=>{
       const f = b.dataset.f;
+      if(!confirm(L.confirmdel.replace("%s", f))) return;
       toast(await appLLMDel(f));
       if(selLLM === f){
         selLLM = null;
@@ -988,7 +990,8 @@ async function refreshLLM(){
     '<input type="text" id="hf_q" placeholder="'+L.hfph+'" style="flex:1;min-width:0;padding-left:34px;padding-right:30px">'+
     '<span id="hf_clr">&#10005;</span>'+
     '<span id="hf_go">'+I_FIND+'</span></span></div>'+
-    '<div class="ramline">'+L.ram+' <b>'+(st.ram/1024).toFixed(0)+' GB</b>'+
+    '<div class="ramline">'+L.ram+' <b>'+((st.ram_free||st.ram)/1024).toFixed(1)+'</b> / '+(st.ram/1024).toFixed(0)+' GB '+L.free+
+    ''+
       '<span class="dot" style="color:var(--green)">&#9679;</span>'+L.fitok+
       '<span class="dot" style="color:var(--amber)">&#9679;</span>'+L.fitwarn+
       '<span class="dot" style="color:#ff7b6b">&#9679;</span>'+L.fitbad+'</div>'+
@@ -1252,6 +1255,7 @@ async function refreshModels(){
     b.onclick = async ()=>{
       if(b.dataset.a === "dl"){ await appModelDl(b.dataset.id); }
       else {
+        if(!confirm(L.confirmdel.replace("%s", b.dataset.id))) return;
         toast(await appModelDel(b.dataset.id));
         if(selModel === b.dataset.id) selModel = null;
       }

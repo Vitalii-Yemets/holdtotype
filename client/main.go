@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-var appVersion = "0.6.1"
+var appVersion = "0.7.0"
 
 type appState = int32
 
@@ -106,6 +106,7 @@ func main() {
 	app.startCore()
 	go cleanupWebViewProfiles()
 	go app.startupUpdateCheck()
+	go cleanupStaleParts()
 	args := os.Args[1:]
 	for i, arg := range args {
 		if arg == "-settings" {

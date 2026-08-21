@@ -8,8 +8,11 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
+
+	"golang.org/x/sys/windows"
 )
 
 type modelInfo struct {
@@ -128,6 +131,47 @@ func (a *App) startDownload(key, file, url string) {
 	}()
 }
 
+func freeDiskMB(dir string) int {
+	abs, err := filepath.Abs(dir)
+	if err != nil {
+		return -1
+	}
+	var free uint64
+	p, _ := windows.UTF16PtrFromString(abs)
+	if err := windows.GetDiskFreeSpaceEx(p, &free, nil, nil); err != nil {
+		return -1
+	}
+	return int(free / (1024 * 1024))
+}
+
+func cleanupStaleParts() {
+	entries, err := os.ReadDir("models")
+	if err != nil {
+		return
+	}
+	dlMu.Lock()
+	activeAny := false
+	for _, st := range dl {
+		if st.active {
+			activeAny = true
+		}
+	}
+	dlMu.Unlock()
+	if activeAny {
+		return
+	}
+	for _, e := range entries {
+		if e.IsDir() || !strings.HasSuffix(e.Name(), ".part") {
+			continue
+		}
+		p := filepath.Join("models", e.Name())
+		if info, ierr := e.Info(); ierr == nil {
+			log.Printf("удаляю незавершённую загрузку %s (%d МБ)", e.Name(), info.Size()/(1024*1024))
+		}
+		_ = os.Remove(p)
+	}
+}
+
 func (a *App) doDownload(key, file, url string) error {
 	if err := os.MkdirAll("models", 0o755); err != nil {
 		return err
@@ -145,6 +189,11 @@ func (a *App) doDownload(key, file, url string) error {
 		return fmt.Errorf("HTTP %d", resp.StatusCode)
 	}
 	total := resp.ContentLength
+	if total > 0 {
+		if free := freeDiskMB("models"); free >= 0 && int64(free) < total/(1024*1024)+512 {
+			return fmt.Errorf("%s", trf("err.disk.space", free, total/(1024*1024)))
+		}
+	}
 
 	f, err := os.Create(tmp)
 	if err != nil {

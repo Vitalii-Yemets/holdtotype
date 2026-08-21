@@ -3,11 +3,14 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -17,7 +20,17 @@ import (
 	"syscall"
 	"time"
 	"unsafe"
+
+	"golang.org/x/sys/windows"
 )
+
+var llmAPIKey = func() string {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return "voxterminal-local"
+	}
+	return hex.EncodeToString(b)
+}()
 
 const llmFile = "qwen2.5-1.5b-instruct-q4_k_m.gguf"
 
@@ -30,6 +43,7 @@ type llamaServer struct {
 	baseURL string
 	cmd     *exec.Cmd
 	client  *http.Client
+	job     uintptr
 
 	mu     sync.Mutex
 	exited bool
@@ -52,6 +66,7 @@ func startLlamaServer(cfg *Config, logw io.Writer) (*llamaServer, error) {
 		"--port", strconv.Itoa(cfg.LLMPort),
 		"-t", strconv.Itoa(cfg.Threads),
 		"-c", "4096",
+		"--api-key", llmAPIKey,
 	}
 	cmd := exec.Command(exePath, args...)
 	cmd.Stdout = logw
@@ -64,7 +79,7 @@ func startLlamaServer(cfg *Config, logw io.Writer) (*llamaServer, error) {
 		return nil, fmt.Errorf("запуск %s: %w", cfg.LLMExe, err)
 	}
 	s.cmd = cmd
-	attachProcessToJob(cmd.Process.Pid)
+	s.job = uintptr(attachProcessToJob(cmd.Process.Pid))
 	go func() {
 		_ = cmd.Wait()
 		s.mu.Lock()
@@ -103,6 +118,10 @@ func (s *llamaServer) stop() {
 	if s.cmd != nil && s.cmd.Process != nil {
 		_ = s.cmd.Process.Kill()
 	}
+	if s.job != 0 {
+		_ = windows.CloseHandle(windows.Handle(s.job))
+		s.job = 0
+	}
 }
 
 func (s *llamaServer) chat(ctx context.Context, system, user string) (string, error) {
@@ -120,6 +139,7 @@ func (s *llamaServer) chat(ctx context.Context, system, user string) (string, er
 		return "", err
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+llmAPIKey)
 	resp, err := s.client.Do(req)
 	if err != nil {
 		return "", err
@@ -161,11 +181,11 @@ type memStatusEx struct {
 	AvailExtendedVirtual uint64
 }
 
-func totalRAMMB() int {
+func ramMB() (total, avail int) {
 	var ms memStatusEx
 	ms.Length = uint32(unsafe.Sizeof(ms))
 	procGlobalMemoryStatusEx.Call(uintptr(unsafe.Pointer(&ms)))
-	return int(ms.TotalPhys / (1024 * 1024))
+	return int(ms.TotalPhys / (1024 * 1024)), int(ms.AvailPhys / (1024 * 1024))
 }
 
 func llmNeedMB(sizeMB int) int {
@@ -173,12 +193,12 @@ func llmNeedMB(sizeMB int) int {
 }
 
 func llmFit(sizeMB int) string {
-	ram := totalRAMMB()
+	_, avail := ramMB()
 	need := llmNeedMB(sizeMB)
 	switch {
-	case need < ram*6/10:
+	case need < avail*7/10:
 		return "ok"
-	case need < ram*85/100:
+	case need < avail*95/100:
 		return "warn"
 	default:
 		return "bad"
@@ -223,20 +243,22 @@ func (a *App) llmStatus() string {
 		}
 	}
 	dlMu.Unlock()
+	total, avail := ramMB()
 	out, _ := json.Marshal(map[string]any{
 		"installed": installed,
 		"downloads": downloads,
-		"ram":       totalRAMMB(),
+		"ram":       total,
+		"ram_free":  avail,
 	})
 	return string(out)
 }
 
 func (a *App) llmDownloadFile(repo, file string) {
-	if strings.Contains(file, "/") || strings.Contains(file, "\\") || !strings.HasSuffix(file, ".gguf") {
+	if !repoOK(repo) || strings.Contains(file, "/") || strings.Contains(file, "\\") || !strings.HasSuffix(file, ".gguf") {
 		return
 	}
-	url := "https://huggingface.co/" + repo + "/resolve/main/" + file
-	a.startDownload("llm-"+file, file, url)
+	u := "https://huggingface.co/" + repo + "/resolve/main/" + file
+	a.startDownload("llm-"+file, file, u)
 }
 
 func (a *App) llmDelete(file string) string {
@@ -294,7 +316,7 @@ func (a *App) llmSearch(q string) string {
 		return `{"repos":[]}`
 	}
 	client := &http.Client{Timeout: 15 * time.Second}
-	u := "https://huggingface.co/api/models?search=" + strings.ReplaceAll(q, " ", "+") + "&filter=gguf&sort=downloads&direction=-1&limit=8&expand[]=lastModified&expand[]=downloads"
+	u := "https://huggingface.co/api/models?search=" + url.QueryEscape(q) + "&filter=gguf&sort=downloads&direction=-1&limit=8&expand[]=lastModified&expand[]=downloads"
 	resp, err := client.Get(u)
 	if err != nil {
 		out, _ := json.Marshal(map[string]any{"error": err.Error()})

@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
@@ -34,8 +35,10 @@ func runUninstall(silent bool) {
 	dir := filepath.Dir(exe)
 
 	_ = hiddenCmd("taskkill", "/F", "/IM", "voxterminal.exe", "/FI", fmt.Sprintf("PID ne %d", os.Getpid())).Run()
-	_ = hiddenCmd("taskkill", "/F", "/IM", "whisper-server.exe").Run()
-	_ = hiddenCmd("taskkill", "/F", "/IM", "llama-server.exe").Run()
+	ps := fmt.Sprintf(
+		`Get-Process whisper-server,llama-server -ErrorAction SilentlyContinue | Where-Object { $_.Path -like '%s*' } | Stop-Process -Force`,
+		strings.ReplaceAll(dir, "'", "''"))
+	_ = hiddenCmd("powershell", "-NoProfile", "-NonInteractive", "-Command", ps).Run()
 	time.Sleep(500 * time.Millisecond)
 
 	delData := false

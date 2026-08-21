@@ -128,6 +128,8 @@ var msgs = map[string]map[string]string{
 		"cap.selected":          "Выбрано: %s",
 		"cap.cancelled":         "Отменено",
 		"err.hotkey.dup":        "Сочетание «%s» назначено дважды — хоткеи не должны совпадать",
+		"cfg.err.recovered":     "config.json повреждён (%s).\nФайл сохранён как %s, настройки сброшены к значениям по умолчанию.",
+		"err.disk.space":        "мало места на диске: свободно %d МБ, нужно ~%d МБ",
 		"un.title":              "Vox Terminal — удаление",
 		"un.confirm":            "Удалить Vox Terminal с этого компьютера?",
 		"un.data":               "Удалить также настройки и скачанные модели?",
@@ -199,6 +201,8 @@ var msgs = map[string]map[string]string{
 		"cap.selected":          "Selected: %s",
 		"cap.cancelled":         "Cancelled",
 		"err.hotkey.dup":        "The \"%s\" shortcut is assigned twice — hotkeys must be unique",
+		"cfg.err.recovered":     "config.json is corrupted (%s).\nThe file was saved as %s and settings were reset to defaults.",
+		"err.disk.space":        "low disk space: %d MB free, ~%d MB needed",
 		"un.title":              "Vox Terminal — Uninstall",
 		"un.confirm":            "Remove Vox Terminal from this computer?",
 		"un.data":               "Also delete settings and downloaded models?",
@@ -250,6 +254,8 @@ var settingsStrings = map[string]map[string]string{
 		"S_NO_LLM_PROF": "Промпты станут доступны после установки модели (вкладки «Модели» и «Поиск»).",
 		"S_PROF_EDIT":   "Редактировать",
 		"S_PROF_CLOSE":  "Свернуть",
+		"S_CONFIRM_DEL": "Удалить модель «%s»? Её можно будет скачать заново.",
+		"S_FREE":        "свободно",
 		"S_SUB_MODELS":  "Модели",
 		"S_SUB_SEARCH":  "Поиск",
 		"S_SUB_PROMPTS": "Промпты",
@@ -392,7 +398,7 @@ var settingsStrings = map[string]map[string]string{
 			"<div class=\"mock-row\" style=\"padding-left:18px\">q8_0.gguf<span style=\"margin-left:auto\">3.6 GB</span><span style=\"color:var(--amber)\">● ≈8.2 GB</span><span style=\"color:var(--dim)\">⭳</span></div></div>" +
 			"<ul>" +
 			"<li><b>Модели</b> — установленные LLM-модели редактора; радиокнопка выбирает активную (по «Сохранить»), крестик удаляет (можно и активную — тогда постобработка отключится). Здесь же виден прогресс загрузок.</li>" +
-			"<li><b>Поиск</b> — GGUF-модели на Hugging Face по имени (например, «qwen2.5 instruct»). У репозитория: дата последнего обновления, число загрузок и ссылка ↗ на страницу модели; клик по строке раскрывает файлы-кванты.</li>" +
+			"<li><b>Поиск</b> — GGUF-модели на Hugging Face по имени (например, «qwen2.5 instruct»). У репозитория: дата последнего обновления, число загрузок и ссылка ↗ на страницу модели; клик по строке раскрывает файлы-кванты. Индикатор ● ≈N GB сравнивается со <b>свободной</b> оперативной памятью (она показана над списком).</li>" +
 			"<li><b>Как выбрать квант:</b> цифра — сколько бит на вес (Q4 — золотая середина, Q8 — почти без сжатия, Q3 — экономия памяти ценой качества); K_M точнее K_S; IQ4 — новое поколение, лучше классических при том же размере. Индикатор ● ≈N GB — оценка нужной оперативной памяти (файл + запас на контекст): зелёный — помещается, жёлтый — впритык, красный — не хватит.</li>" +
 			"<li>Модель 1.5–3B — быстрая редактура; 7–9B — заметно умнее, но на CPU каждая обработка занимает секунды. llama-server поднимается при первом использовании и держит модель в памяти наготове.</li>" +
 			"</ul>" +
@@ -467,6 +473,8 @@ var settingsStrings = map[string]map[string]string{
 		"S_NO_LLM_PROF": "Prompts become available once a model is installed (see Models and Search tabs).",
 		"S_PROF_EDIT":   "Edit",
 		"S_PROF_CLOSE":  "Collapse",
+		"S_CONFIRM_DEL": "Delete the \"%s\" model? It can be downloaded again.",
+		"S_FREE":        "free",
 		"S_SUB_MODELS":  "Models",
 		"S_SUB_SEARCH":  "Search",
 		"S_SUB_PROMPTS": "Prompts",
@@ -609,7 +617,7 @@ var settingsStrings = map[string]map[string]string{
 			"<div class=\"mock-row\" style=\"padding-left:18px\">q8_0.gguf<span style=\"margin-left:auto\">3.6 GB</span><span style=\"color:var(--amber)\">● ≈8.2 GB</span><span style=\"color:var(--dim)\">⭳</span></div></div>" +
 			"<ul>" +
 			"<li><b>Models</b> — installed LLM editing models; the radio selects the active one (on Save), ✕ deletes (the active one too — post-processing then turns off). Download progress shows here as well.</li>" +
-			"<li><b>Search</b> — GGUF models on Hugging Face by name (e.g. \"qwen2.5 instruct\"). Each repository shows its last update date, download count and a ↗ link to the model page; clicking a row expands its quant files.</li>" +
+			"<li><b>Search</b> — GGUF models on Hugging Face by name (e.g. \"qwen2.5 instruct\"). Each repository shows its last update date, download count and a ↗ link to the model page; clicking a row expands its quant files. The ● ≈N GB indicator is compared against the <b>free</b> RAM (shown above the list).</li>" +
 			"<li><b>Picking a quant:</b> the number is bits per weight (Q4 — the sweet spot, Q8 — nearly uncompressed, Q3 — saves RAM at a quality cost); K_M beats K_S; IQ4 is the newer generation, better than classic quants at the same size. The ● ≈N GB indicator estimates the RAM needed (file plus context headroom): green fits, amber is tight, red won't fit.</li>" +
 			"<li>A 1.5–3B model gives fast editing; 7–9B is noticeably smarter but each pass takes seconds on CPU. llama-server starts on first use and keeps the model warm in memory.</li>" +
 			"</ul>" +

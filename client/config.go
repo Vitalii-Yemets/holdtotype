@@ -3,8 +3,8 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"os"
+	"sync"
 )
 
 type Profile struct {
@@ -95,12 +95,24 @@ func defaultConfig() *Config {
 	}
 }
 
+var saveMu sync.Mutex
+
 func saveConfig(path string, cfg *Config) error {
+	saveMu.Lock()
+	defer saveMu.Unlock()
 	out, err := json.MarshalIndent(cfg, "", "  ")
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(path, append(out, '\n'), 0o644)
+	tmp := path + ".tmp"
+	if err := os.WriteFile(tmp, append(out, '\n'), 0o644); err != nil {
+		return err
+	}
+	if err := os.Rename(tmp, path); err != nil {
+		os.Remove(tmp)
+		return err
+	}
+	return nil
 }
 
 func loadConfig(path string) (*Config, error) {
@@ -124,10 +136,19 @@ func loadConfig(path string) (*Config, error) {
 	dec := json.NewDecoder(bytes.NewReader(data))
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(cfg); err != nil {
-		return nil, fmt.Errorf("%s: %w", path, err)
+		broken := path + ".broken"
+		_ = os.Rename(path, broken)
+		cfg = defaultConfig()
+		if def, defErr := os.ReadFile("config.default.json"); defErr == nil {
+			d2 := json.NewDecoder(bytes.NewReader(bytes.TrimPrefix(def, []byte{0xEF, 0xBB, 0xBF})))
+			_ = d2.Decode(cfg)
+		}
+		_ = saveConfig(path, cfg)
+		go msgBox(tr("cfg.err.title"), trf("cfg.err.recovered", err.Error(), broken))
+		return cfg, nil
 	}
 	if cfg.PasteMode != "clipboard" && cfg.PasteMode != "type" {
-		return nil, fmt.Errorf("paste_mode должен быть \"clipboard\" или \"type\"")
+		cfg.PasteMode = "clipboard"
 	}
 	if cfg.Threads <= 0 {
 		cfg.Threads = 4
