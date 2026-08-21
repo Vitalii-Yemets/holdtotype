@@ -9,42 +9,15 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
-	"strings"
 	"time"
+
+	"voxterminal/internal/appver"
 )
 
 const updateLatestURL = "https://api.github.com/repos/Vitalii-Yemets/vox-terminal/releases/latest"
 
-func parseVer(s string) ([3]int, bool) {
-	var v [3]int
-	s = strings.TrimPrefix(strings.TrimSpace(s), "v")
-	parts := strings.SplitN(s, ".", 3)
-	if len(parts) != 3 {
-		return v, false
-	}
-	for i, p := range parts {
-		n, err := strconv.Atoi(strings.TrimSpace(p))
-		if err != nil {
-			return v, false
-		}
-		v[i] = n
-	}
-	return v, true
-}
-
 func verNewer(latest, current string) bool {
-	l, ok1 := parseVer(latest)
-	c, ok2 := parseVer(current)
-	if !ok1 || !ok2 {
-		return false
-	}
-	for i := 0; i < 3; i++ {
-		if l[i] != c[i] {
-			return l[i] > c[i]
-		}
-	}
-	return false
+	return appver.IsNewer(latest, current)
 }
 
 func fetchLatestRelease() (tag, setupURL string, err error) {

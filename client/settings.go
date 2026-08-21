@@ -15,6 +15,8 @@ import (
 
 	webview "github.com/jchv/go-webview2"
 	"golang.org/x/sys/windows"
+
+	"voxterminal/internal/hotkeys"
 )
 
 var (
@@ -363,21 +365,12 @@ func (a *App) applySettings(f *settingsForm) string {
 	if _, err := parseHotkey(f.Hotkey); err != nil {
 		return err.Error()
 	}
-	used := map[string]bool{}
-	for _, hk := range append([]string{f.Hotkey, f.TranslateHotkey}, func() []string {
-		var hs []string
-		for _, p := range f.Profiles {
-			hs = append(hs, p.Hotkey)
-		}
-		return hs
-	}()...) {
-		if hk == "" {
-			continue
-		}
-		if used[hk] {
-			return trf("err.hotkey.dup", hk)
-		}
-		used[hk] = true
+	combos := []string{f.Hotkey, f.TranslateHotkey}
+	for _, p := range f.Profiles {
+		combos = append(combos, p.Hotkey)
+	}
+	if dup := hotkeys.FindDuplicate(combos); dup != "" {
+		return trf("err.hotkey.dup", dup)
 	}
 
 	a.mu.Lock()

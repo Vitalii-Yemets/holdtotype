@@ -5,3 +5,7 @@ client/setup/app.ico
 client/setup/app.rc
 client/setup/app.manifest
 client/setup/resources.syso
+test/node_modules/
+test/page.html
+test/package-lock.json
+test/package.json

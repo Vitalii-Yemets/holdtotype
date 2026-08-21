@@ -15,6 +15,8 @@
   <img src="https://img.shields.io/badge/llama.cpp-LLM-0b0f0c?style=flat-square&labelColor=0e1410&color=1d4a2b" alt="llama.cpp">
   <img src="https://img.shields.io/badge/100%25-offline-0b0f0c?style=flat-square&labelColor=0e1410&color=1d4a2b" alt="offline">
   <img src="https://img.shields.io/badge/GPU-not%20required-0b0f0c?style=flat-square&labelColor=0e1410&color=1d4a2b" alt="CPU only">
+  <img src="https://img.shields.io/badge/license-MIT-0b0f0c?style=flat-square&labelColor=0e1410&color=1d4a2b" alt="MIT">
+  <a href="https://github.com/Vitalii-Yemets/vox-terminal/actions/workflows/ci.yml"><img src="https://github.com/Vitalii-Yemets/vox-terminal/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
 </p>
 
 ---
@@ -147,7 +149,21 @@ The result lands in `dist/`:
 | `models/ggml-*.bin` | the Whisper model |
 | `config.default.json` | default settings |
 
-The pipeline: MinGW-w64 cross-compilation of whisper.cpp and llama.cpp inside a Linux container, the Go client with cgo (microphone capture), icon generation, installer packaging — all in `build/Dockerfile`.
+The pipeline: MinGW-w64 cross-compilation of whisper.cpp and llama.cpp inside a Linux container, the Go client with cgo (microphone capture), icon generation, installer packaging — all in `build/Dockerfile`. Both engines are pinned to specific upstream versions (`WHISPER_CPP_VERSION`, `LLAMA_CPP_VERSION` build args), so builds stay reproducible.
+
+## 🧪 Tests
+
+Everything runs in containers — nothing to install locally:
+
+```powershell
+docker build --file build/Dockerfile --target gotest .        # Go unit tests + go vet (Windows target)
+docker run --rm -v "${PWD}:/w" -w /w node:20 sh -c "node test/build-page.js && cd test && npm i --no-save --silent jsdom && node ui.test.js"
+```
+
+- `client/internal/...` — unit tests for update-version comparison and hotkey duplicate detection.
+- `test/ui.test.js` — 20 checks against the real settings page rendered in jsdom: tab and sub-tab switching, the translation enable/disable matrix, the prompt editor accordion, model deletion, About sub-tabs, and "no JavaScript errors".
+
+The same suites run in GitHub Actions on every push, together with a full Windows build of all binaries.
 
 ## 🏗️ Architecture
 
@@ -174,6 +190,10 @@ Files next to the exe: `config.json` (all settings; manual edits apply via "Relo
 ## 🗑️ Uninstall
 
 "Apps & features" → Vox Terminal, or `voxterminal.exe -uninstall`. The uninstaller asks whether to delete settings and downloaded models, then cleans up files, the shortcut and the registry. The portable version is removed by deleting the folder.
+
+## 📄 License
+
+[MIT](LICENSE) © Vitalii Yemets. Bundled engines keep their own licenses: [whisper.cpp](https://github.com/ggerganov/whisper.cpp) and [llama.cpp](https://github.com/ggml-org/llama.cpp) are MIT-licensed; downloaded models are covered by their respective licenses on Hugging Face.
 
 ## 👤 Author
 

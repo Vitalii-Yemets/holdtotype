@@ -29,7 +29,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         git ca-certificates cmake make g++ \
         gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 \
     && rm -rf /var/lib/apt/lists/*
-RUN git clone --depth 1 https://github.com/ggml-org/llama.cpp /src
+ARG LLAMA_CPP_VERSION=v0.2.0
+RUN git clone --depth 1 --branch ${LLAMA_CPP_VERSION} \
+        https://github.com/ggml-org/llama.cpp /src
 COPY build/mingw-toolchain.cmake /toolchain.cmake
 RUN cmake -S /src -B /bld \
         -DCMAKE_TOOLCHAIN_FILE=/toolchain.cmake \
@@ -109,6 +111,28 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     go build -mod=readonly -trimpath \
         -ldflags "-H windowsgui -s -w -X main.appVersion=${APP_VERSION}" \
         -o /out/voxterminal-setup.exe ./setup
+
+FROM golang:1.23-bookworm AS gotest
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        gcc-mingw-w64-x86-64 \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY client/go.mod client/go.sum ./
+RUN --mount=type=cache,target=/go/pkg/mod go mod download
+COPY client/ ./
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    touch setup/payload.zip \
+    && go test ./internal/... \
+    && GOOS=windows CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc go vet -unsafeptr=false ./...
+
+FROM scratch AS dist-slim
+COPY --from=whisper-build /bld/bin/whisper-server.exe /whisper-server.exe
+COPY --from=llama-build /bld/bin/llama-server.exe /llama-server.exe
+COPY --from=client-build /out/voxterminal.exe /voxterminal.exe
+COPY --from=setup-build /out/voxterminal-setup.exe /voxterminal-setup.exe
+COPY --from=assets /config.json /config.default.json
+COPY README.md /README.md
 
 FROM scratch AS dist
 ARG WHISPER_MODEL

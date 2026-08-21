@@ -1,4 +1,4 @@
-module voice2text
+module voxterminal
 
 go 1.23
 
