@@ -9,3 +9,9 @@ test/node_modules/
 test/page.html
 test/package-lock.json
 test/package.json
+
+# private notes: research reports, audits, drafts (never published)
+research/
+*.research.md
+docs/*research*.md
+docs/*audit*.md
