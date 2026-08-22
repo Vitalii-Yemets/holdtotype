@@ -46,7 +46,7 @@ type App struct {
 	mu        sync.Mutex
 	cfg       *Config
 	rec       *Recorder
-	srv       *whisperServer
+	srv       recognizer
 	llm       *llamaServer
 	hook      *hotkeyHook
 	enabled   bool
@@ -91,7 +91,7 @@ func main() {
 	}
 	setupLog()
 
-	for _, arg := range os.Args[1:] {
+	for i, arg := range os.Args[1:] {
 		if arg == "-listmics" {
 			rec, rerr := NewRecorder("")
 			if rerr != nil {
@@ -102,6 +102,37 @@ func main() {
 				log.Printf("микрофон: %s (id=%s)", d.Name, d.ID)
 			}
 			rec.Close()
+			return
+		}
+		if arg == "-transcribe" && i+1 < len(os.Args[1:]) {
+			path := os.Args[1:][i+1]
+			cfg, cerr := loadConfig("config.json")
+			if cerr != nil {
+				log.Printf("конфигурация: %v", cerr)
+				return
+			}
+			wav, rerr := os.ReadFile(path)
+			if rerr != nil {
+				log.Printf("файл %s: %v", path, rerr)
+				return
+			}
+			srv, serr := startRecognizer(cfg, logFile)
+			if serr != nil {
+				log.Printf("распознаватель: %v", serr)
+				return
+			}
+			defer srv.stop()
+			if werr := srv.waitReady(engineReadyTimeout(srv)); werr != nil {
+				log.Printf("распознаватель не поднялся: %v", werr)
+				return
+			}
+			started := time.Now()
+			text, terr := srv.transcribe(context.Background(), wav, cfg.Language, cfg.WhisperPrompt, false)
+			if terr != nil {
+				log.Printf("распознавание: %v", terr)
+				return
+			}
+			log.Printf("движок=%s время=%.2f c текст=%q", srv.engine(), time.Since(started).Seconds(), text)
 			return
 		}
 		if arg == "-miclevel" {
@@ -250,7 +281,7 @@ func (a *App) initBackend() {
 	for {
 		cfg := a.snapshot()
 		if cfg.ServerAutostart && cfg.ServerURL == "" {
-			if _, err := os.Stat(cfg.Model); err != nil {
+			if missing := missingModelPath(cfg); missing != "" {
 				a.mu.Lock()
 				q := a.quitting
 				a.mu.Unlock()
@@ -259,7 +290,7 @@ func (a *App) initBackend() {
 				}
 				if !waiting {
 					waiting = true
-					log.Printf("модель %s не найдена — жду скачивания", cfg.Model)
+					log.Printf("модель %s не найдена — жду скачивания", missing)
 					a.setStatus(tr("status.nomodel"))
 					traySetIcon(trayOff)
 					go a.openSettings("rec")
@@ -272,7 +303,7 @@ func (a *App) initBackend() {
 				a.setStatus(tr("status.loading"))
 			}
 		}
-		srv, err := startWhisperServer(cfg, logFile)
+		srv, err := startRecognizer(cfg, logFile)
 		if err != nil {
 			a.fatal(err.Error())
 			return
@@ -286,11 +317,7 @@ func (a *App) initBackend() {
 		a.srv = srv
 		a.mu.Unlock()
 
-		timeout := 3 * time.Minute
-		if srv.external() {
-			timeout = 20 * time.Second
-		}
-		if err := srv.waitReady(timeout); err != nil {
+		if err := srv.waitReady(engineReadyTimeout(srv)); err != nil {
 			a.fatal(err.Error())
 			return
 		}
@@ -299,13 +326,13 @@ func (a *App) initBackend() {
 		a.ready = true
 		a.mu.Unlock()
 		a.refreshIdleUI()
-		log.Printf("готов: hotkey=%s model=%s lang=%s", cfg.Hotkey, cfg.Model, cfg.Language)
+		log.Printf("готов: hotkey=%s движок=%s модель=%s lang=%s", cfg.Hotkey, srv.engine(), activeModelPath(cfg), cfg.Language)
 
 		if srv.external() {
 			return
 		}
 		started := time.Now()
-		<-srv.done
+		<-srv.done()
 
 		a.mu.Lock()
 		q := a.quitting
@@ -328,7 +355,7 @@ func (a *App) initBackend() {
 			a.fatal(tr("err.server.repeat"))
 			return
 		}
-		log.Printf("whisper-server упал, перезапуск (попытка %d)", attempts)
+		log.Printf("распознаватель упал, перезапуск (попытка %d)", attempts)
 		a.setStatus(tr("status.server.restart"))
 		traySetIcon(trayOff)
 	}
@@ -587,6 +614,13 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 		default:
 			log.Printf("перевод: цель=%s силами Whisper (режим %s)", target, cfg.TranslateAsk)
 		}
+	}
+	if target != "" && !engineTranslates(srv.engine()) {
+		log.Printf("перевод недоступен: активен движок %s — вставляю распознанный текст как есть", srv.engine())
+		if cfg.Overlay {
+			overlaySet(ovFlashErr, tr("ov.notranslate"))
+		}
+		target = ""
 	}
 	fastTranslate := target == "en"
 	if fastTranslate && strings.Contains(cfg.Model, "turbo") {

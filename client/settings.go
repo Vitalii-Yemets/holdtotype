@@ -431,11 +431,20 @@ func (a *App) applySettings(f *settingsForm) string {
 	c.Language = f.Language
 	modelChanged := false
 	if f.ModelID != "" && f.ModelID != "custom" {
-		if m := findModel(f.ModelID); m != nil {
-			if _, err := os.Stat(filepath.Join("models", m.File)); err == nil {
+		if m := findModel(f.ModelID); m != nil && m.installed() {
+			switch m.Engine {
+			case engineSherpa:
+				nd := "models/" + m.Dir
+				if nd != c.SherpaModel || c.STTEngine != engineSherpa {
+					c.SherpaModel = nd
+					c.STTEngine = engineSherpa
+					modelChanged = true
+				}
+			default:
 				nm := "models/" + m.File
-				if nm != c.Model {
+				if nm != c.Model || c.STTEngine != engineWhisper {
 					c.Model = nm
+					c.STTEngine = engineWhisper
 					modelChanged = true
 				}
 			}
@@ -692,6 +701,7 @@ button.ghost:hover{color:var(--green)}
 .mrow input[type=radio]{width:15px;height:15px;accent-color:var(--dim)}
 .mrow .mname{width:104px;font-weight:700}
 .mrow .mdesc{flex:1;color:var(--faint);font-size:12px}
+.mtag{font-size:9px;border:1px solid var(--line);color:var(--faint);padding:0 4px;margin-left:6px;vertical-align:middle;letter-spacing:.06em}
 .mrow .msize{color:var(--dim);font-size:12px;width:70px;text-align:right}
 .badge{font-size:11px;letter-spacing:1px;padding:4px 10px;border:1px solid var(--dim);color:var(--green);text-shadow:var(--glow);text-transform:uppercase}
 button.mini{padding:5px 12px;border:1px solid var(--line);background:none;color:var(--dim);font:12px Consolas,monospace;cursor:pointer;text-transform:uppercase}
@@ -1331,7 +1341,8 @@ async function refreshModels(){
     if(m.state === "downloading"){ busy = true; right = '<span class="mpct">'+(m.pct>0?m.pct+"%":"…")+'</span>'; }
     else if(m.state === "absent") right = '<button class="iconbtn" title="'+L.dl+'" data-a="dl" data-id="'+m.id+'">'+I_DL+'</button>';
     else if(m.state === "installed") right = '<button class="iconbtn danger" title="'+L.del+'" data-a="del" data-id="'+m.id+'">&#10005;</button>';
-    div.innerHTML = radio+'<span class="mname">'+m.name+'</span><span class="mdesc">'+m.desc+'</span><span class="msize">'+(m.size?m.size+" MB":"")+'</span><span>'+right+'</span>';
+    const tag = m.engine === "sherpa" ? '<span class="mtag">RU</span>' : (m.langs === "*" ? '<span class="mtag">99</span>' : "");
+    div.innerHTML = radio+'<span class="mname">'+m.name+tag+'</span><span class="mdesc">'+m.desc+'</span><span class="msize">'+(m.size?m.size+" MB":"")+'</span><span>'+right+'</span>';
     el.appendChild(div);
   });
   el.querySelectorAll('input[name="mdl"]').forEach(r=>{

@@ -68,6 +68,19 @@ RUN --mount=type=cache,target=/go/pkg/mod \
         -ldflags "-H windowsgui -s -w -extldflags=-static ${APP_VERSION:+-X holdtotype/internal/appid.Version=$APP_VERSION}" \
         -o /out/holdtotype.exe .
 
+FROM debian:bookworm-slim AS sherpa-fetch
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        curl ca-certificates bzip2 \
+    && rm -rf /var/lib/apt/lists/*
+ARG SHERPA_ONNX_VERSION=v1.13.6
+ARG SHERPA_ONNX_SHA256=388654755fb59c23eefaaab297e2d43660e08c9695cec5b7391ccdd3e274e917
+RUN curl -fL --retry 3 -o /s.tar.bz2 \
+        "https://github.com/k2-fsa/sherpa-onnx/releases/download/${SHERPA_ONNX_VERSION}/sherpa-onnx-${SHERPA_ONNX_VERSION}-win-x64-static-MT-Release-no-tts.tar.bz2" \
+    && echo "${SHERPA_ONNX_SHA256}  /s.tar.bz2" | sha256sum -c - \
+    && mkdir /x && tar -xjf /s.tar.bz2 -C /x --strip-components=1 \
+    && cp /x/bin/sherpa-onnx-offline-websocket-server.exe /sherpa-server.exe \
+    && rm -rf /x /s.tar.bz2
+
 FROM debian:bookworm-slim AS assets
 RUN apt-get update && apt-get install -y --no-install-recommends \
         curl ca-certificates \
@@ -86,9 +99,10 @@ WORKDIR /p
 COPY --from=client-build /out/holdtotype.exe ./
 COPY --from=whisper-build /bld/bin/whisper-server.exe ./
 COPY --from=llama-build /bld/bin/llama-server.exe ./
+COPY --from=sherpa-fetch /sherpa-server.exe ./
 COPY --from=assets /config.json ./config.default.json
 COPY README.md ./
-RUN zip -9 -X payload.zip holdtotype.exe whisper-server.exe llama-server.exe config.default.json README.md
+RUN zip -9 -X payload.zip holdtotype.exe whisper-server.exe llama-server.exe sherpa-server.exe config.default.json README.md
 
 FROM golang:1.23-bookworm AS setup-build
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -129,6 +143,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 FROM scratch AS dist-slim
 COPY --from=whisper-build /bld/bin/whisper-server.exe /whisper-server.exe
 COPY --from=llama-build /bld/bin/llama-server.exe /llama-server.exe
+COPY --from=sherpa-fetch /sherpa-server.exe /sherpa-server.exe
 COPY --from=client-build /out/holdtotype.exe /holdtotype.exe
 COPY --from=setup-build /out/holdtotype-setup.exe /holdtotype-setup.exe
 COPY --from=assets /config.json /config.default.json
@@ -138,6 +153,7 @@ FROM scratch AS dist
 ARG WHISPER_MODEL
 COPY --from=whisper-build /bld/bin/whisper-server.exe /whisper-server.exe
 COPY --from=llama-build /bld/bin/llama-server.exe /llama-server.exe
+COPY --from=sherpa-fetch /sherpa-server.exe /sherpa-server.exe
 COPY --from=client-build /out/holdtotype.exe /holdtotype.exe
 COPY --from=assets /ggml.bin /models/ggml-${WHISPER_MODEL}.bin
 COPY --from=assets /config.json /config.default.json

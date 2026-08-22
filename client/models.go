@@ -16,21 +16,66 @@ import (
 )
 
 type modelInfo struct {
-	ID      string
-	File    string
-	SizeMB  int
-	NameKey string
-	DescKey string
+	ID        string
+	File      string
+	SizeMB    int
+	NameKey   string
+	DescKey   string
+	Engine    string
+	Dir       string
+	Files     []string
+	BaseURL   string
+	Langs     string
+	Punct     bool
+	Translate bool
 }
 
 var modelCatalog = []modelInfo{
-	{"base", "ggml-base.bin", 142, "Base", "S_M_BASE"},
-	{"small", "ggml-small.bin", 466, "Small", "S_M_SMALL"},
-	{"medium-q5_0", "ggml-medium-q5_0.bin", 539, "Medium (q5)", "S_M_MED"},
-	{"large-v3-turbo-q5_0", "ggml-large-v3-turbo-q5_0.bin", 574, "Turbo (q5)", "S_M_TURBO"},
+	{ID: "base", File: "ggml-base.bin", SizeMB: 142, NameKey: "Base", DescKey: "S_M_BASE",
+		Engine: engineWhisper, Langs: "*", Translate: true},
+	{ID: "small", File: "ggml-small.bin", SizeMB: 466, NameKey: "Small", DescKey: "S_M_SMALL",
+		Engine: engineWhisper, Langs: "*", Translate: true},
+	{ID: "medium-q5_0", File: "ggml-medium-q5_0.bin", SizeMB: 539, NameKey: "Medium (q5)", DescKey: "S_M_MED",
+		Engine: engineWhisper, Langs: "*", Translate: true},
+	{ID: "large-v3-turbo-q5_0", File: "ggml-large-v3-turbo-q5_0.bin", SizeMB: 574, NameKey: "Turbo (q5)", DescKey: "S_M_TURBO",
+		Engine: engineWhisper, Langs: "*", Translate: true},
+	{ID: "gigaam-v3", SizeMB: 232, NameKey: "GigaAM v3", DescKey: "S_M_GIGAAM",
+		Engine: engineSherpa, Dir: "gigaam-v3", Langs: "ru", Punct: true,
+		Files:   []string{"encoder.int8.onnx", "decoder.onnx", "joiner.onnx", "tokens.txt"},
+		BaseURL: "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-transducer-punct-giga-am-v3-russian-2025-12-16/resolve/main/"},
 }
 
 const modelBaseURL = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/"
+
+func (m *modelInfo) paths() []string {
+	if m.Engine == engineSherpa {
+		out := make([]string, 0, len(m.Files))
+		for _, f := range m.Files {
+			out = append(out, filepath.Join("models", m.Dir, f))
+		}
+		return out
+	}
+	return []string{filepath.Join("models", m.File)}
+}
+
+func (m *modelInfo) installed() bool {
+	for _, p := range m.paths() {
+		if _, err := os.Stat(p); err != nil {
+			return false
+		}
+	}
+	return true
+}
+
+func (m *modelInfo) isActive(cfg *Config) bool {
+	if m.Engine != cfg.STTEngine {
+		return false
+	}
+	if m.Engine == engineSherpa {
+		return filepath.Base(filepath.Clean(cfg.SherpaModel)) == m.Dir
+	}
+	return filepath.Base(cfg.Model) == m.File
+}
 
 type dlState struct {
 	active bool
@@ -53,23 +98,30 @@ func findModel(id string) *modelInfo {
 }
 
 type modelRow struct {
-	ID    string `json:"id"`
-	Name  string `json:"name"`
-	Desc  string `json:"desc"`
-	Size  int    `json:"size"`
-	State string `json:"state"`
-	Pct   int    `json:"pct"`
-	Err   string `json:"err"`
+	ID     string `json:"id"`
+	Name   string `json:"name"`
+	Desc   string `json:"desc"`
+	Size   int    `json:"size"`
+	State  string `json:"state"`
+	Pct    int    `json:"pct"`
+	Err    string `json:"err"`
+	Engine string `json:"engine"`
+	Langs  string `json:"langs"`
+	Punct  bool   `json:"punct"`
 }
 
 func (a *App) modelRows() string {
-	activeFile := filepath.Base(a.snapshot().Model)
+	cfg := a.snapshot()
 	var rows []modelRow
 	known := false
-	for _, m := range modelCatalog {
-		row := modelRow{ID: m.ID, Name: m.NameKey, Desc: strS(m.DescKey), Size: m.SizeMB}
-		path := filepath.Join("models", m.File)
-		_, statErr := os.Stat(path)
+	for i := range modelCatalog {
+		m := &modelCatalog[i]
+		row := modelRow{
+			ID: m.ID, Name: m.NameKey, Desc: strS(m.DescKey), Size: m.SizeMB,
+			Engine: m.Engine, Langs: m.Langs, Punct: m.Punct,
+		}
+		have := m.installed()
+		active := m.isActive(cfg)
 		dlMu.Lock()
 		st := dl[m.ID]
 		dlMu.Unlock()
@@ -77,13 +129,13 @@ func (a *App) modelRows() string {
 		case st != nil && st.active:
 			row.State = "downloading"
 			row.Pct = st.pct
-		case m.File == activeFile && statErr == nil:
+		case active && have:
 			row.State = "active"
 			known = true
-		case statErr == nil:
+		case have:
 			row.State = "installed"
 		default:
-			if m.File == activeFile {
+			if active {
 				known = true
 			}
 			row.State = "absent"
@@ -94,7 +146,10 @@ func (a *App) modelRows() string {
 		rows = append(rows, row)
 	}
 	if !known {
-		rows = append(rows, modelRow{ID: "custom", Name: activeFile, Desc: strS("S_M_CUSTOM"), State: "active"})
+		rows = append(rows, modelRow{
+			ID: "custom", Name: filepath.Base(activeModelPath(cfg)),
+			Desc: strS("S_M_CUSTOM"), State: "active", Engine: cfg.STTEngine, Langs: "*",
+		})
 	}
 	out, _ := json.Marshal(rows)
 	return string(out)
@@ -105,7 +160,124 @@ func (a *App) downloadModel(id string) {
 	if m == nil {
 		return
 	}
+	if m.Engine == engineSherpa {
+		a.startMultiDownload(id, m)
+		return
+	}
 	a.startDownload(id, m.File, modelBaseURL+m.File)
+}
+
+func (a *App) startMultiDownload(key string, m *modelInfo) {
+	dlMu.Lock()
+	if st := dl[key]; st != nil && st.active {
+		dlMu.Unlock()
+		return
+	}
+	dl[key] = &dlState{active: true}
+	dlMu.Unlock()
+
+	go func() {
+		err := a.doMultiDownload(key, m)
+		dlMu.Lock()
+		if err != nil {
+			log.Printf("скачивание %s: %v", m.ID, err)
+			dl[key] = &dlState{err: err.Error()}
+		} else {
+			log.Printf("модель %s скачана целиком", m.ID)
+			dl[key] = &dlState{pct: 100}
+		}
+		dlMu.Unlock()
+	}()
+}
+
+func (a *App) doMultiDownload(key string, m *modelInfo) error {
+	dir := filepath.Join("models", m.Dir)
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return err
+	}
+	if free := freeDiskMB("models"); free >= 0 && free < m.SizeMB+256 {
+		return fmt.Errorf("%s", trf("err.disk.space", free, m.SizeMB))
+	}
+	total := int64(m.SizeMB) * 1024 * 1024
+	var doneBytes int64
+	for _, f := range m.Files {
+		written, err := downloadFile(m.BaseURL+f, filepath.Join(dir, f), func(n int64) {
+			dlMu.Lock()
+			if st := dl[key]; st != nil && total > 0 {
+				pct := int((doneBytes + n) * 100 / total)
+				if pct > 99 {
+					pct = 99
+				}
+				st.pct = pct
+			}
+			dlMu.Unlock()
+		})
+		if err != nil {
+			return fmt.Errorf("%s: %w", f, err)
+		}
+		doneBytes += written
+		log.Printf("модель %s: файл %s готов (%d МБ)", m.ID, f, written/(1024*1024))
+	}
+	return nil
+}
+
+func downloadFile(url, final string, progress func(written int64)) (int64, error) {
+	tmp := final + ".part"
+	client := &http.Client{Timeout: 0}
+	resp, err := client.Get(url)
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return 0, fmt.Errorf("HTTP %d", resp.StatusCode)
+	}
+	f, err := os.Create(tmp)
+	if err != nil {
+		return 0, err
+	}
+	var written int64
+	buf := make([]byte, 256*1024)
+	lastUpd := time.Now()
+	for {
+		n, rerr := resp.Body.Read(buf)
+		if n > 0 {
+			if _, werr := f.Write(buf[:n]); werr != nil {
+				f.Close()
+				os.Remove(tmp)
+				return 0, werr
+			}
+			written += int64(n)
+			if progress != nil && time.Since(lastUpd) > 300*time.Millisecond {
+				lastUpd = time.Now()
+				progress(written)
+			}
+		}
+		if rerr == io.EOF {
+			break
+		}
+		if rerr != nil {
+			f.Close()
+			os.Remove(tmp)
+			return 0, rerr
+		}
+	}
+	if err := f.Close(); err != nil {
+		os.Remove(tmp)
+		return 0, err
+	}
+	if resp.ContentLength > 0 && written != resp.ContentLength {
+		os.Remove(tmp)
+		return 0, fmt.Errorf("файл получен не целиком: %d из %d байт", written, resp.ContentLength)
+	}
+	os.Remove(final)
+	if err := os.Rename(tmp, final); err != nil {
+		return 0, err
+	}
+	if progress != nil {
+		progress(written)
+	}
+	return written, nil
 }
 
 func (a *App) startDownload(key, file, url string) {
@@ -160,15 +332,27 @@ func cleanupStaleParts() {
 	if activeAny {
 		return
 	}
+	dirs := []string{"models"}
 	for _, e := range entries {
-		if e.IsDir() || !strings.HasSuffix(e.Name(), ".part") {
+		if e.IsDir() {
+			dirs = append(dirs, filepath.Join("models", e.Name()))
+		}
+	}
+	for _, dir := range dirs {
+		items, derr := os.ReadDir(dir)
+		if derr != nil {
 			continue
 		}
-		p := filepath.Join("models", e.Name())
-		if info, ierr := e.Info(); ierr == nil {
-			log.Printf("удаляю незавершённую загрузку %s (%d МБ)", e.Name(), info.Size()/(1024*1024))
+		for _, e := range items {
+			if e.IsDir() || !strings.HasSuffix(e.Name(), ".part") {
+				continue
+			}
+			p := filepath.Join(dir, e.Name())
+			if info, ierr := e.Info(); ierr == nil {
+				log.Printf("удаляю незавершённую загрузку %s (%d МБ)", p, info.Size()/(1024*1024))
+			}
+			_ = os.Remove(p)
 		}
-		_ = os.Remove(p)
 	}
 }
 
@@ -242,7 +426,7 @@ func (a *App) deleteModel(id string) string {
 	if m == nil {
 		return ""
 	}
-	if filepath.Base(a.snapshot().Model) == m.File {
+	if m.isActive(a.snapshot()) {
 		return tr("model.del.active")
 	}
 	dlMu.Lock()
@@ -251,8 +435,15 @@ func (a *App) deleteModel(id string) string {
 		return ""
 	}
 	dlMu.Unlock()
-	path := filepath.Join("models", m.File)
-	if err := os.Remove(path); err != nil {
+	if m.Engine == engineSherpa {
+		dir := filepath.Join("models", m.Dir)
+		if err := os.RemoveAll(dir); err != nil {
+			return err.Error()
+		}
+		log.Printf("модель %s удалена", m.ID)
+		return tr("model.del.ok")
+	}
+	if err := os.Remove(filepath.Join("models", m.File)); err != nil {
 		return err.Error()
 	}
 	log.Printf("модель %s удалена", m.File)

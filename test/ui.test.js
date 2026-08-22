@@ -19,8 +19,9 @@ const dom = new JSDOM(html, {
     window.appLLM = async () => JSON.stringify(llmState);
     window.appModels = async () =>
       JSON.stringify([
-        { id: "base", name: "Base", desc: "fast", size: 142, state: "absent" },
-        { id: "small", name: "Small", desc: "balanced", size: 466, state: "active" },
+        { id: "base", name: "Base", desc: "fast", size: 142, state: "absent", engine: "whisper", langs: "*" },
+        { id: "small", name: "Small", desc: "balanced", size: 466, state: "active", engine: "whisper", langs: "*" },
+        { id: "gigaam-v3", name: "GigaAM v3", desc: "russian", size: 232, state: "absent", engine: "sherpa", langs: "ru", punct: true },
       ]);
     window.appLLMSearch = async () =>
       JSON.stringify({ repos: [{ id: "org/Repo-GGUF", downloads: 1234, updated: "2026-01-01" }] });
@@ -75,7 +76,9 @@ function check(name, actual, expected) {
 
   tab("rec"); await sleep(80);
   check("recognition opens on Models", visible("rec-models"), true);
-  check("whisper models listed", d.querySelectorAll('#rec-models input[name="mdl"]').length, 2);
+  check("recognition models listed", d.querySelectorAll('#rec-models input[name="mdl"]').length, 3);
+  check("engine tags rendered", d.querySelectorAll("#rec-models .mtag").length, 3);
+  check("russian engine tagged RU", d.querySelectorAll("#rec-models .mtag")[2].textContent, "RU");
   sub("rec", "params"); await sleep(120);
   const mic = d.getElementById("mic_device");
   check("microphone list has default plus devices", mic.options.length, 3);

@@ -39,7 +39,8 @@ Hold a hotkey — speak. Release — the transcribed text is pasted right where 
 - 📟 **On-screen overlay** — a pill at the bottom of the screen: live voice level while recording, processing stages, the result; the ✕ or Esc cancels at any stage; input focus is never stolen.
 - 🌍 **Translation powered by Whisper** — to English via the native translate mode, to Ukrainian / German / French / Spanish / Italian / Polish / Russian by forcing the output language. Three modes: always translate to the target language, ask with a dialog before every dictation, or ask with a countdown.
 - 🤖 **Local LLM post-processing** (llama.cpp) — a chain of prompts removes filler words, changes style, formats text; each prompt can have its own hotkey; a test field runs a sample through the live model right from Settings.
-- 📦 **Built-in model catalog** — Whisper models download in one click; GGUF models for the LLM are searched on Hugging Face with last-update date, download counts and a color indicator showing whether the model fits your RAM.
+- 🇷🇺 **Two recognition engines** — Whisper (99 languages, translation) and GigaAM v3 through sherpa-onnx (Russian only, punctuates by itself). Measured on the same 11-second file: 0.47 s against 11.6 s, 277 MB of RAM against 814 MB, no mistakes against three. Both models can be installed side by side; the engine follows the model you pick.
+- 📦 **Built-in model catalog** — recognition models download in one click; GGUF models for the LLM are searched on Hugging Face with last-update date, download counts and a color indicator showing whether the model fits your RAM.
 - 🎚️ **Microphone control** — pick the input device from the settings, watch a live level meter before dictating, and keep working when a headset is unplugged (the app falls back to the system default automatically). Silent recordings are never sent to recognition, so background noise can't turn into invented text.
 - 📖 **Recognition dictionary** — terms and abbreviations hint rare words to Whisper; a multilingual starter set is preinstalled.
 - 🗣️ **8 UI languages** — English, Ukrainian, Russian, German, French, Spanish, Italian, Polish; switching is instant, "Same as system" follows Windows.
@@ -145,9 +146,11 @@ The result lands in `dist/`:
 |---|---|
 | `holdtotype.exe` | tray client (Go + WinAPI, WebView2) |
 | `whisper-server.exe` | recognition (whisper.cpp), static build |
+| `sherpa-server.exe` | recognition (sherpa-onnx), official static build, pinned and checksum-verified |
 | `llama-server.exe` | post-processing (llama.cpp), static build |
 | `holdtotype-setup.exe` | installer (Go + WebView2, payload embedded) |
 | `models/ggml-*.bin` | the Whisper model |
+| `models/gigaam-v3/` | the GigaAM v3 model: encoder, decoder, joiner, tokens |
 | `config.default.json` | default settings |
 
 The pipeline: MinGW-w64 cross-compilation of whisper.cpp and llama.cpp inside a Linux container, the Go client with cgo (microphone capture), icon generation, installer packaging — all in `build/Dockerfile`. Both engines are pinned to specific upstream versions (`WHISPER_CPP_VERSION`, `LLAMA_CPP_VERSION` build args), so builds stay reproducible.

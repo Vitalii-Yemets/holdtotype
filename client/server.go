@@ -8,7 +8,7 @@ import (
 	"io"
 	"log"
 	"mime/multipart"
-	"net"
+
 	"net/http"
 	"net/url"
 	"os"
@@ -28,7 +28,7 @@ type whisperServer struct {
 	baseURL string
 	cmd     *exec.Cmd
 	client  *http.Client
-	done    chan struct{}
+	doneCh  chan struct{}
 	job     windows.Handle
 
 	mu       sync.Mutex
@@ -44,10 +44,14 @@ func (s *whisperServer) wasStopped() bool {
 
 func (s *whisperServer) external() bool { return s.cmd == nil }
 
+func (s *whisperServer) done() <-chan struct{} { return s.doneCh }
+
+func (s *whisperServer) engine() string { return engineWhisper }
+
 func startWhisperServer(cfg *Config, logw io.Writer) (*whisperServer, error) {
 	s := &whisperServer{
 		client: &http.Client{Timeout: 5 * time.Minute},
-		done:   make(chan struct{}),
+		doneCh: make(chan struct{}),
 	}
 	if cfg.ServerURL != "" {
 		s.baseURL = strings.TrimRight(cfg.ServerURL, "/")
@@ -93,7 +97,7 @@ func startWhisperServer(cfg *Config, logw io.Writer) (*whisperServer, error) {
 		s.exited = true
 		stopping := s.stopping
 		s.mu.Unlock()
-		close(s.done)
+		close(s.doneCh)
 		if !stopping {
 			log.Printf("whisper-server аварийно завершился")
 		}
@@ -166,9 +170,7 @@ func (s *whisperServer) waitReady(timeout time.Duration) error {
 				return fmt.Errorf("%s", tr("err.server.start"))
 			}
 		}
-		conn, err := net.DialTimeout("tcp", addr, time.Second)
-		if err == nil {
-			conn.Close()
+		if dialOK(addr) {
 			return nil
 		}
 		time.Sleep(300 * time.Millisecond)

@@ -24,6 +24,10 @@ type Config struct {
 	ServerAutostart  bool   `json:"server_autostart"`
 	ServerExe        string `json:"server_exe"`
 	ServerURL        string `json:"server_url"`
+	STTEngine        string `json:"stt_engine"`
+	SherpaExe        string `json:"sherpa_exe"`
+	SherpaPort       int    `json:"sherpa_port"`
+	SherpaModel      string `json:"sherpa_model"`
 	PasteMode        string `json:"paste_mode"`
 	RestoreClipboard bool   `json:"restore_clipboard"`
 	Beep             bool   `json:"beep"`
@@ -82,6 +86,10 @@ func defaultConfig() *Config {
 		ServerPort:       8910,
 		ServerAutostart:  true,
 		ServerExe:        "whisper-server.exe",
+		STTEngine:        engineWhisper,
+		SherpaExe:        "sherpa-server.exe",
+		SherpaPort:       8912,
+		SherpaModel:      "models/gigaam-v3",
 		PasteMode:        "clipboard",
 		RestoreClipboard: true,
 		Beep:             true,
@@ -162,6 +170,18 @@ func loadConfig(path string) (*Config, error) {
 	}
 	if cfg.ServerPort <= 0 {
 		cfg.ServerPort = 8910
+	}
+	if !validEngine(cfg.STTEngine) {
+		cfg.STTEngine = engineWhisper
+	}
+	if cfg.SherpaExe == "" {
+		cfg.SherpaExe = "sherpa-server.exe"
+	}
+	if cfg.SherpaPort <= 0 {
+		cfg.SherpaPort = 8912
+	}
+	if cfg.SherpaModel == "" {
+		cfg.SherpaModel = "models/gigaam-v3"
 	}
 	if !validUILang(cfg.UILanguage) {
 		cfg.UILanguage = "auto"
