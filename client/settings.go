@@ -699,7 +699,7 @@ button.ghost:hover{color:var(--green)}
 .mrow{display:flex;align-items:center;gap:9px;padding:7px 2px;border-bottom:1px solid #12241a;flex-wrap:wrap}
 .mrow:last-child{border-bottom:none}
 .mrow input[type=radio]{width:15px;height:15px;accent-color:var(--dim)}
-.mrow .mname{width:104px;font-weight:700}
+.mrow .mname{width:132px;font-weight:700;white-space:nowrap}
 .mrow .mdesc{flex:1;color:var(--faint);font-size:12px}
 .mtag{font-size:9px;border:1px solid var(--line);color:var(--faint);padding:0 4px;margin-left:6px;vertical-align:middle;letter-spacing:.06em}
 .mrow .msize{color:var(--dim);font-size:12px;width:70px;text-align:right}
