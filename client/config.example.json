@@ -13,6 +13,7 @@
   "sherpa_port": 8912,
   "sherpa_threads": 4,
   "engine_idle_minutes": 10,
+  "punctuation": "model",
   "sherpa_model": "models/gigaam-v3",
   "paste_mode": "clipboard",
   "restore_clipboard": true,

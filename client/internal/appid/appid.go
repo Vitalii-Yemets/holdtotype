@@ -23,7 +23,7 @@ const (
 	LLMAlias = Slug + "-local"
 )
 
-var Version = "0.11.0"
+var Version = "0.12.0"
 
 func Class(suffix string) string { return Name + suffix }
 

@@ -817,7 +817,7 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 	}
 
 	skipped := ""
-	if chain := chainProfiles(cfg, profileID); len(chain) > 0 && llmInstalled(cfg) {
+	if chain := punctChain(cfg, chainProfiles(cfg, profileID)); len(chain) > 0 && llmInstalled(cfg) {
 		for i, prof := range chain {
 			label := prof.Name
 			if len(chain) > 1 {
@@ -845,6 +845,9 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 		}
 	}
 
+	if cfg.Punctuation == punctOff {
+		text = stripPunctuation(text)
+	}
 	a.insertResult(ctx, cfg, start, text, skipped, targetWnd)
 }
 
@@ -1065,4 +1068,22 @@ func mustReadWav(args []string, i int) []byte {
 		}
 	}
 	return wavFromPCM16(make([]byte, sampleRate/5*2), sampleRate)
+}
+
+func punctChain(cfg *Config, chain []*Profile) []*Profile {
+	if cfg.Punctuation != punctByLLM {
+		return chain
+	}
+	head := &Profile{ID: "punct", Name: strS("S_PUNCT"), Prompt: tr("punct.prompt")}
+	return append([]*Profile{head}, chain...)
+}
+
+var punctMarks = []string{".", ",", "!", "?", ";", ":", "…", "—", "–"}
+
+func stripPunctuation(text string) string {
+	for _, m := range punctMarks {
+		text = strings.ReplaceAll(text, m, "")
+	}
+	text = strings.Join(strings.Fields(text), " ")
+	return strings.ToLower(strings.TrimSpace(text))
 }

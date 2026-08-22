@@ -39,6 +39,7 @@ const cfg = {
   translate_ask_seconds: 3,
   translate_ask_langs: ["en", "ru"],
   llm_model: "model.gguf",
+  punctuation: "model",
   active_profiles: ["clean"],
   profiles: [
     { id: "clean", name: "Cleanup", prompt: "p1", hotkey: "" },

@@ -19,6 +19,16 @@ type Profile struct {
 
 const configVersion = 2
 
+const (
+	punctFromModel = "model"
+	punctByLLM     = "llm"
+	punctOff       = "off"
+)
+
+func validPunctuation(v string) bool {
+	return v == punctFromModel || v == punctByLLM || v == punctOff
+}
+
 type Config struct {
 	Hotkey           string `json:"hotkey"`
 	Language         string `json:"language"`
@@ -35,6 +45,7 @@ type Config struct {
 	ConfigVersion    int    `json:"config_version"`
 	SherpaThreads    int    `json:"sherpa_threads"`
 	EngineIdleMin    int    `json:"engine_idle_minutes"`
+	Punctuation      string `json:"punctuation"`
 	PasteMode        string `json:"paste_mode"`
 	RestoreClipboard bool   `json:"restore_clipboard"`
 	Beep             bool   `json:"beep"`
@@ -99,6 +110,7 @@ func defaultConfig() *Config {
 		ConfigVersion:    configVersion,
 		SherpaThreads:    4,
 		EngineIdleMin:    10,
+		Punctuation:      punctFromModel,
 		SherpaModel:      "models/gigaam-v3",
 		PasteMode:        "clipboard",
 		RestoreClipboard: true,
@@ -191,6 +203,9 @@ func loadConfig(path string) (*Config, error) {
 		migrated = true
 	}
 	cfg.ConfigVersion = configVersion
+	if !validPunctuation(cfg.Punctuation) {
+		cfg.Punctuation = punctFromModel
+	}
 	if cfg.SherpaThreads <= 0 {
 		cfg.SherpaThreads = 4
 	}

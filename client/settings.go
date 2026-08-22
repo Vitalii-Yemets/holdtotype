@@ -96,6 +96,7 @@ type settingsForm struct {
 	CheckUpdates     bool   `json:"check_updates"`
 	MicDevice        string `json:"mic_device"`
 	MicDeviceName    string `json:"mic_device_name"`
+	Punctuation      string `json:"punctuation"`
 	ServerPort       int    `json:"server_port"`
 	ServerExe        string `json:"server_exe"`
 	ServerURL        string `json:"server_url"`
@@ -197,6 +198,9 @@ func (a *App) settingsThread(tab string, attempt int) {
 		_ = w.Bind("appRouting", func() string {
 			out, _ := json.Marshal(routeRows(a.snapshot()))
 			return string(out)
+		})
+		_ = w.Bind("appAdvise", func(lang, priority string, needTranslate bool) string {
+			return adviseModel(lang, priority, needTranslate)
 		})
 		_ = w.Bind("appModelDl", func(id string) {
 			a.downloadModel(id)
@@ -465,6 +469,9 @@ func (a *App) applySettings(f *settingsForm) string {
 	}
 	c.ServerAutostart = f.ServerAutostart
 	c.CheckUpdates = f.CheckUpdates
+	if validPunctuation(f.Punctuation) {
+		c.Punctuation = f.Punctuation
+	}
 	c.MicDevice = f.MicDevice
 	c.MicDeviceName = f.MicDeviceName
 	if f.ServerPort > 0 {
@@ -601,6 +608,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"server_autostart":      cfg.ServerAutostart,
 		"check_updates":         cfg.CheckUpdates,
 		"mic_device":            cfg.MicDevice,
+		"punctuation":           cfg.Punctuation,
 		"server_port":           cfg.ServerPort,
 		"server_exe":            cfg.ServerExe,
 		"server_url":            cfg.ServerURL,
@@ -712,6 +720,20 @@ button.ghost:hover{color:var(--green)}
 .rrow .reng{border:1px solid var(--line);padding:1px 7px;color:var(--green);font-size:11.5px}
 .rrow .rwhy{margin-left:auto;color:var(--faint);font-size:11px}
 #routing{border-bottom:1px solid #12241a;margin-bottom:8px;padding-bottom:6px}
+.advbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.fchips{display:flex;gap:5px;flex-wrap:wrap;margin-left:auto}
+.fchip{appearance:none;background:none;border:1px solid var(--line);color:var(--faint);font:inherit;font-size:10.5px;padding:2px 8px;cursor:pointer}
+.fchip:hover{color:var(--dim)}
+.fchip.on{background:var(--dim);color:#08100b;border-color:var(--dim)}
+#advisor{border:1px solid var(--line);padding:10px 11px;margin-bottom:9px;display:flex;flex-direction:column;gap:9px}
+.advq{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:11.5px;color:var(--faint)}
+.advq select{background:#08100b;border:1px solid var(--line);color:var(--green);font:inherit;font-size:11.5px;padding:2px 6px;margin-left:5px}
+.advchk{display:flex;align-items:center;gap:5px}
+.advout{font-size:12px;color:var(--green);line-height:1.5;min-height:1em}
+.mrow.hidden{display:none}
+.mram{color:var(--faint);font-size:10.5px;width:74px;text-align:right}
+.mram.warn{color:var(--amber)}
+.mram.bad{color:#ff6b5b}
 .mrow .msize{color:var(--dim);font-size:12px;width:70px;text-align:right}
 .badge{font-size:11px;letter-spacing:1px;padding:4px 10px;border:1px solid var(--dim);color:var(--green);text-shadow:var(--glow);text-transform:uppercase}
 button.mini{padding:5px 12px;border:1px solid var(--line);background:none;color:var(--dim);font:12px Consolas,monospace;cursor:pointer;text-transform:uppercase}
@@ -861,6 +883,12 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
    <button class="stab" data-s="translate">{{S_SUB_TR}}</button>
   </div>
   <div id="rec-params" class="spage">
+  <div class="row"><label>{{S_PUNCT}}</label>
+   <select id="punctuation">
+    <option value="model">{{S_PUNCT_MODEL}}</option>
+    <option value="llm">{{S_PUNCT_LLM}}</option>
+    <option value="off">{{S_PUNCT_OFF}}</option>
+   </select></div>
   <div class="row"><label>{{S_MIC}}</label>
    <select id="mic_device"><option value="">{{S_MIC_DEFAULT}}</option></select>
    <button class="iconbtn" id="mic_refresh" title="{{S_MIC_REFRESH}}">&#8635;</button></div>
@@ -873,6 +901,29 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
   </div>
   <div id="rec-models" class="spage">
   <div id="routing"></div>
+  <div class="advbar">
+   <button type="button" class="mini" id="adv_open">{{S_ADV_TITLE}}</button>
+   <span class="fchips">
+    <button type="button" class="fchip on" data-f="all">{{S_F_ALL}}</button>
+    <button type="button" class="fchip" data-f="ru">{{S_F_RU}}</button>
+    <button type="button" class="fchip" data-f="multi">{{S_F_MULTI}}</button>
+    <button type="button" class="fchip" data-f="punct">{{S_F_PUNCT}}</button>
+    <button type="button" class="fchip" data-f="fit">{{S_F_FIT}}</button>
+   </span>
+  </div>
+  <div id="advisor" style="display:none">
+   <div class="advq">
+    <label>{{S_ADV_LANGQ}}
+     <select id="adv_lang"><option value="ru">RU</option><option value="en">EN</option><option value="multi">{{S_F_MULTI}}</option></select>
+    </label>
+    <label>{{S_ADV_PRIOQ}}
+     <select id="adv_prio"><option value="balance">·</option><option value="accuracy">{{S_ADV_ACC}}</option><option value="speed">{{S_ADV_SPEED}}</option></select>
+    </label>
+    <label class="advchk"><input type="checkbox" id="adv_tr"> {{S_ADV_TRQ}}</label>
+    <button type="button" class="mini" id="adv_go">{{S_ADV_GO}}</button>
+   </div>
+   <div id="adv_out" class="advout"></div>
+  </div>
   <div id="models"></div>
   </div>
   <div id="rec-dict" class="spage">
@@ -1328,6 +1379,46 @@ let selModel = null;
 let activeModelId = null;
 let pendingDl = null;
 let baseline = null;
+let modelFilter = "all";
+function modelPassesFilter(m){
+  switch(modelFilter){
+    case "ru":    return m.langs === "ru" || m.langs === "*";
+    case "multi": return m.langs === "*";
+    case "punct": return !!m.punct;
+    case "fit":   return m.fit !== "bad";
+    default:      return true;
+  }
+}
+function initModelFilters(){
+  document.querySelectorAll(".fchip").forEach(b=>{
+    b.onclick = ()=>{
+      document.querySelectorAll(".fchip").forEach(o=>o.classList.toggle("on", o === b));
+      modelFilter = b.dataset.f;
+      refreshModels();
+    };
+  });
+  const open = document.getElementById("adv_open");
+  const box = document.getElementById("advisor");
+  if(open && box){
+    open.onclick = ()=>{ box.style.display = box.style.display === "none" ? "flex" : "none"; };
+  }
+  const go = document.getElementById("adv_go");
+  if(go){
+    go.onclick = async ()=>{
+      const r = JSON.parse(await appAdvise(
+        document.getElementById("adv_lang").value,
+        document.getElementById("adv_prio").value,
+        document.getElementById("adv_tr").checked));
+      document.getElementById("adv_out").textContent = r.text + " (" + r.ram + ")";
+      if(r.primary){
+        selModel = r.primary;
+        modelFilter = "all";
+        document.querySelectorAll(".fchip").forEach(o=>o.classList.toggle("on", o.dataset.f === "all"));
+        refreshModels();
+      }
+    };
+  }
+}
 async function refreshRouting(){
   const host = document.getElementById("routing");
   if(!host) return;
@@ -1367,7 +1458,9 @@ async function refreshModels(){
     else if(m.state === "absent") right = '<button class="iconbtn" title="'+L.dl+'" data-a="dl" data-id="'+m.id+'">'+I_DL+'</button>';
     else if(m.state === "installed") right = '<button class="iconbtn danger" title="'+L.del+'" data-a="del" data-id="'+m.id+'">&#10005;</button>';
     const tag = m.engine === "sherpa" ? '<span class="mtag">RU</span>' : (m.langs === "*" ? '<span class="mtag">99</span>' : "");
-    div.innerHTML = radio+'<span class="mname">'+m.name+tag+'</span><span class="mdesc">'+m.desc+'</span><span class="msize">'+(m.size?m.size+" MB":"")+'</span><span>'+right+'</span>';
+    const ram = m.ram ? '<span class="mram '+(m.fit||"")+'">≈'+m.ram+' MB RAM</span>' : '<span class="mram"></span>';
+    div.innerHTML = radio+'<span class="mname">'+m.name+tag+'</span><span class="mdesc">'+m.desc+'</span>'+ram+'<span class="msize">'+(m.size?m.size+" MB":"")+'</span><span>'+right+'</span>';
+    if(!modelPassesFilter(m)) div.classList.add("hidden");
     el.appendChild(div);
   });
   el.querySelectorAll('input[name="mdl"]').forEach(r=>{
@@ -1460,6 +1553,7 @@ function toast(msg){
 
 const sliders = ["threads","min_record_ms","max_record_seconds","translate_ask_seconds"];
 function load(){
+  document.getElementById("punctuation").value = CFG.punctuation || "model";
   document.getElementById("whisper_prompt").value = CFG.whisper_prompt || "";
   trAll.forEach(l=>{ document.getElementById("tl_"+l).checked = (CFG.translate_ask_langs||[]).includes(l); });
   const trd = document.getElementById("tr_default");
@@ -1512,6 +1606,7 @@ async function doSave(){
   const micSel = document.getElementById("mic_device");
   const f={hotkey:CFG.hotkey, model_id:selModel||"",
     mic_device: micSel.value,
+    punctuation: document.getElementById("punctuation").value,
     mic_device_name: micSel.value ? micSel.options[micSel.selectedIndex].textContent : "",
     whisper_prompt: document.getElementById("whisper_prompt").value,
     translate_hotkey: translateHotkey,
@@ -1557,6 +1652,7 @@ document.querySelector(".header").addEventListener("mousedown", e=>{
 });
 load();
 (async ()=>{
+  initModelFilters();
   await refreshModels();
   await refreshLLM();
   baseline = formState();

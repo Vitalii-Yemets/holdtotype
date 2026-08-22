@@ -13,6 +13,8 @@ import (
 	"time"
 
 	"golang.org/x/sys/windows"
+
+	"holdtotype/internal/advisor"
 )
 
 type modelInfo struct {
@@ -28,19 +30,42 @@ type modelInfo struct {
 	Langs     string
 	Punct     bool
 	Translate bool
+	Speed     int
+	Accuracy  int
+}
+
+func (m *modelInfo) ramEstimateMB() int {
+	if m.Engine == engineSherpa {
+		return m.SizeMB * 12 / 10
+	}
+	return m.SizeMB*15/10 + 60
+}
+
+func advisorCatalog() []advisor.Model {
+	out := make([]advisor.Model, 0, len(modelCatalog))
+	for i := range modelCatalog {
+		m := &modelCatalog[i]
+		langs := strings.Split(m.Langs, ",")
+		out = append(out, advisor.Model{
+			ID: m.ID, Engine: m.Engine, Langs: langs, SizeMB: m.SizeMB,
+			RAMMB: m.ramEstimateMB(), Punct: m.Punct, Translate: m.Translate,
+			Speed: m.Speed, Accuracy: m.Accuracy,
+		})
+	}
+	return out
 }
 
 var modelCatalog = []modelInfo{
 	{ID: "base", File: "ggml-base.bin", SizeMB: 142, NameKey: "Base", DescKey: "S_M_BASE",
-		Engine: engineWhisper, Langs: "*", Translate: true},
+		Engine: engineWhisper, Langs: "*", Translate: true, Speed: 5, Accuracy: 2},
 	{ID: "small", File: "ggml-small.bin", SizeMB: 466, NameKey: "Small", DescKey: "S_M_SMALL",
-		Engine: engineWhisper, Langs: "*", Translate: true},
+		Engine: engineWhisper, Langs: "*", Translate: true, Speed: 3, Accuracy: 3},
 	{ID: "medium-q5_0", File: "ggml-medium-q5_0.bin", SizeMB: 539, NameKey: "Medium (q5)", DescKey: "S_M_MED",
-		Engine: engineWhisper, Langs: "*", Translate: true},
+		Engine: engineWhisper, Langs: "*", Translate: true, Speed: 2, Accuracy: 4},
 	{ID: "large-v3-turbo-q5_0", File: "ggml-large-v3-turbo-q5_0.bin", SizeMB: 574, NameKey: "Turbo (q5)", DescKey: "S_M_TURBO",
-		Engine: engineWhisper, Langs: "*", Translate: true},
+		Engine: engineWhisper, Langs: "*", Translate: false, Speed: 4, Accuracy: 4},
 	{ID: "gigaam-v3", SizeMB: 232, NameKey: "GigaAM v3", DescKey: "S_M_GIGAAM",
-		Engine: engineSherpa, Dir: "gigaam-v3", Langs: "ru", Punct: true,
+		Engine: engineSherpa, Dir: "gigaam-v3", Langs: "ru", Punct: true, Speed: 5, Accuracy: 5,
 		Files:   []string{"encoder.int8.onnx", "decoder.onnx", "joiner.onnx", "tokens.txt"},
 		BaseURL: "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-transducer-punct-giga-am-v3-russian-2025-12-16/resolve/main/"},
 }
@@ -109,10 +134,28 @@ type modelRow struct {
 	Engine string `json:"engine"`
 	Langs  string `json:"langs"`
 	Punct  bool   `json:"punct"`
+	Trans  bool   `json:"translate"`
+	RAM    int    `json:"ram"`
+	Fit    string `json:"fit"`
+}
+
+func ramFit(needMB, freeMB int) string {
+	if freeMB <= 0 || needMB <= 0 {
+		return ""
+	}
+	switch {
+	case needMB*10 <= freeMB*6:
+		return "ok"
+	case needMB*10 <= freeMB*9:
+		return "warn"
+	default:
+		return "bad"
+	}
 }
 
 func (a *App) modelRows() string {
 	cfg := a.snapshot()
+	_, freeRAM := ramMB()
 	var rows []modelRow
 	known := false
 	for i := range modelCatalog {
@@ -120,6 +163,7 @@ func (a *App) modelRows() string {
 		row := modelRow{
 			ID: m.ID, Name: m.NameKey, Desc: strS(m.DescKey), Size: m.SizeMB,
 			Engine: m.Engine, Langs: m.Langs, Punct: m.Punct,
+			Trans: m.Translate, RAM: m.ramEstimateMB(), Fit: ramFit(m.ramEstimateMB(), freeRAM),
 		}
 		have := m.installed()
 		active := m.isActive(cfg)
@@ -449,4 +493,54 @@ func (a *App) deleteModel(id string) string {
 	}
 	log.Printf("модель %s удалена", m.File)
 	return tr("model.del.ok")
+}
+
+type adviceOut struct {
+	Primary   string `json:"primary"`
+	Companion string `json:"companion"`
+	Text      string `json:"text"`
+	RAM       string `json:"ram"`
+}
+
+func modelDisplayName(id string) string {
+	if m := findModel(id); m != nil {
+		return m.NameKey
+	}
+	return id
+}
+
+func adviseModel(lang, priority string, needTranslate bool) string {
+	_, free := ramMB()
+	res := advisor.Recommend(advisor.Input{
+		Lang: lang, Priority: priority, RAMFreeMB: free, Translate: needTranslate,
+	}, advisorCatalog())
+
+	var parts []string
+	if res.Primary == "" {
+		parts = append(parts, strS("S_ADV_NONE"))
+	} else {
+		parts = append(parts, trf("adv.pick", modelDisplayName(res.Primary)))
+		for _, why := range res.Why {
+			switch why {
+			case advisor.WhyLanguage:
+				parts = append(parts, strS("S_ADV_LANG"))
+			case advisor.WhyAccuracy:
+				parts = append(parts, strS("S_ADV_ACC"))
+			case advisor.WhySpeed:
+				parts = append(parts, strS("S_ADV_SPEED"))
+			case advisor.WhyRAM:
+				parts = append(parts, strS("S_ADV_RAM"))
+			}
+		}
+		if res.Companion != "" {
+			parts = append(parts, trf("adv.companion", modelDisplayName(res.Companion)))
+		}
+	}
+	out, _ := json.Marshal(adviceOut{
+		Primary:   res.Primary,
+		Companion: res.Companion,
+		Text:      strings.Join(parts, " "),
+		RAM:       trf("adv.ram", free),
+	})
+	return string(out)
 }

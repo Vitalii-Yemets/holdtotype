@@ -37,6 +37,7 @@ const dom = new JSDOM(html, {
       llmState = { installed: [], downloads: [], ram: 16384, ram_free: 9000 };
       return "deleted";
     };
+    window.appAdvise = async () => JSON.stringify({ primary: "gigaam-v3", companion: "small", text: "I recommend GigaAM v3.", ram: "8000 MB free" });
     for (const name of [
       "appLLMDlFile", "appLLMTest", "appHFPage", "appHFHome", "appRepoLink",
       "appAuthorLink", "appCapture", "appCaptureCombo", "appReload",
@@ -83,6 +84,8 @@ function check(name, actual, expected) {
   tab("rec"); await sleep(80);
   check("recognition opens on Models", visible("rec-models"), true);
   check("recognition models listed", d.querySelectorAll('#rec-models input[name="mdl"]').length, 3);
+  check("model filters rendered", d.querySelectorAll(".fchip").length, 5);
+  check("ram estimate shown", d.querySelectorAll("#rec-models .mram").length, 3);
   check("routing panel rows", d.querySelectorAll("#routing .rrow").length, 3);
   check("routing shows engine", d.querySelectorAll("#routing .reng")[0].textContent, "gigaam-v3");
   check("engine tags rendered", d.querySelectorAll("#rec-models .mtag").length, 3);
