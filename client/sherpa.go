@@ -56,7 +56,7 @@ func startSherpaServer(cfg *Config, logw io.Writer) (*sherpaServer, error) {
 		addr:    fmt.Sprintf("127.0.0.1:%d", cfg.SherpaPort),
 		dir:     cfg.SherpaModel,
 		doneCh:  make(chan struct{}),
-		threads: cfg.Threads,
+		threads: cfg.SherpaThreads,
 	}
 	encoder, decoder, joiner, tokens, err := sherpaModelFiles(cfg.SherpaModel)
 	if err != nil {
@@ -80,7 +80,7 @@ func startSherpaServer(cfg *Config, logw io.Writer) (*sherpaServer, error) {
 		"--joiner=" + joiner,
 		"--tokens=" + tokens,
 		"--model-type=nemo_transducer",
-		"--num-threads=" + strconv.Itoa(cfg.Threads),
+		"--num-threads=" + strconv.Itoa(cfg.SherpaThreads),
 	}
 	quiet := logfilter.New(logw,
 		"handle_read_frame error",

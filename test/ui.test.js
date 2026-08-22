@@ -17,6 +17,12 @@ const dom = new JSDOM(html, {
   beforeParse(window) {
     window.confirm = () => true;
     window.appLLM = async () => JSON.stringify(llmState);
+    window.appRouting = async () =>
+      JSON.stringify([
+        { cond: "Speech in RU", engine: "gigaam-v3", why: "more accurate here" },
+        { cond: "Other languages", engine: "ggml-small.bin", why: "99 languages" },
+        { cond: "Translation", engine: "ggml-small.bin", why: "only Whisper translates" },
+      ]);
     window.appModels = async () =>
       JSON.stringify([
         { id: "base", name: "Base", desc: "fast", size: 142, state: "absent", engine: "whisper", langs: "*" },
@@ -77,6 +83,8 @@ function check(name, actual, expected) {
   tab("rec"); await sleep(80);
   check("recognition opens on Models", visible("rec-models"), true);
   check("recognition models listed", d.querySelectorAll('#rec-models input[name="mdl"]').length, 3);
+  check("routing panel rows", d.querySelectorAll("#routing .rrow").length, 3);
+  check("routing shows engine", d.querySelectorAll("#routing .reng")[0].textContent, "gigaam-v3");
   check("engine tags rendered", d.querySelectorAll("#rec-models .mtag").length, 3);
   check("russian engine tagged RU", d.querySelectorAll("#rec-models .mtag")[2].textContent, "RU");
   sub("rec", "params"); await sleep(120);

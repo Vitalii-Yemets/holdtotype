@@ -194,6 +194,10 @@ func (a *App) settingsThread(tab string, attempt int) {
 		_ = w.Bind("appModels", func() string {
 			return a.modelRows()
 		})
+		_ = w.Bind("appRouting", func() string {
+			out, _ := json.Marshal(routeRows(a.snapshot()))
+			return string(out)
+		})
 		_ = w.Bind("appModelDl", func(id string) {
 			a.downloadModel(id)
 		})
@@ -432,21 +436,21 @@ func (a *App) applySettings(f *settingsForm) string {
 	modelChanged := false
 	if f.ModelID != "" && f.ModelID != "custom" {
 		if m := findModel(f.ModelID); m != nil && m.installed() {
+			before := primaryEngine(&c)
 			switch m.Engine {
 			case engineSherpa:
-				nd := "models/" + m.Dir
-				if nd != c.SherpaModel || c.STTEngine != engineSherpa {
+				if nd := "models/" + m.Dir; nd != c.SherpaModel {
 					c.SherpaModel = nd
-					c.STTEngine = engineSherpa
 					modelChanged = true
 				}
 			default:
-				nm := "models/" + m.File
-				if nm != c.Model || c.STTEngine != engineWhisper {
+				if nm := "models/" + m.File; nm != c.Model {
 					c.Model = nm
-					c.STTEngine = engineWhisper
 					modelChanged = true
 				}
+			}
+			if primaryEngine(&c) != before {
+				modelChanged = true
 			}
 		}
 	}
@@ -702,6 +706,12 @@ button.ghost:hover{color:var(--green)}
 .mrow .mname{width:132px;font-weight:700;white-space:nowrap}
 .mrow .mdesc{flex:1;color:var(--faint);font-size:12px}
 .mtag{font-size:9px;border:1px solid var(--line);color:var(--faint);padding:0 4px;margin-left:6px;vertical-align:middle;letter-spacing:.06em}
+.rrow{display:flex;align-items:center;gap:9px;padding:6px 2px;font-size:12px;color:var(--dim);flex-wrap:wrap}
+.rrow .rcond{min-width:132px;color:var(--green)}
+.rrow .rarr{color:var(--faint)}
+.rrow .reng{border:1px solid var(--line);padding:1px 7px;color:var(--green);font-size:11.5px}
+.rrow .rwhy{margin-left:auto;color:var(--faint);font-size:11px}
+#routing{border-bottom:1px solid #12241a;margin-bottom:8px;padding-bottom:6px}
 .mrow .msize{color:var(--dim);font-size:12px;width:70px;text-align:right}
 .badge{font-size:11px;letter-spacing:1px;padding:4px 10px;border:1px solid var(--dim);color:var(--green);text-shadow:var(--glow);text-transform:uppercase}
 button.mini{padding:5px 12px;border:1px solid var(--line);background:none;color:var(--dim);font:12px Consolas,monospace;cursor:pointer;text-transform:uppercase}
@@ -862,6 +872,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
   <div class="row"><label>{{S_MAXSEC}}</label><span class="val" id="max_record_seconds_v"></span><input type="range" id="max_record_seconds" min="10" max="300" step="10"></div>
   </div>
   <div id="rec-models" class="spage">
+  <div id="routing"></div>
   <div id="models"></div>
   </div>
   <div id="rec-dict" class="spage">
@@ -1317,8 +1328,22 @@ let selModel = null;
 let activeModelId = null;
 let pendingDl = null;
 let baseline = null;
+async function refreshRouting(){
+  const host = document.getElementById("routing");
+  if(!host) return;
+  const rows = JSON.parse(await appRouting());
+  host.innerHTML = "";
+  rows.forEach(r=>{
+    const div = document.createElement("div");
+    div.className = "rrow";
+    div.innerHTML = '<span class="rcond">'+r.cond+'</span><span class="rarr">&#8594;</span>'+
+      '<span class="reng">'+r.engine+'</span><span class="rwhy">'+r.why+'</span>';
+    host.appendChild(div);
+  });
+}
 async function refreshModels(){
   const rows = JSON.parse(await appModels());
+  refreshRouting();
   const activeRow = rows.find(m=>m.state==="active");
   activeModelId = activeRow ? activeRow.id : null;
   if(pendingDl){

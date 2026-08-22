@@ -66,6 +66,91 @@ type App struct {
 	lastResult string
 	updVer     string
 	updURL     string
+
+	altMu   sync.Mutex
+	alt     recognizer
+	altUsed time.Time
+}
+
+func (a *App) engineFor(cfg *Config, want string) (recognizer, error) {
+	a.mu.Lock()
+	primary := a.srv
+	ready := a.ready
+	a.mu.Unlock()
+	if primary != nil && ready && primary.engine() == want {
+		return primary, nil
+	}
+
+	a.altMu.Lock()
+	defer a.altMu.Unlock()
+	if a.alt != nil && a.alt.engine() == want && a.alt.wasStopped() == false {
+		select {
+		case <-a.alt.done():
+			a.alt = nil
+		default:
+			a.altUsed = time.Now()
+			return a.alt, nil
+		}
+	}
+	if a.alt != nil {
+		a.alt.stop()
+		a.alt = nil
+	}
+	log.Printf("поднимаю второй движок %s под эту диктовку", want)
+	started := time.Now()
+	srv, err := startEngine(cfg, want, logFile)
+	if err != nil {
+		return nil, err
+	}
+	if err := srv.waitReady(engineReadyTimeout(srv)); err != nil {
+		srv.stop()
+		return nil, err
+	}
+	a.alt = srv
+	a.altUsed = time.Now()
+	log.Printf("второй движок %s готов за %.1f с", want, time.Since(started).Seconds())
+	return srv, nil
+}
+
+func (a *App) sweepOnce() bool {
+	a.mu.Lock()
+	idle := time.Duration(a.cfg.EngineIdleMin) * time.Minute
+	a.mu.Unlock()
+	if idle <= 0 {
+		return false
+	}
+	a.altMu.Lock()
+	defer a.altMu.Unlock()
+	if a.alt == nil || time.Since(a.altUsed) <= idle {
+		return false
+	}
+	name := a.alt.engine()
+	a.alt.stop()
+	a.alt = nil
+	log.Printf("второй движок %s выгружен после %d минут простоя", name, int(idle.Minutes()))
+	return true
+}
+
+func (a *App) sweepIdleEngine() {
+	for {
+		time.Sleep(30 * time.Second)
+		a.mu.Lock()
+		quitting := a.quitting
+		a.mu.Unlock()
+		if quitting {
+			return
+		}
+		a.sweepOnce()
+	}
+}
+
+func (a *App) stopAltEngine() {
+	a.altMu.Lock()
+	defer a.altMu.Unlock()
+	if a.alt != nil {
+		a.alt.stop()
+		a.alt = nil
+	}
 }
 
 var logFile *rotatingWriter
@@ -135,6 +220,61 @@ func main() {
 			log.Printf("движок=%s время=%.2f c текст=%q", srv.engine(), time.Since(started).Seconds(), text)
 			return
 		}
+		if arg == "-routecheck" {
+			cfg, cerr := loadConfig("config.json")
+			if cerr != nil {
+				log.Printf("конфигурация: %v", cerr)
+				return
+			}
+			app := &App{cfg: cfg, enabled: true, evq: evqueue.New[ptEvent](8)}
+			primary := primaryEngine(cfg)
+			srv, serr := startEngine(cfg, primary, logFile)
+			if serr != nil {
+				log.Printf("основной движок: %v", serr)
+				return
+			}
+			if werr := srv.waitReady(engineReadyTimeout(srv)); werr != nil {
+				log.Printf("основной движок не поднялся: %v", werr)
+				srv.stop()
+				return
+			}
+			app.mu.Lock()
+			app.srv = srv
+			app.ready = true
+			app.mu.Unlock()
+			log.Printf("routecheck: основной движок %s поднят", primary)
+
+			other := engineWhisper
+			if primary == engineWhisper {
+				other = engineSherpa
+			}
+			alt, aerr := app.engineFor(cfg, other)
+			if aerr != nil {
+				log.Printf("routecheck: второй движок %s не поднялся: %v", other, aerr)
+			} else {
+				log.Printf("routecheck: оба движка живы — %s и %s", srv.engine(), alt.engine())
+				text, terr := alt.transcribe(context.Background(), mustReadWav(os.Args[1:], i), cfg.Language, cfg.WhisperPrompt, false)
+				if terr != nil {
+					log.Printf("routecheck: второй движок не распознал: %v", terr)
+				} else {
+					log.Printf("routecheck: второй движок ответил %q", text)
+				}
+			}
+			log.Printf("routecheck: держу оба движка 20 секунд для замера памяти")
+			time.Sleep(20 * time.Second)
+			app.altMu.Lock()
+			app.altUsed = time.Now().Add(-24 * time.Hour)
+			app.altMu.Unlock()
+			if app.sweepOnce() {
+				log.Printf("routecheck: выгрузка по простою сработала")
+			} else {
+				log.Printf("routecheck: выгрузка по простою НЕ сработала")
+			}
+			app.stopAltEngine()
+			srv.stop()
+			log.Printf("routecheck: оба движка остановлены")
+			return
+		}
 		if arg == "-miclevel" {
 			cfg, _ := loadConfig("config.json")
 			device := ""
@@ -178,6 +318,7 @@ func main() {
 	go cleanupWebViewProfiles()
 	go app.startupUpdateCheck()
 	go cleanupStaleParts()
+	go app.sweepIdleEngine()
 	args := os.Args[1:]
 	for i, arg := range args {
 		if arg == "-settings" {
@@ -615,6 +756,19 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 			log.Printf("перевод: цель=%s силами Whisper (режим %s)", target, cfg.TranslateAsk)
 		}
 	}
+	decision := pickEngine(cfg, target != "")
+	if decision.Engine != srv.engine() {
+		alt, aerr := a.engineFor(cfg, decision.Engine)
+		if aerr != nil {
+			log.Printf("движок %s не поднялся (%v) — остаюсь на %s", decision.Engine, aerr, srv.engine())
+			if cfg.Overlay {
+				overlaySet(ovFlashErr, tr("ov.engine.fallback"))
+			}
+		} else {
+			srv = alt
+		}
+	}
+	log.Printf("маршрутизация: движок=%s причина=%s язык=%s перевод=%v", srv.engine(), decision.Reason, cfg.Language, target != "")
 	if target != "" && !engineTranslates(srv.engine()) {
 		log.Printf("перевод недоступен: активен движок %s — вставляю распознанный текст как есть", srv.engine())
 		if cfg.Overlay {
@@ -891,6 +1045,7 @@ func (a *App) onExit() {
 	if srv != nil {
 		srv.stop()
 	}
+	a.stopAltEngine()
 	if llm != nil {
 		llm.stop()
 	}
@@ -901,4 +1056,13 @@ func (a *App) onExit() {
 	if logFile != nil {
 		logFile.Close()
 	}
+}
+
+func mustReadWav(args []string, i int) []byte {
+	if i+1 < len(args) {
+		if b, err := os.ReadFile(args[i+1]); err == nil {
+			return b
+		}
+	}
+	return wavFromPCM16(make([]byte, sampleRate/5*2), sampleRate)
 }

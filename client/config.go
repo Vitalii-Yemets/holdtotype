@@ -1,6 +1,8 @@
 package main
 
 import (
+	"holdtotype/internal/routing"
+
 	"bytes"
 	"encoding/json"
 	"log"
@@ -15,6 +17,8 @@ type Profile struct {
 	Hotkey string `json:"hotkey"`
 }
 
+const configVersion = 2
+
 type Config struct {
 	Hotkey           string `json:"hotkey"`
 	Language         string `json:"language"`
@@ -28,6 +32,9 @@ type Config struct {
 	SherpaExe        string `json:"sherpa_exe"`
 	SherpaPort       int    `json:"sherpa_port"`
 	SherpaModel      string `json:"sherpa_model"`
+	ConfigVersion    int    `json:"config_version"`
+	SherpaThreads    int    `json:"sherpa_threads"`
+	EngineIdleMin    int    `json:"engine_idle_minutes"`
 	PasteMode        string `json:"paste_mode"`
 	RestoreClipboard bool   `json:"restore_clipboard"`
 	Beep             bool   `json:"beep"`
@@ -86,9 +93,12 @@ func defaultConfig() *Config {
 		ServerPort:       8910,
 		ServerAutostart:  true,
 		ServerExe:        "whisper-server.exe",
-		STTEngine:        engineWhisper,
+		STTEngine:        routing.ModeAuto,
 		SherpaExe:        "sherpa-server.exe",
 		SherpaPort:       8912,
+		ConfigVersion:    configVersion,
+		SherpaThreads:    4,
+		EngineIdleMin:    10,
 		SherpaModel:      "models/gigaam-v3",
 		PasteMode:        "clipboard",
 		RestoreClipboard: true,
@@ -159,6 +169,7 @@ func loadConfig(path string) (*Config, error) {
 		go msgBox(tr("cfg.err.title"), trf("cfg.err.recovered", err.Error(), broken))
 		return cfg, nil
 	}
+	migrated := fileConfigVersion(data) != configVersion
 	if cfg.PasteMode != "clipboard" && cfg.PasteMode != "type" {
 		cfg.PasteMode = "clipboard"
 	}
@@ -172,7 +183,19 @@ func loadConfig(path string) (*Config, error) {
 		cfg.ServerPort = 8910
 	}
 	if !validEngine(cfg.STTEngine) {
-		cfg.STTEngine = engineWhisper
+		cfg.STTEngine = routing.ModeAuto
+	}
+	if fileConfigVersion(data) < 2 && cfg.STTEngine != routing.ModeAuto {
+		log.Printf("конфигурация из прошлой версии: движок %q превращён в автоматический выбор по языку", cfg.STTEngine)
+		cfg.STTEngine = routing.ModeAuto
+		migrated = true
+	}
+	cfg.ConfigVersion = configVersion
+	if cfg.SherpaThreads <= 0 {
+		cfg.SherpaThreads = 4
+	}
+	if cfg.EngineIdleMin <= 0 {
+		cfg.EngineIdleMin = 10
 	}
 	if cfg.SherpaExe == "" {
 		cfg.SherpaExe = "sherpa-server.exe"
@@ -244,8 +267,11 @@ func loadConfig(path string) (*Config, error) {
 		if sys := systemLang(); sys != "" && sys != cfg.Language {
 			log.Printf("первый запуск: язык распознавания по системе — %s", sys)
 			cfg.Language = sys
-			_ = saveConfig(path, cfg)
+			migrated = true
 		}
+	}
+	if migrated {
+		_ = saveConfig(path, cfg)
 	}
 	return cfg, nil
 }
@@ -269,4 +295,14 @@ func profileByID(cfg *Config, id string) *Profile {
 		}
 	}
 	return nil
+}
+
+func fileConfigVersion(data []byte) int {
+	var probe struct {
+		ConfigVersion int `json:"config_version"`
+	}
+	if json.Unmarshal(data, &probe) != nil {
+		return 0
+	}
+	return probe.ConfigVersion
 }

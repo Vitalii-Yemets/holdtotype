@@ -67,14 +67,15 @@ func (m *modelInfo) installed() bool {
 	return true
 }
 
-func (m *modelInfo) isActive(cfg *Config) bool {
-	if m.Engine != cfg.STTEngine {
-		return false
-	}
+func (m *modelInfo) slotMatches(cfg *Config) bool {
 	if m.Engine == engineSherpa {
 		return filepath.Base(filepath.Clean(cfg.SherpaModel)) == m.Dir
 	}
 	return filepath.Base(cfg.Model) == m.File
+}
+
+func (m *modelInfo) isActive(cfg *Config) bool {
+	return m.slotMatches(cfg) && m.Engine == primaryEngine(cfg)
 }
 
 type dlState struct {
