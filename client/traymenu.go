@@ -7,15 +7,17 @@ import (
 	"unsafe"
 
 	"golang.org/x/sys/windows"
+
+	"holdtotype/internal/appid"
 )
 
 const (
-	tmWidth    = 260
-	tmItemH    = 30
-	tmSepH     = 9
-	tmPad      = 6
-	wmLBtnDown = 0x0201
-	wmRBtnDown = 0x0204
+	tmWidth          = 260
+	tmItemH          = 30
+	tmSepH           = 9
+	tmPad            = 6
+	wmLBtnDown       = 0x0201
+	wmRBtnDown       = 0x0204
 	wmCaptureChanged = 0x0215
 )
 
@@ -219,7 +221,7 @@ func showTrayMenu(items []tmItem) uintptr {
 	go func() {
 		runtime.LockOSThread()
 		tmClassOnce.Do(func() {
-			className, _ := windows.UTF16PtrFromString("V2TTrayMenu")
+			className, _ := windows.UTF16PtrFromString(appid.Class("TrayMenu"))
 			cb := syscall.NewCallback(tmWndProc)
 			wc := wndClassExW{
 				Size:      uint32(unsafe.Sizeof(wndClassExW{})),
@@ -228,7 +230,7 @@ func showTrayMenu(items []tmItem) uintptr {
 			}
 			procRegisterClassExW.Call(uintptr(unsafe.Pointer(&wc)))
 		})
-		className, _ := windows.UTF16PtrFromString("V2TTrayMenu")
+		className, _ := windows.UTF16PtrFromString(appid.Class("TrayMenu"))
 		h := tmHeight()
 		var pt point
 		procGetCursorPos.Call(uintptr(unsafe.Pointer(&pt)))

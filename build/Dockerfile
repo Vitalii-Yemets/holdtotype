@@ -60,13 +60,13 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
     go run ./tools/genicon -o app.ico \
     && x86_64-w64-mingw32-windres -O coff -o resources.syso app.rc
-ARG APP_VERSION=0.5.0
+ARG APP_VERSION=
 ENV GOOS=windows GOARCH=amd64 CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
     go build -mod=readonly -trimpath \
-        -ldflags "-H windowsgui -s -w -extldflags=-static -X main.appVersion=${APP_VERSION}" \
-        -o /out/voxterminal.exe .
+        -ldflags "-H windowsgui -s -w -extldflags=-static ${APP_VERSION:+-X holdtotype/internal/appid.Version=$APP_VERSION}" \
+        -o /out/holdtotype.exe .
 
 FROM debian:bookworm-slim AS assets
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -83,12 +83,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         zip \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /p
-COPY --from=client-build /out/voxterminal.exe ./
+COPY --from=client-build /out/holdtotype.exe ./
 COPY --from=whisper-build /bld/bin/whisper-server.exe ./
 COPY --from=llama-build /bld/bin/llama-server.exe ./
 COPY --from=assets /config.json ./config.default.json
 COPY README.md ./
-RUN zip -9 -X payload.zip voxterminal.exe whisper-server.exe llama-server.exe config.default.json README.md
+RUN zip -9 -X payload.zip holdtotype.exe whisper-server.exe llama-server.exe config.default.json README.md
 
 FROM golang:1.23-bookworm AS setup-build
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -104,13 +104,13 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     go run ./tools/genicon -o setup/app.ico \
     && cp app.rc app.manifest setup/ \
     && cd setup && x86_64-w64-mingw32-windres -O coff -o resources.syso app.rc
-ARG APP_VERSION=0.5.0
+ARG APP_VERSION=
 ENV GOOS=windows GOARCH=amd64 CGO_ENABLED=0
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
     go build -mod=readonly -trimpath \
-        -ldflags "-H windowsgui -s -w -X main.appVersion=${APP_VERSION}" \
-        -o /out/voxterminal-setup.exe ./setup
+        -ldflags "-H windowsgui -s -w ${APP_VERSION:+-X holdtotype/internal/appid.Version=$APP_VERSION}" \
+        -o /out/holdtotype-setup.exe ./setup
 
 FROM golang:1.23-bookworm AS gotest
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -129,8 +129,8 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 FROM scratch AS dist-slim
 COPY --from=whisper-build /bld/bin/whisper-server.exe /whisper-server.exe
 COPY --from=llama-build /bld/bin/llama-server.exe /llama-server.exe
-COPY --from=client-build /out/voxterminal.exe /voxterminal.exe
-COPY --from=setup-build /out/voxterminal-setup.exe /voxterminal-setup.exe
+COPY --from=client-build /out/holdtotype.exe /holdtotype.exe
+COPY --from=setup-build /out/holdtotype-setup.exe /holdtotype-setup.exe
 COPY --from=assets /config.json /config.default.json
 COPY README.md /README.md
 
@@ -138,8 +138,8 @@ FROM scratch AS dist
 ARG WHISPER_MODEL
 COPY --from=whisper-build /bld/bin/whisper-server.exe /whisper-server.exe
 COPY --from=llama-build /bld/bin/llama-server.exe /llama-server.exe
-COPY --from=client-build /out/voxterminal.exe /voxterminal.exe
+COPY --from=client-build /out/holdtotype.exe /holdtotype.exe
 COPY --from=assets /ggml.bin /models/ggml-${WHISPER_MODEL}.bin
 COPY --from=assets /config.json /config.default.json
-COPY --from=setup-build /out/voxterminal-setup.exe /voxterminal-setup.exe
+COPY --from=setup-build /out/holdtotype-setup.exe /holdtotype-setup.exe
 COPY README.md /README.md

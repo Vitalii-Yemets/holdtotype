@@ -9,8 +9,9 @@ import (
 	"unsafe"
 
 	"golang.org/x/sys/windows"
-)
 
+	"holdtotype/internal/appid"
+)
 
 const (
 	wsOverlapped   = 0x00CF0000
@@ -128,7 +129,7 @@ func captureHotkeyDialog(hook *hotkeyHook, current string) (string, bool) {
 
 	capClassOnce.Do(func() {
 		capWndProcCB = syscall.NewCallback(captureWndProc)
-		className, _ := windows.UTF16PtrFromString("V2TCaptureWnd")
+		className, _ := windows.UTF16PtrFromString(appid.Class("CaptureWnd"))
 		cursor, _, _ := procLoadCursorW.Call(0, idcArrow)
 		bg, _, _ := procCreateSolidBrush.Call(colBg)
 		wc := wndClassExW{
@@ -149,7 +150,7 @@ func captureHotkeyDialog(hook *hotkeyHook, current string) (string, bool) {
 	const w, h = 420, 160
 	sw, _, _ := procGetSystemMetrics.Call(0)
 	sh, _, _ := procGetSystemMetrics.Call(1)
-	className, _ := windows.UTF16PtrFromString("V2TCaptureWnd")
+	className, _ := windows.UTF16PtrFromString(appid.Class("CaptureWnd"))
 	title, _ := windows.UTF16PtrFromString(tr("cap.title"))
 	hwnd, _, _ := procCreateWindowExW.Call(
 		wsExTopmost,

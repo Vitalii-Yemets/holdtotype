@@ -1,6 +1,8 @@
 package main
 
 import (
+	"holdtotype/internal/evqueue"
+
 	"context"
 	"errors"
 	"fmt"
@@ -12,9 +14,11 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"holdtotype/internal/appid"
 )
 
-var appVersion = "0.9.0"
+var appVersion = appid.Version
 
 type appState = int32
 
@@ -50,9 +54,9 @@ type App struct {
 	capturing bool
 	quitting  bool
 
-	events chan ptEvent
+	evq *evqueue.Queue[ptEvent]
 
-	state atomic.Int32
+	state          atomic.Int32
 	gen            int
 	sessionCfg     *Config
 	sessionProfile string
@@ -100,6 +104,26 @@ func main() {
 			rec.Close()
 			return
 		}
+		if arg == "-miclevel" {
+			cfg, _ := loadConfig("config.json")
+			device := ""
+			if cfg != nil {
+				device = cfg.MicDevice
+			}
+			rec, rerr := NewRecorder(device)
+			if rerr != nil {
+				log.Printf("микрофон недоступен: %v", rerr)
+				return
+			}
+			log.Printf("замер уровня без диктовки, 5 секунд")
+			for i := 0; i < 25; i++ {
+				rec.MonitorPing()
+				time.Sleep(200 * time.Millisecond)
+				log.Printf("уровень: %.3f", rec.Level())
+			}
+			rec.Close()
+			return
+		}
 	}
 
 	if !acquireSingleInstance() {
@@ -117,7 +141,7 @@ func main() {
 	app := &App{
 		cfg:     cfg,
 		enabled: true,
-		events:  make(chan ptEvent, 32),
+		evq:     evqueue.New[ptEvent](256),
 	}
 	app.startCore()
 	go cleanupWebViewProfiles()
@@ -126,9 +150,13 @@ func main() {
 	args := os.Args[1:]
 	for i, arg := range args {
 		if arg == "-settings" {
+			tab := "proc"
+			if i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
+				tab = args[i+1]
+			}
 			go func() {
 				time.Sleep(2 * time.Second)
-				app.openSettings("proc")
+				app.openSettings(tab)
 			}()
 		}
 		if arg == "-testpaste" && i+1 < len(args) {
@@ -150,9 +178,9 @@ func main() {
 }
 
 func setupLog() {
-	logFile = newRotatingWriter("voxterminal.log", 1<<20)
+	logFile = newRotatingWriter(appid.LogFile, 1<<20)
 	log.SetOutput(logFile)
-	log.Printf("=== voxterminal %s запущен ===", appVersion)
+	log.Printf("=== %s %s запущен ===", appid.Slug, appVersion)
 }
 
 func (a *App) snapshot() *Config {
@@ -163,10 +191,8 @@ func (a *App) snapshot() *Config {
 }
 
 func (a *App) post(ev ptEvent) {
-	select {
-	case a.events <- ev:
-	default:
-		log.Printf("очередь событий переполнена, событие %d пропущено", ev.kind)
+	if !a.evq.Push(ev) {
+		log.Printf("очередь событий переполнена, событие %d пропущено (всего %d)", ev.kind, a.evq.Dropped())
 	}
 }
 
@@ -182,6 +208,13 @@ func (a *App) startCore() {
 	hook, err := startHotkeyHook(buildCombos(a.cfg),
 		func(id string) { a.post(ptEvent{kind: evDown, profile: id}) },
 		func() { a.post(ptEvent{kind: evUp}) },
+		func() bool {
+			if a.state.Load() == stIdle {
+				return false
+			}
+			a.post(ptEvent{kind: evCancel})
+			return true
+		},
 	)
 	if err != nil {
 		a.fatal(trf("err.hook", err.Error()))
@@ -372,18 +405,24 @@ func buildCombos(cfg *Config) []comboDef {
 }
 
 func (a *App) worker() {
-	for ev := range a.events {
-		switch ev.kind {
-		case evDown:
-			a.handleDown(ev.profile)
-		case evUp:
-			a.handleStop(0)
-		case evTimeout:
-			a.handleStop(ev.gen)
-		case evDone:
-			a.handleDone(ev.gen)
-		case evCancel:
-			a.handleCancel()
+	for range a.evq.Signal() {
+		for {
+			ev, ok := a.evq.Pop()
+			if !ok {
+				break
+			}
+			switch ev.kind {
+			case evDown:
+				a.handleDown(ev.profile)
+			case evUp:
+				a.handleStop(0)
+			case evTimeout:
+				a.handleStop(ev.gen)
+			case evDone:
+				a.handleDone(ev.gen)
+			case evCancel:
+				a.handleCancel()
+			}
 		}
 	}
 }
@@ -426,7 +465,7 @@ func (a *App) handleDown(profileID string) {
 	if !ok {
 		return
 	}
-	if err := rec.Start(); err != nil {
+	if err := rec.Start(cfg.MaxRecordSeconds); err != nil {
 		log.Printf("ошибка старта записи: %v", err)
 		if cfg.Overlay {
 			overlaySet(ovFlashErr, tr("ov.err.mic"))

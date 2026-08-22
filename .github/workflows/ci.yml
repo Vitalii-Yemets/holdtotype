@@ -34,6 +34,16 @@ jobs:
         with:
           go-version: "1.23"
           cache-dependency-path: client/go.sum
+      - name: Version matches tag
+        if: github.ref_type == 'tag'
+        run: |
+          want="${GITHUB_REF_NAME#v}"
+          have=$(sed -n 's/^var Version = "\(.*\)"$/\1/p' internal/appid/appid.go)
+          if [ "$want" != "$have" ]; then
+            echo "тег $want не совпадает с appid.Version $have"
+            exit 1
+          fi
+        working-directory: client
       - name: Unit tests
         run: go test ./internal/...
         working-directory: client
@@ -51,22 +61,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
+      - name: Resolve version
+        id: ver
+        run: |
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            echo "value=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=" >> "$GITHUB_OUTPUT"
+          fi
       - name: Build (no model bundled)
         uses: docker/build-push-action@v6
         with:
           context: .
           file: build/Dockerfile
           target: dist-slim
+          build-args: |
+            APP_VERSION=${{ steps.ver.outputs.value }}
           outputs: type=local,dest=dist
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - name: Package portable archive
         run: |
           cd dist
-          zip -9 ../voxterminal-portable.zip voxterminal.exe whisper-server.exe llama-server.exe config.default.json README.md
+          zip -9 ../holdtotype-portable.zip holdtotype.exe whisper-server.exe llama-server.exe config.default.json README.md
       - uses: actions/upload-artifact@v4
         with:
-          name: voxterminal-binaries
+          name: holdtotype-binaries
           path: |
-            dist/voxterminal-setup.exe
-            voxterminal-portable.zip
+            dist/holdtotype-setup.exe
+            holdtotype-portable.zip

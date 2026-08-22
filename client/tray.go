@@ -8,8 +8,9 @@ import (
 	"unsafe"
 
 	"golang.org/x/sys/windows"
-)
 
+	"holdtotype/internal/appid"
+)
 
 func init() {
 	runtime.LockOSThread()
@@ -60,7 +61,6 @@ var (
 	procCreateIconFromResourceEx = user32.NewProc("CreateIconFromResourceEx")
 	procSetMenuInfo              = user32.NewProc("SetMenuInfo")
 )
-
 
 type notifyIconData struct {
 	CbSize           uint32
@@ -223,7 +223,7 @@ func trayShowMenu(hwnd uintptr) {
 	case cmdOpenConfig:
 		shellOpen("config.json")
 	case cmdOpenLog:
-		shellOpen("voxterminal.log")
+		shellOpen(appid.LogFile)
 	case cmdAbout:
 		go a.openSettings("about")
 	case cmdQuit:
@@ -246,7 +246,7 @@ func runTray(a *App) {
 		trayOff:        hIconFromPNG(iconDisabled),
 	}
 
-	className, _ := windows.UTF16PtrFromString("V2TTrayWnd")
+	className, _ := windows.UTF16PtrFromString(appid.Class("TrayWnd"))
 	cb := syscall.NewCallback(trayWndProc)
 	wc := wndClassExW{
 		Size:      uint32(unsafe.Sizeof(wndClassExW{})),

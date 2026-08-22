@@ -1,4 +1,4 @@
-module voxterminal
+module holdtotype
 
 go 1.23
 

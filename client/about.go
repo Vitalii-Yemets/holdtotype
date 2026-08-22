@@ -8,6 +8,8 @@ import (
 	"unsafe"
 
 	"golang.org/x/sys/windows"
+
+	"holdtotype/internal/appid"
 )
 
 var (
@@ -36,7 +38,7 @@ func aboutWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 		aboutMu.Unlock()
 		u, _ := windows.UTF16FromString(text)
 		procDrawTextW.Call(hdc, uintptr(unsafe.Pointer(&u[0])), uintptr(len(u)-1),
-			uintptr(unsafe.Pointer(&rc)), 0x0010 )
+			uintptr(unsafe.Pointer(&rc)), 0x0010)
 		procEndPaint.Call(hwnd, uintptr(unsafe.Pointer(&ps)))
 		return 0
 	case wmClose:
@@ -64,7 +66,7 @@ func showAbout(cfg *Config) {
 	defer runtime.UnlockOSThread()
 
 	aboutClassOnce.Do(func() {
-		className, _ := windows.UTF16PtrFromString("V2TAboutWnd")
+		className, _ := windows.UTF16PtrFromString(appid.Class("AboutWnd"))
 		cursor, _, _ := procLoadCursorW.Call(0, idcArrow)
 		bg, _, _ := procCreateSolidBrush.Call(colBg)
 		wc := wndClassExW{
@@ -80,8 +82,8 @@ func showAbout(cfg *Config) {
 	const w, h = 480, 330
 	sw, _, _ := procGetSystemMetrics.Call(0)
 	sh, _, _ := procGetSystemMetrics.Call(1)
-	className, _ := windows.UTF16PtrFromString("V2TAboutWnd")
-	title, _ := windows.UTF16PtrFromString(tr("menu.about") + " — Vox Terminal")
+	className, _ := windows.UTF16PtrFromString(appid.Class("AboutWnd"))
+	title, _ := windows.UTF16PtrFromString(tr("menu.about") + " — " + appid.Name)
 	hwnd, _, _ := procCreateWindowExW.Call(
 		0,
 		uintptr(unsafe.Pointer(className)),

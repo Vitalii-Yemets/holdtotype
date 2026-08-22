@@ -1,6 +1,10 @@
 package main
 
 import (
+	"log"
+
+	"holdtotype/internal/evqueue"
+
 	"fmt"
 	"runtime"
 	"sort"
@@ -117,6 +121,8 @@ type comboDef struct {
 	groups [][]uint32
 }
 
+const vkEscape = 0x1B
+
 type hotkeyHook struct {
 	mu       sync.Mutex
 	combos   []comboDef
@@ -124,9 +130,33 @@ type hotkeyHook struct {
 	activeID string
 	active   bool
 	armed    bool
+	escFree  bool
 	onDown   func(id string)
 	onUp     func()
+	onEsc    func() bool
 	capture  *captureSession
+	q        *evqueue.Queue[func()]
+}
+
+func (h *hotkeyHook) post(fn func()) {
+	if fn == nil {
+		return
+	}
+	if !h.q.Push(fn) {
+		log.Printf("очередь хоткея переполнена, событие отброшено (всего %d)", h.q.Dropped())
+	}
+}
+
+func (h *hotkeyHook) dispatch() {
+	for range h.q.Signal() {
+		for {
+			fn, ok := h.q.Pop()
+			if !ok {
+				break
+			}
+			fn()
+		}
+	}
 }
 
 type captureSession struct {
@@ -152,9 +182,7 @@ func (h *hotkeyHook) StartCapture(onUpdate func(string), onDone func(string, boo
 		onDone:   onDone,
 	}
 	h.mu.Unlock()
-	if fire != nil {
-		go fire()
-	}
+	h.post(fire)
 }
 
 func (h *hotkeyHook) CancelCapture() {
@@ -197,20 +225,21 @@ func (h *hotkeyHook) captureEvent(vk uint32, down bool) bool {
 		fire = func() { c.onUpdate(live) }
 	}
 	h.mu.Unlock()
-	if fire != nil {
-		go fire()
-	}
+	h.post(fire)
 	return true
 }
 
-func startHotkeyHook(combos []comboDef, onDown func(id string), onUp func()) (*hotkeyHook, error) {
+func startHotkeyHook(combos []comboDef, onDown func(id string), onUp func(), onEsc func() bool) (*hotkeyHook, error) {
 	h := &hotkeyHook{
 		pressed: make(map[uint32]bool),
 		armed:   true,
 		onDown:  onDown,
 		onUp:    onUp,
+		onEsc:   onEsc,
+		q:       evqueue.New[func()](256),
 	}
 	h.setCombosLocked(combos)
+	go h.dispatch()
 	errCh := make(chan error, 1)
 	go func() {
 		runtime.LockOSThread()
@@ -236,6 +265,22 @@ func (h *hotkeyHook) setCombosLocked(combos []comboDef) {
 		return len(sorted[i].groups) > len(sorted[j].groups)
 	})
 	h.combos = sorted
+	h.escFree = true
+	for _, c := range sorted {
+		for _, group := range c.groups {
+			for _, vk := range group {
+				if vk == vkEscape {
+					h.escFree = false
+				}
+			}
+		}
+	}
+}
+
+func (h *hotkeyHook) escCancels() bool {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	return h.escFree && h.capture == nil && h.onEsc != nil
 }
 
 func (h *hotkeyHook) SetCombos(combos []comboDef) {
@@ -249,9 +294,7 @@ func (h *hotkeyHook) SetCombos(combos []comboDef) {
 		fire = h.onUp
 	}
 	h.mu.Unlock()
-	if fire != nil {
-		go fire()
-	}
+	h.post(fire)
 }
 
 func (h *hotkeyHook) comboPressed(id string) bool {
@@ -292,7 +335,7 @@ func (h *hotkeyHook) groupsPressed(groups [][]uint32) bool {
 }
 
 func (h *hotkeyHook) hookProc(nCode, wParam, lParam uintptr) uintptr {
-	if int32(nCode) == 0  {
+	if int32(nCode) == 0 {
 		k := (*kbdllHookStruct)(unsafe.Pointer(lParam))
 		if k.ExtraInfo != injectedMarker {
 			down := wParam == wmKeyDown || wParam == wmSysKeyDown
@@ -300,6 +343,11 @@ func (h *hotkeyHook) hookProc(nCode, wParam, lParam uintptr) uintptr {
 			if down || up {
 				if h.captureEvent(k.VkCode, down) {
 					return 1
+				}
+				if k.VkCode == vkEscape && h.escCancels() {
+					if down && h.onEsc() {
+						return 1
+					}
 				}
 				h.keyEvent(k.VkCode, down)
 			}
@@ -338,7 +386,5 @@ func (h *hotkeyHook) keyEvent(vk uint32, down bool) {
 		}
 	}
 	h.mu.Unlock()
-	if fire != nil {
-		go fire()
-	}
+	h.post(fire)
 }

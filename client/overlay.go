@@ -12,6 +12,8 @@ import (
 	"unsafe"
 
 	"golang.org/x/sys/windows"
+
+	"holdtotype/internal/appid"
 )
 
 const (
@@ -45,24 +47,24 @@ const (
 )
 
 var (
-	procSetTimer                    = user32.NewProc("SetTimer")
-	procKillTimer                   = user32.NewProc("KillTimer")
-	procShowWindow                  = user32.NewProc("ShowWindow")
-	procFillRect                    = user32.NewProc("FillRect")
-	procSystemParametersInfoW       = user32.NewProc("SystemParametersInfoW")
-	procSetWindowRgn                = user32.NewProc("SetWindowRgn")
-	procSetLayeredWindowAttributes  = user32.NewProc("SetLayeredWindowAttributes")
-	procScreenToClient              = user32.NewProc("ScreenToClient")
-	procSetCursor                   = user32.NewProc("SetCursor")
-	procCreateSolidBrush            = gdi32.NewProc("CreateSolidBrush")
-	procDeleteObject                = gdi32.NewProc("DeleteObject")
-	procEllipse                     = gdi32.NewProc("Ellipse")
-	procCreateRoundRectRgn          = gdi32.NewProc("CreateRoundRectRgn")
-	procSetTextColor                = gdi32.NewProc("SetTextColor")
-	procCreateFontW                 = gdi32.NewProc("CreateFontW")
-	procFrameRgn                    = gdi32.NewProc("FrameRgn")
-	procGetDC                       = user32.NewProc("GetDC")
-	procReleaseDC                   = user32.NewProc("ReleaseDC")
+	procSetTimer                   = user32.NewProc("SetTimer")
+	procKillTimer                  = user32.NewProc("KillTimer")
+	procShowWindow                 = user32.NewProc("ShowWindow")
+	procFillRect                   = user32.NewProc("FillRect")
+	procSystemParametersInfoW      = user32.NewProc("SystemParametersInfoW")
+	procSetWindowRgn               = user32.NewProc("SetWindowRgn")
+	procSetLayeredWindowAttributes = user32.NewProc("SetLayeredWindowAttributes")
+	procScreenToClient             = user32.NewProc("ScreenToClient")
+	procSetCursor                  = user32.NewProc("SetCursor")
+	procCreateSolidBrush           = gdi32.NewProc("CreateSolidBrush")
+	procDeleteObject               = gdi32.NewProc("DeleteObject")
+	procEllipse                    = gdi32.NewProc("Ellipse")
+	procCreateRoundRectRgn         = gdi32.NewProc("CreateRoundRectRgn")
+	procSetTextColor               = gdi32.NewProc("SetTextColor")
+	procCreateFontW                = gdi32.NewProc("CreateFontW")
+	procFrameRgn                   = gdi32.NewProc("FrameRgn")
+	procGetDC                      = user32.NewProc("GetDC")
+	procReleaseDC                  = user32.NewProc("ReleaseDC")
 )
 
 func blendCol(a, b uintptr, t float64) uintptr {
@@ -139,7 +141,7 @@ func startOverlayThread() {
 	ovAnim.Store(true)
 	go func() {
 		runtime.LockOSThread()
-		className, _ := windows.UTF16PtrFromString("V2TOverlayWnd")
+		className, _ := windows.UTF16PtrFromString(appid.Class("OverlayWnd"))
 		cb := syscall.NewCallback(overlayWndProc)
 		wc := wndClassExW{
 			Size:      uint32(unsafe.Sizeof(wndClassExW{})),

@@ -198,6 +198,7 @@ func snapshotClipboard() ([]clipFormat, bool) {
 		}
 		id := uint32(fmtID)
 		if clipSkipFormats[id] {
+			complete = false
 			continue
 		}
 		h, _, _ := procGetClipboardData.Call(fmtID)

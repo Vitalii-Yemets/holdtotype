@@ -16,7 +16,9 @@ import (
 	webview "github.com/jchv/go-webview2"
 	"golang.org/x/sys/windows"
 
-	"voxterminal/internal/hotkeys"
+	"holdtotype/internal/hotkeys"
+
+	"holdtotype/internal/appid"
 )
 
 var (
@@ -38,10 +40,10 @@ func tryCreateWebView(width, height int) (w webview.WebView) {
 		}
 	}()
 	return webview.NewWithOptions(webview.WebViewOptions{
-		DataPath:  filepath.Join(os.TempDir(), fmt.Sprintf("voxterminal-webview-%d", os.Getpid())),
+		DataPath:  filepath.Join(os.TempDir(), appid.TempDirName("webview", os.Getpid())),
 		AutoFocus: true,
 		WindowOptions: webview.WindowOptions{
-			Title:  settingsStrings[lang()]["S_TITLE"],
+			Title:  strS("S_TITLE"),
 			Width:  uint(width),
 			Height: uint(height),
 			IconId: 1,
@@ -62,14 +64,14 @@ func createWebView(width, height int) webview.WebView {
 }
 
 func cleanupWebViewProfiles() {
-	own := fmt.Sprintf("voxterminal-webview-%d", os.Getpid())
+	own := appid.TempDirName("webview", os.Getpid())
 	entries, err := os.ReadDir(os.TempDir())
 	if err != nil {
 		return
 	}
 	for _, e := range entries {
 		name := e.Name()
-		if e.IsDir() && strings.HasPrefix(name, "voxterminal-webview") && name != own {
+		if e.IsDir() && strings.HasPrefix(name, appid.TempDirPrefix("webview")) && name != own {
 			_ = os.RemoveAll(filepath.Join(os.TempDir(), name))
 		}
 	}
@@ -148,7 +150,7 @@ func (a *App) settingsThread(tab string, attempt int) {
 			winW, winH = c.SettingsW, c.SettingsH
 		}
 		lastWndW, lastWndH = 0, 0
-		stopHider := hideWebViewWindowEarly(settingsStrings[lang()]["S_TITLE"])
+		stopHider := hideWebViewWindowEarly(strS("S_TITLE"))
 		w := createWebView(winW, winH)
 		stopHider()
 		if w == nil {
@@ -266,10 +268,10 @@ func (a *App) settingsThread(tab string, attempt int) {
 			}()
 		})
 		_ = w.Bind("appRepoLink", func() {
-			shellOpenURL("https://github.com/Vitalii-Yemets/vox-terminal")
+			shellOpenURL(appid.RepoURL)
 		})
 		_ = w.Bind("appAuthorLink", func() {
-			shellOpenURL("https://github.com/Vitalii-Yemets")
+			shellOpenURL(appid.AuthorURL)
 		})
 		_ = w.Bind("appCaptureCombo", func() {
 			go func() {
@@ -326,6 +328,7 @@ func (a *App) settingsThread(tab string, attempt int) {
 			if rec == nil {
 				return 0
 			}
+			rec.MonitorPing()
 			return rec.Level()
 		})
 		_ = w.Bind("appMicSelect", func(id string) string {
@@ -559,58 +562,52 @@ func (a *App) applySettings(f *settingsForm) string {
 	log.Printf("настройки сохранены: hotkey=%s ui=%s model=%s restart=%v", c.Hotkey, c.UILanguage, c.Model, restartNeeded)
 	switch {
 	case restartNeeded:
-		return settingsStrings[lang()]["S_RESTART"]
+		return strS("S_RESTART")
 	case modelChanged:
 		return tr("model.switching")
 	default:
-		return settingsStrings[lang()]["S_SAVED"]
+		return strS("S_SAVED")
 	}
 }
 
 func settingsHTML(cfg *Config, tab string) string {
 	cfgMap := map[string]any{
-		"hotkey":             cfg.Hotkey,
-		"ui_language":        cfg.UILanguage,
-		"beep":               cfg.Beep,
-		"sound_theme":        cfg.SoundTheme,
-		"auto_enter":         cfg.AutoEnter,
-		"restore_clipboard":  cfg.RestoreClipboard,
-		"overlay":            cfg.Overlay,
-		"animation":          cfg.Animation,
-		"type_mode":          cfg.PasteMode == "type",
-		"language":           cfg.Language,
-		"threads":            cfg.Threads,
-		"min_record_ms":      cfg.MinRecordMs,
-		"max_record_seconds": cfg.MaxRecordSeconds,
-		"server_autostart":   cfg.ServerAutostart,
-		"check_updates":      cfg.CheckUpdates,
-		"mic_device":         cfg.MicDevice,
-		"server_port":        cfg.ServerPort,
-		"server_exe":         cfg.ServerExe,
-		"server_url":         cfg.ServerURL,
-		"whisper_prompt":     cfg.WhisperPrompt,
-		"translate_default":  cfg.TranslateDefault,
-		"active_profiles":    cfg.ActiveProfiles,
-		"translate_hotkey":   cfg.TranslateHotkey,
-		"translate_target":   cfg.TranslateTarget,
-		"translate_ask":      cfg.TranslateAsk,
+		"hotkey":                cfg.Hotkey,
+		"ui_language":           cfg.UILanguage,
+		"beep":                  cfg.Beep,
+		"sound_theme":           cfg.SoundTheme,
+		"auto_enter":            cfg.AutoEnter,
+		"restore_clipboard":     cfg.RestoreClipboard,
+		"overlay":               cfg.Overlay,
+		"animation":             cfg.Animation,
+		"type_mode":             cfg.PasteMode == "type",
+		"language":              cfg.Language,
+		"threads":               cfg.Threads,
+		"min_record_ms":         cfg.MinRecordMs,
+		"max_record_seconds":    cfg.MaxRecordSeconds,
+		"server_autostart":      cfg.ServerAutostart,
+		"check_updates":         cfg.CheckUpdates,
+		"mic_device":            cfg.MicDevice,
+		"server_port":           cfg.ServerPort,
+		"server_exe":            cfg.ServerExe,
+		"server_url":            cfg.ServerURL,
+		"whisper_prompt":        cfg.WhisperPrompt,
+		"translate_default":     cfg.TranslateDefault,
+		"active_profiles":       cfg.ActiveProfiles,
+		"translate_hotkey":      cfg.TranslateHotkey,
+		"translate_target":      cfg.TranslateTarget,
+		"translate_ask":         cfg.TranslateAsk,
 		"translate_ask_seconds": cfg.TranslateAskSeconds,
 		"translate_ask_langs":   cfg.TranslateAskLangs,
-		"llm_model":          filepath.Base(cfg.LLMModel),
-		"profiles":           cfg.Profiles,
-		"_version":           appVersion,
-		"_tab":               tab,
-		"_cpus":              runtime.NumCPU(),
+		"llm_model":             filepath.Base(cfg.LLMModel),
+		"profiles":              cfg.Profiles,
+		"_version":              appVersion,
+		"_tab":                  tab,
+		"_cpus":                 runtime.NumCPU(),
 	}
 	cfgJSON, _ := json.Marshal(cfgMap)
 
-	cur := settingsStrings[lang()]
-	str := func(key string) string {
-		if v := cur[key]; v != "" {
-			return v
-		}
-		return settingsStrings["en"][key]
-	}
+	str := strS
 	lMap := map[string]string{"nohot": "—"}
 	for jsKey, sKey := range map[string]string{
 		"dl": "S_DL", "del": "S_DEL", "hint": "S_APPLY_HINT", "add": "S_PROF_ADD",
@@ -627,7 +624,7 @@ func settingsHTML(cfg *Config, tab string) string {
 	}
 	lJSON, _ := json.Marshal(lMap)
 
-	pairs := []string{"{{CFG}}", string(cfgJSON), "{{L_JSON}}", string(lJSON)}
+	pairs := []string{"{{CFG}}", string(cfgJSON), "{{L_JSON}}", string(lJSON), "{{APP}}", appid.Name}
 	for k := range settingsStrings["en"] {
 		pairs = append(pairs, "{{"+k+"}}", str(k))
 	}
@@ -769,7 +766,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
    <path class="wave" d="M51 20a17 17 0 0 1 0 14" style="animation-delay:.6s"/>
   </g>
  </svg></div>
- <h1>VOX&nbsp;TERMINAL</h1>
+ <h1>{{APP}}</h1>
  <span class="ver" style="margin-left:auto">v<span id="ver"></span></span>
  <div class="capbtns">
   <button class="cap" onclick="appMin()">&#9472;</button>
@@ -930,7 +927,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
    <button class="stab" data-s="author">{{S_SUB_AUTHOR}}</button>
   </div>
   <div id="about-info" class="spage">
-  <p style="font-size:15px;letter-spacing:2px"><b>VOX TERMINAL</b> <span id="ver2"></span></p>
+  <p style="font-size:15px;letter-spacing:2px"><b>{{APP}}</b> <span id="ver2"></span></p>
   {{S_ABOUT_HTML}}
   <div class="row" style="border-top:1px solid #12241a;margin-top:10px;padding-top:12px">
    <label>{{S_UPD}}</label>

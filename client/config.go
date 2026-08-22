@@ -35,24 +35,24 @@ type Config struct {
 	MaxRecordSeconds int    `json:"max_record_seconds"`
 	MinRecordMs      int    `json:"min_record_ms"`
 
-	WhisperPrompt        string   `json:"whisper_prompt"`
-	TranslateHotkey      string   `json:"translate_hotkey"`
-	TranslateTarget      string   `json:"translate_target"`
-	TranslateAsk         string   `json:"translate_ask"`
-	TranslateAskSeconds  int      `json:"translate_ask_seconds"`
-	TranslateAskLangs    []string `json:"translate_ask_langs"`
-	DefaultProfile   string    `json:"default_profile"`
-	TranslateDefault bool      `json:"translate_default"`
-	ActiveProfiles   []string  `json:"active_profiles"`
-	Profiles         []Profile `json:"profiles"`
-	LLMPort        int       `json:"llm_port"`
-	LLMExe         string    `json:"llm_exe"`
-	LLMModel       string    `json:"llm_model"`
-	SettingsW      int       `json:"settings_width"`
-	SettingsH      int       `json:"settings_height"`
-	CheckUpdates   bool      `json:"check_updates"`
-	MicDevice      string    `json:"mic_device"`
-	MicDeviceName  string    `json:"mic_device_name"`
+	WhisperPrompt       string    `json:"whisper_prompt"`
+	TranslateHotkey     string    `json:"translate_hotkey"`
+	TranslateTarget     string    `json:"translate_target"`
+	TranslateAsk        string    `json:"translate_ask"`
+	TranslateAskSeconds int       `json:"translate_ask_seconds"`
+	TranslateAskLangs   []string  `json:"translate_ask_langs"`
+	DefaultProfile      string    `json:"default_profile"`
+	TranslateDefault    bool      `json:"translate_default"`
+	ActiveProfiles      []string  `json:"active_profiles"`
+	Profiles            []Profile `json:"profiles"`
+	LLMPort             int       `json:"llm_port"`
+	LLMExe              string    `json:"llm_exe"`
+	LLMModel            string    `json:"llm_model"`
+	SettingsW           int       `json:"settings_width"`
+	SettingsH           int       `json:"settings_height"`
+	CheckUpdates        bool      `json:"check_updates"`
+	MicDevice           string    `json:"mic_device"`
+	MicDeviceName       string    `json:"mic_device_name"`
 }
 
 func presetProfiles() []Profile {

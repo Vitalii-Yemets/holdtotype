@@ -16,20 +16,22 @@ import (
 	"time"
 
 	"golang.org/x/sys/windows/registry"
+
+	"holdtotype/internal/appid"
 )
 
 //go:embed payload.zip
 var payload []byte
 
 const (
-	appName   = "Vox Terminal"
-	exeName   = "voxterminal.exe"
-	uninstKey = `Software\Microsoft\Windows\CurrentVersion\Uninstall\VoxTerminal`
+	appName   = appid.Name
+	exeName   = appid.Exe
+	uninstKey = appid.UninstallKey
 	runKey    = `Software\Microsoft\Windows\CurrentVersion\Run`
-	runValue  = "VoxTerminal"
+	runValue  = appid.RunValue
 )
 
-var appVersion = "0.9.0"
+var appVersion = appid.Version
 
 func existingInstall() string {
 	k, err := registry.OpenKey(registry.CURRENT_USER, uninstKey, registry.QUERY_VALUE)
@@ -81,11 +83,11 @@ func defaultInstallDir() string {
 	if base == "" {
 		base = filepath.Join(os.Getenv("USERPROFILE"), "AppData", "Local")
 	}
-	return filepath.Join(base, "Programs", "VoxTerminal")
+	return filepath.Join(base, "Programs", appid.InstallDirName)
 }
 
 func startMenuLnk() string {
-	return filepath.Join(os.Getenv("APPDATA"), "Microsoft", "Windows", "Start Menu", "Programs", appName+".lnk")
+	return filepath.Join(os.Getenv("APPDATA"), "Microsoft", "Windows", "Start Menu", "Programs", appid.ShortcutName)
 }
 
 func extractFile(f *zip.File, dir string) error {

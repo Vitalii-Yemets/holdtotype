@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -10,22 +12,33 @@ import (
 
 	"github.com/gen2brain/malgo"
 
-	"voxterminal/internal/audiolevel"
+	"holdtotype/internal/audiolevel"
 )
 
 const sampleRate = 16000
 
-const maxBufferBytes = sampleRate * 2 * 600
+const defaultMaxSeconds = 600
+
+const monitorLinger = 2 * time.Second
 
 type Recorder struct {
 	ctx    *malgo.AllocatedContext
 	device *malgo.Device
 
+	devMu sync.Mutex
+
 	mu        sync.Mutex
 	buf       []byte
+	maxBytes  int
+	overflow  bool
 	recording bool
 	started   bool
+	monitor   bool
+	monUntil  time.Time
 	deviceID  string
+
+	done chan struct{}
+	once sync.Once
 
 	level atomic.Uint32
 	peak  atomic.Uint32
@@ -114,8 +127,12 @@ func (r *Recorder) openDevice(deviceID string) error {
 				r.peak.Store(lvl)
 			}
 			r.mu.Lock()
-			if r.recording && len(r.buf) < maxBufferBytes {
-				r.buf = append(r.buf, in...)
+			if r.recording {
+				if len(r.buf) < r.maxBytes {
+					r.buf = append(r.buf, in...)
+				} else {
+					r.overflow = true
+				}
 			}
 			r.mu.Unlock()
 		},
@@ -137,7 +154,10 @@ func (r *Recorder) openDevice(deviceID string) error {
 }
 
 func NewRecorder(deviceID string) (*Recorder, error) {
-	r := &Recorder{}
+	r := &Recorder{
+		maxBytes: sampleRate * 2 * defaultMaxSeconds,
+		done:     make(chan struct{}),
+	}
 	ctx, err := malgo.InitContext(nil, malgo.ContextConfig{}, nil)
 	if err != nil {
 		return nil, fmt.Errorf("аудиоконтекст: %w", err)
@@ -145,100 +165,193 @@ func NewRecorder(deviceID string) (*Recorder, error) {
 	r.ctx = ctx
 
 	if err := r.openDevice(deviceID); err != nil {
+		opened := false
 		if deviceID != "" {
 			log.Printf("микрофон %s недоступен (%v) — беру системный по умолчанию", deviceID, err)
-			if err2 := r.openDevice(""); err2 == nil {
-				return r, nil
-			}
+			opened = r.openDevice("") == nil
 		}
-		ctx.Uninit()
-		ctx.Free()
-		return nil, fmt.Errorf("микрофон: %w", err)
+		if !opened {
+			ctx.Uninit()
+			ctx.Free()
+			return nil, fmt.Errorf("микрофон: %w", err)
+		}
 	}
+	go r.watchMonitor()
 	return r, nil
 }
 
 func (r *Recorder) SetDevice(deviceID string) error {
 	r.mu.Lock()
 	same := r.deviceID == deviceID
-	busy := r.started
+	busy := r.recording
+	wasMonitoring := r.monitor
+	if !same && !busy {
+		r.monitor = false
+	}
 	r.mu.Unlock()
 	if same || busy {
 		return nil
 	}
-	return r.openDevice(deviceID)
+	r.stopDevice()
+	err := r.openDevice(deviceID)
+	if wasMonitoring {
+		r.mu.Lock()
+		r.monitor = true
+		r.monUntil = time.Now().Add(monitorLinger)
+		r.mu.Unlock()
+		if err == nil {
+			err = r.startDevice()
+		}
+	}
+	return err
 }
 
-func (r *Recorder) Start() error {
+func (r *Recorder) startDevice() error {
+	r.devMu.Lock()
+	defer r.devMu.Unlock()
 	r.mu.Lock()
 	if r.started {
 		r.mu.Unlock()
-		return errors.New("запись уже идёт")
+		return nil
 	}
-	r.buf = nil
-	r.recording = true
-	r.started = true
 	dev := r.device
 	devID := r.deviceID
 	r.mu.Unlock()
-	r.resetPeak()
+	if dev == nil {
+		return errors.New("устройство записи не открыто")
+	}
 
 	err := dev.Start()
 	if err != nil {
 		log.Printf("микрофон не запустился (%v) — переоткрываю устройство", err)
-		if rerr := r.openDevice(devID); rerr != nil && devID != "" {
+		rerr := r.openDevice(devID)
+		if rerr != nil && devID != "" {
 			rerr = r.openDevice("")
-			if rerr != nil {
-				r.failStart()
-				return err
-			}
-		} else if rerr != nil {
-			r.failStart()
+		}
+		if rerr != nil {
 			return err
 		}
 		r.mu.Lock()
 		dev = r.device
-		r.recording = true
-		r.started = true
 		r.mu.Unlock()
 		if err2 := dev.Start(); err2 != nil {
-			r.failStart()
 			return err2
 		}
+	}
+	r.mu.Lock()
+	r.started = true
+	r.mu.Unlock()
+	return nil
+}
+
+func (r *Recorder) stopDevice() {
+	r.devMu.Lock()
+	defer r.devMu.Unlock()
+	r.mu.Lock()
+	if !r.started || r.recording || r.monitor {
+		r.mu.Unlock()
+		return
+	}
+	dev := r.device
+	r.started = false
+	r.mu.Unlock()
+	if dev != nil {
+		_ = dev.Stop()
+	}
+	r.level.Store(0)
+}
+
+func (r *Recorder) Start(maxSeconds int) error {
+	r.mu.Lock()
+	if r.recording {
+		r.mu.Unlock()
+		return errors.New("запись уже идёт")
+	}
+	if maxSeconds <= 0 {
+		maxSeconds = defaultMaxSeconds
+	}
+	r.buf = nil
+	r.overflow = false
+	r.maxBytes = sampleRate * 2 * maxSeconds
+	r.recording = true
+	r.mu.Unlock()
+	r.resetPeak()
+
+	if err := r.startDevice(); err != nil {
+		r.mu.Lock()
+		r.recording = false
+		r.mu.Unlock()
+		r.stopDevice()
+		return err
 	}
 	return nil
 }
 
-func (r *Recorder) failStart() {
-	r.mu.Lock()
-	r.recording = false
-	r.started = false
-	r.mu.Unlock()
-}
-
 func (r *Recorder) Stop() []byte {
 	r.mu.Lock()
-	wasStarted := r.started
-	dev := r.device
 	r.recording = false
-	r.started = false
-	r.mu.Unlock()
-	if wasStarted && dev != nil {
-		_ = dev.Stop()
-	}
-	r.mu.Lock()
 	pcm := r.buf
+	over := r.overflow
+	max := r.maxBytes
 	r.buf = nil
+	r.overflow = false
 	r.mu.Unlock()
+	r.stopDevice()
+	if over {
+		log.Printf("запись упёрлась в предел буфера (%d с), хвост отброшен", max/(sampleRate*2))
+	}
 	return pcm
 }
 
+func (r *Recorder) MonitorPing() {
+	r.mu.Lock()
+	r.monitor = true
+	r.monUntil = time.Now().Add(monitorLinger)
+	need := !r.started
+	r.mu.Unlock()
+	if !need {
+		return
+	}
+	if err := r.startDevice(); err != nil {
+		log.Printf("монитор микрофона: %v", err)
+		r.mu.Lock()
+		r.monitor = false
+		r.mu.Unlock()
+	}
+}
+
+func (r *Recorder) watchMonitor() {
+	t := time.NewTicker(500 * time.Millisecond)
+	defer t.Stop()
+	for {
+		select {
+		case <-r.done:
+			return
+		case <-t.C:
+		}
+		r.mu.Lock()
+		expired := r.monitor && time.Now().After(r.monUntil)
+		if expired {
+			r.monitor = false
+		}
+		r.mu.Unlock()
+		if expired {
+			r.stopDevice()
+		}
+	}
+}
+
 func (r *Recorder) Close() {
+	r.once.Do(func() { close(r.done) })
 	r.mu.Lock()
 	dev := r.device
 	r.device = nil
+	r.recording = false
+	r.monitor = false
+	r.started = false
 	r.mu.Unlock()
 	if dev != nil {
+		_ = dev.Stop()
 		dev.Uninit()
 	}
 	if r.ctx != nil {

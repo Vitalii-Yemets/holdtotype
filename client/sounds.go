@@ -46,11 +46,11 @@ type timbre struct {
 }
 
 var timbres = map[string]timbre{
-	"chime":  {harmonic: 0.35, decay: 4.5, attackMs: 6, noise: 0},
-	"soft":   {harmonic: 0.05, decay: 3.0, attackMs: 25, noise: 0},
+	"chime":   {harmonic: 0.35, decay: 4.5, attackMs: 6, noise: 0},
+	"soft":    {harmonic: 0.05, decay: 3.0, attackMs: 25, noise: 0},
 	"marimba": {harmonic: 0.6, decay: 8.0, attackMs: 3, noise: 0},
-	"blip":   {harmonic: 0.9, decay: 14.0, attackMs: 1, noise: 0},
-	"pop":    {harmonic: 0.2, decay: 18.0, attackMs: 1, noise: 0.15},
+	"blip":    {harmonic: 0.9, decay: 14.0, attackMs: 1, noise: 0},
+	"pop":     {harmonic: 0.2, decay: 18.0, attackMs: 1, noise: 0.15},
 }
 
 func synthWavT(notes []note, tb timbre) []byte {

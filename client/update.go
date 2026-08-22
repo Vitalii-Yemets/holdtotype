@@ -11,10 +11,12 @@ import (
 	"path/filepath"
 	"time"
 
-	"voxterminal/internal/appver"
+	"holdtotype/internal/appver"
+
+	"holdtotype/internal/appid"
 )
 
-const updateLatestURL = "https://api.github.com/repos/Vitalii-Yemets/vox-terminal/releases/latest"
+const updateLatestURL = appid.LatestAPI
 
 func verNewer(latest, current string) bool {
 	return appver.IsNewer(latest, current)
@@ -43,7 +45,7 @@ func fetchLatestRelease() (tag, setupURL string, err error) {
 		return "", "", err
 	}
 	for _, a := range rel.Assets {
-		if a.Name == "voxterminal-setup.exe" {
+		if a.Name == appid.SetupExe {
 			return rel.TagName, a.URL, nil
 		}
 	}
@@ -77,7 +79,7 @@ func downloadSetup(url string, progress func(pct int)) (string, error) {
 	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("HTTP %d", resp.StatusCode)
 	}
-	dst := filepath.Join(os.TempDir(), "voxterminal-setup-update.exe")
+	dst := filepath.Join(os.TempDir(), appid.Slug+"-setup-update.exe")
 	out, err := os.Create(dst)
 	if err != nil {
 		return "", err

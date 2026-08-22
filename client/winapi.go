@@ -8,6 +8,8 @@ import (
 	"unsafe"
 
 	"golang.org/x/sys/windows"
+
+	"holdtotype/internal/appid"
 )
 
 const injectedMarker uintptr = 0x56325454
@@ -17,19 +19,19 @@ var (
 	kernel32 = windows.NewLazySystemDLL("kernel32.dll")
 	shell32  = windows.NewLazySystemDLL("shell32.dll")
 
-	procSetWindowsHookExW = user32.NewProc("SetWindowsHookExW")
-	procCallNextHookEx    = user32.NewProc("CallNextHookEx")
-	procGetMessageW       = user32.NewProc("GetMessageW")
-	procSendInput         = user32.NewProc("SendInput")
-	procGetAsyncKeyState  = user32.NewProc("GetAsyncKeyState")
+	procSetWindowsHookExW    = user32.NewProc("SetWindowsHookExW")
+	procCallNextHookEx       = user32.NewProc("CallNextHookEx")
+	procGetMessageW          = user32.NewProc("GetMessageW")
+	procSendInput            = user32.NewProc("SendInput")
+	procGetAsyncKeyState     = user32.NewProc("GetAsyncKeyState")
 	procOpenClipboard        = user32.NewProc("OpenClipboard")
 	procEnumClipboardFormats = user32.NewProc("EnumClipboardFormats")
 	procGetForegroundWindow  = user32.NewProc("GetForegroundWindow")
-	procCloseClipboard    = user32.NewProc("CloseClipboard")
-	procEmptyClipboard    = user32.NewProc("EmptyClipboard")
-	procGetClipboardData  = user32.NewProc("GetClipboardData")
-	procSetClipboardData  = user32.NewProc("SetClipboardData")
-	procMessageBoxW       = user32.NewProc("MessageBoxW")
+	procCloseClipboard       = user32.NewProc("CloseClipboard")
+	procEmptyClipboard       = user32.NewProc("EmptyClipboard")
+	procGetClipboardData     = user32.NewProc("GetClipboardData")
+	procSetClipboardData     = user32.NewProc("SetClipboardData")
+	procMessageBoxW          = user32.NewProc("MessageBoxW")
 
 	procGlobalAlloc  = kernel32.NewProc("GlobalAlloc")
 	procGlobalFree   = kernel32.NewProc("GlobalFree")
@@ -70,9 +72,25 @@ var (
 	procIsWindowVisible  = user32.NewProc("IsWindowVisible")
 )
 
+var (
+	darkBrushOnce sync.Once
+	darkBrush     uintptr
+	darkBgMu      sync.Mutex
+	darkBgDone    = map[uintptr]bool{}
+)
+
 func setDarkClientBackground(hwnd uintptr) {
-	br, _, _ := procCreateSolidBrush.Call(0x0C0F0B)
-	procSetClassLongPtrW.Call(hwnd, ^uintptr(9), br)
+	darkBgMu.Lock()
+	if darkBgDone[hwnd] {
+		darkBgMu.Unlock()
+		return
+	}
+	darkBgDone[hwnd] = true
+	darkBgMu.Unlock()
+	darkBrushOnce.Do(func() {
+		darkBrush, _, _ = procCreateSolidBrush.Call(0x0C0F0B)
+	})
+	procSetClassLongPtrW.Call(hwnd, ^uintptr(9), darkBrush)
 }
 
 const offscreenXY int32 = -32000
@@ -87,6 +105,7 @@ func hideWebViewWindowEarly(title string) func() {
 	go func() {
 		cls, _ := windows.UTF16PtrFromString("webview")
 		t, _ := windows.UTF16PtrFromString(title)
+		var styled uintptr
 		for {
 			select {
 			case <-done:
@@ -100,8 +119,11 @@ func hideWebViewWindowEarly(title string) func() {
 				if rc.Left > offscreenXY+1000 {
 					procSetWindowPos.Call(h, 0, offscreenPos(), offscreenPos(), 0, 0, 0x0001|0x0004|0x0010)
 				}
-				setDarkClientBackground(h)
-				applyDarkCaption(h)
+				if h != styled {
+					setDarkClientBackground(h)
+					applyDarkCaption(h)
+					styled = h
+				}
 			}
 			time.Sleep(2 * time.Millisecond)
 		}
@@ -186,7 +208,7 @@ func applyMinSize(hwnd uintptr, w, h int32) {
 func msgBox(title, text string) {
 	t, _ := windows.UTF16PtrFromString(title)
 	m, _ := windows.UTF16PtrFromString(text)
-	procMessageBoxW.Call(0, uintptr(unsafe.Pointer(m)), uintptr(unsafe.Pointer(t)), 0x10 )
+	procMessageBoxW.Call(0, uintptr(unsafe.Pointer(m)), uintptr(unsafe.Pointer(t)), 0x10)
 }
 
 func shellOpen(path string) {
@@ -217,13 +239,13 @@ func shellOpenURL(url string) {
 }
 
 func acquireSingleInstance() bool {
-	name, _ := windows.UTF16PtrFromString("Local\\VoxTerminalTrayMutex")
+	name, _ := windows.UTF16PtrFromString(appid.MutexName)
 	_, _, err := procCreateMutexW.Call(0, 0, uintptr(unsafe.Pointer(name)))
 	return err != windows.ERROR_ALREADY_EXISTS
 }
 
 func waitModifiersReleased(timeout time.Duration) {
-	mods := []uintptr{0x10 , 0x11 , 0x12 , 0x5B , 0x5C }
+	mods := []uintptr{0x10, 0x11, 0x12, 0x5B, 0x5C}
 	deadline := time.Now().Add(timeout)
 	for time.Now().Before(deadline) {
 		down := false

@@ -22,12 +22,14 @@ import (
 	"unsafe"
 
 	"golang.org/x/sys/windows"
+
+	"holdtotype/internal/appid"
 )
 
 var llmAPIKey = func() string {
 	b := make([]byte, 16)
 	if _, err := rand.Read(b); err != nil {
-		return "voxterminal-local"
+		return appid.LLMAlias
 	}
 	return hex.EncodeToString(b)
 }()

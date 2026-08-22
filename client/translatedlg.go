@@ -7,6 +7,8 @@ import (
 	"unsafe"
 
 	"golang.org/x/sys/windows"
+
+	"holdtotype/internal/appid"
 )
 
 const (
@@ -242,7 +244,7 @@ func askTranslateTarget(cfg *Config) string {
 	go func() {
 		runtime.LockOSThread()
 		tdClassOnce.Do(func() {
-			className, _ := windows.UTF16PtrFromString("V2TTranslateDlg")
+			className, _ := windows.UTF16PtrFromString(appid.Class("TranslateDlg"))
 			cb := syscall.NewCallback(tdWndProc)
 			wc := wndClassExW{
 				Size:      uint32(unsafe.Sizeof(wndClassExW{})),
@@ -251,7 +253,7 @@ func askTranslateTarget(cfg *Config) string {
 			}
 			procRegisterClassExW.Call(uintptr(unsafe.Pointer(&wc)))
 		})
-		className, _ := windows.UTF16PtrFromString("V2TTranslateDlg")
+		className, _ := windows.UTF16PtrFromString(appid.Class("TranslateDlg"))
 		w := tdWidth()
 		var wa rect
 		procSystemParametersInfoW.Call(0x30, 0, uintptr(unsafe.Pointer(&wa)), 0)

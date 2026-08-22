@@ -10,12 +10,14 @@ import (
 	"time"
 
 	"golang.org/x/sys/windows/registry"
+
+	"holdtotype/internal/appid"
 )
 
 const (
-	uninstRegKey = `Software\Microsoft\Windows\CurrentVersion\Uninstall\VoxTerminal`
+	uninstRegKey = appid.UninstallKey
 	runRegKey    = `Software\Microsoft\Windows\CurrentVersion\Run`
-	runRegValue  = "VoxTerminal"
+	runRegValue  = appid.RunValue
 )
 
 func hiddenCmd(name string, args ...string) *exec.Cmd {
@@ -34,7 +36,7 @@ func runUninstall(silent bool) {
 	}
 	dir := filepath.Dir(exe)
 
-	_ = hiddenCmd("taskkill", "/F", "/IM", "voxterminal.exe", "/FI", fmt.Sprintf("PID ne %d", os.Getpid())).Run()
+	_ = hiddenCmd("taskkill", "/F", "/IM", appid.Exe, "/FI", fmt.Sprintf("PID ne %d", os.Getpid())).Run()
 	ps := fmt.Sprintf(
 		`Get-Process whisper-server,llama-server -ErrorAction SilentlyContinue | Where-Object { $_.Path -like '%s*' } | Stop-Process -Force`,
 		strings.ReplaceAll(dir, "'", "''"))
@@ -47,13 +49,13 @@ func runUninstall(silent bool) {
 	}
 	files := []string{"whisper-server.exe", "llama-server.exe", "config.default.json", "README.md"}
 	if delData {
-		files = append(files, "config.json", "voxterminal.log", "voxterminal.log.old")
+		files = append(files, "config.json", appid.LogFile, appid.LogFile+".old")
 		_ = os.RemoveAll(filepath.Join(dir, "models"))
 	}
 	for _, f := range files {
 		_ = os.Remove(filepath.Join(dir, f))
 	}
-	_ = os.Remove(filepath.Join(os.Getenv("APPDATA"), "Microsoft", "Windows", "Start Menu", "Programs", "Vox Terminal.lnk"))
+	_ = os.Remove(filepath.Join(os.Getenv("APPDATA"), "Microsoft", "Windows", "Start Menu", "Programs", appid.ShortcutName))
 
 	_ = registry.DeleteKey(registry.CURRENT_USER, uninstRegKey)
 	if k, kerr := registry.OpenKey(registry.CURRENT_USER, runRegKey, registry.SET_VALUE); kerr == nil {

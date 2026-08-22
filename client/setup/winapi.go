@@ -25,9 +25,9 @@ var (
 	procShellExecuteW         = shell32.NewProc("ShellExecuteW")
 	procGetUserDefaultUILang  = kernel32.NewProc("GetUserDefaultUILanguage")
 
-	gdi32                = windows.NewLazySystemDLL("gdi32.dll")
-	procCreateSolidBrush = gdi32.NewProc("CreateSolidBrush")
-	procSetClassLongPtrW = user32.NewProc("SetClassLongPtrW")
+	gdi32                     = windows.NewLazySystemDLL("gdi32.dll")
+	procCreateSolidBrush      = gdi32.NewProc("CreateSolidBrush")
+	procSetClassLongPtrW      = user32.NewProc("SetClassLongPtrW")
 	procFindWindowW           = user32.NewProc("FindWindowW")
 	procGetWindowRect         = user32.NewProc("GetWindowRect")
 	procSystemParametersInfoW = user32.NewProc("SystemParametersInfoW")

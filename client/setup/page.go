@@ -42,7 +42,7 @@ button.btn:hover{background:#123f22;box-shadow:var(--glow)}
  <div class="logo"><svg viewBox="0 0 64 64" fill="none" stroke="#3cff6e" stroke-width="3" stroke-linecap="round">
   <rect x="24" y="8" width="16" height="26" rx="8"/><path d="M16 26a16 16 0 0 0 32 0"/>
   <line x1="32" y1="42" x2="32" y2="50"/><line x1="23" y1="53" x2="41" y2="53"/></svg></div>
- <h1>VOX&nbsp;TERMINAL</h1>
+ <h1>{{APP}}</h1>
  <span class="ver" style="margin-left:auto">v{{VERSION}}</span>
  <button class="cap close" onclick="appClose()">&#10005;</button>
 </div>

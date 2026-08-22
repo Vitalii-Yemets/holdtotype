@@ -7,6 +7,8 @@ import (
 	"unsafe"
 
 	"golang.org/x/sys/windows"
+
+	"holdtotype/internal/appid"
 )
 
 const (
@@ -208,7 +210,7 @@ func askFocusMismatch() string {
 	go func() {
 		runtime.LockOSThread()
 		fdClassOnce.Do(func() {
-			className, _ := windows.UTF16PtrFromString("V2TFocusDlg")
+			className, _ := windows.UTF16PtrFromString(appid.Class("FocusDlg"))
 			cb := syscall.NewCallback(fdWndProc)
 			wc := wndClassExW{
 				Size:      uint32(unsafe.Sizeof(wndClassExW{})),
@@ -217,7 +219,7 @@ func askFocusMismatch() string {
 			}
 			procRegisterClassExW.Call(uintptr(unsafe.Pointer(&wc)))
 		})
-		className, _ := windows.UTF16PtrFromString("V2TFocusDlg")
+		className, _ := windows.UTF16PtrFromString(appid.Class("FocusDlg"))
 		w := fdWidth()
 		var wa rect
 		procSystemParametersInfoW.Call(0x30, 0, uintptr(unsafe.Pointer(&wa)), 0)

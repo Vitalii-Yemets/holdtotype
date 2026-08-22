@@ -67,7 +67,7 @@ func (a *App) modelRows() string {
 	var rows []modelRow
 	known := false
 	for _, m := range modelCatalog {
-		row := modelRow{ID: m.ID, Name: m.NameKey, Desc: settingsStrings[lang()][m.DescKey], Size: m.SizeMB}
+		row := modelRow{ID: m.ID, Name: m.NameKey, Desc: strS(m.DescKey), Size: m.SizeMB}
 		path := filepath.Join("models", m.File)
 		_, statErr := os.Stat(path)
 		dlMu.Lock()
@@ -94,7 +94,7 @@ func (a *App) modelRows() string {
 		rows = append(rows, row)
 	}
 	if !known {
-		rows = append(rows, modelRow{ID: "custom", Name: activeFile, Desc: settingsStrings[lang()]["S_M_CUSTOM"], State: "active"})
+		rows = append(rows, modelRow{ID: "custom", Name: activeFile, Desc: strS("S_M_CUSTOM"), State: "active"})
 	}
 	out, _ := json.Marshal(rows)
 	return string(out)
