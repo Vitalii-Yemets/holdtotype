@@ -60,6 +60,7 @@ var (
 	procGetCursorPos             = user32.NewProc("GetCursorPos")
 	procCreateIconFromResourceEx = user32.NewProc("CreateIconFromResourceEx")
 	procSetMenuInfo              = user32.NewProc("SetMenuInfo")
+	procRegisterWindowMessageW   = user32.NewProc("RegisterWindowMessageW")
 )
 
 type notifyIconData struct {
@@ -148,7 +149,25 @@ func trayNotifyData() notifyIconData {
 	return nid
 }
 
+var wmTaskbarCreated uintptr
+
+func trayReadd() {
+	trayMu.Lock()
+	ready := trayReady
+	nid := trayNotifyData()
+	trayMu.Unlock()
+	if !ready {
+		return
+	}
+	procShellNotifyIconW.Call(nimAdd, uintptr(unsafe.Pointer(&nid)))
+	log.Printf("трей: панель задач перезапущена, иконка добавлена заново")
+}
+
 func trayWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
+	if wmTaskbarCreated != 0 && msg == wmTaskbarCreated {
+		trayReadd()
+		return 0
+	}
 	switch msg {
 	case wmTrayCallback:
 		switch lParam {
@@ -244,6 +263,10 @@ func runTray(a *App) {
 		trayRecording:  hIconFromPNG(iconRecording),
 		trayProcessing: hIconFromPNG(iconProcessing),
 		trayOff:        hIconFromPNG(iconDisabled),
+	}
+
+	if name, err := windows.UTF16PtrFromString("TaskbarCreated"); err == nil {
+		wmTaskbarCreated, _, _ = procRegisterWindowMessageW.Call(uintptr(unsafe.Pointer(name)))
 	}
 
 	className, _ := windows.UTF16PtrFromString(appid.Class("TrayWnd"))

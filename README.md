@@ -28,8 +28,8 @@ Hold a hotkey — speak. Release — the transcribed text is pasted right where 
 | Installer | Status screen |
 |---|---|
 | ![Installer](docs/setup.png) | ![Status](docs/settings-general.png) |
-| **Model catalog** | **Post-processing (LLM)** |
-| ![Models](docs/models.png) | ![Post-processing](docs/postprocessing.png) |
+| **Model catalog** | **Text: dictionary, replacements, commands** |
+| ![Models](docs/models.png) | ![Text](docs/postprocessing.png) |
 
 ## ✨ Features
 
@@ -47,7 +47,7 @@ Hold a hotkey — speak. Release — the transcribed text is pasted right where 
 - 🧳 **Lists to carry over** — replacements and voice commands save into a single .json file and load on another machine; loading adds only what is missing and reports how many lines were added and how many were already there.
 - 📦 **Built-in model catalog** — recognition models download in one click; GGUF models for the LLM are searched on Hugging Face with last-update date, download counts and a color indicator showing whether the model fits your RAM.
 - 🎚️ **Microphone control** — pick the input device from the settings, watch a live level meter before dictating, and press Test: three seconds are recorded and taken apart — peak level, how much of it holds speech, how much was clipped — and the answer comes in words, with what to do about it. The same numbers are measured after every dictation, so a failed recognition says whether it was too quiet, clipped or plain silence. Silent recordings are never sent to recognition, and a headset unplugged mid-session falls back to the system default.
-- 🔤 **Replacements after recognition** — a list of what the model mishears and what it should become: `git hub` → GitHub, surnames, in-house terms. They run before translation and before the prompts, match whole words and ignore case by default, and a field right there tries them on any phrase without dictating.
+- 🔤 **Replacements after recognition** — a list of what the model mishears and what it should become: `git hub` → GitHub, surnames, in-house terms. They run right after recognition and before the prompts, match whole words and ignore case by default, and a field right there tries them on any phrase without dictating.
 - 🗣️ **Voice commands** — say "new line" and get a line break, "new paragraph" and get two, "cancel" and the dictation is thrown away without inserting anything; or have a phrase drop in any text you like. One button fills the list with the usual phrases in your language. They run after the replacements, so prompts and translation get the finished text.
 - 🕘 **History of dictations** — off by default; turn it on and the last N dictations stay on this machine as text (never audio), searchable by text or by the program they went into, one click to copy, one to paste it back into the window you came from, one to wipe them all. Kept for a chosen number of days, and a list of programs — password managers, banking apps — that nothing is ever recorded from.
 - 📖 **Recognition dictionary** — terms and abbreviations hint rare words to Whisper; a multilingual starter set is preinstalled.
@@ -58,7 +58,7 @@ Hold a hotkey — speak. Release — the transcribed text is pasted right where 
 - 🧭 **First-run wizard** — five steps on the very first launch: interface language, the dictation language (the model is chosen and downloaded for you, with a progress bar), the shortcut and microphone with a live level bar, a field to try a real dictation into, and starting with Windows. Skipping it leaves a working app; upgrades never see it.
 - 🎚️ **Simple mode** — new installs open with 15 rarely-touched settings folded away behind "N more settings" in each section, and a SIMPLE/ALL switch in the title bar shows which view is on. Upgrades keep the full view, because taking away settings someone has already seen is a regression.
 - ⏯️ **Hold or toggle, with a pause** — hold the keys as before, or press once to start and once to stop; in toggle mode a second shortcut pauses and resumes the recording, and the length limit does not run out while it is paused.
-- 🖥️ **One window, eight sections** — a sidebar instead of tabs inside tabs: Status, Dictation, Microphone, Models, Text, Translation, System, About. The Status screen answers "is everything ready" at a glance — hotkey, microphone, engine and model, free memory, last dictation — and a status bar keeps that answer visible from every section.
+- 🖥️ **One window, nine sections** — a sidebar instead of tabs inside tabs: Status, History, Dictation, Microphone, Models, Text, Translation, System, About. The Status screen answers "is everything ready" at a glance — hotkey, microphone, engine and model, free memory, last dictation — and a status bar keeps that answer visible from every section.
 - 🖥️ **Tray application** — color-coded status icon, quick menu, a Pip-Boy-terminal-styled settings window that remembers its size.
 - 💾 **Portable** — the folder is self-contained: copy it to a USB stick and run on another PC; nothing is written to the registry.
 - 🛡️ **Private** — zero network requests while dictating; internet is only needed to download models.
@@ -78,7 +78,7 @@ Silent install: `holdtotype-setup.exe -silent -dir "C:\path" -model small` (mode
 
 ### Updates
 
-- **About → Info** has a "Check for updates" button; optionally the app can check on startup (off by default — this is the only network request besides model downloads).
+- **About** has a "Check for updates" button; optionally the app can check on startup (off by default — this is the only network request besides model downloads).
 - One click downloads the new installer and updates in place: **settings and downloaded models are always preserved**, the app restarts itself. GitHub publishes a SHA-256 for every release file, and the downloaded installer is compared against it — a file that does not match is deleted instead of started.
 - Running a newer `holdtotype-setup.exe` manually also detects the existing installation and switches to update mode.
 
@@ -102,7 +102,7 @@ Download the archive from Releases (or build `dist/` yourself), copy the folder 
 
 Icon colors: green — ready, red — recording, orange — transcribing, grey — disabled/error.
 
-A full description of every feature lives in the **About → Guide** tab inside the app (a mini-wiki with illustrations).
+A full description of every feature lives in the **Guide** inside About (a mini-wiki with illustrations).
 
 ### Safe insertion
 
@@ -112,11 +112,12 @@ Speech processing takes a few seconds — if you switch windows in the meantime,
 
 ## ⚙️ Settings
 
-Left-click the tray icon to open the settings window. Eight sections in the sidebar, no tabs inside tabs:
+Left-click the tray icon to open the settings window. Nine sections in the sidebar, no tabs inside tabs:
 
 | Section | Contents |
 |---|---|
 | **Status** | is everything ready, at a glance: hotkey, microphone with a live level, the model for Russian and the one for every other language, the post-processing model, free memory, and the last dictation with *Copy* |
+| **History** | the switch that turns it on, how long entries are kept and how many, the programs nothing is ever recorded from, search, and per entry: copy, paste back into the window you came from, and clearing everything |
 | **Dictation** | the hotkey, hold or toggle, auto-Enter, the on-screen overlay; folded away: the pause shortcut, recording durations, clipboard restore, character-by-character typing, overlay animation |
 | **Microphone** | input device with a live level meter, recording cue sounds and the sound theme |
 | **Models** | the recognition catalog with filters and honest RAM numbers, the picker that answers with a model and the reason, a button that re-checks the installed files against their reference hashes, recognition language, CPU threads, and the editor model for post-processing (installed + Hugging Face search) |
@@ -134,9 +135,9 @@ All translation is done by Whisper itself — no second neural network needed:
 | Target | Mechanism | Quality |
 |---|---|---|
 | English | native `translate` mode | excellent |
-| other languages | forced output language (**experimental**) | depends on the language pair; better into major languages |
+| other languages | forced output language (**experimental**) — the app tells the model to write in that language instead of asking it to translate | not guaranteed: the text may come back in the language you spoke |
 
-Note: the Turbo model is not trained for the translation task — the app shows a warning on the Translation tab when Turbo is active; pick Base/Small/Medium for translating.
+Note: the Turbo model is not trained for the translation task — the app shows a warning in the Translation section when Turbo is active; pick Base/Small/Medium for translating.
 
 Modes: "always translate to the target language" (a checkbox, no questions), "always ask" and "ask with a timeout" — a language dialog appears above the overlay before transcription; when the countdown expires the target language is applied, ✕/Esc inserts without translation.
 

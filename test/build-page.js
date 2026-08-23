@@ -18,6 +18,7 @@ const cfg = {
   ui_level: "all",
   hotkey_mode: "hold",
   language: "ru",
+  model: "models/ggml-large-v3-turbo-q5_0.bin",
   beep: true,
   sound_theme: "speech",
   auto_enter: false,

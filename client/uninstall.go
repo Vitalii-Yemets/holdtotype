@@ -26,6 +26,12 @@ func hiddenCmd(name string, args ...string) *exec.Cmd {
 	return cmd
 }
 
+func hiddenShell(line string) *exec.Cmd {
+	cmd := exec.Command("cmd")
+	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true, CreationFlags: 0x08000000, CmdLine: `cmd /C ` + line}
+	return cmd
+}
+
 func runUninstall(silent bool) {
 	if !silent && !msgBoxYesNo(tr("un.title"), tr("un.confirm")) {
 		return
@@ -38,7 +44,7 @@ func runUninstall(silent bool) {
 
 	_ = hiddenCmd("taskkill", "/F", "/IM", appid.Exe, "/FI", fmt.Sprintf("PID ne %d", os.Getpid())).Run()
 	ps := fmt.Sprintf(
-		`Get-Process whisper-server,llama-server -ErrorAction SilentlyContinue | Where-Object { $_.Path -like '%s*' } | Stop-Process -Force`,
+		`Get-Process whisper-server,llama-server,sherpa-server -ErrorAction SilentlyContinue | Where-Object { $_.Path -like '%s*' } | Stop-Process -Force`,
 		strings.ReplaceAll(dir, "'", "''"))
 	_ = hiddenCmd("powershell", "-NoProfile", "-NonInteractive", "-Command", ps).Run()
 	time.Sleep(500 * time.Millisecond)
@@ -47,7 +53,7 @@ func runUninstall(silent bool) {
 	if !silent {
 		delData = msgBoxYesNo(tr("un.title"), tr("un.data"))
 	}
-	files := []string{"whisper-server.exe", "llama-server.exe", "config.default.json", "README.md"}
+	files := []string{"whisper-server.exe", "llama-server.exe", "sherpa-server.exe", "config.default.json", "README.md"}
 	if delData {
 		files = append(files, "config.json", appid.LogFile, appid.LogFile+".old", appid.HistoryFile)
 		_ = os.RemoveAll(filepath.Join(dir, "models"))
@@ -66,6 +72,5 @@ func runUninstall(silent bool) {
 	if !silent {
 		msgBox(tr("un.title"), tr("un.done"))
 	}
-	_ = hiddenCmd("cmd", "/C",
-		`ping -n 3 127.0.0.1 >nul & del /f /q "`+exe+`" & rd "`+dir+`"`).Start()
+	_ = hiddenShell(`ping -n 3 127.0.0.1 >nul & del /f /q "` + exe + `" & rd "` + dir + `"`).Start()
 }

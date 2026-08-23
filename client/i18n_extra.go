@@ -25,6 +25,7 @@ func init() {
 		"ov.quiet": "Zu leise, es war fast nichts zu hören", "ov.clipped": "Übersteuert — der Ton wurde abgeschnitten",
 		"ov.cmd.cancelled": "Per Sprache abgebrochen",
 		"ov.silence": "Stille — nichts erkannt", "ov.server.loading": "Server lädt noch",
+		"ov.tooshort": "Zu kurz — Tasten länger halten",
 		"ov.cancelled": "Abgebrochen", "ov.editing": "Bearbeite: %s", "ov.translating": "Übersetze",
 		"ov.llm.needed": "Diese Sprache benötigt das LLM-Modul", "td.title": "Übersetzen nach:", "td.plain": "Ohne Übersetzung",
 		"cap.title": "{app} — Tastenkürzel", "cap.prompt": "Neue Tastenkombination drücken…\n\n(aktuell: %s)\n\nEsc — Abbrechen",
@@ -99,6 +100,7 @@ func init() {
 		"ov.quiet": "Trop faible, presque rien n'a été entendu", "ov.clipped": "Saturation — le son a été écrêté",
 		"ov.cmd.cancelled": "Annulé à la voix",
 		"ov.silence": "Silence — rien reconnu", "ov.server.loading": "Le serveur charge encore",
+		"ov.tooshort": "Trop court — maintenez les touches plus longtemps",
 		"ov.cancelled": "Annulé", "ov.editing": "Édition : %s", "ov.translating": "Traduction",
 		"ov.llm.needed": "Cette langue nécessite le module LLM", "td.title": "Traduire vers :", "td.plain": "Sans traduction",
 		"cap.title": "{app} — raccourci", "cap.prompt": "Appuyez une nouvelle combinaison…\n\n(actuel : %s)\n\nÉchap — annuler",
@@ -173,6 +175,7 @@ func init() {
 		"ov.quiet": "Demasiado bajo, casi no se oyó nada", "ov.clipped": "Saturación: el sonido se recortó",
 		"ov.cmd.cancelled": "Cancelado por voz",
 		"ov.silence": "Silencio — nada reconocido", "ov.server.loading": "El servidor aún carga",
+		"ov.tooshort": "Demasiado corto: mantén las teclas más tiempo",
 		"ov.cancelled": "Cancelado", "ov.editing": "Editando: %s", "ov.translating": "Traduciendo",
 		"ov.llm.needed": "Este idioma requiere el módulo LLM", "td.title": "Traducir a:", "td.plain": "Sin traducción",
 		"cap.title": "{app} — atajo", "cap.prompt": "Pulse una nueva combinación…\n\n(actual: %s)\n\nEsc — cancelar",
@@ -247,6 +250,7 @@ func init() {
 		"ov.quiet": "Troppo basso, non si è sentito quasi nulla", "ov.clipped": "Distorsione: il suono è stato tagliato",
 		"ov.cmd.cancelled": "Annullato a voce",
 		"ov.silence": "Silenzio — nulla riconosciuto", "ov.server.loading": "Il server sta ancora caricando",
+		"ov.tooshort": "Troppo breve — tieni premuti i tasti più a lungo",
 		"ov.cancelled": "Annullato", "ov.editing": "Modifica: %s", "ov.translating": "Traduzione",
 		"ov.llm.needed": "Questa lingua richiede il modulo LLM", "td.title": "Traduci in:", "td.plain": "Senza traduzione",
 		"cap.title": "{app} — scorciatoia", "cap.prompt": "Premi una nuova combinazione…\n\n(attuale: %s)\n\nEsc — annulla",
@@ -321,6 +325,7 @@ func init() {
 		"ov.quiet": "Za cicho, prawie nic nie było słychać", "ov.clipped": "Przesterowanie — dźwięk został obcięty",
 		"ov.cmd.cancelled": "Anulowano głosem",
 		"ov.silence": "Cisza — nic nie rozpoznano", "ov.server.loading": "Serwer wciąż się ładuje",
+		"ov.tooshort": "Za krótko — przytrzymaj klawisze dłużej",
 		"ov.cancelled": "Anulowano", "ov.editing": "Edycja: %s", "ov.translating": "Tłumaczenie",
 		"ov.llm.needed": "Ten język wymaga modułu LLM", "td.title": "Tłumacz na:", "td.plain": "Bez tłumaczenia",
 		"cap.title": "{app} — skrót", "cap.prompt": "Naciśnij nową kombinację…\n\n(obecna: %s)\n\nEsc — anuluj",
@@ -400,7 +405,7 @@ func init() {
 		"S_CMD_NEWLINE": "Zeilenumbruch", "S_CMD_PARAGRAPH": "neuer Absatz", "S_CMD_TEXT": "Text einfügen", "S_CMD_CANCEL": "Diktat abbrechen",
 		"S_CMD_TEXT_PH": "was einfügen", "S_CMD_EMPTY": "Noch keine Befehle", "S_CMD_DEL": "Befehl löschen",
 		"S_CMD_P_NEWLINE": "neue Zeile", "S_CMD_P_PARAGRAPH": "neuer Absatz", "S_CMD_P_CANCEL": "abbrechen",
-		"S_SEC_REPLACE": "Ersetzungen nach der Erkennung", "S_REPLACE_HINT": "Falsch Gehörtes wird zu dem, was gemeint war — vor Prompts und Übersetzung. Von oben nach unten angewendet.",
+		"S_SEC_REPLACE": "Ersetzungen nach der Erkennung", "S_REPLACE_HINT": "Falsch Gehörtes wird zu dem, was gemeint war — direkt nach der Erkennung, vor den Prompts. Von oben nach unten angewendet.",
 		"S_REPL_ADD": "Ersetzung hinzufügen", "S_REPL_FROM_PH": "git hub", "S_REPL_TO_PH": "GitHub",
 		"S_REPL_WHOLE": "ganze Wörter", "S_REPL_CASE": "Groß-/Kleinschreibung", "S_REPL_EMPTY": "Noch keine Ersetzungen",
 		"S_REPL_DEL": "Ersetzung löschen", "S_REPL_TEST_PH": "Satz eingeben, um Ersetzungen und Befehle zu prüfen",
@@ -462,6 +467,8 @@ func init() {
 		"S_SUB_DICT": "Wörterbuch", "S_SUB_PROMPTS": "Prompts",
 		"S_TR_TURBO": "⚠ Das aktive Turbo-Modell ist nicht für die Übersetzung ins Englische trainiert — wählen Sie zum Übersetzen ein anderes Modell im Reiter „Modelle“.",
 		"S_SUB_TRTARGET": "Englisch ist für Whisper nativ, andere Zielsprachen sind experimentell",
+		"S_TR_EXP": "außer Englisch erzwingt die App die Ausgabesprache, statt zu übersetzen — der Text kann in der gesprochenen Sprache bleiben",
+		"S_REMOTE_ABOUT": "Ein entfernter Server ist eingestellt: Audio wird dorthin gesendet, und das Versprechen oben gilt so lange nicht.",
 		"S_UPD": "Aktualisierungen", "S_UPD_CHECK": "Nach Updates suchen", "S_UPD_AUTO": "Beim Start prüfen",
 		"S_SUB_UPD": "die einzige Netzwerkanfrage außer Modell-Downloads",
 		"S_UPD_NONE": "Sie haben die neueste Version", "S_UPD_AVAIL": "Version %s ist verfügbar.",
@@ -528,7 +535,7 @@ func init() {
 			"<p class=\"wh\">Sprachbefehle</p>" +
 			"<p>Unter den Ersetzungen auf der Registerkarte „Text“ steht eine Liste von Befehlen: Gesagtes wird zur Handlung statt zu Wörtern. „Neue Zeile“ und „neuer Absatz“ setzen einen Umbruch — Modelle tun das nie; „abbrechen“ verwirft das ganze Diktat und fügt nichts ein; „Text einfügen“ setzt beliebiges ein, auch ein Smiley. Die Schaltfläche neben der Liste füllt sie mit den üblichen Wendungen in der Sprache der Oberfläche. Befehle werden als ganze Wörter erkannt und laufen nach den Ersetzungen, damit Prompts und Übersetzung schon den fertigen Text bekommen. Überflüssige Leerzeichen um die Umbrüche verschwinden von selbst. Das Feld darunter probiert Ersetzungen und Befehle an jedem Satz: ein Umbruch erscheint als ⏎.</p>" +
 			"<p class=\"wh\">Ersetzungen nach der Erkennung</p>" +
-			"<p>Unter „Text“ lässt sich auflisten, was das Modell falsch hört und was daraus werden soll: „git hub“ → GitHub, Nachnamen, hauseigene Begriffe. Ersetzungen laufen direkt nach der Erkennung — vor der Übersetzung und vor den Prompts, damit der Editor bereits die richtigen Wörter bekommt. Standardmäßig gelten ganze Wörter und keine Groß-/Kleinschreibung; die beiden Schalter daneben ändern das. Regeln greifen von oben nach unten. Das Feld darunter probiert sie an jedem Satz aus, ganz ohne Diktat.</p>" +
+			"<p>Unter „Text“ lässt sich auflisten, was das Modell falsch hört und was daraus werden soll: „git hub“ → GitHub, Nachnamen, hauseigene Begriffe. Ersetzungen laufen direkt nach der Erkennung, vor den Prompts, damit der Editor bereits die richtigen Wörter bekommt. Die Übersetzung ins Englische passiert innerhalb der Erkennung, die Ersetzungen sehen also bereits den übersetzten Text. Standardmäßig gelten ganze Wörter und keine Groß-/Kleinschreibung; die beiden Schalter daneben ändern das. Regeln greifen von oben nach unten. Das Feld darunter probiert sie an jedem Satz aus, ganz ohne Diktat.</p>" +
 			"<p class=\"wh\">Regeln pro Programm</p>" +
 			"<p>Unter „Diktat“ lassen sich Regeln für einzelne Programme festlegen: womit eingefügt wird (Zwischenablage oder zeichenweise), ob Enter gedrückt wird, wie lange vor dem Einfügen gewartet wird und welche Prompts gelten. Ein Programm wird über seinen Dateinamen angegeben — <b>chrome.exe</b>; in einer Regel dürfen mehrere durch Komma stehen, ein Stern am Ende fängt alle Namen mit diesem Anfang. Die erste passende Regel gewinnt; ohne Regeln oder ohne Treffer gilt alles wie in den allgemeinen Einstellungen. Die Schaltfläche neben der Liste trägt das zuletzt beschriebene Programm ein.</p>" +
 			"<p class=\"wh\">Diktat</p>" +
@@ -648,7 +655,7 @@ func init() {
 		"S_CMD_NEWLINE": "saut de ligne", "S_CMD_PARAGRAPH": "nouveau paragraphe", "S_CMD_TEXT": "insérer du texte", "S_CMD_CANCEL": "annuler la dictée",
 		"S_CMD_TEXT_PH": "quoi insérer", "S_CMD_EMPTY": "Aucune commande pour l'instant", "S_CMD_DEL": "Supprimer la commande",
 		"S_CMD_P_NEWLINE": "nouvelle ligne", "S_CMD_P_PARAGRAPH": "nouveau paragraphe", "S_CMD_P_CANCEL": "annuler",
-		"S_SEC_REPLACE": "Remplacements après la reconnaissance", "S_REPLACE_HINT": "Ce qui a été mal entendu devient ce que vous vouliez dire — avant les prompts et la traduction. Appliqués de haut en bas.",
+		"S_SEC_REPLACE": "Remplacements après la reconnaissance", "S_REPLACE_HINT": "Ce qui a été mal entendu devient ce que vous vouliez dire — juste après la reconnaissance, avant les prompts. Appliqués de haut en bas.",
 		"S_REPL_ADD": "Ajouter un remplacement", "S_REPL_FROM_PH": "git hub", "S_REPL_TO_PH": "GitHub",
 		"S_REPL_WHOLE": "mots entiers", "S_REPL_CASE": "casse", "S_REPL_EMPTY": "Aucun remplacement pour l'instant",
 		"S_REPL_DEL": "Supprimer le remplacement", "S_REPL_TEST_PH": "tapez une phrase pour tester remplacements et commandes",
@@ -710,6 +717,8 @@ func init() {
 		"S_SUB_DICT": "Dictionnaire", "S_SUB_PROMPTS": "Prompts",
 		"S_TR_TURBO": "⚠ Le modèle Turbo actif n'est pas entraîné pour la traduction vers l'anglais — choisissez un autre modèle dans l'onglet « Modèles » pour traduire.",
 		"S_SUB_TRTARGET": "l'anglais est natif pour Whisper, les autres cibles sont expérimentales",
+		"S_TR_EXP": "hors anglais, l'application impose la langue de sortie au lieu de traduire — le texte peut rester dans la langue parlée",
+		"S_REMOTE_ABOUT": "Un serveur distant est configuré : l'audio y est envoyé, et la promesse ci-dessus ne tient pas tant qu'il est actif.",
 		"S_UPD": "Mises à jour", "S_UPD_CHECK": "Rechercher des mises à jour", "S_UPD_AUTO": "Vérifier au démarrage",
 		"S_SUB_UPD": "la seule requête réseau en dehors du téléchargement des modèles",
 		"S_UPD_NONE": "Vous avez la dernière version", "S_UPD_AVAIL": "La version %s est disponible.",
@@ -776,7 +785,7 @@ func init() {
 			"<p class=\"wh\">Commandes vocales</p>" +
 			"<p>Sous les remplacements, dans l'onglet Texte, il y a une liste de commandes : ce que vous dites devient une action au lieu de mots. « Nouvelle ligne » et « nouveau paragraphe » posent un saut — les modèles ne le font jamais ; « annuler » jette toute la dictée sans rien insérer ; « insérer du texte » place ce que vous voulez, un émoticône compris. Le bouton à côté de la liste la remplit des formules habituelles dans la langue de l'interface. Les commandes sont reconnues en mots entiers et s'appliquent après les remplacements, si bien que les prompts et la traduction reçoivent déjà le texte fini. Les espaces en trop autour des sauts disparaissent d'eux-mêmes. Le champ du dessous essaie remplacements et commandes sur n'importe quelle phrase : un saut s'affiche comme ⏎.</p>" +
 			"<p class=\"wh\">Remplacements après la reconnaissance</p>" +
-			"<p>Dans « Texte », vous pouvez lister ce que le modèle entend mal et ce que cela doit devenir : « git hub » → GitHub, des noms propres, des termes maison. Les remplacements s'appliquent juste après la reconnaissance — avant la traduction et avant les prompts — pour que l'éditeur reçoive déjà les bons mots. Par défaut ils visent les mots entiers et ignorent la casse ; les deux interrupteurs à côté changent cela. Les règles s'appliquent de haut en bas. Le champ du dessous les essaie sur n'importe quelle phrase, sans dicter.</p>" +
+			"<p>Dans « Texte », vous pouvez lister ce que le modèle entend mal et ce que cela doit devenir : « git hub » → GitHub, des noms propres, des termes maison. Les remplacements s'appliquent juste après la reconnaissance, avant les prompts, pour que l'éditeur reçoive déjà les bons mots. La traduction vers l'anglais se fait pendant la reconnaissance : les remplacements voient donc le texte déjà traduit. Par défaut ils visent les mots entiers et ignorent la casse ; les deux interrupteurs à côté changent cela. Les règles s'appliquent de haut en bas. Le champ du dessous les essaie sur n'importe quelle phrase, sans dicter.</p>" +
 			"<p class=\"wh\">Règles par application</p>" +
 			"<p>Dans « Dictée », vous pouvez définir des règles pour certains programmes : avec quoi insérer (presse-papiers ou caractère par caractère), s'il faut appuyer sur Entrée, combien de temps attendre avant d'insérer et quels prompts appliquer. Un programme se désigne par son fichier — <b>chrome.exe</b> ; une règle peut en lister plusieurs séparés par des virgules, et une astérisque finale attrape tous les noms qui commencent ainsi. La première règle qui correspond l'emporte ; sans règle, ou sans correspondance, tout fonctionne comme dans les réglages généraux. Le bouton à côté de la liste inscrit le programme où vous avez inséré en dernier.</p>" +
 			"<p class=\"wh\">Dictée</p>" +
@@ -896,7 +905,7 @@ func init() {
 		"S_CMD_NEWLINE": "salto de línea", "S_CMD_PARAGRAPH": "nuevo párrafo", "S_CMD_TEXT": "insertar texto", "S_CMD_CANCEL": "cancelar el dictado",
 		"S_CMD_TEXT_PH": "qué insertar", "S_CMD_EMPTY": "Todavía no hay comandos", "S_CMD_DEL": "Eliminar el comando",
 		"S_CMD_P_NEWLINE": "nueva línea", "S_CMD_P_PARAGRAPH": "nuevo párrafo", "S_CMD_P_CANCEL": "cancelar",
-		"S_SEC_REPLACE": "Reemplazos tras el reconocimiento", "S_REPLACE_HINT": "Lo que se oyó mal se convierte en lo que querías decir, antes de los prompts y la traducción. Se aplican de arriba abajo.",
+		"S_SEC_REPLACE": "Reemplazos tras el reconocimiento", "S_REPLACE_HINT": "Lo que se oyó mal se convierte en lo que querías decir, justo tras el reconocimiento y antes de los prompts. Se aplican de arriba abajo.",
 		"S_REPL_ADD": "Añadir un reemplazo", "S_REPL_FROM_PH": "git hub", "S_REPL_TO_PH": "GitHub",
 		"S_REPL_WHOLE": "palabras completas", "S_REPL_CASE": "mayúsculas", "S_REPL_EMPTY": "Todavía no hay reemplazos",
 		"S_REPL_DEL": "Eliminar el reemplazo", "S_REPL_TEST_PH": "escribe una frase para probar reemplazos y comandos",
@@ -958,6 +967,8 @@ func init() {
 		"S_SUB_DICT": "Diccionario", "S_SUB_PROMPTS": "Prompts",
 		"S_TR_TURBO": "⚠ El modelo Turbo activo no está entrenado para traducir al inglés — elige otro modelo en la pestaña «Modelos» para traducir.",
 		"S_SUB_TRTARGET": "el inglés es nativo para Whisper, los demás destinos son experimentales",
+		"S_TR_EXP": "salvo el inglés, la aplicación fuerza el idioma de salida en vez de traducir: el texto puede quedarse en el idioma hablado",
+		"S_REMOTE_ABOUT": "Hay un servidor remoto configurado: el audio se envía allí y la promesa anterior no se cumple mientras esté activo.",
 		"S_UPD": "Actualizaciones", "S_UPD_CHECK": "Buscar actualizaciones", "S_UPD_AUTO": "Comprobar al iniciar",
 		"S_SUB_UPD": "la única petición de red aparte de la descarga de modelos",
 		"S_UPD_NONE": "Tienes la última versión", "S_UPD_AVAIL": "La versión %s está disponible.",
@@ -1024,7 +1035,7 @@ func init() {
 			"<p class=\"wh\">Comandos de voz</p>" +
 			"<p>Bajo los reemplazos, en la pestaña Texto, hay una lista de comandos: lo que dices se convierte en una acción en lugar de en palabras. «Nueva línea» y «nuevo párrafo» ponen un salto — los modelos nunca lo hacen; «cancelar» descarta todo el dictado sin insertar nada; «insertar texto» coloca lo que quieras, incluso un emoticono. El botón junto a la lista la rellena con las frases habituales en el idioma de la interfaz. Los comandos se buscan como palabras completas y se aplican tras los reemplazos, así que los prompts y la traducción reciben ya el texto terminado. Los espacios sobrantes junto a los saltos se limpian solos. El campo de abajo prueba reemplazos y comandos con cualquier frase: un salto se muestra como ⏎.</p>" +
 			"<p class=\"wh\">Reemplazos tras el reconocimiento</p>" +
-			"<p>En «Texto» puedes enumerar lo que el modelo oye mal y en qué debe convertirse: «git hub» → GitHub, apellidos, términos internos. Los reemplazos se aplican justo después del reconocimiento — antes de la traducción y de los prompts — para que el editor ya reciba las palabras correctas. Por defecto buscan palabras completas y no distinguen mayúsculas; los dos interruptores de al lado lo cambian. Las reglas se aplican de arriba abajo. El campo de abajo las prueba con cualquier frase, sin dictar.</p>" +
+			"<p>En «Texto» puedes enumerar lo que el modelo oye mal y en qué debe convertirse: «git hub» → GitHub, apellidos, términos internos. Los reemplazos se aplican justo después del reconocimiento, antes de los prompts, para que el editor ya reciba las palabras correctas. La traducción al inglés ocurre dentro del reconocimiento, así que los reemplazos ven el texto ya traducido. Por defecto buscan palabras completas y no distinguen mayúsculas; los dos interruptores de al lado lo cambian. Las reglas se aplican de arriba abajo. El campo de abajo las prueba con cualquier frase, sin dictar.</p>" +
 			"<p class=\"wh\">Reglas por aplicación</p>" +
 			"<p>En «Dictado» puedes fijar reglas para programas concretos: con qué insertar (portapapeles o carácter a carácter), si pulsar Intro, cuánto esperar antes de insertar y qué prompts aplicar. El programa se indica por su archivo — <b>chrome.exe</b>; una regla puede listar varios separados por comas, y un asterisco final atrapa todos los nombres que empiecen igual. Gana la primera regla que coincide; sin reglas, o si ninguna coincide, todo funciona como en los ajustes generales. El botón junto a la lista rellena el programa donde insertaste por última vez.</p>" +
 			"<p class=\"wh\">Dictado</p>" +
@@ -1144,7 +1155,7 @@ func init() {
 		"S_CMD_NEWLINE": "a capo", "S_CMD_PARAGRAPH": "nuovo paragrafo", "S_CMD_TEXT": "inserire testo", "S_CMD_CANCEL": "annullare la dettatura",
 		"S_CMD_TEXT_PH": "cosa inserire", "S_CMD_EMPTY": "Ancora nessun comando", "S_CMD_DEL": "Elimina il comando",
 		"S_CMD_P_NEWLINE": "nuova riga", "S_CMD_P_PARAGRAPH": "nuovo paragrafo", "S_CMD_P_CANCEL": "annulla",
-		"S_SEC_REPLACE": "Sostituzioni dopo il riconoscimento", "S_REPLACE_HINT": "Ciò che è stato sentito male diventa ciò che intendevi — prima dei prompt e della traduzione. Applicate dall'alto in basso.",
+		"S_SEC_REPLACE": "Sostituzioni dopo il riconoscimento", "S_REPLACE_HINT": "Ciò che è stato sentito male diventa ciò che intendevi — subito dopo il riconoscimento, prima dei prompt. Applicate dall'alto in basso.",
 		"S_REPL_ADD": "Aggiungi una sostituzione", "S_REPL_FROM_PH": "git hub", "S_REPL_TO_PH": "GitHub",
 		"S_REPL_WHOLE": "parole intere", "S_REPL_CASE": "maiuscole", "S_REPL_EMPTY": "Ancora nessuna sostituzione",
 		"S_REPL_DEL": "Elimina la sostituzione", "S_REPL_TEST_PH": "scrivi una frase per provare sostituzioni e comandi",
@@ -1206,6 +1217,8 @@ func init() {
 		"S_SUB_DICT": "Dizionario", "S_SUB_PROMPTS": "Prompt",
 		"S_TR_TURBO": "⚠ Il modello Turbo attivo non è addestrato per la traduzione in inglese — per tradurre scegli un altro modello nella scheda «Modelli».",
 		"S_SUB_TRTARGET": "l'inglese è nativo per Whisper, le altre lingue di destinazione sono sperimentali",
+		"S_TR_EXP": "tranne l'inglese, l'app forza la lingua di uscita invece di tradurre: il testo può restare nella lingua parlata",
+		"S_REMOTE_ABOUT": "È impostato un server remoto: l'audio viene inviato lì e la promessa qui sopra non vale finché è attivo.",
 		"S_UPD": "Aggiornamenti", "S_UPD_CHECK": "Cerca aggiornamenti", "S_UPD_AUTO": "Controlla all'avvio",
 		"S_SUB_UPD": "l'unica richiesta di rete oltre allo scaricamento dei modelli",
 		"S_UPD_NONE": "Hai l'ultima versione", "S_UPD_AVAIL": "È disponibile la versione %s.",
@@ -1272,7 +1285,7 @@ func init() {
 			"<p class=\"wh\">Comandi vocali</p>" +
 			"<p>Sotto le sostituzioni, nella scheda Testo, c'è un elenco di comandi: ciò che dici diventa un'azione invece che parole. «Nuova riga» e «nuovo paragrafo» inseriscono un a capo — i modelli non lo fanno mai; «annulla» butta via l'intera dettatura senza inserire nulla; «inserire testo» mette quello che vuoi, faccina compresa. Il pulsante accanto all'elenco lo riempie con le formule solite nella lingua dell'interfaccia. I comandi sono riconosciuti come parole intere e si applicano dopo le sostituzioni, così i prompt e la traduzione ricevono già il testo finito. Gli spazi di troppo attorno agli a capo spariscono da soli. Il campo in fondo prova sostituzioni e comandi su qualsiasi frase: un a capo appare come ⏎.</p>" +
 			"<p class=\"wh\">Sostituzioni dopo il riconoscimento</p>" +
-			"<p>In «Testo» puoi elencare ciò che il modello sente male e in che cosa deve diventare: «git hub» → GitHub, cognomi, termini interni. Le sostituzioni si applicano subito dopo il riconoscimento — prima della traduzione e prima dei prompt — così l'editor riceve già le parole giuste. Per impostazione predefinita cercano parole intere e ignorano le maiuscole; i due interruttori accanto lo cambiano. Le regole si applicano dall'alto in basso. Il campo in fondo le prova su qualsiasi frase, senza dettare.</p>" +
+			"<p>In «Testo» puoi elencare ciò che il modello sente male e in che cosa deve diventare: «git hub» → GitHub, cognomi, termini interni. Le sostituzioni si applicano subito dopo il riconoscimento, prima dei prompt, così l'editor riceve già le parole giuste. La traduzione in inglese avviene dentro il riconoscimento, quindi le sostituzioni vedono il testo già tradotto. Per impostazione predefinita cercano parole intere e ignorano le maiuscole; i due interruttori accanto lo cambiano. Le regole si applicano dall'alto in basso. Il campo in fondo le prova su qualsiasi frase, senza dettare.</p>" +
 			"<p class=\"wh\">Regole per applicazione</p>" +
 			"<p>In «Dettatura» puoi impostare regole per programmi specifici: con che cosa inserire (appunti o carattere per carattere), se premere Invio, quanto attendere prima di inserire e quali prompt applicare. Il programma si indica con il nome del file — <b>chrome.exe</b>; in una regola se ne possono elencare più d'uno separati da virgole, e un asterisco finale cattura tutti i nomi che iniziano così. Vince la prima regola che corrisponde; senza regole, o se nessuna corrisponde, tutto funziona come nelle impostazioni generali. Il pulsante accanto all'elenco inserisce il programma in cui hai scritto l'ultima volta.</p>" +
 			"<p class=\"wh\">Dettatura</p>" +
@@ -1392,7 +1405,7 @@ func init() {
 		"S_CMD_NEWLINE": "złamanie wiersza", "S_CMD_PARAGRAPH": "nowy akapit", "S_CMD_TEXT": "wstawić tekst", "S_CMD_CANCEL": "anulować dyktowanie",
 		"S_CMD_TEXT_PH": "co wstawić", "S_CMD_EMPTY": "Na razie brak komend", "S_CMD_DEL": "Usuń komendę",
 		"S_CMD_P_NEWLINE": "nowy wiersz", "S_CMD_P_PARAGRAPH": "nowy akapit", "S_CMD_P_CANCEL": "anuluj",
-		"S_SEC_REPLACE": "Zamiany po rozpoznaniu", "S_REPLACE_HINT": "To, co zostało źle usłyszane, staje się tym, co miałeś na myśli — przed promptami i tłumaczeniem. Stosowane od góry do dołu.",
+		"S_SEC_REPLACE": "Zamiany po rozpoznaniu", "S_REPLACE_HINT": "To, co zostało źle usłyszane, staje się tym, co miałeś na myśli — zaraz po rozpoznaniu, przed promptami. Stosowane od góry do dołu.",
 		"S_REPL_ADD": "Dodaj zamianę", "S_REPL_FROM_PH": "git hub", "S_REPL_TO_PH": "GitHub",
 		"S_REPL_WHOLE": "całe słowa", "S_REPL_CASE": "wielkość liter", "S_REPL_EMPTY": "Na razie brak zamian",
 		"S_REPL_DEL": "Usuń zamianę", "S_REPL_TEST_PH": "wpisz zdanie, aby sprawdzić zamiany i komendy",
@@ -1454,6 +1467,8 @@ func init() {
 		"S_SUB_DICT": "Słownik", "S_SUB_PROMPTS": "Prompty",
 		"S_TR_TURBO": "⚠ Aktywny model Turbo nie jest uczony tłumaczenia na angielski — do tłumaczenia wybierz inny model w zakładce „Modele”.",
 		"S_SUB_TRTARGET": "angielski jest dla Whispera natywny, pozostałe języki docelowe są eksperymentalne",
+		"S_TR_EXP": "poza angielskim aplikacja wymusza język wyjścia zamiast tłumaczyć — tekst może zostać w języku mowy",
+		"S_REMOTE_ABOUT": "Ustawiony jest serwer zdalny: dźwięk trafia do niego, a obietnica powyżej wtedy nie obowiązuje.",
 		"S_UPD": "Aktualizacje", "S_UPD_CHECK": "Sprawdź aktualizacje", "S_UPD_AUTO": "Sprawdzaj przy starcie",
 		"S_SUB_UPD": "jedyne zapytanie sieciowe poza pobieraniem modeli",
 		"S_UPD_NONE": "Masz najnowszą wersję", "S_UPD_AVAIL": "Dostępna jest wersja %s.",
@@ -1520,7 +1535,7 @@ func init() {
 			"<p class=\"wh\">Komendy głosowe</p>" +
 			"<p>Pod zamianami na karcie „Tekst” jest lista komend: to, co powiesz, zamienia się w działanie zamiast w słowa. „Nowy wiersz” i „nowy akapit” wstawiają złamanie — modele nigdy tego nie robią; „anuluj” wyrzuca całe dyktowanie i nic nie wstawia; „wstawić tekst” wkłada cokolwiek, choćby uśmieszek. Przycisk obok listy wypełnia ją typowymi zwrotami w języku interfejsu. Komendy rozpoznawane są jako całe słowa i działają po zamianach, więc prompty i tłumaczenie dostają już gotowy tekst. Zbędne spacje wokół złamań znikają same. Pole poniżej sprawdza zamiany i komendy na dowolnym zdaniu: złamanie pokazuje się jako ⏎.</p>" +
 			"<p class=\"wh\">Zamiany po rozpoznaniu</p>" +
-			"<p>W „Tekście” można wypisać, co model słyszy źle i w co ma to zamienić: „git hub” → GitHub, nazwiska, wewnętrzne terminy. Zamiany działają zaraz po rozpoznaniu — przed tłumaczeniem i przed promptami, więc edytor dostaje już właściwe słowa. Domyślnie szukają całych słów i nie zważają na wielkość liter; dwa przełączniki obok to zmieniają. Reguły działają od góry do dołu. Pole poniżej sprawdza je na dowolnym zdaniu, bez dyktowania.</p>" +
+			"<p>W „Tekście” można wypisać, co model słyszy źle i w co ma to zamienić: „git hub” → GitHub, nazwiska, wewnętrzne terminy. Zamiany działają zaraz po rozpoznaniu, przed promptami, więc edytor dostaje już właściwe słowa. Tłumaczenie na angielski dzieje się wewnątrz rozpoznawania, więc zamiany widzą już przetłumaczony tekst. Domyślnie szukają całych słów i nie zważają na wielkość liter; dwa przełączniki obok to zmieniają. Reguły działają od góry do dołu. Pole poniżej sprawdza je na dowolnym zdaniu, bez dyktowania.</p>" +
 			"<p class=\"wh\">Reguły dla programów</p>" +
 			"<p>W „Dyktowaniu” można ustawić reguły dla wybranych programów: czym wstawiać (schowkiem czy znak po znaku), czy naciskać Enter, ile czekać przed wstawieniem i jakie prompty stosować. Program wskazuje się nazwą pliku — <b>chrome.exe</b>; w jednej regule można wymienić kilka po przecinku, a gwiazdka na końcu łapie wszystkie nazwy o takim początku. Wygrywa pierwsza pasująca reguła; gdy reguł nie ma albo żadna nie pasuje, wszystko działa jak w ustawieniach ogólnych. Przycisk obok listy wpisuje program, do którego wstawiano ostatnio.</p>" +
 			"<p class=\"wh\">Dyktowanie</p>" +
@@ -1642,6 +1657,7 @@ func init() {
 		"ov.quiet": "Надто тихо, майже нічого не чути", "ov.clipped": "Перевантаження — звук обрізано",
 		"ov.cmd.cancelled": "Скасовано голосом",
 		"ov.silence": "Тиша — нічого не розпізнано", "ov.server.loading": "Сервер ще завантажується",
+		"ov.tooshort": "Занадто коротко — тримайте клавіші довше",
 		"ov.cancelled": "Скасовано", "ov.editing": "Редагую: %s", "ov.translating": "Перекладаю",
 		"ov.llm.needed": "Ця мова потребує LLM-модуль", "td.title": "Перекласти на:", "td.plain": "Без перекладу",
 		"cap.title": "{app} — сполучення клавіш", "cap.prompt": "Натисніть нове сполучення клавіш…\n\n(зараз: %s)\n\nEsc — скасувати",
@@ -1737,7 +1753,7 @@ func init() {
 		"S_CMD_NEWLINE": "перенесення рядка", "S_CMD_PARAGRAPH": "новий абзац", "S_CMD_TEXT": "підставити текст", "S_CMD_CANCEL": "скасувати диктування",
 		"S_CMD_TEXT_PH": "що підставити", "S_CMD_EMPTY": "Команд поки немає", "S_CMD_DEL": "Видалити команду",
 		"S_CMD_P_NEWLINE": "новий рядок", "S_CMD_P_PARAGRAPH": "новий абзац", "S_CMD_P_CANCEL": "скасувати",
-		"S_SEC_REPLACE": "Заміни після розпізнавання", "S_REPLACE_HINT": "Те, що почулося неправильно, стає тим, що ви мали на увазі — до промптів і перекладу. Застосовуються згори вниз.",
+		"S_SEC_REPLACE": "Заміни після розпізнавання", "S_REPLACE_HINT": "Те, що почулося неправильно, стає тим, що ви мали на увазі — одразу після розпізнавання, до промптів. Застосовуються згори вниз.",
 		"S_REPL_ADD": "Додати заміну", "S_REPL_FROM_PH": "гіт хаб", "S_REPL_TO_PH": "GitHub",
 		"S_REPL_WHOLE": "цілі слова", "S_REPL_CASE": "регістр", "S_REPL_EMPTY": "Замін поки немає",
 		"S_REPL_DEL": "Видалити заміну", "S_REPL_TEST_PH": "напишіть фразу, щоб перевірити заміни й команди",
@@ -1797,6 +1813,8 @@ func init() {
 		"S_PUNCT": "Розділові знаки й великі літери", "S_SUB_PUNCT": "звідки беруться розділові знаки й великі літери",
 		"S_PUNCT_MODEL": "від моделі", "S_PUNCT_LLM": "від моделі-редактора", "S_PUNCT_OFF": "прибирати",
 		"S_SUB_TRTARGET": "англійська для Whisper рідна, інші цілі — експериментальні",
+		"S_TR_EXP": "крім англійської застосунок примусово задає мову виводу, а не перекладає — текст може лишитися мовою мовлення",
+		"S_REMOTE_ABOUT": "Задано віддалений сервер: звук іде на нього, і обіцянка вище не діє, поки він увімкнений.",
 		"S_SUB_UPD": "єдиний мережевий запит, окрім завантаження моделей",
 		"S_SEC_SERVICE": "Службове", "S_SUB_AUTOSTART": "вимкніть, якщо запускаєте сервер самі",
 		"S_SUB_PORT": "розпізнавач перезапуститься сам",
@@ -1846,7 +1864,7 @@ func init() {
 			"<p class=\"wh\">Голосові команди</p>" +
 			"<p>Під замінами на «Тексті» — список команд: сказане перетворюється не на слова, а на дію. «Новий рядок» і «новий абзац» ставлять перенесення — моделі його не ставлять ніколи; «скасувати» викидає все диктування, нічого не вставляючи; «підставити текст» кладе будь-що, хоч смайлик. Кнопка поруч зі списком заповнює його звичними фразами мовою інтерфейсу. Команди шукаються цілими словами й застосовуються після замін, тому в промпти та переклад іде вже готовий текст. Зайві пробіли навколо перенесень прибираються самі. Поле внизу перевіряє і заміни, і команди на будь-якій фразі: перенесення показується значком ⏎.</p>" +
 			"<p class=\"wh\">Заміни після розпізнавання</p>" +
-			"<p>У «Тексті» можна перелічити, що модель чує неправильно і на що це змінювати: «гіт хаб» → GitHub, прізвища, внутрішні терміни. Заміни спрацьовують одразу після розпізнавання — до перекладу й до промптів, тому редактор отримує вже правильні слова. Типово шукаються цілі слова й без урахування регістру, два перемикачі поруч це змінюють. Правила застосовуються згори вниз. Поле внизу перевіряє їх на будь-якій фразі, нічого не диктуючи.</p>" +
+			"<p>У «Тексті» можна перелічити, що модель чує неправильно і на що це змінювати: «гіт хаб» → GitHub, прізвища, внутрішні терміни. Заміни спрацьовують одразу після розпізнавання, до промптів, тому редактор отримує вже правильні слова. Переклад англійською відбувається всередині розпізнавання, тож заміни бачать уже перекладений текст. Типово шукаються цілі слова й без урахування регістру, два перемикачі поруч це змінюють. Правила застосовуються згори вниз. Поле внизу перевіряє їх на будь-якій фразі, нічого не диктуючи.</p>" +
 			"<p class=\"wh\">Правила для програм</p>" +
 			"<p>У «Диктуванні» можна задати правила для окремих програм: чим вставляти (буфером чи посимвольно), чи натискати Enter, скільки чекати перед вставкою та які промпти застосовувати. Програма вказується іменем файлу — <b>chrome.exe</b>; в одному правилі їх можна перелічити через кому, а зірочка в кінці ловить усі імена з таким початком. Виграє перше відповідне правило; якщо правил немає або жодне не підійшло, усе працює як у загальних налаштуваннях. Кнопка поруч зі списком підставляє програму, куди вставляли востаннє.</p>" +
 			"<p class=\"wh\">Диктування</p>" +

@@ -918,7 +918,7 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 	if len(pcm) < minBytes {
 		log.Printf("запись слишком короткая (%d мс), пропускаю", len(pcm)*1000/(sampleRate*2))
 		if cfg.Overlay {
-			overlayHide()
+			overlaySet(ovFlashErr, tr("ov.tooshort"))
 		}
 		return
 	}

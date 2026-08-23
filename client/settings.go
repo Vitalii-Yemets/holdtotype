@@ -782,6 +782,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"animation":             cfg.Animation,
 		"type_mode":             cfg.PasteMode == "type",
 		"language":              cfg.Language,
+		"model":                 cfg.Model,
 		"threads":               cfg.Threads,
 		"min_record_ms":         cfg.MinRecordMs,
 		"paste_delay_ms":        cfg.PasteDelayMs,
@@ -970,7 +971,7 @@ button.btn.ghost:hover{color:var(--green);border-color:var(--dim);background:non
 .moreb{appearance:none;background:none;border:1px dashed var(--line);color:var(--faint);font:inherit;font-size:11px;padding:6px 10px;margin:6px 0 0;cursor:pointer}
 .moreb:hover{color:var(--dim);border-color:var(--dim)}
 .modal-bg{position:fixed;inset:0;background:rgba(3,7,4,.78);display:flex;align-items:center;justify-content:center;z-index:20}
-.modal{background:var(--panel);border:1px solid var(--dim);border-radius:8px;box-shadow:0 0 24px rgba(60,255,110,.18);padding:20px 22px;max-width:380px;display:flex;flex-direction:column;gap:16px}
+.modal{background:var(--panel);border:1px solid var(--dim);box-shadow:0 0 24px rgba(60,255,110,.18);padding:20px 22px;max-width:380px;display:flex;flex-direction:column;gap:16px}
 .modal p{font-size:13px;line-height:1.55;color:var(--green)}
 .modal-btns{display:flex;gap:10px;justify-content:flex-end}
 .modal .btn{padding:7px 18px;border:1px solid var(--dim);background:#0d1a11;color:var(--green);font:inherit;font-size:12px;letter-spacing:1px;text-transform:uppercase;cursor:pointer}
@@ -997,6 +998,7 @@ button.btn.ghost:hover{color:var(--green);border-color:var(--dim);background:non
 .card .row:last-child{border-bottom:0}
 .row label{flex:1;min-width:100px;color:var(--green)}
 .row label .sub{display:block;font-size:10.5px;color:var(--faint);margin-top:2px;letter-spacing:0}
+.row label .sub.warn{color:var(--amber)}
 .row select{flex:0 1 auto;min-width:0;max-width:100%}
 .row input[type=text]{flex:0 1 auto;min-width:0}
 .row .hint{font-size:11px;color:var(--dim)}
@@ -1362,7 +1364,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
     <option value="ru">Русский</option><option value="en">English</option>
     <option value="uk">Українська</option><option value="de">Deutsch</option>
     <option value="fr">Français</option><option value="es">Español</option>
-    <option value="pl">Polski</option>
+    <option value="it">Italiano</option><option value="pl">Polski</option>
    </select></div>
   <div class="row" data-adv><label>{{S_THREADS}}<span class="sub">{{S_SUB_THREADS}}</span></label><select id="threads"><option value="1">1</option><option value="2">2</option><option value="4">4</option><option value="6">6</option><option value="8">8</option><option value="12">12</option><option value="16">16</option></select></div>
  </div>
@@ -1425,7 +1427,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
   <div style="color:var(--faint);font-size:12px;margin-bottom:6px">{{S_TR_HINT}}</div>
   <div id="tr_warn" style="display:none;color:var(--amber);font-size:12px;margin-bottom:6px">{{S_TR_TURBO}}</div>
   <div class="row"><label>{{S_TR_DEFAULT}}</label><input type="checkbox" id="tr_default"></div>
-  <div class="row"><label>{{S_TR_TARGET}}<span class="sub">{{S_SUB_TRTARGET}}</span></label>
+  <div class="row"><label>{{S_TR_TARGET}}<span class="sub">{{S_SUB_TRTARGET}}</span><span class="sub warn">{{S_TR_EXP}}</span></label>
    <select id="translate_target">
     <option value="en">English</option><option value="uk">Українська</option>
     <option value="de">Deutsch</option><option value="fr">Français</option>
@@ -1553,7 +1555,8 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
      <option value="ru">Русский</option><option value="en">English</option>
      <option value="uk">Українська</option><option value="de">Deutsch</option>
      <option value="fr">Français</option><option value="es">Español</option>
-     <option value="pl">Polski</option><option value="auto">{{S_RECAUTO}}</option>
+     <option value="it">Italiano</option><option value="pl">Polski</option>
+     <option value="auto">{{S_RECAUTO}}</option>
     </select></div>
    <div class="wizplan" id="wiz_plan"></div>
    <div class="wizrow" id="wiz_dlrow" style="display:none"><span class="wizbar"><i id="wiz_dlbar"></i></span><span class="mpct" id="wiz_dlpct"></span></div>
@@ -2485,7 +2488,7 @@ function wizShow(n){
   if(wizStep === 4) wizDone();
 }
 async function wizAdvise(){
-  const v = wizEl("wiz_lang").value || "ru";
+  const v = wizEl("wiz_lang").value || "auto";
   const bucket = v === "ru" ? "ru" : (v === "en" ? "en" : "multi");
   const r = JSON.parse(await appAdvise(bucket, "balance", false));
   wizPlan = r.plan || [];
@@ -3033,7 +3036,8 @@ function wizStart(){
   wizOn = true;
   wizEl("wiz").classList.add("on");
   wizEl("wiz_ui").value = CFG.ui_language || "auto";
-  wizEl("wiz_lang").value = CFG.language || "ru";
+  wizEl("wiz_lang").value = CFG.language || "auto";
+  if(!wizEl("wiz_lang").value) wizEl("wiz_lang").value = "auto";
   wizShow(0);
 }
 document.getElementById("upd_check").onclick = updCheck;

@@ -204,6 +204,8 @@ function check(name, actual, expected) {
   check("models section shown", shown("models"), true);
   check("recognition models listed", d.querySelectorAll('#p-models input[name="mdl"]').length, 3);
   check("model filters rendered", d.querySelectorAll(".fchip").length, 5);
+  const recLangs = [...d.getElementById("language").options].map(o=>o.value);
+  check("italian can be dictated too", recLangs.includes("it"), true);
   check("ram estimate shown", d.querySelectorAll("#p-models .mram").length, 3);
   check("routing panel rows", d.querySelectorAll("#routing .rrow").length, 3);
   check("routing shows engine", d.querySelectorAll("#routing .reng")[0].textContent, "gigaam-v3");
@@ -292,6 +294,8 @@ function check(name, actual, expected) {
   check("and it can be turned back off", w.autorunCalls[w.autorunCalls.length - 1], false);
 
   tab("translate"); await sleep(30);
+  check("the turbo warning is shown for a turbo model", d.getElementById("tr_warn").style.display, "block");
+  check("the target language carries the honest note", !!d.querySelector("#p-translate .row label .sub.warn"), true);
   const trd = d.getElementById("tr_default");
   const ask = d.getElementById("translate_ask");
   const state = () => [

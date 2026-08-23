@@ -146,6 +146,7 @@ var msgs = map[string]map[string]string{
 		"ov.quiet": "Слишком тихо, почти ничего не слышно", "ov.clipped": "Перегруз — звук обрезан",
 		"ov.cmd.cancelled": "Отменено голосом",
 		"ov.silence":            "Тишина — текст не распознан",
+		"ov.tooshort":          "Слишком коротко — держите клавиши дольше",
 		"ov.notranslate":        "Активная модель не переводит — вставлен исходный текст",
 		"ov.engine.fallback":    "Второй движок не поднялся — распознаю текущим",
 		"route.speech":           "Речь на %s",
@@ -265,6 +266,7 @@ var msgs = map[string]map[string]string{
 		"ov.quiet": "Too quiet, almost nothing was heard", "ov.clipped": "Clipping — the sound was cut off",
 		"ov.cmd.cancelled": "Cancelled by voice",
 		"ov.silence":            "Silence — nothing recognized",
+		"ov.tooshort":          "Too short — hold the keys longer",
 		"ov.notranslate":        "The active model cannot translate — inserted as recognized",
 		"ov.engine.fallback":    "The other engine did not start — using the current one",
 		"route.speech":           "Speech in %s",
@@ -416,7 +418,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_CMD_NEWLINE": "перенос строки", "S_CMD_PARAGRAPH": "новый абзац", "S_CMD_TEXT": "подставить текст", "S_CMD_CANCEL": "отменить диктовку",
 		"S_CMD_TEXT_PH": "что подставить", "S_CMD_EMPTY": "Команд пока нет", "S_CMD_DEL": "Удалить команду",
 		"S_CMD_P_NEWLINE": "новая строка", "S_CMD_P_PARAGRAPH": "новый абзац", "S_CMD_P_CANCEL": "отмена",
-		"S_SEC_REPLACE": "Замены после распознавания", "S_REPLACE_HINT": "Что услышано неправильно, заменяется на правильное — до промптов и перевода. Порядок сверху вниз.",
+		"S_SEC_REPLACE": "Замены после распознавания", "S_REPLACE_HINT": "Что услышано неправильно, заменяется на правильное — сразу после распознавания, до промптов и перевода. Порядок сверху вниз.",
 		"S_REPL_ADD": "Добавить замену", "S_REPL_FROM_PH": "гит хаб", "S_REPL_TO_PH": "GitHub",
 		"S_REPL_WHOLE": "целые слова", "S_REPL_CASE": "регистр", "S_REPL_EMPTY": "Замен пока нет",
 		"S_REPL_DEL": "Удалить замену", "S_REPL_TEST_PH": "напишите фразу, чтобы проверить замены и команды",
@@ -496,6 +498,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_SUB_THREADS":    "больше потоков — не всегда быстрее, проверьте на своей машине",
 		"S_SUB_PUNCT":      "откуда берутся знаки препинания и заглавные",
 		"S_SUB_TRTARGET":   "на английский переводит Whisper, остальные — экспериментально",
+		"S_TR_EXP":         "кроме английского приложение принудительно задаёт язык вывода, а не переводит — текст может остаться на языке речи",
 		"S_SUB_AUTOSTART":  "выключите, если сервер поднимаете сами",
 		"S_SUB_PORT":       "распознаватель перезапустится сам",
 		"S_SUB_UPD":        "единственный сетевой запрос, кроме загрузки моделей",
@@ -618,7 +621,7 @@ var settingsStrings = map[string]map[string]string{
 			"<p class=\"wh\">Голосовые команды</p>" +
 			"<p>Под заменами на «Тексте» — список команд: сказанное вслух превращается не в слова, а в действие. «Новая строка» и «новый абзац» ставят перенос — модели их сами не ставят никогда; «отмена» выбрасывает всю диктовку, ничего не вставляя; «подставить текст» кладёт что угодно, хоть смайлик. Кнопка «Добавить стандартные» заполняет список привычными фразами на языке интерфейса. Команды ищутся целыми словами и применяются после замен, поэтому в промпты и в перевод уходит уже готовый текст. Лишние пробелы вокруг переносов убираются сами. Поле внизу проверяет и замены, и команды на любой фразе: перенос показывается значком ⏎.</p>" +
 			"<p class=\"wh\">Замены после распознавания</p>" +
-			"<p>На «Тексте» можно перечислить, что модель слышит неправильно и во что это превращать: «гит хаб» → GitHub, фамилии, внутренние термины. Замены применяются сразу после распознавания — до перевода и до промптов, поэтому редактор получает уже правильные слова. По умолчанию ищутся целые слова и без учёта регистра, обе галочки рядом это меняют. Правила применяются сверху вниз. Поле внизу проверяет их на любой фразе, не диктуя.</p>" +
+			"<p>На «Тексте» можно перечислить, что модель слышит неправильно и во что это превращать: «гит хаб» → GitHub, фамилии, внутренние термины. Замены применяются сразу после распознавания, до промптов, поэтому редактор получает уже правильные слова. Перевод на английский делает сам распознаватель, поэтому замены видят уже переведённый текст. По умолчанию ищутся целые слова и без учёта регистра, обе галочки рядом это меняют. Правила применяются сверху вниз. Поле внизу проверяет их на любой фразе, не диктуя.</p>" +
 			"<p class=\"wh\">Правила по приложениям</p>" +
 			"<p>На «Диктовке» можно задать правила для отдельных программ: чем вставлять (буфером или посимвольно), нажимать ли Enter, сколько ждать перед вставкой и какие промпты применять. Программа указывается именем файла — <b>chrome.exe</b>; в одном правиле их можно перечислить через запятую, а звёздочка в конце ловит все имена с таким началом. Выигрывает первое подходящее правило; если правил нет или ни одно не подошло, всё работает как в общих настройках. Кнопка рядом со списком подставляет программу, в которую вставляли в последний раз.</p>" +
 			"<p class=\"wh\">Основные</p>" +
@@ -789,7 +792,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_CMD_NEWLINE": "line break", "S_CMD_PARAGRAPH": "new paragraph", "S_CMD_TEXT": "insert text", "S_CMD_CANCEL": "cancel the dictation",
 		"S_CMD_TEXT_PH": "what to insert", "S_CMD_EMPTY": "No commands yet", "S_CMD_DEL": "Delete the command",
 		"S_CMD_P_NEWLINE": "new line", "S_CMD_P_PARAGRAPH": "new paragraph", "S_CMD_P_CANCEL": "cancel",
-		"S_SEC_REPLACE": "Replacements after recognition", "S_REPLACE_HINT": "What was misheard becomes what you meant — before prompts and translation. Applied from top to bottom.",
+		"S_SEC_REPLACE": "Replacements after recognition", "S_REPLACE_HINT": "What was misheard becomes what you meant — right after recognition, before the prompts. Applied from top to bottom.",
 		"S_REPL_ADD": "Add a replacement", "S_REPL_FROM_PH": "git hub", "S_REPL_TO_PH": "GitHub",
 		"S_REPL_WHOLE": "whole words", "S_REPL_CASE": "case", "S_REPL_EMPTY": "No replacements yet",
 		"S_REPL_DEL": "Delete the replacement", "S_REPL_TEST_PH": "type a phrase to try the replacements and commands",
@@ -869,6 +872,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_SUB_THREADS":    "more threads is not always faster — measure on your machine",
 		"S_SUB_PUNCT":      "where punctuation and capitals come from",
 		"S_SUB_TRTARGET":   "English is native for Whisper, other targets are experimental",
+		"S_TR_EXP":         "for targets other than English the app forces the output language instead of translating — the text may stay in the spoken language",
 		"S_SUB_AUTOSTART":  "turn off if you start the server yourself",
 		"S_SUB_PORT":       "the recognizer restarts itself",
 		"S_SUB_UPD":        "the only network request besides model downloads",
@@ -991,7 +995,7 @@ var settingsStrings = map[string]map[string]string{
 			"<p class=\"wh\">Voice commands</p>" +
 			"<p>Under the replacements on the Text tab there is a list of commands: what you say turns into an action instead of words. \"New line\" and \"new paragraph\" put in a break — models never do; \"cancel\" throws the whole dictation away and inserts nothing; \"insert text\" drops in anything you like, an emoticon included. The button next to the list fills it with the usual phrases in the language of the interface. Commands are matched as whole words and run after the replacements, so the prompts and the translation already get the finished text. Spare spaces around the breaks are cleaned up. The field below tries both replacements and commands on any phrase: a break shows as ⏎.</p>" +
 			"<p class=\"wh\">Replacements after recognition</p>" +
-			"<p>On the Text tab you can list what the model mishears and what it should become: \"git hub\" → GitHub, surnames, in-house terms. Replacements run right after recognition — before translation and before the prompts — so the editor already gets the right words. By default they match whole words and ignore case; the two switches next to each row change that. Rules apply from top to bottom. The field at the bottom tries them on any phrase without dictating.</p>" +
+			"<p>On the Text tab you can list what the model mishears and what it should become: \"git hub\" → GitHub, surnames, in-house terms. Replacements run right after recognition, before the prompts, so the editor already gets the right words. Translation into English happens inside recognition, so replacements see the translated text. By default they match whole words and ignore case; the two switches next to each row change that. Rules apply from top to bottom. The field at the bottom tries them on any phrase without dictating.</p>" +
 			"<p class=\"wh\">Rules per application</p>" +
 			"<p>On the Dictation tab you can set rules for particular programs: what to insert with (the clipboard or character by character), whether to press Enter, how long to wait before inserting and which prompts to apply. A program is named by its file — <b>chrome.exe</b>; one rule can list several, separated by commas, and a trailing asterisk catches every name with that beginning. The first matching rule wins; with no rules, or none that match, everything works as in the general settings. The button next to the list fills in the program you last inserted into.</p>" +
 			"<p class=\"wh\">General</p>" +
