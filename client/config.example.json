@@ -32,6 +32,7 @@
   "history_days": 7,
   "history_max": 200,
   "history_skip": "",
+  "commands": [],
   "animation": true,
   "ui_language": "auto",
   "max_record_seconds": 120,

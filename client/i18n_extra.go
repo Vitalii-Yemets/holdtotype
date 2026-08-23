@@ -23,6 +23,7 @@ func init() {
 		"mic.busy": "Ein Diktat läuft, jetzt geht das nicht", "mic.check.ok": "Klingt gut: Spitze %.0f dB, Sprache in %.0f%% der Aufnahme",
 		"mic.check.quiet": "Zu leise: Spitze %.0f dB — Mikrofonpegel in Windows anheben oder näher sitzen", "mic.check.clipped": "Übersteuert: %.1f%% der Abtastwerte abgeschnitten — Mikrofonpegel senken", "mic.check.silent": "Keine Sprache gehört — prüfen Sie, ob das richtige Mikrofon gewählt und nicht stumm ist",
 		"ov.quiet": "Zu leise, es war fast nichts zu hören", "ov.clipped": "Übersteuert — der Ton wurde abgeschnitten",
+		"ov.cmd.cancelled": "Per Sprache abgebrochen",
 		"ov.silence": "Stille — nichts erkannt", "ov.server.loading": "Server lädt noch",
 		"ov.cancelled": "Abgebrochen", "ov.editing": "Bearbeite: %s", "ov.translating": "Übersetze",
 		"ov.llm.needed": "Diese Sprache benötigt das LLM-Modul", "td.title": "Übersetzen nach:", "td.plain": "Ohne Übersetzung",
@@ -82,6 +83,7 @@ func init() {
 		"mic.busy": "Une dictée est en cours, impossible de vérifier", "mic.check.ok": "Bon signal : crête %.0f dB, parole sur %.0f%% de l'enregistrement",
 		"mic.check.quiet": "Trop faible : crête %.0f dB — montez le niveau du micro dans Windows ou rapprochez-vous", "mic.check.clipped": "Saturation : %.1f%% des échantillons écrêtés — baissez le niveau du micro", "mic.check.silent": "Aucune parole entendue — vérifiez que le bon micro est choisi et qu'il n'est pas coupé",
 		"ov.quiet": "Trop faible, presque rien n'a été entendu", "ov.clipped": "Saturation — le son a été écrêté",
+		"ov.cmd.cancelled": "Annulé à la voix",
 		"ov.silence": "Silence — rien reconnu", "ov.server.loading": "Le serveur charge encore",
 		"ov.cancelled": "Annulé", "ov.editing": "Édition : %s", "ov.translating": "Traduction",
 		"ov.llm.needed": "Cette langue nécessite le module LLM", "td.title": "Traduire vers :", "td.plain": "Sans traduction",
@@ -141,6 +143,7 @@ func init() {
 		"mic.busy": "Hay un dictado en curso, ahora no se puede comprobar", "mic.check.ok": "Se oye bien: pico %.0f dB, voz en el %.0f%% de la grabación",
 		"mic.check.quiet": "Demasiado bajo: pico %.0f dB — sube el nivel del micrófono en Windows o acércate", "mic.check.clipped": "Saturación: %.1f%% de muestras recortadas — baja el nivel del micrófono", "mic.check.silent": "No se oye voz — comprueba que el micrófono elegido es el correcto y no está silenciado",
 		"ov.quiet": "Demasiado bajo, casi no se oyó nada", "ov.clipped": "Saturación: el sonido se recortó",
+		"ov.cmd.cancelled": "Cancelado por voz",
 		"ov.silence": "Silencio — nada reconocido", "ov.server.loading": "El servidor aún carga",
 		"ov.cancelled": "Cancelado", "ov.editing": "Editando: %s", "ov.translating": "Traduciendo",
 		"ov.llm.needed": "Este idioma requiere el módulo LLM", "td.title": "Traducir a:", "td.plain": "Sin traducción",
@@ -200,6 +203,7 @@ func init() {
 		"mic.busy": "C'è una dettatura in corso, ora non si può controllare", "mic.check.ok": "Si sente bene: picco %.0f dB, voce nel %.0f%% della registrazione",
 		"mic.check.quiet": "Troppo basso: picco %.0f dB — alza il livello del microfono in Windows o avvicinati", "mic.check.clipped": "Distorsione: %.1f%% dei campioni tagliati — abbassa il livello del microfono", "mic.check.silent": "Nessuna voce sentita — controlla che sia scelto il microfono giusto e non sia muto",
 		"ov.quiet": "Troppo basso, non si è sentito quasi nulla", "ov.clipped": "Distorsione: il suono è stato tagliato",
+		"ov.cmd.cancelled": "Annullato a voce",
 		"ov.silence": "Silenzio — nulla riconosciuto", "ov.server.loading": "Il server sta ancora caricando",
 		"ov.cancelled": "Annullato", "ov.editing": "Modifica: %s", "ov.translating": "Traduzione",
 		"ov.llm.needed": "Questa lingua richiede il modulo LLM", "td.title": "Traduci in:", "td.plain": "Senza traduzione",
@@ -259,6 +263,7 @@ func init() {
 		"mic.busy": "Trwa dyktowanie, teraz nie można sprawdzić", "mic.check.ok": "Brzmi dobrze: szczyt %.0f dB, mowa w %.0f%% nagrania",
 		"mic.check.quiet": "Za cicho: szczyt %.0f dB — podnieś poziom mikrofonu w Windows albo usiądź bliżej", "mic.check.clipped": "Przesterowanie: obcięto %.1f%% próbek — zmniejsz poziom mikrofonu", "mic.check.silent": "Nie słychać mowy — sprawdź, czy wybrany jest właściwy mikrofon i czy nie jest wyciszony",
 		"ov.quiet": "Za cicho, prawie nic nie było słychać", "ov.clipped": "Przesterowanie — dźwięk został obcięty",
+		"ov.cmd.cancelled": "Anulowano głosem",
 		"ov.silence": "Cisza — nic nie rozpoznano", "ov.server.loading": "Serwer wciąż się ładuje",
 		"ov.cancelled": "Anulowano", "ov.editing": "Edycja: %s", "ov.translating": "Tłumaczenie",
 		"ov.llm.needed": "Ten język wymaga modułu LLM", "td.title": "Tłumacz na:", "td.plain": "Bez tłumaczenia",
@@ -320,10 +325,15 @@ func init() {
 		"S_HIST_SKIP": "Aus diesen Programmen nie aufzeichnen", "S_HIST_SKIP_SUB": "durch Komma getrennt: keepass.exe, 1password.exe",
 		"S_HIST_LIST": "Einträge", "S_HIST_CLEAR": "Leeren", "S_HIST_COPY": "Kopieren",
 		"S_HIST_FIND": "Im Verlauf suchen…", "S_HIST_EMPTY": "Noch kein Verlauf", "S_HIST_ASK": "Den gesamten Diktatverlauf löschen?",
+		"S_SEC_CMD": "Sprachbefehle", "S_CMD_HINT": "Gesagtes wird zu einem Zeilenumbruch, einem Zeichen oder einem Abbruch, statt im Text zu landen. Als ganze Wörter erkannt, von oben nach unten angewendet, nach den Ersetzungen.",
+		"S_CMD_ADD": "Befehl hinzufügen", "S_CMD_PRESET": "Übliche hinzufügen", "S_CMD_PH": "neue Zeile",
+		"S_CMD_NEWLINE": "Zeilenumbruch", "S_CMD_PARAGRAPH": "neuer Absatz", "S_CMD_TEXT": "Text einfügen", "S_CMD_CANCEL": "Diktat abbrechen",
+		"S_CMD_TEXT_PH": "was einfügen", "S_CMD_EMPTY": "Noch keine Befehle", "S_CMD_DEL": "Befehl löschen",
+		"S_CMD_P_NEWLINE": "neue Zeile", "S_CMD_P_PARAGRAPH": "neuer Absatz", "S_CMD_P_CANCEL": "abbrechen",
 		"S_SEC_REPLACE": "Ersetzungen nach der Erkennung", "S_REPLACE_HINT": "Falsch Gehörtes wird zu dem, was gemeint war — vor Prompts und Übersetzung. Von oben nach unten angewendet.",
 		"S_REPL_ADD": "Ersetzung hinzufügen", "S_REPL_FROM_PH": "git hub", "S_REPL_TO_PH": "GitHub",
 		"S_REPL_WHOLE": "ganze Wörter", "S_REPL_CASE": "Groß-/Kleinschreibung", "S_REPL_EMPTY": "Noch keine Ersetzungen",
-		"S_REPL_DEL": "Ersetzung löschen", "S_REPL_TEST_PH": "Satz eingeben, um die Ersetzungen zu prüfen",
+		"S_REPL_DEL": "Ersetzung löschen", "S_REPL_TEST_PH": "Satz eingeben, um Ersetzungen und Befehle zu prüfen",
 		"S_SEC_RULES": "Regeln pro Programm", "S_RULES_HINT": "Für einzelne Programme kann das Einfügen anders laufen. Die erste passende Regel gewinnt.",
 		"S_RULE_ADD": "Regel hinzufügen", "S_RULE_PH": "chrome.exe, msedge.exe",
 		"S_RULE_PASTE_INH": "Einfügen: wie sonst", "S_RULE_ENTER_INH": "Enter: wie sonst", "S_RULE_DELAY_NONE": "ohne Verzögerung", "S_RULE_PROMPT_INH": "Prompts: wie sonst",
@@ -433,6 +443,8 @@ func init() {
 			"<p>Die Schaltfläche „Test“ unter „Mikrofon“ nimmt drei Sekunden auf und zerlegt sie: Spitzenpegel in Dezibel, wie viel der Aufnahme wirklich Sprache enthält und wie viele Abtastwerte abgeschnitten wurden. Die Antwort kommt in Worten: klingt gut, zu leise — Pegel in Windows anheben, übersteuert — Pegel senken, keine Sprache gehört — ist das richtige Mikrofon gewählt. Dasselbe wird nach jedem Diktat gemessen und ins Log geschrieben; kommt die Erkennung leer zurück, nennt die Leiste den Grund — zu leise, übersteuert oder Stille — statt nur zu sagen, sie habe nichts gehört.</p>" +
 			"<p class=\"wh\">Verlauf der Diktate</p>" +
 			"<p>Der Abschnitt „Verlauf“ in der linken Spalte bewahrt auf, was Sie diktiert haben: nur Text, nur auf diesem Rechner, Ton wird nie gespeichert. Standardmäßig aus, eingeschaltet wird er mit einem Schalter an derselben Stelle. Einträge bleiben eine eingestellte Zahl von Tagen und bis zu einer eingestellten Anzahl, Älteres fällt von selbst heraus; „Aus diesen Programmen nie aufzeichnen“ listet durch Komma getrennt jene, aus denen nichts gespeichert werden soll — Passwortmanager, Banking. Die Suche greift auf Text und Programmnamen, die Schaltfläche neben einem Eintrag legt ihn in die Zwischenablage, und „Leeren“ entfernt alles samt der Datei <b>{app}-history.json</b>.</p>" +
+			"<p class=\"wh\">Sprachbefehle</p>" +
+			"<p>Unter den Ersetzungen auf der Registerkarte „Text“ steht eine Liste von Befehlen: Gesagtes wird zur Handlung statt zu Wörtern. „Neue Zeile“ und „neuer Absatz“ setzen einen Umbruch — Modelle tun das nie; „abbrechen“ verwirft das ganze Diktat und fügt nichts ein; „Text einfügen“ setzt beliebiges ein, auch ein Smiley. Die Schaltfläche neben der Liste füllt sie mit den üblichen Wendungen in der Sprache der Oberfläche. Befehle werden als ganze Wörter erkannt und laufen nach den Ersetzungen, damit Prompts und Übersetzung schon den fertigen Text bekommen. Überflüssige Leerzeichen um die Umbrüche verschwinden von selbst. Das Feld darunter probiert Ersetzungen und Befehle an jedem Satz: ein Umbruch erscheint als ⏎.</p>" +
 			"<p class=\"wh\">Ersetzungen nach der Erkennung</p>" +
 			"<p>Unter „Text“ lässt sich auflisten, was das Modell falsch hört und was daraus werden soll: „git hub“ → GitHub, Nachnamen, hauseigene Begriffe. Ersetzungen laufen direkt nach der Erkennung — vor der Übersetzung und vor den Prompts, damit der Editor bereits die richtigen Wörter bekommt. Standardmäßig gelten ganze Wörter und keine Groß-/Kleinschreibung; die beiden Schalter daneben ändern das. Regeln greifen von oben nach unten. Das Feld darunter probiert sie an jedem Satz aus, ganz ohne Diktat.</p>" +
 			"<p class=\"wh\">Regeln pro Programm</p>" +
@@ -549,10 +561,15 @@ func init() {
 		"S_HIST_SKIP": "Ne jamais enregistrer depuis ces programmes", "S_HIST_SKIP_SUB": "séparés par des virgules : keepass.exe, 1password.exe",
 		"S_HIST_LIST": "Entrées", "S_HIST_CLEAR": "Vider", "S_HIST_COPY": "Copier",
 		"S_HIST_FIND": "Chercher dans l'historique…", "S_HIST_EMPTY": "Pas encore d'historique", "S_HIST_ASK": "Supprimer tout l'historique des dictées ?",
+		"S_SEC_CMD": "Commandes vocales", "S_CMD_HINT": "Ce que vous dites devient un saut de ligne, un signe ou une annulation au lieu d'atterrir dans le texte. Reconnues en mots entiers, appliquées de haut en bas, après les remplacements.",
+		"S_CMD_ADD": "Ajouter une commande", "S_CMD_PRESET": "Ajouter les habituelles", "S_CMD_PH": "nouvelle ligne",
+		"S_CMD_NEWLINE": "saut de ligne", "S_CMD_PARAGRAPH": "nouveau paragraphe", "S_CMD_TEXT": "insérer du texte", "S_CMD_CANCEL": "annuler la dictée",
+		"S_CMD_TEXT_PH": "quoi insérer", "S_CMD_EMPTY": "Aucune commande pour l'instant", "S_CMD_DEL": "Supprimer la commande",
+		"S_CMD_P_NEWLINE": "nouvelle ligne", "S_CMD_P_PARAGRAPH": "nouveau paragraphe", "S_CMD_P_CANCEL": "annuler",
 		"S_SEC_REPLACE": "Remplacements après la reconnaissance", "S_REPLACE_HINT": "Ce qui a été mal entendu devient ce que vous vouliez dire — avant les prompts et la traduction. Appliqués de haut en bas.",
 		"S_REPL_ADD": "Ajouter un remplacement", "S_REPL_FROM_PH": "git hub", "S_REPL_TO_PH": "GitHub",
 		"S_REPL_WHOLE": "mots entiers", "S_REPL_CASE": "casse", "S_REPL_EMPTY": "Aucun remplacement pour l'instant",
-		"S_REPL_DEL": "Supprimer le remplacement", "S_REPL_TEST_PH": "tapez une phrase pour tester les remplacements",
+		"S_REPL_DEL": "Supprimer le remplacement", "S_REPL_TEST_PH": "tapez une phrase pour tester remplacements et commandes",
 		"S_SEC_RULES": "Règles par application", "S_RULES_HINT": "L'insertion peut fonctionner autrement pour certains programmes. La première règle qui correspond l'emporte.",
 		"S_RULE_ADD": "Ajouter une règle", "S_RULE_PH": "chrome.exe, msedge.exe",
 		"S_RULE_PASTE_INH": "insertion : comme partout", "S_RULE_ENTER_INH": "Entrée : comme partout", "S_RULE_DELAY_NONE": "sans délai", "S_RULE_PROMPT_INH": "prompts : comme partout",
@@ -662,6 +679,8 @@ func init() {
 			"<p>Le bouton « Test » de l'onglet Microphone enregistre trois secondes et les décortique : niveau de crête en décibels, part de l'enregistrement qui contient vraiment de la parole, et part d'échantillons écrêtés. La réponse est en mots : bon signal, trop faible — montez le niveau dans Windows, saturation — baissez-le, aucune parole entendue — est-ce le bon micro. Les mêmes mesures sont faites après chaque dictée et écrites dans le journal ; si la reconnaissance revient vide, le bandeau nomme la raison — trop faible, saturation ou silence — au lieu de dire simplement qu'il n'a rien entendu.</p>" +
 			"<p class=\"wh\">Historique des dictées</p>" +
 			"<p>La section « Historique » dans la colonne de gauche conserve ce que vous avez dicté : le texte seul, sur cet ordinateur seulement, l'audio n'est jamais conservé. Désactivée par défaut, elle s'active d'un interrupteur au même endroit. Les entrées restent un nombre de jours et jusqu'à un nombre d'entrées réglables, les plus anciennes disparaissent d'elles-mêmes ; « Ne jamais enregistrer depuis ces programmes » liste, séparés par des virgules, ceux dont rien ne doit être conservé — gestionnaires de mots de passe, applications bancaires. La recherche porte sur le texte et sur le nom du programme, le bouton à côté d'une entrée la met dans le presse-papiers, et « Vider » supprime tout d'un coup avec le fichier <b>{app}-history.json</b>.</p>" +
+			"<p class=\"wh\">Commandes vocales</p>" +
+			"<p>Sous les remplacements, dans l'onglet Texte, il y a une liste de commandes : ce que vous dites devient une action au lieu de mots. « Nouvelle ligne » et « nouveau paragraphe » posent un saut — les modèles ne le font jamais ; « annuler » jette toute la dictée sans rien insérer ; « insérer du texte » place ce que vous voulez, un émoticône compris. Le bouton à côté de la liste la remplit des formules habituelles dans la langue de l'interface. Les commandes sont reconnues en mots entiers et s'appliquent après les remplacements, si bien que les prompts et la traduction reçoivent déjà le texte fini. Les espaces en trop autour des sauts disparaissent d'eux-mêmes. Le champ du dessous essaie remplacements et commandes sur n'importe quelle phrase : un saut s'affiche comme ⏎.</p>" +
 			"<p class=\"wh\">Remplacements après la reconnaissance</p>" +
 			"<p>Dans « Texte », vous pouvez lister ce que le modèle entend mal et ce que cela doit devenir : « git hub » → GitHub, des noms propres, des termes maison. Les remplacements s'appliquent juste après la reconnaissance — avant la traduction et avant les prompts — pour que l'éditeur reçoive déjà les bons mots. Par défaut ils visent les mots entiers et ignorent la casse ; les deux interrupteurs à côté changent cela. Les règles s'appliquent de haut en bas. Le champ du dessous les essaie sur n'importe quelle phrase, sans dicter.</p>" +
 			"<p class=\"wh\">Règles par application</p>" +
@@ -778,10 +797,15 @@ func init() {
 		"S_HIST_SKIP": "No registrar nunca desde estos programas", "S_HIST_SKIP_SUB": "separados por comas: keepass.exe, 1password.exe",
 		"S_HIST_LIST": "Entradas", "S_HIST_CLEAR": "Vaciar", "S_HIST_COPY": "Copiar",
 		"S_HIST_FIND": "Buscar en el historial…", "S_HIST_EMPTY": "Todavía no hay historial", "S_HIST_ASK": "¿Eliminar todo el historial de dictados?",
+		"S_SEC_CMD": "Comandos de voz", "S_CMD_HINT": "Lo que dices se convierte en un salto de línea, un signo o una cancelación en vez de acabar en el texto. Se buscan como palabras completas y se aplican de arriba abajo, después de los reemplazos.",
+		"S_CMD_ADD": "Añadir un comando", "S_CMD_PRESET": "Añadir los habituales", "S_CMD_PH": "nueva línea",
+		"S_CMD_NEWLINE": "salto de línea", "S_CMD_PARAGRAPH": "nuevo párrafo", "S_CMD_TEXT": "insertar texto", "S_CMD_CANCEL": "cancelar el dictado",
+		"S_CMD_TEXT_PH": "qué insertar", "S_CMD_EMPTY": "Todavía no hay comandos", "S_CMD_DEL": "Eliminar el comando",
+		"S_CMD_P_NEWLINE": "nueva línea", "S_CMD_P_PARAGRAPH": "nuevo párrafo", "S_CMD_P_CANCEL": "cancelar",
 		"S_SEC_REPLACE": "Reemplazos tras el reconocimiento", "S_REPLACE_HINT": "Lo que se oyó mal se convierte en lo que querías decir, antes de los prompts y la traducción. Se aplican de arriba abajo.",
 		"S_REPL_ADD": "Añadir un reemplazo", "S_REPL_FROM_PH": "git hub", "S_REPL_TO_PH": "GitHub",
 		"S_REPL_WHOLE": "palabras completas", "S_REPL_CASE": "mayúsculas", "S_REPL_EMPTY": "Todavía no hay reemplazos",
-		"S_REPL_DEL": "Eliminar el reemplazo", "S_REPL_TEST_PH": "escribe una frase para probar los reemplazos",
+		"S_REPL_DEL": "Eliminar el reemplazo", "S_REPL_TEST_PH": "escribe una frase para probar reemplazos y comandos",
 		"S_SEC_RULES": "Reglas por aplicación", "S_RULES_HINT": "La inserción puede funcionar de otra forma en programas concretos. Gana la primera regla que coincide.",
 		"S_RULE_ADD": "Añadir una regla", "S_RULE_PH": "chrome.exe, msedge.exe",
 		"S_RULE_PASTE_INH": "inserción: como siempre", "S_RULE_ENTER_INH": "Intro: como siempre", "S_RULE_DELAY_NONE": "sin retraso", "S_RULE_PROMPT_INH": "prompts: como siempre",
@@ -891,6 +915,8 @@ func init() {
 			"<p>El botón «Test» de la pestaña Micrófono graba tres segundos y los analiza: pico en decibelios, qué parte de la grabación contiene voz de verdad y qué parte de las muestras se recortó. La respuesta llega en palabras: se oye bien, demasiado bajo — sube el nivel en Windows, saturación — bájalo, no se oye voz — ¿está elegido el micrófono correcto? Lo mismo se mide tras cada dictado y se escribe en el registro; si el reconocimiento vuelve vacío, la barra nombra el motivo — bajo, saturación o silencio — en vez de decir solo que no oyó nada.</p>" +
 			"<p class=\"wh\">Historial de dictados</p>" +
 			"<p>La sección «Historial» de la columna izquierda guarda lo que has dictado: solo el texto, solo en este equipo, el audio nunca se guarda. Está desactivada por defecto y se activa con un interruptor en el mismo sitio. Las entradas se conservan durante los días y hasta la cantidad que fijes, las viejas caen solas; «No registrar nunca desde estos programas» enumera, separados por comas, aquellos de los que no debe guardarse nada — gestores de contraseñas, banca. La búsqueda cubre el texto y el nombre del programa, el botón junto a una entrada la copia al portapapeles, y «Vaciar» borra todo de golpe junto con el archivo <b>{app}-history.json</b>.</p>" +
+			"<p class=\"wh\">Comandos de voz</p>" +
+			"<p>Bajo los reemplazos, en la pestaña Texto, hay una lista de comandos: lo que dices se convierte en una acción en lugar de en palabras. «Nueva línea» y «nuevo párrafo» ponen un salto — los modelos nunca lo hacen; «cancelar» descarta todo el dictado sin insertar nada; «insertar texto» coloca lo que quieras, incluso un emoticono. El botón junto a la lista la rellena con las frases habituales en el idioma de la interfaz. Los comandos se buscan como palabras completas y se aplican tras los reemplazos, así que los prompts y la traducción reciben ya el texto terminado. Los espacios sobrantes junto a los saltos se limpian solos. El campo de abajo prueba reemplazos y comandos con cualquier frase: un salto se muestra como ⏎.</p>" +
 			"<p class=\"wh\">Reemplazos tras el reconocimiento</p>" +
 			"<p>En «Texto» puedes enumerar lo que el modelo oye mal y en qué debe convertirse: «git hub» → GitHub, apellidos, términos internos. Los reemplazos se aplican justo después del reconocimiento — antes de la traducción y de los prompts — para que el editor ya reciba las palabras correctas. Por defecto buscan palabras completas y no distinguen mayúsculas; los dos interruptores de al lado lo cambian. Las reglas se aplican de arriba abajo. El campo de abajo las prueba con cualquier frase, sin dictar.</p>" +
 			"<p class=\"wh\">Reglas por aplicación</p>" +
@@ -1007,10 +1033,15 @@ func init() {
 		"S_HIST_SKIP": "Non registrare mai da questi programmi", "S_HIST_SKIP_SUB": "separati da virgole: keepass.exe, 1password.exe",
 		"S_HIST_LIST": "Voci", "S_HIST_CLEAR": "Svuota", "S_HIST_COPY": "Copia",
 		"S_HIST_FIND": "Cerca nella cronologia…", "S_HIST_EMPTY": "Ancora nessuna cronologia", "S_HIST_ASK": "Eliminare tutta la cronologia delle dettature?",
+		"S_SEC_CMD": "Comandi vocali", "S_CMD_HINT": "Ciò che dici diventa un a capo, un segno o un annullamento invece di finire nel testo. Riconosciuti come parole intere, applicati dall'alto in basso, dopo le sostituzioni.",
+		"S_CMD_ADD": "Aggiungi un comando", "S_CMD_PRESET": "Aggiungi quelli soliti", "S_CMD_PH": "nuova riga",
+		"S_CMD_NEWLINE": "a capo", "S_CMD_PARAGRAPH": "nuovo paragrafo", "S_CMD_TEXT": "inserire testo", "S_CMD_CANCEL": "annullare la dettatura",
+		"S_CMD_TEXT_PH": "cosa inserire", "S_CMD_EMPTY": "Ancora nessun comando", "S_CMD_DEL": "Elimina il comando",
+		"S_CMD_P_NEWLINE": "nuova riga", "S_CMD_P_PARAGRAPH": "nuovo paragrafo", "S_CMD_P_CANCEL": "annulla",
 		"S_SEC_REPLACE": "Sostituzioni dopo il riconoscimento", "S_REPLACE_HINT": "Ciò che è stato sentito male diventa ciò che intendevi — prima dei prompt e della traduzione. Applicate dall'alto in basso.",
 		"S_REPL_ADD": "Aggiungi una sostituzione", "S_REPL_FROM_PH": "git hub", "S_REPL_TO_PH": "GitHub",
 		"S_REPL_WHOLE": "parole intere", "S_REPL_CASE": "maiuscole", "S_REPL_EMPTY": "Ancora nessuna sostituzione",
-		"S_REPL_DEL": "Elimina la sostituzione", "S_REPL_TEST_PH": "scrivi una frase per provare le sostituzioni",
+		"S_REPL_DEL": "Elimina la sostituzione", "S_REPL_TEST_PH": "scrivi una frase per provare sostituzioni e comandi",
 		"S_SEC_RULES": "Regole per applicazione", "S_RULES_HINT": "L'inserimento può funzionare diversamente in certi programmi. Vince la prima regola che corrisponde.",
 		"S_RULE_ADD": "Aggiungi una regola", "S_RULE_PH": "chrome.exe, msedge.exe",
 		"S_RULE_PASTE_INH": "inserimento: come sempre", "S_RULE_ENTER_INH": "Invio: come sempre", "S_RULE_DELAY_NONE": "senza ritardo", "S_RULE_PROMPT_INH": "prompt: come sempre",
@@ -1120,6 +1151,8 @@ func init() {
 			"<p>Il pulsante «Test» nella scheda Microfono registra tre secondi e li scompone: picco in decibel, quanta parte della registrazione contiene davvero voce e quanti campioni sono stati tagliati. La risposta arriva a parole: si sente bene, troppo basso — alza il livello in Windows, distorsione — abbassalo, nessuna voce sentita — è scelto il microfono giusto. Le stesse misure vengono fatte dopo ogni dettatura e finiscono nel log; se il riconoscimento torna vuoto, la barra dice il motivo — basso, distorsione o silenzio — invece di dire soltanto che non ha sentito nulla.</p>" +
 			"<p class=\"wh\">Cronologia delle dettature</p>" +
 			"<p>La sezione «Cronologia» nella colonna di sinistra conserva ciò che hai dettato: solo testo, solo su questo computer, l'audio non viene mai salvato. È disattivata per impostazione predefinita e si accende con un interruttore lì accanto. Le voci restano per i giorni e fino al numero che imposti, le più vecchie escono da sole; «Non registrare mai da questi programmi» elenca, separati da virgole, quelli da cui non salvare nulla — gestori di password, home banking. La ricerca copre il testo e il nome del programma, il pulsante accanto a una voce la mette negli appunti, e «Svuota» cancella tutto insieme al file <b>{app}-history.json</b>.</p>" +
+			"<p class=\"wh\">Comandi vocali</p>" +
+			"<p>Sotto le sostituzioni, nella scheda Testo, c'è un elenco di comandi: ciò che dici diventa un'azione invece che parole. «Nuova riga» e «nuovo paragrafo» inseriscono un a capo — i modelli non lo fanno mai; «annulla» butta via l'intera dettatura senza inserire nulla; «inserire testo» mette quello che vuoi, faccina compresa. Il pulsante accanto all'elenco lo riempie con le formule solite nella lingua dell'interfaccia. I comandi sono riconosciuti come parole intere e si applicano dopo le sostituzioni, così i prompt e la traduzione ricevono già il testo finito. Gli spazi di troppo attorno agli a capo spariscono da soli. Il campo in fondo prova sostituzioni e comandi su qualsiasi frase: un a capo appare come ⏎.</p>" +
 			"<p class=\"wh\">Sostituzioni dopo il riconoscimento</p>" +
 			"<p>In «Testo» puoi elencare ciò che il modello sente male e in che cosa deve diventare: «git hub» → GitHub, cognomi, termini interni. Le sostituzioni si applicano subito dopo il riconoscimento — prima della traduzione e prima dei prompt — così l'editor riceve già le parole giuste. Per impostazione predefinita cercano parole intere e ignorano le maiuscole; i due interruttori accanto lo cambiano. Le regole si applicano dall'alto in basso. Il campo in fondo le prova su qualsiasi frase, senza dettare.</p>" +
 			"<p class=\"wh\">Regole per applicazione</p>" +
@@ -1236,10 +1269,15 @@ func init() {
 		"S_HIST_SKIP": "Nigdy nie zapisuj z tych programów", "S_HIST_SKIP_SUB": "po przecinku: keepass.exe, 1password.exe",
 		"S_HIST_LIST": "Wpisy", "S_HIST_CLEAR": "Wyczyść", "S_HIST_COPY": "Kopiuj",
 		"S_HIST_FIND": "Szukaj w historii…", "S_HIST_EMPTY": "Na razie brak historii", "S_HIST_ASK": "Usunąć całą historię dyktowań?",
+		"S_SEC_CMD": "Komendy głosowe", "S_CMD_HINT": "To, co powiesz, zamienia się w złamanie wiersza, znak albo anulowanie, zamiast trafić do tekstu. Rozpoznawane jako całe słowa, stosowane od góry do dołu, po zamianach.",
+		"S_CMD_ADD": "Dodaj komendę", "S_CMD_PRESET": "Dodaj typowe", "S_CMD_PH": "nowy wiersz",
+		"S_CMD_NEWLINE": "złamanie wiersza", "S_CMD_PARAGRAPH": "nowy akapit", "S_CMD_TEXT": "wstawić tekst", "S_CMD_CANCEL": "anulować dyktowanie",
+		"S_CMD_TEXT_PH": "co wstawić", "S_CMD_EMPTY": "Na razie brak komend", "S_CMD_DEL": "Usuń komendę",
+		"S_CMD_P_NEWLINE": "nowy wiersz", "S_CMD_P_PARAGRAPH": "nowy akapit", "S_CMD_P_CANCEL": "anuluj",
 		"S_SEC_REPLACE": "Zamiany po rozpoznaniu", "S_REPLACE_HINT": "To, co zostało źle usłyszane, staje się tym, co miałeś na myśli — przed promptami i tłumaczeniem. Stosowane od góry do dołu.",
 		"S_REPL_ADD": "Dodaj zamianę", "S_REPL_FROM_PH": "git hub", "S_REPL_TO_PH": "GitHub",
 		"S_REPL_WHOLE": "całe słowa", "S_REPL_CASE": "wielkość liter", "S_REPL_EMPTY": "Na razie brak zamian",
-		"S_REPL_DEL": "Usuń zamianę", "S_REPL_TEST_PH": "wpisz zdanie, aby sprawdzić zamiany",
+		"S_REPL_DEL": "Usuń zamianę", "S_REPL_TEST_PH": "wpisz zdanie, aby sprawdzić zamiany i komendy",
 		"S_SEC_RULES": "Reguły dla programów", "S_RULES_HINT": "W wybranych programach wstawianie może działać inaczej. Wygrywa pierwsza pasująca reguła.",
 		"S_RULE_ADD": "Dodaj regułę", "S_RULE_PH": "chrome.exe, msedge.exe",
 		"S_RULE_PASTE_INH": "wstawianie: jak zwykle", "S_RULE_ENTER_INH": "Enter: jak zwykle", "S_RULE_DELAY_NONE": "bez opóźnienia", "S_RULE_PROMPT_INH": "prompty: jak zwykle",
@@ -1349,6 +1387,8 @@ func init() {
 			"<p>Przycisk „Test” na karcie Mikrofon nagrywa trzy sekundy i je rozbiera: szczyt w decybelach, jaka część nagrania naprawdę zawiera mowę i ile próbek zostało obciętych. Odpowiedź przychodzi słowami: brzmi dobrze, za cicho — podnieś poziom w Windows, przesterowanie — zmniejsz go, nie słychać mowy — czy wybrany jest właściwy mikrofon. To samo mierzy się po każdym dyktowaniu i trafia do dziennika; gdy rozpoznanie wraca puste, pasek nazywa powód — cicho, przesterowanie albo cisza — zamiast mówić tylko, że nic nie usłyszał.</p>" +
 			"<p class=\"wh\">Historia dyktowań</p>" +
 			"<p>Sekcja „Historia” w lewej kolumnie przechowuje to, co podyktowałeś: tylko tekst, tylko na tym komputerze, dźwięk nigdy nie jest zapisywany. Domyślnie wyłączona, włącza się jednym przełącznikiem w tym samym miejscu. Wpisy trzymają się przez ustaloną liczbę dni i do ustalonej liczby, starsze wypadają same; „Nigdy nie zapisuj z tych programów” wymienia po przecinku te, z których nic nie ma być zapisywane — menedżery haseł, bankowość. Wyszukiwanie obejmuje tekst i nazwę programu, przycisk obok wpisu wkłada go do schowka, a „Wyczyść” usuwa wszystko razem z plikiem <b>{app}-history.json</b>.</p>" +
+			"<p class=\"wh\">Komendy głosowe</p>" +
+			"<p>Pod zamianami na karcie „Tekst” jest lista komend: to, co powiesz, zamienia się w działanie zamiast w słowa. „Nowy wiersz” i „nowy akapit” wstawiają złamanie — modele nigdy tego nie robią; „anuluj” wyrzuca całe dyktowanie i nic nie wstawia; „wstawić tekst” wkłada cokolwiek, choćby uśmieszek. Przycisk obok listy wypełnia ją typowymi zwrotami w języku interfejsu. Komendy rozpoznawane są jako całe słowa i działają po zamianach, więc prompty i tłumaczenie dostają już gotowy tekst. Zbędne spacje wokół złamań znikają same. Pole poniżej sprawdza zamiany i komendy na dowolnym zdaniu: złamanie pokazuje się jako ⏎.</p>" +
 			"<p class=\"wh\">Zamiany po rozpoznaniu</p>" +
 			"<p>W „Tekście” można wypisać, co model słyszy źle i w co ma to zamienić: „git hub” → GitHub, nazwiska, wewnętrzne terminy. Zamiany działają zaraz po rozpoznaniu — przed tłumaczeniem i przed promptami, więc edytor dostaje już właściwe słowa. Domyślnie szukają całych słów i nie zważają na wielkość liter; dwa przełączniki obok to zmieniają. Reguły działają od góry do dołu. Pole poniżej sprawdza je na dowolnym zdaniu, bez dyktowania.</p>" +
 			"<p class=\"wh\">Reguły dla programów</p>" +
@@ -1470,6 +1510,7 @@ func init() {
 		"mic.busy": "Триває диктування, зараз перевірити не можна", "mic.check.ok": "Чути добре: пік %.0f дБ, мовлення на %.0f%% запису",
 		"mic.check.quiet": "Надто тихо: пік %.0f дБ — додайте гучності мікрофона у Windows або сядьте ближче", "mic.check.clipped": "Перевантаження: обрізано %.1f%% відліків — зменште гучність мікрофона", "mic.check.silent": "Мовлення не чути — перевірте, чи вибрано той мікрофон і чи не вимкнений він",
 		"ov.quiet": "Надто тихо, майже нічого не чути", "ov.clipped": "Перевантаження — звук обрізано",
+		"ov.cmd.cancelled": "Скасовано голосом",
 		"ov.silence": "Тиша — нічого не розпізнано", "ov.server.loading": "Сервер ще завантажується",
 		"ov.cancelled": "Скасовано", "ov.editing": "Редагую: %s", "ov.translating": "Перекладаю",
 		"ov.llm.needed": "Ця мова потребує LLM-модуль", "td.title": "Перекласти на:", "td.plain": "Без перекладу",
@@ -1547,10 +1588,15 @@ func init() {
 		"S_HIST_SKIP": "Не записувати з цих програм", "S_HIST_SKIP_SUB": "через кому: keepass.exe, 1password.exe",
 		"S_HIST_LIST": "Записи", "S_HIST_CLEAR": "Очистити", "S_HIST_COPY": "Копіювати",
 		"S_HIST_FIND": "Знайти в історії…", "S_HIST_EMPTY": "Історії поки немає", "S_HIST_ASK": "Видалити всю історію диктувань?",
+		"S_SEC_CMD": "Голосові команди", "S_CMD_HINT": "Сказане перетворюється на перенесення рядка, знак або скасування замість того, щоб потрапити в текст. Шукаються цілими словами, застосовуються згори вниз, уже після замін.",
+		"S_CMD_ADD": "Додати команду", "S_CMD_PRESET": "Додати звичайні", "S_CMD_PH": "новий рядок",
+		"S_CMD_NEWLINE": "перенесення рядка", "S_CMD_PARAGRAPH": "новий абзац", "S_CMD_TEXT": "підставити текст", "S_CMD_CANCEL": "скасувати диктування",
+		"S_CMD_TEXT_PH": "що підставити", "S_CMD_EMPTY": "Команд поки немає", "S_CMD_DEL": "Видалити команду",
+		"S_CMD_P_NEWLINE": "новий рядок", "S_CMD_P_PARAGRAPH": "новий абзац", "S_CMD_P_CANCEL": "скасувати",
 		"S_SEC_REPLACE": "Заміни після розпізнавання", "S_REPLACE_HINT": "Те, що почулося неправильно, стає тим, що ви мали на увазі — до промптів і перекладу. Застосовуються згори вниз.",
 		"S_REPL_ADD": "Додати заміну", "S_REPL_FROM_PH": "гіт хаб", "S_REPL_TO_PH": "GitHub",
 		"S_REPL_WHOLE": "цілі слова", "S_REPL_CASE": "регістр", "S_REPL_EMPTY": "Замін поки немає",
-		"S_REPL_DEL": "Видалити заміну", "S_REPL_TEST_PH": "напишіть фразу, щоб перевірити заміни",
+		"S_REPL_DEL": "Видалити заміну", "S_REPL_TEST_PH": "напишіть фразу, щоб перевірити заміни й команди",
 		"S_SEC_RULES": "Правила для програм", "S_RULES_HINT": "Для окремих програм вставка може працювати інакше. Виграє перше відповідне правило.",
 		"S_RULE_ADD": "Додати правило", "S_RULE_PH": "chrome.exe, msedge.exe",
 		"S_RULE_PASTE_INH": "вставка: як усюди", "S_RULE_ENTER_INH": "Enter: як усюди", "S_RULE_DELAY_NONE": "без затримки", "S_RULE_PROMPT_INH": "промпти: як усюди",
@@ -1641,6 +1687,8 @@ func init() {
 			"<p>Кнопка «Перевірка» на «Мікрофоні» записує три секунди й розбирає їх: пікова гучність у децибелах, частка запису, де справді є мовлення, і частка обрізаних відліків. Відповідь приходить словами: чути добре, надто тихо — додайте гучності у Windows, перевантаження — зменште її, мовлення не чути — чи той мікрофон вибрано. Те саме рахується після кожного диктування й пишеться в журнал; якщо розпізнати не вдалося, смужка назве причину — тихо, перевантаження чи тиша, — а не просто «нічого не почув».</p>" +
 			"<p class=\"wh\">Історія диктувань</p>" +
 			"<p>Розділ «Історія» в лівому стовпці зберігає те, що ви надиктували: лише текст, лише на цьому комп'ютері, звук не зберігається ніколи. Типово вимкнено — вмикається одним перемикачем там само. Записи тримаються задану кількість днів і до заданої кількості, старі зникають самі; поле «Не записувати з цих програм» перелічує через кому ті, з яких не треба зберігати нічого — менеджери паролів, банк-клієнт. Пошук шукає і за текстом, і за назвою програми, кнопка поруч із записом кладе його в буфер обміну, а «Очистити» видаляє все разом із файлом <b>{app}-history.json</b>.</p>" +
+			"<p class=\"wh\">Голосові команди</p>" +
+			"<p>Під замінами на «Тексті» — список команд: сказане перетворюється не на слова, а на дію. «Новий рядок» і «новий абзац» ставлять перенесення — моделі його не ставлять ніколи; «скасувати» викидає все диктування, нічого не вставляючи; «підставити текст» кладе будь-що, хоч смайлик. Кнопка поруч зі списком заповнює його звичними фразами мовою інтерфейсу. Команди шукаються цілими словами й застосовуються після замін, тому в промпти та переклад іде вже готовий текст. Зайві пробіли навколо перенесень прибираються самі. Поле внизу перевіряє і заміни, і команди на будь-якій фразі: перенесення показується значком ⏎.</p>" +
 			"<p class=\"wh\">Заміни після розпізнавання</p>" +
 			"<p>У «Тексті» можна перелічити, що модель чує неправильно і на що це змінювати: «гіт хаб» → GitHub, прізвища, внутрішні терміни. Заміни спрацьовують одразу після розпізнавання — до перекладу й до промптів, тому редактор отримує вже правильні слова. Типово шукаються цілі слова й без урахування регістру, два перемикачі поруч це змінюють. Правила застосовуються згори вниз. Поле внизу перевіряє їх на будь-якій фразі, нічого не диктуючи.</p>" +
 			"<p class=\"wh\">Правила для програм</p>" +

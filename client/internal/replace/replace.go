@@ -95,3 +95,17 @@ func Clean(rules []Rule) []Rule {
 	}
 	return out
 }
+
+func Contains(r Rule, text string) bool {
+	pat := []rune(r.From)
+	if len(pat) == 0 || text == "" {
+		return false
+	}
+	src := []rune(text)
+	for i := 0; i+len(pat) <= len(src); i++ {
+		if matchAt(src, i, pat, r.MatchCase) && (!r.Whole || boundaryOK(src, i, len(pat))) {
+			return true
+		}
+	}
+	return false
+}

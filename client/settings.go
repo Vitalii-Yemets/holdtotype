@@ -2,6 +2,7 @@ package main
 
 
 import (
+	"holdtotype/internal/commands"
 	"holdtotype/internal/replace"
 	"holdtotype/internal/apprules"
 	"context"
@@ -134,6 +135,7 @@ type settingsForm struct {
 	ActiveProfiles      []string  `json:"active_profiles"`
 	AppRules            []apprules.Rule `json:"app_rules"`
 	Replacements        []replace.Rule  `json:"replacements"`
+	Commands            []commands.Command `json:"commands"`
 	LLMModelFile        string    `json:"llm_model_file"`
 	Profiles            []Profile `json:"profiles"`
 }
@@ -429,8 +431,19 @@ func (a *App) settingsThread(tab string, attempt int) {
 			}
 			return false
 		})
-		_ = w.Bind("appTestReplace", func(text string) string {
-			return replace.Apply(a.snapshot().Replacements, text)
+		_ = w.Bind("appTestText", func(text string) string {
+			cfg := a.snapshot()
+			out := replace.Apply(cfg.Replacements, text)
+			res := commands.Apply(cfg.Commands, out)
+			shown := res.Text
+			if res.Cancelled {
+				shown = tr("ov.cmd.cancelled")
+			}
+			b, _ := json.Marshal(struct {
+				Text      string `json:"text"`
+				Cancelled bool   `json:"cancelled"`
+			}{shown, res.Cancelled})
+			return string(b)
 		})
 		_ = w.Bind("appAutorun", func() bool {
 			return autorunEnabled()
@@ -664,6 +677,9 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	if f.Replacements != nil {
 		c.Replacements = replace.Clean(f.Replacements)
 	}
+	if f.Commands != nil {
+		c.Commands = commands.Clean(f.Commands)
+	}
 	llmChanged := false
 	if f.LLMModelFile != "" && !strings.ContainsAny(f.LLMModelFile, "/\\") && strings.HasSuffix(f.LLMModelFile, ".gguf") {
 		if _, err := os.Stat(filepath.Join("models", f.LLMModelFile)); err == nil {
@@ -757,6 +773,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"active_profiles":       cfg.ActiveProfiles,
 		"app_rules":             cfg.AppRules,
 		"replacements":          cfg.Replacements,
+		"commands":              cfg.Commands,
 		"translate_hotkey":      cfg.TranslateHotkey,
 		"translate_target":      cfg.TranslateTarget,
 		"translate_ask":         cfg.TranslateAsk,
@@ -792,6 +809,10 @@ func settingsHTML(cfg *Config, tab string) string {
 		"rulelast": "S_RULE_LAST", "ruleempty": "S_RULE_EMPTY", "ruledel": "S_RULE_DEL",
 		"ruleprompts": "S_RULE_PROMPTS", "ruleph": "S_RULE_PH",
 		"replempty": "S_REPL_EMPTY", "repldel": "S_REPL_DEL", "replwhole": "S_REPL_WHOLE",
+		"cmdempty": "S_CMD_EMPTY", "cmddel": "S_CMD_DEL", "cmdph": "S_CMD_PH",
+		"cmdnewline": "S_CMD_NEWLINE", "cmdparagraph": "S_CMD_PARAGRAPH", "cmdtext": "S_CMD_TEXT", "cmdcancel": "S_CMD_CANCEL",
+		"cmdtextph": "S_CMD_TEXT_PH",
+		"cmdpnewline": "S_CMD_P_NEWLINE", "cmdpparagraph": "S_CMD_P_PARAGRAPH", "cmdpcancel": "S_CMD_P_CANCEL",
 		"histempty": "S_HIST_EMPTY", "histcopy": "S_HIST_COPY", "histask": "S_HIST_ASK", "histclear": "S_HIST_CLEAR",
 		"micchecking": "S_MIC_CHECKING",
 		"replcase": "S_REPL_CASE", "replfromph": "S_REPL_FROM_PH", "repltoph": "S_REPL_TO_PH",
@@ -1333,6 +1354,15 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
   <div id="replbody"></div>
   <div class="rulefoot">
    <button type="button" class="mini" id="repl_add">{{S_REPL_ADD}}</button>
+  </div>
+ </div>
+ <div class="card">
+  <div class="sect">{{S_SEC_CMD}}</div>
+  <div class="hint">{{S_CMD_HINT}}</div>
+  <div id="cmdbody"></div>
+  <div class="rulefoot">
+   <button type="button" class="mini" id="cmd_add">{{S_CMD_ADD}}</button>
+   <button type="button" class="mini ghost" id="cmd_preset">{{S_CMD_PRESET}}</button>
   </div>
   <div class="replcheck">
    <input type="text" id="repl_test" placeholder="{{S_REPL_TEST_PH}}">
@@ -2239,6 +2269,7 @@ async function doSave(){
     active_profiles: activeProfiles,
     app_rules: rules,
     replacements: repls,
+    commands: cmds,
     llm_model_file: selLLM||"",
     profiles: profiles};
   bools.forEach(k=>f[k]=document.getElementById(k).checked);
@@ -2590,6 +2621,91 @@ function initHistory(){
   const on = document.getElementById("history");
   if(on) on.addEventListener("change", ()=>setTimeout(refreshHistory, 300));
 }
+let cmds = (CFG.commands || []).map(c=>({...c}));
+function renderCmds(){
+  const body = document.getElementById("cmdbody");
+  if(!body) return;
+  body.innerHTML = "";
+  if(!cmds.length){
+    const empty = document.createElement("div");
+    empty.className = "ruleempty";
+    empty.textContent = L.cmdempty;
+    body.appendChild(empty);
+  }
+  cmds.forEach((c, i)=>{
+    const row = document.createElement("div");
+    row.className = "replrow";
+
+    const phrase = document.createElement("input");
+    phrase.type = "text";
+    phrase.className = "cphrase";
+    phrase.value = c.phrase || "";
+    phrase.placeholder = L.cmdph;
+    phrase.oninput = ()=>{ cmds[i].phrase = phrase.value; };
+    phrase.onchange = ()=>{ cmds[i].phrase = phrase.value; applyNow(); replTest(); };
+    row.appendChild(phrase);
+
+    const arrow = document.createElement("span");
+    arrow.className = "rarrow";
+    arrow.textContent = "→";
+    row.appendChild(arrow);
+
+    const act = document.createElement("select");
+    act.className = "caction";
+    ruleOpts(act, [["newline", L.cmdnewline], ["paragraph", L.cmdparagraph], ["text", L.cmdtext], ["cancel", L.cmdcancel]], c.action || "newline");
+    row.appendChild(act);
+
+    const txt = document.createElement("input");
+    txt.type = "text";
+    txt.className = "ctext";
+    txt.value = c.text || "";
+    txt.placeholder = L.cmdtextph;
+    txt.style.display = (c.action === "text") ? "" : "none";
+    txt.oninput = ()=>{ cmds[i].text = txt.value; };
+    txt.onchange = ()=>{ cmds[i].text = txt.value; applyNow(); replTest(); };
+    row.appendChild(txt);
+
+    act.onchange = ()=>{
+      cmds[i].action = act.value;
+      txt.style.display = (act.value === "text") ? "" : "none";
+      applyNow();
+      replTest();
+    };
+
+    const del = document.createElement("button");
+    del.type = "button";
+    del.className = "rdel";
+    del.title = L.cmddel;
+    del.textContent = "✕";
+    del.onclick = ()=>{ cmds.splice(i, 1); renderCmds(); applyNow(); replTest(); };
+    row.appendChild(del);
+
+    body.appendChild(row);
+  });
+}
+function initCmds(){
+  const add = document.getElementById("cmd_add");
+  if(!add) return;
+  add.onclick = ()=>{
+    cmds.push({id: "c" + Date.now(), phrase: "", action: "newline", text: ""});
+    renderCmds();
+    const rows = document.querySelectorAll("#cmdbody .cphrase");
+    if(rows.length) rows[rows.length - 1].focus();
+  };
+  const preset = document.getElementById("cmd_preset");
+  if(preset){
+    preset.onclick = ()=>{
+      const known = cmds.map(c=>(c.phrase || "").toLowerCase());
+      [["newline", L.cmdpnewline], ["paragraph", L.cmdpparagraph], ["cancel", L.cmdpcancel]].forEach(([action, phrase], n)=>{
+        if(!phrase || known.includes(phrase.toLowerCase())) return;
+        cmds.push({id: "c" + Date.now() + n, phrase: phrase, action: action, text: ""});
+      });
+      renderCmds();
+      applyNow();
+    };
+  }
+  renderCmds();
+}
 let repls = (CFG.replacements || []).map(r=>({...r}));
 function renderRepls(){
   const body = document.getElementById("replbody");
@@ -2666,7 +2782,9 @@ async function replTest(){
   if(!input || !out) return;
   const text = input.value.trim();
   if(!text){ out.textContent = ""; return; }
-  out.textContent = await appTestReplace(text);
+  const r = JSON.parse(await appTestText(text));
+  out.textContent = r.text.split("\n").join(" ⏎ ");
+  out.classList.toggle("bad", !!r.cancelled);
 }
 function initRepls(){
   const add = document.getElementById("repl_add");
@@ -2840,6 +2958,7 @@ load();
   initAutorun();
   initRules();
   initRepls();
+  initCmds();
   initHistory();
   refreshLastApp();
   bindLabels();

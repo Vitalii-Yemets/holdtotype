@@ -144,6 +144,7 @@ var msgs = map[string]map[string]string{
 		"mic.busy": "Идёт запись, проверка невозможна", "mic.check.ok": "Слышно хорошо: пик %.0f дБ, речь на %.0f%% записи",
 		"mic.check.quiet": "Слишком тихо: пик %.0f дБ — прибавьте громкость микрофона в Windows или сядьте ближе", "mic.check.clipped": "Перегруз: обрезано %.1f%% отсчётов — убавьте громкость микрофона", "mic.check.silent": "Речи не слышно — проверьте, тот ли выбран микрофон и не выключен ли он",
 		"ov.quiet": "Слишком тихо, почти ничего не слышно", "ov.clipped": "Перегруз — звук обрезан",
+		"ov.cmd.cancelled": "Отменено голосом",
 		"ov.silence":            "Тишина — текст не распознан",
 		"ov.notranslate":        "Активная модель не переводит — вставлен исходный текст",
 		"ov.engine.fallback":    "Второй движок не поднялся — распознаю текущим",
@@ -248,6 +249,7 @@ var msgs = map[string]map[string]string{
 		"mic.busy": "A dictation is in progress, cannot check now", "mic.check.ok": "Sounds good: peak %.0f dB, speech in %.0f%% of the recording",
 		"mic.check.quiet": "Too quiet: peak %.0f dB — raise the microphone level in Windows or sit closer", "mic.check.clipped": "Clipping: %.1f%% of samples cut off — lower the microphone level", "mic.check.silent": "No speech heard — check that the right microphone is picked and not muted",
 		"ov.quiet": "Too quiet, almost nothing was heard", "ov.clipped": "Clipping — the sound was cut off",
+		"ov.cmd.cancelled": "Cancelled by voice",
 		"ov.silence":            "Silence — nothing recognized",
 		"ov.notranslate":        "The active model cannot translate — inserted as recognized",
 		"ov.engine.fallback":    "The other engine did not start — using the current one",
@@ -381,10 +383,15 @@ var settingsStrings = map[string]map[string]string{
 		"S_HIST_SKIP": "Не записывать из программ", "S_HIST_SKIP_SUB": "через запятую: keepass.exe, 1password.exe",
 		"S_HIST_LIST": "Записи", "S_HIST_CLEAR": "Очистить", "S_HIST_COPY": "Копировать",
 		"S_HIST_FIND": "Найти в истории…", "S_HIST_EMPTY": "Истории пока нет", "S_HIST_ASK": "Удалить всю историю диктовок?",
+		"S_SEC_CMD": "Голосовые команды", "S_CMD_HINT": "Сказанное вслух превращается в перенос строки, знак или отмену вместо того, чтобы попасть в текст. Проверяются целыми словами, применяются сверху вниз, уже после замен.",
+		"S_CMD_ADD": "Добавить команду", "S_CMD_PRESET": "Добавить стандартные", "S_CMD_PH": "новая строка",
+		"S_CMD_NEWLINE": "перенос строки", "S_CMD_PARAGRAPH": "новый абзац", "S_CMD_TEXT": "подставить текст", "S_CMD_CANCEL": "отменить диктовку",
+		"S_CMD_TEXT_PH": "что подставить", "S_CMD_EMPTY": "Команд пока нет", "S_CMD_DEL": "Удалить команду",
+		"S_CMD_P_NEWLINE": "новая строка", "S_CMD_P_PARAGRAPH": "новый абзац", "S_CMD_P_CANCEL": "отмена",
 		"S_SEC_REPLACE": "Замены после распознавания", "S_REPLACE_HINT": "Что услышано неправильно, заменяется на правильное — до промптов и перевода. Порядок сверху вниз.",
 		"S_REPL_ADD": "Добавить замену", "S_REPL_FROM_PH": "гит хаб", "S_REPL_TO_PH": "GitHub",
 		"S_REPL_WHOLE": "целые слова", "S_REPL_CASE": "регистр", "S_REPL_EMPTY": "Замен пока нет",
-		"S_REPL_DEL": "Удалить замену", "S_REPL_TEST_PH": "напишите фразу, чтобы проверить замены",
+		"S_REPL_DEL": "Удалить замену", "S_REPL_TEST_PH": "напишите фразу, чтобы проверить замены и команды",
 		"S_SEC_RULES": "Правила по приложениям", "S_RULES_HINT": "Для отдельных программ вставка может работать иначе. Выигрывает первое подходящее правило.",
 		"S_RULE_ADD": "Добавить правило", "S_RULE_PH": "chrome.exe, msedge.exe",
 		"S_RULE_PASTE_INH": "вставка: как везде", "S_RULE_ENTER_INH": "Enter: как везде", "S_RULE_DELAY_NONE": "без задержки", "S_RULE_PROMPT_INH": "промпты: как везде",
@@ -568,6 +575,8 @@ var settingsStrings = map[string]map[string]string{
 			"<p>Кнопка «Проверка» на «Микрофоне» записывает три секунды и разбирает их: пиковая громкость в децибелах, доля записи, в которой действительно есть речь, и доля обрезанных отсчётов. Ответ приходит словами: «слышно хорошо», «слишком тихо — прибавьте громкость в Windows», «перегруз — убавьте громкость», «речи не слышно — тот ли микрофон выбран». То же самое считается после каждой диктовки и пишется в лог; если распознать не удалось, плашка скажет причину — тихо, перегруз или тишина, — а не просто «ничего не услышал».</p>" +
 			"<p class=\"wh\">История диктовок</p>" +
 			"<p>Раздел «История» в левом столбце хранит то, что вы надиктовали: только текст, только на этом компьютере, звук не сохраняется никогда. По умолчанию выключено — включается одним переключателем там же. Хранится заданное число дней и записей, старое удаляется само; поле «Не записывать из программ» перечисляет через запятую те, из которых не нужно сохранять ничего — менеджеры паролей, банк-клиент. Поиск ищет и по тексту, и по названию программы, кнопка рядом с записью кладёт её в буфер обмена, «Очистить» удаляет всё сразу вместе с файлом <b>{app}-history.json</b>.</p>" +
+			"<p class=\"wh\">Голосовые команды</p>" +
+			"<p>Под заменами на «Тексте» — список команд: сказанное вслух превращается не в слова, а в действие. «Новая строка» и «новый абзац» ставят перенос — модели их сами не ставят никогда; «отмена» выбрасывает всю диктовку, ничего не вставляя; «подставить текст» кладёт что угодно, хоть смайлик. Кнопка «Добавить стандартные» заполняет список привычными фразами на языке интерфейса. Команды ищутся целыми словами и применяются после замен, поэтому в промпты и в перевод уходит уже готовый текст. Лишние пробелы вокруг переносов убираются сами. Поле внизу проверяет и замены, и команды на любой фразе: перенос показывается значком ⏎.</p>" +
 			"<p class=\"wh\">Замены после распознавания</p>" +
 			"<p>На «Тексте» можно перечислить, что модель слышит неправильно и во что это превращать: «гит хаб» → GitHub, фамилии, внутренние термины. Замены применяются сразу после распознавания — до перевода и до промптов, поэтому редактор получает уже правильные слова. По умолчанию ищутся целые слова и без учёта регистра, обе галочки рядом это меняют. Правила применяются сверху вниз. Поле внизу проверяет их на любой фразе, не диктуя.</p>" +
 			"<p class=\"wh\">Правила по приложениям</p>" +
@@ -735,10 +744,15 @@ var settingsStrings = map[string]map[string]string{
 		"S_HIST_SKIP": "Never record from these programs", "S_HIST_SKIP_SUB": "comma-separated: keepass.exe, 1password.exe",
 		"S_HIST_LIST": "Entries", "S_HIST_CLEAR": "Clear", "S_HIST_COPY": "Copy",
 		"S_HIST_FIND": "Search the history…", "S_HIST_EMPTY": "No history yet", "S_HIST_ASK": "Delete the whole dictation history?",
+		"S_SEC_CMD": "Voice commands", "S_CMD_HINT": "What you say turns into a line break, a symbol or a cancel instead of landing in the text. Matched as whole words, applied top to bottom, after the replacements.",
+		"S_CMD_ADD": "Add a command", "S_CMD_PRESET": "Add the usual ones", "S_CMD_PH": "new line",
+		"S_CMD_NEWLINE": "line break", "S_CMD_PARAGRAPH": "new paragraph", "S_CMD_TEXT": "insert text", "S_CMD_CANCEL": "cancel the dictation",
+		"S_CMD_TEXT_PH": "what to insert", "S_CMD_EMPTY": "No commands yet", "S_CMD_DEL": "Delete the command",
+		"S_CMD_P_NEWLINE": "new line", "S_CMD_P_PARAGRAPH": "new paragraph", "S_CMD_P_CANCEL": "cancel",
 		"S_SEC_REPLACE": "Replacements after recognition", "S_REPLACE_HINT": "What was misheard becomes what you meant — before prompts and translation. Applied from top to bottom.",
 		"S_REPL_ADD": "Add a replacement", "S_REPL_FROM_PH": "git hub", "S_REPL_TO_PH": "GitHub",
 		"S_REPL_WHOLE": "whole words", "S_REPL_CASE": "case", "S_REPL_EMPTY": "No replacements yet",
-		"S_REPL_DEL": "Delete the replacement", "S_REPL_TEST_PH": "type a phrase to try the replacements",
+		"S_REPL_DEL": "Delete the replacement", "S_REPL_TEST_PH": "type a phrase to try the replacements and commands",
 		"S_SEC_RULES": "Rules per application", "S_RULES_HINT": "Insertion can work differently for particular programs. The first matching rule wins.",
 		"S_RULE_ADD": "Add a rule", "S_RULE_PH": "chrome.exe, msedge.exe",
 		"S_RULE_PASTE_INH": "insertion: as set", "S_RULE_ENTER_INH": "Enter: as set", "S_RULE_DELAY_NONE": "no delay", "S_RULE_PROMPT_INH": "prompts: as set",
@@ -922,6 +936,8 @@ var settingsStrings = map[string]map[string]string{
 			"<p>The Test button on the Microphone tab records three seconds and takes them apart: peak level in decibels, how much of the recording actually holds speech, and how many samples were clipped. The answer comes in words: sounds good, too quiet — raise the level in Windows, clipping — lower it, no speech heard — is the right microphone picked. The same numbers are measured after every dictation and written to the log; when recognition comes back empty the plate names the reason — too quiet, clipping or silence — instead of just saying it heard nothing.</p>" +
 			"<p class=\"wh\">History of dictations</p>" +
 			"<p>The History section in the left column keeps what you dictated: text only, on this computer only, audio is never kept. It is off by default and turns on with one switch in the same place. Entries are kept for a set number of days and up to a set count, older ones drop out on their own; \"Never record from these programs\" lists, separated by commas, the ones nothing should be saved from — password managers, banking apps. Search covers both the text and the program name, the button next to an entry puts it on the clipboard, and Clear removes everything at once along with the <b>{app}-history.json</b> file.</p>" +
+			"<p class=\"wh\">Voice commands</p>" +
+			"<p>Under the replacements on the Text tab there is a list of commands: what you say turns into an action instead of words. \"New line\" and \"new paragraph\" put in a break — models never do; \"cancel\" throws the whole dictation away and inserts nothing; \"insert text\" drops in anything you like, an emoticon included. The button next to the list fills it with the usual phrases in the language of the interface. Commands are matched as whole words and run after the replacements, so the prompts and the translation already get the finished text. Spare spaces around the breaks are cleaned up. The field below tries both replacements and commands on any phrase: a break shows as ⏎.</p>" +
 			"<p class=\"wh\">Replacements after recognition</p>" +
 			"<p>On the Text tab you can list what the model mishears and what it should become: \"git hub\" → GitHub, surnames, in-house terms. Replacements run right after recognition — before translation and before the prompts — so the editor already gets the right words. By default they match whole words and ignore case; the two switches next to each row change that. Rules apply from top to bottom. The field at the bottom tries them on any phrase without dictating.</p>" +
 			"<p class=\"wh\">Rules per application</p>" +

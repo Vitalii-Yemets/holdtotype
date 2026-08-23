@@ -1,6 +1,7 @@
 package main
 
 import (
+	"holdtotype/internal/commands"
 	"encoding/json"
 	"holdtotype/internal/audiolevel"
 	"holdtotype/internal/history"
@@ -306,7 +307,11 @@ func main() {
 			}
 			in := os.Args[1:][i+1]
 			log.Printf("replcheck: замен в конфиге — %d", len(cfg.Replacements))
-			log.Printf("replcheck: %q → %q", in, replace.Apply(cfg.Replacements, in))
+			after := replace.Apply(cfg.Replacements, in)
+			log.Printf("replcheck: замены: %q → %q", in, after)
+			cmd := commands.Apply(cfg.Commands, after)
+			log.Printf("replcheck: команд в конфиге — %d, сработали %v, отмена=%v", len(cfg.Commands), cmd.Applied, cmd.Cancelled)
+			log.Printf("replcheck: итог: %q", cmd.Text)
 			return
 		}
 		if arg == "-rulecheck" {
@@ -935,6 +940,16 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 	if fixed := replace.Apply(cfg.Replacements, text); fixed != text {
 		log.Printf("замены: %q → %q", text, fixed)
 		text = fixed
+	}
+	if cmd := commands.Apply(cfg.Commands, text); len(cmd.Applied) > 0 {
+		log.Printf("команды %v: %q → %q (отмена=%v)", cmd.Applied, text, cmd.Text, cmd.Cancelled)
+		if cmd.Cancelled {
+			if cfg.Overlay {
+				overlaySet(ovFlashErr, tr("ov.cmd.cancelled"))
+			}
+			return
+		}
+		text = cmd.Text
 	}
 	if text == "" || onlyNoise.MatchString(text) {
 		log.Printf("пустой результат (%q), вставлять нечего", text)

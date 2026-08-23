@@ -95,7 +95,7 @@ const dom = new JSDOM(html, {
       return JSON.stringify(window.lastSave);
     };
     window.replaceCalls = [];
-    window.appTestReplace = async (t) => { window.replaceCalls.push(t); return t.replace(/git hub/gi, "GitHub"); };
+    window.appTestText = async (t) => { window.replaceCalls.push(t); const out = t.replace(/git hub/gi, "GitHub"); return JSON.stringify({ text: out, cancelled: false }); };
     let histItems = [{ at: 1700000000000, text: "выложи на GitHub", app: "chrome.exe" }, { at: 1699999000000, text: "привет команде", app: "Telegram.exe" }];
     window.histQueries = [];
     window.histCopied = [];
@@ -305,6 +305,22 @@ function check(name, actual, expected) {
   check("and shows what would come out", d.getElementById("repl_out").textContent, "push to GitHub");
   d.querySelector("#replbody .rdel").click(); await sleep(250);
   check("a replacement can be deleted", w.lastSaveForm.replacements.length, 0);
+
+  check("with no commands the list says so", d.querySelector("#cmdbody .ruleempty").textContent, "No commands yet");
+  d.getElementById("cmd_preset").click(); await sleep(300);
+  check("the usual commands can be added in one click", d.querySelectorAll("#cmdbody .replrow").length, 3);
+  check("they carry the phrases of this language", w.lastSaveForm.commands.map((c) => c.phrase), ["new line", "new paragraph", "cancel"]);
+  check("and the actions that go with them", w.lastSaveForm.commands.map((c) => c.action), ["newline", "paragraph", "cancel"]);
+  d.getElementById("cmd_preset").click(); await sleep(300);
+  check("adding them twice changes nothing", d.querySelectorAll("#cmdbody .replrow").length, 3);
+  const cmdRow = d.querySelector("#cmdbody .replrow");
+  check("a command with no text keeps its field hidden", cmdRow.querySelector(".ctext").style.display, "none");
+  const cact = cmdRow.querySelector(".caction");
+  cact.value = "text"; cact.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
+  check("choosing insert-text reveals the field", cmdRow.querySelector(".ctext").style.display, "");
+  check("the action is saved", w.lastSaveForm.commands[0].action, "text");
+  d.querySelectorAll("#cmdbody .rdel")[0].click(); await sleep(300);
+  check("a command can be deleted", w.lastSaveForm.commands.length, 2);
 
   const pb = d.getElementById("profbody");
   check("prompts listed", pb.querySelectorAll("input.profcb").length, 2);

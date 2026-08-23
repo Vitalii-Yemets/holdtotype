@@ -1,6 +1,7 @@
 package main
 
 import (
+	"holdtotype/internal/commands"
 	"holdtotype/internal/history"
 	"holdtotype/internal/mojibake"
 	"holdtotype/internal/apprules"
@@ -111,6 +112,7 @@ type Config struct {
 	HistoryDays         int       `json:"history_days"`
 	HistoryMax          int       `json:"history_max"`
 	HistorySkip         string    `json:"history_skip"`
+	Commands            []commands.Command `json:"commands"`
 	WizardDone          bool      `json:"wizard_done"`
 }
 
