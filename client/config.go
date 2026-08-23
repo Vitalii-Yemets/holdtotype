@@ -32,6 +32,16 @@ func validHotkeyMode(v string) bool { return v == hotkeyHold || v == hotkeyToggl
 func validUILevel(v string) bool { return v == levelSimple || v == levelAll }
 
 const (
+	ovPosBottom = "bottom"
+	ovPosTop    = "top"
+	ovPosCaret  = "caret"
+)
+
+func validOverlayPos(v string) bool {
+	return v == ovPosBottom || v == ovPosTop || v == ovPosCaret
+}
+
+const (
 	punctFromModel = "model"
 	punctByLLM     = "llm"
 	punctOff       = "off"
@@ -66,6 +76,8 @@ type Config struct {
 	SoundTheme       string `json:"sound_theme"`
 	AutoEnter        bool   `json:"auto_enter"`
 	Overlay          bool   `json:"overlay"`
+	OverlayPos       string `json:"overlay_position"`
+	OverlayText      bool   `json:"overlay_text"`
 	Animation        bool   `json:"animation"`
 	UILanguage       string `json:"ui_language"`
 	MaxRecordSeconds int    `json:"max_record_seconds"`
@@ -134,6 +146,8 @@ func defaultConfig() *Config {
 		Beep:             true,
 		SoundTheme:       "speech",
 		Overlay:          true,
+		OverlayPos:       ovPosBottom,
+		OverlayText:      true,
 		Animation:        true,
 		UILanguage:       "auto",
 		MaxRecordSeconds: 120,

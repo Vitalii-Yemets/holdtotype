@@ -90,6 +90,7 @@ const dom = new JSDOM(html, {
       const f = JSON.parse(json);
       micBadge = f.mic_device_name ? f.mic_device_name.split(" ")[0] : "Realtek";
       const message = Number(f.server_port) === 8910 ? "Saved" : "Restarting the recognizer…";
+      window.lastSaveForm = f;
       window.lastSave = { ok: true, severity: "ok", message };
       return JSON.stringify(window.lastSave);
     };
@@ -146,7 +147,7 @@ function check(name, actual, expected) {
   check("eight sections in the sidebar", d.querySelectorAll(".nav").length, 8);
   const everySetting = [
     "hotkey", "min_record_ms", "max_record_seconds", "auto_enter", "restore_clipboard",
-    "type_mode", "overlay", "animation", "mic_device", "mic_bar", "beep", "sound_theme",
+    "type_mode", "overlay", "overlay_position", "overlay_text", "animation", "mic_device", "mic_bar", "beep", "sound_theme",
     "routing", "models", "language", "threads", "punctuation", "whisper_prompt", "profbody",
     "tr_default", "translate_target", "translate_ask", "translate_ask_seconds", "tr_hotkey",
     "tl_en", "ui_language", "upd_check", "check_updates", "server_autostart", "server_port",
@@ -180,6 +181,19 @@ function check(name, actual, expected) {
   tab("text"); await sleep(30);
   check("dictionary textarea present", !!d.getElementById("whisper_prompt"), true);
   check("punctuation modes offered", d.getElementById("punctuation").options.length, 3);
+
+  tab("dictation"); await sleep(60);
+  const ovpos = d.getElementById("overlay_position");
+  check("the plate can be put in three places", ovpos.options.length, 3);
+  check("it starts at the bottom of the screen", ovpos.value, "bottom");
+  ovpos.value = "caret"; ovpos.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
+  check("moving the plate is saved", w.lastSaveForm.overlay_position, "caret");
+  ovpos.value = "bottom"; ovpos.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
+  const ovtext = d.getElementById("overlay_text");
+  check("showing the text on the plate is a switch", ovtext.type, "checkbox");
+  ovtext.checked = false; ovtext.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
+  check("turning it off is saved", w.lastSaveForm.overlay_text, false);
+  ovtext.checked = true; ovtext.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
 
   tab("system"); await sleep(30);
   check("service settings shown", [shown("system"), !!d.getElementById("server_url")], [true, true]);

@@ -282,6 +282,7 @@ func main() {
 			cfg, _ := loadConfig("config.json")
 			if cfg != nil {
 				initLang(cfg.UILanguage)
+				setOverlayPos(cfg.OverlayPos)
 			}
 			log.Printf("демонстрация диалогов: смена фокуса")
 			log.Printf("ответ: %q", askFocusMismatch())
@@ -306,6 +307,7 @@ func main() {
 			cfg, _ := loadConfig("config.json")
 			if cfg != nil {
 				initLang(cfg.UILanguage)
+				setOverlayPos(cfg.OverlayPos)
 			}
 			state := ovFlashErr
 			text := tr("ov.err.mic")
@@ -362,6 +364,7 @@ func main() {
 		return
 	}
 	initLang(cfg.UILanguage)
+	setOverlayPos(cfg.OverlayPos)
 
 	app := &App{
 		cfg:     cfg,
@@ -723,6 +726,7 @@ func (a *App) handleDown(profileID string) {
 	playCue(cfg.Beep, cfg.SoundTheme, cueStart)
 	if cfg.Overlay {
 		ovAnim.Store(cfg.Animation)
+		setOverlayPos(cfg.OverlayPos)
 		overlaySet(ovRecording, tr("ov.speak"))
 	}
 
@@ -977,12 +981,19 @@ func (a *App) insertResult(ctx context.Context, cfg *Config, start time.Time, te
 	}
 	log.Printf("готово за %.1fс: %d символов", time.Since(start).Seconds(), len([]rune(text)))
 	if cfg.Overlay {
-		if skipped != "" {
+		switch {
+		case skipped != "":
 			overlaySet(ovFlashErr, trf("ov.llm.skipped", skipped))
-		} else {
+		case cfg.OverlayText && strings.TrimSpace(text) != "":
+			overlaySet(ovFlashOK, oneLine(text))
+		default:
 			overlaySet(ovFlashOK, trf("ov.inserted", len([]rune(text))))
 		}
 	}
+}
+
+func oneLine(s string) string {
+	return strings.Join(strings.Fields(s), " ")
 }
 
 func (a *App) changeHotkey() {

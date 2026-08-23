@@ -23,6 +23,8 @@
   "sound_theme": "speech",
   "auto_enter": false,
   "overlay": true,
+  "overlay_position": "bottom",
+  "overlay_text": true,
   "animation": true,
   "ui_language": "auto",
   "max_record_seconds": 120,

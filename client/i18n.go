@@ -370,6 +370,9 @@ var settingsStrings = map[string]map[string]string{
 		"S_AUTOENTER":      "Нажимать Enter после вставки (автоотправка)",
 		"S_RESTORE":        "Восстанавливать буфер обмена после вставки",
 		"S_OVERLAY":        "Индикатор внизу экрана",
+		"S_OVPOS": "Где показывать плашку", "S_OVPOS_SUB": "у курсора — рядом с местом ввода; если приложение его не показывает, рядом с указателем мыши",
+		"S_OVPOS_BOTTOM": "Внизу экрана", "S_OVPOS_TOP": "Вверху экрана", "S_OVPOS_CARET": "У курсора",
+		"S_OVTEXT": "Показывать распознанный текст", "S_OVTEXT_SUB": "в плашке после вставки, вместо числа символов",
 		"S_ANIM":           "Анимация записи и распознавания",
 		"S_TYPEMODE":       "Вставлять посимвольно, а не через буфер",
 		"S_RECLANG":        "Язык распознавания",
@@ -526,6 +529,7 @@ var settingsStrings = map[string]map[string]string{
 			"<li><b>Распознаю…</b> — Whisper обрабатывает звук; при переводе — «Перевожу», при промптах — «Редактирую: имя (1/2)».</li>" +
 			"<li><b>Вставлено: N симв.</b> — готово; при ошибке или тишине — короткое сообщение о причине.</li>" +
 			"<li>Крестик ✕ справа отменяет операцию на любой стадии; фокус ввода оверлей не забирает. Показывать плашку и её анимацию можно отключить на «Основных».</li>" +
+			"<li>Где показывать плашку — внизу экрана, вверху или у курсора — и показывать ли в ней сам распознанный текст вместо числа символов, настраивается на «Диктовке».</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Вопрос о языке перевода</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Распознаю…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Переводить на:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Без перевода</span></div></div>" +
@@ -695,6 +699,9 @@ var settingsStrings = map[string]map[string]string{
 		"S_AUTOENTER":      "Press Enter after paste (auto-submit)",
 		"S_RESTORE":        "Restore clipboard after paste",
 		"S_OVERLAY":        "On-screen indicator",
+		"S_OVPOS": "Where to show the plate", "S_OVPOS_SUB": "at the cursor — next to where you type; if the app hides it, next to the mouse pointer",
+		"S_OVPOS_BOTTOM": "Bottom of the screen", "S_OVPOS_TOP": "Top of the screen", "S_OVPOS_CARET": "At the cursor",
+		"S_OVTEXT": "Show the recognised text", "S_OVTEXT_SUB": "on the plate after insertion, instead of the character count",
 		"S_ANIM":           "Recording & transcribing animation",
 		"S_TYPEMODE":       "Insert character-by-character instead of the clipboard",
 		"S_RECLANG":        "Recognition language",
@@ -851,6 +858,7 @@ var settingsStrings = map[string]map[string]string{
 			"<li><b>Transcribing…</b> — Whisper is processing; while translating — \"Translating\", while running prompts — \"Editing: name (1/2)\".</li>" +
 			"<li><b>Inserted: N chars</b> — done; on errors or silence a short reason is shown.</li>" +
 			"<li>The ✕ on the right cancels at any stage; the overlay never steals input focus. The overlay and its animation can be turned off on the General tab.</li>" +
+			"<li>Where the plate appears — bottom of the screen, top, or at the cursor — and whether it shows the recognised text itself instead of a character count, is set on the Dictation tab.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">The translation question</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Transcribing…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Translate to:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">No translation</span></div></div>" +

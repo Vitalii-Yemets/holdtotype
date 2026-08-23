@@ -23,6 +23,8 @@ const cfg = {
   auto_enter: false,
   restore_clipboard: true,
   overlay: true,
+  overlay_position: "bottom",
+  overlay_text: true,
   animation: true,
   type_mode: false,
   threads: 4,

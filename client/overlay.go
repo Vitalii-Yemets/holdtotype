@@ -124,6 +124,8 @@ func ovCancelActive() bool {
 var (
 	ovWidth   = int32(ovW)
 	ovHeight  = int32(ovH)
+	ovX       int32
+	ovY       int32
 	ovWidthMu sync.Mutex
 	ovFontDPI int32
 )
@@ -220,20 +222,18 @@ func overlayHeightDIP() int32 {
 }
 
 func resizeOverlay(hwnd uintptr, width int32) {
-	dpi := dpiFor(hwnd)
-	h := scaleDPI(overlayHeightDIP(), dpi)
-	ovWidthMu.Lock()
-	same := ovWidth == width && ovHeight == h
-	ovWidth = width
-	ovHeight = h
-	ovWidthMu.Unlock()
-	if same || hwnd == 0 {
+	if hwnd == 0 {
 		return
 	}
-	var wa rect
-	procSystemParametersInfoW.Call(0x30, 0, uintptr(unsafe.Pointer(&wa)), 0)
-	x := wa.Left + (wa.Right-wa.Left-width)/2
-	y := wa.Bottom - h - scaleDPI(28, dpi)
+	h := scaleDPI(overlayHeightDIP(), dpiFor(hwnd))
+	x, y := overlayOrigin(width, h)
+	ovWidthMu.Lock()
+	same := ovWidth == width && ovHeight == h && ovX == x && ovY == y
+	ovWidth, ovHeight, ovX, ovY = width, h, x, y
+	ovWidthMu.Unlock()
+	if same {
+		return
+	}
 	procSetWindowPos.Call(hwnd, 0, uintptr(x), uintptr(y), uintptr(width), uintptr(h), 0x0004|0x0010)
 }
 
@@ -283,13 +283,11 @@ func startOverlayThread() {
 		}
 		procRegisterClassExW.Call(uintptr(unsafe.Pointer(&wc)))
 
-		var wa rect
-		procSystemParametersInfoW.Call(0x30, 0, uintptr(unsafe.Pointer(&wa)), 0)
 		sysDPI := int(dpiForCursor())
 		startW := ovW * sysDPI / 96
 		startH := ovH * sysDPI / 96
-		x := int(wa.Left) + (int(wa.Right-wa.Left)-startW)/2
-		y := int(wa.Bottom) - startH - 28*sysDPI/96
+		sx, sy := overlayOrigin(int32(startW), int32(startH))
+		x, y := int(sx), int(sy)
 
 		hwnd, _, _ := procCreateWindowExW.Call(
 			wsExLayered|wsExToolWindow|wsExNoActivate|0x00000008,

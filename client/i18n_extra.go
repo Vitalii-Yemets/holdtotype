@@ -300,6 +300,9 @@ func init() {
 		"S_SND_SPEECH": "System (Sprache)", "S_SND_CHIME": "Glöckchen", "S_SND_SOFT": "Sanft", "S_SND_MARIMBA": "Marimba",
 		"S_SND_BLIP": "Blip", "S_SND_POP": "Pop",
 		"S_AUTOENTER": "Enter nach dem Einfügen drücken (Auto-Senden)", "S_RESTORE": "Zwischenablage nach Einfügen wiederherstellen",
+		"S_OVPOS": "Wo die Leiste erscheint", "S_OVPOS_SUB": "am Cursor — neben der Eingabestelle; zeigt die App sie nicht, dann neben dem Mauszeiger",
+		"S_OVPOS_BOTTOM": "Unten am Bildschirm", "S_OVPOS_TOP": "Oben am Bildschirm", "S_OVPOS_CARET": "Am Cursor",
+		"S_OVTEXT": "Erkannten Text anzeigen", "S_OVTEXT_SUB": "auf der Leiste nach dem Einfügen, statt der Zeichenzahl",
 		"S_OVERLAY": "Bildschirmanzeige", "S_ANIM": "Aufnahme-/Erkennungsanimation", "S_TYPEMODE": "Zeichenweise Eingabe (für Felder ohne Einfügen)",
 		"S_RECLANG": "Erkennungssprache", "S_RECAUTO": "Automatisch",
 		"S_MODELS": "Erkennungsmodelle", "S_DL": "Laden", "S_DEL": "Löschen",
@@ -382,6 +385,7 @@ func init() {
 			"<li><b>Erkenne…</b> — Whisper arbeitet; beim Übersetzen — „Übersetze“, beim Bearbeiten — „Bearbeite: Name (1/2)“.</li>" +
 			"<li><b>Eingefügt: N Zeichen</b> — fertig; bei Fehlern oder Stille steht dort kurz der Grund.</li>" +
 			"<li>Das ✕ rechts bricht in jedem Schritt ab; die Leiste nimmt niemals den Eingabefokus. Leiste und Animation lassen sich unter „Diktat“ abschalten.</li>" +
+			"<li>Wo die Leiste erscheint — unten, oben oder am Cursor — und ob sie den erkannten Text statt der Zeichenzahl zeigt, stellen Sie unter „Diktat“ ein.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Die Frage nach der Übersetzung</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Erkenne…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Übersetzen nach:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Ohne Übersetzung</span></div></div>" +
@@ -500,6 +504,9 @@ func init() {
 		"S_SND_SPEECH": "Système (voix)", "S_SND_CHIME": "Clochette", "S_SND_SOFT": "Doux", "S_SND_MARIMBA": "Marimba",
 		"S_SND_BLIP": "Blip", "S_SND_POP": "Pop",
 		"S_AUTOENTER": "Appuyer Entrée après insertion (envoi auto)", "S_RESTORE": "Restaurer le presse-papiers après insertion",
+		"S_OVPOS": "Où afficher le bandeau", "S_OVPOS_SUB": "au curseur — près de l'endroit où vous tapez ; si l'application ne le montre pas, près du pointeur",
+		"S_OVPOS_BOTTOM": "En bas de l'écran", "S_OVPOS_TOP": "En haut de l'écran", "S_OVPOS_CARET": "Au curseur",
+		"S_OVTEXT": "Afficher le texte reconnu", "S_OVTEXT_SUB": "sur le bandeau après l'insertion, au lieu du nombre de caractères",
 		"S_OVERLAY": "Indicateur à l'écran", "S_ANIM": "Animation d'enregistrement", "S_TYPEMODE": "Saisie caractère par caractère",
 		"S_RECLANG": "Langue de reconnaissance", "S_RECAUTO": "Auto",
 		"S_MODELS": "Modèles de reconnaissance", "S_DL": "Télécharger", "S_DEL": "Supprimer",
@@ -582,6 +589,7 @@ func init() {
 			"<li><b>Reconnaissance…</b> — Whisper travaille ; pendant la traduction — « Traduction », pendant les prompts — « Édition : nom (1/2) ».</li>" +
 			"<li><b>Inséré : N caractères</b> — terminé ; en cas d'erreur ou de silence, la raison s'affiche brièvement.</li>" +
 			"<li>Le ✕ à droite annule à n'importe quelle étape ; le bandeau ne prend jamais le focus. Le bandeau et son animation se désactivent dans « Dictée ».</li>" +
+			"<li>Où le bandeau apparaît — en bas, en haut ou au curseur — et s'il affiche le texte reconnu au lieu d'un nombre de caractères, se règle dans « Dictée ».</li>" +
 			"</ul>" +
 			"<p class=\"wh\">La question de la traduction</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Reconnaissance…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Traduire vers :</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Sans traduction</span></div></div>" +
@@ -700,6 +708,9 @@ func init() {
 		"S_SND_SPEECH": "Sistema (voz)", "S_SND_CHIME": "Campanilla", "S_SND_SOFT": "Suave", "S_SND_MARIMBA": "Marimba",
 		"S_SND_BLIP": "Blip", "S_SND_POP": "Pop",
 		"S_AUTOENTER": "Pulsar Enter tras insertar (envío auto)", "S_RESTORE": "Restaurar portapapeles tras insertar",
+		"S_OVPOS": "Dónde mostrar la barra", "S_OVPOS_SUB": "en el cursor: junto al punto de escritura; si la aplicación no lo expone, junto al puntero",
+		"S_OVPOS_BOTTOM": "Abajo en la pantalla", "S_OVPOS_TOP": "Arriba en la pantalla", "S_OVPOS_CARET": "En el cursor",
+		"S_OVTEXT": "Mostrar el texto reconocido", "S_OVTEXT_SUB": "en la barra tras insertar, en vez del número de caracteres",
 		"S_OVERLAY": "Indicador en pantalla", "S_ANIM": "Animación de grabación", "S_TYPEMODE": "Escritura carácter a carácter",
 		"S_RECLANG": "Idioma de reconocimiento", "S_RECAUTO": "Auto",
 		"S_MODELS": "Modelos de reconocimiento", "S_DL": "Descargar", "S_DEL": "Borrar",
@@ -782,6 +793,7 @@ func init() {
 			"<li><b>Reconociendo…</b> — Whisper trabaja; al traducir — «Traduciendo», al aplicar prompts — «Editando: nombre (1/2)».</li>" +
 			"<li><b>Insertado: N caracteres</b> — listo; si hay error o silencio, se muestra el motivo en corto.</li>" +
 			"<li>La ✕ de la derecha cancela en cualquier momento; la barra nunca roba el foco. La barra y su animación se apagan en «Dictado».</li>" +
+			"<li>Dónde aparece la barra — abajo, arriba o en el cursor — y si muestra el texto reconocido en vez del número de caracteres, se ajusta en «Dictado».</li>" +
 			"</ul>" +
 			"<p class=\"wh\">La pregunta de la traducción</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Reconociendo…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Traducir a:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Sin traducción</span></div></div>" +
@@ -900,6 +912,9 @@ func init() {
 		"S_SND_SPEECH": "Sistema (voce)", "S_SND_CHIME": "Campanello", "S_SND_SOFT": "Morbido", "S_SND_MARIMBA": "Marimba",
 		"S_SND_BLIP": "Blip", "S_SND_POP": "Pop",
 		"S_AUTOENTER": "Premi Invio dopo l'inserimento (invio auto)", "S_RESTORE": "Ripristina appunti dopo l'inserimento",
+		"S_OVPOS": "Dove mostrare la barra", "S_OVPOS_SUB": "al cursore — accanto al punto in cui scrivi; se l'app non lo espone, accanto al puntatore",
+		"S_OVPOS_BOTTOM": "In basso sullo schermo", "S_OVPOS_TOP": "In alto sullo schermo", "S_OVPOS_CARET": "Al cursore",
+		"S_OVTEXT": "Mostrare il testo riconosciuto", "S_OVTEXT_SUB": "sulla barra dopo l'inserimento, invece del numero di caratteri",
 		"S_OVERLAY": "Indicatore a schermo", "S_ANIM": "Animazione di registrazione", "S_TYPEMODE": "Digitazione carattere per carattere",
 		"S_RECLANG": "Lingua di riconoscimento", "S_RECAUTO": "Auto",
 		"S_MODELS": "Modelli di riconoscimento", "S_DL": "Scarica", "S_DEL": "Elimina",
@@ -982,6 +997,7 @@ func init() {
 			"<li><b>Riconosco…</b> — Whisper sta lavorando; durante la traduzione — «Traduco», durante i prompt — «Modifico: nome (1/2)».</li>" +
 			"<li><b>Inserito: N caratteri</b> — fatto; in caso di errore o silenzio compare brevemente il motivo.</li>" +
 			"<li>La ✕ a destra annulla in qualsiasi momento; la barra non ruba mai il fuoco. Barra e animazione si spengono in «Dettatura».</li>" +
+			"<li>Dove appare la barra — in basso, in alto o al cursore — e se mostra il testo riconosciuto invece del numero di caratteri, si imposta in «Dettatura».</li>" +
 			"</ul>" +
 			"<p class=\"wh\">La domanda sulla traduzione</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Riconoscimento…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Tradurre in:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Senza traduzione</span></div></div>" +
@@ -1100,6 +1116,9 @@ func init() {
 		"S_SND_SPEECH": "Systemowy (mowa)", "S_SND_CHIME": "Dzwonek", "S_SND_SOFT": "Miękki", "S_SND_MARIMBA": "Marimba",
 		"S_SND_BLIP": "Blip", "S_SND_POP": "Pop",
 		"S_AUTOENTER": "Naciśnij Enter po wstawieniu (auto-wysyłka)", "S_RESTORE": "Przywróć schowek po wstawieniu",
+		"S_OVPOS": "Gdzie pokazywać pasek", "S_OVPOS_SUB": "przy kursorze — obok miejsca pisania; jeśli aplikacja go nie pokazuje, obok wskaźnika myszy",
+		"S_OVPOS_BOTTOM": "Na dole ekranu", "S_OVPOS_TOP": "Na górze ekranu", "S_OVPOS_CARET": "Przy kursorze",
+		"S_OVTEXT": "Pokazywać rozpoznany tekst", "S_OVTEXT_SUB": "na pasku po wstawieniu, zamiast liczby znaków",
 		"S_OVERLAY": "Wskaźnik na ekranie", "S_ANIM": "Animacja nagrywania", "S_TYPEMODE": "Wpisywanie znak po znaku",
 		"S_RECLANG": "Język rozpoznawania", "S_RECAUTO": "Auto",
 		"S_MODELS": "Modele rozpoznawania", "S_DL": "Pobierz", "S_DEL": "Usuń",
@@ -1182,6 +1201,7 @@ func init() {
 			"<li><b>Rozpoznaję…</b> — Whisper pracuje; przy tłumaczeniu — „Tłumaczę”, przy promptach — „Redaguję: nazwa (1/2)”.</li>" +
 			"<li><b>Wstawiono: N znaków</b> — gotowe; przy błędzie albo ciszy pojawia się krótki powód.</li>" +
 			"<li>✕ po prawej przerywa na każdym etapie; pasek nigdy nie zabiera fokusu. Pasek i jego animację można wyłączyć w „Dyktowaniu”.</li>" +
+			"<li>Gdzie pojawia się pasek — na dole, na górze albo przy kursorze — i czy pokazuje rozpoznany tekst zamiast liczby znaków, ustawia się w „Dyktowaniu”.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Pytanie o tłumaczenie</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Rozpoznawanie…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Tłumaczyć na:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Bez tłumaczenia</span></div></div>" +
@@ -1379,6 +1399,9 @@ func init() {
 		"S_SND_SPEECH": "Системний (мовлення)", "S_SND_CHIME": "Дзвіночок", "S_SND_SOFT": "М'який", "S_SND_MARIMBA": "Марімба",
 		"S_SND_BLIP": "Бліп", "S_SND_POP": "Поп",
 		"S_AUTOENTER": "Enter після вставлення (автовідправлення)", "S_RESTORE": "Відновлювати буфер обміну після вставлення",
+		"S_OVPOS": "Де показувати смужку", "S_OVPOS_SUB": "біля курсора — поряд із місцем введення; якщо застосунок його не показує, поряд із вказівником миші",
+		"S_OVPOS_BOTTOM": "Унизу екрана", "S_OVPOS_TOP": "Угорі екрана", "S_OVPOS_CARET": "Біля курсора",
+		"S_OVTEXT": "Показувати розпізнаний текст", "S_OVTEXT_SUB": "у смужці після вставки, замість кількості символів",
 		"S_OVERLAY": "Екранний індикатор", "S_ANIM": "Анімація запису/розпізнавання", "S_TYPEMODE": "Посимвольне введення (для полів без вставлення)",
 		"S_RECLANG": "Мова розпізнавання", "S_RECAUTO": "Автовизначення",
 		"S_MODELS": "Моделі розпізнавання", "S_DL": "Завантажити", "S_DEL": "Видалити",
@@ -1442,6 +1465,7 @@ func init() {
 			"<li><b>Розпізнаю…</b> — Whisper працює; під час перекладу — «Перекладаю», під час промптів — «Редагую: назва (1/2)».</li>" +
 			"<li><b>Вставлено: N символів</b> — готово; при помилці чи тиші коротко пишеться причина.</li>" +
 			"<li>✕ праворуч скасовує на будь-якому кроці; смужка ніколи не забирає фокус вводу. Смужку та її анімацію можна вимкнути в «Диктуванні».</li>" +
+			"<li>Де з'являється смужка — унизу, угорі чи біля курсора — і чи показує вона сам розпізнаний текст замість кількості символів, налаштовується в «Диктуванні».</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Питання про переклад</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Розпізнаю…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Перекласти на:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Без перекладу</span></div></div>" +

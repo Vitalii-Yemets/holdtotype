@@ -97,6 +97,8 @@ type settingsForm struct {
 	AutoEnter        bool   `json:"auto_enter"`
 	RestoreClipboard bool   `json:"restore_clipboard"`
 	Overlay          bool   `json:"overlay"`
+	OverlayPos       string `json:"overlay_position"`
+	OverlayText      bool   `json:"overlay_text"`
 	Animation        bool   `json:"animation"`
 	TypeMode         bool   `json:"type_mode"`
 	Language         string `json:"language"`
@@ -491,6 +493,11 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	c.AutoEnter = f.AutoEnter
 	c.RestoreClipboard = f.RestoreClipboard
 	c.Overlay = f.Overlay
+	if validOverlayPos(f.OverlayPos) {
+		c.OverlayPos = f.OverlayPos
+	}
+	c.OverlayText = f.OverlayText
+	setOverlayPos(c.OverlayPos)
 	c.Animation = f.Animation
 	if f.TypeMode {
 		c.PasteMode = "type"
@@ -669,6 +676,8 @@ func settingsHTML(cfg *Config, tab string) string {
 		"auto_enter":            cfg.AutoEnter,
 		"restore_clipboard":     cfg.RestoreClipboard,
 		"overlay":               cfg.Overlay,
+		"overlay_position":      cfg.OverlayPos,
+		"overlay_text":          cfg.OverlayText,
 		"animation":             cfg.Animation,
 		"type_mode":             cfg.PasteMode == "type",
 		"language":              cfg.Language,
@@ -1087,6 +1096,13 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
  <div class="card">
   <div class="sect">{{S_SEC_OVERLAY}}</div>
   <div class="row"><label>{{S_OVERLAY}}</label><input type="checkbox" id="overlay"></div>
+  <div class="row"><label>{{S_OVPOS}}<span class="sub">{{S_OVPOS_SUB}}</span></label>
+   <select id="overlay_position">
+    <option value="bottom">{{S_OVPOS_BOTTOM}}</option>
+    <option value="top">{{S_OVPOS_TOP}}</option>
+    <option value="caret">{{S_OVPOS_CARET}}</option>
+   </select></div>
+  <div class="row"><label>{{S_OVTEXT}}<span class="sub">{{S_OVTEXT_SUB}}</span></label><input type="checkbox" id="overlay_text"></div>
   <div class="row" data-adv><label>{{S_ANIM}}</label><input type="checkbox" id="animation"></div>
  </div>
 </div>
@@ -1358,10 +1374,10 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
 <script>
 window.onerror = function(m, s, l, c){ if(window.appJSError) appJSError(String(m) + " @line " + l + ":" + c); };
 const CFG = {{CFG}};
-const bools = ["beep","auto_enter","restore_clipboard","overlay","animation","type_mode","server_autostart","check_updates"];
+const bools = ["beep","auto_enter","restore_clipboard","overlay","overlay_text","animation","type_mode","server_autostart","check_updates"];
 const texts = ["server_exe","server_url"];
 const nums  = ["threads","min_record_ms","max_record_seconds","translate_ask_seconds","server_port"];
-const sels  = ["ui_language","language","sound_theme","translate_target","translate_ask","hotkey_mode"];
+const sels  = ["ui_language","language","sound_theme","translate_target","translate_ask","hotkey_mode","overlay_position"];
 const trAll = ["en","de","fr","es","it","pl","ru","uk"];
 const L = {{L_JSON}};
 const I_DL = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12"/><path d="M6 11l6 6 6-6"/><path d="M4 21h16"/></svg>';
