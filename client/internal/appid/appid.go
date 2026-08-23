@@ -21,9 +21,11 @@ const (
 	LatestAPI = "https://api.github.com/repos/" + Repo + "/releases/latest"
 
 	LLMAlias = Slug + "-local"
+
+	PrevSlug = "voxterminal"
 )
 
-var Version = "0.14.3"
+var Version = "0.14.4"
 
 func Class(suffix string) string { return Name + suffix }
 
@@ -32,6 +34,8 @@ func TempDirName(kind string, pid int) string {
 }
 
 func TempDirPrefix(kind string) string { return Slug + "-" + kind }
+
+func PrevTempPrefix(kind string) string { return PrevSlug + "-" + kind }
 
 func itoa(n int) string {
 	if n == 0 {

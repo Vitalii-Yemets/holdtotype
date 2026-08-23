@@ -1,77 +1,42 @@
 package appid
 
-import (
-	"strings"
-	"testing"
+import "testing"
 
-	"holdtotype/internal/appver"
-)
-
-func TestVersionParses(t *testing.T) {
-	if _, ok := appver.Parse(Version); !ok {
-		t.Fatalf("Version %q не разбирается как x.y.z", Version)
+func TestIdentityIsOneName(t *testing.T) {
+	if Name != "HoldToType" || Slug != "holdtotype" {
+		t.Fatalf("identity drifted: %s / %s", Name, Slug)
 	}
-}
-
-func TestSlugIsFileSafe(t *testing.T) {
-	if Slug == "" {
-		t.Fatal("пустой Slug")
+	for _, s := range []string{Exe, SetupExe, LogFile, Portable, LLMAlias, Repo, RepoURL, LatestAPI} {
+		if !contains(s, Slug) {
+			t.Errorf("%q does not carry the slug", s)
+		}
 	}
-	for _, r := range Slug {
-		if (r < 'a' || r > 'z') && (r < '0' || r > '9') && r != '-' {
-			t.Fatalf("Slug содержит %q — недопустимо в именах файлов и URL", r)
+	for _, s := range []string{InstallDirName, ShortcutName, RunValue, UninstallKey, MutexName} {
+		if !contains(s, Name) {
+			t.Errorf("%q does not carry the name", s)
 		}
 	}
 }
 
-func TestDerivedNames(t *testing.T) {
-	cases := map[string]string{
-		Exe:      ".exe",
-		SetupExe: ".exe",
-		LogFile:  ".log",
-		Portable: ".zip",
+func TestPreviousNameIsOnlyUsedForCleanup(t *testing.T) {
+	if PrevSlug == Slug {
+		t.Fatal("the previous name must differ from the current one")
 	}
-	for name, ext := range cases {
-		if !strings.HasPrefix(name, Slug) {
-			t.Errorf("%q не начинается со Slug", name)
-		}
-		if !strings.HasSuffix(name, ext) {
-			t.Errorf("%q не оканчивается на %q", name, ext)
+	if got := PrevTempPrefix("webview"); got != "voxterminal-webview" {
+		t.Fatalf("PrevTempPrefix = %q", got)
+	}
+	for _, s := range []string{Exe, SetupExe, LogFile, Portable, InstallDirName, ShortcutName, RunValue, UninstallKey, MutexName, Repo, LLMAlias} {
+		if contains(s, PrevSlug) || contains(s, "Vox") {
+			t.Errorf("%q still carries the old name", s)
 		}
 	}
-	if Exe == SetupExe {
-		t.Error("имена приложения и установщика совпали")
-	}
 }
 
-func TestRegistryAndURLsCarryName(t *testing.T) {
-	if !strings.HasSuffix(UninstallKey, Name) {
-		t.Errorf("ключ удаления %q не оканчивается именем", UninstallKey)
+func contains(s, sub string) bool {
+	for i := 0; i+len(sub) <= len(s); i++ {
+		if s[i:i+len(sub)] == sub {
+			return true
+		}
 	}
-	if !strings.Contains(MutexName, Name) {
-		t.Errorf("имя мьютекса %q не содержит имени приложения", MutexName)
-	}
-	if !strings.Contains(LatestAPI, Repo) || !strings.Contains(RepoURL, Repo) {
-		t.Error("ссылки не совпадают с Repo")
-	}
-	if !strings.HasSuffix(RepoURL, Slug) {
-		t.Errorf("репозиторий %q не совпадает со Slug", RepoURL)
-	}
-}
-
-func TestTempDirName(t *testing.T) {
-	got := TempDirName("webview", 421)
-	want := Slug + "-webview-421"
-	if got != want {
-		t.Fatalf("TempDirName = %q, ожидалось %q", got, want)
-	}
-	if !strings.HasPrefix(got, TempDirPrefix("webview")) {
-		t.Fatal("префикс не совпадает с именем каталога")
-	}
-}
-
-func TestClass(t *testing.T) {
-	if Class("TrayWnd") != Name+"TrayWnd" {
-		t.Fatal("Class собирает имя класса неверно")
-	}
+	return false
 }

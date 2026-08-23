@@ -66,14 +66,25 @@ func createWebView(width, height int) webview.WebView {
 
 func cleanupWebViewProfiles() {
 	own := appid.TempDirName("webview", os.Getpid())
+	stale := []string{
+		appid.TempDirPrefix("webview"),
+		appid.PrevTempPrefix("webview"),
+		appid.PrevTempPrefix("setup"),
+	}
 	entries, err := os.ReadDir(os.TempDir())
 	if err != nil {
 		return
 	}
 	for _, e := range entries {
 		name := e.Name()
-		if e.IsDir() && strings.HasPrefix(name, appid.TempDirPrefix("webview")) && name != own {
-			_ = os.RemoveAll(filepath.Join(os.TempDir(), name))
+		if !e.IsDir() || name == own {
+			continue
+		}
+		for _, prefix := range stale {
+			if strings.HasPrefix(name, prefix) {
+				_ = os.RemoveAll(filepath.Join(os.TempDir(), name))
+				break
+			}
 		}
 	}
 }
