@@ -561,6 +561,7 @@ type stateOut struct {
 	LLMOK      bool   `json:"llm_ok"`
 	MicOK      bool   `json:"mic_ok"`
 	StatusLine string `json:"status_line"`
+	RestartPending bool   `json:"restart_pending"`
 	Badges     struct {
 		Mic    string `json:"mic"`
 		Models string `json:"models"`
@@ -606,6 +607,7 @@ func (a *App) stateSnapshot() string {
 	ready := a.ready
 	rec := a.rec
 	last := a.lastResult
+	pending := a.restartPending
 	a.mu.Unlock()
 
 	mic := strS("S_MIC_DEFAULT")
@@ -663,6 +665,7 @@ func (a *App) stateSnapshot() string {
 		LLMOK:      llmInstalled(cfg),
 		MicOK:      rec != nil,
 		StatusLine: statusLine(cfg, ready, free),
+		RestartPending: pending,
 	}
 	st.Badges.Mic = micBadge(mic)
 	st.Badges.Models = itoaSafe(installedModelCount())

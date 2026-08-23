@@ -601,6 +601,11 @@ func (a *App) applySettings(f *settingsForm) string {
 		c.ServerURL != old.ServerURL ||
 		c.ServerExe != old.ServerExe ||
 		c.ServerAutostart != old.ServerAutostart
+	if restartNeeded {
+		a.mu.Lock()
+		a.restartPending = true
+		a.mu.Unlock()
+	}
 	log.Printf("настройки сохранены: hotkey=%s ui=%s model=%s restart=%v", c.Hotkey, c.UILanguage, c.Model, restartNeeded)
 	switch {
 	case restartNeeded:
@@ -849,10 +854,6 @@ button.stab.on{color:var(--green);border-color:var(--line);background:var(--bg);
 button.iconbtn{border:none;background:none;padding:2px 5px;color:var(--dim);cursor:pointer;line-height:1;font:13px Consolas,monospace}
 button.iconbtn:hover{color:var(--green);filter:drop-shadow(0 0 4px rgba(60,255,110,.6))}
 button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,110,90,.5))}
-.modal-bg{position:fixed;inset:0;background:rgba(3,7,4,.75);display:none;align-items:center;justify-content:center;z-index:10}
-.modal-bg.show{display:flex}
-.modal{background:var(--panel);border:1px solid var(--line);box-shadow:0 0 24px rgba(60,255,110,.18);padding:20px 24px;max-width:360px;text-align:center}
-.modal p{margin-bottom:16px;line-height:1.5}
 .about p{margin:8px 0;line-height:1.55;user-select:text;color:var(--green)}
 .about b{text-shadow:var(--glow)}
 .about .wh{color:var(--dim);font-size:12px;letter-spacing:1px;text-transform:uppercase;margin:16px 0 4px;border-bottom:1px solid #12241a;padding-bottom:3px}
@@ -901,7 +902,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
  <label class="omni"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="15.5" y1="15.5" x2="21" y2="21"/></svg><input id="omni" type="text" placeholder="{{S_SEARCH}}" autocomplete="off"><span class="okey">Ctrl K</span></label>
  <div class="capbtns">
   <button class="cap" onclick="appMin()">&#9472;</button>
-  <button class="cap close" onclick="guardClose()">&#10005;</button>
+  <button class="cap close" onclick="appClose()">&#10005;</button>
  </div>
 </div>
 <div class="shell">
@@ -1144,16 +1145,6 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
 
 
 
-<div class="modal-bg" id="modalbg">
- <div class="modal">
-  <p>{{S_UNSAVED}}</p>
-  <div style="display:flex;gap:10px;justify-content:center">
-   <button class="btn" id="mYes">{{S_SAVE_YES}}</button>
-   <button class="ghost btn" id="mNo">{{S_SAVE_NO}}</button>
-  </div>
- </div>
-</div>
-
 <script>
 window.onerror = function(m, s, l, c){ if(window.appJSError) appJSError(String(m) + " @line " + l + ":" + c); };
 const CFG = {{CFG}};
@@ -1235,7 +1226,6 @@ async function refreshLLM(){
       toast(await appLLMDel(f));
       if(selLLM === f){
         selLLM = null;
-        if(baseline){ const bl = JSON.parse(baseline); bl.lm = ""; baseline = JSON.stringify(bl); }
       }
       refreshLLM();
     };
@@ -1500,7 +1490,6 @@ function llmTestResult(out){
 let selModel = null;
 let activeModelId = null;
 let pendingDl = null;
-let baseline = null;
 async function refreshState(){
   const s = JSON.parse(await appState());
   const set = (id, v)=>{ const el = document.getElementById(id); if(el) el.textContent = v; };
@@ -1537,12 +1526,14 @@ async function refreshState(){
   badge("badge_mic", s.badges && s.badges.mic, s.mic);
   badge("badge_models", s.badges && s.badges.models);
   badge("badge_system", s.badges && s.badges.system);
+  const pend = document.getElementById("st_pend");
+  if(pend) pend.textContent = s.restart_pending ? L.hint : "";
 }
 function initStateScreen(){
   const copy = document.getElementById("state_copy");
   if(copy) copy.onclick = ()=>{ appCopyLast(); toast(L.upd); };
   document.querySelectorAll("[data-goto]").forEach(b=>{ b.onclick = ()=>show(b.dataset.goto); });
-  setInterval(()=>{ refreshState(); restartHint(); }, 1500);
+  setInterval(refreshState, 1500);
   startMeter("state_mic_bar", "p-state", null);
   refreshState();
 }
@@ -1658,63 +1649,6 @@ async function refreshModels(){
   });
   if(busy || pendingDl) setTimeout(refreshModels, 700);
 }
-function formState(){
-  const o = {m: selModel || activeModelId};
-  bools.forEach(k=>o[k]=document.getElementById(k).checked);
-  texts.forEach(k=>o[k]=document.getElementById(k).value);
-  nums.forEach(k=>o[k]=document.getElementById(k).value);
-  sels.forEach(k=>o[k]=document.getElementById(k).value);
-  o.hotkey = CFG.hotkey;
-  o.wp = document.getElementById("whisper_prompt").value;
-  o.td = translateDefault;
-  o.ap = activeProfiles.join(",");
-  o.lm = selLLM || "";
-  o.wt = translateHotkey;
-  o.tal = trAll.filter(l=>document.getElementById("tl_"+l).checked).join(",");
-  o.prof = JSON.stringify(profiles);
-  return JSON.stringify(o);
-}
-function dirty(){ return baseline !== null && formState() !== baseline; }
-function restartHint(){
-  const el = document.getElementById("st_pend");
-  if(!el || baseline === null) return;
-  const base = JSON.parse(baseline), now = JSON.parse(formState());
-  const needs = ["server_port","server_exe","server_url"].some(k=>String(base[k]) !== String(now[k]));
-  el.textContent = needs ? L.hint : "";
-}
-function revert(){
-  if(baseline === null) return;
-  const b = JSON.parse(baseline);
-  bools.forEach(k=>document.getElementById(k).checked = b[k]);
-  texts.forEach(k=>document.getElementById(k).value = b[k]);
-  nums.forEach(k=>document.getElementById(k).value = b[k]);
-  sels.forEach(k=>document.getElementById(k).value = b[k]);
-  sliders.forEach(k=>document.getElementById(k).dispatchEvent(new Event("input")));
-  selModel = b.m || null;
-  document.getElementById("whisper_prompt").value = b.wp || "";
-  translateDefault = !!b.td;
-  activeProfiles = (b.ap||"") === "" ? [] : b.ap.split(",");
-  selLLM = b.lm || null;
-  translateHotkey = b.wt || "";
-  document.getElementById("tr_default").checked = translateDefault;
-  syncTrControls();
-  updTrHotkey();
-  const tal = (b.tal||"").split(",");
-  trAll.forEach(l=>{ document.getElementById("tl_"+l).checked = tal.includes(l); });
-  try { profiles = JSON.parse(b.prof) || []; } catch(e) {}
-  expandedID = null;
-  refreshModels();
-  refreshLLM();
-}
-function askUnsaved(cb){
-  const bg = document.getElementById("modalbg");
-  bg.classList.add("show");
-  const done = v => { bg.classList.remove("show"); if(v !== undefined) cb(v); };
-  document.getElementById("mYes").onclick = ()=>done(true);
-  document.getElementById("mNo").onclick = ()=>done(false);
-  bg.onclick = e => { if(e.target === bg) done(undefined); };
-}
-function guardClose(){ appClose(); }
 function toast(msg){
   if(!msg) return;
   const t = document.getElementById("st_saved");
@@ -1775,7 +1709,6 @@ function syncTrControls(){
 function setHotkey(s){
   CFG.hotkey=s;
   document.getElementById("hotkey").textContent=s;
-  if(baseline !== null){ const b=JSON.parse(baseline); b.hotkey=s; baseline=JSON.stringify(b); }
 }
 async function doSave(){
   const micSel = document.getElementById("mic_device");
@@ -1797,7 +1730,6 @@ async function doSave(){
   sels.forEach(k=>f[k]=document.getElementById(k).value);
   const langChanged = f.ui_language !== (CFG.ui_language || "auto");
   const msg = await appSave(JSON.stringify(f));
-  baseline = formState();
   if(langChanged){ appReload(curTab); return; }
   toast(msg);
   refreshModels();
@@ -1895,7 +1827,6 @@ load();
   }
   await refreshModels();
   await refreshLLM();
-  baseline = formState();
   if(window.appReady) appReady();
 })();
 const tabAlias = {general:"state", rec:"models", proc:"text", server:"system", about:"about", state:"state", dictation:"dictation", mic:"mic", models:"models", text:"text", translate:"translate", system:"system"};

@@ -585,9 +585,6 @@ var settingsStrings = map[string]map[string]string{
 			"<li><b>{log}</b> — журнал работы, автоматически ограничен ~2 МБ.</li>" +
 			"<li><b>models/</b> — скачанные модели Whisper и LLM.</li>" +
 			"</ul>",
-		"S_UNSAVED":    "Есть несохранённые изменения. Сохранить?",
-		"S_SAVE_YES":   "Сохранить",
-		"S_SAVE_NO":    "Не сохранять",
 		"S_APPLY_HINT": "Модель переключится после нажатия «Сохранить»",
 		"S_VERSION":    "Версия",
 	},
@@ -876,9 +873,6 @@ var settingsStrings = map[string]map[string]string{
 			"<li><b>{log}</b> — the log, automatically capped at ~2 MB.</li>" +
 			"<li><b>models/</b> — downloaded Whisper and LLM models.</li>" +
 			"</ul>",
-		"S_UNSAVED":    "You have unsaved changes. Save them?",
-		"S_SAVE_YES":   "Save",
-		"S_SAVE_NO":    "Don't save",
 		"S_APPLY_HINT": "The model will switch after you press Save",
 		"S_VERSION":    "Version",
 	},

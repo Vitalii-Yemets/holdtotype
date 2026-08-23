@@ -49,7 +49,7 @@ Hold a hotkey — speak. Release — the transcribed text is pasted right where 
 - 🔊 **Sound themes** — several synthesized cue sets plus Windows system sounds, with preview.
 - ⚡ **Nothing to save** — every change applies the moment you make it; the Save button is gone, and the two settings that genuinely need a restart say so in the status bar.
 - 🔍 **Find a setting** — Ctrl+K, a word, and the window jumps to the right section and highlights the row, even when the row is hidden by simple mode.
-- 🎚️ **Simple mode** — new installs open with 15 rarely-touched settings folded away behind "N more settings" in each section; the status bar always says how many are hidden and offers to show everything. Upgrades keep the full view, because taking away settings someone has already seen is a regression.
+- 🎚️ **Simple mode** — new installs open with 15 rarely-touched settings folded away behind "N more settings" in each section, and a SIMPLE/ALL switch in the title bar shows which view is on. Upgrades keep the full view, because taking away settings someone has already seen is a regression.
 - ⏯️ **Hold or toggle** — hold the keys as before, or press once to start and once to stop.
 - 🖥️ **One window, eight sections** — a sidebar instead of tabs inside tabs: Status, Dictation, Microphone, Models, Text, Translation, System, About. The Status screen answers "is everything ready" at a glance — hotkey, microphone, engine and model, free memory, last dictation — and a status bar keeps that answer visible from every section.
 - 🖥️ **Tray application** — color-coded status icon, quick menu, a Pip-Boy-terminal-styled settings window that remembers its size.
@@ -104,20 +104,20 @@ Speech processing takes a few seconds — if you switch windows in the meantime,
 
 ## ⚙️ Settings
 
-Left-click the tray icon to open the settings window:
+Left-click the tray icon to open the settings window. Eight sections in the sidebar, no tabs inside tabs:
 
-| Tab | Contents |
+| Section | Contents |
 |---|---|
-| **General** | hotkey, UI and recognition languages, sound themes, auto-Enter, clipboard restore, overlay and animation, type mode |
-| **Recognition → Models** | the Whisper catalog: Base / Small / Medium / Turbo, one-click download and switching |
-| **Recognition → Dictionary** | a recognition hint: terms, names, abbreviations, comma-separated |
-| **Recognition → Parameters** | microphone selection with a live level meter, CPU threads, min/max recording duration |
-| **Recognition → Server** | whisper-server autostart, port, external server URL |
-| **Recognition → Translation** | target language, translation modes, dialog languages, a separate translation hotkey |
-| **Post-processing** | LLM models (installed + Hugging Face search) and the prompt chain with checkboxes |
-| **About** | info, a detailed guide-wiki, about the author |
+| **Status** | is everything ready, at a glance: hotkey, microphone with a live level, the model for Russian and the one for every other language, the post-processing model, free memory, and the last dictation with *Copy* |
+| **Dictation** | the hotkey, hold or toggle, auto-Enter, the on-screen overlay; folded away: recording durations, clipboard restore, character-by-character typing, overlay animation |
+| **Microphone** | input device with a live level meter, recording cue sounds and the sound theme |
+| **Models** | the recognition catalog with filters and honest RAM numbers, the picker that answers with a model and the reason, recognition language, CPU threads, and the editor model for post-processing (installed + Hugging Face search) |
+| **Text** | where punctuation comes from, the recognition dictionary, and the chain of post-processing prompts |
+| **Translation** | target language, when to ask, dialog languages, a separate translation hotkey |
+| **System** | UI language and updates; folded away: whisper-server autostart, port, path, external server URL |
+| **About** | version, a detailed guide-wiki, about the author |
 
-Unsaved changes are tracked: when leaving a tab the app asks whether to keep them. Settings that do not apply in the current mode are greyed out automatically.
+Everything applies the moment you change it — there is no Save button and no dialog about unsaved changes. The two settings that cannot apply live — the recognizer port and an external server — say so in the status bar until the app is restarted. Settings that do not apply in the current mode are greyed out automatically.
 
 ## 🌐 How translation works
 

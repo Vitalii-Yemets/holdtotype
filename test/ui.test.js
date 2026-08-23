@@ -18,11 +18,13 @@ const dom = new JSDOM(html, {
     window.confirm = () => true;
     window.appLLM = async () => JSON.stringify(llmState);
     let micBadge = "Realtek";
+    let restartPending = false;
     window.appState = async () =>
       JSON.stringify({ hotkey: "ctrl+win", mic: "Realtek", engine: "sherpa · gigaam-v3", llm: "model.gguf",
         ram: "8000 MB free", last: "hello", last_meta: "just now · 5 characters", ready: true, status: "Ready",
         status_line: "Ready · gigaam-v3 + ggml-small.bin · 7.8 GB free", ru_model: "gigaam-v3",
         other_model: "ggml-small.bin", llm_ok: true, mic_ok: true,
+        restart_pending: restartPending,
         badges: { mic: micBadge, models: "2", system: "" } });
     window.appRouting = async () =>
       JSON.stringify([
@@ -60,6 +62,7 @@ const dom = new JSDOM(html, {
       window.saveCalls++;
       const f = JSON.parse(json);
       micBadge = f.mic_device_name ? f.mic_device_name.split(" ")[0] : "Realtek";
+      if(Number(f.server_port) !== 8910) restartPending = true;
       return "Saved";
     };
     window.appModelDel = async () => "ok";
@@ -104,6 +107,7 @@ function check(name, actual, expected) {
   check("last dictation is clamped to its row", [lastCS.display, lastCS.overflow, lastCS.textOverflow, lastCS.whiteSpace], ["block", "hidden", "ellipsis", "nowrap"]);
   check("full dictation text kept on hover", d.getElementById("state_last").title, "hello");
   check("status screen meter follows the microphone", d.getElementById("state_mic_bar").style.width !== "" && d.getElementById("state_mic_bar").style.width !== "0%", true);
+  check("restart hint follows the app state", d.getElementById("st_pend").textContent, "");
   check("status bar names both models", d.getElementById("st_main").textContent, "Ready · gigaam-v3 + ggml-small.bin · 7.8 GB free");
   check("sidebar badges filled", [d.getElementById("badge_mic").textContent, d.getElementById("badge_models").textContent], ["Realtek", "2"]);
   check("status bar led lit", d.getElementById("st_led").classList.contains("on"), true);
@@ -222,6 +226,14 @@ function check(name, actual, expected) {
   check("empty title bar still drags the window", w.dragCalls, drag0 + 1);
   check("version sits in the status bar", !!d.querySelector("#statusbar #ver"), true);
   check("version left the title bar", !!d.querySelector(".header #ver"), false);
+
+  check("no unsaved-changes dialog left", !!d.getElementById("modalbg"), false);
+
+  tab("system"); await sleep(80);
+  const port = d.getElementById("server_port");
+  port.value = "8999"; port.dispatchEvent(new w.Event("change", { bubbles: true }));
+  await sleep(400);
+  check("the port says it needs a restart", d.getElementById("st_pend").textContent, "Applied on save");
 
   check("no page errors", errors, []);
 
