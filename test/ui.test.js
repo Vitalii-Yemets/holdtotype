@@ -18,7 +18,6 @@ const dom = new JSDOM(html, {
     window.confirm = () => true;
     window.appLLM = async () => JSON.stringify(llmState);
     let micBadge = "Realtek";
-    let restartFields = "";
     let micFails = false;
     let ruState = "ready";
     let otherState = "ready";
@@ -32,7 +31,7 @@ const dom = new JSDOM(html, {
         ram: "8000 MB free", last: "hello", last_meta: "just now · 5 characters", ready: true, status: "Ready",
         status_line: "Ready · gigaam-v3 + ggml-small.bin · 7.8 GB free", ru_model: "gigaam-v3",
         other_model: "ggml-small.bin", llm_ok: true, mic_ok: true,
-        restart_hint: restartFields, remote: remote,
+        remote: remote,
         ru_state: ruState, other_state: otherState,
         badges: { mic: micBadge, models: "2", system: "" } });
     window.appRouting = async () =>
@@ -67,12 +66,14 @@ const dom = new JSDOM(html, {
     window.dragCalls = 0;
     window.appDrag = () => { window.dragCalls++; };
     window.saveCalls = 0;
+    window.lastSave = {};
     window.appSave = async (json) => {
       window.saveCalls++;
       const f = JSON.parse(json);
       micBadge = f.mic_device_name ? f.mic_device_name.split(" ")[0] : "Realtek";
-      if(Number(f.server_port) !== 8910) restartFields = "Restart HoldToType to apply: Port";
-      return JSON.stringify({ ok: true, severity: "ok", message: "Saved" });
+      const message = Number(f.server_port) === 8910 ? "Saved" : "Restarting the recognizer…";
+      window.lastSave = { ok: true, severity: "ok", message };
+      return JSON.stringify(window.lastSave);
     };
     window.appModelDel = async () => "ok";
     window.appMics = async () =>
@@ -120,7 +121,6 @@ function check(name, actual, expected) {
   check("last dictation is clamped to its row", [lastCS.display, lastCS.overflow, lastCS.textOverflow, lastCS.whiteSpace], ["block", "hidden", "ellipsis", "nowrap"]);
   check("full dictation text kept on hover", d.getElementById("state_last").title, "hello");
   check("status screen meter follows the microphone", d.getElementById("state_mic_bar").style.width !== "" && d.getElementById("state_mic_bar").style.width !== "0%", true);
-  check("restart hint follows the app state", d.getElementById("st_pend").textContent, "");
   check("status bar names both models", d.getElementById("st_main").textContent, "Ready · gigaam-v3 + ggml-small.bin · 7.8 GB free");
   check("sidebar badges filled", [d.getElementById("badge_mic").textContent, d.getElementById("badge_models").textContent], ["Realtek", "2"]);
   check("status bar led lit", d.getElementById("st_led").classList.contains("on"), true);
@@ -270,9 +270,8 @@ function check(name, actual, expected) {
   const port = d.getElementById("server_port");
   port.value = "8999"; port.dispatchEvent(new w.Event("change", { bubbles: true }));
   await sleep(400);
-  const pendText = d.getElementById("st_pend").textContent;
-  check("the port says it needs a restart", pendText, "Restart HoldToType to apply: Port");
-  check("the restart hint never mentions Save", /save/i.test(pendText), false);
+  check("changing the port restarts the recognizer instead of asking", w.lastSave.message, "Restarting the recognizer…");
+  check("nothing in the status bar asks for a restart", !!d.getElementById("st_pend"), false);
 
   check("no page errors", errors, []);
 

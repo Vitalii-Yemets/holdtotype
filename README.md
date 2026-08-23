@@ -47,7 +47,7 @@ Hold a hotkey — speak. Release — the transcribed text is pasted right where 
 - 📖 **Recognition dictionary** — terms and abbreviations hint rare words to Whisper; a multilingual starter set is preinstalled.
 - 🗣️ **UI languages** — English and Russian are complete. Ukrainian is about half translated, German, French, Spanish, Italian and Polish about a third; the rest of those interfaces falls back to English. Switching is instant, "Same as system" follows Windows.
 - 🔊 **Sound themes** — several synthesized cue sets plus Windows system sounds, with preview.
-- ⚡ **Nothing to save** — every change applies the moment you make it; the Save button is gone, and the two settings that genuinely need a restart say so in the status bar.
+- ⚡ **Nothing to save, nothing to restart** — every change applies the moment you make it; the Save button is gone. The settings that describe the recognition server — port, threads, server path, remote URL, autostart — restart the recognizer itself, which takes about a second; the app is never asked to be restarted.
 - 🔍 **Find a setting** — Ctrl+K, a word, and the window jumps to the right section and highlights the row, even when the row is hidden by simple mode.
 - 🎚️ **Simple mode** — new installs open with 15 rarely-touched settings folded away behind "N more settings" in each section, and a SIMPLE/ALL switch in the title bar shows which view is on. Upgrades keep the full view, because taking away settings someone has already seen is a regression.
 - ⏯️ **Hold or toggle** — hold the keys as before, or press once to start and once to stop.
@@ -117,7 +117,7 @@ Left-click the tray icon to open the settings window. Eight sections in the side
 | **System** | UI language and updates; folded away: whisper-server autostart, port, path, external server URL |
 | **About** | version, a detailed guide-wiki, about the author |
 
-Everything applies the moment you change it — there is no Save button and no dialog about unsaved changes. The two settings that cannot apply live — the recognizer port and an external server — say so in the status bar until the app is restarted. Settings that do not apply in the current mode are greyed out automatically.
+Everything applies the moment you change it — there is no Save button and no dialog about unsaved changes. Settings that describe the recognition server (port, threads, server path, remote URL, autostart) restart the recognizer in place, so nothing waits for an app restart. Settings that do not apply in the current mode are greyed out automatically.
 
 ## 🌐 How translation works
 

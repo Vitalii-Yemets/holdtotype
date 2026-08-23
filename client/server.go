@@ -31,6 +31,8 @@ type whisperServer struct {
 	doneCh  chan struct{}
 	job     windows.Handle
 
+	noProcDone sync.Once
+
 	mu       sync.Mutex
 	exited   bool
 	stopping bool
@@ -190,6 +192,9 @@ func (s *whisperServer) stop() {
 	}
 	if s.job != 0 {
 		windows.CloseHandle(s.job)
+	}
+	if s.cmd == nil {
+		s.noProcDone.Do(func() { close(s.doneCh) })
 	}
 }
 

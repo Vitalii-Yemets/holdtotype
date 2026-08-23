@@ -66,7 +66,6 @@ type App struct {
 	lastResult   string
 	lastResultAt time.Time
 	lastTarget   string
-	restartFields map[string]bool
 	updVer     string
 	updURL     string
 
@@ -472,9 +471,6 @@ func (a *App) initBackend() {
 		a.refreshIdleUI()
 		log.Printf("готов: hotkey=%s движок=%s модель=%s lang=%s", cfg.Hotkey, srv.engine(), activeModelPath(cfg), cfg.Language)
 
-		if srv.external() {
-			return
-		}
 		started := time.Now()
 		<-srv.done()
 
@@ -487,9 +483,12 @@ func (a *App) initBackend() {
 		}
 		if srv.wasStopped() {
 			attempts = 0
-			log.Printf("перезапуск сервера по запросу")
+			log.Printf("перезапуск распознавателя по запросу")
 			a.setStatus(tr("status.loading"))
 			continue
+		}
+		if srv.external() {
+			return
 		}
 		if time.Since(started) > 5*time.Minute {
 			attempts = 0
@@ -510,9 +509,10 @@ func (a *App) requestServerRestart() {
 	a.ready = false
 	srv := a.srv
 	a.mu.Unlock()
-	if srv != nil && !srv.external() {
+	if srv != nil {
 		srv.stop()
 	}
+	a.stopAltEngine()
 }
 
 func (a *App) fatal(text string) {
@@ -1027,14 +1027,15 @@ func (a *App) reloadConfig() {
 	a.mu.Unlock()
 	initLang(fresh.UILanguage)
 
-	if fresh.Model != old.Model {
-		a.requestServerRestart()
-	}
-	restartNeeded := fresh.ServerPort != old.ServerPort ||
+	serverChanged := fresh.Model != old.Model ||
+		fresh.ServerPort != old.ServerPort ||
 		fresh.Threads != old.Threads ||
 		fresh.ServerURL != old.ServerURL ||
 		fresh.ServerExe != old.ServerExe ||
 		fresh.ServerAutostart != old.ServerAutostart
+	if serverChanged {
+		a.requestServerRestart()
+	}
 
 	if hook != nil {
 		hook.SetCombos(buildCombos(fresh))
@@ -1042,9 +1043,9 @@ func (a *App) reloadConfig() {
 		log.Printf("хук не установлен, новое сочетание применится после перезапуска")
 	}
 
-	if restartNeeded {
-		a.setStatus(tr("status.restart.needed"))
-		log.Printf("конфиг перечитан; модель/язык/сервер вступят в силу после перезапуска")
+	if serverChanged {
+		a.setStatus(tr("status.loading"))
+		log.Printf("конфиг перечитан; распознаватель перезапускается с новыми настройками")
 	} else {
 		a.refreshIdleUI()
 		log.Printf("конфиг перечитан: hotkey=%s paste=%s", fresh.Hotkey, fresh.PasteMode)

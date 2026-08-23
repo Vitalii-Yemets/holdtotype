@@ -561,7 +561,6 @@ type stateOut struct {
 	LLMOK      bool   `json:"llm_ok"`
 	MicOK      bool   `json:"mic_ok"`
 	StatusLine string `json:"status_line"`
-	RestartHint string `json:"restart_hint"`
 	Remote      bool   `json:"remote"`
 	RuState     string `json:"ru_state"`
 	OtherState  string `json:"other_state"`
@@ -644,22 +643,6 @@ func modelStateFor(cfg *Config, engine string) string {
 	return "missing"
 }
 
-func (a *App) restartHint() string {
-	a.mu.Lock()
-	fields := a.restartFields
-	a.mu.Unlock()
-	if len(fields) == 0 {
-		return ""
-	}
-	var names []string
-	for _, key := range []string{"S_PORT", "S_THREADS", "S_SERVEREXE", "S_SERVERURL", "S_AUTOSTART"} {
-		if fields[key] {
-			names = append(names, strS(key))
-		}
-	}
-	return fmt.Sprintf(strS("S_RESTART_HINT"), strings.Join(names, ", "))
-}
-
 func (a *App) stateSnapshot() string {
 	cfg := a.snapshot()
 	a.mu.Lock()
@@ -727,7 +710,6 @@ func (a *App) stateSnapshot() string {
 		LLMOK:      llmInstalled(cfg),
 		MicOK:      rec != nil,
 		StatusLine: statusLine(cfg, ready, free),
-		RestartHint: a.restartHint(),
 		Remote:      strings.TrimSpace(cfg.ServerURL) != "",
 		RuState:     modelStateFor(cfg, engineSherpa),
 		OtherState:  modelStateFor(cfg, engineWhisper),

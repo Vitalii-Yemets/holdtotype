@@ -602,29 +602,21 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 		a.requestServerRestart()
 	}
 
-	changed := map[string]bool{
-		"S_PORT":      c.ServerPort != old.ServerPort,
-		"S_THREADS":   c.Threads != old.Threads,
-		"S_SERVERURL": c.ServerURL != old.ServerURL,
-		"S_SERVEREXE": c.ServerExe != old.ServerExe,
-		"S_AUTOSTART": c.ServerAutostart != old.ServerAutostart,
-	}
-	restartNeeded := false
-	a.mu.Lock()
-	if a.restartFields == nil {
-		a.restartFields = map[string]bool{}
-	}
-	for key, ch := range changed {
-		if ch {
-			a.restartFields[key] = true
-			restartNeeded = true
-		}
-	}
-	a.mu.Unlock()
+	serverChanged := c.ServerPort != old.ServerPort ||
+		c.Threads != old.Threads ||
+		c.ServerURL != old.ServerURL ||
+		c.ServerExe != old.ServerExe ||
+		c.ServerAutostart != old.ServerAutostart
 
-	log.Printf("настройки сохранены: hotkey=%s ui=%s model=%s restart=%v", c.Hotkey, c.UILanguage, c.Model, restartNeeded)
+	log.Printf("настройки сохранены: hotkey=%s ui=%s model=%s сервер=%v", c.Hotkey, c.UILanguage, c.Model, serverChanged)
+	if serverChanged && !modelChanged {
+		a.requestServerRestart()
+	}
 	if modelChanged {
 		return saveResult{OK: true, Severity: "ok", Message: tr("model.switching")}
+	}
+	if serverChanged {
+		return saveResult{OK: true, Severity: "ok", Message: tr("srv.restarting")}
 	}
 	return saveResult{OK: true, Severity: "ok", Message: strS("S_SAVED")}
 }
@@ -744,12 +736,11 @@ button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box
 .row .lbl{flex:1;min-width:0}
 .statusbar{border-top:1px solid var(--line);padding:6px 14px;display:flex;gap:12px;align-items:center;font-size:11px;color:var(--faint);flex-wrap:nowrap;white-space:nowrap}
 .statusbar #st_main{min-width:0;overflow:hidden;text-overflow:ellipsis}
-.statusbar .stsaved,.statusbar .stpend,.statusbar .stremote{flex:none}
+.statusbar .stsaved,.statusbar .stremote{flex:none}
 .statusbar .stremote{color:var(--amber);border:1px solid var(--amber);padding:0 5px;letter-spacing:.08em}
 .statusbar .stremote:empty{display:none;border:0;padding:0}
 .statusbar .led{width:6px;height:6px;border-radius:50%;background:var(--faint);flex:none}
 .statusbar .led.on{background:var(--green);box-shadow:var(--glow)}
-.statusbar .stpend{color:var(--amber)}
 .statusbar .stsaved{color:var(--dim)}
 .statusbar .stsaved.warn{color:var(--amber)}
 .statusbar .stsaved.bad{color:var(--bad)}
@@ -824,7 +815,11 @@ button.ghost:hover{color:var(--green)}
 .toast.show{opacity:1}
 .mrow{display:flex;align-items:center;gap:9px;padding:7px 2px;border-bottom:1px solid #12241a;flex-wrap:wrap}
 .mrow:last-child{border-bottom:none}
-.mrow input[type=radio]{width:15px;height:15px;accent-color:var(--dim)}
+input[type=radio]{appearance:none;-webkit-appearance:none;width:15px;height:15px;flex:none;margin:0;padding:0;border:1px solid var(--line);border-radius:50%;background:#08100b;position:relative;cursor:pointer}
+input[type=radio]:checked{border-color:var(--green)}
+input[type=radio]:checked::after{content:"";position:absolute;top:3px;left:3px;width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:var(--glow)}
+input[type=radio]:disabled{opacity:.4;cursor:default}
+input[type=radio]:focus-visible{outline:1px solid var(--green);outline-offset:2px}
 .mrow .mname{width:132px;font-weight:700;white-space:nowrap}
 .mrow .mdesc{flex:1;color:var(--faint);font-size:12px}
 .mtag{font-size:9px;border:1px solid var(--line);color:var(--faint);padding:0 4px;margin-left:6px;vertical-align:middle;letter-spacing:.06em}
@@ -1167,7 +1162,6 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
  <span id="st_main">—</span>
  <span class="stsaved" id="st_saved"></span>
  <span class="stremote" id="st_remote"></span>
- <span class="stpend" id="st_pend"></span>
  <span class="ver">v<span id="ver"></span></span>
 </div>
 
@@ -1561,8 +1555,6 @@ async function refreshState(){
   badge("badge_mic", s.badges && s.badges.mic, s.mic);
   badge("badge_models", s.badges && s.badges.models);
   badge("badge_system", s.badges && s.badges.system);
-  const pend = document.getElementById("st_pend");
-  if(pend) pend.textContent = s.restart_hint || "";
   const rem = document.getElementById("st_remote");
   if(rem) rem.textContent = s.remote ? L.remotebadge : "";
 }
