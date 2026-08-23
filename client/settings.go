@@ -973,6 +973,7 @@ input[type=radio]:checked{border-color:var(--green)}
 input[type=radio]:checked::after{content:"";position:absolute;top:3px;left:3px;width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:var(--glow)}
 input[type=radio]:disabled{opacity:.4;cursor:default}
 input[type=radio]:focus-visible{outline:1px solid var(--green);outline-offset:2px}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:1px solid var(--green);outline-offset:2px}
 .mrow .mname{width:132px;font-weight:700;white-space:nowrap}
 .mrow .mdesc{flex:1;color:var(--dim);font-size:12px}
 .mtag{font-size:9px;border:1px solid var(--line);color:var(--faint);padding:0 4px;margin-left:6px;vertical-align:middle;letter-spacing:.06em}

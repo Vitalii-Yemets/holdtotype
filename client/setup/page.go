@@ -17,6 +17,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;background:rep
 button.cap{width:36px;height:30px;background:none;border:1px solid var(--line);color:var(--dim);font:14px Consolas,monospace;cursor:pointer;padding:0}
 button.cap:hover{color:var(--green);border-color:var(--dim)}
 button.cap.close:hover{color:#ff7b6b;border-color:#7a2e2e}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:1px solid var(--green);outline-offset:2px}
 .body{flex:1;padding:18px 22px;display:flex;flex-direction:column;gap:12px}
 .tagline{color:var(--dim);font-size:13px;line-height:1.5}
 label.fld{color:var(--green);font-size:13px}
