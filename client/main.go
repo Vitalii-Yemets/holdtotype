@@ -60,6 +60,7 @@ type App struct {
 	enabled   bool
 	ready     bool
 	capturing bool
+	paused    bool
 	quitting  bool
 
 	evq *evqueue.Queue[ptEvent]
@@ -74,9 +75,12 @@ type App struct {
 	lastResult   string
 	lastResultAt time.Time
 	lastTarget   string
+	lastWnd      uintptr
+	settingsPrev uintptr
 	lastProcess  string
 	updVer     string
 	updURL     string
+	updDigest  string
 
 	altMu   sync.Mutex
 	alt     recognizer
@@ -313,6 +317,30 @@ func main() {
 			cmd := commands.Apply(cfg.Commands, after)
 			log.Printf("replcheck: команд в конфиге — %d, сработали %v, отмена=%v", len(cfg.Commands), cmd.Applied, cmd.Cancelled)
 			log.Printf("replcheck: итог: %q", cmd.Text)
+			return
+		}
+		if arg == "-modelcheck" {
+			app := &App{}
+			var out struct {
+				Rows []struct {
+					Name string `json:"name"`
+					OK   bool   `json:"ok"`
+					Note string `json:"note"`
+				} `json:"rows"`
+				Text string `json:"text"`
+			}
+			if err := json.Unmarshal([]byte(app.verifyModels()), &out); err != nil {
+				log.Printf("modelcheck: %v", err)
+				return
+			}
+			for _, r := range out.Rows {
+				state := "цел"
+				if !r.OK {
+					state = "повреждён: " + r.Note
+				}
+				log.Printf("modelcheck: %s — %s", r.Name, state)
+			}
+			log.Printf("modelcheck: %s", out.Text)
 			return
 		}
 		if arg == "-rulecheck" {
@@ -676,6 +704,11 @@ func buildCombos(cfg *Config) []comboDef {
 			combos = append(combos, comboDef{id: "wtranslate", groups: groups})
 		}
 	}
+	if cfg.PauseHotkey != "" {
+		if groups, err := parseHotkey(cfg.PauseHotkey); err == nil {
+			combos = append(combos, comboDef{id: pauseCombo, groups: groups})
+		}
+	}
 	for _, p := range cfg.Profiles {
 		if p.Hotkey == "" {
 			continue
@@ -720,6 +753,7 @@ func (a *App) handleCancel() {
 	case stRecording:
 		a.mu.Lock()
 		rec := a.rec
+		a.paused = false
 		a.mu.Unlock()
 		rec.Stop()
 		a.gen++
@@ -737,7 +771,43 @@ func (a *App) handleCancel() {
 	}
 }
 
+const pauseCombo = "wpause"
+
+func (a *App) togglePause() {
+	if a.state.Load() != stRecording {
+		return
+	}
+	a.mu.Lock()
+	rec := a.rec
+	a.paused = !a.paused
+	paused := a.paused
+	a.mu.Unlock()
+	if rec != nil {
+		rec.SetPaused(paused)
+	}
+	cfg := a.sessionCfg
+	if paused {
+		log.Printf("пауза: запись приостановлена")
+		traySetIcon(trayProcessing)
+		a.setStatus(tr("status.paused"))
+		if cfg != nil && cfg.Overlay {
+			overlaySet(ovRecording, tr("ov.paused"))
+		}
+		return
+	}
+	log.Printf("пауза: запись продолжается")
+	traySetIcon(trayRecording)
+	a.setStatus(tr("status.recording"))
+	if cfg != nil && cfg.Overlay {
+		overlaySet(ovRecording, tr("ov.speak"))
+	}
+}
+
 func (a *App) handleDown(profileID string) {
+	if profileID == pauseCombo {
+		a.togglePause()
+		return
+	}
 	cfg := a.snapshot()
 	if a.state.Load() == stRecording && cfg.HotkeyMode == hotkeyToggle {
 		log.Printf("фиксация: второе нажатие останавливает запись")
@@ -766,6 +836,9 @@ func (a *App) handleDown(profileID string) {
 		return
 	}
 	a.gen++
+	a.mu.Lock()
+	a.paused = false
+	a.mu.Unlock()
 	a.sessionTarget, _, _ = procGetForegroundWindow.Call()
 	applyAppRule(cfg, processNameOf(a.sessionTarget))
 	a.sessionCfg = cfg
@@ -793,11 +866,23 @@ func (a *App) handleStop(expectGen int) {
 	if expectGen != 0 && expectGen != a.gen {
 		return
 	}
+	a.mu.Lock()
+	paused := a.paused
+	a.mu.Unlock()
+	if expectGen != 0 && paused {
+		log.Printf("предел записи наступил на паузе — жду продолжения")
+		gen := a.gen
+		time.AfterFunc(time.Duration(a.sessionCfg.MaxRecordSeconds)*time.Second, func() {
+			a.post(ptEvent{kind: evTimeout, gen: gen})
+		})
+		return
+	}
 	if expectGen != 0 {
 		log.Printf("достигнут max_record_seconds=%d, останавливаю", a.sessionCfg.MaxRecordSeconds)
 	}
 	a.mu.Lock()
 	rec := a.rec
+	a.paused = false
 	a.mu.Unlock()
 	pcm := rec.Stop()
 	a.state.Store(stProcessing)
@@ -1006,6 +1091,7 @@ func (a *App) insertResult(ctx context.Context, cfg *Config, start time.Time, te
 	a.mu.Lock()
 	a.lastResult = text
 	a.lastResultAt = time.Now()
+	a.lastWnd = targetWnd
 	a.lastTarget = windowTitle(targetWnd)
 	a.lastProcess = processNameOf(targetWnd)
 	targetApp := a.lastProcess

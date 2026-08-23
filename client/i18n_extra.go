@@ -57,6 +57,20 @@ func init() {
 		"err.hotkey.dup": "Das Kürzel „%s“ ist doppelt vergeben — Kürzel müssen eindeutig sein",
 		"cfg.err.recovered": "config.json ist beschädigt (%s).\nDie Datei wurde als %s gesichert, die Einstellungen wurden zurückgesetzt.",
 		"err.disk.space": "wenig Speicherplatz: %d MB frei, ~%d MB nötig",
+		"err.hash": "die heruntergeladene Datei ist beschädigt — bitte erneut versuchen",
+		"models.check.ok": "Geprüfte Modelle: %d — alle Dateien in Ordnung",
+		"models.check.none": "Nichts zu prüfen — kein installiertes Modell hat einen Referenz-Hash",
+		"models.check.bad": "Beschädigte Dateien: %s — Modell erneut herunterladen",
+		"ov.paused": "Pause",
+		"status.paused": "Pause — die Aufnahme wartet",
+		"hist.insert.gone": "Eintrag nicht gefunden",
+		"hist.insert.nowin": "kein Ziel zum Einfügen — der Text liegt in der Zwischenablage",
+		"hist.insert.ok": "in „%s“ eingefügt",
+		"lists.bad": "diese Datei passt nicht",
+		"lists.saved": "gespeichert in %s",
+		"lists.added": "hinzugefügt: %d, übersprungen: %d",
+		"lists.save.title": "Wohin die Listen speichern",
+		"lists.open.title": "Welche Datei laden",
 		"un.title": "{app} — Deinstallation", "un.confirm": "{app} von diesem Rechner entfernen?",
 		"un.data": "Auch Einstellungen und geladene Modelle löschen?", "un.done": "{app} wurde entfernt.",
 		"srv.restarting": "Erkennung wird mit den neuen Einstellungen neu gestartet…",
@@ -117,6 +131,20 @@ func init() {
 		"err.hotkey.dup": "Le raccourci « %s » est attribué deux fois — les raccourcis doivent être uniques",
 		"cfg.err.recovered": "config.json est corrompu (%s).\nLe fichier a été enregistré sous %s et les réglages ont été réinitialisés.",
 		"err.disk.space": "espace disque faible : %d Mo libres, ~%d Mo nécessaires",
+		"err.hash": "le fichier téléchargé est endommagé — réessayez",
+		"models.check.ok": "Modèles vérifiés : %d — tous les fichiers sont intacts",
+		"models.check.none": "Rien à vérifier — aucun modèle installé n'a d'empreinte de référence",
+		"models.check.bad": "Fichiers endommagés : %s — téléchargez le modèle à nouveau",
+		"ov.paused": "Pause",
+		"status.paused": "Pause — l'enregistrement attend",
+		"hist.insert.gone": "entrée introuvable",
+		"hist.insert.nowin": "rien où coller — le texte est dans le presse-papiers",
+		"hist.insert.ok": "collé dans « %s »",
+		"lists.bad": "ce fichier ne convient pas",
+		"lists.saved": "enregistré dans %s",
+		"lists.added": "ajoutés : %d, ignorés : %d",
+		"lists.save.title": "Où enregistrer les listes",
+		"lists.open.title": "Quel fichier charger",
 		"un.title": "{app} — Désinstallation", "un.confirm": "Supprimer {app} de cet ordinateur ?",
 		"un.data": "Supprimer aussi les réglages et les modèles téléchargés ?", "un.done": "{app} a été supprimé.",
 		"srv.restarting": "Redémarrage de la reconnaissance avec les nouveaux réglages…",
@@ -177,6 +205,20 @@ func init() {
 		"err.hotkey.dup": "El atajo «%s» está asignado dos veces — los atajos deben ser únicos",
 		"cfg.err.recovered": "config.json está dañado (%s).\nEl archivo se guardó como %s y los ajustes volvieron a los valores por defecto.",
 		"err.disk.space": "poco espacio en disco: %d MB libres, ~%d MB necesarios",
+		"err.hash": "el archivo descargado está dañado: inténtalo de nuevo",
+		"models.check.ok": "Modelos comprobados: %d, todos los archivos están intactos",
+		"models.check.none": "Nada que comprobar: ningún modelo instalado tiene hash de referencia",
+		"models.check.bad": "Archivos dañados: %s — descarga el modelo de nuevo",
+		"ov.paused": "Pausa",
+		"status.paused": "Pausa: la grabación espera",
+		"hist.insert.gone": "no se encuentra la entrada",
+		"hist.insert.nowin": "no hay dónde pegar: el texto está en el portapapeles",
+		"hist.insert.ok": "pegado en «%s»",
+		"lists.bad": "este archivo no sirve",
+		"lists.saved": "guardado en %s",
+		"lists.added": "añadidos: %d, omitidos: %d",
+		"lists.save.title": "Dónde guardar las listas",
+		"lists.open.title": "Qué archivo cargar",
 		"un.title": "{app} — Desinstalación", "un.confirm": "¿Quitar {app} de este equipo?",
 		"un.data": "¿Borrar también los ajustes y los modelos descargados?", "un.done": "{app} se ha quitado.",
 		"srv.restarting": "Reiniciando el reconocedor con los nuevos ajustes…",
@@ -237,6 +279,20 @@ func init() {
 		"err.hotkey.dup": "La scorciatoia «%s» è assegnata due volte — le scorciatoie devono essere uniche",
 		"cfg.err.recovered": "config.json è danneggiato (%s).\nIl file è stato salvato come %s e le impostazioni sono tornate ai valori predefiniti.",
 		"err.disk.space": "poco spazio su disco: %d MB liberi, ~%d MB necessari",
+		"err.hash": "il file scaricato è danneggiato — riprova",
+		"models.check.ok": "Modelli controllati: %d — tutti i file sono integri",
+		"models.check.none": "Niente da controllare: nessun modello installato ha un hash di riferimento",
+		"models.check.bad": "File danneggiati: %s — scarica di nuovo il modello",
+		"ov.paused": "Pausa",
+		"status.paused": "Pausa — la registrazione aspetta",
+		"hist.insert.gone": "voce non trovata",
+		"hist.insert.nowin": "non c'è dove incollare: il testo è negli appunti",
+		"hist.insert.ok": "incollato in «%s»",
+		"lists.bad": "questo file non va bene",
+		"lists.saved": "salvato in %s",
+		"lists.added": "aggiunti: %d, saltati: %d",
+		"lists.save.title": "Dove salvare le liste",
+		"lists.open.title": "Quale file caricare",
 		"un.title": "{app} — Disinstallazione", "un.confirm": "Rimuovere {app} da questo computer?",
 		"un.data": "Eliminare anche impostazioni e modelli scaricati?", "un.done": "{app} è stato rimosso.",
 		"srv.restarting": "Riavvio del riconoscitore con le nuove impostazioni…",
@@ -297,6 +353,20 @@ func init() {
 		"err.hotkey.dup": "Skrót „%s” jest przypisany dwa razy — skróty muszą być unikalne",
 		"cfg.err.recovered": "config.json jest uszkodzony (%s).\nPlik zapisano jako %s, a ustawienia wróciły do domyślnych.",
 		"err.disk.space": "mało miejsca na dysku: %d MB wolnych, potrzeba ~%d MB",
+		"err.hash": "pobrany plik jest uszkodzony — spróbuj ponownie",
+		"models.check.ok": "Sprawdzone modele: %d — wszystkie pliki są całe",
+		"models.check.none": "Nie ma czego sprawdzać — żaden zainstalowany model nie ma wzorcowego skrótu",
+		"models.check.bad": "Uszkodzone pliki: %s — pobierz model ponownie",
+		"ov.paused": "Pauza",
+		"status.paused": "Pauza — nagranie czeka",
+		"hist.insert.gone": "nie znaleziono wpisu",
+		"hist.insert.nowin": "nie ma gdzie wkleić — tekst jest w schowku",
+		"hist.insert.ok": "wklejono w „%s”",
+		"lists.bad": "ten plik nie pasuje",
+		"lists.saved": "zapisano w %s",
+		"lists.added": "dodano: %d, pominięto: %d",
+		"lists.save.title": "Gdzie zapisać listy",
+		"lists.open.title": "Który plik wczytać",
 		"un.title": "{app} — Odinstalowanie", "un.confirm": "Usunąć {app} z tego komputera?",
 		"un.data": "Usunąć także ustawienia i pobrane modele?", "un.done": "{app} został usunięty.",
 		"srv.restarting": "Ponowne uruchamianie rozpoznawania z nowymi ustawieniami…",
@@ -372,6 +442,10 @@ func init() {
 		"S_SUB_TYPE": "hilft dort, wo ein Feld das Einfügen verweigert",
 		"S_SEC_OVERLAY": "Bildschirmanzeige",
 		"S_MIC_CHECK": "Mikrofon prüfen", "S_MIC_CHECK_SUB": "drei Sekunden Aufnahme und ein Urteil: Pegel, Übersteuerung, ob Sprache da ist", "S_MIC_CHECKING": "Prüfe…",
+		"S_PAUSE": "Aufnahme pausieren", "S_PAUSE_SUB": "im Umschaltmodus: einmal drücken und die Aufnahme hält an, noch einmal und sie läuft weiter",
+		"S_MCHECK": "Installierte Modelle prüfen", "S_MCHECK_SUB": "vergleicht die Modelldateien mit den Referenz-Hashes", "S_MCHECK_GO": "Prüfen", "S_MCHECK_RUN": "Prüfe…",
+		"S_HIST_INSERT": "Einfügen",
+		"S_LISTS_HINT": "Ersetzungen und Befehle in einer Datei — zum Mitnehmen auf einen anderen Rechner", "S_LISTS_EXPORT": "In Datei speichern", "S_LISTS_IMPORT": "Aus Datei laden",
 		"S_MIC": "Mikrofon", "S_MIC_DEFAULT": "Systemstandard", "S_MIC_REFRESH": "Liste aktualisieren",
 		"S_MIC_LEVEL": "Eingangspegel", "S_MIC_QUIET": "still",
 		"S_ADV_TITLE": "Modell auswählen", "S_F_ALL": "alle", "S_F_RU": "Russisch",
@@ -441,6 +515,14 @@ func init() {
 			"</ul>" +
 			"<p class=\"wh\">Mikrofon prüfen</p>" +
 			"<p>Die Schaltfläche „Test“ unter „Mikrofon“ nimmt drei Sekunden auf und zerlegt sie: Spitzenpegel in Dezibel, wie viel der Aufnahme wirklich Sprache enthält und wie viele Abtastwerte abgeschnitten wurden. Die Antwort kommt in Worten: klingt gut, zu leise — Pegel in Windows anheben, übersteuert — Pegel senken, keine Sprache gehört — ist das richtige Mikrofon gewählt. Dasselbe wird nach jedem Diktat gemessen und ins Log geschrieben; kommt die Erkennung leer zurück, nennt die Leiste den Grund — zu leise, übersteuert oder Stille — statt nur zu sagen, sie habe nichts gehört.</p>" +
+			"<p class=\"wh\">Aufnahme pausieren</p>" +
+			"<p>Im Umschaltmodus (einmal drücken startet, noch einmal stoppt) lässt sich ein eigenes Kürzel für die Pause festlegen: Reiter „Diktat“, Zeile „Aufnahme pausieren“. Ein Druck hält die Aufnahme an — die Leiste zeigt „Pause“ und es wird nichts aufgezeichnet; noch ein Druck und es geht weiter, alles vor der Pause bleibt erhalten. Die Längenbegrenzung greift während der Pause nicht.</p>" +
+			"<p class=\"wh\">Aus dem Verlauf einfügen</p>" +
+			"<p>Jeder Eintrag im Verlauf hat die Schaltfläche „Einfügen“: sie holt das Fenster zurück, aus dem Sie die Einstellungen geöffnet haben, und fügt den Text dort ein wie ein gewöhnliches Diktat. Gibt es kein solches Fenster, landet der Text einfach in der Zwischenablage, und das Programm sagt es.</p>" +
+			"<p class=\"wh\">Die Listen in einer Datei</p>" +
+			"<p>Ersetzungen und Sprachbefehle lassen sich in eine .json-Datei speichern und auf einem anderen Rechner laden — die Schaltflächen unter der Befehlsliste im Reiter „Text“. Beim Laden wird nichts überschrieben: nur die Zeilen, die noch fehlen, kommen hinzu, und das Programm nennt die Zahl der hinzugefügten und der übersprungenen.</p>" +
+			"<p class=\"wh\">Unversehrtheit der Dateien</p>" +
+			"<p>Zu jedem Modell aus dem Katalog gehört ein bekannter SHA-256-Referenz-Hash. Nach dem Herunterladen wird die Datei damit verglichen: passt sie nicht, wird sie gelöscht und der Download kann wiederholt werden. Die Schaltfläche „Prüfen“ im Reiter „Modelle“ vergleicht die bereits installierten Modelle genauso, und beim Update wird auch das heruntergeladene Installationsprogramm geprüft — eine fremde Datei wird nicht gestartet.</p>" +
 			"<p class=\"wh\">Verlauf der Diktate</p>" +
 			"<p>Der Abschnitt „Verlauf“ in der linken Spalte bewahrt auf, was Sie diktiert haben: nur Text, nur auf diesem Rechner, Ton wird nie gespeichert. Standardmäßig aus, eingeschaltet wird er mit einem Schalter an derselben Stelle. Einträge bleiben eine eingestellte Zahl von Tagen und bis zu einer eingestellten Anzahl, Älteres fällt von selbst heraus; „Aus diesen Programmen nie aufzeichnen“ listet durch Komma getrennt jene, aus denen nichts gespeichert werden soll — Passwortmanager, Banking. Die Suche greift auf Text und Programmnamen, die Schaltfläche neben einem Eintrag legt ihn in die Zwischenablage, und „Leeren“ entfernt alles samt der Datei <b>{app}-history.json</b>.</p>" +
 			"<p class=\"wh\">Sprachbefehle</p>" +
@@ -608,6 +690,10 @@ func init() {
 		"S_SUB_TYPE": "utile là où un champ refuse le collage",
 		"S_SEC_OVERLAY": "Bandeau à l'écran",
 		"S_MIC_CHECK": "Vérifier le microphone", "S_MIC_CHECK_SUB": "trois secondes d'enregistrement, puis un verdict : niveau, saturation, présence de parole", "S_MIC_CHECKING": "Vérification…",
+		"S_PAUSE": "Mettre l'enregistrement en pause", "S_PAUSE_SUB": "en mode bascule : une pression fige l'enregistrement, une autre le relance",
+		"S_MCHECK": "Vérifier les modèles installés", "S_MCHECK_SUB": "compare les fichiers des modèles aux empreintes de référence", "S_MCHECK_GO": "Vérifier", "S_MCHECK_RUN": "Vérification…",
+		"S_HIST_INSERT": "Coller",
+		"S_LISTS_HINT": "Remplacements et commandes dans un seul fichier — pour passer à un autre ordinateur", "S_LISTS_EXPORT": "Enregistrer dans un fichier", "S_LISTS_IMPORT": "Charger depuis un fichier",
 		"S_MIC": "Microphone", "S_MIC_DEFAULT": "Par défaut du système", "S_MIC_REFRESH": "Actualiser la liste",
 		"S_MIC_LEVEL": "Niveau d'entrée", "S_MIC_QUIET": "silence",
 		"S_ADV_TITLE": "Choisir un modèle", "S_F_ALL": "tous", "S_F_RU": "russe",
@@ -677,6 +763,14 @@ func init() {
 			"</ul>" +
 			"<p class=\"wh\">Vérifier le microphone</p>" +
 			"<p>Le bouton « Test » de l'onglet Microphone enregistre trois secondes et les décortique : niveau de crête en décibels, part de l'enregistrement qui contient vraiment de la parole, et part d'échantillons écrêtés. La réponse est en mots : bon signal, trop faible — montez le niveau dans Windows, saturation — baissez-le, aucune parole entendue — est-ce le bon micro. Les mêmes mesures sont faites après chaque dictée et écrites dans le journal ; si la reconnaissance revient vide, le bandeau nomme la raison — trop faible, saturation ou silence — au lieu de dire simplement qu'il n'a rien entendu.</p>" +
+			"<p class=\"wh\">Mettre l'enregistrement en pause</p>" +
+			"<p>En mode bascule (une pression démarre, une autre arrête), un raccourci à part peut mettre en pause : onglet « Dictée », ligne « Mettre l'enregistrement en pause ». Une pression fige l'enregistrement — le bandeau affiche « Pause » et plus rien n'est enregistré ; une autre le relance, et tout ce qui a été dit avant reste. La limite de durée ne se déclenche pas pendant la pause.</p>" +
+			"<p class=\"wh\">Coller depuis l'historique</p>" +
+			"<p>Chaque entrée de l'historique a un bouton « Coller » : il ramène la fenêtre depuis laquelle vous avez ouvert les réglages et y colle le texte, comme une dictée ordinaire. S'il n'y a nulle part où revenir, le texte est simplement placé dans le presse-papiers et le programme le dit.</p>" +
+			"<p class=\"wh\">Les listes dans un seul fichier</p>" +
+			"<p>Les remplacements et les commandes vocales peuvent être enregistrés dans un fichier .json et chargés sur un autre ordinateur — les boutons sous la liste des commandes, onglet « Texte ». Le chargement n'écrase rien : seules les lignes absentes sont ajoutées, et le programme indique combien ont été ajoutées et combien ignorées.</p>" +
+			"<p class=\"wh\">Intégrité des fichiers</p>" +
+			"<p>Chaque modèle du catalogue a une empreinte SHA-256 de référence. Après le téléchargement, le fichier lui est comparé : s'il ne correspond pas, il est supprimé et le téléchargement peut être repris. Le bouton « Vérifier » de l'onglet « Modèles » compare de la même façon les modèles déjà installés, et lors d'une mise à jour l'installateur téléchargé est vérifié aussi — un fichier étranger ne sera pas lancé.</p>" +
 			"<p class=\"wh\">Historique des dictées</p>" +
 			"<p>La section « Historique » dans la colonne de gauche conserve ce que vous avez dicté : le texte seul, sur cet ordinateur seulement, l'audio n'est jamais conservé. Désactivée par défaut, elle s'active d'un interrupteur au même endroit. Les entrées restent un nombre de jours et jusqu'à un nombre d'entrées réglables, les plus anciennes disparaissent d'elles-mêmes ; « Ne jamais enregistrer depuis ces programmes » liste, séparés par des virgules, ceux dont rien ne doit être conservé — gestionnaires de mots de passe, applications bancaires. La recherche porte sur le texte et sur le nom du programme, le bouton à côté d'une entrée la met dans le presse-papiers, et « Vider » supprime tout d'un coup avec le fichier <b>{app}-history.json</b>.</p>" +
 			"<p class=\"wh\">Commandes vocales</p>" +
@@ -844,6 +938,10 @@ func init() {
 		"S_SUB_TYPE": "ayuda donde un campo no admite pegar",
 		"S_SEC_OVERLAY": "Aviso en pantalla",
 		"S_MIC_CHECK": "Comprobar el micrófono", "S_MIC_CHECK_SUB": "tres segundos de grabación y un veredicto: nivel, saturación, si hay voz", "S_MIC_CHECKING": "Comprobando…",
+		"S_PAUSE": "Pausar la grabación", "S_PAUSE_SUB": "en modo conmutador: una pulsación congela la grabación, otra la reanuda",
+		"S_MCHECK": "Comprobar los modelos instalados", "S_MCHECK_SUB": "compara los archivos de los modelos con los hashes de referencia", "S_MCHECK_GO": "Comprobar", "S_MCHECK_RUN": "Comprobando…",
+		"S_HIST_INSERT": "Pegar",
+		"S_LISTS_HINT": "Sustituciones y órdenes en un archivo, para llevarlas a otro ordenador", "S_LISTS_EXPORT": "Guardar en un archivo", "S_LISTS_IMPORT": "Cargar desde un archivo",
 		"S_MIC": "Micrófono", "S_MIC_DEFAULT": "Predeterminado del sistema", "S_MIC_REFRESH": "Actualizar la lista",
 		"S_MIC_LEVEL": "Nivel de entrada", "S_MIC_QUIET": "silencio",
 		"S_ADV_TITLE": "Elegir un modelo", "S_F_ALL": "todos", "S_F_RU": "ruso",
@@ -913,6 +1011,14 @@ func init() {
 			"</ul>" +
 			"<p class=\"wh\">Comprobar el micrófono</p>" +
 			"<p>El botón «Test» de la pestaña Micrófono graba tres segundos y los analiza: pico en decibelios, qué parte de la grabación contiene voz de verdad y qué parte de las muestras se recortó. La respuesta llega en palabras: se oye bien, demasiado bajo — sube el nivel en Windows, saturación — bájalo, no se oye voz — ¿está elegido el micrófono correcto? Lo mismo se mide tras cada dictado y se escribe en el registro; si el reconocimiento vuelve vacío, la barra nombra el motivo — bajo, saturación o silencio — en vez de decir solo que no oyó nada.</p>" +
+			"<p class=\"wh\">Pausar la grabación</p>" +
+			"<p>En modo conmutador (una pulsación empieza, otra termina) se puede asignar un atajo aparte para la pausa: pestaña «Dictado», fila «Pausar la grabación». Una pulsación congela la grabación —el rótulo muestra «Pausa» y no se graba nada—, otra la reanuda y conserva todo lo dicho antes. El límite de duración no salta durante la pausa.</p>" +
+			"<p class=\"wh\">Pegar desde el historial</p>" +
+			"<p>Cada entrada del historial tiene el botón «Pegar»: devuelve el foco a la ventana desde la que abrió los ajustes y pega allí el texto, como un dictado normal. Si no hay adónde volver, el texto se queda en el portapapeles y el programa lo avisa.</p>" +
+			"<p class=\"wh\">Las listas en un archivo</p>" +
+			"<p>Las sustituciones y las órdenes de voz pueden guardarse en un archivo .json y cargarse en otro ordenador: los botones bajo la lista de órdenes en la pestaña «Texto». La carga no borra nada: solo se añaden las líneas que faltan, y el programa dice cuántas se añadieron y cuántas se omitieron.</p>" +
+			"<p class=\"wh\">Integridad de los archivos</p>" +
+			"<p>Cada modelo del catálogo tiene un hash SHA-256 de referencia. Tras la descarga el archivo se compara con él: si no coincide, se borra y la descarga puede repetirse. El botón «Comprobar» de la pestaña «Modelos» compara igual los modelos ya instalados, y al actualizar el programa también se comprueba el instalador descargado: un archivo ajeno no se ejecutará.</p>" +
 			"<p class=\"wh\">Historial de dictados</p>" +
 			"<p>La sección «Historial» de la columna izquierda guarda lo que has dictado: solo el texto, solo en este equipo, el audio nunca se guarda. Está desactivada por defecto y se activa con un interruptor en el mismo sitio. Las entradas se conservan durante los días y hasta la cantidad que fijes, las viejas caen solas; «No registrar nunca desde estos programas» enumera, separados por comas, aquellos de los que no debe guardarse nada — gestores de contraseñas, banca. La búsqueda cubre el texto y el nombre del programa, el botón junto a una entrada la copia al portapapeles, y «Vaciar» borra todo de golpe junto con el archivo <b>{app}-history.json</b>.</p>" +
 			"<p class=\"wh\">Comandos de voz</p>" +
@@ -1080,6 +1186,10 @@ func init() {
 		"S_SUB_TYPE": "serve dove un campo rifiuta di incollare",
 		"S_SEC_OVERLAY": "Avviso a schermo",
 		"S_MIC_CHECK": "Controlla il microfono", "S_MIC_CHECK_SUB": "tre secondi di registrazione e un verdetto: livello, distorsione, se c'è voce", "S_MIC_CHECKING": "Controllo…",
+		"S_PAUSE": "Metti in pausa la registrazione", "S_PAUSE_SUB": "in modalità interruttore: una pressione ferma la registrazione, un'altra la riprende",
+		"S_MCHECK": "Controlla i modelli installati", "S_MCHECK_SUB": "confronta i file dei modelli con gli hash di riferimento", "S_MCHECK_GO": "Controlla", "S_MCHECK_RUN": "Controllo…",
+		"S_HIST_INSERT": "Incolla",
+		"S_LISTS_HINT": "Sostituzioni e comandi in un solo file, da portare su un altro computer", "S_LISTS_EXPORT": "Salva su file", "S_LISTS_IMPORT": "Carica da file",
 		"S_MIC": "Microfono", "S_MIC_DEFAULT": "Predefinito di sistema", "S_MIC_REFRESH": "Aggiorna l'elenco",
 		"S_MIC_LEVEL": "Livello d'ingresso", "S_MIC_QUIET": "silenzio",
 		"S_ADV_TITLE": "Scegli un modello", "S_F_ALL": "tutti", "S_F_RU": "russo",
@@ -1149,6 +1259,14 @@ func init() {
 			"</ul>" +
 			"<p class=\"wh\">Controllare il microfono</p>" +
 			"<p>Il pulsante «Test» nella scheda Microfono registra tre secondi e li scompone: picco in decibel, quanta parte della registrazione contiene davvero voce e quanti campioni sono stati tagliati. La risposta arriva a parole: si sente bene, troppo basso — alza il livello in Windows, distorsione — abbassalo, nessuna voce sentita — è scelto il microfono giusto. Le stesse misure vengono fatte dopo ogni dettatura e finiscono nel log; se il riconoscimento torna vuoto, la barra dice il motivo — basso, distorsione o silenzio — invece di dire soltanto che non ha sentito nulla.</p>" +
+			"<p class=\"wh\">Mettere in pausa la registrazione</p>" +
+			"<p>In modalità interruttore (una pressione avvia, un'altra ferma) si può assegnare una scorciatoia a parte per la pausa: scheda «Dettatura», riga «Metti in pausa la registrazione». Una pressione ferma la registrazione — la targhetta mostra «Pausa» e non viene registrato nulla — un'altra la riprende, e tutto ciò che è stato detto prima resta. Il limite di durata non scatta durante la pausa.</p>" +
+			"<p class=\"wh\">Incollare dalla cronologia</p>" +
+			"<p>Ogni voce della cronologia ha il pulsante «Incolla»: riporta in primo piano la finestra da cui avete aperto le impostazioni e vi incolla il testo, come una dettatura normale. Se non c'è dove tornare, il testo finisce semplicemente negli appunti e il programma lo dice.</p>" +
+			"<p class=\"wh\">Le liste in un solo file</p>" +
+			"<p>Sostituzioni e comandi vocali si possono salvare in un file .json e caricare su un altro computer: i pulsanti sotto l'elenco dei comandi nella scheda «Testo». Il caricamento non cancella nulla: vengono aggiunte solo le righe che mancano, e il programma dice quante ne ha aggiunte e quante saltate.</p>" +
+			"<p class=\"wh\">Integrità dei file</p>" +
+			"<p>Per ogni modello del catalogo è noto l'hash SHA-256 di riferimento. Dopo lo scaricamento il file viene confrontato con esso: se non coincide, il file viene eliminato e lo scaricamento si può ripetere. Il pulsante «Controlla» nella scheda «Modelli» confronta allo stesso modo i modelli già installati, e all'aggiornamento del programma viene controllato anche l'installatore scaricato: un file estraneo non verrà avviato.</p>" +
 			"<p class=\"wh\">Cronologia delle dettature</p>" +
 			"<p>La sezione «Cronologia» nella colonna di sinistra conserva ciò che hai dettato: solo testo, solo su questo computer, l'audio non viene mai salvato. È disattivata per impostazione predefinita e si accende con un interruttore lì accanto. Le voci restano per i giorni e fino al numero che imposti, le più vecchie escono da sole; «Non registrare mai da questi programmi» elenca, separati da virgole, quelli da cui non salvare nulla — gestori di password, home banking. La ricerca copre il testo e il nome del programma, il pulsante accanto a una voce la mette negli appunti, e «Svuota» cancella tutto insieme al file <b>{app}-history.json</b>.</p>" +
 			"<p class=\"wh\">Comandi vocali</p>" +
@@ -1316,6 +1434,10 @@ func init() {
 		"S_SUB_TYPE": "pomaga tam, gdzie pole nie przyjmuje wklejania",
 		"S_SEC_OVERLAY": "Pasek na ekranie",
 		"S_MIC_CHECK": "Sprawdź mikrofon", "S_MIC_CHECK_SUB": "trzy sekundy nagrania i werdykt: poziom, przesterowanie, czy jest mowa", "S_MIC_CHECKING": "Sprawdzam…",
+		"S_PAUSE": "Wstrzymaj nagranie", "S_PAUSE_SUB": "w trybie przełącznika: jedno naciśnięcie zatrzymuje nagranie, kolejne je wznawia",
+		"S_MCHECK": "Sprawdź zainstalowane modele", "S_MCHECK_SUB": "porównuje pliki modeli z wzorcowymi skrótami", "S_MCHECK_GO": "Sprawdź", "S_MCHECK_RUN": "Sprawdzam…",
+		"S_HIST_INSERT": "Wklej",
+		"S_LISTS_HINT": "Zamiany i polecenia w jednym pliku — do przeniesienia na inny komputer", "S_LISTS_EXPORT": "Zapisz do pliku", "S_LISTS_IMPORT": "Wczytaj z pliku",
 		"S_MIC": "Mikrofon", "S_MIC_DEFAULT": "Domyślny systemowy", "S_MIC_REFRESH": "Odśwież listę",
 		"S_MIC_LEVEL": "Poziom wejścia", "S_MIC_QUIET": "cisza",
 		"S_ADV_TITLE": "Dobierz model", "S_F_ALL": "wszystkie", "S_F_RU": "rosyjski",
@@ -1385,6 +1507,14 @@ func init() {
 			"</ul>" +
 			"<p class=\"wh\">Sprawdzenie mikrofonu</p>" +
 			"<p>Przycisk „Test” na karcie Mikrofon nagrywa trzy sekundy i je rozbiera: szczyt w decybelach, jaka część nagrania naprawdę zawiera mowę i ile próbek zostało obciętych. Odpowiedź przychodzi słowami: brzmi dobrze, za cicho — podnieś poziom w Windows, przesterowanie — zmniejsz go, nie słychać mowy — czy wybrany jest właściwy mikrofon. To samo mierzy się po każdym dyktowaniu i trafia do dziennika; gdy rozpoznanie wraca puste, pasek nazywa powód — cicho, przesterowanie albo cisza — zamiast mówić tylko, że nic nie usłyszał.</p>" +
+			"<p class=\"wh\">Wstrzymanie nagrania</p>" +
+			"<p>W trybie przełącznika (jedno naciśnięcie zaczyna, kolejne kończy) można ustawić osobny skrót do pauzy: karta „Dyktowanie”, wiersz „Wstrzymaj nagranie”. Naciśnięcie zatrzymuje nagranie — plakietka pokazuje „Pauza” i nic nie jest zapisywane; kolejne wznawia je, a wszystko powiedziane wcześniej zostaje. Ograniczenie długości nie zadziała w czasie pauzy.</p>" +
+			"<p class=\"wh\">Wklejanie z historii</p>" +
+			"<p>Każdy wpis w historii ma przycisk „Wklej”: przywraca okno, z którego otworzyliście ustawienia, i wkleja tam tekst jak zwykłe dyktowanie. Gdy nie ma dokąd wracać, tekst po prostu trafia do schowka, a program o tym mówi.</p>" +
+			"<p class=\"wh\">Listy w jednym pliku</p>" +
+			"<p>Zamiany i polecenia głosowe można zapisać do jednego pliku .json i wczytać na innym komputerze — przyciski pod listą poleceń na karcie „Tekst”. Wczytanie niczego nie kasuje: dodawane są tylko wiersze, których jeszcze nie ma, a program powie, ile dodano i ile pominięto.</p>" +
+			"<p class=\"wh\">Nienaruszalność plików</p>" +
+			"<p>Dla każdego modelu z katalogu znany jest wzorcowy skrót SHA-256. Po pobraniu plik jest z nim porównywany: gdy się nie zgadza, plik zostaje usunięty i pobieranie można powtórzyć. Przycisk „Sprawdź” na karcie „Modele” tak samo porównuje modele już zainstalowane, a przy aktualizacji programu sprawdzany jest też pobrany instalator — obcy plik się nie uruchomi.</p>" +
 			"<p class=\"wh\">Historia dyktowań</p>" +
 			"<p>Sekcja „Historia” w lewej kolumnie przechowuje to, co podyktowałeś: tylko tekst, tylko na tym komputerze, dźwięk nigdy nie jest zapisywany. Domyślnie wyłączona, włącza się jednym przełącznikiem w tym samym miejscu. Wpisy trzymają się przez ustaloną liczbę dni i do ustalonej liczby, starsze wypadają same; „Nigdy nie zapisuj z tych programów” wymienia po przecinku te, z których nic nie ma być zapisywane — menedżery haseł, bankowość. Wyszukiwanie obejmuje tekst i nazwę programu, przycisk obok wpisu wkłada go do schowka, a „Wyczyść” usuwa wszystko razem z plikiem <b>{app}-history.json</b>.</p>" +
 			"<p class=\"wh\">Komendy głosowe</p>" +
@@ -1519,6 +1649,20 @@ func init() {
 		"err.hotkey.dup":    "Сполучення «%s» призначено двічі — хоткеї не повинні збігатися",
 		"cfg.err.recovered": "config.json пошкоджено (%s).\nФайл збережено як %s, налаштування скинуто до типових.",
 		"err.disk.space":    "мало місця на диску: вільно %d МБ, потрібно ~%d МБ",
+		"err.hash": "завантажений файл пошкоджено — спробуйте ще раз",
+		"models.check.ok": "Перевірено моделей: %d — усі файли цілі",
+		"models.check.none": "Немає що перевіряти — жодна встановлена модель не має еталонного хешу",
+		"models.check.bad": "Пошкоджені файли: %s — завантажте модель ще раз",
+		"ov.paused": "Пауза",
+		"status.paused": "Пауза — запис чекає",
+		"hist.insert.gone": "запис не знайдено",
+		"hist.insert.nowin": "нікуди вставляти — текст скопійовано в буфер",
+		"hist.insert.ok": "вставлено в «%s»",
+		"lists.bad": "файл не підходить",
+		"lists.saved": "збережено в %s",
+		"lists.added": "додано: %d, пропущено: %d",
+		"lists.save.title": "Куди зберегти списки",
+		"lists.open.title": "Звідки завантажити списки",
 		"un.title":          "{app} — видалення", "un.confirm": "Видалити {app} з цього комп'ютера?",
 		"un.data": "Видалити також налаштування та завантажені моделі?", "un.done": "{app} видалено.",
 		"model.switching": "Перемикаю модель — розпізнавач перезапускається…", "model.del.active": "Не можна видалити активну модель",
@@ -1613,6 +1757,10 @@ func init() {
 		"S_M_BASE": "швидка, для слабких ПК", "S_M_SMALL": "баланс швидкості й точності", "S_M_MED": "точніша, рекомендуємо", "S_M_TURBO": "максимум точності на CPU",
 		"S_M_CUSTOM": "власна (з config.json)",
 		"S_MIC_CHECK": "Перевірити мікрофон", "S_MIC_CHECK_SUB": "три секунди запису та розбір: гучність, перевантаження, чи є мовлення", "S_MIC_CHECKING": "Перевіряю…",
+		"S_PAUSE": "Пауза в записі", "S_PAUSE_SUB": "працює в режимі фіксації: натиснули — запис завмер, натиснули ще раз — пішов далі",
+		"S_MCHECK": "Перевірити встановлені моделі", "S_MCHECK_SUB": "звіряє файли моделей з еталонними хешами", "S_MCHECK_GO": "Перевірити", "S_MCHECK_RUN": "Перевіряю…",
+		"S_HIST_INSERT": "Вставити",
+		"S_LISTS_HINT": "Заміни й команди одним файлом — перенести на інший комп'ютер", "S_LISTS_EXPORT": "Зберегти у файл", "S_LISTS_IMPORT": "Завантажити з файлу",
 		"S_MIC":      "Мікрофон", "S_MIC_DEFAULT": "Системний за замовчуванням", "S_MIC_REFRESH": "Оновити список",
 		"S_MIC_LEVEL": "Рівень сигналу", "S_MIC_QUIET": "тихо",
 		"S_THREADS": "Потоки CPU", "S_MINMS": "Мін. запис, мс", "S_MAXSEC": "Макс. запис, с",
@@ -1685,6 +1833,14 @@ func init() {
 			"</ul>" +
 			"<p class=\"wh\">Перевірка мікрофона</p>" +
 			"<p>Кнопка «Перевірка» на «Мікрофоні» записує три секунди й розбирає їх: пікова гучність у децибелах, частка запису, де справді є мовлення, і частка обрізаних відліків. Відповідь приходить словами: чути добре, надто тихо — додайте гучності у Windows, перевантаження — зменште її, мовлення не чути — чи той мікрофон вибрано. Те саме рахується після кожного диктування й пишеться в журнал; якщо розпізнати не вдалося, смужка назве причину — тихо, перевантаження чи тиша, — а не просто «нічого не почув».</p>" +
+			"<p class=\"wh\">Пауза в записі</p>" +
+			"<p>У режимі фіксації (натиснули — пише, натиснули ще раз — зупинилася) можна задати окреме сполучення для паузи: на «Диктуванні», рядок «Пауза в записі». Натиснули — запис завмер, плашка показує «Пауза», і нічого не записується; натиснули ще раз — запис пішов далі, а все сказане до паузи зберігається. Обмеження довжини запису на паузі не спрацьовує.</p>" +
+			"<p class=\"wh\">Повторна вставка з історії</p>" +
+			"<p>У кожного запису в історії є кнопка «Вставити»: вона повертає вікно, з якого ви відкрили налаштування, і вставляє текст туди — як звичайне диктування. Якщо повертатися нікуди, текст просто лягає в буфер обміну, і програма про це скаже.</p>" +
+			"<p class=\"wh\">Списки одним файлом</p>" +
+			"<p>Заміни й голосові команди можна зберегти в один файл .json і завантажити на іншому комп'ютері — кнопки під списком команд на «Тексті». Завантаження нічого не затирає: додаються лише ті рядки, яких ще немає, а скільки додано й скільки пропущено, програма скаже.</p>" +
+			"<p class=\"wh\">Цілісність файлів</p>" +
+			"<p>Для кожної моделі з каталогу відомий еталонний хеш SHA-256. Після завантаження файл звіряється з ним: не зійшлося — файл видаляється, і завантаження можна повторити. Кнопка «Перевірити» на «Моделях» так само звіряє вже встановлені моделі, а під час оновлення програми звіряється й завантажений установник — чужий файл не запуститься.</p>" +
 			"<p class=\"wh\">Історія диктувань</p>" +
 			"<p>Розділ «Історія» в лівому стовпці зберігає те, що ви надиктували: лише текст, лише на цьому комп'ютері, звук не зберігається ніколи. Типово вимкнено — вмикається одним перемикачем там само. Записи тримаються задану кількість днів і до заданої кількості, старі зникають самі; поле «Не записувати з цих програм» перелічує через кому ті, з яких не треба зберігати нічого — менеджери паролів, банк-клієнт. Пошук шукає і за текстом, і за назвою програми, кнопка поруч із записом кладе його в буфер обміну, а «Очистити» видаляє все разом із файлом <b>{app}-history.json</b>.</p>" +
 			"<p class=\"wh\">Голосові команди</p>" +

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"holdtotype/internal/checksum"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -22,41 +23,42 @@ func verNewer(latest, current string) bool {
 	return appver.IsNewer(latest, current)
 }
 
-func fetchLatestRelease() (tag, setupURL string, err error) {
+func fetchLatestRelease() (tag, setupURL, digest string, err error) {
 	client := &http.Client{Timeout: 20 * time.Second}
 	req, _ := http.NewRequest(http.MethodGet, updateLatestURL, nil)
 	req.Header.Set("Accept", "application/vnd.github+json")
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return "", "", fmt.Errorf("HTTP %d", resp.StatusCode)
+		return "", "", "", fmt.Errorf("HTTP %d", resp.StatusCode)
 	}
 	var rel struct {
 		TagName string `json:"tag_name"`
 		Assets  []struct {
+			Digest string `json:"digest"`
 			Name string `json:"name"`
 			URL  string `json:"browser_download_url"`
 		} `json:"assets"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&rel); err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
 	for _, a := range rel.Assets {
 		if a.Name == appid.SetupExe {
-			return rel.TagName, a.URL, nil
+			return rel.TagName, a.URL, a.Digest, nil
 		}
 	}
-	return rel.TagName, "", nil
+	return rel.TagName, "", "", nil
 }
 
 func (a *App) startupUpdateCheck() {
 	if !a.snapshot().CheckUpdates {
 		return
 	}
-	tag, url, err := fetchLatestRelease()
+	tag, url, digest, err := fetchLatestRelease()
 	if err != nil {
 		log.Printf("проверка обновлений: %v", err)
 		return
@@ -64,12 +66,12 @@ func (a *App) startupUpdateCheck() {
 	if verNewer(tag, appVersion) && url != "" {
 		log.Printf("доступно обновление %s (текущая %s)", tag, appVersion)
 		a.mu.Lock()
-		a.updVer, a.updURL = tag, url
+		a.updVer, a.updURL, a.updDigest = tag, url, digest
 		a.mu.Unlock()
 	}
 }
 
-func downloadSetup(url string, progress func(pct int)) (string, error) {
+func downloadSetup(url, digest string, progress func(pct int)) (string, error) {
 	client := &http.Client{Timeout: 30 * time.Minute}
 	resp, err := client.Get(url)
 	if err != nil {
@@ -113,6 +115,12 @@ func downloadSetup(url string, progress func(pct int)) (string, error) {
 		os.Remove(dst)
 		return "", err
 	}
+	if err := checksum.Verify(dst, digest); err != nil {
+		os.Remove(dst)
+		log.Printf("обновление: хеш не сошёлся: %v", err)
+		return "", fmt.Errorf("%s", tr("err.hash"))
+	}
+	log.Printf("обновление: хеш совпал")
 	return dst, nil
 }
 

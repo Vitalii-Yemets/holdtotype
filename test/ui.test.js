@@ -102,6 +102,19 @@ const dom = new JSDOM(html, {
     window.appHistory = async (q) => { window.histQueries.push(q); return JSON.stringify(histItems.filter(i => !q || i.text.includes(q) || i.app.includes(q))); };
     window.appHistoryClear = async () => { histItems = []; };
     window.appHistoryCopy = async (at) => { window.histCopied.push(at); return true; };
+    window.histInserted = [];
+    window.appHistoryInsert = async (at) => { window.histInserted.push(at); return JSON.stringify({ ok: true, text: "pasted into “Editor”" }); };
+    window.modelChecks = 0;
+    window.appCheckModels = async () => { window.modelChecks++; return JSON.stringify({ ok: false, text: "Damaged files: Small (ggml-small.bin)", rows: [] }); };
+    window.listsExported = [];
+    window.appListsExport = async (payload) => { window.listsExported.push(JSON.parse(payload)); return JSON.stringify({ ok: true, text: "saved to lists.json" }); };
+    window.listsImported = [];
+    window.appListsImport = async (payload) => {
+      window.listsImported.push(JSON.parse(payload));
+      return JSON.stringify({ ok: true, text: "added: 2, skipped: 0",
+        replacements: [{ id: "r1", from: "git hub", to: "GitHub", whole: true, match_case: false }],
+        commands: [{ id: "c1", phrase: "новая строка", action: "newline", text: "" }] });
+    };
     window.micChecks = 0;
     window.appMicCheck = async () => { window.micChecks++; return JSON.stringify({ verdict: "quiet", text: "Too quiet: peak -32 dB", peak_db: -32, voice: 0.8, clip: 0 }); };
     window.appModelDel = async () => "ok";
@@ -164,6 +177,9 @@ function check(name, actual, expected) {
   check("each entry carries the text", d.querySelector("#histbody .histtext").textContent, "выложи на GitHub");
   d.querySelector("#histbody .mini").click(); await sleep(200);
   check("an entry can be copied", w.histCopied, [1700000000000]);
+  d.querySelectorAll("#histbody .histrow")[0].querySelectorAll("button")[1].click(); await sleep(250);
+  check("an entry can be pasted back", w.histInserted, [1700000000000]);
+  check("the program says where it went", d.getElementById("st_saved").textContent, "pasted into “Editor”");
   const hfind = d.getElementById("hist_find");
   hfind.value = "Telegram"; hfind.dispatchEvent(new w.Event("input", { bubbles: true })); await sleep(400);
   check("search reaches the program itself", w.histQueries[w.histQueries.length - 1], "Telegram");
@@ -179,7 +195,7 @@ function check(name, actual, expected) {
     "routing", "models", "language", "threads", "punctuation", "whisper_prompt", "profbody",
     "tr_default", "translate_target", "translate_ask", "translate_ask_seconds", "tr_hotkey",
     "tl_en", "ui_language", "upd_check", "check_updates", "server_autostart", "server_port",
-    "server_exe", "server_url", "proc-models", "proc-search", "ver2", "autorun",
+    "server_exe", "server_url", "proc-models", "proc-search", "ver2", "autorun", "pause_hotkey",
   ];
   const missing = everySetting.filter((id) => !d.getElementById(id));
   check("every setting is present in the new window", missing, []);
@@ -193,6 +209,10 @@ function check(name, actual, expected) {
   check("routing shows engine", d.querySelectorAll("#routing .reng")[0].textContent, "gigaam-v3");
   check("engine tags rendered", d.querySelectorAll("#p-models .mtag").length, 3);
   check("russian engine tagged RU", d.querySelectorAll("#p-models .mtag")[2].textContent, "RU");
+  d.getElementById("mcheck").click(); await sleep(250);
+  check("installed models can be checked", w.modelChecks, 1);
+  check("the check says what it found", d.getElementById("mcheck_out").textContent, "Damaged files: Small (ggml-small.bin)");
+  check("a damaged model is marked as bad", d.getElementById("mcheck_out").className.includes("bad"), true);
 
   tab("mic"); await sleep(120);
   const mic = d.getElementById("mic_device");
@@ -220,6 +240,9 @@ function check(name, actual, expected) {
   const ovpos = d.getElementById("overlay_position");
   check("the plate can be put in three places", ovpos.options.length, 3);
   check("it starts at the bottom of the screen", ovpos.value, "bottom");
+  check("the pause hotkey is shown", d.getElementById("pause_hotkey").textContent, "ctrl+alt+p");
+  d.getElementById("pause_clear").click(); await sleep(300);
+  check("clearing the pause hotkey is saved", w.lastSaveForm.pause_hotkey, "");
   ovpos.value = "caret"; ovpos.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
   check("moving the plate is saved", w.lastSaveForm.overlay_position, "caret");
   ovpos.value = "bottom"; ovpos.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
@@ -321,6 +344,16 @@ function check(name, actual, expected) {
   check("the action is saved", w.lastSaveForm.commands[0].action, "text");
   d.querySelectorAll("#cmdbody .rdel")[0].click(); await sleep(300);
   check("a command can be deleted", w.lastSaveForm.commands.length, 2);
+
+  d.getElementById("lists_export").click(); await sleep(250);
+  check("the lists can be saved to a file", w.listsExported.length, 1);
+  check("what is on the page goes into the file", Array.isArray(w.listsExported[0].commands), true);
+  check("saving reports back", d.getElementById("st_saved").textContent, "saved to lists.json");
+  d.getElementById("lists_import").click(); await sleep(300);
+  check("the lists can be loaded from a file", w.listsImported.length, 1);
+  check("loading brings the replacements in", w.lastSaveForm.replacements.map((r) => r.from), ["git hub"]);
+  check("and the commands with them", w.lastSaveForm.commands.map((c) => c.phrase), ["новая строка"]);
+  check("the rows appear on the page", d.querySelectorAll("#replbody .replrow").length, 1);
 
   const pb = d.getElementById("profbody");
   check("prompts listed", pb.querySelectorAll("input.profcb").length, 2);

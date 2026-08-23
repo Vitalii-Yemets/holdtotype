@@ -1,6 +1,7 @@
 package main
 
 import (
+	"holdtotype/internal/checksum"
 	"context"
 	"encoding/json"
 	"errors"
@@ -34,6 +35,7 @@ type modelInfo struct {
 	Punct     bool
 	Translate bool
 	Speed     int
+	Hashes    map[string]string
 	Accuracy  int
 }
 
@@ -60,16 +62,26 @@ func advisorCatalog() []advisor.Model {
 
 var modelCatalog = []modelInfo{
 	{ID: "base", File: "ggml-base.bin", SizeMB: 142, NameKey: "Base", DescKey: "S_M_BASE",
+		Hashes: map[string]string{"ggml-base.bin": "60ed5bc3dd14eea856493d334349b405782ddcaf0028d4b5df4088345fba2efe"},
 		Engine: engineWhisper, Langs: "*", Translate: true, Speed: 5, Accuracy: 2},
 	{ID: "small", File: "ggml-small.bin", SizeMB: 466, NameKey: "Small", DescKey: "S_M_SMALL",
+		Hashes: map[string]string{"ggml-small.bin": "1be3a9b2063867b937e64e2ec7483364a79917e157fa98c5d94b5c1fffea987b"},
 		Engine: engineWhisper, Langs: "*", Translate: true, Speed: 3, Accuracy: 3},
 	{ID: "medium-q5_0", File: "ggml-medium-q5_0.bin", SizeMB: 539, NameKey: "Medium (q5)", DescKey: "S_M_MED",
+		Hashes: map[string]string{"ggml-medium-q5_0.bin": "19fea4b380c3a618ec4723c3eef2eb785ffba0d0538cf43f8f235e7b3b34220f"},
 		Engine: engineWhisper, Langs: "*", Translate: true, Speed: 2, Accuracy: 4},
 	{ID: "large-v3-turbo-q5_0", File: "ggml-large-v3-turbo-q5_0.bin", SizeMB: 574, NameKey: "Turbo (q5)", DescKey: "S_M_TURBO",
+		Hashes: map[string]string{"ggml-large-v3-turbo-q5_0.bin": "394221709cd5ad1f40c46e6031ca61bce88931e6e088c188294c6d5a55ffa7e2"},
 		Engine: engineWhisper, Langs: "*", Translate: false, Speed: 4, Accuracy: 4},
 	{ID: "gigaam-v3", SizeMB: 232, NameKey: "GigaAM v3", DescKey: "S_M_GIGAAM",
 		Engine: engineSherpa, Dir: "gigaam-v3", Langs: "ru", Punct: true, Speed: 5, Accuracy: 5,
 		Files:   []string{"encoder.int8.onnx", "decoder.onnx", "joiner.onnx", "tokens.txt"},
+		Hashes: map[string]string{
+			"encoder.int8.onnx": "369f35a71bf288d3b8e0391fabd8dba5f2314088d440bca474056b7b4b6e66bf",
+			"decoder.onnx":      "38fc7475443ea2a26f63211ca350f73ac50fff824ab7a3876ee2bd610c53bbc4",
+			"joiner.onnx":       "602ff7017a93311aad34df1437c8d7f49911353c13d6eae7a6ee7b041339465c",
+			"tokens.txt":        "39abae20e692998290c574e606f11a9edef2902a1995463fcff63d1490cf22b7",
+		},
 		BaseURL: "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-transducer-punct-giga-am-v3-russian-2025-12-16/resolve/main/"},
 }
 
@@ -271,6 +283,13 @@ func (a *App) doMultiDownload(ctx context.Context, key string, m *modelInfo) err
 		})
 		if err != nil {
 			return fmt.Errorf("%s: %w", f, err)
+		}
+		if want := m.Hashes[f]; want != "" {
+			if verr := checksum.Verify(filepath.Join(dir, f), want); verr != nil {
+				_ = os.Remove(filepath.Join(dir, f))
+				log.Printf("хеш не сошёлся: %v", verr)
+				return fmt.Errorf("%s", tr("err.hash"))
+			}
 		}
 		doneBytes += written
 		log.Printf("модель %s: файл %s готов (%d МБ)", m.ID, f, written/(1024*1024))
@@ -483,7 +502,20 @@ func (a *App) doDownload(ctx context.Context, key, file, url string) error {
 		}
 		dlMu.Unlock()
 	})
-	return err
+	if err != nil {
+		return err
+	}
+	if m := findModel(key); m != nil {
+		if want := m.Hashes[file]; want != "" {
+			if verr := checksum.Verify(final, want); verr != nil {
+				_ = os.Remove(final)
+				log.Printf("хеш не сошёлся: %v", verr)
+				return fmt.Errorf("%s", tr("err.hash"))
+			}
+			log.Printf("%s: хеш совпал", file)
+		}
+	}
+	return nil
 }
 
 func (a *App) deleteModel(id string) string {
@@ -851,4 +883,54 @@ func histBadge() string {
 		return ""
 	}
 	return itoaSafe(n)
+}
+
+func (a *App) verifyModels() string {
+	type row struct {
+		Name string `json:"name"`
+		OK   bool   `json:"ok"`
+		Note string `json:"note"`
+	}
+	var rows []row
+	for i := range modelCatalog {
+		m := &modelCatalog[i]
+		if !m.installed() || len(m.Hashes) == 0 {
+			continue
+		}
+		bad := ""
+		for _, p := range m.paths() {
+			want := m.Hashes[filepath.Base(p)]
+			if want == "" {
+				continue
+			}
+			if err := checksum.Verify(p, want); err != nil {
+				log.Printf("проверка моделей: %v", err)
+				bad = filepath.Base(p)
+				break
+			}
+		}
+		rows = append(rows, row{Name: m.NameKey, OK: bad == "", Note: bad})
+	}
+	checked, broken := 0, 0
+	for _, r := range rows {
+		checked++
+		if !r.OK {
+			broken++
+		}
+	}
+	text := trf("models.check.ok", checked)
+	if checked == 0 {
+		text = tr("models.check.none")
+	} else if broken > 0 {
+		var names []string
+		for _, r := range rows {
+			if !r.OK {
+				names = append(names, r.Name+" ("+r.Note+")")
+			}
+		}
+		text = trf("models.check.bad", strings.Join(names, ", "))
+	}
+	log.Printf("проверка моделей: проверено %d, повреждено %d", checked, broken)
+	out, _ := json.Marshal(map[string]any{"rows": rows, "text": text, "ok": broken == 0})
+	return string(out)
 }

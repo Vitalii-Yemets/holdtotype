@@ -398,3 +398,12 @@ func processNameOf(hwnd uintptr) string {
 	}
 	return full
 }
+
+func ownWindow(hwnd uintptr) bool {
+	if hwnd == 0 {
+		return false
+	}
+	var pid uint32
+	procGetWindowThreadPID.Call(hwnd, uintptr(unsafe.Pointer(&pid)))
+	return pid != 0 && pid == uint32(windows.GetCurrentProcessId())
+}

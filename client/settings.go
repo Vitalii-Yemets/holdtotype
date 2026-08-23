@@ -127,6 +127,7 @@ type settingsForm struct {
 
 	WhisperPrompt       string    `json:"whisper_prompt"`
 	TranslateHotkey     string    `json:"translate_hotkey"`
+	PauseHotkey         string    `json:"pause_hotkey"`
 	TranslateTarget     string    `json:"translate_target"`
 	TranslateAsk        string    `json:"translate_ask"`
 	TranslateAskSeconds int       `json:"translate_ask_seconds"`
@@ -142,6 +143,12 @@ type settingsForm struct {
 
 func (a *App) openSettings(tab string) {
 	log.Printf("openSettings: tab=%s", tab)
+	if fg, _, _ := procGetForegroundWindow.Call(); fg != 0 && fg != settingsHwnd.Load() && !ownWindow(fg) {
+		a.mu.Lock()
+		a.settingsPrev = fg
+		a.mu.Unlock()
+		log.Printf("openSettings: вернуть текст можно в окно «%s»", windowTitle(fg))
+	}
 	if !settingsOpen.CompareAndSwap(false, true) {
 		if hwnd := settingsHwnd.Load(); hwnd != 0 {
 			log.Printf("openSettings: уже открыто, поднимаю на передний план")
@@ -282,7 +289,7 @@ func (a *App) settingsThread(tab string, attempt int) {
 			return string(out)
 		})
 		_ = w.Bind("appCheckUpdate", func() string {
-			tag, uurl, err := fetchLatestRelease()
+			tag, uurl, dig, err := fetchLatestRelease()
 			if err != nil {
 				out, _ := json.Marshal(map[string]any{"error": err.Error()})
 				return string(out)
@@ -290,7 +297,7 @@ func (a *App) settingsThread(tab string, attempt int) {
 			newer := verNewer(tag, appVersion) && uurl != ""
 			if newer {
 				a.mu.Lock()
-				a.updVer, a.updURL = tag, uurl
+				a.updVer, a.updURL, a.updDigest = tag, uurl, dig
 				a.mu.Unlock()
 			}
 			out, _ := json.Marshal(map[string]any{"current": appVersion, "latest": tag, "newer": newer})
@@ -298,13 +305,13 @@ func (a *App) settingsThread(tab string, attempt int) {
 		})
 		_ = w.Bind("appDoUpdate", func() {
 			a.mu.Lock()
-			uurl := a.updURL
+			uurl, udig := a.updURL, a.updDigest
 			a.mu.Unlock()
 			if uurl == "" {
 				return
 			}
 			go func() {
-				path, err := downloadSetup(uurl, func(pct int) {
+				path, err := downloadSetup(uurl, udig, func(pct int) {
 					w.Dispatch(func() { w.Eval(fmt.Sprintf("updProgress(%d)", pct)) })
 				})
 				if err == nil {
@@ -406,6 +413,9 @@ func (a *App) settingsThread(tab string, attempt int) {
 		_ = w.Bind("appModelDel", func(id string) string {
 			return a.deleteModel(id)
 		})
+		_ = w.Bind("appCheckModels", func() string {
+			return a.verifyModels()
+		})
 		_ = w.Bind("appMicCheck", func() string {
 			return a.micCheck()
 		})
@@ -430,6 +440,21 @@ func (a *App) settingsThread(tab string, attempt int) {
 				}
 			}
 			return false
+		})
+		_ = w.Bind("appHistoryInsert", func(at float64) string {
+			for _, it := range histStore.Items() {
+				if it.At == int64(at) {
+					return a.insertFromHistory(it.Text)
+				}
+			}
+			out, _ := json.Marshal(map[string]any{"ok": false, "text": tr("hist.insert.gone")})
+			return string(out)
+		})
+		_ = w.Bind("appListsExport", func(payload string) string {
+			return exportLists(payload)
+		})
+		_ = w.Bind("appListsImport", func(payload string) string {
+			return importLists(payload)
 		})
 		_ = w.Bind("appTestText", func(text string) string {
 			cfg := a.snapshot()
@@ -523,7 +548,7 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	if _, err := parseHotkey(f.Hotkey); err != nil {
 		return saveResult{Severity: "error", Message: err.Error()}
 	}
-	combos := []string{f.Hotkey, f.TranslateHotkey}
+	combos := []string{f.Hotkey, f.TranslateHotkey, f.PauseHotkey}
 	for _, p := range f.Profiles {
 		combos = append(combos, p.Hotkey)
 	}
@@ -637,6 +662,12 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	if c.TranslateHotkey != "" {
 		if _, err := parseHotkey(c.TranslateHotkey); err != nil {
 			c.TranslateHotkey = ""
+		}
+	}
+	c.PauseHotkey = f.PauseHotkey
+	if c.PauseHotkey != "" {
+		if _, err := parseHotkey(c.PauseHotkey); err != nil {
+			c.PauseHotkey = ""
 		}
 	}
 	if validTranslateLang(f.TranslateTarget) {
@@ -775,6 +806,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"replacements":          cfg.Replacements,
 		"commands":              cfg.Commands,
 		"translate_hotkey":      cfg.TranslateHotkey,
+		"pause_hotkey":          cfg.PauseHotkey,
 		"translate_target":      cfg.TranslateTarget,
 		"translate_ask":         cfg.TranslateAsk,
 		"translate_ask_seconds": cfg.TranslateAskSeconds,
@@ -814,7 +846,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"cmdtextph": "S_CMD_TEXT_PH",
 		"cmdpnewline": "S_CMD_P_NEWLINE", "cmdpparagraph": "S_CMD_P_PARAGRAPH", "cmdpcancel": "S_CMD_P_CANCEL",
 		"histempty": "S_HIST_EMPTY", "histcopy": "S_HIST_COPY", "histask": "S_HIST_ASK", "histclear": "S_HIST_CLEAR",
-		"micchecking": "S_MIC_CHECKING",
+		"micchecking": "S_MIC_CHECKING", "mchecking": "S_MCHECK_RUN", "histinsert": "S_HIST_INSERT",
 		"replcase": "S_REPL_CASE", "replfromph": "S_REPL_FROM_PH", "repltoph": "S_REPL_TO_PH",
 		"wiznext": "S_WIZ_NEXT", "wizfinish": "S_WIZ_FINISH", "wizwait": "S_WIZ_WAIT",
 		"wizheard": "S_WIZ_HEARD", "wizhave": "S_WIZ_HAVE", "wiztry": "S_WIZ_TRY_TEXT",
@@ -1225,6 +1257,10 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
    <button class="btn" onclick="appCapture()">{{S_CHANGE}}</button></div></div>
   <div class="row"><label>{{S_HOTMODE}}<span class="sub">{{S_SUB_HOTMODE}}</span></label>
    <select id="hotkey_mode"><option value="hold">{{S_HOTMODE_HOLD}}</option><option value="toggle">{{S_HOTMODE_TOGGLE}}</option></select></div>
+  <div class="row" data-adv><label>{{S_PAUSE}}<span class="sub">{{S_PAUSE_SUB}}</span></label>
+   <span class="hotkey-val" id="pause_hotkey" style="min-width:110px"></span>
+   <button class="mini" id="pause_set">{{S_PROF_SET}}</button>
+   <button class="mini" id="pause_clear">{{S_PROF_CLEAR}}</button></div>
   <div class="row" data-adv><label>{{S_MINMS}}<span class="sub">{{S_SUB_MINMS}}</span></label><select id="min_record_ms"><option value="0">0 ms</option><option value="100">100 ms</option><option value="150">150 ms</option><option value="200">200 ms</option><option value="300">300 ms</option><option value="500">500 ms</option><option value="750">750 ms</option><option value="1000">1000 ms</option></select></div>
   <div class="row" data-adv><label>{{S_MAXSEC}}</label><select id="max_record_seconds"><option value="30">30 s</option><option value="60">60 s</option><option value="120">120 s</option><option value="180">180 s</option><option value="300">300 s</option></select></div>
  </div>
@@ -1315,6 +1351,9 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
    <div id="adv_out" class="advout"></div>
   </div>
   <div id="models"></div>
+  <div class="row"><label>{{S_MCHECK}}<span class="sub">{{S_MCHECK_SUB}}</span></label>
+   <button type="button" class="mini" id="mcheck">{{S_MCHECK_GO}}</button></div>
+  <div class="micverdict" id="mcheck_out"></div>
  </div>
  <div class="card">
   <div class="row"><label>{{S_RECLANG}}</label>
@@ -1363,6 +1402,11 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
   <div class="rulefoot">
    <button type="button" class="mini" id="cmd_add">{{S_CMD_ADD}}</button>
    <button type="button" class="mini ghost" id="cmd_preset">{{S_CMD_PRESET}}</button>
+  </div>
+  <div class="rulefoot">
+   <span class="hint" style="margin:0;flex:1 1 auto">{{S_LISTS_HINT}}</span>
+   <button type="button" class="mini ghost" id="lists_export">{{S_LISTS_EXPORT}}</button>
+   <button type="button" class="mini ghost" id="lists_import">{{S_LISTS_IMPORT}}</button>
   </div>
   <div class="replcheck">
    <input type="text" id="repl_test" placeholder="{{S_REPL_TEST_PH}}">
@@ -1563,6 +1607,7 @@ let profiles = (CFG.profiles || []).map(p=>Object.assign({}, p));
 let activeProfiles = (CFG.active_profiles || []).slice();
 let translateDefault = !!CFG.translate_default;
 let translateHotkey = CFG.translate_hotkey || "";
+let pauseHotkey = CFG.pause_hotkey || "";
 let expandedID = null;
 let captureFor = null;
 
@@ -1891,6 +1936,21 @@ async function micCheck(){
     btn.disabled = false;
   }
 }
+async function modelsCheck(){
+  const btn = document.getElementById("mcheck");
+  const out = document.getElementById("mcheck_out");
+  if(!btn || !out) return;
+  btn.disabled = true;
+  out.className = "micverdict";
+  out.textContent = L.mchecking;
+  try {
+    const r = JSON.parse(await appCheckModels());
+    out.textContent = r.text;
+    out.className = "micverdict " + (r.ok ? "ok" : "bad");
+  } finally {
+    btn.disabled = false;
+  }
+}
 function startMicMeter(){
   if(micTimer) return;
   micTimer = startMeter("mic_bar", "p-mic", "mic_hint");
@@ -1900,12 +1960,24 @@ function updTrHotkey(){
   const el = document.getElementById("tr_hotkey");
   if(el) el.textContent = translateHotkey || L.nohot;
 }
+function updPauseHotkey(){
+  const el = document.getElementById("pause_hotkey");
+  if(el) el.textContent = pauseHotkey || L.nohot;
+}
 function comboCaptured(combo){
   if(!captureFor) return;
   if(captureFor === "__wt"){
     captureFor = null;
     if(combo) translateHotkey = combo;
     updTrHotkey();
+    doSave();
+    return;
+  }
+  if(captureFor === "__pause"){
+    captureFor = null;
+    if(combo) pauseHotkey = combo;
+    updPauseHotkey();
+    doSave();
     return;
   }
   const p = profiles.find(x=>x.id===captureFor);
@@ -2191,12 +2263,19 @@ function load(){
   document.getElementById("mic_refresh").onclick = refreshMics;
   const micChk = document.getElementById("mic_check");
   if(micChk) micChk.onclick = micCheck;
+  const mChk = document.getElementById("mcheck");
+  if(mChk) mChk.onclick = modelsCheck;
   refreshMics();
   startMicMeter();
   if ((CFG.model || "").indexOf("turbo") >= 0) document.getElementById("tr_warn").style.display = "block";
   updTrHotkey();
   document.getElementById("tr_set").onclick = ()=>{ captureFor = "__wt"; appCaptureCombo(); };
-  document.getElementById("tr_clear").onclick = ()=>{ translateHotkey = ""; updTrHotkey(); };
+  document.getElementById("tr_clear").onclick = ()=>{ translateHotkey = ""; updTrHotkey(); doSave(); };
+  const pset = document.getElementById("pause_set");
+  if(pset) pset.onclick = ()=>{ captureFor = "__pause"; appCaptureCombo(); };
+  const pclr = document.getElementById("pause_clear");
+  if(pclr) pclr.onclick = ()=>{ pauseHotkey = ""; updPauseHotkey(); doSave(); };
+  updPauseHotkey();
   document.getElementById("hotkey").textContent = CFG.hotkey;
   document.getElementById("ver").textContent = CFG._version;
   document.getElementById("ver2").textContent = CFG._version;
@@ -2264,6 +2343,7 @@ async function doSave(){
     mic_device_name: micSel.value ? micSel.options[micSel.selectedIndex].textContent : "",
     whisper_prompt: document.getElementById("whisper_prompt").value,
     translate_hotkey: translateHotkey,
+    pause_hotkey: pauseHotkey,
     translate_ask_langs: trAll.filter(l=>document.getElementById("tl_"+l).checked),
     translate_default: translateDefault,
     active_profiles: activeProfiles,
@@ -2598,6 +2678,15 @@ async function refreshHistory(){
     copy.textContent = L.histcopy;
     copy.onclick = async ()=>{ await appHistoryCopy(it.at); toast(L.upd, "ok"); };
     row.appendChild(copy);
+    const ins = document.createElement("button");
+    ins.type = "button";
+    ins.className = "mini ghost";
+    ins.textContent = L.histinsert;
+    ins.onclick = async ()=>{
+      const r = JSON.parse(await appHistoryInsert(it.at));
+      toast(r.text, r.ok ? "ok" : "error");
+    };
+    row.appendChild(ins);
     body.appendChild(row);
   });
 }
@@ -2794,6 +2883,25 @@ function initRepls(){
     renderRepls();
     const rows = document.querySelectorAll("#replbody .rfrom");
     if(rows.length) rows[rows.length - 1].focus();
+  };
+  const exp = document.getElementById("lists_export");
+  if(exp) exp.onclick = async ()=>{
+    const r = JSON.parse(await appListsExport(JSON.stringify({replacements: repls, commands: cmds})));
+    if(r.cancelled) return;
+    toast(r.text, r.ok ? "ok" : "error");
+  };
+  const imp = document.getElementById("lists_import");
+  if(imp) imp.onclick = async ()=>{
+    const r = JSON.parse(await appListsImport(JSON.stringify({replacements: repls, commands: cmds})));
+    if(r.cancelled) return;
+    if(r.ok){
+      repls = r.replacements || repls;
+      cmds = r.commands || cmds;
+      renderRepls();
+      renderCmds();
+      doSave();
+    }
+    toast(r.text, r.ok ? "ok" : "error");
   };
   const test = document.getElementById("repl_test");
   if(test){

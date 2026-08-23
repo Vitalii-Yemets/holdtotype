@@ -87,6 +87,7 @@ type Config struct {
 
 	WhisperPrompt       string    `json:"whisper_prompt"`
 	TranslateHotkey     string    `json:"translate_hotkey"`
+	PauseHotkey         string    `json:"pause_hotkey"`
 	TranslateTarget     string    `json:"translate_target"`
 	TranslateAsk        string    `json:"translate_ask"`
 	TranslateAskSeconds int       `json:"translate_ask_seconds"`

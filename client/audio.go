@@ -32,6 +32,7 @@ type Recorder struct {
 	maxBytes  int
 	overflow  bool
 	recording bool
+	paused    bool
 	started   bool
 	monitor   bool
 	monUntil  time.Time
@@ -129,7 +130,7 @@ func (r *Recorder) openDevice(deviceID string) error {
 				r.peak.Store(lvl)
 			}
 			r.mu.Lock()
-			if r.recording {
+			if r.recording && !r.paused {
 				if len(r.buf) < r.maxBytes {
 					r.buf = append(r.buf, in...)
 				} else {
@@ -276,6 +277,7 @@ func (r *Recorder) Start(maxSeconds int) error {
 	r.overflow = false
 	r.maxBytes = sampleRate * 2 * maxSeconds
 	r.recording = true
+	r.paused = false
 	r.mu.Unlock()
 	r.resetPeak()
 
@@ -289,9 +291,16 @@ func (r *Recorder) Start(maxSeconds int) error {
 	return nil
 }
 
+func (r *Recorder) SetPaused(v bool) {
+	r.mu.Lock()
+	r.paused = v
+	r.mu.Unlock()
+}
+
 func (r *Recorder) Stop() []byte {
 	r.mu.Lock()
 	r.recording = false
+	r.paused = false
 	pcm := r.buf
 	over := r.overflow
 	max := r.maxBytes

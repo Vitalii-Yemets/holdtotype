@@ -186,6 +186,20 @@ var msgs = map[string]map[string]string{
 		"err.hotkey.dup":        "Сочетание «%s» назначено дважды — хоткеи не должны совпадать",
 		"cfg.err.recovered":     "config.json повреждён (%s).\nФайл сохранён как %s, настройки сброшены к значениям по умолчанию.",
 		"err.disk.space":        "мало места на диске: свободно %d МБ, нужно ~%d МБ",
+		"err.hash": "скачанный файл повреждён — попробуйте ещё раз",
+		"models.check.ok": "Проверено моделей: %d — все файлы целы",
+		"models.check.none": "Проверять нечего — нет установленных моделей с эталонными хешами",
+		"models.check.bad": "Повреждены файлы: %s — скачайте модель заново",
+		"ov.paused": "Пауза",
+		"status.paused": "Пауза — запись ждёт",
+		"hist.insert.gone": "запись не найдена",
+		"hist.insert.nowin": "некуда вставлять — текст скопирован в буфер",
+		"hist.insert.ok": "вставлено в «%s»",
+		"lists.bad": "файл не подходит",
+		"lists.saved": "сохранено в %s",
+		"lists.added": "добавлено: %d, пропущено: %d",
+		"lists.save.title": "Куда сохранить списки",
+		"lists.open.title": "Откуда загрузить списки",
 		"un.title":              "{app} — удаление",
 		"un.confirm":            "Удалить {app} с этого компьютера?",
 		"un.data":               "Удалить также настройки и скачанные модели?",
@@ -291,6 +305,20 @@ var msgs = map[string]map[string]string{
 		"err.hotkey.dup":        "The \"%s\" shortcut is assigned twice — hotkeys must be unique",
 		"cfg.err.recovered":     "config.json is corrupted (%s).\nThe file was saved as %s and settings were reset to defaults.",
 		"err.disk.space":        "low disk space: %d MB free, ~%d MB needed",
+		"err.hash": "the downloaded file is damaged — try again",
+		"models.check.ok": "Models checked: %d — all files intact",
+		"models.check.none": "Nothing to check — no installed model has a reference hash",
+		"models.check.bad": "Damaged files: %s — download the model again",
+		"ov.paused": "Paused",
+		"status.paused": "Paused — recording is waiting",
+		"hist.insert.gone": "entry not found",
+		"hist.insert.nowin": "nowhere to paste — the text is on the clipboard",
+		"hist.insert.ok": "pasted into “%s”",
+		"lists.bad": "this file does not fit",
+		"lists.saved": "saved to %s",
+		"lists.added": "added: %d, skipped: %d",
+		"lists.save.title": "Where to save the lists",
+		"lists.open.title": "Which file to load",
 		"un.title":              "{app} — Uninstall",
 		"un.confirm":            "Remove {app} from this computer?",
 		"un.data":               "Also delete settings and downloaded models?",
@@ -487,6 +515,10 @@ var settingsStrings = map[string]map[string]string{
 		"S_MIC":            "Микрофон",
 		"S_MIC_DEFAULT":    "Системный по умолчанию",
 		"S_MIC_CHECK": "Проверить микрофон", "S_MIC_CHECK_SUB": "три секунды записи и разбор: громкость, перегруз, есть ли речь", "S_MIC_CHECKING": "Проверяю…",
+		"S_PAUSE": "Пауза в записи", "S_PAUSE_SUB": "работает в режиме фиксации: нажали — запись замерла, нажали ещё раз — пошла дальше",
+		"S_MCHECK": "Проверить установленные модели", "S_MCHECK_SUB": "сверяет файлы моделей с эталонными хешами", "S_MCHECK_GO": "Проверить", "S_MCHECK_RUN": "Проверяю…",
+		"S_HIST_INSERT": "Вставить",
+		"S_LISTS_HINT": "Замены и команды одним файлом — перенести на другой компьютер", "S_LISTS_EXPORT": "Сохранить в файл", "S_LISTS_IMPORT": "Загрузить из файла",
 		"S_MIC_REFRESH":    "Обновить список",
 		"S_MIC_LEVEL":      "Уровень сигнала",
 		"S_MIC_QUIET":      "тихо",
@@ -573,6 +605,14 @@ var settingsStrings = map[string]map[string]string{
 			"</ul>" +
 			"<p class=\"wh\">Проверка микрофона</p>" +
 			"<p>Кнопка «Проверка» на «Микрофоне» записывает три секунды и разбирает их: пиковая громкость в децибелах, доля записи, в которой действительно есть речь, и доля обрезанных отсчётов. Ответ приходит словами: «слышно хорошо», «слишком тихо — прибавьте громкость в Windows», «перегруз — убавьте громкость», «речи не слышно — тот ли микрофон выбран». То же самое считается после каждой диктовки и пишется в лог; если распознать не удалось, плашка скажет причину — тихо, перегруз или тишина, — а не просто «ничего не услышал».</p>" +
+			"<p class=\"wh\">Пауза в записи</p>" +
+			"<p>В режиме фиксации (нажали — пишет, нажали ещё раз — остановилась) можно задать отдельное сочетание для паузы: на «Диктовке», строка «Пауза в записи». Нажали — запись замерла, плашка показывает «Пауза», и ничего не записывается; нажали ещё раз — запись пошла дальше, а всё сказанное до паузы сохраняется. Предел длины записи на паузе не срабатывает.</p>" +
+			"<p class=\"wh\">Повторная вставка из истории</p>" +
+			"<p>У каждой записи в истории есть кнопка «Вставить»: она возвращает окно, из которого вы открыли настройки, и вставляет текст туда — как обычная диктовка. Если возвращаться некуда, текст просто кладётся в буфер обмена, и программа об этом скажет.</p>" +
+			"<p class=\"wh\">Списки одним файлом</p>" +
+			"<p>Замены и голосовые команды можно сохранить в один файл .json и загрузить на другом компьютере — кнопки под списком команд на «Тексте». Загрузка ничего не затирает: добавляются только те строки, которых ещё нет, а сколько добавлено и сколько пропущено, программа скажет.</p>" +
+			"<p class=\"wh\">Целостность файлов</p>" +
+			"<p>Для каждой модели из каталога известен эталонный хеш SHA-256. После скачивания файл сверяется с ним: не сошлось — файл удаляется, и загрузку можно повторить. Кнопка «Проверить» на «Моделях» так же сверяет уже установленные модели, а при обновлении программы сверяется и скачанный установщик — чужой файл не запустится.</p>" +
 			"<p class=\"wh\">История диктовок</p>" +
 			"<p>Раздел «История» в левом столбце хранит то, что вы надиктовали: только текст, только на этом компьютере, звук не сохраняется никогда. По умолчанию выключено — включается одним переключателем там же. Хранится заданное число дней и записей, старое удаляется само; поле «Не записывать из программ» перечисляет через запятую те, из которых не нужно сохранять ничего — менеджеры паролей, банк-клиент. Поиск ищет и по тексту, и по названию программы, кнопка рядом с записью кладёт её в буфер обмена, «Очистить» удаляет всё сразу вместе с файлом <b>{app}-history.json</b>.</p>" +
 			"<p class=\"wh\">Голосовые команды</p>" +
@@ -848,6 +888,10 @@ var settingsStrings = map[string]map[string]string{
 		"S_MIC":            "Microphone",
 		"S_MIC_DEFAULT":    "System default",
 		"S_MIC_CHECK": "Check the microphone", "S_MIC_CHECK_SUB": "three seconds of recording, then a verdict: level, clipping, whether there is speech", "S_MIC_CHECKING": "Checking…",
+		"S_PAUSE": "Pause the recording", "S_PAUSE_SUB": "works in toggle mode: press once and recording freezes, press again and it goes on",
+		"S_MCHECK": "Check installed models", "S_MCHECK_SUB": "compares model files with reference hashes", "S_MCHECK_GO": "Check", "S_MCHECK_RUN": "Checking…",
+		"S_HIST_INSERT": "Paste",
+		"S_LISTS_HINT": "Replacements and commands in one file — to move to another computer", "S_LISTS_EXPORT": "Save to a file", "S_LISTS_IMPORT": "Load from a file",
 		"S_MIC_REFRESH":    "Refresh list",
 		"S_MIC_LEVEL":      "Input level",
 		"S_MIC_QUIET":      "quiet",
@@ -934,6 +978,14 @@ var settingsStrings = map[string]map[string]string{
 			"</ul>" +
 			"<p class=\"wh\">Checking the microphone</p>" +
 			"<p>The Test button on the Microphone tab records three seconds and takes them apart: peak level in decibels, how much of the recording actually holds speech, and how many samples were clipped. The answer comes in words: sounds good, too quiet — raise the level in Windows, clipping — lower it, no speech heard — is the right microphone picked. The same numbers are measured after every dictation and written to the log; when recognition comes back empty the plate names the reason — too quiet, clipping or silence — instead of just saying it heard nothing.</p>" +
+			"<p class=\"wh\">Pausing the recording</p>" +
+			"<p>In toggle mode (press once to start, press again to stop) a separate shortcut can pause: the Dictation tab, the \"Pause the recording\" row. Press it and the recording freezes — the plate says Paused and nothing is recorded; press again and it goes on, keeping everything said before the pause. The recording length limit does not fire while paused.</p>" +
+			"<p class=\"wh\">Pasting from the history</p>" +
+			"<p>Every entry in the history has a Paste button: it brings back the window you opened the settings from and pastes the text there, like an ordinary dictation. When there is nowhere to go back to, the text simply lands on the clipboard and the program says so.</p>" +
+			"<p class=\"wh\">The lists in one file</p>" +
+			"<p>Replacements and voice commands can be saved into a single .json file and loaded on another computer — the buttons under the command list on the Text tab. Loading overwrites nothing: only the lines that are not there yet are added, and the program says how many were added and how many were skipped.</p>" +
+			"<p class=\"wh\">File integrity</p>" +
+			"<p>Every model in the catalog has a known SHA-256 reference hash. After a download the file is compared against it: no match — the file is deleted and the download can be repeated. The Check button on the Models tab compares the models already installed the same way, and when the program updates itself the downloaded installer is checked too — a foreign file will not be started.</p>" +
 			"<p class=\"wh\">History of dictations</p>" +
 			"<p>The History section in the left column keeps what you dictated: text only, on this computer only, audio is never kept. It is off by default and turns on with one switch in the same place. Entries are kept for a set number of days and up to a set count, older ones drop out on their own; \"Never record from these programs\" lists, separated by commas, the ones nothing should be saved from — password managers, banking apps. Search covers both the text and the program name, the button next to an entry puts it on the clipboard, and Clear removes everything at once along with the <b>{app}-history.json</b> file.</p>" +
 			"<p class=\"wh\">Voice commands</p>" +
