@@ -47,11 +47,13 @@ const dom = new JSDOM(html, {
     for (const name of [
       "appLLMDlFile", "appLLMTest", "appHFPage", "appHFHome", "appRepoLink",
       "appAuthorLink", "appCapture", "appCaptureCombo", "appReload",
-      "appPreviewSound", "appModelDl", "appMin", "appClose", "appDrag",
+      "appPreviewSound", "appModelDl", "appMin", "appClose",
       "appDoUpdate", "appReady", "appJSError", "appCopyLast",
     ]) {
       window[name] = () => {};
     }
+    window.dragCalls = 0;
+    window.appDrag = () => { window.dragCalls++; };
     window.saveCalls = 0;
     window.appSave = async () => { window.saveCalls++; return ""; };
     window.appModelDel = async () => "ok";
@@ -197,6 +199,16 @@ function check(name, actual, expected) {
 
   d.querySelector('.lvlb[data-l="all"]').click(); await sleep(80);
   check("no save button left", !!d.querySelector(".footer"), false);
+
+  const drag0 = w.dragCalls;
+  const down = (el) => el.dispatchEvent(new w.MouseEvent("mousedown", { bubbles: true, button: 0 }));
+  down(d.getElementById("omni"));
+  down(d.querySelector('.lvlb[data-l="simple"]'));
+  check("title bar controls are not swallowed by the window drag", w.dragCalls, drag0);
+  down(d.querySelector(".header h1"));
+  check("empty title bar still drags the window", w.dragCalls, drag0 + 1);
+  check("version sits in the status bar", !!d.querySelector("#statusbar #ver"), true);
+  check("version left the title bar", !!d.querySelector(".header #ver"), false);
 
   check("no page errors", errors, []);
 

@@ -697,7 +697,7 @@ button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box
 .logo{width:40px;height:40px;flex:none}
 .logo svg{width:100%;height:100%;filter:drop-shadow(0 0 5px rgba(60,255,110,.7))}
 .header h1{font-size:15px;letter-spacing:2px;text-shadow:var(--glow);animation:flicker 6s infinite}
-.header .ver{font-size:12px;color:var(--dim);flex:none}
+.statusbar .ver{flex:none;color:var(--faint)}
 @keyframes flicker{0%,93%,97%,100%{opacity:1}95%{opacity:.6}}
 @keyframes pulse{0%,100%{opacity:.35;transform:scale(.94)}50%{opacity:1;transform:scale(1)}}
 .wave{animation:pulse 1.6s infinite}
@@ -725,9 +725,9 @@ button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box
 .statusbar .stpend{color:var(--amber)}
 .statusbar .stlvl{margin-left:auto;display:flex;align-items:center;gap:7px}
 .statusbar .stsaved{color:var(--dim)}
-.omni{margin-left:auto;display:flex;align-items:center;gap:8px;flex:none;border:1px solid var(--line);background:var(--panel);padding:4px 9px;min-width:min(270px,32%)}
+.omni{margin-left:auto;display:flex;align-items:center;gap:8px;flex:none;border:1px solid var(--line);background:var(--panel);padding:4px 9px;min-width:min(320px,38%)}
 .omni:focus-within{border-color:var(--dim);box-shadow:var(--glow)}
-.omni input[type=text]{flex:1;min-width:0;width:auto;background:none;border:0;box-shadow:none;outline:none;color:var(--green);font:inherit;font-size:11.5px;padding:0}
+.omni input[type=text]{flex:1;min-width:0;width:auto;background:none;border:0;box-shadow:none;outline:none;color:var(--green);font:inherit;font-size:11.5px;padding:0;user-select:text;-webkit-user-select:text}
 .omni input[type=text]:focus{border:0;box-shadow:none}
 .omni input::placeholder{color:var(--faint)}
 .omni svg{flex:none;color:var(--faint)}
@@ -898,7 +898,6 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
   <button type="button" class="lvlb" data-l="all">{{S_LVL_ALL}}</button>
  </span>
  <label class="omni"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="15.5" y1="15.5" x2="21" y2="21"/></svg><input id="omni" type="text" placeholder="{{S_SEARCH}}" autocomplete="off"><span class="okey">Ctrl K</span></label>
- <span class="ver">v<span id="ver"></span></span>
  <div class="capbtns">
   <button class="cap" onclick="appMin()">&#9472;</button>
   <button class="cap close" onclick="guardClose()">&#10005;</button>
@@ -1140,6 +1139,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
  <span class="stsaved" id="st_saved"></span>
  <span class="stpend" id="st_pend"></span>
  <span class="stlvl"><span class="stlevel" id="st_level"></span><button type="button" class="stlink" id="st_levelbtn"></button></span>
+ <span class="ver">v<span id="ver"></span></span>
 </div>
 
 
@@ -1878,7 +1878,7 @@ document.querySelectorAll(".nav").forEach(b=>b.onclick=()=>{
   if(p !== curTab) show(p);
 });
 document.querySelector(".header").addEventListener("mousedown", e=>{
-  if(e.target.closest(".cap")) return;
+  if(e.target.closest("button, input, select, textarea, a, .omni, .lvlsw")) return;
   if(e.button===0) appDrag();
 });
 load();
