@@ -15,7 +15,6 @@ let llmState = {
 const dom = new JSDOM(html, {
   runScripts: "dangerously",
   beforeParse(window) {
-    window.confirm = () => true;
     window.appLLM = async () => JSON.stringify(llmState);
     let micBadge = "Realtek";
     let micFails = false;
@@ -40,11 +39,16 @@ const dom = new JSDOM(html, {
         { cond: "Other languages", engine: "ggml-small.bin", why: "99 languages" },
         { cond: "Translation", engine: "ggml-small.bin", why: "only Whisper translates" },
       ]);
+    let modelStates = { base: "absent", small: "active", "gigaam-v3": "absent" };
+    window.dlCalls = [];
+    window.cancelCalls = [];
+    window.appModelDl = async (id) => { window.dlCalls.push(id); modelStates[id] = "downloading"; };
+    window.appModelCancel = async (id) => { window.cancelCalls.push(id); modelStates[id] = "absent"; return true; };
     window.appModels = async () =>
       JSON.stringify([
-        { id: "base", name: "Base", desc: "fast", size: 142, state: "absent", engine: "whisper", langs: "*" },
-        { id: "small", name: "Small", desc: "balanced", size: 466, state: "active", engine: "whisper", langs: "*" },
-        { id: "gigaam-v3", name: "GigaAM v3", desc: "russian", size: 232, state: "absent", engine: "sherpa", langs: "ru", punct: true },
+        { id: "base", name: "Base", desc: "fast", size: 142, state: modelStates.base, pct: 12, engine: "whisper", langs: "*" },
+        { id: "small", name: "Small", desc: "balanced", size: 466, state: modelStates.small, engine: "whisper", langs: "*" },
+        { id: "gigaam-v3", name: "GigaAM v3", desc: "russian", size: 232, state: modelStates["gigaam-v3"], pct: 5, engine: "sherpa", langs: "ru", punct: true },
       ]);
     window.appLLMSearch = async () =>
       JSON.stringify({ repos: [{ id: "org/Repo-GGUF", downloads: 1234, updated: "2026-01-01" }] });
@@ -58,7 +62,7 @@ const dom = new JSDOM(html, {
     for (const name of [
       "appLLMDlFile", "appLLMTest", "appHFPage", "appHFHome", "appRepoLink",
       "appAuthorLink", "appCapture", "appCaptureCombo", "appReload",
-      "appPreviewSound", "appModelDl", "appMin", "appClose",
+      "appPreviewSound", "appMin", "appClose",
       "appDoUpdate", "appReady", "appJSError", "appCopyLast",
     ]) {
       window[name] = () => {};
@@ -201,9 +205,31 @@ function check(name, actual, expected) {
   tab("models"); await sleep(30);
   const del = d.querySelector('#proc-models button[data-a="ldel"]');
   check("active LLM model can be deleted", !!del, true);
-  del.click(); await sleep(200);
+  del.click(); await sleep(60);
+  check("deleting a model asks first", !!d.querySelector(".modal-bg"), true);
+  check("the question is asked in the app style, not by the browser", d.querySelectorAll(".modal .btn").length, 2);
+  check("the way out comes first, the action second", [...d.querySelectorAll(".modal .btn")].map(b=>b.className), ["btn ghost", "btn yes"]);
+  d.querySelector(".modal .btn.yes").click(); await sleep(250);
+  check("the question closes with the answer", !!d.querySelector(".modal-bg"), false);
   check("model list empty after delete", d.querySelectorAll('#proc-models input[name="llmmdl"]').length, 0);
 
+
+  tab("models"); await sleep(120);
+  const pickAbsent = () => d.querySelector('#models input[name="mdl"][value="base"]');
+  pickAbsent().click(); await sleep(80);
+  check("picking a model that is not here asks first", !!d.querySelector(".modal-bg"), true);
+  check("the question names the model and its size", d.querySelector(".modal p").textContent.includes("Base") && d.querySelector(".modal p").textContent.includes("142 MB"), true);
+  d.querySelector(".modal .btn.ghost").click(); await sleep(250);
+  check("saying no downloads nothing", w.dlCalls.length, 0);
+  check("saying no puts the choice back", d.querySelector('#models input[name="mdl"][value="small"]').checked, true);
+
+  pickAbsent().click(); await sleep(80);
+  d.querySelector(".modal .btn.yes").click(); await sleep(250);
+  check("saying yes starts the download", w.dlCalls, ["base"]);
+  check("a download can be stopped", !!d.querySelector('#models button[data-a="cancel"][data-id="base"]'), true);
+  d.querySelector('#models button[data-a="cancel"][data-id="base"]').click(); await sleep(250);
+  check("stopping asks the program to stop", w.cancelCalls, ["base"]);
+  check("a stopped download offers to start again", !!d.querySelector('#models button[data-a="dl"][data-id="base"]'), true);
   tab("about"); await sleep(60);
   check("about section shown", shown("about"), true);
   check("about carries version, help and author", d.querySelectorAll("#p-about .card").length, 3);

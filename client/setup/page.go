@@ -10,6 +10,9 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;background:rep
 .header{display:flex;align-items:center;gap:14px;padding:12px 12px 12px 20px;border-bottom:1px solid var(--line);box-shadow:0 1px 12px rgba(60,255,110,.12);cursor:default}
 .header h1{font-size:16px;letter-spacing:3px;text-shadow:var(--glow);font-weight:700}
 .logo svg{width:40px;height:40px;display:block;filter:drop-shadow(0 0 6px rgba(60,255,110,.6))}
+.wave{animation:pulse 1.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes pulse{0%,100%{opacity:.35;transform:scale(.94)}50%{opacity:1;transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.wave{animation:none;opacity:.75}}
 .ver{color:var(--faint);font-size:12px}
 button.cap{width:36px;height:30px;background:none;border:1px solid var(--line);color:var(--dim);font:14px Consolas,monospace;cursor:pointer;padding:0}
 button.cap:hover{color:var(--green);border-color:var(--dim)}
@@ -46,9 +49,19 @@ button.btn:hover{background:#123f22;box-shadow:var(--glow)}
 .foot{margin-top:auto;display:flex;justify-content:flex-end}
 </style></head><body>
 <div class="header" onmousedown="if(event.button===0&&event.target.tagName!=='BUTTON')appDrag()">
- <div class="logo"><svg viewBox="0 0 64 64" fill="none" stroke="#3cff6e" stroke-width="3" stroke-linecap="round">
-  <rect x="24" y="8" width="16" height="26" rx="8"/><path d="M16 26a16 16 0 0 0 32 0"/>
-  <line x1="32" y1="42" x2="32" y2="50"/><line x1="23" y1="53" x2="41" y2="53"/></svg></div>
+ <div class="logo"><svg viewBox="0 0 64 64">
+  <rect x="2" y="2" width="60" height="60" rx="12" fill="#0e1410" stroke="#1d4a2b" stroke-width="2"/>
+  <g stroke="#3cff6e" stroke-width="4" fill="none" stroke-linecap="round">
+   <rect x="26" y="12" width="12" height="20" rx="6" fill="#3cff6e"/>
+   <path d="M19 27a13 13 0 0 0 26 0"/>
+   <line x1="32" y1="40" x2="32" y2="46"/>
+   <line x1="24" y1="49" x2="40" y2="49"/>
+  </g>
+  <g stroke="#3cff6e" stroke-width="2.5" fill="none" stroke-linecap="round">
+   <path class="wave" d="M13 20a17 17 0 0 0 0 14" style="animation-delay:.2s"/>
+   <path class="wave" d="M51 20a17 17 0 0 1 0 14" style="animation-delay:.6s"/>
+  </g>
+ </svg></div>
  <h1>{{APP}}</h1>
  <span class="ver" style="margin-left:auto">v{{VERSION}}</span>
  <button class="cap close" onclick="appClose()">&#10005;</button>

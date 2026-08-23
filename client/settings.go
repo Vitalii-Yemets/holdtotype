@@ -229,6 +229,9 @@ func (a *App) settingsThread(tab string, attempt int) {
 		_ = w.Bind("appAdvise", func(lang, priority string, needTranslate bool) string {
 			return adviseModel(lang, priority, needTranslate)
 		})
+		_ = w.Bind("appModelCancel", func(id string) bool {
+			return cancelDownload(id)
+		})
 		_ = w.Bind("appModelDl", func(id string) {
 			a.downloadModel(id)
 		})
@@ -684,6 +687,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"confirmdel": "S_CONFIRM_DEL", "free": "S_FREE", "updnone": "S_UPD_NONE",
 		"micdefault": "S_MIC_DEFAULT", "micquiet": "S_MIC_QUIET", "get": "S_STATE_GET", "change": "S_CHANGE_MODEL",
 		"remotewarn": "S_REMOTE_WARN", "remoteask": "S_REMOTE_ASK", "remotebadge": "S_REMOTE_BADGE",
+		"ok": "S_OK", "cancel": "S_CANCEL", "dlask": "S_DL_ASK", "dlstart": "S_DL_START", "dlcancel": "S_DL_CANCEL",
 		"more": "S_MORE", "less": "S_LESS",
 		"updavail": "S_UPD_AVAIL", "updgo": "S_UPD_GO", "upderr": "S_UPD_ERR", "upddl": "S_UPD_DL",
 	} {
@@ -774,6 +778,15 @@ button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box
 .row.hit{background:#101d14;box-shadow:inset 2px 0 0 var(--green)}
 .moreb{appearance:none;background:none;border:1px dashed var(--line);color:var(--faint);font:inherit;font-size:11px;padding:6px 10px;margin:6px 0 0;cursor:pointer}
 .moreb:hover{color:var(--dim);border-color:var(--dim)}
+.modal-bg{position:fixed;inset:0;background:rgba(3,7,4,.78);display:flex;align-items:center;justify-content:center;z-index:20}
+.modal{background:var(--panel);border:1px solid var(--dim);border-radius:8px;box-shadow:0 0 24px rgba(60,255,110,.18);padding:20px 22px;max-width:380px;display:flex;flex-direction:column;gap:16px}
+.modal p{font-size:13px;line-height:1.55;color:var(--green)}
+.modal-btns{display:flex;gap:10px;justify-content:flex-end}
+.modal .btn{padding:7px 18px;border:1px solid var(--dim);background:#0d1a11;color:var(--green);font:inherit;font-size:12px;letter-spacing:1px;text-transform:uppercase;cursor:pointer}
+.modal .btn:hover{background:#123f22;box-shadow:var(--glow)}
+.modal .btn.ghost{border-color:var(--line);background:none;color:var(--dim)}
+.modal .btn.ghost:hover{color:var(--green);border-color:var(--dim)}
+.modal .btn:focus-visible{outline:1px solid var(--green);outline-offset:2px}
 .hero{display:flex;align-items:center;gap:12px;border:1px solid var(--line);background:var(--panel);padding:12px 14px;margin-bottom:10px;flex-wrap:wrap}
 .herokey{border:1px solid var(--dim);color:var(--green);padding:5px 12px;font-size:14px;letter-spacing:1px}
 .herotext{font-size:12px;color:var(--dim)}
@@ -802,12 +815,12 @@ input::placeholder{color:var(--faint);opacity:.7}
 input:disabled,select:disabled{opacity:.35;cursor:default}
 #trlangs label:has(input:disabled){opacity:.45}
 input[type=text]{width:220px;max-width:100%}select{width:210px;max-width:100%}
-input[type=checkbox]{width:16px;height:16px;accent-color:var(--dim)}
 input[type=range]{width:150px;accent-color:var(--dim);background:transparent}
-.row input[type=checkbox]{appearance:none;-webkit-appearance:none;width:32px;height:17px;border:1px solid var(--line);position:relative;cursor:pointer;background:none;flex:none;padding:0;margin:0}
-.row input[type=checkbox]::after{content:"";position:absolute;top:2px;left:2px;width:11px;height:11px;background:var(--faint);transition:.15s}
-.row input[type=checkbox]:checked{border-color:var(--dim)}
-.row input[type=checkbox]:checked::after{left:17px;background:var(--green);box-shadow:var(--glow)}
+input[type=checkbox]{appearance:none;-webkit-appearance:none;width:32px;height:17px;border:1px solid var(--line);position:relative;cursor:pointer;background:none;flex:none;padding:0;margin:0}
+input[type=checkbox]::after{content:"";position:absolute;top:2px;left:2px;width:11px;height:11px;background:var(--faint);transition:.15s}
+input[type=checkbox]:checked{border-color:var(--dim)}
+input[type=checkbox]:checked::after{left:17px;background:var(--green);box-shadow:var(--glow)}
+input[type=checkbox]:focus-visible{outline:1px solid var(--green);outline-offset:2px}
 .row select,.row input[type=text]{border:1px solid var(--line);background:#08100b;color:var(--green);font:inherit;font-size:11.5px;padding:4px 8px}
 .row select{flex:0 0 auto;width:auto;min-width:118px;max-width:230px}
 .row input[type=text]{flex:0 0 auto;width:min(230px,50%)}
@@ -1255,7 +1268,7 @@ async function refreshLLM(){
   body.querySelectorAll("button[data-a='ldel']").forEach(b=>{
     b.onclick = async ()=>{
       const f = b.dataset.f;
-      if(!confirm(L.confirmdel.replace("%s", f))) return;
+      if(!await askConfirm(L.confirmdel.replace("%s", f), L.del)) return;
       toast(await appLLMDel(f));
       if(selLLM === f){
         selLLM = null;
@@ -1652,7 +1665,7 @@ async function refreshModels(){
     const checked = checkedId === m.id ? " checked" : "";
     const radio = '<input type="radio" name="mdl" value="'+m.id+'"'+checked+(m.id==="custom"?" disabled":"")+'>';
     let right = "";
-    if(m.state === "downloading"){ busy = true; right = '<span class="mpct">'+(m.pct>0?m.pct+"%":"…")+'</span>'; }
+    if(m.state === "downloading"){ busy = true; right = '<span class="mpct">'+(m.pct>0?m.pct+"%":"…")+'</span><button class="iconbtn danger" title="'+L.dlcancel+'" data-a="cancel" data-id="'+m.id+'">&#10005;</button>'; }
     else if(m.state === "absent") right = '<button class="iconbtn" title="'+L.dl+'" data-a="dl" data-id="'+m.id+'">'+I_DL+'</button>';
     else if(m.state === "installed") right = '<button class="iconbtn danger" title="'+L.del+'" data-a="del" data-id="'+m.id+'">&#10005;</button>';
     const tag = m.engine === "sherpa" ? '<span class="mtag">RU</span>' : (m.langs === "*" ? '<span class="mtag">99</span>' : "");
@@ -1666,11 +1679,17 @@ async function refreshModels(){
       const id = r.value;
       const row = rows.find(m=>m.id===id);
       if(!row) return;
-      selModel = id;
       if(row.state === "absent"){
+        const size = row.size ? row.size + " MB" : "";
+        if(!await askConfirm(L.dlask.replace("%s", row.name).replace("%s", size), L.dlstart)){
+          refreshModels();
+          return;
+        }
+        selModel = id;
         pendingDl = id;
         await appModelDl(id);
       } else {
+        selModel = id;
         await doSave();
       }
       refreshModels();
@@ -1679,15 +1698,55 @@ async function refreshModels(){
   el.querySelectorAll("button[data-a]").forEach(b=>{
     b.onclick = async ()=>{
       if(b.dataset.a === "dl"){ await appModelDl(b.dataset.id); }
+      else if(b.dataset.a === "cancel"){
+        await appModelCancel(b.dataset.id);
+        if(pendingDl === b.dataset.id) pendingDl = null;
+        if(selModel === b.dataset.id) selModel = null;
+      }
       else {
-        if(!confirm(L.confirmdel.replace("%s", b.dataset.id))) return;
+        if(!await askConfirm(L.confirmdel.replace("%s", b.dataset.id), L.del)) return;
         toast(await appModelDel(b.dataset.id));
         if(selModel === b.dataset.id) selModel = null;
       }
       refreshModels();
     };
   });
-  if(busy || pendingDl) setTimeout(refreshModels, 700);
+}
+function askConfirm(text, okText, cancelText){
+  return new Promise(resolve=>{
+    const bg = document.createElement("div");
+    bg.className = "modal-bg";
+    const box = document.createElement("div");
+    box.className = "modal";
+    const p = document.createElement("p");
+    p.textContent = text;
+    const row = document.createElement("div");
+    row.className = "modal-btns";
+    const yes = document.createElement("button");
+    yes.type = "button";
+    yes.className = "btn yes";
+    yes.textContent = okText || L.ok;
+    const no = document.createElement("button");
+    no.type = "button";
+    no.className = "btn ghost";
+    no.textContent = cancelText || L.cancel;
+    const done = v => { bg.remove(); document.removeEventListener("keydown", onKey, true); resolve(v); };
+    function onKey(e){
+      if(e.key === "Escape"){ e.preventDefault(); done(false); }
+      if(e.key === "Enter"){ e.preventDefault(); done(true); }
+    }
+    yes.onclick = ()=>done(true);
+    no.onclick = ()=>done(false);
+    bg.onclick = e => { if(e.target === bg) done(false); };
+    document.addEventListener("keydown", onKey, true);
+    row.appendChild(no);
+    row.appendChild(yes);
+    box.appendChild(p);
+    box.appendChild(row);
+    bg.appendChild(box);
+    document.body.appendChild(bg);
+    yes.focus();
+  });
 }
 function toast(msg, severity){
   if(!msg) return;
@@ -1762,11 +1821,12 @@ function initRemote(){
   if(!el) return;
   let known = el.value.trim();
   syncRemoteWarn();
-  el.addEventListener("change", ()=>{
+  el.addEventListener("change", async ()=>{
     const url = el.value.trim();
-    if(url && url !== known && !confirm(L.remoteask.replace("%s", url))){
+    if(url && url !== known && !await askConfirm(L.remoteask.replace("%s", url))){
       el.value = known;
       syncRemoteWarn();
+      doSave();
       return;
     }
     known = url;

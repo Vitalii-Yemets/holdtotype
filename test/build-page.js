@@ -55,6 +55,8 @@ const cfg = {
 const strings = {
   nohot: "-", dl: "Download", del: 'Delete "x"', mdlready: "Model downloaded",
   get: "Download", change: "Change", remotewarn: "Audio will be sent to this server.",
+  ok: "Yes", cancel: "Cancel", dlask: 'The "%s" model is not downloaded (%s). Start downloading?',
+  dlstart: "Download", dlcancel: "Cancel the download",
   remoteask: "Send audio to %s?", remotebadge: "REMOTE",
   add: "Add profile", pname: "Name", pprompt: "Prompt", phot: "Hotkey",
   pset: "Set", pclr: "Clear", ptest: "Test", fitok: "fits", fitwarn: "tight",

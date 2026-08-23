@@ -1,13 +1,16 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -107,7 +110,10 @@ type dlState struct {
 	active bool
 	pct    int
 	err    string
+	cancel context.CancelFunc
 }
+
+const partKeep = 7 * 24 * time.Hour
 
 var (
 	dlMu sync.Mutex
@@ -218,16 +224,22 @@ func (a *App) startMultiDownload(key string, m *modelInfo) {
 		dlMu.Unlock()
 		return
 	}
-	dl[key] = &dlState{active: true}
+	ctx, cancel := context.WithCancel(context.Background())
+	dl[key] = &dlState{active: true, cancel: cancel}
 	dlMu.Unlock()
 
 	go func() {
-		err := a.doMultiDownload(key, m)
+		defer cancel()
+		err := a.doMultiDownload(ctx, key, m)
 		dlMu.Lock()
-		if err != nil {
+		switch {
+		case errors.Is(err, context.Canceled):
+			log.Printf("скачивание %s отменено", m.ID)
+			delete(dl, key)
+		case err != nil:
 			log.Printf("скачивание %s: %v", m.ID, err)
 			dl[key] = &dlState{err: err.Error()}
-		} else {
+		default:
 			log.Printf("модель %s скачана целиком", m.ID)
 			dl[key] = &dlState{pct: 100}
 		}
@@ -235,7 +247,7 @@ func (a *App) startMultiDownload(key string, m *modelInfo) {
 	}()
 }
 
-func (a *App) doMultiDownload(key string, m *modelInfo) error {
+func (a *App) doMultiDownload(ctx context.Context, key string, m *modelInfo) error {
 	dir := filepath.Join("models", m.Dir)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return err
@@ -246,7 +258,7 @@ func (a *App) doMultiDownload(key string, m *modelInfo) error {
 	total := int64(m.SizeMB) * 1024 * 1024
 	var doneBytes int64
 	for _, f := range m.Files {
-		written, err := downloadFile(m.BaseURL+f, filepath.Join(dir, f), func(n int64) {
+		written, err := downloadFile(ctx, m.BaseURL+f, filepath.Join(dir, f), func(n int64) {
 			dlMu.Lock()
 			if st := dl[key]; st != nil && total > 0 {
 				pct := int((doneBytes + n) * 100 / total)
@@ -266,22 +278,48 @@ func (a *App) doMultiDownload(key string, m *modelInfo) error {
 	return nil
 }
 
-func downloadFile(url, final string, progress func(written int64)) (int64, error) {
+func downloadFile(ctx context.Context, url, final string, progress func(written int64)) (int64, error) {
 	tmp := final + ".part"
+	have := int64(0)
+	if fi, err := os.Stat(tmp); err == nil {
+		have = fi.Size()
+	}
 	client := &http.Client{Timeout: 0}
-	resp, err := client.Get(url)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return 0, err
+	}
+	if have > 0 {
+		req.Header.Set("Range", "bytes="+strconv.FormatInt(have, 10)+"-")
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return 0, err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
+	resumed := resp.StatusCode == http.StatusPartialContent
+	if resp.StatusCode != http.StatusOK && !resumed {
 		return 0, fmt.Errorf("HTTP %d", resp.StatusCode)
 	}
-	f, err := os.Create(tmp)
+	if !resumed {
+		have = 0
+	} else {
+		log.Printf("%s: продолжаю с %d МБ", filepath.Base(final), have/(1024*1024))
+	}
+	var f *os.File
+	if resumed {
+		f, err = os.OpenFile(tmp, os.O_WRONLY|os.O_APPEND, 0o644)
+	} else {
+		f, err = os.Create(tmp)
+	}
 	if err != nil {
 		return 0, err
 	}
-	var written int64
+	written := have
+	expected := resp.ContentLength
+	if expected > 0 {
+		expected += have
+	}
 	buf := make([]byte, 256*1024)
 	lastUpd := time.Now()
 	for {
@@ -303,6 +341,9 @@ func downloadFile(url, final string, progress func(written int64)) (int64, error
 		}
 		if rerr != nil {
 			f.Close()
+			if ctx.Err() != nil {
+				return written, ctx.Err()
+			}
 			os.Remove(tmp)
 			return 0, rerr
 		}
@@ -311,9 +352,9 @@ func downloadFile(url, final string, progress func(written int64)) (int64, error
 		os.Remove(tmp)
 		return 0, err
 	}
-	if resp.ContentLength > 0 && written != resp.ContentLength {
+	if expected > 0 && written != expected {
 		os.Remove(tmp)
-		return 0, fmt.Errorf("файл получен не целиком: %d из %d байт", written, resp.ContentLength)
+		return 0, fmt.Errorf("файл получен не целиком: %d из %d байт", written, expected)
 	}
 	os.Remove(final)
 	if err := os.Rename(tmp, final); err != nil {
@@ -331,16 +372,22 @@ func (a *App) startDownload(key, file, url string) {
 		dlMu.Unlock()
 		return
 	}
-	dl[key] = &dlState{active: true}
+	ctx, cancel := context.WithCancel(context.Background())
+	dl[key] = &dlState{active: true, cancel: cancel}
 	dlMu.Unlock()
 
 	go func() {
-		err := a.doDownload(key, file, url)
+		defer cancel()
+		err := a.doDownload(ctx, key, file, url)
 		dlMu.Lock()
-		if err != nil {
+		switch {
+		case errors.Is(err, context.Canceled):
+			log.Printf("скачивание %s отменено", file)
+			delete(dl, key)
+		case err != nil:
 			log.Printf("скачивание %s: %v", file, err)
 			dl[key] = &dlState{err: err.Error()}
-		} else {
+		default:
 			log.Printf("модель %s скачана", file)
 			dl[key] = &dlState{pct: 100}
 		}
@@ -393,77 +440,50 @@ func cleanupStaleParts() {
 				continue
 			}
 			p := filepath.Join(dir, e.Name())
-			if info, ierr := e.Info(); ierr == nil {
-				log.Printf("удаляю незавершённую загрузку %s (%d МБ)", p, info.Size()/(1024*1024))
+			info, ierr := e.Info()
+			if ierr != nil {
+				_ = os.Remove(p)
+				continue
 			}
+			if time.Since(info.ModTime()) < partKeep {
+				log.Printf("незавершённая загрузка %s (%d МБ) сохранена — можно продолжить", p, info.Size()/(1024*1024))
+				continue
+			}
+			log.Printf("удаляю незавершённую загрузку %s (%d МБ)", p, info.Size()/(1024*1024))
 			_ = os.Remove(p)
 		}
 	}
 }
 
-func (a *App) doDownload(key, file, url string) error {
+func (a *App) doDownload(ctx context.Context, key, file, url string) error {
 	if err := os.MkdirAll("models", 0o755); err != nil {
 		return err
 	}
-	tmp := filepath.Join("models", file+".part")
 	final := filepath.Join("models", file)
-
-	client := &http.Client{Timeout: 0}
-	resp, err := client.Get(url)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("HTTP %d", resp.StatusCode)
-	}
-	total := resp.ContentLength
-	if total > 0 {
-		if free := freeDiskMB("models"); free >= 0 && int64(free) < total/(1024*1024)+512 {
-			return fmt.Errorf("%s", trf("err.disk.space", free, total/(1024*1024)))
+	if m := findModel(key); m != nil && m.SizeMB > 0 {
+		if free := freeDiskMB("models"); free >= 0 && free < m.SizeMB+512 {
+			return fmt.Errorf("%s", trf("err.disk.space", free, m.SizeMB))
 		}
 	}
-
-	f, err := os.Create(tmp)
-	if err != nil {
-		return err
+	total := int64(0)
+	if m := findModel(key); m != nil {
+		total = int64(m.SizeMB) * 1024 * 1024
 	}
-	var written int64
-	buf := make([]byte, 256*1024)
-	lastUpd := time.Now()
-	for {
-		n, rerr := resp.Body.Read(buf)
-		if n > 0 {
-			if _, werr := f.Write(buf[:n]); werr != nil {
-				f.Close()
-				os.Remove(tmp)
-				return werr
-			}
-			written += int64(n)
-			if total > 0 && time.Since(lastUpd) > 300*time.Millisecond {
-				lastUpd = time.Now()
-				dlMu.Lock()
-				if st := dl[key]; st != nil {
-					st.pct = int(written * 100 / total)
-				}
-				dlMu.Unlock()
-			}
+	_, err := downloadFile(ctx, url, final, func(written int64) {
+		if total <= 0 {
+			return
 		}
-		if rerr == io.EOF {
-			break
+		pct := int(written * 100 / total)
+		if pct > 99 {
+			pct = 99
 		}
-		if rerr != nil {
-			f.Close()
-			os.Remove(tmp)
-			return rerr
+		dlMu.Lock()
+		if st := dl[key]; st != nil {
+			st.pct = pct
 		}
-	}
-	if err := f.Close(); err != nil {
-		os.Remove(tmp)
-		return err
-	}
-	os.Remove(final)
-	return os.Rename(tmp, final)
+		dlMu.Unlock()
+	})
+	return err
 }
 
 func (a *App) deleteModel(id string) string {
@@ -768,4 +788,15 @@ func statusLine(cfg *Config, ready bool, freeMB int) string {
 		models += " + " + filepath.Base(cfg.Model)
 	}
 	return trf("status.line", models, float64(freeMB)/1024)
+}
+
+func cancelDownload(id string) bool {
+	dlMu.Lock()
+	st := dl[id]
+	dlMu.Unlock()
+	if st == nil || !st.active || st.cancel == nil {
+		return false
+	}
+	st.cancel()
+	return true
 }
