@@ -227,7 +227,7 @@ func askFocusMismatch() string {
 			procRegisterClassExW.Call(uintptr(unsafe.Pointer(&wc)))
 		})
 		className, _ := windows.UTF16PtrFromString(appid.Class("FocusDlg"))
-		dpi := dpiFor(0)
+		dpi := dpiForCursor()
 		w := scaleDPI(int32(16+fdBtn1W+fdGapX+fdBtn2W+16+34), dpi)
 		h := scaleDPI(fdHeight, dpi)
 		var wa rect

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"unsafe"
 	"holdtotype/internal/evqueue"
 
 	"context"
@@ -288,6 +289,17 @@ func main() {
 				log.Printf("демонстрация диалогов: выбор языка перевода")
 				log.Printf("ответ: %q", askTranslateTarget(cfg))
 			}
+			return
+		}
+		if arg == "-dpi" {
+			var pt point
+			procGetCursorPosDPI.Call(uintptr(unsafe.Pointer(&pt)))
+			log.Printf("dpi: GetDpiForSystem=%d dpiForCursor=%d курсор=%d,%d", dpiFor(0), dpiForCursor(), pt.X, pt.Y)
+			mon, _, _ := procMonitorFromPoint.Call(uintptr(uint32(pt.X))|uintptr(uint32(pt.Y))<<32, 2)
+			var dx, dy uint32
+			r, _, _ := procGetDpiForMonitor.Call(mon, 0, uintptr(unsafe.Pointer(&dx)), uintptr(unsafe.Pointer(&dy)))
+			log.Printf("dpi: монитор=%x GetDpiForMonitor rc=%d dx=%d", mon, r, dx)
+			log.Printf("dpi: MonitorFromPoint.Find=%v GetDpiForMonitor.Find=%v", procMonitorFromPoint.Find(), procGetDpiForMonitor.Find())
 			return
 		}
 		if arg == "-overlay" {

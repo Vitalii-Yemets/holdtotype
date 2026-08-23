@@ -164,9 +164,6 @@ func (a *App) settingsThread(tab string, attempt int) {
 		if c := a.snapshot(); c.SettingsW >= 660 && c.SettingsH >= 420 {
 			winW, winH = c.SettingsW, c.SettingsH
 		}
-		dpi := dpiFor(0)
-		winW = int(scaleDPI(int32(winW), dpi))
-		winH = int(scaleDPI(int32(winH), dpi))
 		lastWndW, lastWndH = 0, 0
 		stopHider := hideWebViewWindowEarly(strS("S_TITLE"))
 		w := createWebView(winW, winH)

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"sync/atomic"
 	"runtime"
 	"sync"
 	"syscall"
@@ -40,13 +41,14 @@ var (
 	procSetCapture = user32.NewProc("SetCapture")
 )
 
-func tmWindow() uintptr {
-	tmMu.Lock()
-	defer tmMu.Unlock()
-	return tmHwnd
-}
+var tmDpiVal atomic.Int32
 
-func tmDPI() int32 { return dpiFor(tmWindow()) }
+func tmDPI() int32 {
+	if v := tmDpiVal.Load(); v >= 72 {
+		return v
+	}
+	return 96
+}
 
 func tmW() int32 { return scaleDPI(tmWidth, tmDPI()) }
 
@@ -58,12 +60,13 @@ func tmPadding() int32 { return scaleDPI(tmPad, tmDPI()) }
 
 func tmHeight() int32 {
 	h := tmPadding() * 2
+	itemH, sepH := tmItemHeight(), tmSepHeight()
 	tmMu.Lock()
 	for _, it := range tmItems {
 		if it.sep {
-			h += tmSepHeight()
+			h += sepH
 		} else {
-			h += tmItemHeight()
+			h += itemH
 		}
 	}
 	tmMu.Unlock()
@@ -246,13 +249,13 @@ func showTrayMenu(items []tmItem) uintptr {
 			procRegisterClassExW.Call(uintptr(unsafe.Pointer(&wc)))
 		})
 		className, _ := windows.UTF16PtrFromString(appid.Class("TrayMenu"))
-		h := tmHeight()
 		var pt point
 		procGetCursorPos.Call(uintptr(unsafe.Pointer(&pt)))
-		var wa rect
-		procSystemParametersInfoW.Call(0x30, 0, uintptr(unsafe.Pointer(&wa)), 0)
+		tmDpiVal.Store(dpiForPoint(pt.X, pt.Y))
+		h := tmHeight()
+		wa := workAreaForPoint(pt.X, pt.Y)
 		x := pt.X
-		mw := scaleDPI(tmWidth, dpiFor(0))
+		mw := scaleDPI(tmWidth, tmDPI())
 		if x+mw > wa.Right {
 			x = wa.Right - mw - 4
 		}

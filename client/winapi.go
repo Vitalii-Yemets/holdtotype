@@ -18,6 +18,7 @@ var (
 	user32   = windows.NewLazySystemDLL("user32.dll")
 	kernel32 = windows.NewLazySystemDLL("kernel32.dll")
 	shell32  = windows.NewLazySystemDLL("shell32.dll")
+	shcore   = windows.NewLazySystemDLL("shcore.dll")
 
 	procSetWindowsHookExW    = user32.NewProc("SetWindowsHookExW")
 	procCallNextHookEx       = user32.NewProc("CallNextHookEx")
@@ -311,3 +312,53 @@ func dpiFor(hwnd uintptr) int32 {
 }
 
 func scaleDPI(v, dpi int32) int32 { return v * dpi / 96 }
+
+var (
+	procMonitorFromPoint = user32.NewProc("MonitorFromPoint")
+	procGetDpiForMonitor = shcore.NewProc("GetDpiForMonitor")
+	procGetCursorPosDPI  = user32.NewProc("GetCursorPos")
+)
+
+func dpiForPoint(x, y int32) int32 {
+	if procMonitorFromPoint.Find() == nil && procGetDpiForMonitor.Find() == nil {
+		mon, _, _ := procMonitorFromPoint.Call(uintptr(uint32(x))|uintptr(uint32(y))<<32, 2)
+		if mon != 0 {
+			var dx, dy uint32
+			r, _, _ := procGetDpiForMonitor.Call(mon, 0, uintptr(unsafe.Pointer(&dx)), uintptr(unsafe.Pointer(&dy)))
+			if r == 0 && dx >= 72 {
+				return int32(dx)
+			}
+		}
+	}
+	return dpiFor(0)
+}
+
+func dpiForCursor() int32 {
+	var pt point
+	procGetCursorPosDPI.Call(uintptr(unsafe.Pointer(&pt)))
+	return dpiForPoint(pt.X, pt.Y)
+}
+
+type monitorInfo struct {
+	Size    uint32
+	Monitor rect
+	Work    rect
+	Flags   uint32
+}
+
+var procGetMonitorInfoW = user32.NewProc("GetMonitorInfoW")
+
+func workAreaForPoint(x, y int32) rect {
+	var wa rect
+	if procMonitorFromPoint.Find() == nil && procGetMonitorInfoW.Find() == nil {
+		mon, _, _ := procMonitorFromPoint.Call(uintptr(uint32(x))|uintptr(uint32(y))<<32, 2)
+		if mon != 0 {
+			mi := monitorInfo{Size: uint32(unsafe.Sizeof(monitorInfo{}))}
+			if r, _, _ := procGetMonitorInfoW.Call(mon, uintptr(unsafe.Pointer(&mi))); r != 0 {
+				return mi.Work
+			}
+		}
+	}
+	procSystemParametersInfoW.Call(0x30, 0, uintptr(unsafe.Pointer(&wa)), 0)
+	return wa
+}

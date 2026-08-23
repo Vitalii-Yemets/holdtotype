@@ -122,7 +122,7 @@ func ovCancelActive() bool {
 
 
 var (
-	ovWidth   = scaleDPI(ovW, dpiFor(0))
+	ovWidth   = int32(ovW)
 	ovWidthMu sync.Mutex
 	ovFontDPI int32
 )
@@ -245,7 +245,7 @@ func startOverlayThread() {
 
 		var wa rect
 		procSystemParametersInfoW.Call(0x30, 0, uintptr(unsafe.Pointer(&wa)), 0)
-		sysDPI := int(dpiFor(0))
+		sysDPI := int(dpiForCursor())
 		startW := ovW * sysDPI / 96
 		startH := ovH * sysDPI / 96
 		x := int(wa.Left) + (int(wa.Right-wa.Left)-startW)/2

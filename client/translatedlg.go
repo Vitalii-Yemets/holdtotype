@@ -267,7 +267,7 @@ func askTranslateTarget(cfg *Config) string {
 		var wa rect
 		procSystemParametersInfoW.Call(0x30, 0, uintptr(unsafe.Pointer(&wa)), 0)
 		x := int(wa.Left) + (int(wa.Right-wa.Left)-int(w))/2
-		dpi := dpiFor(0)
+		dpi := dpiForCursor()
 		h := scaleDPI(tdH, dpi)
 		y := int(wa.Bottom) - int(h) - int(scaleDPI(ovH+44, dpi))
 
