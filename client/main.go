@@ -1,6 +1,7 @@
 package main
 
 import (
+	"holdtotype/internal/replace"
 	"holdtotype/internal/apprules"
 	"unsafe"
 	"holdtotype/internal/evqueue"
@@ -292,6 +293,17 @@ func main() {
 				log.Printf("демонстрация диалогов: выбор языка перевода")
 				log.Printf("ответ: %q", askTranslateTarget(cfg))
 			}
+			return
+		}
+		if arg == "-replcheck" && i+1 < len(os.Args[1:]) {
+			cfg, cerr := loadConfig("config.json")
+			if cerr != nil {
+				log.Printf("конфигурация: %v", cerr)
+				return
+			}
+			in := os.Args[1:][i+1]
+			log.Printf("replcheck: замен в конфиге — %d", len(cfg.Replacements))
+			log.Printf("replcheck: %q → %q", in, replace.Apply(cfg.Replacements, in))
 			return
 		}
 		if arg == "-rulecheck" {
@@ -904,6 +916,10 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 		return
 	}
 	text = strings.TrimSpace(text)
+	if fixed := replace.Apply(cfg.Replacements, text); fixed != text {
+		log.Printf("замены: %q → %q", text, fixed)
+		text = fixed
+	}
 	if text == "" || onlyNoise.MatchString(text) {
 		log.Printf("пустой результат (%q), вставлять нечего", text)
 		if cfg.Overlay {

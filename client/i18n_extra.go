@@ -300,6 +300,10 @@ func init() {
 		"S_SND_SPEECH": "System (Sprache)", "S_SND_CHIME": "Glöckchen", "S_SND_SOFT": "Sanft", "S_SND_MARIMBA": "Marimba",
 		"S_SND_BLIP": "Blip", "S_SND_POP": "Pop",
 		"S_AUTOENTER": "Enter nach dem Einfügen drücken (Auto-Senden)", "S_RESTORE": "Zwischenablage nach Einfügen wiederherstellen",
+		"S_SEC_REPLACE": "Ersetzungen nach der Erkennung", "S_REPLACE_HINT": "Falsch Gehörtes wird zu dem, was gemeint war — vor Prompts und Übersetzung. Von oben nach unten angewendet.",
+		"S_REPL_ADD": "Ersetzung hinzufügen", "S_REPL_FROM_PH": "git hub", "S_REPL_TO_PH": "GitHub",
+		"S_REPL_WHOLE": "ganze Wörter", "S_REPL_CASE": "Groß-/Kleinschreibung", "S_REPL_EMPTY": "Noch keine Ersetzungen",
+		"S_REPL_DEL": "Ersetzung löschen", "S_REPL_TEST_PH": "Satz eingeben, um die Ersetzungen zu prüfen",
 		"S_SEC_RULES": "Regeln pro Programm", "S_RULES_HINT": "Für einzelne Programme kann das Einfügen anders laufen. Die erste passende Regel gewinnt.",
 		"S_RULE_ADD": "Regel hinzufügen", "S_RULE_PH": "chrome.exe, msedge.exe",
 		"S_RULE_PASTE_INH": "Einfügen: wie sonst", "S_RULE_ENTER_INH": "Enter: wie sonst", "S_RULE_DELAY_NONE": "ohne Verzögerung", "S_RULE_PROMPT_INH": "Prompts: wie sonst",
@@ -404,6 +408,8 @@ func init() {
 			"<li>Enter nach dem Einfügen wird nur gedrückt, wenn das Zielfenster dasselbe geblieben ist.</li>" +
 			"<li><b>Letztes Ergebnis</b> — der fertige Text jedes Diktats bleibt bis zum nächsten im Speicher; im Menü im Infobereich gibt es „Letztes Ergebnis kopieren“. Ein misslungenes Einfügen oder ein Fokuswechsel kostet nie ein Diktat.</li>" +
 			"</ul>" +
+			"<p class=\"wh\">Ersetzungen nach der Erkennung</p>" +
+			"<p>Unter „Text“ lässt sich auflisten, was das Modell falsch hört und was daraus werden soll: „git hub“ → GitHub, Nachnamen, hauseigene Begriffe. Ersetzungen laufen direkt nach der Erkennung — vor der Übersetzung und vor den Prompts, damit der Editor bereits die richtigen Wörter bekommt. Standardmäßig gelten ganze Wörter und keine Groß-/Kleinschreibung; die beiden Schalter daneben ändern das. Regeln greifen von oben nach unten. Das Feld darunter probiert sie an jedem Satz aus, ganz ohne Diktat.</p>" +
 			"<p class=\"wh\">Regeln pro Programm</p>" +
 			"<p>Unter „Diktat“ lassen sich Regeln für einzelne Programme festlegen: womit eingefügt wird (Zwischenablage oder zeichenweise), ob Enter gedrückt wird, wie lange vor dem Einfügen gewartet wird und welche Prompts gelten. Ein Programm wird über seinen Dateinamen angegeben — <b>chrome.exe</b>; in einer Regel dürfen mehrere durch Komma stehen, ein Stern am Ende fängt alle Namen mit diesem Anfang. Die erste passende Regel gewinnt; ohne Regeln oder ohne Treffer gilt alles wie in den allgemeinen Einstellungen. Die Schaltfläche neben der Liste trägt das zuletzt beschriebene Programm ein.</p>" +
 			"<p class=\"wh\">Diktat</p>" +
@@ -513,6 +519,10 @@ func init() {
 		"S_SND_SPEECH": "Système (voix)", "S_SND_CHIME": "Clochette", "S_SND_SOFT": "Doux", "S_SND_MARIMBA": "Marimba",
 		"S_SND_BLIP": "Blip", "S_SND_POP": "Pop",
 		"S_AUTOENTER": "Appuyer Entrée après insertion (envoi auto)", "S_RESTORE": "Restaurer le presse-papiers après insertion",
+		"S_SEC_REPLACE": "Remplacements après la reconnaissance", "S_REPLACE_HINT": "Ce qui a été mal entendu devient ce que vous vouliez dire — avant les prompts et la traduction. Appliqués de haut en bas.",
+		"S_REPL_ADD": "Ajouter un remplacement", "S_REPL_FROM_PH": "git hub", "S_REPL_TO_PH": "GitHub",
+		"S_REPL_WHOLE": "mots entiers", "S_REPL_CASE": "casse", "S_REPL_EMPTY": "Aucun remplacement pour l'instant",
+		"S_REPL_DEL": "Supprimer le remplacement", "S_REPL_TEST_PH": "tapez une phrase pour tester les remplacements",
 		"S_SEC_RULES": "Règles par application", "S_RULES_HINT": "L'insertion peut fonctionner autrement pour certains programmes. La première règle qui correspond l'emporte.",
 		"S_RULE_ADD": "Ajouter une règle", "S_RULE_PH": "chrome.exe, msedge.exe",
 		"S_RULE_PASTE_INH": "insertion : comme partout", "S_RULE_ENTER_INH": "Entrée : comme partout", "S_RULE_DELAY_NONE": "sans délai", "S_RULE_PROMPT_INH": "prompts : comme partout",
@@ -617,6 +627,8 @@ func init() {
 			"<li>Entrée après le collage n'est envoyée que si la fenêtre cible n'a pas changé.</li>" +
 			"<li><b>Dernier résultat</b> — le texte final de chaque dictée reste en mémoire jusqu'à la suivante ; le menu de la zone de notification propose « Copier le dernier résultat ». Un collage manqué ou un changement de focus ne fait jamais perdre une dictée.</li>" +
 			"</ul>" +
+			"<p class=\"wh\">Remplacements après la reconnaissance</p>" +
+			"<p>Dans « Texte », vous pouvez lister ce que le modèle entend mal et ce que cela doit devenir : « git hub » → GitHub, des noms propres, des termes maison. Les remplacements s'appliquent juste après la reconnaissance — avant la traduction et avant les prompts — pour que l'éditeur reçoive déjà les bons mots. Par défaut ils visent les mots entiers et ignorent la casse ; les deux interrupteurs à côté changent cela. Les règles s'appliquent de haut en bas. Le champ du dessous les essaie sur n'importe quelle phrase, sans dicter.</p>" +
 			"<p class=\"wh\">Règles par application</p>" +
 			"<p>Dans « Dictée », vous pouvez définir des règles pour certains programmes : avec quoi insérer (presse-papiers ou caractère par caractère), s'il faut appuyer sur Entrée, combien de temps attendre avant d'insérer et quels prompts appliquer. Un programme se désigne par son fichier — <b>chrome.exe</b> ; une règle peut en lister plusieurs séparés par des virgules, et une astérisque finale attrape tous les noms qui commencent ainsi. La première règle qui correspond l'emporte ; sans règle, ou sans correspondance, tout fonctionne comme dans les réglages généraux. Le bouton à côté de la liste inscrit le programme où vous avez inséré en dernier.</p>" +
 			"<p class=\"wh\">Dictée</p>" +
@@ -726,6 +738,10 @@ func init() {
 		"S_SND_SPEECH": "Sistema (voz)", "S_SND_CHIME": "Campanilla", "S_SND_SOFT": "Suave", "S_SND_MARIMBA": "Marimba",
 		"S_SND_BLIP": "Blip", "S_SND_POP": "Pop",
 		"S_AUTOENTER": "Pulsar Enter tras insertar (envío auto)", "S_RESTORE": "Restaurar portapapeles tras insertar",
+		"S_SEC_REPLACE": "Reemplazos tras el reconocimiento", "S_REPLACE_HINT": "Lo que se oyó mal se convierte en lo que querías decir, antes de los prompts y la traducción. Se aplican de arriba abajo.",
+		"S_REPL_ADD": "Añadir un reemplazo", "S_REPL_FROM_PH": "git hub", "S_REPL_TO_PH": "GitHub",
+		"S_REPL_WHOLE": "palabras completas", "S_REPL_CASE": "mayúsculas", "S_REPL_EMPTY": "Todavía no hay reemplazos",
+		"S_REPL_DEL": "Eliminar el reemplazo", "S_REPL_TEST_PH": "escribe una frase para probar los reemplazos",
 		"S_SEC_RULES": "Reglas por aplicación", "S_RULES_HINT": "La inserción puede funcionar de otra forma en programas concretos. Gana la primera regla que coincide.",
 		"S_RULE_ADD": "Añadir una regla", "S_RULE_PH": "chrome.exe, msedge.exe",
 		"S_RULE_PASTE_INH": "inserción: como siempre", "S_RULE_ENTER_INH": "Intro: como siempre", "S_RULE_DELAY_NONE": "sin retraso", "S_RULE_PROMPT_INH": "prompts: como siempre",
@@ -830,6 +846,8 @@ func init() {
 			"<li>Enter tras pegar solo se envía si la ventana de destino no ha cambiado.</li>" +
 			"<li><b>Último resultado</b> — el texto final de cada dictado se guarda en memoria hasta el siguiente; el menú del área de notificación tiene «Copiar el último resultado». Un pegado fallido o un cambio de foco nunca hacen perder un dictado.</li>" +
 			"</ul>" +
+			"<p class=\"wh\">Reemplazos tras el reconocimiento</p>" +
+			"<p>En «Texto» puedes enumerar lo que el modelo oye mal y en qué debe convertirse: «git hub» → GitHub, apellidos, términos internos. Los reemplazos se aplican justo después del reconocimiento — antes de la traducción y de los prompts — para que el editor ya reciba las palabras correctas. Por defecto buscan palabras completas y no distinguen mayúsculas; los dos interruptores de al lado lo cambian. Las reglas se aplican de arriba abajo. El campo de abajo las prueba con cualquier frase, sin dictar.</p>" +
 			"<p class=\"wh\">Reglas por aplicación</p>" +
 			"<p>En «Dictado» puedes fijar reglas para programas concretos: con qué insertar (portapapeles o carácter a carácter), si pulsar Intro, cuánto esperar antes de insertar y qué prompts aplicar. El programa se indica por su archivo — <b>chrome.exe</b>; una regla puede listar varios separados por comas, y un asterisco final atrapa todos los nombres que empiecen igual. Gana la primera regla que coincide; sin reglas, o si ninguna coincide, todo funciona como en los ajustes generales. El botón junto a la lista rellena el programa donde insertaste por última vez.</p>" +
 			"<p class=\"wh\">Dictado</p>" +
@@ -939,6 +957,10 @@ func init() {
 		"S_SND_SPEECH": "Sistema (voce)", "S_SND_CHIME": "Campanello", "S_SND_SOFT": "Morbido", "S_SND_MARIMBA": "Marimba",
 		"S_SND_BLIP": "Blip", "S_SND_POP": "Pop",
 		"S_AUTOENTER": "Premi Invio dopo l'inserimento (invio auto)", "S_RESTORE": "Ripristina appunti dopo l'inserimento",
+		"S_SEC_REPLACE": "Sostituzioni dopo il riconoscimento", "S_REPLACE_HINT": "Ciò che è stato sentito male diventa ciò che intendevi — prima dei prompt e della traduzione. Applicate dall'alto in basso.",
+		"S_REPL_ADD": "Aggiungi una sostituzione", "S_REPL_FROM_PH": "git hub", "S_REPL_TO_PH": "GitHub",
+		"S_REPL_WHOLE": "parole intere", "S_REPL_CASE": "maiuscole", "S_REPL_EMPTY": "Ancora nessuna sostituzione",
+		"S_REPL_DEL": "Elimina la sostituzione", "S_REPL_TEST_PH": "scrivi una frase per provare le sostituzioni",
 		"S_SEC_RULES": "Regole per applicazione", "S_RULES_HINT": "L'inserimento può funzionare diversamente in certi programmi. Vince la prima regola che corrisponde.",
 		"S_RULE_ADD": "Aggiungi una regola", "S_RULE_PH": "chrome.exe, msedge.exe",
 		"S_RULE_PASTE_INH": "inserimento: come sempre", "S_RULE_ENTER_INH": "Invio: come sempre", "S_RULE_DELAY_NONE": "senza ritardo", "S_RULE_PROMPT_INH": "prompt: come sempre",
@@ -1043,6 +1065,8 @@ func init() {
 			"<li>Invio dopo l'incollaggio viene premuto solo se la finestra di destinazione è rimasta la stessa.</li>" +
 			"<li><b>Ultimo risultato</b> — il testo finale di ogni dettatura resta in memoria fino alla successiva; nel menu dell'area di notifica c'è «Copia l'ultimo risultato». Un incollaggio fallito o un cambio di fuoco non fanno mai perdere una dettatura.</li>" +
 			"</ul>" +
+			"<p class=\"wh\">Sostituzioni dopo il riconoscimento</p>" +
+			"<p>In «Testo» puoi elencare ciò che il modello sente male e in che cosa deve diventare: «git hub» → GitHub, cognomi, termini interni. Le sostituzioni si applicano subito dopo il riconoscimento — prima della traduzione e prima dei prompt — così l'editor riceve già le parole giuste. Per impostazione predefinita cercano parole intere e ignorano le maiuscole; i due interruttori accanto lo cambiano. Le regole si applicano dall'alto in basso. Il campo in fondo le prova su qualsiasi frase, senza dettare.</p>" +
 			"<p class=\"wh\">Regole per applicazione</p>" +
 			"<p>In «Dettatura» puoi impostare regole per programmi specifici: con che cosa inserire (appunti o carattere per carattere), se premere Invio, quanto attendere prima di inserire e quali prompt applicare. Il programma si indica con il nome del file — <b>chrome.exe</b>; in una regola se ne possono elencare più d'uno separati da virgole, e un asterisco finale cattura tutti i nomi che iniziano così. Vince la prima regola che corrisponde; senza regole, o se nessuna corrisponde, tutto funziona come nelle impostazioni generali. Il pulsante accanto all'elenco inserisce il programma in cui hai scritto l'ultima volta.</p>" +
 			"<p class=\"wh\">Dettatura</p>" +
@@ -1152,6 +1176,10 @@ func init() {
 		"S_SND_SPEECH": "Systemowy (mowa)", "S_SND_CHIME": "Dzwonek", "S_SND_SOFT": "Miękki", "S_SND_MARIMBA": "Marimba",
 		"S_SND_BLIP": "Blip", "S_SND_POP": "Pop",
 		"S_AUTOENTER": "Naciśnij Enter po wstawieniu (auto-wysyłka)", "S_RESTORE": "Przywróć schowek po wstawieniu",
+		"S_SEC_REPLACE": "Zamiany po rozpoznaniu", "S_REPLACE_HINT": "To, co zostało źle usłyszane, staje się tym, co miałeś na myśli — przed promptami i tłumaczeniem. Stosowane od góry do dołu.",
+		"S_REPL_ADD": "Dodaj zamianę", "S_REPL_FROM_PH": "git hub", "S_REPL_TO_PH": "GitHub",
+		"S_REPL_WHOLE": "całe słowa", "S_REPL_CASE": "wielkość liter", "S_REPL_EMPTY": "Na razie brak zamian",
+		"S_REPL_DEL": "Usuń zamianę", "S_REPL_TEST_PH": "wpisz zdanie, aby sprawdzić zamiany",
 		"S_SEC_RULES": "Reguły dla programów", "S_RULES_HINT": "W wybranych programach wstawianie może działać inaczej. Wygrywa pierwsza pasująca reguła.",
 		"S_RULE_ADD": "Dodaj regułę", "S_RULE_PH": "chrome.exe, msedge.exe",
 		"S_RULE_PASTE_INH": "wstawianie: jak zwykle", "S_RULE_ENTER_INH": "Enter: jak zwykle", "S_RULE_DELAY_NONE": "bez opóźnienia", "S_RULE_PROMPT_INH": "prompty: jak zwykle",
@@ -1256,6 +1284,8 @@ func init() {
 			"<li>Enter po wklejeniu jest wysyłany tylko wtedy, gdy okno docelowe się nie zmieniło.</li>" +
 			"<li><b>Ostatni wynik</b> — gotowy tekst każdego dyktowania zostaje w pamięci do następnego; w menu w zasobniku jest „Kopiuj ostatni wynik”. Nieudane wklejenie albo zmiana okna nigdy nie gubią dyktowania.</li>" +
 			"</ul>" +
+			"<p class=\"wh\">Zamiany po rozpoznaniu</p>" +
+			"<p>W „Tekście” można wypisać, co model słyszy źle i w co ma to zamienić: „git hub” → GitHub, nazwiska, wewnętrzne terminy. Zamiany działają zaraz po rozpoznaniu — przed tłumaczeniem i przed promptami, więc edytor dostaje już właściwe słowa. Domyślnie szukają całych słów i nie zważają na wielkość liter; dwa przełączniki obok to zmieniają. Reguły działają od góry do dołu. Pole poniżej sprawdza je na dowolnym zdaniu, bez dyktowania.</p>" +
 			"<p class=\"wh\">Reguły dla programów</p>" +
 			"<p>W „Dyktowaniu” można ustawić reguły dla wybranych programów: czym wstawiać (schowkiem czy znak po znaku), czy naciskać Enter, ile czekać przed wstawieniem i jakie prompty stosować. Program wskazuje się nazwą pliku — <b>chrome.exe</b>; w jednej regule można wymienić kilka po przecinku, a gwiazdka na końcu łapie wszystkie nazwy o takim początku. Wygrywa pierwsza pasująca reguła; gdy reguł nie ma albo żadna nie pasuje, wszystko działa jak w ustawieniach ogólnych. Przycisk obok listy wpisuje program, do którego wstawiano ostatnio.</p>" +
 			"<p class=\"wh\">Dyktowanie</p>" +
@@ -1444,6 +1474,10 @@ func init() {
 		"S_SND_SPEECH": "Системний (мовлення)", "S_SND_CHIME": "Дзвіночок", "S_SND_SOFT": "М'який", "S_SND_MARIMBA": "Марімба",
 		"S_SND_BLIP": "Бліп", "S_SND_POP": "Поп",
 		"S_AUTOENTER": "Enter після вставлення (автовідправлення)", "S_RESTORE": "Відновлювати буфер обміну після вставлення",
+		"S_SEC_REPLACE": "Заміни після розпізнавання", "S_REPLACE_HINT": "Те, що почулося неправильно, стає тим, що ви мали на увазі — до промптів і перекладу. Застосовуються згори вниз.",
+		"S_REPL_ADD": "Додати заміну", "S_REPL_FROM_PH": "гіт хаб", "S_REPL_TO_PH": "GitHub",
+		"S_REPL_WHOLE": "цілі слова", "S_REPL_CASE": "регістр", "S_REPL_EMPTY": "Замін поки немає",
+		"S_REPL_DEL": "Видалити заміну", "S_REPL_TEST_PH": "напишіть фразу, щоб перевірити заміни",
 		"S_SEC_RULES": "Правила для програм", "S_RULES_HINT": "Для окремих програм вставка може працювати інакше. Виграє перше відповідне правило.",
 		"S_RULE_ADD": "Додати правило", "S_RULE_PH": "chrome.exe, msedge.exe",
 		"S_RULE_PASTE_INH": "вставка: як усюди", "S_RULE_ENTER_INH": "Enter: як усюди", "S_RULE_DELAY_NONE": "без затримки", "S_RULE_PROMPT_INH": "промпти: як усюди",
@@ -1529,6 +1563,8 @@ func init() {
 			"<li>Enter після вставки натискається лише тоді, коли цільове вікно не змінилося.</li>" +
 			"<li><b>Останній результат</b> — готовий текст кожного диктування лишається в пам'яті до наступного; у меню в треї є «Копіювати останній результат». Невдала вставка чи зміна вікна ніколи не втрачають диктування.</li>" +
 			"</ul>" +
+			"<p class=\"wh\">Заміни після розпізнавання</p>" +
+			"<p>У «Тексті» можна перелічити, що модель чує неправильно і на що це змінювати: «гіт хаб» → GitHub, прізвища, внутрішні терміни. Заміни спрацьовують одразу після розпізнавання — до перекладу й до промптів, тому редактор отримує вже правильні слова. Типово шукаються цілі слова й без урахування регістру, два перемикачі поруч це змінюють. Правила застосовуються згори вниз. Поле внизу перевіряє їх на будь-якій фразі, нічого не диктуючи.</p>" +
 			"<p class=\"wh\">Правила для програм</p>" +
 			"<p>У «Диктуванні» можна задати правила для окремих програм: чим вставляти (буфером чи посимвольно), чи натискати Enter, скільки чекати перед вставкою та які промпти застосовувати. Програма вказується іменем файлу — <b>chrome.exe</b>; в одному правилі їх можна перелічити через кому, а зірочка в кінці ловить усі імена з таким початком. Виграє перше відповідне правило; якщо правил немає або жодне не підійшло, усе працює як у загальних налаштуваннях. Кнопка поруч зі списком підставляє програму, куди вставляли востаннє.</p>" +
 			"<p class=\"wh\">Диктування</p>" +

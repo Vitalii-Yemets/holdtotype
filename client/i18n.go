@@ -370,6 +370,10 @@ var settingsStrings = map[string]map[string]string{
 		"S_AUTOENTER":      "Нажимать Enter после вставки (автоотправка)",
 		"S_RESTORE":        "Восстанавливать буфер обмена после вставки",
 		"S_OVERLAY":        "Индикатор внизу экрана",
+		"S_SEC_REPLACE": "Замены после распознавания", "S_REPLACE_HINT": "Что услышано неправильно, заменяется на правильное — до промптов и перевода. Порядок сверху вниз.",
+		"S_REPL_ADD": "Добавить замену", "S_REPL_FROM_PH": "гит хаб", "S_REPL_TO_PH": "GitHub",
+		"S_REPL_WHOLE": "целые слова", "S_REPL_CASE": "регистр", "S_REPL_EMPTY": "Замен пока нет",
+		"S_REPL_DEL": "Удалить замену", "S_REPL_TEST_PH": "напишите фразу, чтобы проверить замены",
 		"S_SEC_RULES": "Правила по приложениям", "S_RULES_HINT": "Для отдельных программ вставка может работать иначе. Выигрывает первое подходящее правило.",
 		"S_RULE_ADD": "Добавить правило", "S_RULE_PH": "chrome.exe, msedge.exe",
 		"S_RULE_PASTE_INH": "вставка: как везде", "S_RULE_ENTER_INH": "Enter: как везде", "S_RULE_DELAY_NONE": "без задержки", "S_RULE_PROMPT_INH": "промпты: как везде",
@@ -548,6 +552,8 @@ var settingsStrings = map[string]map[string]string{
 			"<li>Enter после вставки нажимается только если окно-цель не менялось.</li>" +
 			"<li><b>Последний результат</b> — финальный текст каждой диктовки хранится в памяти до следующей; в меню трея есть пункт «Копировать последний результат». Ошибка вставки или смена фокуса не теряют надиктованное.</li>" +
 			"</ul>" +
+			"<p class=\"wh\">Замены после распознавания</p>" +
+			"<p>На «Тексте» можно перечислить, что модель слышит неправильно и во что это превращать: «гит хаб» → GitHub, фамилии, внутренние термины. Замены применяются сразу после распознавания — до перевода и до промптов, поэтому редактор получает уже правильные слова. По умолчанию ищутся целые слова и без учёта регистра, обе галочки рядом это меняют. Правила применяются сверху вниз. Поле внизу проверяет их на любой фразе, не диктуя.</p>" +
 			"<p class=\"wh\">Правила по приложениям</p>" +
 			"<p>На «Диктовке» можно задать правила для отдельных программ: чем вставлять (буфером или посимвольно), нажимать ли Enter, сколько ждать перед вставкой и какие промпты применять. Программа указывается именем файла — <b>chrome.exe</b>; в одном правиле их можно перечислить через запятую, а звёздочка в конце ловит все имена с таким началом. Выигрывает первое подходящее правило; если правил нет или ни одно не подошло, всё работает как в общих настройках. Кнопка рядом со списком подставляет программу, в которую вставляли в последний раз.</p>" +
 			"<p class=\"wh\">Основные</p>" +
@@ -708,6 +714,10 @@ var settingsStrings = map[string]map[string]string{
 		"S_AUTOENTER":      "Press Enter after paste (auto-submit)",
 		"S_RESTORE":        "Restore clipboard after paste",
 		"S_OVERLAY":        "On-screen indicator",
+		"S_SEC_REPLACE": "Replacements after recognition", "S_REPLACE_HINT": "What was misheard becomes what you meant — before prompts and translation. Applied from top to bottom.",
+		"S_REPL_ADD": "Add a replacement", "S_REPL_FROM_PH": "git hub", "S_REPL_TO_PH": "GitHub",
+		"S_REPL_WHOLE": "whole words", "S_REPL_CASE": "case", "S_REPL_EMPTY": "No replacements yet",
+		"S_REPL_DEL": "Delete the replacement", "S_REPL_TEST_PH": "type a phrase to try the replacements",
 		"S_SEC_RULES": "Rules per application", "S_RULES_HINT": "Insertion can work differently for particular programs. The first matching rule wins.",
 		"S_RULE_ADD": "Add a rule", "S_RULE_PH": "chrome.exe, msedge.exe",
 		"S_RULE_PASTE_INH": "insertion: as set", "S_RULE_ENTER_INH": "Enter: as set", "S_RULE_DELAY_NONE": "no delay", "S_RULE_PROMPT_INH": "prompts: as set",
@@ -886,6 +896,8 @@ var settingsStrings = map[string]map[string]string{
 			"<li>Enter after paste is pressed only when the target window has not changed.</li>" +
 			"<li><b>Last Result</b> — the final text of every dictation is kept in memory until the next one; the tray menu has \"Copy last result\". A failed paste or focus change never loses a dictation.</li>" +
 			"</ul>" +
+			"<p class=\"wh\">Replacements after recognition</p>" +
+			"<p>On the Text tab you can list what the model mishears and what it should become: \"git hub\" → GitHub, surnames, in-house terms. Replacements run right after recognition — before translation and before the prompts — so the editor already gets the right words. By default they match whole words and ignore case; the two switches next to each row change that. Rules apply from top to bottom. The field at the bottom tries them on any phrase without dictating.</p>" +
 			"<p class=\"wh\">Rules per application</p>" +
 			"<p>On the Dictation tab you can set rules for particular programs: what to insert with (the clipboard or character by character), whether to press Enter, how long to wait before inserting and which prompts to apply. A program is named by its file — <b>chrome.exe</b>; one rule can list several, separated by commas, and a trailing asterisk catches every name with that beginning. The first matching rule wins; with no rules, or none that match, everything works as in the general settings. The button next to the list fills in the program you last inserted into.</p>" +
 			"<p class=\"wh\">General</p>" +

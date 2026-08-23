@@ -3,6 +3,7 @@ package main
 import (
 	"holdtotype/internal/mojibake"
 	"holdtotype/internal/apprules"
+	"holdtotype/internal/replace"
 	"holdtotype/internal/routing"
 
 	"bytes"
@@ -104,6 +105,7 @@ type Config struct {
 	MicDevice           string    `json:"mic_device"`
 	MicDeviceName       string    `json:"mic_device_name"`
 	AppRules            []apprules.Rule `json:"app_rules"`
+	Replacements        []replace.Rule  `json:"replacements"`
 	WizardDone          bool      `json:"wizard_done"`
 }
 

@@ -46,6 +46,7 @@ const cfg = {
   punctuation: "model",
   active_profiles: ["clean"],
   app_rules: [],
+  replacements: [],
   paste_delay_ms: 0,
   profiles: [
     { id: "clean", name: "Cleanup", prompt: "p1", hotkey: "" },
@@ -78,6 +79,8 @@ const strings = {
   ruleenteron: "with Enter", ruleenteroff: "without Enter", rulenoprompt: "no prompts",
   rulelast: "last insertion: %s", ruleempty: "No rules yet", ruledel: "Delete the rule",
   ruleprompts: "Prompts", ruleph: "chrome.exe, msedge.exe",
+  replempty: "No replacements yet", repldel: "Delete the replacement", replwhole: "whole words",
+  replcase: "case", replfromph: "git hub", repltoph: "GitHub",
   wiznext: "Next", wizfinish: "Finish", wizwait: "Waiting for the first phrase…",
   wizheard: "Heard:", wizhave: "Everything you need is already downloaded",
   wiztry: "Put the caret in the field below, hold %s, say a phrase and let go.",

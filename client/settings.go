@@ -2,6 +2,7 @@ package main
 
 
 import (
+	"holdtotype/internal/replace"
 	"holdtotype/internal/apprules"
 	"context"
 	"encoding/json"
@@ -128,6 +129,7 @@ type settingsForm struct {
 	TranslateDefault    bool      `json:"translate_default"`
 	ActiveProfiles      []string  `json:"active_profiles"`
 	AppRules            []apprules.Rule `json:"app_rules"`
+	Replacements        []replace.Rule  `json:"replacements"`
 	LLMModelFile        string    `json:"llm_model_file"`
 	Profiles            []Profile `json:"profiles"`
 }
@@ -398,6 +400,9 @@ func (a *App) settingsThread(tab string, attempt int) {
 		_ = w.Bind("appModelDel", func(id string) string {
 			return a.deleteModel(id)
 		})
+		_ = w.Bind("appTestReplace", func(text string) string {
+			return replace.Apply(a.snapshot().Replacements, text)
+		})
 		_ = w.Bind("appAutorun", func() bool {
 			return autorunEnabled()
 		})
@@ -619,6 +624,9 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	if f.AppRules != nil {
 		c.AppRules = apprules.Clean(f.AppRules)
 	}
+	if f.Replacements != nil {
+		c.Replacements = replace.Clean(f.Replacements)
+	}
 	llmChanged := false
 	if f.LLMModelFile != "" && !strings.ContainsAny(f.LLMModelFile, "/\\") && strings.HasSuffix(f.LLMModelFile, ".gguf") {
 		if _, err := os.Stat(filepath.Join("models", f.LLMModelFile)); err == nil {
@@ -707,6 +715,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"translate_default":     cfg.TranslateDefault,
 		"active_profiles":       cfg.ActiveProfiles,
 		"app_rules":             cfg.AppRules,
+		"replacements":          cfg.Replacements,
 		"translate_hotkey":      cfg.TranslateHotkey,
 		"translate_target":      cfg.TranslateTarget,
 		"translate_ask":         cfg.TranslateAsk,
@@ -741,6 +750,8 @@ func settingsHTML(cfg *Config, tab string) string {
 		"ruleenteron": "S_RULE_ENTER_ON", "ruleenteroff": "S_RULE_ENTER_OFF", "rulenoprompt": "S_RULE_NOPROMPT",
 		"rulelast": "S_RULE_LAST", "ruleempty": "S_RULE_EMPTY", "ruledel": "S_RULE_DEL",
 		"ruleprompts": "S_RULE_PROMPTS", "ruleph": "S_RULE_PH",
+		"replempty": "S_REPL_EMPTY", "repldel": "S_REPL_DEL", "replwhole": "S_REPL_WHOLE",
+		"replcase": "S_REPL_CASE", "replfromph": "S_REPL_FROM_PH", "repltoph": "S_REPL_TO_PH",
 		"wiznext": "S_WIZ_NEXT", "wizfinish": "S_WIZ_FINISH", "wizwait": "S_WIZ_WAIT",
 		"wizheard": "S_WIZ_HEARD", "wizhave": "S_WIZ_HAVE", "wiztry": "S_WIZ_TRY_TEXT",
 		"updavail": "S_UPD_AVAIL", "updgo": "S_UPD_GO", "upderr": "S_UPD_ERR", "upddl": "S_UPD_DL",
@@ -938,8 +949,18 @@ button.ghost:hover{color:var(--green)}
 .rulerow:last-child{border-bottom:none}
 .rulerow input[type=text]{flex:1 1 190px;min-width:150px;width:auto;font-size:12px;padding:5px 9px}
 .rulerow select{flex:0 0 auto;width:auto;min-width:118px;font-size:11.5px;padding:4px 8px}
-.rulerow .rdel{flex:none;border:1px solid var(--line);background:none;color:var(--dim);font:inherit;font-size:12px;cursor:pointer;padding:4px 9px}
-.rulerow .rdel:hover{color:#ff7b6b;border-color:#7a2e2e}
+.rdel{flex:none;border:1px solid var(--line);background:none;color:var(--dim);font:inherit;font-size:12px;cursor:pointer;padding:4px 9px}
+.rdel:hover{color:#ff7b6b;border-color:#7a2e2e}
+.replrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 0;border-bottom:1px solid #12241a}
+.replrow:last-child{border-bottom:none}
+.replrow input[type=text]{flex:1 1 160px;min-width:120px;width:auto;font-size:12px;padding:5px 9px}
+.replrow .rarrow{flex:none;color:var(--faint)}
+.replrow label{flex:none;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--dim);white-space:nowrap}
+.replrow label input[type=checkbox]{width:28px;height:15px}
+.replcheck{display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:10px;border-top:1px solid #12241a;flex-wrap:wrap}
+.replcheck input[type=text]{flex:1 1 220px;min-width:160px;width:auto;font-size:12px;padding:5px 9px}
+.replout{flex:1 1 200px;min-width:0;font-size:12px;color:var(--green);text-shadow:var(--glow);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.replout:empty{display:none}
 .rulefoot{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
 .rulefoot .ghost{border-color:var(--line);color:var(--faint)}
 .rulefoot .ghost:empty{display:none}
@@ -1230,6 +1251,18 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
   <div class="sect">{{S_SUB_DICT}}</div>
   <div style="color:var(--faint);font-size:12px;margin-bottom:6px">{{S_DICT_HINT}}</div>
   <textarea id="whisper_prompt" rows="10" style="width:100%;min-height:150px;height:26vh;padding:8px 11px;border:1px solid var(--line);background:#08100b;color:var(--green);font:inherit;line-height:1.5;outline:none;resize:vertical"></textarea>
+ </div>
+ <div class="card">
+  <div class="sect">{{S_SEC_REPLACE}}</div>
+  <div class="hint">{{S_REPLACE_HINT}}</div>
+  <div id="replbody"></div>
+  <div class="rulefoot">
+   <button type="button" class="mini" id="repl_add">{{S_REPL_ADD}}</button>
+  </div>
+  <div class="replcheck">
+   <input type="text" id="repl_test" placeholder="{{S_REPL_TEST_PH}}">
+   <span class="replout" id="repl_out"></span>
+  </div>
  </div>
  <div class="card">
   <div class="sect">{{S_SUB_PROMPTS}}</div>
@@ -2112,6 +2145,7 @@ async function doSave(){
     translate_default: translateDefault,
     active_profiles: activeProfiles,
     app_rules: rules,
+    replacements: repls,
     llm_model_file: selLLM||"",
     profiles: profiles};
   bools.forEach(k=>f[k]=document.getElementById(k).checked);
@@ -2401,6 +2435,102 @@ function initWizard(){
     if(wizStep === 3) wizPollTry();
   }, 800);
 }
+let repls = (CFG.replacements || []).map(r=>({...r}));
+function renderRepls(){
+  const body = document.getElementById("replbody");
+  if(!body) return;
+  body.innerHTML = "";
+  if(!repls.length){
+    const empty = document.createElement("div");
+    empty.className = "ruleempty";
+    empty.textContent = L.replempty;
+    body.appendChild(empty);
+  }
+  repls.forEach((r, i)=>{
+    const row = document.createElement("div");
+    row.className = "replrow";
+
+    const from = document.createElement("input");
+    from.type = "text";
+    from.className = "rfrom";
+    from.value = r.from || "";
+    from.placeholder = L.replfromph;
+    from.oninput = ()=>{ repls[i].from = from.value; };
+    from.onchange = ()=>{ repls[i].from = from.value; applyNow(); replTest(); };
+    row.appendChild(from);
+
+    const arrow = document.createElement("span");
+    arrow.className = "rarrow";
+    arrow.textContent = "→";
+    row.appendChild(arrow);
+
+    const to = document.createElement("input");
+    to.type = "text";
+    to.className = "rto";
+    to.value = r.to || "";
+    to.placeholder = L.repltoph;
+    to.oninput = ()=>{ repls[i].to = to.value; };
+    to.onchange = ()=>{ repls[i].to = to.value; applyNow(); replTest(); };
+    row.appendChild(to);
+
+    const wholeLbl = document.createElement("label");
+    const whole = document.createElement("input");
+    whole.type = "checkbox";
+    whole.className = "rwhole";
+    whole.checked = r.whole !== false;
+    whole.onchange = ()=>{ repls[i].whole = whole.checked; applyNow(); replTest(); };
+    wholeLbl.appendChild(whole);
+    wholeLbl.appendChild(document.createTextNode(L.replwhole));
+    row.appendChild(wholeLbl);
+
+    const caseLbl = document.createElement("label");
+    const mcase = document.createElement("input");
+    mcase.type = "checkbox";
+    mcase.className = "rcase";
+    mcase.checked = !!r.match_case;
+    mcase.onchange = ()=>{ repls[i].match_case = mcase.checked; applyNow(); replTest(); };
+    caseLbl.appendChild(mcase);
+    caseLbl.appendChild(document.createTextNode(L.replcase));
+    row.appendChild(caseLbl);
+
+    const del = document.createElement("button");
+    del.type = "button";
+    del.className = "rdel";
+    del.title = L.repldel;
+    del.textContent = "✕";
+    del.onclick = ()=>{ repls.splice(i, 1); renderRepls(); applyNow(); replTest(); };
+    row.appendChild(del);
+
+    body.appendChild(row);
+  });
+}
+let replTimer = null;
+async function replTest(){
+  const input = document.getElementById("repl_test");
+  const out = document.getElementById("repl_out");
+  if(!input || !out) return;
+  const text = input.value.trim();
+  if(!text){ out.textContent = ""; return; }
+  out.textContent = await appTestReplace(text);
+}
+function initRepls(){
+  const add = document.getElementById("repl_add");
+  if(!add) return;
+  add.onclick = ()=>{
+    repls.push({id: "x" + Date.now(), from: "", to: "", whole: true, match_case: false});
+    renderRepls();
+    const rows = document.querySelectorAll("#replbody .rfrom");
+    if(rows.length) rows[rows.length - 1].focus();
+  };
+  const test = document.getElementById("repl_test");
+  if(test){
+    test.addEventListener("input", ()=>{
+      clearTimeout(replTimer);
+      replTimer = setTimeout(replTest, 250);
+    });
+  }
+  renderRepls();
+}
 let rules = (CFG.app_rules || []).map(r=>({...r}));
 function ruleOpts(sel, items, value){
   sel.innerHTML = "";
@@ -2554,6 +2684,7 @@ load();
   initWizard();
   initAutorun();
   initRules();
+  initRepls();
   refreshLastApp();
   bindLabels();
   applyLevel();

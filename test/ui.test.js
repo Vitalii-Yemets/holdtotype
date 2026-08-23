@@ -94,6 +94,8 @@ const dom = new JSDOM(html, {
       window.lastSave = { ok: true, severity: "ok", message };
       return JSON.stringify(window.lastSave);
     };
+    window.replaceCalls = [];
+    window.appTestReplace = async (t) => { window.replaceCalls.push(t); return t.replace(/git hub/gi, "GitHub"); };
     window.appModelDel = async () => "ok";
     window.appMics = async () =>
       JSON.stringify([
@@ -254,6 +256,24 @@ function check(name, actual, expected) {
   check("timeout mode keeps target editable", state(), [false, false, false, false]);
 
   tab("text"); await sleep(80);
+  check("with no replacements the list says so", d.querySelector("#replbody .ruleempty").textContent, "No replacements yet");
+  d.getElementById("repl_add").click(); await sleep(100);
+  const rep = d.querySelector("#replbody .replrow");
+  check("a replacement row has both sides", [!!rep.querySelector(".rfrom"), !!rep.querySelector(".rto")], [true, true]);
+  check("whole words is on by default", rep.querySelector(".rwhole").checked, true);
+  check("case is off by default", rep.querySelector(".rcase").checked, false);
+  const rfrom = rep.querySelector(".rfrom"), rto = rep.querySelector(".rto");
+  rfrom.value = "гит хаб"; rfrom.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(250);
+  rto.value = "GitHub"; rto.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(250);
+  check("the replacement is saved", [w.lastSaveForm.replacements[0].from, w.lastSaveForm.replacements[0].to], ["гит хаб", "GitHub"]);
+  check("its flags are saved too", [w.lastSaveForm.replacements[0].whole, w.lastSaveForm.replacements[0].match_case], [true, false]);
+  const rtest = d.getElementById("repl_test");
+  rtest.value = "push to git hub"; rtest.dispatchEvent(new w.Event("input", { bubbles: true })); await sleep(500);
+  check("the test field asks the program itself", w.replaceCalls[w.replaceCalls.length - 1], "push to git hub");
+  check("and shows what would come out", d.getElementById("repl_out").textContent, "push to GitHub");
+  d.querySelector("#replbody .rdel").click(); await sleep(250);
+  check("a replacement can be deleted", w.lastSaveForm.replacements.length, 0);
+
   const pb = d.getElementById("profbody");
   check("prompts listed", pb.querySelectorAll("input.profcb").length, 2);
 
