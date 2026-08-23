@@ -817,7 +817,7 @@ func settingsHTML(cfg *Config, tab string) string {
 
 const settingsPage = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>{{S_TITLE}}</title><style>
-:root{--bg:#0b0f0c;--panel:#0e1410;--line:#1d4a2b;--green:#3cff6e;--dim:#20a34a;--faint:#14803a;--amber:#ffb347;--bad:#ff7b6b;--glow:0 0 7px rgba(60,255,110,.55)}
+:root{--bg:#0b0f0c;--panel:#0e1410;--line:#1d4a2b;--green:#3cff6e;--dim:#20a34a;--faint:#14803a;--amber:#ffb347;--bad:#ff7b6b;--glow:0 0 7px rgba(60,255,110,.55);--sw-on:"{{S_SW_ON}}";--sw-off:"{{S_SW_OFF}}"}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{font:14px Consolas,"Cascadia Mono",monospace;background:var(--bg);color:var(--green);user-select:none;display:flex;flex-direction:column;overflow:hidden}
@@ -827,14 +827,14 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;background:rep
 ::-webkit-scrollbar-track{background:var(--bg)}
 ::-webkit-scrollbar-thumb{background:var(--line);border:2px solid var(--bg)}
 ::-webkit-scrollbar-thumb:hover{background:var(--dim)}
-.header{display:flex;align-items:center;gap:14px;padding:12px 12px 12px 20px;border-bottom:1px solid var(--line);box-shadow:0 1px 12px rgba(60,255,110,.12);cursor:default}
-.capbtns{display:flex;gap:6px;margin-left:10px}
+.header{display:flex;align-items:center;gap:14px;padding:12px 12px 12px 20px;overflow:hidden;border-bottom:1px solid var(--line);box-shadow:0 1px 12px rgba(60,255,110,.12);cursor:default}
+.capbtns{display:flex;gap:6px;margin-left:10px;flex:none}
 button.cap{width:36px;height:30px;background:none;border:1px solid var(--line);color:var(--dim);font:14px Consolas,monospace;cursor:pointer;padding:0}
 button.cap:hover{background:#123f22;color:var(--green);box-shadow:var(--glow)}
 button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box-shadow:0 0 7px rgba(255,110,90,.5)}
 .logo{width:40px;height:40px;flex:none}
 .logo svg{width:100%;height:100%;filter:drop-shadow(0 0 5px rgba(60,255,110,.7))}
-.header h1{font-size:15px;letter-spacing:2px;text-shadow:var(--glow);animation:flicker 6s infinite}
+.header h1{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:15px;letter-spacing:2px;text-shadow:var(--glow);animation:flicker 6s infinite}
 .statusbar .ver{margin-left:auto;flex:none;color:var(--faint)}
 @keyframes flicker{0%,93%,97%,100%{opacity:1}95%{opacity:.6}}
 @keyframes pulse{0%,100%{opacity:.35;transform:scale(.94)}50%{opacity:1;transform:scale(1)}}
@@ -869,7 +869,7 @@ button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box
 .statusbar .stsaved.bad{color:var(--bad)}
 .note.warn{font-size:11px;color:var(--amber);line-height:1.5;padding:2px 0 6px}
 .note.warn:empty{display:none}
-.omni{margin-left:auto;display:flex;align-items:center;gap:8px;flex:none;border:1px solid var(--line);background:var(--panel);padding:4px 9px;min-width:min(320px,38%)}
+.omni{margin-left:auto;display:flex;align-items:center;gap:8px;flex:0 1 auto;min-width:0;width:min(320px,38%);border:1px solid var(--line);background:var(--panel);padding:4px 9px}
 .omni:focus-within{border-color:var(--dim);box-shadow:var(--glow)}
 .omni input[type=text]{flex:1;min-width:0;width:auto;background:none;border:0;box-shadow:none;outline:none;color:var(--green);font:inherit;font-size:11.5px;padding:0;user-select:text;-webkit-user-select:text}
 .omni input[type=text]:focus{border:0;box-shadow:none}
@@ -966,11 +966,13 @@ input:disabled,select:disabled{opacity:.35;cursor:default}
 #trlangs label:has(input:disabled){opacity:.45}
 input[type=text]{width:220px;max-width:100%}select{width:210px;max-width:100%}
 input[type=range]{width:150px;accent-color:var(--dim);background:transparent}
-input[type=checkbox]{appearance:none;-webkit-appearance:none;width:32px;height:17px;border:1px solid var(--dim);position:relative;cursor:pointer;background:none;flex:none;padding:0;margin:0}
-input[type=checkbox]::before,input[type=radio]::before{content:"";position:absolute;top:-11px;bottom:-11px;left:-9px;right:-9px}
-input[type=checkbox]::after{content:"";position:absolute;top:2px;left:2px;width:11px;height:11px;background:var(--dim);transition:.15s}
+input[type=checkbox]{appearance:none;-webkit-appearance:none;width:60px;height:20px;border:1px solid var(--dim);position:relative;cursor:pointer;background:none;flex:none;padding:0;margin:0;font:inherit}
+input[type=radio]::before{content:"";position:absolute;top:-11px;bottom:-11px;left:-9px;right:-9px}
+input[type=checkbox]::before{content:var(--sw-off);position:absolute;top:0;right:8px;line-height:18px;font-size:9px;letter-spacing:.08em;color:var(--faint)}
+input[type=checkbox]:checked::before{content:var(--sw-on);right:auto;left:8px;color:var(--green);text-shadow:var(--glow)}
+input[type=checkbox]::after{content:"";position:absolute;top:3px;left:3px;width:12px;height:12px;background:var(--dim);transition:.15s}
 input[type=checkbox]:checked{border-color:var(--dim)}
-input[type=checkbox]:checked::after{left:17px;background:var(--green);box-shadow:var(--glow)}
+input[type=checkbox]:checked::after{left:43px;background:var(--green);box-shadow:var(--glow)}
 input[type=checkbox]:focus-visible{outline:1px solid var(--green);outline-offset:2px}
 .row select,.row input[type=text]{border:1px solid var(--dim);background:#08100b;color:var(--green);font:inherit;font-size:11.5px;padding:4px 8px}
 .row select{flex:0 0 auto;width:auto;min-width:118px;max-width:230px}
@@ -1011,7 +1013,6 @@ button.ghost:hover{color:var(--green)}
 .replrow input[type=text]{flex:1 1 160px;min-width:120px;width:auto;font-size:12px;padding:5px 9px}
 .replrow .rarrow{flex:none;color:var(--faint)}
 .replrow label{flex:none;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--dim);white-space:nowrap}
-.replrow label input[type=checkbox]{width:28px;height:15px}
 .replcheck{display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:10px;border-top:1px solid #12241a;flex-wrap:wrap}
 .replcheck input[type=text]{flex:1 1 220px;min-width:160px;width:auto;font-size:12px;padding:5px 9px}
 .replout{flex:1 1 200px;min-width:0;font-size:12px;color:var(--green);text-shadow:var(--glow);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

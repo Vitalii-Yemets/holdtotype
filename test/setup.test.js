@@ -15,6 +15,8 @@ if (start < marker.length || end < 0) {
 
 const values = {
   TITLE: "HoldToType — Setup",
+  SWON: "ON",
+  SWOFF: "OFF",
   APP: "HoldToType",
   TAGLINE: "Voice to text at the cursor.",
   PATH: "Install folder",
