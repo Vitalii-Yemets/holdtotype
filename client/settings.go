@@ -663,7 +663,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"upd": "S_UPDATED", "pedit": "S_PROF_EDIT", "pclose": "S_PROF_CLOSE",
 		"confirmdel": "S_CONFIRM_DEL", "free": "S_FREE", "updnone": "S_UPD_NONE",
 		"micdefault": "S_MIC_DEFAULT", "micquiet": "S_MIC_QUIET",
-		"more": "S_MORE", "less": "S_LESS", "hidden": "S_HIDDEN", "allshown": "S_ALLSHOWN", "showall": "S_SHOWALL", "showsimple": "S_SHOWSIMPLE",
+		"more": "S_MORE", "less": "S_LESS", "hidden": "S_HIDDEN", "allshown": "S_ALLSHOWN",
 		"updavail": "S_UPD_AVAIL", "updgo": "S_UPD_GO", "upderr": "S_UPD_ERR", "upddl": "S_UPD_DL",
 	} {
 		lMap[jsKey] = str(sKey)
@@ -719,11 +719,13 @@ button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box
 .scard .mini{align-self:flex-start}
 .row .sub{display:block;font-size:10.5px;color:var(--faint);margin-top:2px;letter-spacing:0}
 .row .lbl{flex:1;min-width:0}
-.statusbar{border-top:1px solid var(--line);padding:6px 14px;display:flex;gap:12px;align-items:center;font-size:11px;color:var(--faint);flex-wrap:wrap}
+.statusbar{border-top:1px solid var(--line);padding:6px 14px;display:flex;gap:12px;align-items:center;font-size:11px;color:var(--faint);flex-wrap:nowrap;white-space:nowrap}
+.statusbar #st_main{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.statusbar .stsaved,.statusbar .stpend{flex:none}
 .statusbar .led{width:6px;height:6px;border-radius:50%;background:var(--faint);flex:none}
 .statusbar .led.on{background:var(--green);box-shadow:var(--glow)}
 .statusbar .stpend{color:var(--amber)}
-.statusbar .stlvl{margin-left:auto;display:flex;align-items:center;gap:7px}
+.statusbar .stlvl{margin-left:auto;flex:none}
 .statusbar .stsaved{color:var(--dim)}
 .omni{margin-left:auto;display:flex;align-items:center;gap:8px;flex:none;border:1px solid var(--line);background:var(--panel);padding:4px 9px;min-width:min(320px,38%)}
 .omni:focus-within{border-color:var(--dim);box-shadow:var(--glow)}
@@ -742,7 +744,6 @@ button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box
 .row.hit{background:#101d14;box-shadow:inset 2px 0 0 var(--green)}
 .moreb{appearance:none;background:none;border:1px dashed var(--line);color:var(--faint);font:inherit;font-size:11px;padding:6px 10px;margin:6px 0 0;cursor:pointer}
 .moreb:hover{color:var(--dim);border-color:var(--dim)}
-.stlink{background:none;border:0;color:var(--dim);font:inherit;font-size:11px;text-decoration:underline;cursor:pointer;padding:0}
 .hero{display:flex;align-items:center;gap:12px;border:1px solid var(--line);background:var(--panel);padding:12px 14px;margin-bottom:10px;flex-wrap:wrap}
 .herokey{border:1px solid var(--dim);color:var(--green);padding:5px 12px;font-size:14px;letter-spacing:1px}
 .herotext{font-size:12px;color:var(--dim)}
@@ -1138,7 +1139,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
  <span id="st_main">—</span>
  <span class="stsaved" id="st_saved"></span>
  <span class="stpend" id="st_pend"></span>
- <span class="stlvl"><span class="stlevel" id="st_level"></span><button type="button" class="stlink" id="st_levelbtn"></button></span>
+ <span class="stlvl" id="st_level"></span>
  <span class="ver">v<span id="ver"></span></span>
 </div>
 
@@ -1832,8 +1833,6 @@ function applyLevel(){
   });
   const line = document.getElementById("st_level");
   if(line) line.textContent = uiLevel === "simple" ? L.hidden.replace("%d", hiddenTotal()) : L.allshown;
-  const sw = document.getElementById("st_levelbtn");
-  if(sw) sw.textContent = uiLevel === "simple" ? L.showall : L.showsimple;
 }
 function hiddenTotal(){
   let n = 0;
@@ -1887,8 +1886,6 @@ load();
   initStateScreen();
   applyLevel();
   document.querySelectorAll(".lvlb").forEach(b=>b.onclick=()=>setLevel(b.dataset.l));
-  const st = document.getElementById("st_levelbtn");
-  if(st) st.onclick = ()=>setLevel(uiLevel === "simple" ? "all" : "simple");
   const omni = document.getElementById("omni");
   if(omni){
     omni.addEventListener("input", ()=>searchSettings(omni.value));

@@ -191,6 +191,7 @@ function check(name, actual, expected) {
   d.querySelector("#p-dictation .moreb").click(); await sleep(60);
   check("disclosure reveals them", d.querySelectorAll("#p-dictation .row[data-adv].hidden").length, 0);
   check("status bar counts what is hidden", d.getElementById("st_level").textContent.includes("hidden"), true);
+  check("no switching from the status bar", !!d.getElementById("st_levelbtn"), false);
 
   const omni = d.getElementById("omni");
   omni.value = "S_PORT"; omni.dispatchEvent(new w.Event("input")); await sleep(120);
