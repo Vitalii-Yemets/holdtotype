@@ -25,11 +25,18 @@ const dom = new JSDOM(html, {
     window.setMicFails = (v) => { micFails = v; };
     window.setModelStates = (ru, other) => { ruState = ru; otherState = other; };
     window.setRemote = (v) => { remote = v; };
+    let lastAt = 0;
+    window.setLastAt = (v) => { lastAt = v; };
+    window.autorunCalls = [];
+    window.wizardDone = 0;
+    window.appAutorun = async () => window.autorunCalls.length > 0 && window.autorunCalls[window.autorunCalls.length - 1];
+    window.appSetAutorun = async (on) => { window.autorunCalls.push(on); return on; };
+    window.appWizardDone = async () => { window.wizardDone++; };
     window.appState = async () =>
       JSON.stringify({ hotkey: "ctrl+win", mic: "Realtek", engine: "sherpa · gigaam-v3", llm: "model.gguf",
         ram: "8000 MB free", last: "hello", last_meta: "just now · 5 characters", ready: true, status: "Ready",
         status_line: "Ready · gigaam-v3 + ggml-small.bin · 7.8 GB free", ru_model: "gigaam-v3",
-        other_model: "ggml-small.bin", llm_ok: true, mic_ok: true,
+        other_model: "ggml-small.bin", llm_ok: true, mic_ok: true, last_at: lastAt,
         remote: remote,
         ru_state: ruState, other_state: otherState,
         badges: { mic: micBadge, models: "2", system: "" } });
@@ -333,6 +340,52 @@ function check(name, actual, expected) {
   await sleep(400);
   check("changing the port restarts the recognizer instead of asking", w.lastSave.message, "Restarting the recognizer…");
   check("nothing in the status bar asks for a restart", !!d.getElementById("st_pend"), false);
+
+  check("the wizard stays out of the way until it is asked for", d.getElementById("wiz").classList.contains("on"), false);
+  w.wizStart(); await sleep(150);
+  check("the wizard covers the window", d.getElementById("wiz").classList.contains("on"), true);
+  check("the wizard opens on the welcome step", d.getElementById("wz0").classList.contains("on"), true);
+  check("the wizard walks five steps", d.querySelectorAll("#wizdots i").length, 5);
+  check("there is no way back from the first step", d.getElementById("wiz_back").style.display, "none");
+  check("the interface language is offered right away", d.getElementById("wiz_ui").value, "en");
+
+  d.getElementById("wiz_next").click(); await sleep(250);
+  check("the second step is the model", d.getElementById("wz1").classList.contains("on"), true);
+  check("the wizard proposes a plan, not a list", d.querySelectorAll("#wiz_plan .advrow").length, 2);
+  check("the plan says what is already here", [...d.querySelectorAll("#wiz_plan .advstate")].map((s) => s.className.includes("ok")), [false, true]);
+  check("the download button carries the size", d.getElementById("wiz_dl").textContent.includes("232 MB"), true);
+  const wizDlBefore = w.dlCalls.length;
+  d.getElementById("wiz_dl").click(); await sleep(200);
+  check("the wizard downloads what the plan is missing", w.dlCalls.length > wizDlBefore, true);
+  check("the wizard shows the download running", d.getElementById("wiz_dlrow").style.display, "");
+
+  d.getElementById("wiz_next").click(); await sleep(300);
+  check("the third step names the shortcut", d.getElementById("wiz_hot").textContent, "ctrl+win");
+  check("the third step offers the microphones", d.getElementById("wiz_mic").options.length, 3);
+  await sleep(300);
+  check("the wizard meter follows the microphone", d.getElementById("wiz_micbar").style.width !== "" && d.getElementById("wiz_micbar").style.width !== "0%", true);
+
+  d.getElementById("wiz_next").click(); await sleep(250);
+  check("the fourth step waits for a phrase", d.getElementById("wiz_tryout").textContent, "Waiting for the first phrase…");
+  check("the fourth step offers a place to dictate into", !!d.getElementById("wiz_try"), true);
+  w.setLastAt(1700000000000); await sleep(1000);
+  check("the wizard repeats what it heard", d.getElementById("wiz_tryout").textContent, "Heard: hello");
+
+  d.getElementById("wiz_next").click(); await sleep(250);
+  check("the last step offers to start with Windows", !!d.getElementById("wiz_auto"), true);
+  check("the last button finishes instead of going on", d.getElementById("wiz_next").textContent, "Finish");
+  check("there is nothing left to skip", d.getElementById("wiz_skip").style.display, "none");
+  d.getElementById("wiz_auto").checked = true;
+  d.getElementById("wiz_next").click(); await sleep(250);
+  check("finishing hides the wizard", d.getElementById("wiz").classList.contains("on"), false);
+  check("finishing is remembered", w.wizardDone, 1);
+  check("the autostart answer is passed on", w.autorunCalls, [true]);
+  check("finishing lands on the status screen", shown("state"), true);
+
+  w.wizStart(); await sleep(150);
+  d.getElementById("wiz_skip").click(); await sleep(250);
+  check("skipping closes the wizard too", d.getElementById("wiz").classList.contains("on"), false);
+  check("skipping is remembered, so it does not ask again", w.wizardDone, 2);
 
   check("no page errors", errors, []);
 

@@ -606,6 +606,7 @@ type stateOut struct {
 	RAM      string `json:"ram"`
 	Last     string `json:"last"`
 	LastMeta string `json:"last_meta"`
+	LastAt   int64  `json:"last_at"`
 	Ready    bool   `json:"ready"`
 	Status   string `json:"status"`
 
@@ -700,6 +701,8 @@ func (a *App) stateSnapshot() string {
 	cfg := a.snapshot()
 	a.mu.Lock()
 	ready := a.ready
+	stamp := a.lastResultAt
+	target := a.lastTarget
 	rec := a.rec
 	last := a.lastResult
 	a.mu.Unlock()
@@ -730,12 +733,14 @@ func (a *App) stateSnapshot() string {
 		last = "—"
 	}
 	lastMeta := ""
-	if a.lastResultAt.IsZero() {
+	var lastAt int64
+	if stamp.IsZero() {
 		last = "—"
 	} else {
-		parts := []string{agoLabel(time.Since(a.lastResultAt)), trf("chars", len([]rune(a.lastResult)))}
-		if a.lastTarget != "" {
-			parts = append(parts, trf("inserted.into", a.lastTarget))
+		lastAt = stamp.UnixMilli()
+		parts := []string{agoLabel(time.Since(stamp)), trf("chars", len([]rune(last)))}
+		if target != "" {
+			parts = append(parts, trf("inserted.into", target))
 		}
 		lastMeta = strings.Join(parts, " · ")
 	}
@@ -756,6 +761,7 @@ func (a *App) stateSnapshot() string {
 		RAM:        trf("adv.ram", free),
 		Last:       last,
 		LastMeta:   lastMeta,
+		LastAt:     lastAt,
 		Ready:      ready,
 		Status:     status,
 		RuModel:    ruModel,

@@ -393,6 +393,26 @@ func (a *App) settingsThread(tab string, attempt int) {
 		_ = w.Bind("appModelDel", func(id string) string {
 			return a.deleteModel(id)
 		})
+		_ = w.Bind("appAutorun", func() bool {
+			return autorunEnabled()
+		})
+		_ = w.Bind("appSetAutorun", func(on bool) bool {
+			if err := setAutorun(on); err != nil {
+				log.Printf("автозапуск с Windows: %v", err)
+			}
+			return autorunEnabled()
+		})
+		_ = w.Bind("appWizardDone", func() {
+			a.mu.Lock()
+			c := *a.cfg
+			c.WizardDone = true
+			a.cfg = &c
+			a.mu.Unlock()
+			if err := saveConfig("config.json", &c); err != nil {
+				log.Printf("сохранение конфига: %v", err)
+			}
+			log.Printf("мастер первого запуска пройден")
+		})
 
 		log.Printf("openSettings: WebView2 создан, открываю страницу")
 		settingsHwnd.Store(hwnd)
@@ -677,6 +697,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"_version":              appVersion,
 		"_tab":                  tab,
 		"_cpus":                 runtime.NumCPU(),
+		"_wizard":               !cfg.WizardDone,
 	}
 	cfgJSON, _ := json.Marshal(cfgMap)
 
@@ -695,6 +716,8 @@ func settingsHTML(cfg *Config, tab string) string {
 		"ok": "S_OK", "cancel": "S_CANCEL", "dlask": "S_DL_ASK", "dlstart": "S_DL_START", "dlcancel": "S_DL_CANCEL", "nofound": "S_NOT_FOUND",
 		"advprimary": "S_ADV_PRIMARY", "advcompanion": "S_ADV_COMPANION", "advhave": "S_ADV_HAVE", "advapply": "S_ADV_APPLY", "advask": "S_ADV_ASK",
 		"more": "S_MORE", "less": "S_LESS",
+		"wiznext": "S_WIZ_NEXT", "wizfinish": "S_WIZ_FINISH", "wizwait": "S_WIZ_WAIT",
+		"wizheard": "S_WIZ_HEARD", "wizhave": "S_WIZ_HAVE", "wiztry": "S_WIZ_TRY_TEXT",
 		"updavail": "S_UPD_AVAIL", "updgo": "S_UPD_GO", "upderr": "S_UPD_ERR", "upddl": "S_UPD_DL",
 	} {
 		lMap[jsKey] = str(sKey)
@@ -777,6 +800,34 @@ button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box
 .omni .okey{flex:none;font-size:9px;letter-spacing:.06em;color:var(--faint);border:1px solid var(--line);padding:1px 5px}
 .omni .ocount{flex:none;font-size:10px;color:var(--dim);white-space:nowrap}
 .omni .ocount.none{color:var(--amber)}
+.wiz{position:fixed;inset:0;z-index:30;background:var(--bg);display:none;flex-direction:column}
+.wiz.on{display:flex}
+.wizhead{display:flex;align-items:center;gap:14px;padding:12px 12px 12px 20px;border-bottom:1px solid var(--line);box-shadow:0 1px 12px rgba(60,255,110,.12)}
+.wizhead h2{font-size:14px;letter-spacing:2px;text-shadow:var(--glow);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wizbody{flex:1;min-height:0;overflow-y:auto;padding:22px 26px}
+.wizstep{display:none;flex-direction:column;gap:14px}
+.wizstep.on{display:flex}
+.wizh{font-size:15px;letter-spacing:2px;text-shadow:var(--glow)}
+.wiztext{color:var(--dim);font-size:13px;line-height:1.6;max-width:62ch}
+.wizfoot{display:flex;align-items:center;gap:10px;padding:11px 20px;border-top:1px solid var(--line)}
+.wizdots{display:flex;gap:6px;align-items:center}
+.wizgap{flex:1}
+.wizdots i{width:7px;height:7px;border:1px solid var(--line);display:block}
+.wizdots i.on{background:var(--green);border-color:var(--green);box-shadow:var(--glow)}
+.wizrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.wizrow select{background:#08100b;border:1px solid var(--line);color:var(--green);font:inherit;font-size:13px;padding:6px 9px;min-width:170px}
+.wizrow select:focus{border-color:var(--dim);box-shadow:var(--glow);outline:none}
+.wizkey{border:1px solid var(--dim);padding:4px 11px;letter-spacing:1px;text-shadow:var(--glow);white-space:nowrap}
+.wizplan{display:flex;flex-direction:column;gap:4px;border:1px solid var(--line);background:var(--panel);padding:10px 12px;min-height:38px}
+.wizbar{height:14px;border:1px solid var(--line);background:#08100b;position:relative;overflow:hidden;flex:1;min-width:150px;max-width:430px}
+.wizbar i{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,var(--faint),var(--green));box-shadow:var(--glow);transition:width .15s linear}
+.wiztry{width:100%;min-height:76px;resize:none;background:#08100b;border:1px solid var(--line);color:var(--green);font:inherit;font-size:13px;padding:9px 11px;outline:none;user-select:text}
+.wiztry:focus{border-color:var(--dim);box-shadow:var(--glow)}
+.wizout{font-size:12.5px;color:var(--dim);min-height:18px}
+.wizout.ok{color:var(--green);text-shadow:var(--glow)}
+.wizbig{font-size:30px;text-shadow:var(--glow);line-height:1}
+button.btn.ghost{border-color:var(--line);background:none;color:var(--dim)}
+button.btn.ghost:hover{color:var(--green);border-color:var(--dim);background:none}
 .lvlsw{display:flex;flex:none;border:1px solid var(--line);background:var(--panel)}
 .lvlb{appearance:none;border:0;background:none;color:var(--faint);font:inherit;font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:4px 11px;cursor:pointer}
 .lvlb:hover{color:var(--dim)}
@@ -1203,6 +1254,89 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
  <span class="ver">v<span id="ver"></span></span>
 </div>
 
+<div class="wiz" id="wiz">
+ <div class="wizhead" id="wizhead">
+  <div class="logo"><svg viewBox="0 0 64 64">
+   <rect x="2" y="2" width="60" height="60" rx="12" fill="#0e1410" stroke="#1d4a2b" stroke-width="2"/>
+   <g stroke="#3cff6e" stroke-width="4" fill="none" stroke-linecap="round">
+    <rect x="26" y="12" width="12" height="20" rx="6" fill="#3cff6e"/>
+    <path d="M19 27a13 13 0 0 0 26 0"/>
+    <line x1="32" y1="40" x2="32" y2="46"/>
+    <line x1="24" y1="49" x2="40" y2="49"/>
+   </g>
+   <g stroke="#3cff6e" stroke-width="2.5" fill="none" stroke-linecap="round">
+    <path class="wave" d="M13 20a17 17 0 0 0 0 14" style="animation-delay:.2s"/>
+    <path class="wave" d="M51 20a17 17 0 0 1 0 14" style="animation-delay:.6s"/>
+   </g>
+  </svg></div>
+  <h2>{{APP}}</h2>
+  <div class="capbtns">
+   <button class="cap" onclick="appMin()">&#9472;</button>
+   <button class="cap close" onclick="appClose()">&#10005;</button>
+  </div>
+ </div>
+ <div class="wizbody" id="wizbody">
+  <div class="wizstep on" id="wz0">
+   <div class="wizh">{{S_WIZ_HELLO}}</div>
+   <div class="wiztext">{{S_WIZ_HELLO_TEXT}}</div>
+   <div class="wizrow"><label for="wiz_ui">{{S_UILANG}}</label>
+    <select id="wiz_ui">
+     <option value="auto">{{S_AUTO}}</option>
+     <option value="en">English</option>
+     <option value="ru">Русский</option>
+     <option value="uk">Українська</option>
+     <option value="de">Deutsch</option>
+     <option value="fr">Français</option>
+     <option value="es">Español</option>
+     <option value="it">Italiano</option>
+     <option value="pl">Polski</option>
+    </select></div>
+   <div class="wiztext">{{S_WIZ_LATER}}</div>
+  </div>
+  <div class="wizstep" id="wz1">
+   <div class="wizh">{{S_WIZ_T_MODEL}}</div>
+   <div class="wiztext">{{S_WIZ_MODEL_TEXT}}</div>
+   <div class="wizrow"><label for="wiz_lang">{{S_RECLANG}}</label>
+    <select id="wiz_lang">
+     <option value="ru">Русский</option><option value="en">English</option>
+     <option value="uk">Українська</option><option value="de">Deutsch</option>
+     <option value="fr">Français</option><option value="es">Español</option>
+     <option value="pl">Polski</option><option value="auto">{{S_RECAUTO}}</option>
+    </select></div>
+   <div class="wizplan" id="wiz_plan"></div>
+   <div class="wizrow" id="wiz_dlrow" style="display:none"><span class="wizbar"><i id="wiz_dlbar"></i></span><span class="mpct" id="wiz_dlpct"></span></div>
+   <div class="wizrow"><button type="button" class="btn" id="wiz_dl">{{S_DL}}</button><span class="wizout" id="wiz_dlout"></span></div>
+  </div>
+  <div class="wizstep" id="wz2">
+   <div class="wizh">{{S_WIZ_T_INPUT}}</div>
+   <div class="wiztext">{{S_WIZ_INPUT_TEXT}}</div>
+   <div class="wizrow"><label>{{S_HOTKEY}}</label><span class="wizkey" id="wiz_hot">—</span>
+    <button type="button" class="btn" id="wiz_hotb">{{S_CHANGE}}</button></div>
+   <div class="wizrow"><label for="wiz_mic">{{S_MIC}}</label><select id="wiz_mic"></select></div>
+   <div class="wizrow"><span class="wizbar"><i id="wiz_micbar"></i></span><span class="wizout" id="wiz_michint"></span></div>
+  </div>
+  <div class="wizstep" id="wz3">
+   <div class="wizh">{{S_WIZ_T_TRY}}</div>
+   <div class="wiztext" id="wiz_trytext"></div>
+   <textarea class="wiztry" id="wiz_try" placeholder="{{S_WIZ_TRY_PH}}"></textarea>
+   <div class="wizout" id="wiz_tryout"></div>
+  </div>
+  <div class="wizstep" id="wz4">
+   <div class="wizbig">&#10003;</div>
+   <div class="wizh">{{S_WIZ_T_DONE}}</div>
+   <div class="wiztext">{{S_WIZ_DONE_TEXT}}</div>
+   <div class="row" style="max-width:430px"><label class="lbl" for="wiz_auto">{{S_WIZ_AUTORUN}}<span class="sub">{{S_WIZ_AUTORUN_SUB}}</span></label><input type="checkbox" id="wiz_auto"></div>
+  </div>
+ </div>
+ <div class="wizfoot">
+  <span class="wizdots" id="wizdots"></span>
+  <button type="button" class="btn ghost" id="wiz_skip">{{S_WIZ_SKIP}}</button>
+  <span class="wizgap"></span>
+  <button type="button" class="btn ghost" id="wiz_back">{{S_WIZ_BACK}}</button>
+  <button type="button" class="btn" id="wiz_next">{{S_WIZ_NEXT}}</button>
+ </div>
+</div>
+
 
 
 <script>
@@ -1520,6 +1654,20 @@ function startMeter(barId, pageId, hintId){
     }
   }, 120);
 }
+async function applyMic(){
+  const micSel = document.getElementById("mic_device");
+  const r = JSON.parse(await appMicSelect(micSel.value));
+  const note = document.getElementById("mic_err");
+  if(!r.ok){
+    micSel.value = micChosen;
+    if(note) note.textContent = r.message || "";
+    toast(r.message, "error");
+    return;
+  }
+  micChosen = micSel.value;
+  if(note) note.textContent = "";
+  doSave();
+}
 function startMicMeter(){
   if(micTimer) return;
   micTimer = startMeter("mic_bar", "p-mic", "mic_hint");
@@ -1815,20 +1963,7 @@ function load(){
   trd.checked = translateDefault;
   trd.onchange = ()=>{ translateDefault = trd.checked; syncTrControls(); };
   document.getElementById("translate_ask").onchange = syncTrControls;
-  const micSel = document.getElementById("mic_device");
-  micSel.onchange = async ()=>{
-    const r = JSON.parse(await appMicSelect(micSel.value));
-    const note = document.getElementById("mic_err");
-    if(!r.ok){
-      micSel.value = micChosen;
-      if(note) note.textContent = r.message || "";
-      toast(r.message, "error");
-      return;
-    }
-    micChosen = micSel.value;
-    if(note) note.textContent = "";
-    doSave();
-  };
+  document.getElementById("mic_device").onchange = applyMic;
   document.getElementById("mic_refresh").onclick = refreshMics;
   refreshMics();
   startMicMeter();
@@ -1891,6 +2026,8 @@ function syncTrControls(){
 function setHotkey(s){
   CFG.hotkey=s;
   document.getElementById("hotkey").textContent=s;
+  const w = document.getElementById("wiz_hot");
+  if(w) w.textContent = s;
 }
 async function doSave(){
   const micSel = document.getElementById("mic_device");
@@ -1912,7 +2049,7 @@ async function doSave(){
   sels.forEach(k=>f[k]=document.getElementById(k).value);
   const langChanged = f.ui_language !== (CFG.ui_language || "auto");
   const r = JSON.parse(await appSave(JSON.stringify(f)));
-  if(langChanged){ appReload(curTab); return; }
+  if(langChanged){ appReload(wizOn ? "wizard" : curTab); return; }
   toast(r.message, r.severity);
   refreshModels();
   refreshState();
@@ -2015,6 +2152,189 @@ function searchSettings(q){
 function searchStep(delta){
   if(hits.length) showHit(hitAt + delta);
 }
+const WIZ_N = 5;
+let wizOn = false, wizStep = 0, wizBase = 0, wizPlan = [], wizDlIds = [];
+function wizEl(id){ return document.getElementById(id); }
+function wizShow(n){
+  wizStep = Math.max(0, Math.min(WIZ_N - 1, n));
+  document.querySelectorAll(".wizstep").forEach((s, i)=>s.classList.toggle("on", i === wizStep));
+  const dots = wizEl("wizdots");
+  dots.innerHTML = "";
+  for(let i = 0; i < WIZ_N; i++){
+    const d = document.createElement("i");
+    if(i <= wizStep) d.classList.add("on");
+    dots.appendChild(d);
+  }
+  wizEl("wiz_back").style.display = wizStep ? "" : "none";
+  wizEl("wiz_skip").style.display = wizStep === WIZ_N - 1 ? "none" : "";
+  wizEl("wiz_next").textContent = wizStep === WIZ_N - 1 ? L.wizfinish : L.wiznext;
+  wizEl("wizbody").scrollTop = 0;
+  if(wizStep === 1) wizAdvise();
+  if(wizStep === 2) wizInput();
+  if(wizStep === 3) wizTry();
+  if(wizStep === 4) wizDone();
+}
+async function wizAdvise(){
+  const v = wizEl("wiz_lang").value || "ru";
+  const bucket = v === "ru" ? "ru" : (v === "en" ? "en" : "multi");
+  const r = JSON.parse(await appAdvise(bucket, "balance", false));
+  wizPlan = r.plan || [];
+  const box = wizEl("wiz_plan");
+  box.innerHTML = "";
+  wizPlan.forEach((p, i)=>{
+    const row = document.createElement("div");
+    row.className = "advrow";
+    row.innerHTML = '<span class="advrole">'+(i === 0 ? L.advprimary : L.advcompanion)+'</span>'+
+      '<span class="advname">'+esc(p.name)+'</span>'+
+      '<span class="advstate'+(p.installed ? " ok" : "")+'">'+(p.installed ? L.advhave : (p.size ? p.size+" MB" : ""))+'</span>';
+    box.appendChild(row);
+  });
+  const missing = wizPlan.filter(p=>!p.installed);
+  const btn = wizEl("wiz_dl");
+  const out = wizEl("wiz_dlout");
+  btn.style.display = missing.length ? "" : "none";
+  btn.textContent = L.dl + (r.need ? " · " + r.need + " MB" : "");
+  wizEl("wiz_dlrow").style.display = "none";
+  out.textContent = missing.length ? "" : L.wizhave;
+  out.classList.toggle("ok", !missing.length);
+  wizDlIds = [];
+}
+async function wizApplyModel(){
+  if(!wizPlan.length) return;
+  const first = wizPlan[0];
+  if(!first.installed) return;
+  selModel = first.id;
+  await doSave();
+  refreshModels();
+}
+async function wizDownload(){
+  const missing = wizPlan.filter(p=>!p.installed);
+  if(!missing.length) return;
+  wizEl("wiz_dl").style.display = "none";
+  wizEl("wiz_dlrow").style.display = "";
+  wizEl("wiz_dlout").textContent = "";
+  wizDlIds = missing.map(p=>p.id);
+  for(const p of missing) await appModelDl(p.id);
+}
+async function wizPollDl(){
+  if(!wizDlIds.length) return;
+  const rows = JSON.parse(await appModels());
+  let sum = 0, done = 0, err = "";
+  wizDlIds.forEach(id=>{
+    const row = rows.find(m=>m.id === id);
+    if(!row) return;
+    if(row.state === "downloading"){ sum += row.pct; return; }
+    if(row.state === "absent"){ if(row.err) err = row.err; return; }
+    sum += 100;
+    done++;
+  });
+  const pct = Math.round(sum / wizDlIds.length);
+  wizEl("wiz_dlbar").style.width = pct + "%";
+  wizEl("wiz_dlpct").textContent = pct + "%";
+  if(err){
+    wizDlIds = [];
+    wizEl("wiz_dlrow").style.display = "none";
+    wizEl("wiz_dl").style.display = "";
+    const out = wizEl("wiz_dlout");
+    out.textContent = err;
+    out.classList.remove("ok");
+    return;
+  }
+  if(done === wizDlIds.length){
+    wizDlIds = [];
+    wizPlan = wizPlan.map(p=>({...p, installed: true}));
+    wizEl("wiz_dlrow").style.display = "none";
+    const out = wizEl("wiz_dlout");
+    out.textContent = L.wizhave;
+    out.classList.add("ok");
+    await wizApplyModel();
+  }
+}
+function wizInput(){
+  wizEl("wiz_hot").textContent = CFG.hotkey || L.nohot;
+  const src = wizEl("mic_device"), dst = wizEl("wiz_mic");
+  dst.innerHTML = src.innerHTML;
+  dst.value = src.value;
+}
+async function wizTry(){
+  const s = JSON.parse(await appState());
+  wizBase = s.last_at || 0;
+  wizEl("wiz_trytext").textContent = L.wiztry.replace("%s", CFG.hotkey || L.nohot);
+  const out = wizEl("wiz_tryout");
+  out.textContent = L.wizwait;
+  out.classList.remove("ok");
+  const ta = wizEl("wiz_try");
+  ta.value = "";
+  setTimeout(()=>ta.focus(), 60);
+}
+async function wizPollTry(){
+  const s = JSON.parse(await appState());
+  if(!s.last_at || s.last_at <= wizBase) return;
+  const out = wizEl("wiz_tryout");
+  out.textContent = L.wizheard + " " + s.last;
+  out.classList.add("ok");
+}
+async function wizDone(){
+  wizEl("wiz_auto").checked = await appAutorun();
+}
+async function wizFinish(){
+  await appSetAutorun(wizEl("wiz_auto").checked);
+  await appWizardDone();
+  wizClose();
+}
+async function wizSkip(){
+  await appWizardDone();
+  wizClose();
+}
+function wizClose(){
+  wizOn = false;
+  wizEl("wiz").classList.remove("on");
+  show("state");
+}
+function initWizard(){
+  wizEl("wiz_next").onclick = ()=>{ if(wizStep === WIZ_N - 1) wizFinish(); else wizShow(wizStep + 1); };
+  wizEl("wiz_back").onclick = ()=>wizShow(wizStep - 1);
+  wizEl("wiz_skip").onclick = wizSkip;
+  wizEl("wiz_dl").onclick = wizDownload;
+  wizEl("wiz_hotb").onclick = ()=>appCapture();
+  wizEl("wiz_ui").onchange = ()=>{
+    wizEl("ui_language").value = wizEl("wiz_ui").value;
+    doSave();
+  };
+  wizEl("wiz_lang").onchange = ()=>{
+    wizEl("language").value = wizEl("wiz_lang").value;
+    doSave();
+    wizAdvise();
+  };
+  wizEl("wiz_mic").onchange = async ()=>{
+    const src = wizEl("mic_device"), dst = wizEl("wiz_mic");
+    src.value = dst.value;
+    await applyMic();
+    dst.value = src.value;
+  };
+  wizEl("wizhead").addEventListener("mousedown", e=>{
+    if(e.target.closest("button, input, select")) return;
+    if(e.button === 0) appDrag();
+  });
+  setInterval(async ()=>{
+    if(!wizOn || wizStep !== 2) return;
+    const lvl = await appMicLevel();
+    wizEl("wiz_micbar").style.width = Math.min(100, Math.round(lvl * 130)) + "%";
+    wizEl("wiz_michint").textContent = lvl > 0.02 ? "" : L.micquiet;
+  }, 120);
+  setInterval(()=>{
+    if(!wizOn) return;
+    if(wizStep === 1) wizPollDl();
+    if(wizStep === 3) wizPollTry();
+  }, 800);
+}
+function wizStart(){
+  wizOn = true;
+  wizEl("wiz").classList.add("on");
+  wizEl("wiz_ui").value = CFG.ui_language || "auto";
+  wizEl("wiz_lang").value = CFG.language || "ru";
+  wizShow(0);
+}
 document.getElementById("upd_check").onclick = updCheck;
 let applyTimer = null;
 function applyNow(){
@@ -2041,6 +2361,7 @@ load();
   initModelFilters();
   initStateScreen();
   initRemote();
+  initWizard();
   bindLabels();
   applyLevel();
   document.querySelectorAll(".lvlb").forEach(b=>b.onclick=()=>setLevel(b.dataset.l));
@@ -2048,6 +2369,7 @@ load();
   if(omni){
     omni.addEventListener("input", ()=>searchSettings(omni.value));
     document.addEventListener("keydown", e=>{
+      if(wizOn) return;
       if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k"){ e.preventDefault(); omni.focus(); omni.select(); }
       if(e.key === "Escape" && document.activeElement === omni){ omni.value = ""; searchSettings(""); omni.blur(); }
       if(e.key === "Enter" && document.activeElement === omni){ e.preventDefault(); searchStep(e.shiftKey ? -1 : 1); }
@@ -2059,6 +2381,7 @@ load();
 })();
 const tabAlias = {general:"state", rec:"models", proc:"text", server:"system", about:"about", state:"state", dictation:"dictation", mic:"mic", models:"models", text:"text", translate:"translate", system:"system"};
 show(tabAlias[CFG._tab] || "state");
+if(CFG._wizard || CFG._tab === "wizard") wizStart();
 setTimeout(()=>{ if(window.appReady) appReady(); }, 400);
 </script>
 </body></html>`

@@ -31,5 +31,6 @@
   "default_profile": "",
   "llm_port": 8911,
   "llm_exe": "llama-server.exe",
-  "llm_model": "models/qwen2.5-1.5b-instruct-q4_k_m.gguf"
+  "llm_model": "models/qwen2.5-1.5b-instruct-q4_k_m.gguf",
+  "wizard_done": false
 }

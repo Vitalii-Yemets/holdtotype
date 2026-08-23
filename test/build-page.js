@@ -49,6 +49,7 @@ const cfg = {
   ],
   _version: "0.0.0-test",
   _tab: "general",
+  _wizard: false,
   _cpus: 8,
 };
 
@@ -68,6 +69,9 @@ const strings = {
   updavail: "Version %s available.", updgo: "Update", upderr: "Check failed",
   upddl: "Downloading", micdefault: "System default", micquiet: "quiet",
   more: "%d more settings", less: "Collapse %d settings",
+  wiznext: "Next", wizfinish: "Finish", wizwait: "Waiting for the first phrase…",
+  wizheard: "Heard:", wizhave: "Everything you need is already downloaded",
+  wiztry: "Put the caret in the field below, hold %s, say a phrase and let go.",
 };
 
 let html = src.slice(start, end);

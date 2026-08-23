@@ -375,6 +375,9 @@ func main() {
 				app.openSettings(tab)
 			}()
 		}
+		if arg == "-wizard" {
+			cfg.WizardDone = false
+		}
 		if arg == "-testpaste" && i+1 < len(args) {
 			text := args[i+1]
 			go func() {
@@ -389,6 +392,13 @@ func main() {
 				app.insertResult(context.Background(), app.snapshot(), time.Now(), text, "", tw)
 			}()
 		}
+	}
+	if !cfg.WizardDone {
+		log.Printf("первый запуск: открываю мастер настройки")
+		go func() {
+			time.Sleep(1500 * time.Millisecond)
+			app.openSettings("wizard")
+		}()
 	}
 	runTray(app)
 }

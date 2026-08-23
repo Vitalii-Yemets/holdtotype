@@ -49,6 +49,7 @@ Hold a hotkey — speak. Release — the transcribed text is pasted right where 
 - 🔊 **Sound themes** — several synthesized cue sets plus Windows system sounds, with preview.
 - ⚡ **Nothing to save, nothing to restart** — every change applies the moment you make it; the Save button is gone. The settings that describe the recognition server — port, threads, server path, remote URL, autostart — restart the recognizer itself, which takes about a second; the app is never asked to be restarted.
 - 🔍 **Find a setting** — Ctrl+K, a word, and the window jumps to the right section and highlights the row, even when the row is hidden by simple mode.
+- 🧭 **First-run wizard** — five steps on the very first launch: interface language, the dictation language (the model is chosen and downloaded for you, with a progress bar), the shortcut and microphone with a live level bar, a field to try a real dictation into, and starting with Windows. Skipping it leaves a working app; upgrades never see it.
 - 🎚️ **Simple mode** — new installs open with 15 rarely-touched settings folded away behind "N more settings" in each section, and a SIMPLE/ALL switch in the title bar shows which view is on. Upgrades keep the full view, because taking away settings someone has already seen is a regression.
 - ⏯️ **Hold or toggle** — hold the keys as before, or press once to start and once to stop.
 - 🖥️ **One window, eight sections** — a sidebar instead of tabs inside tabs: Status, Dictation, Microphone, Models, Text, Translation, System, About. The Status screen answers "is everything ready" at a glance — hotkey, microphone, engine and model, free memory, last dictation — and a status bar keeps that answer visible from every section.
@@ -89,8 +90,9 @@ Download the archive from Releases (or build `dist/` yourself), copy the folder 
 ## 🎯 Usage
 
 1. Launch the app — a green microphone icon appears in the tray.
-2. Place the cursor in any input field, **hold `Ctrl+Win`** (configurable), say a phrase, **release** — the text is inserted.
-3. Right-click the tray icon — the menu: enable/disable, settings, config, log, quit.
+2. On the very first launch a five-step wizard opens: interface language, the language you will dictate in (it picks and downloads the model for you), the shortcut and microphone with a live level bar, a field to try a dictation into, and — last — starting with Windows. Skip it and everything still works; run `holdtotype.exe -wizard` to see it again.
+3. Place the cursor in any input field, **hold `Ctrl+Win`** (configurable), say a phrase, **release** — the text is inserted.
+4. Right-click the tray icon — the menu: enable/disable, settings, config, log, quit.
 
 Icon colors: green — ready, red — recording, orange — transcribing, grey — disabled/error.
 

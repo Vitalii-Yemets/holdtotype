@@ -89,6 +89,7 @@ type Config struct {
 	CheckUpdates        bool      `json:"check_updates"`
 	MicDevice           string    `json:"mic_device"`
 	MicDeviceName       string    `json:"mic_device_name"`
+	WizardDone          bool      `json:"wizard_done"`
 }
 
 func presetProfiles() []Profile {
@@ -141,6 +142,7 @@ func defaultConfig() *Config {
 		LLMPort:          8911,
 		LLMExe:           "llama-server.exe",
 		LLMModel:         "models/" + llmFile,
+		WizardDone:       true,
 	}
 }
 
