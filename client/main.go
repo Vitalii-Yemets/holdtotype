@@ -277,6 +277,19 @@ func main() {
 			log.Printf("routecheck: оба движка остановлены")
 			return
 		}
+		if arg == "-dialogs" {
+			cfg, _ := loadConfig("config.json")
+			if cfg != nil {
+				initLang(cfg.UILanguage)
+			}
+			log.Printf("демонстрация диалогов: смена фокуса")
+			log.Printf("ответ: %q", askFocusMismatch())
+			if cfg != nil {
+				log.Printf("демонстрация диалогов: выбор языка перевода")
+				log.Printf("ответ: %q", askTranslateTarget(cfg))
+			}
+			return
+		}
 		if arg == "-overlay" {
 			cfg, _ := loadConfig("config.json")
 			if cfg != nil {
