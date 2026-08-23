@@ -546,14 +546,58 @@ func adviseModel(lang, priority string, needTranslate bool) string {
 }
 
 type stateOut struct {
-	Hotkey string `json:"hotkey"`
-	Mic    string `json:"mic"`
-	Engine string `json:"engine"`
-	LLM    string `json:"llm"`
-	RAM    string `json:"ram"`
-	Last   string `json:"last"`
-	Ready  bool   `json:"ready"`
-	Status string `json:"status"`
+	Hotkey   string `json:"hotkey"`
+	Mic      string `json:"mic"`
+	Engine   string `json:"engine"`
+	LLM      string `json:"llm"`
+	RAM      string `json:"ram"`
+	Last     string `json:"last"`
+	LastMeta string `json:"last_meta"`
+	Ready    bool   `json:"ready"`
+	Status   string `json:"status"`
+
+	RuModel    string `json:"ru_model"`
+	OtherModel string `json:"other_model"`
+	LLMOK      bool   `json:"llm_ok"`
+	MicOK      bool   `json:"mic_ok"`
+	StatusLine string `json:"status_line"`
+	Badges     struct {
+		Mic    string `json:"mic"`
+		Models string `json:"models"`
+		System string `json:"system"`
+	} `json:"badges"`
+}
+
+func agoLabel(d time.Duration) string {
+	switch {
+	case d < time.Minute:
+		return tr("ago.now")
+	case d < time.Hour:
+		return trf("ago.min", int(d.Minutes()))
+	default:
+		return trf("ago.hour", int(d.Hours()))
+	}
+}
+
+func installedModelCount() int {
+	n := 0
+	for i := range modelCatalog {
+		if modelCatalog[i].installed() {
+			n++
+		}
+	}
+	return n
+}
+
+func systemWarnings(cfg *Config) int {
+	n := 0
+	if cfg.ServerURL != "" {
+		n++
+	}
+	if !cfg.ServerAutostart {
+		n++
+	}
+	return n
 }
 
 func (a *App) stateSnapshot() string {
@@ -587,15 +631,65 @@ func (a *App) stateSnapshot() string {
 	if last == "" {
 		last = "—"
 	}
-	out, _ := json.Marshal(stateOut{
-		Hotkey: cfg.Hotkey,
-		Mic:    mic,
-		Engine: primaryEngine(cfg) + " · " + filepath.Base(filepath.Clean(activeModelPath(cfg))),
-		LLM:    llm,
-		RAM:    trf("adv.ram", free),
-		Last:   last,
-		Ready:  ready,
-		Status: status,
-	})
+	lastMeta := ""
+	if a.lastResultAt.IsZero() {
+		last = "—"
+	} else {
+		parts := []string{agoLabel(time.Since(a.lastResultAt)), trf("chars", len([]rune(a.lastResult)))}
+		if a.lastTarget != "" {
+			parts = append(parts, trf("inserted.into", a.lastTarget))
+		}
+		lastMeta = strings.Join(parts, " · ")
+	}
+
+	ruModel := filepath.Base(filepath.Clean(cfg.SherpaModel))
+	if !sherpaInstalled(cfg) {
+		ruModel = strS("S_NOT_INSTALLED")
+	}
+	st := stateOut{
+		Hotkey:     cfg.Hotkey,
+		Mic:        mic,
+		Engine:     primaryEngine(cfg) + " · " + filepath.Base(filepath.Clean(activeModelPath(cfg))),
+		LLM:        llm,
+		RAM:        trf("adv.ram", free),
+		Last:       last,
+		LastMeta:   lastMeta,
+		Ready:      ready,
+		Status:     status,
+		RuModel:    ruModel,
+		OtherModel: filepath.Base(cfg.Model),
+		LLMOK:      llmInstalled(cfg),
+		MicOK:      rec != nil,
+		StatusLine: statusLine(cfg, ready, free),
+	}
+	st.Badges.Mic = shortLabel(mic, 14)
+	st.Badges.Models = itoaSafe(installedModelCount())
+	if w := systemWarnings(cfg); w > 0 {
+		st.Badges.System = itoaSafe(w)
+	}
+	out, _ := json.Marshal(st)
 	return string(out)
+}
+
+func itoaSafe(n int) string {
+	return fmt.Sprintf("%d", n)
+}
+
+func shortLabel(s string, max int) string {
+	r := []rune(s)
+	if len(r) <= max {
+		return s
+	}
+	return string(r[:max-1]) + "…"
+}
+
+func statusLine(cfg *Config, ready bool, freeMB int) string {
+	if !ready {
+		return tr("status.loading")
+	}
+	models := filepath.Base(filepath.Clean(activeModelPath(cfg)))
+	if primaryEngine(cfg) == engineSherpa {
+		models += " + " + filepath.Base(cfg.Model)
+	}
+	return trf("status.line", models, float64(freeMB)/1024)
 }

@@ -63,7 +63,9 @@ type App struct {
 	sessionCancel  context.CancelFunc
 	sessionTarget  uintptr
 
-	lastResult string
+	lastResult   string
+	lastResultAt time.Time
+	lastTarget   string
 	updVer     string
 	updURL     string
 
@@ -854,6 +856,8 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 func (a *App) insertResult(ctx context.Context, cfg *Config, start time.Time, text, skipped string, targetWnd uintptr) {
 	a.mu.Lock()
 	a.lastResult = text
+	a.lastResultAt = time.Now()
+	a.lastTarget = windowTitle(targetWnd)
 	a.mu.Unlock()
 
 	allowEnter := cfg.AutoEnter && skipped == ""

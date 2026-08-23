@@ -697,6 +697,16 @@ button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box
 .nav{appearance:none;border:0;background:none;text-align:left;font:inherit;font-size:12.5px;color:var(--dim);padding:8px 12px;cursor:pointer;border-left:2px solid transparent}
 .nav:hover{color:var(--green)}
 .nav.active{color:var(--green);border-left-color:var(--green);background:var(--panel);text-shadow:var(--glow)}
+.nav{display:flex;align-items:center;gap:7px}
+.nbadge{margin-left:auto;font-size:9px;padding:1px 5px;border:1px solid var(--line);color:var(--faint);white-space:nowrap}
+.nbadge:empty{display:none}
+.nbadge.warn{color:var(--amber);border-color:var(--amber)}
+.scard .led{width:6px;height:6px;border-radius:50%;background:var(--faint);display:inline-block;margin-right:6px;flex:none}
+.scard .led.on{background:var(--green);box-shadow:var(--glow)}
+.scard .led.warn{background:var(--amber)}
+.scard .mini{align-self:flex-start}
+.row .sub{display:block;font-size:10.5px;color:var(--faint);margin-top:2px;letter-spacing:0}
+.row .lbl{flex:1;min-width:0}
 .statusbar{border-top:1px solid var(--line);padding:6px 14px;display:flex;gap:12px;align-items:center;font-size:11px;color:var(--faint);flex-wrap:wrap}
 .statusbar .led{width:6px;height:6px;border-radius:50%;background:var(--faint);flex:none}
 .statusbar .led.on{background:var(--green);box-shadow:var(--glow)}
@@ -717,6 +727,7 @@ button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box
 .card{background:var(--panel);border:1px solid var(--line);box-shadow:inset 0 0 18px rgba(60,255,110,.05),0 0 9px rgba(60,255,110,.08);padding:10px 14px;margin-bottom:10px}
 .row{display:flex;align-items:center;gap:10px;padding:6px 0;flex-wrap:wrap}
 .row label{flex:1;min-width:100px;color:var(--green)}
+.row label .sub{display:block;font-size:10.5px;color:var(--faint);margin-top:2px;letter-spacing:0}
 .row select{flex:0 1 auto;min-width:0;max-width:100%}
 .row input[type=text]{flex:0 1 auto;min-width:0}
 .row .hint{font-size:11px;color:var(--faint)}
@@ -852,13 +863,13 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
  <span class="ngrp">{{S_GRP_WORK}}</span>
  <button class="nav" data-p="state">{{S_NAV_STATE}}</button>
  <button class="nav" data-p="dictation">{{S_NAV_DICT}}</button>
- <button class="nav" data-p="mic">{{S_NAV_MIC}}</button>
+ <button class="nav" data-p="mic">{{S_NAV_MIC}}<span class="nbadge" id="badge_mic"></span></button>
  <span class="ngrp">{{S_GRP_REC}}</span>
- <button class="nav" data-p="models">{{S_NAV_MODELS}}</button>
+ <button class="nav" data-p="models">{{S_NAV_MODELS}}<span class="nbadge" id="badge_models"></span></button>
  <button class="nav" data-p="text">{{S_NAV_TEXT}}</button>
  <button class="nav" data-p="translate">{{S_NAV_TR}}</button>
  <span class="ngrp">{{S_GRP_OTHER}}</span>
- <button class="nav" data-p="system">{{S_NAV_SYSTEM}}</button>
+ <button class="nav" data-p="system">{{S_NAV_SYSTEM}}<span class="nbadge warn" id="badge_system"></span></button>
  <button class="nav" data-p="about">{{S_NAV_ABOUT}}</button>
 </nav>
 
@@ -866,14 +877,24 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
 <div class="page" id="p-state">
  <div class="hero"><span class="herokey" id="state_hotkey"></span><span class="herotext">{{S_STATE_HINT}}</span></div>
  <div class="cards">
-  <div class="scard"><span class="k">{{S_NAV_MIC}}</span><span class="v" id="state_mic">—</span></div>
-  <div class="scard"><span class="k">{{S_STATE_ENGINE}}</span><span class="v" id="state_engine">—</span></div>
-  <div class="scard"><span class="k">{{S_STATE_PROC}}</span><span class="v" id="state_llm">—</span></div>
-  <div class="scard"><span class="k">{{S_STATE_MEM}}</span><span class="v" id="state_ram">—</span></div>
+  <div class="scard"><span class="k">{{S_NAV_MIC}}</span>
+   <span class="v"><i class="led" id="state_mic_led"></i><span id="state_mic">—</span></span>
+   <span class="miclevel"><i id="state_mic_bar"></i></span></div>
+  <div class="scard"><span class="k">{{S_STATE_RU}}</span>
+   <span class="v"><i class="led" id="state_ru_led"></i><span id="state_ru">—</span></span>
+   <button class="mini" data-goto="models">{{S_CHANGE_MODEL}}</button></div>
+  <div class="scard"><span class="k">{{S_STATE_OTHER}}</span>
+   <span class="v"><i class="led" id="state_other_led"></i><span id="state_other">—</span></span>
+   <button class="mini" data-goto="models">{{S_CHANGE_MODEL}}</button></div>
+  <div class="scard"><span class="k">{{S_STATE_PROC}}</span>
+   <span class="v"><i class="led" id="state_llm_led"></i><span id="state_llm">—</span></span>
+   <button class="mini" data-goto="models">{{S_PICK_MODEL}}</button></div>
  </div>
  <div class="sect">{{S_STATE_LAST}}</div>
- <div class="row"><span class="lastres" id="state_last">—</span>
+ <div class="row"><span class="lbl"><span class="lastres" id="state_last">—</span><span class="sub" id="state_last_meta"></span></span>
   <button class="mini" id="state_copy">{{S_STATE_COPY}}</button></div>
+ <div class="row"><span class="lbl">{{S_STATE_MEM}}<span class="sub">{{S_STATE_MEM_SUB}}</span></span>
+  <span class="val" id="state_ram">—</span></div>
 </div>
 
 <div class="page" id="p-dictation">
@@ -881,14 +902,14 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
   <div class="row"><label>{{S_HOTKEY}}</label>
    <div class="hotkey-box"><span class="hotkey-val" id="hotkey"></span>
    <button class="btn" onclick="appCapture()">{{S_CHANGE}}</button></div></div>
-  <div class="row"><label>{{S_MINMS}}</label><span class="val" id="min_record_ms_v"></span><input type="range" id="min_record_ms" min="0" max="1000" step="50"></div>
+  <div class="row"><label>{{S_MINMS}}<span class="sub">{{S_SUB_MINMS}}</span></label><span class="val" id="min_record_ms_v"></span><input type="range" id="min_record_ms" min="0" max="1000" step="50"></div>
   <div class="row"><label>{{S_MAXSEC}}</label><span class="val" id="max_record_seconds_v"></span><input type="range" id="max_record_seconds" min="10" max="300" step="10"></div>
  </div>
  <div class="card">
   <div class="sect">{{S_SEC_BEHAVIOR}}</div>
-  <div class="row"><label>{{S_AUTOENTER}}</label><input type="checkbox" id="auto_enter"></div>
-  <div class="row"><label>{{S_RESTORE}}</label><input type="checkbox" id="restore_clipboard"></div>
-  <div class="row"><label>{{S_TYPEMODE}}</label><input type="checkbox" id="type_mode"></div>
+  <div class="row"><label>{{S_AUTOENTER}}<span class="sub">{{S_SUB_ENTER}}</span></label><input type="checkbox" id="auto_enter"></div>
+  <div class="row"><label>{{S_RESTORE}}<span class="sub">{{S_SUB_CLIP}}</span></label><input type="checkbox" id="restore_clipboard"></div>
+  <div class="row"><label>{{S_TYPEMODE}}<span class="sub">{{S_SUB_TYPE}}</span></label><input type="checkbox" id="type_mode"></div>
  </div>
  <div class="card">
   <div class="sect">{{S_SEC_OVERLAY}}</div>
@@ -959,7 +980,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
     <option value="fr">Français</option><option value="es">Español</option>
     <option value="pl">Polski</option>
    </select></div>
-  <div class="row"><label>{{S_THREADS}}</label><span class="val" id="threads_v"></span><input type="range" id="threads" min="1" max="16" step="1"></div>
+  <div class="row"><label>{{S_THREADS}}<span class="sub">{{S_SUB_THREADS}}</span></label><span class="val" id="threads_v"></span><input type="range" id="threads" min="1" max="16" step="1"></div>
  </div>
  <div class="card">
   <div class="sect">{{S_SEC_LLM}}<span class="hfhome" onclick="appHFHome()" title="huggingface.co">Hugging Face ↗</span></div>
@@ -970,7 +991,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
 
 <div class="page" id="p-text">
  <div class="card">
-  <div class="row"><label>{{S_PUNCT}}</label>
+  <div class="row"><label>{{S_PUNCT}}<span class="sub">{{S_SUB_PUNCT}}</span></label>
    <select id="punctuation">
     <option value="model">{{S_PUNCT_MODEL}}</option>
     <option value="llm">{{S_PUNCT_LLM}}</option>
@@ -994,7 +1015,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
   <div style="color:var(--faint);font-size:12px;margin-bottom:6px">{{S_TR_HINT}}</div>
   <div id="tr_warn" style="display:none;color:var(--amber);font-size:12px;margin-bottom:6px">{{S_TR_TURBO}}</div>
   <div class="row"><label>{{S_TR_DEFAULT}}</label><input type="checkbox" id="tr_default"></div>
-  <div class="row"><label>{{S_TR_TARGET}}</label>
+  <div class="row"><label>{{S_TR_TARGET}}<span class="sub">{{S_SUB_TRTARGET}}</span></label>
    <select id="translate_target">
     <option value="en">English</option><option value="uk">Українська</option>
     <option value="de">Deutsch</option><option value="fr">Français</option>
@@ -1042,13 +1063,13 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
    </select></div>
   <div class="row"><label>{{S_UPD}}</label>
    <button class="mini" id="upd_check">{{S_UPD_CHECK}}</button></div>
-  <div class="row"><label>{{S_UPD_AUTO}}</label><input type="checkbox" id="check_updates"></div>
+  <div class="row"><label>{{S_UPD_AUTO}}<span class="sub">{{S_SUB_UPD}}</span></label><input type="checkbox" id="check_updates"></div>
   <div id="upd_out" style="font-size:12px;min-height:18px;color:var(--amber)"></div>
  </div>
  <div class="card">
   <div class="sect">{{S_SEC_SERVICE}}</div>
-  <div class="row"><label>{{S_AUTOSTART}}</label><input type="checkbox" id="server_autostart"></div>
-  <div class="row"><label>{{S_PORT}}</label><input type="text" id="server_port" style="width:90px"></div>
+  <div class="row"><label>{{S_AUTOSTART}}<span class="sub">{{S_SUB_AUTOSTART}}</span></label><input type="checkbox" id="server_autostart"></div>
+  <div class="row"><label>{{S_PORT}}<span class="sub">{{S_SUB_PORT}}</span></label><input type="text" id="server_port" style="width:90px"></div>
   <div class="row"><label>{{S_SERVEREXE}}</label><input type="text" id="server_exe"></div>
   <div class="row"><label>{{S_SERVERURL}}<div class="hint">{{S_URLHINT}}</div></label><input type="text" id="server_url"></div>
  </div>
@@ -1430,20 +1451,41 @@ let baseline = null;
 async function refreshState(){
   const s = JSON.parse(await appState());
   const set = (id, v)=>{ const el = document.getElementById(id); if(el) el.textContent = v; };
+  const led = (id, on, warn)=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.classList.toggle("on", !!on);
+    el.classList.toggle("warn", !!warn);
+  };
   set("state_hotkey", s.hotkey);
   set("state_mic", s.mic);
-  set("state_engine", s.engine);
+  set("state_ru", s.ru_model);
+  set("state_other", s.other_model);
   set("state_llm", s.llm);
   set("state_ram", s.ram);
   set("state_last", s.last);
-  set("st_main", s.status);
-  const led = document.getElementById("st_led");
-  if(led) led.classList.toggle("on", !!s.ready);
+  set("state_last_meta", s.last_meta || "");
+  set("st_main", s.status_line || s.status);
+  led("state_mic_led", s.mic_ok);
+  led("state_ru_led", s.ru_model && s.ru_model.indexOf("/") < 0 && s.ready, !s.ready);
+  led("state_other_led", true);
+  led("state_llm_led", s.llm_ok, !s.llm_ok);
+  led("st_led", s.ready);
+  const badge = (id, v)=>{ const el = document.getElementById(id); if(el) el.textContent = v || ""; };
+  badge("badge_mic", s.badges && s.badges.mic);
+  badge("badge_models", s.badges && s.badges.models);
+  badge("badge_system", s.badges && s.badges.system);
+  const bar = document.getElementById("state_mic_bar");
+  if(bar && curTab === "state"){
+    const lvl = await appMicLevel();
+    bar.style.width = Math.min(100, Math.round(lvl * 130)) + "%";
+  }
 }
 function initStateScreen(){
   const copy = document.getElementById("state_copy");
   if(copy) copy.onclick = ()=>{ appCopyLast(); toast(L.upd); };
-  setInterval(()=>{ if(curTab === "state") refreshState(); }, 3000);
+  document.querySelectorAll("[data-goto]").forEach(b=>{ b.onclick = ()=>show(b.dataset.goto); });
+  setInterval(()=>{ if(curTab === "state") refreshState(); restartHint(); }, 1500);
   refreshState();
 }
 let modelFilter = "all";
@@ -1575,6 +1617,13 @@ function formState(){
   return JSON.stringify(o);
 }
 function dirty(){ return baseline !== null && formState() !== baseline; }
+function restartHint(){
+  const el = document.getElementById("st_pend");
+  if(!el || baseline === null) return;
+  const base = JSON.parse(baseline), now = JSON.parse(formState());
+  const needs = ["server_port","server_exe","server_url"].some(k=>String(base[k]) !== String(now[k]));
+  el.textContent = needs ? L.hint : "";
+}
 function revert(){
   if(baseline === null) return;
   const b = JSON.parse(baseline);

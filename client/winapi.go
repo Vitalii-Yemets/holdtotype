@@ -263,3 +263,17 @@ func waitModifiersReleased(timeout time.Duration) {
 		time.Sleep(20 * time.Millisecond)
 	}
 }
+
+var procGetWindowTextW = user32.NewProc("GetWindowTextW")
+
+func windowTitle(hwnd uintptr) string {
+	if hwnd == 0 || hwnd == 1 {
+		return ""
+	}
+	buf := make([]uint16, 256)
+	n, _, _ := procGetWindowTextW.Call(hwnd, uintptr(unsafe.Pointer(&buf[0])), uintptr(len(buf)))
+	if n == 0 {
+		return ""
+	}
+	return windows.UTF16ToString(buf[:n])
+}

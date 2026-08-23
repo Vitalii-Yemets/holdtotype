@@ -18,7 +18,11 @@ const dom = new JSDOM(html, {
     window.confirm = () => true;
     window.appLLM = async () => JSON.stringify(llmState);
     window.appState = async () =>
-      JSON.stringify({ hotkey: "ctrl+win", mic: "Realtek", engine: "sherpa · gigaam-v3", llm: "model.gguf", ram: "8000 MB free", last: "hello", ready: true, status: "Ready" });
+      JSON.stringify({ hotkey: "ctrl+win", mic: "Realtek", engine: "sherpa · gigaam-v3", llm: "model.gguf",
+        ram: "8000 MB free", last: "hello", last_meta: "just now · 5 characters", ready: true, status: "Ready",
+        status_line: "Ready · gigaam-v3 + ggml-small.bin · 7.8 GB free", ru_model: "gigaam-v3",
+        other_model: "ggml-small.bin", llm_ok: true, mic_ok: true,
+        badges: { mic: "Realtek", models: "2", system: "" } });
     window.appRouting = async () =>
       JSON.stringify([
         { cond: "Speech in RU", engine: "gigaam-v3", why: "more accurate here" },
@@ -84,8 +88,11 @@ function check(name, actual, expected) {
 
   check("opens on the status screen", shown("state"), true);
   check("status hotkey shown", d.getElementById("state_hotkey").textContent, "ctrl+win");
-  check("status engine shown", d.getElementById("state_engine").textContent, "sherpa · gigaam-v3");
-  check("status bar filled", d.getElementById("st_main").textContent, "Ready");
+  check("status shows russian model", d.getElementById("state_ru").textContent, "gigaam-v3");
+  check("status shows other-language model", d.getElementById("state_other").textContent, "ggml-small.bin");
+  check("last dictation carries details", d.getElementById("state_last_meta").textContent, "just now · 5 characters");
+  check("status bar names both models", d.getElementById("st_main").textContent, "Ready · gigaam-v3 + ggml-small.bin · 7.8 GB free");
+  check("sidebar badges filled", [d.getElementById("badge_mic").textContent, d.getElementById("badge_models").textContent], ["Realtek", "2"]);
   check("status bar led lit", d.getElementById("st_led").classList.contains("on"), true);
 
   check("eight sections in the sidebar", d.querySelectorAll(".nav").length, 8);
