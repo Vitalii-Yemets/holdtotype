@@ -1,6 +1,7 @@
 package main
 
 import (
+	"holdtotype/internal/mojibake"
 	"holdtotype/internal/routing"
 
 	"bytes"
@@ -145,6 +146,10 @@ func defaultConfig() *Config {
 
 var saveMu sync.Mutex
 
+func withBOM(out []byte) []byte {
+	return append([]byte{0xEF, 0xBB, 0xBF}, append(out, '\n')...)
+}
+
 func saveConfig(path string, cfg *Config) error {
 	saveMu.Lock()
 	defer saveMu.Unlock()
@@ -153,7 +158,7 @@ func saveConfig(path string, cfg *Config) error {
 		return err
 	}
 	tmp := path + ".tmp"
-	if err := os.WriteFile(tmp, append(out, '\n'), 0o644); err != nil {
+	if err := os.WriteFile(tmp, withBOM(out), 0o644); err != nil {
 		return err
 	}
 	if err := os.Rename(tmp, path); err != nil {
@@ -161,6 +166,22 @@ func saveConfig(path string, cfg *Config) error {
 		return err
 	}
 	return nil
+}
+
+func fixConfigText(cfg *Config) bool {
+	changed := false
+	fix := func(p *string) {
+		if v := mojibake.Fix(*p); v != *p {
+			*p = v
+			changed = true
+		}
+	}
+	fix(&cfg.WhisperPrompt)
+	for i := range cfg.Profiles {
+		fix(&cfg.Profiles[i].Name)
+		fix(&cfg.Profiles[i].Prompt)
+	}
+	return changed
 }
 
 func loadConfig(path string) (*Config, error) {
@@ -197,6 +218,10 @@ func loadConfig(path string) (*Config, error) {
 		return cfg, nil
 	}
 	migrated := fileConfigVersion(data) != configVersion
+	if fixConfigText(cfg) {
+		log.Printf("конфигурация: текст был испорчен сторонним редактором — кодировка восстановлена")
+		migrated = true
+	}
 	if cfg.PasteMode != "clipboard" && cfg.PasteMode != "type" {
 		cfg.PasteMode = "clipboard"
 	}

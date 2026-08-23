@@ -663,7 +663,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"upd": "S_UPDATED", "pedit": "S_PROF_EDIT", "pclose": "S_PROF_CLOSE",
 		"confirmdel": "S_CONFIRM_DEL", "free": "S_FREE", "updnone": "S_UPD_NONE",
 		"micdefault": "S_MIC_DEFAULT", "micquiet": "S_MIC_QUIET",
-		"more": "S_MORE", "less": "S_LESS", "hidden": "S_HIDDEN", "showall": "S_SHOWALL", "showsimple": "S_SHOWSIMPLE",
+		"more": "S_MORE", "less": "S_LESS", "hidden": "S_HIDDEN", "allshown": "S_ALLSHOWN", "showall": "S_SHOWALL", "showsimple": "S_SHOWSIMPLE",
 		"updavail": "S_UPD_AVAIL", "updgo": "S_UPD_GO", "upderr": "S_UPD_ERR", "upddl": "S_UPD_DL",
 	} {
 		lMap[jsKey] = str(sKey)
@@ -697,7 +697,7 @@ button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box
 .logo{width:40px;height:40px;flex:none}
 .logo svg{width:100%;height:100%;filter:drop-shadow(0 0 5px rgba(60,255,110,.7))}
 .header h1{font-size:15px;letter-spacing:2px;text-shadow:var(--glow);animation:flicker 6s infinite}
-.header .ver{margin-left:auto;font-size:12px;color:var(--dim)}
+.header .ver{font-size:12px;color:var(--dim);flex:none}
 @keyframes flicker{0%,93%,97%,100%{opacity:1}95%{opacity:.6}}
 @keyframes pulse{0%,100%{opacity:.35;transform:scale(.94)}50%{opacity:1;transform:scale(1)}}
 .wave{animation:pulse 1.6s infinite}
@@ -722,18 +722,23 @@ button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box
 .statusbar{border-top:1px solid var(--line);padding:6px 14px;display:flex;gap:12px;align-items:center;font-size:11px;color:var(--faint);flex-wrap:wrap}
 .statusbar .led{width:6px;height:6px;border-radius:50%;background:var(--faint);flex:none}
 .statusbar .led.on{background:var(--green);box-shadow:var(--glow)}
-.statusbar .stpend{margin-left:auto;color:var(--amber)}
+.statusbar .stpend{color:var(--amber)}
+.statusbar .stlvl{margin-left:auto;display:flex;align-items:center;gap:7px}
 .statusbar .stsaved{color:var(--dim)}
-.omni{margin-left:auto;display:flex;align-items:center;gap:7px;border:1px solid var(--line);padding:3px 8px;background:#08100b;min-width:min(230px,32%)}
-.omni input{flex:1;min-width:0;background:none;border:0;outline:none;color:var(--green);font:inherit;font-size:11.5px;padding:0}
+.omni{margin-left:auto;display:flex;align-items:center;gap:8px;flex:none;border:1px solid var(--line);background:var(--panel);padding:4px 9px;min-width:min(270px,32%)}
+.omni:focus-within{border-color:var(--dim);box-shadow:var(--glow)}
+.omni input[type=text]{flex:1;min-width:0;width:auto;background:none;border:0;box-shadow:none;outline:none;color:var(--green);font:inherit;font-size:11.5px;padding:0}
+.omni input[type=text]:focus{border:0;box-shadow:none}
 .omni input::placeholder{color:var(--faint)}
-.omni .omag{color:var(--faint);font-size:12px}
-.omni .okey{font-size:9px;color:var(--faint);border:1px solid var(--line);padding:0 4px}
-.lvlsw{display:flex;border:1px solid var(--line);flex:none}
-.lvlb{appearance:none;border:0;background:none;color:var(--faint);font:inherit;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;padding:3px 9px;cursor:pointer}
+.omni svg{flex:none;color:var(--faint)}
+.omni:focus-within svg{color:var(--dim)}
+.omni .okey{flex:none;font-size:9px;letter-spacing:.06em;color:var(--faint);border:1px solid var(--line);padding:1px 5px}
+.lvlsw{display:flex;flex:none;border:1px solid var(--line);background:var(--panel)}
+.lvlb{appearance:none;border:0;background:none;color:var(--faint);font:inherit;font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:4px 11px;cursor:pointer}
 .lvlb:hover{color:var(--dim)}
-.lvlb.on{background:var(--dim);color:#08100b}
+.lvlb.on{background:var(--green);color:var(--bg);text-shadow:none}
 .row.hidden{display:none}
+.page.advopen .row[data-adv]{border-left:2px solid var(--line);padding-left:9px;margin-left:-11px}
 .row.hit{background:#101d14;box-shadow:inset 2px 0 0 var(--green)}
 .moreb{appearance:none;background:none;border:1px dashed var(--line);color:var(--faint);font:inherit;font-size:11px;padding:6px 10px;margin:6px 0 0;cursor:pointer}
 .moreb:hover{color:var(--dim);border-color:var(--dim)}
@@ -888,11 +893,11 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
   </g>
  </svg></div>
  <h1>{{APP}}</h1>
- <label class="omni"><span class="omag">&#9906;</span><input id="omni" type="text" placeholder="{{S_SEARCH}}" autocomplete="off"><span class="okey">Ctrl K</span></label>
  <span class="lvlsw">
   <button type="button" class="lvlb" data-l="simple">{{S_LVL_SIMPLE}}</button>
   <button type="button" class="lvlb" data-l="all">{{S_LVL_ALL}}</button>
  </span>
+ <label class="omni"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="15.5" y1="15.5" x2="21" y2="21"/></svg><input id="omni" type="text" placeholder="{{S_SEARCH}}" autocomplete="off"><span class="okey">Ctrl K</span></label>
  <span class="ver">v<span id="ver"></span></span>
  <div class="capbtns">
   <button class="cap" onclick="appMin()">&#9472;</button>
@@ -1133,9 +1138,8 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
  <span class="led" id="st_led"></span>
  <span id="st_main">—</span>
  <span class="stsaved" id="st_saved"></span>
- <span class="stlevel" id="st_level"></span>
- <button type="button" class="stlink" id="st_levelbtn"></button>
  <span class="stpend" id="st_pend"></span>
+ <span class="stlvl"><span class="stlevel" id="st_level"></span><button type="button" class="stlink" id="st_levelbtn"></button></span>
 </div>
 
 
@@ -1808,6 +1812,7 @@ function applyLevel(){
   document.querySelectorAll(".lvlb").forEach(b=>b.classList.toggle("on", b.dataset.l === uiLevel));
   document.querySelectorAll(".page").forEach(page=>{
     const show = uiLevel === "all" || opened[page.id];
+    page.classList.toggle("advopen", uiLevel === "simple" && !!opened[page.id]);
     page.querySelectorAll("[data-adv]").forEach(el=>el.classList.toggle("hidden", !show));
     let btn = page.querySelector(".moreb");
     const n = advCount(page);
@@ -1826,7 +1831,7 @@ function applyLevel(){
     btn.textContent = (opened[page.id] ? L.less : L.more).replace("%d", n);
   });
   const line = document.getElementById("st_level");
-  if(line) line.textContent = uiLevel === "simple" ? L.hidden.replace("%d", hiddenTotal()) : "";
+  if(line) line.textContent = uiLevel === "simple" ? L.hidden.replace("%d", hiddenTotal()) : L.allshown;
   const sw = document.getElementById("st_levelbtn");
   if(sw) sw.textContent = uiLevel === "simple" ? L.showall : L.showsimple;
 }

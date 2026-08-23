@@ -62,7 +62,7 @@ const strings = {
   updavail: "Version %s available.", updgo: "Update", upderr: "Check failed",
   upddl: "Downloading", micdefault: "System default", micquiet: "quiet",
   more: "%d more settings", less: "Collapse %d settings", hidden: "Simple mode · settings hidden: %d",
-  showall: "Show everything", showsimple: "Back to simple",
+  showall: "Show everything", showsimple: "Back to simple", allshown: "Everything is shown",
 };
 
 let html = src.slice(start, end);
