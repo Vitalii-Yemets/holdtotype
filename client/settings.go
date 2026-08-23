@@ -663,7 +663,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"upd": "S_UPDATED", "pedit": "S_PROF_EDIT", "pclose": "S_PROF_CLOSE",
 		"confirmdel": "S_CONFIRM_DEL", "free": "S_FREE", "updnone": "S_UPD_NONE",
 		"micdefault": "S_MIC_DEFAULT", "micquiet": "S_MIC_QUIET",
-		"more": "S_MORE", "less": "S_LESS", "hidden": "S_HIDDEN", "allshown": "S_ALLSHOWN",
+		"more": "S_MORE", "less": "S_LESS",
 		"updavail": "S_UPD_AVAIL", "updgo": "S_UPD_GO", "upderr": "S_UPD_ERR", "upddl": "S_UPD_DL",
 	} {
 		lMap[jsKey] = str(sKey)
@@ -1452,20 +1452,26 @@ async function refreshMics(){
   });
   sel.value = [...sel.options].some(o=>o.value===chosen) ? chosen : "";
 }
-function startMicMeter(){
-  if(micTimer) return;
-  micTimer = setInterval(async ()=>{
-    const bar = document.getElementById("mic_bar");
+function startMeter(barId, pageId, hintId){
+  return setInterval(async ()=>{
+    const bar = document.getElementById(barId);
     if(!bar) return;
-    const page = document.getElementById("p-mic");
+    const page = document.getElementById(pageId);
     if(!page || !page.classList.contains("active")){
       bar.style.width = "0%";
       return;
     }
     const lvl = await appMicLevel();
     bar.style.width = Math.min(100, Math.round(lvl * 130)) + "%";
-    document.getElementById("mic_hint").textContent = lvl > 0.02 ? "" : L.micquiet;
+    if(hintId){
+      const hint = document.getElementById(hintId);
+      if(hint) hint.textContent = lvl > 0.02 ? "" : L.micquiet;
+    }
   }, 120);
+}
+function startMicMeter(){
+  if(micTimer) return;
+  micTimer = startMeter("mic_bar", "p-mic", "mic_hint");
 }
 
 function updTrHotkey(){
@@ -1531,17 +1537,13 @@ async function refreshState(){
   badge("badge_mic", s.badges && s.badges.mic, s.mic);
   badge("badge_models", s.badges && s.badges.models);
   badge("badge_system", s.badges && s.badges.system);
-  const bar = document.getElementById("state_mic_bar");
-  if(bar && curTab === "state"){
-    const lvl = await appMicLevel();
-    bar.style.width = Math.min(100, Math.round(lvl * 130)) + "%";
-  }
 }
 function initStateScreen(){
   const copy = document.getElementById("state_copy");
   if(copy) copy.onclick = ()=>{ appCopyLast(); toast(L.upd); };
   document.querySelectorAll("[data-goto]").forEach(b=>{ b.onclick = ()=>show(b.dataset.goto); });
   setInterval(()=>{ refreshState(); restartHint(); }, 1500);
+  startMeter("state_mic_bar", "p-state", null);
   refreshState();
 }
 let modelFilter = "all";
@@ -1836,18 +1838,10 @@ function applyLevel(){
     btn.textContent = (opened[page.id] ? L.less : L.more).replace("%d", n);
   });
 }
-function hiddenTotal(){
-  let n = 0;
-  document.querySelectorAll(".page").forEach(p=>{ if(!opened[p.id]) n += advCount(p); });
-  return n;
-}
-function levelMessage(){
-  return uiLevel === "simple" ? L.hidden.replace("%d", hiddenTotal()) : L.allshown;
-}
 function setLevel(l){
   uiLevel = l;
   applyLevel();
-  applyNow(()=>toast(levelMessage()));
+  applyNow();
 }
 function searchSettings(q){
   document.querySelectorAll(".row.hit").forEach(r=>r.classList.remove("hit"));
@@ -1867,14 +1861,14 @@ function searchSettings(q){
 }
 document.getElementById("upd_check").onclick = updCheck;
 let applyTimer = null;
-function applyNow(done){
+function applyNow(){
   clearTimeout(applyTimer);
-  applyTimer = setTimeout(()=>{ doSave().then(()=>{ if(done) done(); }); }, 120);
+  applyTimer = setTimeout(()=>{ doSave(); }, 120);
 }
 document.querySelector(".content").addEventListener("change", e=>{
   if(e.target.closest("#advisor")) return;
   if(e.target.name === "mdl" || e.target.name === "llmmdl") return;
-  applyNow(()=>toast(levelMessage()));
+  applyNow();
 });
 (async()=>{ const s = JSON.parse(await appUpdateStatus()); if(s.latest && s.url) updShow(s.latest, true); })();
 document.querySelectorAll(".nav").forEach(b=>b.onclick=()=>{

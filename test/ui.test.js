@@ -60,7 +60,7 @@ const dom = new JSDOM(html, {
       window.saveCalls++;
       const f = JSON.parse(json);
       micBadge = f.mic_device_name ? f.mic_device_name.split(" ")[0] : "Realtek";
-      return "";
+      return "Saved";
     };
     window.appModelDel = async () => "ok";
     window.appMics = async () =>
@@ -103,6 +103,7 @@ function check(name, actual, expected) {
   const lastCS = w.getComputedStyle(d.getElementById("state_last"));
   check("last dictation is clamped to its row", [lastCS.display, lastCS.overflow, lastCS.textOverflow, lastCS.whiteSpace], ["block", "hidden", "ellipsis", "nowrap"]);
   check("full dictation text kept on hover", d.getElementById("state_last").title, "hello");
+  check("status screen meter follows the microphone", d.getElementById("state_mic_bar").style.width !== "" && d.getElementById("state_mic_bar").style.width !== "0%", true);
   check("status bar names both models", d.getElementById("st_main").textContent, "Ready · gigaam-v3 + ggml-small.bin · 7.8 GB free");
   check("sidebar badges filled", [d.getElementById("badge_mic").textContent, d.getElementById("badge_models").textContent], ["Realtek", "2"]);
   check("status bar led lit", d.getElementById("st_led").classList.contains("on"), true);
@@ -196,7 +197,7 @@ function check(name, actual, expected) {
   check("a toggle applies itself, no Save needed", w.saveCalls > before, true);
 
   d.querySelector('.lvlb[data-l="simple"]').click(); await sleep(320);
-  check("switching the mode is reported once", d.getElementById("st_saved").textContent.includes("hidden"), true);
+  check("switching the mode reports a plain save", d.getElementById("st_saved").textContent, "Saved");
   check("simple mode hides advanced rows", d.querySelectorAll("#p-dictation .row[data-adv].hidden").length > 0, true);
   check("disclosure button offered", !!d.querySelector("#p-dictation .moreb"), true);
   d.querySelector("#p-dictation .moreb").click(); await sleep(60);

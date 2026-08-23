@@ -61,8 +61,7 @@ const strings = {
   confirmdel: 'Delete the "%s" model?', free: "free", updnone: "latest",
   updavail: "Version %s available.", updgo: "Update", upderr: "Check failed",
   upddl: "Downloading", micdefault: "System default", micquiet: "quiet",
-  more: "%d more settings", less: "Collapse %d settings", hidden: "Simple mode · settings hidden: %d",
-  allshown: "Everything is shown",
+  more: "%d more settings", less: "Collapse %d settings",
 };
 
 let html = src.slice(start, end);
