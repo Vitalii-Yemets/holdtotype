@@ -34,6 +34,7 @@ var llmAPIKey = func() string {
 	return hex.EncodeToString(b)
 }()
 
+const maxResponseBytes = 8 << 20
 const llmFile = "qwen2.5-1.5b-instruct-q4_k_m.gguf"
 
 func llmInstalled(cfg *Config) bool {
@@ -97,13 +98,15 @@ func (s *llamaServer) alive() bool {
 	return !s.exited
 }
 
+var healthClient = &http.Client{Timeout: 2 * time.Second}
+
 func (s *llamaServer) waitReady(timeout time.Duration) error {
 	deadline := time.Now().Add(timeout)
 	for time.Now().Before(deadline) {
 		if !s.alive() {
 			return fmt.Errorf("llama-server завершился при старте (см. лог)")
 		}
-		resp, err := http.Get(s.baseURL + "/health")
+		resp, err := healthClient.Get(s.baseURL + "/health")
 		if err == nil {
 			ok := resp.StatusCode == http.StatusOK
 			resp.Body.Close()
@@ -147,7 +150,7 @@ func (s *llamaServer) chat(ctx context.Context, system, user string) (string, er
 		return "", err
 	}
 	defer resp.Body.Close()
-	raw, err := io.ReadAll(resp.Body)
+	raw, err := io.ReadAll(io.LimitReader(resp.Body, maxResponseBytes))
 	if err != nil {
 		return "", err
 	}
@@ -400,6 +403,8 @@ func (a *App) llmShutdown() {
 	}
 }
 
+var llmStartMu sync.Mutex
+
 func (a *App) ensureLLM() (*llamaServer, error) {
 	cfg := a.snapshot()
 	if !llmInstalled(cfg) {
@@ -407,6 +412,16 @@ func (a *App) ensureLLM() (*llamaServer, error) {
 	}
 	a.mu.Lock()
 	llm := a.llm
+	a.mu.Unlock()
+	if llm != nil && llm.alive() {
+		return llm, nil
+	}
+
+	llmStartMu.Lock()
+	defer llmStartMu.Unlock()
+
+	a.mu.Lock()
+	llm = a.llm
 	a.mu.Unlock()
 	if llm != nil && llm.alive() {
 		return llm, nil

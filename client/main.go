@@ -1,6 +1,7 @@
 package main
 
 import (
+	"holdtotype/internal/profiles"
 	"holdtotype/internal/commands"
 	"encoding/json"
 	"holdtotype/internal/audiolevel"
@@ -1158,28 +1159,10 @@ func (a *App) changeHotkey() {
 }
 
 func chainProfiles(cfg *Config, profileID string) []*Profile {
-	if profileID == "wtranslate" {
-		return nil
-	}
-	var ids []string
-	if profileID != "" {
-		ids = []string{profileID}
-	} else {
-		active := map[string]bool{}
-		for _, id := range cfg.ActiveProfiles {
-			active[id] = true
-		}
-		for i := range cfg.Profiles {
-			if active[cfg.Profiles[i].ID] {
-				ids = append(ids, cfg.Profiles[i].ID)
-			}
-		}
-	}
-	var out []*Profile
-	for _, id := range ids {
-		if p := profileByID(cfg, id); p != nil && p.Prompt != "" {
-			out = append(out, p)
-		}
+	chain := profiles.Chain(cfg.Profiles, cfg.ActiveProfiles, profileID)
+	out := make([]*Profile, 0, len(chain))
+	for i := range chain {
+		out = append(out, &chain[i])
 	}
 	return out
 }

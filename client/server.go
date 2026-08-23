@@ -241,7 +241,7 @@ func (s *whisperServer) transcribe(ctx context.Context, wav []byte, language, pr
 		return "", fmt.Errorf("запрос к whisper-server: %w", err)
 	}
 	defer resp.Body.Close()
-	raw, err := io.ReadAll(resp.Body)
+	raw, err := io.ReadAll(io.LimitReader(resp.Body, maxResponseBytes))
 	if err != nil {
 		return "", err
 	}

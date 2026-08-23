@@ -1,6 +1,7 @@
 package main
 
 import (
+	"holdtotype/internal/profiles"
 	"holdtotype/internal/commands"
 	"holdtotype/internal/history"
 	"holdtotype/internal/mojibake"
@@ -15,12 +16,8 @@ import (
 	"sync"
 )
 
-type Profile struct {
-	ID     string `json:"id"`
-	Name   string `json:"name"`
-	Prompt string `json:"prompt"`
-	Hotkey string `json:"hotkey"`
-}
+type Profile = profiles.Profile
+
 
 const configVersion = 3
 
@@ -384,12 +381,7 @@ func validTranslateLang(l string) bool {
 }
 
 func profileByID(cfg *Config, id string) *Profile {
-	for i := range cfg.Profiles {
-		if cfg.Profiles[i].ID == id {
-			return &cfg.Profiles[i]
-		}
-	}
-	return nil
+	return profiles.ByID(cfg.Profiles, id)
 }
 
 func fileConfigVersion(data []byte) int {
