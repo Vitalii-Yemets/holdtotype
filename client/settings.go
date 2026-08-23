@@ -973,9 +973,12 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
 .mock-dot{width:11px;height:11px;border-radius:50%;background:#ff5b4d;box-shadow:0 0 8px rgba(255,91,77,.8);flex:none}
 .mock-bars{display:flex;gap:2px;align-items:center}
 .mock-bars i{display:block;width:3px;background:var(--green)}
+.mock-ask{display:flex;align-items:center;gap:8px;margin-top:9px;padding-top:9px;border-top:1px solid var(--line);flex-wrap:wrap;font-size:13px;color:var(--dim)}
 .mock-x{margin-left:auto;color:var(--dim)}
 .mock-btn{border:1px solid var(--line);padding:5px 14px;color:var(--dim);font-size:13px}
 .mock-btn.on{border-color:var(--green);color:var(--green);text-shadow:var(--glow)}
+.mock-cd{position:relative}
+.mock-cd::after{content:"";position:absolute;left:0;right:38%;bottom:-4px;height:2px;background:var(--green);box-shadow:var(--glow)}
 .mock-mi{padding:4px 6px;color:var(--green);font-size:13px}
 .mock-mi.dim{color:var(--faint)}
 .mock-sep{border:none;border-top:1px solid #12241a;margin:4px 0}

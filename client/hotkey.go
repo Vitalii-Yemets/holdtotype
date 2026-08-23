@@ -123,6 +123,8 @@ type comboDef struct {
 
 const vkEscape = 0x1B
 
+const vkReturn = 0x0D
+
 type hotkeyHook struct {
 	mu       sync.Mutex
 	combos   []comboDef
@@ -348,6 +350,9 @@ func (h *hotkeyHook) hookProc(nCode, wParam, lParam uintptr) uintptr {
 					if down && h.onEsc() {
 						return 1
 					}
+				}
+				if down && askActive() && askKey(k.VkCode) {
+					return 1
 				}
 				h.keyEvent(k.VkCode, down)
 			}

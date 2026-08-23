@@ -678,8 +678,7 @@ func (a *App) handleCancel() {
 		}
 		a.refreshIdleUI()
 	case stProcessing:
-		tdAbort()
-		fdAbort()
+		askAbort()
 		if a.sessionCancel != nil {
 			a.sessionCancel()
 		}

@@ -22,7 +22,7 @@ func init() {
 		"ov.err.recognize": "Erkennungsfehler (siehe Log)", "ov.err.paste": "Einfügefehler (siehe Log)",
 		"ov.silence": "Stille — nichts erkannt", "ov.server.loading": "Server lädt noch",
 		"ov.cancelled": "Abgebrochen", "ov.editing": "Bearbeite: %s", "ov.translating": "Übersetze",
-		"ov.llm.needed": "Diese Sprache benötigt das LLM-Modul", "td.title": "Übersetzen nach:",
+		"ov.llm.needed": "Diese Sprache benötigt das LLM-Modul", "td.title": "Übersetzen nach:", "td.plain": "Ohne Übersetzung",
 		"cap.title": "{app} — Tastenkürzel", "cap.prompt": "Neue Tastenkombination drücken…\n\n(aktuell: %s)\n\nEsc — Abbrechen",
 		"cap.selected": "Gewählt: %s", "cap.cancelled": "Abgebrochen",
 		"model.switching": "Modellwechsel — der Erkenner startet neu…", "model.del.active": "Aktives Modell kann nicht gelöscht werden",
@@ -78,7 +78,7 @@ func init() {
 		"ov.err.recognize": "Erreur de reconnaissance (voir log)", "ov.err.paste": "Erreur d'insertion (voir log)",
 		"ov.silence": "Silence — rien reconnu", "ov.server.loading": "Le serveur charge encore",
 		"ov.cancelled": "Annulé", "ov.editing": "Édition : %s", "ov.translating": "Traduction",
-		"ov.llm.needed": "Cette langue nécessite le module LLM", "td.title": "Traduire vers :",
+		"ov.llm.needed": "Cette langue nécessite le module LLM", "td.title": "Traduire vers :", "td.plain": "Sans traduction",
 		"cap.title": "{app} — raccourci", "cap.prompt": "Appuyez une nouvelle combinaison…\n\n(actuel : %s)\n\nÉchap — annuler",
 		"cap.selected": "Choisi : %s", "cap.cancelled": "Annulé",
 		"model.switching": "Changement de modèle — redémarrage…", "model.del.active": "Impossible de supprimer le modèle actif",
@@ -134,7 +134,7 @@ func init() {
 		"ov.err.recognize": "Error de reconocimiento (vea el log)", "ov.err.paste": "Error al insertar (vea el log)",
 		"ov.silence": "Silencio — nada reconocido", "ov.server.loading": "El servidor aún carga",
 		"ov.cancelled": "Cancelado", "ov.editing": "Editando: %s", "ov.translating": "Traduciendo",
-		"ov.llm.needed": "Este idioma requiere el módulo LLM", "td.title": "Traducir a:",
+		"ov.llm.needed": "Este idioma requiere el módulo LLM", "td.title": "Traducir a:", "td.plain": "Sin traducción",
 		"cap.title": "{app} — atajo", "cap.prompt": "Pulse una nueva combinación…\n\n(actual: %s)\n\nEsc — cancelar",
 		"cap.selected": "Elegido: %s", "cap.cancelled": "Cancelado",
 		"model.switching": "Cambiando modelo — reiniciando…", "model.del.active": "No se puede borrar el modelo activo",
@@ -190,7 +190,7 @@ func init() {
 		"ov.err.recognize": "Errore di riconoscimento (vedi log)", "ov.err.paste": "Errore di inserimento (vedi log)",
 		"ov.silence": "Silenzio — nulla riconosciuto", "ov.server.loading": "Il server sta ancora caricando",
 		"ov.cancelled": "Annullato", "ov.editing": "Modifica: %s", "ov.translating": "Traduzione",
-		"ov.llm.needed": "Questa lingua richiede il modulo LLM", "td.title": "Traduci in:",
+		"ov.llm.needed": "Questa lingua richiede il modulo LLM", "td.title": "Traduci in:", "td.plain": "Senza traduzione",
 		"cap.title": "{app} — scorciatoia", "cap.prompt": "Premi una nuova combinazione…\n\n(attuale: %s)\n\nEsc — annulla",
 		"cap.selected": "Scelto: %s", "cap.cancelled": "Annullato",
 		"model.switching": "Cambio modello — riavvio…", "model.del.active": "Impossibile eliminare il modello attivo",
@@ -246,7 +246,7 @@ func init() {
 		"ov.err.recognize": "Błąd rozpoznawania (zobacz log)", "ov.err.paste": "Błąd wstawiania (zobacz log)",
 		"ov.silence": "Cisza — nic nie rozpoznano", "ov.server.loading": "Serwer wciąż się ładuje",
 		"ov.cancelled": "Anulowano", "ov.editing": "Edycja: %s", "ov.translating": "Tłumaczenie",
-		"ov.llm.needed": "Ten język wymaga modułu LLM", "td.title": "Tłumacz na:",
+		"ov.llm.needed": "Ten język wymaga modułu LLM", "td.title": "Tłumacz na:", "td.plain": "Bez tłumaczenia",
 		"cap.title": "{app} — skrót", "cap.prompt": "Naciśnij nową kombinację…\n\n(obecna: %s)\n\nEsc — anuluj",
 		"cap.selected": "Wybrano: %s", "cap.cancelled": "Anulowano",
 		"model.switching": "Zmiana modelu — restart…", "model.del.active": "Nie można usunąć aktywnego modelu",
@@ -382,12 +382,12 @@ func init() {
 			"<li>Das ✕ rechts bricht in jedem Schritt ab; die Leiste nimmt niemals den Eingabefokus. Leiste und Animation lassen sich unter „Diktat“ abschalten.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Sprachdialog</p>" +
-			"<div class=\"mock\"><div style=\"display:flex;justify-content:space-between;margin-bottom:8px\"><b>Übersetzen nach: (3)</b><span class=\"mock-x\">✕</span></div><div style=\"display:flex;gap:8px\"><span class=\"mock-btn on\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">ES</span></div></div>" +
-			"<p>Erscheint über der Leiste, nachdem das Kürzel losgelassen wurde — in den Modi „jedes Mal fragen“ und „mit Timeout fragen“. Die Schaltflächen kommen aus „Sprachen im Dialog“; die Zielsprache ist hervorgehoben. Im Timeout-Modus zählt der Titel herunter und am Ende gilt die Zielsprache. Das ✕ im Dialog fügt ohne Übersetzung ein, das ✕ auf der Leiste bricht alles ab.</p>" +
+			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Erkenne…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Übersetzen nach:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Ohne Übersetzung</span></div></div>" +
+			"<p>Die Leiste fragt selbst, auf einer zweiten Zeile, sobald Sie das Kürzel loslassen — in den Modi „jedes Mal fragen“ und „mit Timeout fragen“. Die Schaltflächen kommen aus „Sprachen im Dialog“; die Zielsprache ist hervorgehoben. Mit Timeout schrumpft unter dieser Schaltfläche ein Strich: läuft er aus, gilt die hervorgehobene Sprache. <b>Ohne Übersetzung</b> fügt den Text so ein, wie er gehört wurde; das ✕ auf der Leiste bricht alles ab. Auch die Tastatur geht: Enter nimmt die hervorgehobene Antwort, 1…9 wählen eine Schaltfläche, Esc bricht ab.</p>" +
 			"<p class=\"wh\">Sicheres Einfügen</p>" +
-			"<div class=\"mock\"><div style=\"display:flex;justify-content:space-between;margin-bottom:8px\"><b style=\"color:var(--amber)\">Fokus gewechselt — einfügen? (30)</b><span class=\"mock-x\">✕</span></div><div style=\"display:flex;gap:8px\"><span class=\"mock-btn on\">Hier einfügen</span><span class=\"mock-btn\">Kopieren</span></div></div>" +
+			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Erkenne…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span style=\"color:var(--amber)\">Fokus gewechselt — einfügen?</span><span class=\"mock-btn on mock-cd\">Hier einfügen</span><span class=\"mock-btn\">Kopieren</span></div></div>" +
 			"<ul>" +
-			"<li>Das Zielfenster wird in dem Moment gemerkt, in dem Sie das Kürzel drücken. Hat sich der Fokus während der Verarbeitung geändert, wird nichts eingefügt — der Dialog bietet <b>Hier einfügen</b> (ins aktuelle Fenster), <b>Kopieren</b> (in die Zwischenablage) oder ✕. Läuft die Zeit ab, wird nicht eingefügt und der Text bleibt im letzten Ergebnis.</li>" +
+			"<li>Das Zielfenster wird in dem Moment gemerkt, in dem Sie das Kürzel drücken. Hat sich der Fokus während der Verarbeitung geändert, wird nichts eingefügt — die Leiste fragt auf ihrer zweiten Zeile: <b>Hier einfügen</b> (ins aktuelle Fenster), <b>Kopieren</b> (in die Zwischenablage) oder das ✕. Läuft die Zeit ab, wird nicht eingefügt und der Text bleibt im letzten Ergebnis.</li>" +
 			"<li>Enter nach dem Einfügen wird nur gedrückt, wenn das Zielfenster dasselbe geblieben ist.</li>" +
 			"<li><b>Letztes Ergebnis</b> — der fertige Text jedes Diktats bleibt bis zum nächsten im Speicher; im Menü im Infobereich gibt es „Letztes Ergebnis kopieren“. Ein misslungenes Einfügen oder ein Fokuswechsel kostet nie ein Diktat.</li>" +
 			"</ul>" +
@@ -580,12 +580,12 @@ func init() {
 			"<li>Le ✕ à droite annule à n'importe quelle étape ; le bandeau ne prend jamais le focus. Le bandeau et son animation se désactivent dans « Dictée ».</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Dialogue de langue</p>" +
-			"<div class=\"mock\"><div style=\"display:flex;justify-content:space-between;margin-bottom:8px\"><b>Traduire vers : (3)</b><span class=\"mock-x\">✕</span></div><div style=\"display:flex;gap:8px\"><span class=\"mock-btn on\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">ES</span></div></div>" +
-			"<p>Apparaît au-dessus du bandeau après le relâchement du raccourci, dans les modes « demander à chaque fois » et « demander avec délai ». Les boutons viennent de « Langues du dialogue » ; la langue cible est mise en avant. En mode délai le titre décompte et, à la fin, la cible s'applique. Le ✕ du dialogue insère sans traduire, le ✕ du bandeau annule tout.</p>" +
+			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Reconnaissance…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Traduire vers :</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Sans traduction</span></div></div>" +
+			"<p>C'est le bandeau lui-même qui demande, sur une deuxième ligne, dès que vous relâchez le raccourci — dans les modes « demander à chaque fois » et « demander avec délai ». Les boutons viennent de « Langues du dialogue » ; la langue cible est mise en avant. Avec un délai, un trait se raccourcit sous ce bouton : à la fin, la langue mise en avant s'applique. <b>Sans traduction</b> insère le texte tel qu'il a été entendu ; le ✕ du bandeau annule tout. Le clavier fonctionne aussi : Entrée prend la réponse mise en avant, 1…9 choisissent un bouton, Échap annule.</p>" +
 			"<p class=\"wh\">Insertion sûre</p>" +
-			"<div class=\"mock\"><div style=\"display:flex;justify-content:space-between;margin-bottom:8px\"><b style=\"color:var(--amber)\">Le focus a changé — insérer ? (30)</b><span class=\"mock-x\">✕</span></div><div style=\"display:flex;gap:8px\"><span class=\"mock-btn on\">Insérer ici</span><span class=\"mock-btn\">Copier</span></div></div>" +
+			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Reconnaissance…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span style=\"color:var(--amber)\">Le focus a changé — insérer ?</span><span class=\"mock-btn on mock-cd\">Insérer ici</span><span class=\"mock-btn\">Copier</span></div></div>" +
 			"<ul>" +
-			"<li>La fenêtre cible est retenue au moment où vous appuyez sur le raccourci. Si le focus a changé pendant le traitement, rien n'est collé — le dialogue propose <b>Insérer ici</b> (dans la fenêtre courante), <b>Copier</b> (dans le presse-papiers) ou ✕. À la fin du décompte l'insertion est annulée et le texte reste dans le dernier résultat.</li>" +
+			"<li>La fenêtre cible est retenue au moment où vous appuyez sur le raccourci. Si le focus a changé pendant le traitement, rien n'est collé — le bandeau demande sur sa deuxième ligne : <b>Insérer ici</b> (dans la fenêtre courante), <b>Copier</b> (dans le presse-papiers) ou le ✕. À la fin du décompte l'insertion est annulée et le texte reste dans le dernier résultat.</li>" +
 			"<li>Entrée après le collage n'est envoyée que si la fenêtre cible n'a pas changé.</li>" +
 			"<li><b>Dernier résultat</b> — le texte final de chaque dictée reste en mémoire jusqu'à la suivante ; le menu de la zone de notification propose « Copier le dernier résultat ». Un collage manqué ou un changement de focus ne fait jamais perdre une dictée.</li>" +
 			"</ul>" +
@@ -778,12 +778,12 @@ func init() {
 			"<li>La ✕ de la derecha cancela en cualquier momento; la barra nunca roba el foco. La barra y su animación se apagan en «Dictado».</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Diálogo de idioma</p>" +
-			"<div class=\"mock\"><div style=\"display:flex;justify-content:space-between;margin-bottom:8px\"><b>Traducir a: (3)</b><span class=\"mock-x\">✕</span></div><div style=\"display:flex;gap:8px\"><span class=\"mock-btn on\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">ES</span></div></div>" +
-			"<p>Aparece sobre la barra al soltar el atajo, en los modos «preguntar siempre» y «preguntar con cuenta atrás». Los botones vienen de «Idiomas del diálogo»; el idioma de destino está resaltado. En el modo con cuenta atrás el título va restando y, al acabar, se aplica el destino. La ✕ del diálogo inserta sin traducir; la ✕ de la barra cancela todo.</p>" +
+			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Reconociendo…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Traducir a:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Sin traducción</span></div></div>" +
+			"<p>Pregunta la propia barra, en una segunda línea, en cuanto sueltas el atajo — en los modos «preguntar siempre» y «preguntar con cuenta atrás». Los botones vienen de «Idiomas del diálogo»; el idioma de destino está resaltado. Con cuenta atrás, bajo ese botón se acorta una línea: cuando se agota, se aplica el idioma resaltado. <b>Sin traducción</b> inserta el texto tal como se oyó; la ✕ de la barra cancela toda la operación. El teclado también sirve: Intro toma la respuesta resaltada, 1…9 eligen un botón, Esc cancela.</p>" +
 			"<p class=\"wh\">Inserción segura</p>" +
-			"<div class=\"mock\"><div style=\"display:flex;justify-content:space-between;margin-bottom:8px\"><b style=\"color:var(--amber)\">Cambió el foco, ¿insertar? (30)</b><span class=\"mock-x\">✕</span></div><div style=\"display:flex;gap:8px\"><span class=\"mock-btn on\">Insertar aquí</span><span class=\"mock-btn\">Copiar</span></div></div>" +
+			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Reconociendo…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span style=\"color:var(--amber)\">Cambió el foco, ¿insertar?</span><span class=\"mock-btn on mock-cd\">Insertar aquí</span><span class=\"mock-btn\">Copiar</span></div></div>" +
 			"<ul>" +
-			"<li>La ventana de destino se recuerda en el momento de pulsar el atajo. Si el foco cambió mientras se procesaba el habla, no se pega nada — el diálogo ofrece <b>Insertar aquí</b> (en la ventana actual), <b>Copiar</b> (al portapapeles) o ✕. Si se agota la cuenta atrás, la inserción se cancela y el texto queda en el último resultado.</li>" +
+			"<li>La ventana de destino se recuerda en el momento de pulsar el atajo. Si el foco cambió mientras se procesaba el habla, no se pega nada — la barra pregunta en su segunda línea: <b>Insertar aquí</b> (en la ventana actual), <b>Copiar</b> (al portapapeles) o la ✕. Si se agota la cuenta atrás, la inserción se cancela y el texto queda en el último resultado.</li>" +
 			"<li>Enter tras pegar solo se envía si la ventana de destino no ha cambiado.</li>" +
 			"<li><b>Último resultado</b> — el texto final de cada dictado se guarda en memoria hasta el siguiente; el menú del área de notificación tiene «Copiar el último resultado». Un pegado fallido o un cambio de foco nunca hacen perder un dictado.</li>" +
 			"</ul>" +
@@ -976,12 +976,12 @@ func init() {
 			"<li>La ✕ a destra annulla in qualsiasi momento; la barra non ruba mai il fuoco. Barra e animazione si spengono in «Dettatura».</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Finestra della lingua</p>" +
-			"<div class=\"mock\"><div style=\"display:flex;justify-content:space-between;margin-bottom:8px\"><b>Tradurre in: (3)</b><span class=\"mock-x\">✕</span></div><div style=\"display:flex;gap:8px\"><span class=\"mock-btn on\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">ES</span></div></div>" +
-			"<p>Compare sopra la barra dopo il rilascio della scorciatoia, nelle modalità «chiedi sempre» e «chiedi con timer». I pulsanti vengono da «Lingue nella finestra»; la lingua di destinazione è evidenziata. Con il timer il titolo conta alla rovescia e allo scadere vale la destinazione. La ✕ della finestra inserisce senza tradurre, la ✕ della barra annulla tutto.</p>" +
+			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Riconoscimento…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Tradurre in:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Senza traduzione</span></div></div>" +
+			"<p>È la barra stessa a chiedere, su una seconda riga, appena rilasci la scorciatoia — nelle modalità «chiedi sempre» e «chiedi con timer». I pulsanti vengono da «Lingue nella finestra»; la lingua di destinazione è evidenziata. Con il timer, sotto quel pulsante si accorcia una linea: quando finisce vale la lingua evidenziata. <b>Senza traduzione</b> inserisce il testo così come è stato sentito; la ✕ della barra annulla tutta l'operazione. Funziona anche la tastiera: Invio prende la risposta evidenziata, 1…9 scelgono un pulsante, Esc annulla.</p>" +
 			"<p class=\"wh\">Inserimento sicuro</p>" +
-			"<div class=\"mock\"><div style=\"display:flex;justify-content:space-between;margin-bottom:8px\"><b style=\"color:var(--amber)\">Il fuoco è cambiato — inserire? (30)</b><span class=\"mock-x\">✕</span></div><div style=\"display:flex;gap:8px\"><span class=\"mock-btn on\">Inserisci qui</span><span class=\"mock-btn\">Copia</span></div></div>" +
+			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Riconoscimento…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span style=\"color:var(--amber)\">Il fuoco è cambiato — inserire?</span><span class=\"mock-btn on mock-cd\">Inserisci qui</span><span class=\"mock-btn\">Copia</span></div></div>" +
 			"<ul>" +
-			"<li>La finestra di destinazione viene memorizzata nel momento in cui premi la scorciatoia. Se il fuoco è cambiato durante l'elaborazione, non viene incollato nulla — la finestra propone <b>Inserisci qui</b> (nella finestra corrente), <b>Copia</b> (negli appunti) oppure ✕. Allo scadere del tempo l'inserimento viene annullato e il testo resta nell'ultimo risultato.</li>" +
+			"<li>La finestra di destinazione viene memorizzata nel momento in cui premi la scorciatoia. Se il fuoco è cambiato durante l'elaborazione, non viene incollato nulla — la barra chiede sulla sua seconda riga: <b>Inserisci qui</b> (nella finestra corrente), <b>Copia</b> (negli appunti) oppure la ✕. Allo scadere del tempo l'inserimento viene annullato e il testo resta nell'ultimo risultato.</li>" +
 			"<li>Invio dopo l'incollaggio viene premuto solo se la finestra di destinazione è rimasta la stessa.</li>" +
 			"<li><b>Ultimo risultato</b> — il testo finale di ogni dettatura resta in memoria fino alla successiva; nel menu dell'area di notifica c'è «Copia l'ultimo risultato». Un incollaggio fallito o un cambio di fuoco non fanno mai perdere una dettatura.</li>" +
 			"</ul>" +
@@ -1174,12 +1174,12 @@ func init() {
 			"<li>✕ po prawej przerywa na każdym etapie; pasek nigdy nie zabiera fokusu. Pasek i jego animację można wyłączyć w „Dyktowaniu”.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Okno wyboru języka</p>" +
-			"<div class=\"mock\"><div style=\"display:flex;justify-content:space-between;margin-bottom:8px\"><b>Tłumaczyć na: (3)</b><span class=\"mock-x\">✕</span></div><div style=\"display:flex;gap:8px\"><span class=\"mock-btn on\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">ES</span></div></div>" +
-			"<p>Pojawia się nad paskiem po puszczeniu skrótu w trybach „pytaj za każdym razem” i „pytaj z odliczaniem”. Przyciski biorą się z „Języków w oknie”; język docelowy jest wyróżniony. W trybie z odliczaniem tytuł odlicza, a po upływie czasu obowiązuje język docelowy. ✕ w oknie wstawia bez tłumaczenia, ✕ na pasku przerywa wszystko.</p>" +
+			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Rozpoznawanie…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Tłumaczyć na:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Bez tłumaczenia</span></div></div>" +
+			"<p>Pyta sam pasek, w drugim wierszu, gdy tylko puścisz skrót — w trybach „pytaj za każdym razem” i „pytaj z odliczaniem”. Przyciski biorą się z „Języków w oknie”; język docelowy jest wyróżniony. Przy odliczaniu pod tym przyciskiem skraca się kreska: gdy zniknie, obowiązuje wyróżniony język. <b>Bez tłumaczenia</b> wstawia tekst tak, jak został usłyszany; ✕ na pasku przerywa całą operację. Klawiatura też działa: Enter wybiera wyróżnioną odpowiedź, 1…9 wskazują przycisk, Esc przerywa.</p>" +
 			"<p class=\"wh\">Bezpieczne wstawianie</p>" +
-			"<div class=\"mock\"><div style=\"display:flex;justify-content:space-between;margin-bottom:8px\"><b style=\"color:var(--amber)\">Zmieniło się okno — wstawić? (30)</b><span class=\"mock-x\">✕</span></div><div style=\"display:flex;gap:8px\"><span class=\"mock-btn on\">Wstaw tutaj</span><span class=\"mock-btn\">Kopiuj</span></div></div>" +
+			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Rozpoznawanie…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span style=\"color:var(--amber)\">Zmieniło się okno — wstawić?</span><span class=\"mock-btn on mock-cd\">Wstaw tutaj</span><span class=\"mock-btn\">Kopiuj</span></div></div>" +
 			"<ul>" +
-			"<li>Okno docelowe zostaje zapamiętane w chwili naciśnięcia skrótu. Jeśli fokus zmienił się w trakcie przetwarzania, nic nie zostanie wklejone — okno proponuje <b>Wstaw tutaj</b> (do bieżącego okna), <b>Kopiuj</b> (do schowka) albo ✕. Po upływie czasu wstawianie zostaje odwołane, a tekst zostaje w ostatnim wyniku.</li>" +
+			"<li>Okno docelowe zostaje zapamiętane w chwili naciśnięcia skrótu. Jeśli fokus zmienił się w trakcie przetwarzania, nic nie zostanie wklejone — pasek pyta w drugim wierszu: <b>Wstaw tutaj</b> (do bieżącego okna), <b>Kopiuj</b> (do schowka) albo ✕. Po upływie czasu wstawianie zostaje odwołane, a tekst zostaje w ostatnim wyniku.</li>" +
 			"<li>Enter po wklejeniu jest wysyłany tylko wtedy, gdy okno docelowe się nie zmieniło.</li>" +
 			"<li><b>Ostatni wynik</b> — gotowy tekst każdego dyktowania zostaje w pamięci do następnego; w menu w zasobniku jest „Kopiuj ostatni wynik”. Nieudane wklejenie albo zmiana okna nigdy nie gubią dyktowania.</li>" +
 			"</ul>" +
@@ -1299,7 +1299,7 @@ func init() {
 		"ov.err.recognize": "Помилка розпізнавання (див. лог)", "ov.err.paste": "Помилка вставлення (див. лог)",
 		"ov.silence": "Тиша — нічого не розпізнано", "ov.server.loading": "Сервер ще завантажується",
 		"ov.cancelled": "Скасовано", "ov.editing": "Редагую: %s", "ov.translating": "Перекладаю",
-		"ov.llm.needed": "Ця мова потребує LLM-модуль", "td.title": "Перекласти на:",
+		"ov.llm.needed": "Ця мова потребує LLM-модуль", "td.title": "Перекласти на:", "td.plain": "Без перекладу",
 		"cap.title": "{app} — сполучення клавіш", "cap.prompt": "Натисніть нове сполучення клавіш…\n\n(зараз: %s)\n\nEsc — скасувати",
 		"cap.selected": "Обрано: %s", "cap.cancelled": "Скасовано",
 		"err.hotkey.dup":    "Сполучення «%s» призначено двічі — хоткеї не повинні збігатися",
@@ -1432,12 +1432,12 @@ func init() {
 			"<li>✕ праворуч скасовує на будь-якому кроці; смужка ніколи не забирає фокус вводу. Смужку та її анімацію можна вимкнути в «Диктуванні».</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Вікно вибору мови</p>" +
-			"<div class=\"mock\"><div style=\"display:flex;justify-content:space-between;margin-bottom:8px\"><b>Перекласти на: (3)</b><span class=\"mock-x\">✕</span></div><div style=\"display:flex;gap:8px\"><span class=\"mock-btn on\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">ES</span></div></div>" +
-			"<p>З'являється над смужкою після відпускання сполучення в режимах «питати щоразу» та «питати з відліком». Кнопки беруться з «Мов у вікні»; цільова мова виділена. У режимі з відліком заголовок відлічує, а коли час вийде — застосовується цільова. ✕ у вікні вставляє без перекладу, ✕ на смужці скасовує все.</p>" +
+			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Розпізнаю…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Перекласти на:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Без перекладу</span></div></div>" +
+			"<p>Питає сама смужка, другим рядком, щойно ви відпустили сполучення, — у режимах «питати щоразу» та «питати з відліком». Кнопки беруться з «Мов у вікні»; цільова мова виділена. У режимі з відліком під цією кнопкою коротшає риска: коли вона скінчиться, застосується виділена мова. <b>Без перекладу</b> вставляє текст так, як почуто; хрестик смужки скасовує операцію цілком. Клавіатура теж працює: Enter — виділена відповідь, 1…9 — кнопка за номером, Esc — скасувати.</p>" +
 			"<p class=\"wh\">Безпечна вставка</p>" +
-			"<div class=\"mock\"><div style=\"display:flex;justify-content:space-between;margin-bottom:8px\"><b style=\"color:var(--amber)\">Вікно змінилося — вставити? (30)</b><span class=\"mock-x\">✕</span></div><div style=\"display:flex;gap:8px\"><span class=\"mock-btn on\">Вставити тут</span><span class=\"mock-btn\">Копіювати</span></div></div>" +
+			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Розпізнаю…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span style=\"color:var(--amber)\">Вікно змінилося — вставити?</span><span class=\"mock-btn on mock-cd\">Вставити тут</span><span class=\"mock-btn\">Копіювати</span></div></div>" +
 			"<ul>" +
-			"<li>Цільове вікно запам'ятовується в мить натискання сполучення. Якщо фокус змінився, поки оброблялася мова, нічого не вставляється — вікно пропонує <b>Вставити тут</b> (у поточне вікно), <b>Копіювати</b> (у буфер) або ✕. Коли відлік вичерпано, вставка скасовується, а текст лишається в останньому результаті.</li>" +
+			"<li>Цільове вікно запам'ятовується в мить натискання сполучення. Якщо фокус змінився, поки оброблялася мова, нічого не вставляється — смужка питає другим рядком: <b>Вставити тут</b> (у поточне вікно), <b>Копіювати</b> (у буфер) або хрестик. Коли відлік вичерпано, вставка скасовується, а текст лишається в останньому результаті.</li>" +
 			"<li>Enter після вставки натискається лише тоді, коли цільове вікно не змінилося.</li>" +
 			"<li><b>Останній результат</b> — готовий текст кожного диктування лишається в пам'яті до наступного; у меню в треї є «Копіювати останній результат». Невдала вставка чи зміна вікна ніколи не втрачають диктування.</li>" +
 			"</ul>" +

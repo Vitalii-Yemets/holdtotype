@@ -123,6 +123,7 @@ func ovCancelActive() bool {
 
 var (
 	ovWidth   = int32(ovW)
+	ovHeight  = int32(ovH)
 	ovWidthMu sync.Mutex
 	ovFontDPI int32
 )
@@ -158,6 +159,22 @@ func overlayHwnd() uintptr {
 }
 
 func measureOverlayWidth(state int, text string) int32 {
+	need := measureStatusWidth(state, text)
+	dpi := dpiFor(overlayHwnd())
+	if aw := askWidthDIP(); aw > 0 {
+		if w := scaleDPI(aw, dpi); w > need {
+			need = w
+		}
+	}
+	var wa rect
+	procSystemParametersInfoW.Call(0x30, 0, uintptr(unsafe.Pointer(&wa)), 0)
+	if max := (wa.Right - wa.Left) * 4 / 5; max > 0 && need > max {
+		need = max
+	}
+	return need
+}
+
+func measureStatusWidth(state int, text string) int32 {
 	dpi := dpiFor(overlayHwnd())
 	base := scaleDPI(ovW, dpi)
 	if text == "" || state == ovRecording {
@@ -195,10 +212,20 @@ func measureOverlayWidth(state int, text string) int32 {
 	return need
 }
 
+func overlayHeightDIP() int32 {
+	if askActive() {
+		return ovH + ovAskH
+	}
+	return ovH
+}
+
 func resizeOverlay(hwnd uintptr, width int32) {
+	dpi := dpiFor(hwnd)
+	h := scaleDPI(overlayHeightDIP(), dpi)
 	ovWidthMu.Lock()
-	same := ovWidth == width
+	same := ovWidth == width && ovHeight == h
 	ovWidth = width
+	ovHeight = h
 	ovWidthMu.Unlock()
 	if same || hwnd == 0 {
 		return
@@ -206,10 +233,20 @@ func resizeOverlay(hwnd uintptr, width int32) {
 	var wa rect
 	procSystemParametersInfoW.Call(0x30, 0, uintptr(unsafe.Pointer(&wa)), 0)
 	x := wa.Left + (wa.Right-wa.Left-width)/2
-	dpi := dpiFor(hwnd)
-	h := scaleDPI(ovH, dpi)
 	y := wa.Bottom - h - scaleDPI(28, dpi)
 	procSetWindowPos.Call(hwnd, 0, uintptr(x), uintptr(y), uintptr(width), uintptr(h), 0x0004|0x0010)
+}
+
+func overlayRefresh() {
+	hwnd := overlayHwnd()
+	if hwnd == 0 {
+		return
+	}
+	ovMu.Lock()
+	state, text := ovState, ovText
+	ovMu.Unlock()
+	resizeOverlay(hwnd, measureOverlayWidth(state, text))
+	procPostMessageW.Call(hwnd, wmOvSet, 0, 0)
 }
 func overlaySet(state int, text string) {
 	ovOnce.Do(startOverlayThread)
@@ -321,7 +358,9 @@ func overlayWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 			procShowWindow.Call(hwnd, swHide)
 			return 0
 		}
-		if !ovAnim.Load() || (st != ovRecording && st != ovProcessing) {
+		askTick()
+		_, counting := askLeft()
+		if !counting && (!ovAnim.Load() || (st != ovRecording && st != ovProcessing)) {
 			return 0
 		}
 		overlayRenderDirect(hwnd)
@@ -332,15 +371,29 @@ func overlayWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 	case wmLBtnUp:
 		x := int32(int16(lParam & 0xFFFF))
 		y := int32(int16(lParam >> 16 & 0xFFFF))
-		if ovCancelActive() && ovInCloseZone(x, y) && ovOnCancel != nil {
-			ovOnCancel()
+		if id, hit := askHit(x, y); hit {
+			askFinish(id)
+			return 0
+		}
+		if ovInCloseZone(x, y) && (ovCancelActive() || askActive()) {
+			if askActive() {
+				askFinish("")
+			}
+			if ovOnCancel != nil {
+				ovOnCancel()
+			}
 		}
 		return 0
 	case wmSetCursor:
 		var pt point
 		procGetCursorPos.Call(uintptr(unsafe.Pointer(&pt)))
 		procScreenToClient.Call(hwnd, uintptr(unsafe.Pointer(&pt)))
-		if ovCancelActive() && ovInCloseZone(pt.X, pt.Y) {
+		if _, hit := askHit(pt.X, pt.Y); hit {
+			cur, _, _ := procLoadCursorW.Call(0, 32649)
+			procSetCursor.Call(cur)
+			return 1
+		}
+		if (ovCancelActive() || askActive()) && ovInCloseZone(pt.X, pt.Y) {
 			cur, _, _ := procLoadCursorW.Call(0, 32649)
 			procSetCursor.Call(cur)
 			return 1
@@ -439,7 +492,7 @@ func overlayRender(hwnd, hdc uintptr) {
 		procSelectObject.Call(hdc, oldBr)
 		procDeleteObject.Call(br)
 	}
-	cy := rc.Bottom / 2
+	cy := px(ovH) / 2
 	glowR := px(11) + int32(pulse*3)
 	steps := int32(5)
 	for i := int32(0); i < steps; i++ {
@@ -463,7 +516,7 @@ func overlayRender(hwnd, hdc uintptr) {
 	}
 	procSelectObject.Call(hdc, ovFont)
 	procSetBkMode.Call(hdc, 1)
-	txtRc := rect{Left: px(44), Top: 0, Right: rc.Right - px(12), Bottom: rc.Bottom}
+	txtRc := rect{Left: px(44), Top: 0, Right: rc.Right - px(12), Bottom: px(ovH)}
 	if st == ovRecording || st == ovProcessing {
 		txtRc.Right = rc.Right - px(36)
 	}
@@ -494,10 +547,17 @@ func overlayRender(hwnd, hdc uintptr) {
 	}
 
 	if st == ovRecording || st == ovProcessing {
-		xr := rect{Left: rc.Right - px(34), Top: 0, Right: rc.Right - px(8), Bottom: rc.Bottom}
+		xr := rect{Left: rc.Right - px(34), Top: 0, Right: rc.Right - px(8), Bottom: px(ovH)}
 		xs, _ := windows.UTF16FromString("✕")
 		procSetTextColor.Call(hdc, colGreenDm)
 		procDrawTextW.Call(hdc, uintptr(unsafe.Pointer(&xs[0])), uintptr(len(xs)-1),
 			uintptr(unsafe.Pointer(&xr)), 0x0020|0x0004|0x0001)
 	}
+
+	askRender(hwnd, hdc, rc, fill, func(s string, r rect, color uintptr, flags uintptr) {
+		t, _ := windows.UTF16FromString(s)
+		procSetTextColor.Call(hdc, color)
+		procDrawTextW.Call(hdc, uintptr(unsafe.Pointer(&t[0])), uintptr(len(t)-1),
+			uintptr(unsafe.Pointer(&r)), flags)
+	})
 }

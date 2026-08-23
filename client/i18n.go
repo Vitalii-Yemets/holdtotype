@@ -174,6 +174,7 @@ var msgs = map[string]map[string]string{
 		"ov.translating":        "Перевожу",
 		"ov.llm.needed":         "Для этого языка нужен LLM-модуль",
 		"td.title":              "Переводить на:",
+		"td.plain":              "Без перевода",
 		"cap.title":             "{app} — сочетание клавиш",
 		"cap.prompt":            "Нажмите новое сочетание клавиш…\n\n(сейчас: %s)\n\nEsc — отмена",
 		"cap.selected":          "Выбрано: %s",
@@ -274,6 +275,7 @@ var msgs = map[string]map[string]string{
 		"ov.translating":        "Translating",
 		"ov.llm.needed":         "This language requires the LLM module",
 		"td.title":              "Translate to:",
+		"td.plain":              "No translation",
 		"cap.title":             "{app} — shortcut",
 		"cap.prompt":            "Press a new key combination…\n\n(current: %s)\n\nEsc — cancel",
 		"cap.selected":          "Selected: %s",
@@ -524,12 +526,12 @@ var settingsStrings = map[string]map[string]string{
 			"<li>Крестик ✕ справа отменяет операцию на любой стадии; фокус ввода оверлей не забирает. Показывать плашку и её анимацию можно отключить на «Основных».</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Диалог выбора языка</p>" +
-			"<div class=\"mock\"><div style=\"display:flex;justify-content:space-between;margin-bottom:8px\"><b>Переводить на: (3)</b><span class=\"mock-x\">✕</span></div><div style=\"display:flex;gap:8px\"><span class=\"mock-btn on\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">ES</span></div></div>" +
-			"<p>Появляется над оверлеем после отпускания хоткея в режимах «Спрашивать всегда/с таймаутом». Набор кнопок — «Языки в диалоге», подсвечен целевой язык. В режиме с таймаутом в заголовке идёт отсчёт секунд, по истечении применяется целевой язык. Крестик диалога — вставить без перевода; крестик оверлея отменяет операцию целиком.</p>" +
+			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Распознаю…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Переводить на:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Без перевода</span></div></div>" +
+			"<p>Спрашивает сама плашка второй строкой, как только вы отпустили сочетание, — в режимах «Спрашивать всегда» и «Спрашивать с таймаутом». Набор кнопок — «Языки в диалоге», подсвечен целевой язык. В режиме с таймаутом под этой кнопкой укорачивается полоска: когда она кончится, применится подсвеченный язык. <b>Без перевода</b> вставляет как услышано; крестик плашки отменяет операцию целиком. Клавиатура тоже работает: Enter — подсвеченный ответ, 1…9 — кнопка по номеру, Esc — отмена.</p>" +
 			"<p class=\"wh\">Безопасная вставка</p>" +
-			"<div class=\"mock\"><div style=\"display:flex;justify-content:space-between;margin-bottom:8px\"><b style=\"color:var(--amber)\">Фокус сменился — вставить? (30)</b><span class=\"mock-x\">✕</span></div><div style=\"display:flex;gap:8px\"><span class=\"mock-btn on\">Вставить сюда</span><span class=\"mock-btn\">Копировать</span></div></div>" +
+			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Распознаю…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span style=\"color:var(--amber)\">Фокус сменился — вставить?</span><span class=\"mock-btn on mock-cd\">Вставить сюда</span><span class=\"mock-btn\">Копировать</span></div></div>" +
 			"<ul>" +
-			"<li>Окно-цель запоминается в момент нажатия хоткея. Если за время обработки фокус сменился, текст не вставляется — появляется диалог: <b>Вставить сюда</b> (в текущее окно), <b>Копировать</b> (в буфер обмена) или ✕. По истечении отсчёта вставка отменяется, текст остаётся в «Последнем результате».</li>" +
+			"<li>Окно-цель запоминается в момент нажатия хоткея. Если за время обработки фокус сменился, текст не вставляется — плашка спрашивает второй строкой: <b>Вставить сюда</b> (в текущее окно), <b>Копировать</b> (в буфер обмена) или крестик. По истечении отсчёта вставка отменяется, текст остаётся в «Последнем результате».</li>" +
 			"<li>Enter после вставки нажимается только если окно-цель не менялось.</li>" +
 			"<li><b>Последний результат</b> — финальный текст каждой диктовки хранится в памяти до следующей; в меню трея есть пункт «Копировать последний результат». Ошибка вставки или смена фокуса не теряют надиктованное.</li>" +
 			"</ul>" +
@@ -847,12 +849,12 @@ var settingsStrings = map[string]map[string]string{
 			"<li>The ✕ on the right cancels at any stage; the overlay never steals input focus. The overlay and its animation can be turned off on the General tab.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Language dialog</p>" +
-			"<div class=\"mock\"><div style=\"display:flex;justify-content:space-between;margin-bottom:8px\"><b>Translate to: (3)</b><span class=\"mock-x\">✕</span></div><div style=\"display:flex;gap:8px\"><span class=\"mock-btn on\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">ES</span></div></div>" +
-			"<p>Appears above the overlay after releasing the hotkey in the \"always ask\" / \"ask with timeout\" modes. The button set comes from \"Languages in the dialog\"; the target language is highlighted. In timeout mode the title counts down and the target is applied when time runs out. The dialog ✕ inserts without translation; the overlay ✕ cancels the whole operation.</p>" +
+			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Transcribing…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Translate to:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">No translation</span></div></div>" +
+			"<p>The plate itself asks, on a second line, the moment you let the shortcut go — in the \"always ask\" and \"ask with a countdown\" modes. The buttons come from \"Languages in the dialog\"; the target language is highlighted. With a countdown, a line under that button shrinks: when it runs out, the highlighted language is used. <b>No translation</b> inserts the text as it was heard; the ✕ on the plate cancels the whole operation. The keyboard works too: Enter takes the highlighted answer, 1…9 pick a button by number, Esc cancels.</p>" +
 			"<p class=\"wh\">Safe insertion</p>" +
-			"<div class=\"mock\"><div style=\"display:flex;justify-content:space-between;margin-bottom:8px\"><b style=\"color:var(--amber)\">Focus changed — insert? (30)</b><span class=\"mock-x\">✕</span></div><div style=\"display:flex;gap:8px\"><span class=\"mock-btn on\">Insert here</span><span class=\"mock-btn\">Copy</span></div></div>" +
+			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Transcribing…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span style=\"color:var(--amber)\">Focus changed — insert?</span><span class=\"mock-btn on mock-cd\">Insert here</span><span class=\"mock-btn\">Copy</span></div></div>" +
 			"<ul>" +
-			"<li>The target window is captured the moment you press the hotkey. If focus changed while the speech was being processed, nothing is pasted — a dialog offers <b>Insert here</b> (into the current window), <b>Copy</b> (to the clipboard) or ✕. When the countdown expires the insertion is cancelled and the text stays in Last Result.</li>" +
+			"<li>The target window is captured the moment you press the hotkey. If focus changed while the speech was being processed, nothing is pasted — the plate asks on its second line: <b>Insert here</b> (into the current window), <b>Copy</b> (to the clipboard) or the ✕. When the countdown expires the insertion is cancelled and the text stays in Last Result.</li>" +
 			"<li>Enter after paste is pressed only when the target window has not changed.</li>" +
 			"<li><b>Last Result</b> — the final text of every dictation is kept in memory until the next one; the tray menu has \"Copy last result\". A failed paste or focus change never loses a dictation.</li>" +
 			"</ul>" +
