@@ -613,9 +613,11 @@ func (a *App) stateSnapshot() string {
 		mic = cfg.MicDeviceName
 	} else if rec != nil {
 		for _, d := range rec.devices() {
-			if d.Default {
+			if d.System || d.Default {
 				mic = d.Name
-				break
+				if d.System {
+					break
+				}
 			}
 		}
 	}
@@ -662,7 +664,7 @@ func (a *App) stateSnapshot() string {
 		MicOK:      rec != nil,
 		StatusLine: statusLine(cfg, ready, free),
 	}
-	st.Badges.Mic = shortLabel(mic, 14)
+	st.Badges.Mic = micBadge(mic)
 	st.Badges.Models = itoaSafe(installedModelCount())
 	if w := systemWarnings(cfg); w > 0 {
 		st.Badges.System = itoaSafe(w)
@@ -681,6 +683,30 @@ func shortLabel(s string, max int) string {
 		return s
 	}
 	return string(r[:max-1]) + "…"
+}
+
+var micNoise = map[string]bool{
+	"microphone": true, "mic": true, "audio": true, "input": true, "device": true,
+	"микрофон": true, "звук": true, "устройство": true, "system": true, "системный": true,
+}
+
+func micBadge(name string) string {
+	clean := strings.Map(func(r rune) rune {
+		if r == '(' || r == ')' || r == '-' || r == ',' {
+			return ' '
+		}
+		return r
+	}, name)
+	for _, w := range strings.Fields(clean) {
+		if len([]rune(w)) < 3 {
+			continue
+		}
+		if micNoise[strings.ToLower(w)] {
+			continue
+		}
+		return shortLabel(w, 10)
+	}
+	return shortLabel(strings.TrimSpace(name), 10)
 }
 
 func statusLine(cfg *Config, ready bool, freeMB int) string {

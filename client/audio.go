@@ -48,6 +48,7 @@ type micDevice struct {
 	ID      string `json:"id"`
 	Name    string `json:"name"`
 	Default bool   `json:"default"`
+	System  bool   `json:"system"`
 }
 
 func (r *Recorder) Level() float64 {
@@ -76,12 +77,13 @@ func (r *Recorder) devices() []micDevice {
 		return nil
 	}
 	out := make([]micDevice, 0, len(infos))
-	for _, info := range infos {
-		id := hex.EncodeToString(info.ID[:])
+	for i := range infos {
+		id := hex.EncodeToString(infos[i].ID[:])
 		out = append(out, micDevice{
 			ID:      id,
-			Name:    info.Name(),
+			Name:    infos[i].Name(),
 			Default: id == cur,
+			System:  infos[i].IsDefault != 0,
 		})
 	}
 	return out

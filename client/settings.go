@@ -692,13 +692,14 @@ button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box
 .wave{animation:pulse 1.6s infinite}
 .tabs{display:flex;flex-wrap:wrap;gap:2px;padding:10px 16px 0;border-bottom:1px solid var(--line)}
 .shell{display:flex;flex:1;min-height:0}
-.snav{width:168px;flex:none;border-right:1px solid var(--line);padding:6px 0;display:flex;flex-direction:column;gap:1px;overflow-y:auto}
+.snav{width:clamp(150px,23%,196px);flex:none;border-right:1px solid var(--line);padding:6px 0;display:flex;flex-direction:column;gap:1px;overflow-y:auto;overflow-x:hidden}
 .snav .ngrp{font-size:9px;letter-spacing:.16em;color:var(--faint);padding:12px 12px 3px;text-transform:uppercase}
 .nav{appearance:none;border:0;background:none;text-align:left;font:inherit;font-size:12.5px;color:var(--dim);padding:8px 12px;cursor:pointer;border-left:2px solid transparent}
 .nav:hover{color:var(--green)}
 .nav.active{color:var(--green);border-left-color:var(--green);background:var(--panel);text-shadow:var(--glow)}
-.nav{display:flex;align-items:center;gap:7px}
-.nbadge{margin-left:auto;font-size:9px;padding:1px 5px;border:1px solid var(--line);color:var(--faint);white-space:nowrap}
+.nav{display:flex;align-items:center;gap:6px;min-width:0}
+.nav .nlabel{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nbadge{flex:none;max-width:64px;font-size:9px;padding:1px 5px;border:1px solid var(--line);color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .nbadge:empty{display:none}
 .nbadge.warn{color:var(--amber);border-color:var(--amber)}
 .scard .led{width:6px;height:6px;border-radius:50%;background:var(--faint);display:inline-block;margin-right:6px;flex:none}
@@ -724,8 +725,9 @@ button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box
 .tab.active{color:var(--green);border-color:var(--line);background:var(--panel);text-shadow:var(--glow)}
 .page{display:none;padding:14px 16px}
 .page.active{display:block}
-.card{background:var(--panel);border:1px solid var(--line);box-shadow:inset 0 0 18px rgba(60,255,110,.05),0 0 9px rgba(60,255,110,.08);padding:10px 14px;margin-bottom:10px}
-.row{display:flex;align-items:center;gap:10px;padding:6px 0;flex-wrap:wrap}
+.card{background:none;border:0;padding:0;margin:0 0 18px}
+.row{display:flex;align-items:center;gap:10px;padding:9px 0;flex-wrap:wrap;border-bottom:1px solid #12241a}
+.card .row:last-child{border-bottom:0}
 .row label{flex:1;min-width:100px;color:var(--green)}
 .row label .sub{display:block;font-size:10.5px;color:var(--faint);margin-top:2px;letter-spacing:0}
 .row select{flex:0 1 auto;min-width:0;max-width:100%}
@@ -738,7 +740,15 @@ input:disabled,select:disabled{opacity:.35;cursor:default}
 #trlangs label:has(input:disabled){opacity:.45}
 input[type=text]{width:220px;max-width:100%}select{width:210px;max-width:100%}
 input[type=checkbox]{width:16px;height:16px;accent-color:var(--dim)}
-input[type=range]{width:170px;accent-color:var(--dim);background:transparent}
+input[type=range]{width:150px;accent-color:var(--dim);background:transparent}
+.row input[type=checkbox]{appearance:none;-webkit-appearance:none;width:32px;height:17px;border:1px solid var(--line);position:relative;cursor:pointer;background:none;flex:none;padding:0;margin:0}
+.row input[type=checkbox]::after{content:"";position:absolute;top:2px;left:2px;width:11px;height:11px;background:var(--faint);transition:.15s}
+.row input[type=checkbox]:checked{border-color:var(--dim)}
+.row input[type=checkbox]:checked::after{left:17px;background:var(--green);box-shadow:var(--glow)}
+.row select,.row input[type=text]{border:1px solid var(--line);background:#08100b;color:var(--green);font:inherit;font-size:11.5px;padding:4px 8px}
+.row select{flex:0 0 auto;width:auto;min-width:118px;max-width:230px}
+.row input[type=text]{flex:0 0 auto;width:min(230px,50%)}
+.row .val{color:var(--dim);font-size:11.5px;min-width:44px;text-align:right}
 button,select,input[type=checkbox],input[type=radio],input[type=range]{cursor:pointer}
 button:disabled{cursor:default}
 .val{min-width:52px;text-align:right;color:var(--green);text-shadow:var(--glow);font-weight:700}
@@ -783,7 +793,7 @@ button.mini{padding:5px 12px;border:1px solid var(--line);background:none;color:
 button.mini:hover{color:var(--green);border-color:var(--dim);box-shadow:var(--glow)}
 button.mini.danger:hover{color:#ff7b6b;border-color:#7a2e2e;box-shadow:0 0 7px rgba(255,110,90,.5)}
 .mpct{color:var(--amber);font-size:12px;min-width:44px;text-align:right;text-shadow:0 0 6px rgba(255,179,71,.5)}
-.sect{color:var(--dim);font-size:12px;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.sect{color:var(--dim);font-size:11px;letter-spacing:.14em;text-transform:uppercase;margin:0 0 4px;display:flex;align-items:center;gap:8px}
 .hfhome{margin-left:auto;cursor:pointer;color:var(--dim);font-size:11px;letter-spacing:1px;border:1px solid var(--line);padding:3px 9px;text-transform:none}
 .hfhome:hover{color:var(--green);border-color:var(--dim);box-shadow:var(--glow)}
 .ramline{display:flex;align-items:center;flex-wrap:wrap;gap:6px;color:var(--faint);font-size:12px;margin:4px 0 10px}
@@ -861,16 +871,16 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
 <div class="shell">
 <nav class="snav" id="snav">
  <span class="ngrp">{{S_GRP_WORK}}</span>
- <button class="nav" data-p="state">{{S_NAV_STATE}}</button>
- <button class="nav" data-p="dictation">{{S_NAV_DICT}}</button>
- <button class="nav" data-p="mic">{{S_NAV_MIC}}<span class="nbadge" id="badge_mic"></span></button>
+ <button class="nav" data-p="state"><span class="nlabel">{{S_NAV_STATE}}</span></button>
+ <button class="nav" data-p="dictation"><span class="nlabel">{{S_NAV_DICT}}</span></button>
+ <button class="nav" data-p="mic"><span class="nlabel">{{S_NAV_MIC}}</span><span class="nbadge" id="badge_mic"></span></button>
  <span class="ngrp">{{S_GRP_REC}}</span>
- <button class="nav" data-p="models">{{S_NAV_MODELS}}<span class="nbadge" id="badge_models"></span></button>
- <button class="nav" data-p="text">{{S_NAV_TEXT}}</button>
- <button class="nav" data-p="translate">{{S_NAV_TR}}</button>
+ <button class="nav" data-p="models"><span class="nlabel">{{S_NAV_MODELS}}</span><span class="nbadge" id="badge_models"></span></button>
+ <button class="nav" data-p="text"><span class="nlabel">{{S_NAV_TEXT}}</span></button>
+ <button class="nav" data-p="translate"><span class="nlabel">{{S_NAV_TR}}</span></button>
  <span class="ngrp">{{S_GRP_OTHER}}</span>
- <button class="nav" data-p="system">{{S_NAV_SYSTEM}}<span class="nbadge warn" id="badge_system"></span></button>
- <button class="nav" data-p="about">{{S_NAV_ABOUT}}</button>
+ <button class="nav" data-p="system"><span class="nlabel">{{S_NAV_SYSTEM}}</span><span class="nbadge warn" id="badge_system"></span></button>
+ <button class="nav" data-p="about"><span class="nlabel">{{S_NAV_ABOUT}}</span></button>
 </nav>
 
 <div class="content">
@@ -902,8 +912,8 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
   <div class="row"><label>{{S_HOTKEY}}</label>
    <div class="hotkey-box"><span class="hotkey-val" id="hotkey"></span>
    <button class="btn" onclick="appCapture()">{{S_CHANGE}}</button></div></div>
-  <div class="row"><label>{{S_MINMS}}<span class="sub">{{S_SUB_MINMS}}</span></label><span class="val" id="min_record_ms_v"></span><input type="range" id="min_record_ms" min="0" max="1000" step="50"></div>
-  <div class="row"><label>{{S_MAXSEC}}</label><span class="val" id="max_record_seconds_v"></span><input type="range" id="max_record_seconds" min="10" max="300" step="10"></div>
+  <div class="row"><label>{{S_MINMS}}<span class="sub">{{S_SUB_MINMS}}</span></label><select id="min_record_ms"><option value="0">0 ms</option><option value="100">100 ms</option><option value="150">150 ms</option><option value="200">200 ms</option><option value="300">300 ms</option><option value="500">500 ms</option><option value="750">750 ms</option><option value="1000">1000 ms</option></select></div>
+  <div class="row"><label>{{S_MAXSEC}}</label><select id="max_record_seconds"><option value="30">30 s</option><option value="60">60 s</option><option value="120">120 s</option><option value="180">180 s</option><option value="300">300 s</option></select></div>
  </div>
  <div class="card">
   <div class="sect">{{S_SEC_BEHAVIOR}}</div>
@@ -980,7 +990,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
     <option value="fr">Français</option><option value="es">Español</option>
     <option value="pl">Polski</option>
    </select></div>
-  <div class="row"><label>{{S_THREADS}}<span class="sub">{{S_SUB_THREADS}}</span></label><span class="val" id="threads_v"></span><input type="range" id="threads" min="1" max="16" step="1"></div>
+  <div class="row"><label>{{S_THREADS}}<span class="sub">{{S_SUB_THREADS}}</span></label><select id="threads"><option value="1">1</option><option value="2">2</option><option value="4">4</option><option value="6">6</option><option value="8">8</option><option value="12">12</option><option value="16">16</option></select></div>
  </div>
  <div class="card">
   <div class="sect">{{S_SEC_LLM}}<span class="hfhome" onclick="appHFHome()" title="huggingface.co">Hugging Face ↗</span></div>
@@ -1028,7 +1038,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
     <option value="always">{{S_TR_ASK_ALWAYS}}</option>
     <option value="timeout">{{S_TR_ASK_TIMEOUT}}</option>
    </select></div>
-  <div class="row"><label>{{S_TR_SECONDS}}</label><span class="val" id="translate_ask_seconds_v"></span><input type="range" id="translate_ask_seconds" min="1" max="10" step="1"></div>
+  <div class="row"><label>{{S_TR_SECONDS}}</label><select id="translate_ask_seconds"><option value="2">2 s</option><option value="3">3 s</option><option value="4">4 s</option><option value="5">5 s</option><option value="7">7 s</option><option value="10">10 s</option></select></div>
   <div class="row"><label>{{S_PROF_HOTKEY}}</label>
    <span class="hotkey-val" id="tr_hotkey" style="min-width:110px"></span>
    <button class="mini" id="tr_set">{{S_PROF_SET}}</button>
@@ -1471,8 +1481,13 @@ async function refreshState(){
   led("state_other_led", true);
   led("state_llm_led", s.llm_ok, !s.llm_ok);
   led("st_led", s.ready);
-  const badge = (id, v)=>{ const el = document.getElementById(id); if(el) el.textContent = v || ""; };
-  badge("badge_mic", s.badges && s.badges.mic);
+  const badge = (id, v, full)=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.textContent = v || "";
+    el.title = full || v || "";
+  };
+  badge("badge_mic", s.badges && s.badges.mic, s.mic);
   badge("badge_models", s.badges && s.badges.models);
   badge("badge_system", s.badges && s.badges.system);
   const bar = document.getElementById("state_mic_bar");
@@ -1667,7 +1682,8 @@ function toast(msg){
   setTimeout(()=>t.classList.remove("show"), 2500);
 }
 
-const sliders = ["threads","min_record_ms","max_record_seconds","translate_ask_seconds"];
+const sliders = [];
+const numSels = ["threads","min_record_ms","max_record_seconds","translate_ask_seconds"];
 function load(){
   document.getElementById("punctuation").value = CFG.punctuation || "model";
   document.getElementById("whisper_prompt").value = CFG.whisper_prompt || "";
@@ -1697,11 +1713,12 @@ function load(){
     if(![...el.options].some(o=>o.value===v)){const o=document.createElement("option");o.value=v;o.textContent=v;el.appendChild(o);}
     el.value=v;
   });
-  sliders.forEach(k=>{
-    const el = document.getElementById(k), v = document.getElementById(k+"_v");
-    const upd = ()=>{ v.textContent = el.value; };
-    el.oninput = upd;
-    upd();
+  numSels.forEach(k=>{
+    const el = document.getElementById(k), v = String(CFG[k]);
+    if(![...el.options].some(o=>o.value===v)){
+      const o = document.createElement("option"); o.value = v; o.textContent = v; el.insertBefore(o, el.firstChild);
+    }
+    el.value = v;
   });
   syncTrControls();
 }
