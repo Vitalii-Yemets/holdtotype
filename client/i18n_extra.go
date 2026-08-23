@@ -370,6 +370,94 @@ func init() {
 			"<li>Autorenprofil: <span class=\"lnk\" onclick=\"appAuthorLink()\">github.com/Vitalii-Yemets</span></li>" +
 			"</ul>" +
 			"<p>Fehler gefunden oder eine Idee — eröffnen Sie ein Issue im Repository.</p>",
+		"S_HELP_HTML": "<p class=\"wh\">Wie es funktioniert</p>" +
+			"<p>Kürzel halten — die Aufnahme läuft (die Leiste am unteren Bildschirmrand zeigt Ihren Pegel). Loslassen — der Ton wird erkannt, bei Bedarf übersetzt und durch die Prompts geschickt, und der fertige Text landet an der Cursorposition. Das ✕ auf der Leiste bricht in jedem Schritt ab.</p>" +
+			"<p>Der ganze Weg: <b>Aufnahme → Erkennung (Whisper) → Übersetzung (falls aktiv) → Prompts (LLM) → Einfügen</b>. Jeder Schritt ist auf der Leiste zu sehen.</p>" +
+			"<p class=\"wh\">Die Leiste</p>" +
+			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\"></span><span>Sprechen…</span><span class=\"mock-bars\"><i style=\"height:6px\"></i><i style=\"height:13px\"></i><i style=\"height:9px\"></i><i style=\"height:16px\"></i><i style=\"height:7px\"></i><i style=\"height:12px\"></i><i style=\"height:5px\"></i></span><span class=\"mock-x\">✕</span></div></div>" +
+			"<ul>" +
+			"<li><b>Sprechen…</b> — Aufnahme: ein roter Punkt und die Pegelbalken.</li>" +
+			"<li><b>Erkenne…</b> — Whisper arbeitet; beim Übersetzen — „Übersetze“, beim Bearbeiten — „Bearbeite: Name (1/2)“.</li>" +
+			"<li><b>Eingefügt: N Zeichen</b> — fertig; bei Fehlern oder Stille steht dort kurz der Grund.</li>" +
+			"<li>Das ✕ rechts bricht in jedem Schritt ab; die Leiste nimmt niemals den Eingabefokus. Leiste und Animation lassen sich unter „Diktat“ abschalten.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Sprachdialog</p>" +
+			"<div class=\"mock\"><div style=\"display:flex;justify-content:space-between;margin-bottom:8px\"><b>Übersetzen nach: (3)</b><span class=\"mock-x\">✕</span></div><div style=\"display:flex;gap:8px\"><span class=\"mock-btn on\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">ES</span></div></div>" +
+			"<p>Erscheint über der Leiste, nachdem das Kürzel losgelassen wurde — in den Modi „jedes Mal fragen“ und „mit Timeout fragen“. Die Schaltflächen kommen aus „Sprachen im Dialog“; die Zielsprache ist hervorgehoben. Im Timeout-Modus zählt der Titel herunter und am Ende gilt die Zielsprache. Das ✕ im Dialog fügt ohne Übersetzung ein, das ✕ auf der Leiste bricht alles ab.</p>" +
+			"<p class=\"wh\">Sicheres Einfügen</p>" +
+			"<div class=\"mock\"><div style=\"display:flex;justify-content:space-between;margin-bottom:8px\"><b style=\"color:var(--amber)\">Fokus gewechselt — einfügen? (30)</b><span class=\"mock-x\">✕</span></div><div style=\"display:flex;gap:8px\"><span class=\"mock-btn on\">Hier einfügen</span><span class=\"mock-btn\">Kopieren</span></div></div>" +
+			"<ul>" +
+			"<li>Das Zielfenster wird in dem Moment gemerkt, in dem Sie das Kürzel drücken. Hat sich der Fokus während der Verarbeitung geändert, wird nichts eingefügt — der Dialog bietet <b>Hier einfügen</b> (ins aktuelle Fenster), <b>Kopieren</b> (in die Zwischenablage) oder ✕. Läuft die Zeit ab, wird nicht eingefügt und der Text bleibt im letzten Ergebnis.</li>" +
+			"<li>Enter nach dem Einfügen wird nur gedrückt, wenn das Zielfenster dasselbe geblieben ist.</li>" +
+			"<li><b>Letztes Ergebnis</b> — der fertige Text jedes Diktats bleibt bis zum nächsten im Speicher; im Menü im Infobereich gibt es „Letztes Ergebnis kopieren“. Ein misslungenes Einfügen oder ein Fokuswechsel kostet nie ein Diktat.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Diktat</p>" +
+			"<ul>" +
+			"<li><b>Tastenkürzel</b> — das Hauptkürzel fürs Diktieren. Jede Kombination lässt sich aufnehmen; linke und rechte Modifikatoren werden unterschieden. Kürzel für Diktat, Übersetzung und Profile müssen eindeutig sein — eine Dopplung verhindert das Speichern.</li>" +
+			"<li><b>Modus</b> — Tasten halten oder einmal drücken zum Starten und noch einmal zum Beenden.</li>" +
+			"<li><b>Oberflächensprache</b> — wechselt sofort; „Wie im System“ folgt Windows.</li>" +
+			"<li><b>Erkennungssprache</b> — ein Hinweis für Whisper; „auto“ erkennt die Sprache am Klang.</li>" +
+			"<li><b>Ton</b> — Signale für Start und Ende: mehrere Sätze plus Windows-Systemklänge, ▶ spielt sie vor.</li>" +
+			"<li><b>Enter nach dem Einfügen</b> — schickt den diktierten Text sofort ab (praktisch in Messengern).</li>" +
+			"<li><b>Zwischenablage wiederherstellen</b> — legt den vorherigen Inhalt vollständig zurück, auch Bilder, Dateien und formatierten Text. Lässt sich der Inhalt nicht sichern, bleibt die Zwischenablage unangetastet und der Text wird Zeichen für Zeichen getippt.</li>" +
+			"<li><b>Leiste und Animation</b> — die Statusanzeige am unteren Rand; die Animation lässt sich abschalten.</li>" +
+			"<li><b>Zeichenweise einfügen</b> — statt Strg+V werden Tastendrücke simuliert, für Felder, die das Einfügen verweigern.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Erkennung</p>" +
+			"<div class=\"mock\"><div class=\"mock-row\"><span class=\"mock-radio on\"></span><b>Small</b><span class=\"mock-note\">Gleichgewicht aus Tempo und Genauigkeit</span><span style=\"margin-left:auto\">466 MB</span></div>" +
+			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Medium (q5)</b><span class=\"mock-note\">genauer, empfohlen</span><span style=\"margin-left:auto\">539 MB ⭳</span></div>" +
+			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Turbo (q5)</b><span class=\"mock-note\">beste Genauigkeit auf der CPU</span><span style=\"margin-left:auto\">574 MB ⭳</span></div></div>" +
+			"<ul>" +
+			"<li><b>Modelle</b> — der Katalog: Base (schnell, für schwache Rechner), Small (ausgewogen), Medium und Turbo (genauer, langsamer; „q5“ ist eine quantisierte Fassung — etwas kleiner und schneller, fast ohne Qualitätsverlust) sowie GigaAM v3 für Russisch. Der Radioknopf wählt das aktive Modell (gilt sofort, die Erkennung startet neu); bei einem fehlenden Modell fragt das Programm, ob es geladen werden soll.</li>" +
+			"<li>Der Erkennungsserver hält das Modell zwischen den Sätzen im Speicher — das erste Diktat nach dem Start dauert länger (Laden), danach braucht die Erkennung ein bis drei Sekunden.</li>" +
+			"<li><b>Wörterbuch</b> — Begriffe, Namen und Abkürzungen, durch Kommas getrennt. Ein Hinweis für Whispers „Gehör“, damit seltene Wörter richtig ankommen; keine Befehle.</li>" +
+			"<li><b>Mikrofon</b> — Gerätewahl mit Pegelanzeige (sprechen Sie, und der Balken bewegt sich, dann wird das Gerät gehört). Wird das gewählte Gerät abgezogen, greift das Systemgerät; eine Aufnahme ohne Sprache wird gar nicht erst zur Erkennung geschickt — stattdessen meldet die Leiste „Stille“.</li>" +
+			"<li><b>Dienst</b> — der Erkennungsserver startet selbst und läuft lokal. Port, Pfad oder ein entfernter Server lassen sich ändern; die Erkennung startet danach von allein neu.</li>" +
+			"<li><b>Übersetzung</b> — übersetzt wird ausschließlich mit Whisper: ins Englische im nativen Modus, in andere Sprachen <b>experimentell</b> über die erzwungene Ausgabesprache (die Qualität hängt vom Sprachpaar ab; große Sprachen gelingen am besten). Das Turbo-Modell ist dafür nicht trainiert — die Einstellungen warnen, solange es aktiv ist. „Immer in die Zielsprache übersetzen“ übersetzt jedes Diktat ohne Rückfrage. Ohne dieses Häkchen gilt der Fragemodus: immer oder mit Timeout — vor der Erkennung erscheint der Sprachdialog, und nach Ablauf gilt die Zielsprache. Das eigene Übersetzungskürzel übersetzt einmalig, ohne das normale Diktat zu verändern.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Nachbearbeitung (LLM)</p>" +
+			"<p>Eine freiwillige zweite Schicht: ein lokales Sprachmodell (llama.cpp) bearbeitet den erkannten Text nach Ihren Prompts — entfernt Füllwörter, ändert den Stil, formatiert. Vollständig offline, nur auf der CPU.</p>" +
+			"<div class=\"mock\"><div class=\"mock-row\" style=\"color:var(--dim)\">▸ Qwen/Qwen2.5-3B-Instruct-GGUF<span style=\"margin-left:auto;color:var(--faint)\">2024-09-20</span><span>↓303k</span><span>↗</span></div>" +
+			"<div class=\"mock-row\" style=\"padding-left:18px\">q4_k_m.gguf<span style=\"margin-left:auto\">1.9 GB</span><span style=\"color:var(--green)\">● ≈3.7 GB</span><span style=\"color:var(--dim)\">⭳</span></div>" +
+			"<div class=\"mock-row\" style=\"padding-left:18px\">q8_0.gguf<span style=\"margin-left:auto\">3.6 GB</span><span style=\"color:var(--amber)\">● ≈8.2 GB</span><span style=\"color:var(--dim)\">⭳</span></div></div>" +
+			"<ul>" +
+			"<li><b>Modelle</b> — die installierten Bearbeitungsmodelle; der Radioknopf wählt das aktive (gilt sofort), das ✕ löscht (auch das aktive — dann ist die Nachbearbeitung aus). Der Fortschritt beim Laden steht ebenfalls hier.</li>" +
+			"<li><b>Suche</b> — GGUF-Modelle auf Hugging Face nach Namen (etwa „qwen2.5 instruct“). Jedes Repository zeigt Datum der letzten Änderung, Zahl der Downloads und ein ↗ zur Modellseite; ein Klick auf die Zeile öffnet die Quant-Dateien. Die Anzeige ● ≈N GB wird mit dem <b>freien</b> Arbeitsspeicher verglichen (er steht über der Liste).</li>" +
+			"<li><b>Welches Quant:</b> die Zahl sind Bits pro Gewicht (Q4 — der gute Mittelweg, Q8 — fast unkomprimiert, Q3 — spart Speicher auf Kosten der Qualität); K_M ist besser als K_S; IQ4 ist die neuere Generation und bei gleicher Größe besser als die klassischen. Die Anzeige ● ≈N GB schätzt den nötigen Speicher (Datei plus Reserve für den Kontext): grün passt, gelb ist knapp, rot passt nicht.</li>" +
+			"<li>Ein Modell mit 1,5–3B bearbeitet schnell; 7–9B ist merklich klüger, braucht auf der CPU aber Sekunden pro Durchgang. Der LLM-Server startet beim ersten Einsatz und hält das Modell warm.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Prompts</p>" +
+			"<div class=\"mock\"><div class=\"mock-row\"><span class=\"mock-cb on\">✓</span><b>Aufräumen</b><span class=\"mock-note\">—</span><span style=\"margin-left:auto;color:var(--dim)\">✎ ✕</span></div>" +
+			"<div class=\"mock-row\"><span class=\"mock-cb\"></span><b>Geschäftsstil</b><span class=\"mock-note\">ctrl+alt+f</span><span style=\"margin-left:auto;color:var(--dim)\">✎ ✕</span></div></div>" +
+			"<ul>" +
+			"<li>Ein Prompt ist eine Anweisung an das Bearbeitungsmodell. Zwei sind von Anfang an dabei: „Aufräumen“ (entfernt Füllwörter, Wiederholungen und Fehlstarts, richtet die Satzzeichen) und „Geschäftsstil“ (schreibt höflich und formell um); eigene können Sie beliebig anlegen.</li>" +
+			"<li>Angehakte Prompts gelten für jedes Diktat, der Reihe nach von oben nach unten (als Kette: die Ausgabe des einen ist die Eingabe des nächsten); ist nichts angehakt, wird der Text so eingefügt, wie er erkannt wurde.</li>" +
+			"<li>Ein Prompt kann ein eigenes Kürzel haben: ein Diktat damit wendet nur diesen einen an. Der Stift ✎ öffnet den Editor: Name, Prompttext, Kürzel und ein Testfeld ▶, das eine Probe direkt aus den Einstellungen durch das laufende Modell schickt.</li>" +
+			"<li>Tipp: kleine Modelle arbeiten deutlich besser, wenn im Prompt Beispiele „Eingabe → Ausgabe“ stehen — alle mitgelieferten sind so geschrieben.</li>" +
+			"<li>Scheitert ein Profil (das Modell hat nicht geantwortet), wird der Text ohne es eingefügt: die Leiste zeigt „Eingefügt ohne das Profil …“, und Enter wird in diesem Fall nicht gedrückt.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Abhängigkeiten</p>" +
+			"<ul>" +
+			"<li>Prompts brauchen ein installiertes Bearbeitungsmodell; die Übersetzung braucht es nicht — die macht Whisper allein.</li>" +
+			"<li>Das Bearbeitungsmodell wird beim ersten Einsatz geladen und bleibt warm; große Modelle sind auf der CPU spürbar langsamer.</li>" +
+			"<li>Schauen Sie vor dem Laden auf die Speicheranzeige: ein „knappes“ Modell bremst das ganze System.</li>" +
+			"<li>Ausgegraute Bedienelemente sind Einstellungen, die im aktuellen Modus nichts tun.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Installation und Portabilität</p>" +
+			"<ul>" +
+			"<li><b>{setup}</b> — das Installationsprogramm: ohne Administratorrechte, Verknüpfung im Startmenü, Autostart auf Wunsch, sauberes Entfernen über die Windows-Einstellungen.</li>" +
+			"<li><b>Portabel</b> — kopieren Sie einfach den ganzen Ordner mit der exe (auf einen USB-Stick, an einen anderen Rechner): Einstellungen, Modelle und Protokoll liegen daneben und reisen mit. In die Registry wird nichts geschrieben.</li>" +
+			"<li>Ist beim ersten Start kein Erkennungsmodell da, öffnet das Programm den Katalog selbst und wartet auf den Download.</li>" +
+			"<li>Voraussetzungen: Windows 10/11 x64, eine CPU mit AVX2 (etwa ab 2013), WebView2 Runtime für das Einstellungsfenster (in Windows 11 enthalten).</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Menü im Infobereich und Dateien</p>" +
+			"<div class=\"mock\" style=\"max-width:290px\"><div class=\"mock-mi dim\">{app} — Bereit…</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Einstellungen…</div><div class=\"mock-mi\">Ausschalten</div><div class=\"mock-mi\">Letztes Ergebnis kopieren</div><hr class=\"mock-sep\"><div class=\"mock-mi\">config.json neu lesen</div><div class=\"mock-mi\">config.json öffnen</div><div class=\"mock-mi\">Protokoll öffnen</div><div class=\"mock-mi\">Über</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Beenden</div></div>" +
+			"<ul>" +
+			"<li>Linksklick auf das Symbol im Infobereich — die Einstellungen; Rechtsklick — das Menü. Farben des Symbols: grün — bereit, rot — Aufnahme, orange — Erkennung, grau — ausgeschaltet oder Fehler.</li>" +
+			"<li><b>config.json</b> — alle Einstellungen; von Hand geänderte Werte gelten nach „config.json neu lesen“ im Menü.</li>" +
+			"<li><b>{log}</b> — das Protokoll, automatisch auf etwa 2 MB begrenzt.</li>" +
+			"<li><b>models/</b> — die geladenen Erkennungs- und Bearbeitungsmodelle.</li>" +
+			"</ul>",
 	}
 	settingsStrings["fr"] = map[string]string{
 		"S_TITLE": "{app} — Réglages", "S_TAB_GENERAL": "Général", "S_TAB_REC": "Reconnaissance",
@@ -459,6 +547,94 @@ func init() {
 			"<li>Profil de l'auteur : <span class=\"lnk\" onclick=\"appAuthorLink()\">github.com/Vitalii-Yemets</span></li>" +
 			"</ul>" +
 			"<p>Un bug ou une idée — ouvrez une issue dans le dépôt.</p>",
+		"S_HELP_HTML": "<p class=\"wh\">Comment ça marche</p>" +
+			"<p>Maintenez le raccourci — l'enregistrement commence (le bandeau en bas de l'écran montre votre niveau). Relâchez — l'audio est reconnu, traduit si besoin, passé dans les prompts, et le texte final arrive à l'endroit du curseur. Le ✕ du bandeau annule à n'importe quelle étape.</p>" +
+			"<p>Le chemin complet : <b>enregistrement → reconnaissance (Whisper) → traduction (si activée) → prompts (LLM) → collage</b>. Chaque étape est visible sur le bandeau.</p>" +
+			"<p class=\"wh\">Le bandeau</p>" +
+			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\"></span><span>Parlez…</span><span class=\"mock-bars\"><i style=\"height:6px\"></i><i style=\"height:13px\"></i><i style=\"height:9px\"></i><i style=\"height:16px\"></i><i style=\"height:7px\"></i><i style=\"height:12px\"></i><i style=\"height:5px\"></i></span><span class=\"mock-x\">✕</span></div></div>" +
+			"<ul>" +
+			"<li><b>Parlez…</b> — enregistrement : un point rouge et les barres de niveau.</li>" +
+			"<li><b>Reconnaissance…</b> — Whisper travaille ; pendant la traduction — « Traduction », pendant les prompts — « Édition : nom (1/2) ».</li>" +
+			"<li><b>Inséré : N caractères</b> — terminé ; en cas d'erreur ou de silence, la raison s'affiche brièvement.</li>" +
+			"<li>Le ✕ à droite annule à n'importe quelle étape ; le bandeau ne prend jamais le focus. Le bandeau et son animation se désactivent dans « Dictée ».</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Dialogue de langue</p>" +
+			"<div class=\"mock\"><div style=\"display:flex;justify-content:space-between;margin-bottom:8px\"><b>Traduire vers : (3)</b><span class=\"mock-x\">✕</span></div><div style=\"display:flex;gap:8px\"><span class=\"mock-btn on\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">ES</span></div></div>" +
+			"<p>Apparaît au-dessus du bandeau après le relâchement du raccourci, dans les modes « demander à chaque fois » et « demander avec délai ». Les boutons viennent de « Langues du dialogue » ; la langue cible est mise en avant. En mode délai le titre décompte et, à la fin, la cible s'applique. Le ✕ du dialogue insère sans traduire, le ✕ du bandeau annule tout.</p>" +
+			"<p class=\"wh\">Insertion sûre</p>" +
+			"<div class=\"mock\"><div style=\"display:flex;justify-content:space-between;margin-bottom:8px\"><b style=\"color:var(--amber)\">Le focus a changé — insérer ? (30)</b><span class=\"mock-x\">✕</span></div><div style=\"display:flex;gap:8px\"><span class=\"mock-btn on\">Insérer ici</span><span class=\"mock-btn\">Copier</span></div></div>" +
+			"<ul>" +
+			"<li>La fenêtre cible est retenue au moment où vous appuyez sur le raccourci. Si le focus a changé pendant le traitement, rien n'est collé — le dialogue propose <b>Insérer ici</b> (dans la fenêtre courante), <b>Copier</b> (dans le presse-papiers) ou ✕. À la fin du décompte l'insertion est annulée et le texte reste dans le dernier résultat.</li>" +
+			"<li>Entrée après le collage n'est envoyée que si la fenêtre cible n'a pas changé.</li>" +
+			"<li><b>Dernier résultat</b> — le texte final de chaque dictée reste en mémoire jusqu'à la suivante ; le menu de la zone de notification propose « Copier le dernier résultat ». Un collage manqué ou un changement de focus ne fait jamais perdre une dictée.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Dictée</p>" +
+			"<ul>" +
+			"<li><b>Raccourci clavier</b> — le raccourci principal. N'importe quelle combinaison peut être capturée ; les modificateurs gauche et droit sont distingués. Les raccourcis de dictée, de traduction et de profils doivent être uniques — un doublon empêche l'enregistrement.</li>" +
+			"<li><b>Mode</b> — maintenir les touches, ou appuyer une fois pour lancer et une fois pour arrêter.</li>" +
+			"<li><b>Langue de l'interface</b> — change aussitôt ; « Comme le système » suit Windows.</li>" +
+			"<li><b>Langue de reconnaissance</b> — une indication pour Whisper ; « auto » la devine à l'oreille.</li>" +
+			"<li><b>Son</b> — signaux de début et de fin : plusieurs jeux plus les sons système de Windows, ▶ les fait écouter.</li>" +
+			"<li><b>Entrée après le collage</b> — envoie aussitôt le texte dicté (pratique dans les messageries).</li>" +
+			"<li><b>Restaurer le presse-papiers</b> — remet l'ancien contenu entièrement, images, fichiers et texte enrichi compris. Quand le contenu ne peut pas être sauvegardé, le presse-papiers reste intact et le texte est tapé caractère par caractère.</li>" +
+			"<li><b>Bandeau et animation</b> — l'indicateur en bas de l'écran ; l'animation peut être coupée.</li>" +
+			"<li><b>Insertion caractère par caractère</b> — au lieu de Ctrl+V, les frappes sont simulées, pour les champs qui refusent le collage.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Reconnaissance</p>" +
+			"<div class=\"mock\"><div class=\"mock-row\"><span class=\"mock-radio on\"></span><b>Small</b><span class=\"mock-note\">équilibre vitesse / précision</span><span style=\"margin-left:auto\">466 MB</span></div>" +
+			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Medium (q5)</b><span class=\"mock-note\">plus précis, recommandé</span><span style=\"margin-left:auto\">539 MB ⭳</span></div>" +
+			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Turbo (q5)</b><span class=\"mock-note\">meilleure précision sur CPU</span><span style=\"margin-left:auto\">574 MB ⭳</span></div></div>" +
+			"<ul>" +
+			"<li><b>Modèles</b> — le catalogue : Base (rapide, pour machines modestes), Small (équilibré), Medium et Turbo (plus précis, plus lents ; « q5 » est une version quantifiée — un peu plus petite et plus rapide, presque sans perte) ainsi que GigaAM v3 pour le russe. Le bouton radio choisit le modèle actif (appliqué aussitôt, la reconnaissance redémarre) ; pour un modèle absent, le programme demande s'il faut le télécharger.</li>" +
+			"<li>Le serveur de reconnaissance garde le modèle en mémoire entre les phrases — la première dictée après le démarrage est plus lente (chargement), ensuite la reconnaissance prend une à trois secondes.</li>" +
+			"<li><b>Dictionnaire</b> — termes, noms et abréviations séparés par des virgules. Une indication pour « l'oreille » de Whisper afin que les mots rares passent correctement ; ce ne sont pas des commandes.</li>" +
+			"<li><b>Microphone</b> — choix de l'appareil avec un niveau en direct (parlez et la barre bouge : l'appareil est bien entendu). Si l'appareil choisi est débranché, celui du système prend le relais ; un enregistrement sans parole n'est jamais envoyé à la reconnaissance — le bandeau annonce « Silence ».</li>" +
+			"<li><b>Service</b> — le serveur de reconnaissance démarre tout seul et tourne en local. Le port, le chemin ou un serveur distant se changent ; la reconnaissance redémarre ensuite d'elle-même.</li>" +
+			"<li><b>Traduction</b> — tout passe par Whisper : vers l'anglais dans son mode natif, vers les autres langues <b>à titre expérimental</b>, en forçant la langue de sortie (la qualité dépend du couple de langues ; les grandes langues s'en sortent le mieux). Le modèle Turbo n'est pas entraîné pour cela — les réglages préviennent tant qu'il est actif. « Toujours traduire vers la langue cible » traduit chaque dictée sans rien demander. Sans cette case, le mode de question s'applique : toujours ou avec délai — le dialogue de langue apparaît avant la reconnaissance et, le temps écoulé, la cible est retenue. Le raccourci de traduction séparé traduit une seule fois, sans toucher à la dictée normale.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Post-traitement (LLM)</p>" +
+			"<p>Une deuxième couche facultative : un modèle de langue local (llama.cpp) retouche le texte reconnu selon vos prompts — enlève les mots parasites, change le style, met en forme. Entièrement hors ligne, sur le processeur seulement.</p>" +
+			"<div class=\"mock\"><div class=\"mock-row\" style=\"color:var(--dim)\">▸ Qwen/Qwen2.5-3B-Instruct-GGUF<span style=\"margin-left:auto;color:var(--faint)\">2024-09-20</span><span>↓303k</span><span>↗</span></div>" +
+			"<div class=\"mock-row\" style=\"padding-left:18px\">q4_k_m.gguf<span style=\"margin-left:auto\">1.9 GB</span><span style=\"color:var(--green)\">● ≈3.7 GB</span><span style=\"color:var(--dim)\">⭳</span></div>" +
+			"<div class=\"mock-row\" style=\"padding-left:18px\">q8_0.gguf<span style=\"margin-left:auto\">3.6 GB</span><span style=\"color:var(--amber)\">● ≈8.2 GB</span><span style=\"color:var(--dim)\">⭳</span></div></div>" +
+			"<ul>" +
+			"<li><b>Modèles</b> — les modèles d'édition installés ; le bouton radio choisit l'actif (appliqué aussitôt), le ✕ supprime (l'actif aussi — le post-traitement s'éteint alors). La progression des téléchargements s'affiche ici également.</li>" +
+			"<li><b>Recherche</b> — les modèles GGUF sur Hugging Face par nom (par exemple « qwen2.5 instruct »). Chaque dépôt indique sa date de mise à jour, son nombre de téléchargements et un ↗ vers sa page ; un clic sur la ligne déplie ses fichiers de quantification. L'indicateur ● ≈N GB se compare à la mémoire <b>libre</b> (affichée au-dessus de la liste).</li>" +
+			"<li><b>Quelle quantification :</b> le chiffre correspond aux bits par poids (Q4 — le bon compromis, Q8 — presque non compressé, Q3 — économise la mémoire au prix de la qualité) ; K_M vaut mieux que K_S ; IQ4 est la génération plus récente, meilleure à taille égale. L'indicateur ● ≈N GB estime la mémoire nécessaire (le fichier plus une réserve pour le contexte) : vert ça tient, ambre c'est juste, rouge ça ne tient pas.</li>" +
+			"<li>Un modèle de 1,5 à 3 milliards de paramètres édite vite ; 7 à 9 milliards est nettement plus fin mais prend des secondes par passage sur le processeur. Le serveur LLM démarre au premier usage et garde le modèle au chaud.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Prompts</p>" +
+			"<div class=\"mock\"><div class=\"mock-row\"><span class=\"mock-cb on\">✓</span><b>Nettoyage</b><span class=\"mock-note\">—</span><span style=\"margin-left:auto;color:var(--dim)\">✎ ✕</span></div>" +
+			"<div class=\"mock-row\"><span class=\"mock-cb\"></span><b>Style professionnel</b><span class=\"mock-note\">ctrl+alt+f</span><span style=\"margin-left:auto;color:var(--dim)\">✎ ✕</span></div></div>" +
+			"<ul>" +
+			"<li>Un prompt est une consigne pour le modèle d'édition. Deux sont livrés d'origine : « Nettoyage » (retire les mots parasites, les répétitions et les faux départs, remet la ponctuation) et « Style professionnel » (réécrit poliment et formellement) ; ajoutez les vôtres librement.</li>" +
+			"<li>Les prompts cochés s'appliquent à chaque dictée, dans l'ordre, de haut en bas (en chaîne : la sortie de l'un devient l'entrée du suivant) ; rien de coché — le texte est inséré tel qu'il a été reconnu.</li>" +
+			"<li>Un prompt peut avoir son propre raccourci : dicter avec lui n'applique que celui-là, une fois. Le crayon ✎ ouvre l'éditeur : nom, texte du prompt, raccourci et un champ d'essai ▶ qui passe un exemple par le modèle en marche, depuis les réglages.</li>" +
+			"<li>Astuce : les petits modèles travaillent bien mieux quand le prompt contient des exemples « entrée → sortie » — tous ceux livrés sont écrits ainsi.</li>" +
+			"<li>Si un profil échoue (le modèle n'a pas répondu), le texte est inséré sans lui : le bandeau affiche « Inséré sans le profil … » et Entrée n'est pas envoyée dans ce cas.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Dépendances</p>" +
+			"<ul>" +
+			"<li>Les prompts exigent un modèle d'édition installé ; la traduction n'en dépend pas — Whisper la fait seul.</li>" +
+			"<li>Le modèle d'édition se charge au premier usage et reste au chaud ; les gros modèles sont nettement plus lents sur le processeur.</li>" +
+			"<li>Regardez l'indicateur de mémoire avant de télécharger : un modèle « juste » ralentit tout le système.</li>" +
+			"<li>Les contrôles grisés sont les réglages qui ne servent à rien dans le mode courant.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Installation et portabilité</p>" +
+			"<ul>" +
+			"<li><b>{setup}</b> — l'installateur : sans droits administrateur, raccourci dans le menu Démarrer, démarrage automatique si vous le souhaitez, suppression propre depuis les paramètres de Windows.</li>" +
+			"<li><b>Portable</b> — copiez simplement tout le dossier contenant l'exe (sur une clé USB, vers un autre PC) : réglages, modèles et journal vivent à côté et voyagent avec. Rien n'est écrit dans le registre.</li>" +
+			"<li>Au premier lancement sans modèle de reconnaissance, le programme ouvre lui-même le catalogue et attend le téléchargement.</li>" +
+			"<li>Prérequis : Windows 10/11 x64, un processeur avec AVX2 (à partir de 2013 environ), WebView2 Runtime pour la fenêtre des réglages (inclus dans Windows 11).</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Zone de notification et fichiers</p>" +
+			"<div class=\"mock\" style=\"max-width:290px\"><div class=\"mock-mi dim\">{app} — Prêt…</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Réglages…</div><div class=\"mock-mi\">Désactiver</div><div class=\"mock-mi\">Copier le dernier résultat</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Relire config.json</div><div class=\"mock-mi\">Ouvrir config.json</div><div class=\"mock-mi\">Ouvrir le journal</div><div class=\"mock-mi\">À propos</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Quitter</div></div>" +
+			"<ul>" +
+			"<li>Clic gauche sur l'icône — les réglages ; clic droit — le menu. Couleurs de l'icône : vert — prêt, rouge — enregistrement, orange — reconnaissance, gris — désactivé ou erreur.</li>" +
+			"<li><b>config.json</b> — tous les réglages ; les modifications à la main s'appliquent via « Relire config.json » dans le menu.</li>" +
+			"<li><b>{log}</b> — le journal, limité automatiquement à environ 2 Mo.</li>" +
+			"<li><b>models/</b> — les modèles de reconnaissance et d'édition téléchargés.</li>" +
+			"</ul>",
 	}
 	settingsStrings["es"] = map[string]string{
 		"S_TITLE": "{app} — Ajustes", "S_TAB_GENERAL": "General", "S_TAB_REC": "Reconocimiento",
@@ -548,6 +724,94 @@ func init() {
 			"<li>Perfil del autor: <span class=\"lnk\" onclick=\"appAuthorLink()\">github.com/Vitalii-Yemets</span></li>" +
 			"</ul>" +
 			"<p>¿Has encontrado un fallo o tienes una idea? Abre un issue en el repositorio.</p>",
+		"S_HELP_HTML": "<p class=\"wh\">Cómo funciona</p>" +
+			"<p>Mantén el atajo — empieza la grabación (la barra en la parte inferior de la pantalla muestra tu nivel). Suelta — el audio se reconoce, se traduce si hace falta, pasa por los prompts y el texto final aparece donde está el cursor. La ✕ de la barra cancela en cualquier momento.</p>" +
+			"<p>El camino completo: <b>grabación → reconocimiento (Whisper) → traducción (si está activa) → prompts (LLM) → pegado</b>. Cada paso se ve en la barra.</p>" +
+			"<p class=\"wh\">La barra</p>" +
+			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\"></span><span>Habla…</span><span class=\"mock-bars\"><i style=\"height:6px\"></i><i style=\"height:13px\"></i><i style=\"height:9px\"></i><i style=\"height:16px\"></i><i style=\"height:7px\"></i><i style=\"height:12px\"></i><i style=\"height:5px\"></i></span><span class=\"mock-x\">✕</span></div></div>" +
+			"<ul>" +
+			"<li><b>Habla…</b> — grabando: un punto rojo y las barras de nivel.</li>" +
+			"<li><b>Reconociendo…</b> — Whisper trabaja; al traducir — «Traduciendo», al aplicar prompts — «Editando: nombre (1/2)».</li>" +
+			"<li><b>Insertado: N caracteres</b> — listo; si hay error o silencio, se muestra el motivo en corto.</li>" +
+			"<li>La ✕ de la derecha cancela en cualquier momento; la barra nunca roba el foco. La barra y su animación se apagan en «Dictado».</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Diálogo de idioma</p>" +
+			"<div class=\"mock\"><div style=\"display:flex;justify-content:space-between;margin-bottom:8px\"><b>Traducir a: (3)</b><span class=\"mock-x\">✕</span></div><div style=\"display:flex;gap:8px\"><span class=\"mock-btn on\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">ES</span></div></div>" +
+			"<p>Aparece sobre la barra al soltar el atajo, en los modos «preguntar siempre» y «preguntar con cuenta atrás». Los botones vienen de «Idiomas del diálogo»; el idioma de destino está resaltado. En el modo con cuenta atrás el título va restando y, al acabar, se aplica el destino. La ✕ del diálogo inserta sin traducir; la ✕ de la barra cancela todo.</p>" +
+			"<p class=\"wh\">Inserción segura</p>" +
+			"<div class=\"mock\"><div style=\"display:flex;justify-content:space-between;margin-bottom:8px\"><b style=\"color:var(--amber)\">Cambió el foco, ¿insertar? (30)</b><span class=\"mock-x\">✕</span></div><div style=\"display:flex;gap:8px\"><span class=\"mock-btn on\">Insertar aquí</span><span class=\"mock-btn\">Copiar</span></div></div>" +
+			"<ul>" +
+			"<li>La ventana de destino se recuerda en el momento de pulsar el atajo. Si el foco cambió mientras se procesaba el habla, no se pega nada — el diálogo ofrece <b>Insertar aquí</b> (en la ventana actual), <b>Copiar</b> (al portapapeles) o ✕. Si se agota la cuenta atrás, la inserción se cancela y el texto queda en el último resultado.</li>" +
+			"<li>Enter tras pegar solo se envía si la ventana de destino no ha cambiado.</li>" +
+			"<li><b>Último resultado</b> — el texto final de cada dictado se guarda en memoria hasta el siguiente; el menú del área de notificación tiene «Copiar el último resultado». Un pegado fallido o un cambio de foco nunca hacen perder un dictado.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Dictado</p>" +
+			"<ul>" +
+			"<li><b>Atajo de teclado</b> — el atajo principal. Se puede capturar cualquier combinación; los modificadores izquierdo y derecho se distinguen. Los atajos de dictado, traducción y perfiles deben ser únicos — uno repetido impide guardar.</li>" +
+			"<li><b>Modo</b> — mantener las teclas, o pulsar una vez para empezar y otra para parar.</li>" +
+			"<li><b>Idioma de la interfaz</b> — cambia al instante; «Como el sistema» sigue a Windows.</li>" +
+			"<li><b>Idioma de reconocimiento</b> — una pista para Whisper; «auto» lo deduce del habla.</li>" +
+			"<li><b>Sonido</b> — avisos de inicio y fin: varios juegos más los sonidos del sistema, ▶ los reproduce.</li>" +
+			"<li><b>Enter tras pegar</b> — envía el texto dictado enseguida (cómodo en mensajería).</li>" +
+			"<li><b>Restaurar el portapapeles</b> — devuelve el contenido anterior por completo, incluidas imágenes, archivos y texto con formato. Cuando no se puede guardar ese contenido, el portapapeles se deja intacto y el texto se escribe carácter a carácter.</li>" +
+			"<li><b>Barra y animación</b> — el indicador en la parte inferior de la pantalla; la animación se puede apagar.</li>" +
+			"<li><b>Insertar carácter a carácter</b> — en lugar de Ctrl+V se simulan pulsaciones, para los campos que no admiten pegar.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Reconocimiento</p>" +
+			"<div class=\"mock\"><div class=\"mock-row\"><span class=\"mock-radio on\"></span><b>Small</b><span class=\"mock-note\">equilibrio entre velocidad y precisión</span><span style=\"margin-left:auto\">466 MB</span></div>" +
+			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Medium (q5)</b><span class=\"mock-note\">más preciso, recomendado</span><span style=\"margin-left:auto\">539 MB ⭳</span></div>" +
+			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Turbo (q5)</b><span class=\"mock-note\">la mejor precisión en CPU</span><span style=\"margin-left:auto\">574 MB ⭳</span></div></div>" +
+			"<ul>" +
+			"<li><b>Modelos</b> — el catálogo: Base (rápido, para equipos modestos), Small (equilibrado), Medium y Turbo (más precisos y más lentos; «q5» es una versión cuantizada — algo más pequeña y rápida, casi sin pérdida) y GigaAM v3 para el ruso. El botón de opción elige el modelo activo (se aplica al momento y el reconocedor se reinicia); si falta el modelo, el programa pregunta si lo descarga.</li>" +
+			"<li>El servidor de reconocimiento mantiene el modelo en memoria entre frases — el primer dictado tras arrancar tarda más (carga) y luego el reconocimiento lleva de uno a tres segundos.</li>" +
+			"<li><b>Diccionario</b> — términos, nombres y abreviaturas separados por comas. Una pista para el «oído» de Whisper, para que las palabras raras salgan bien; no son órdenes.</li>" +
+			"<li><b>Micrófono</b> — elección del dispositivo con medidor de nivel (habla y la barra se mueve: el dispositivo se oye). Si desconectas el elegido, se usa el del sistema; una grabación sin voz no se manda a reconocer — la barra dice «Silencio».</li>" +
+			"<li><b>Servicio</b> — el servidor de reconocimiento arranca solo y funciona en local. Puedes cambiar el puerto, la ruta o apuntar a un servidor remoto; el reconocedor se reinicia por su cuenta.</li>" +
+			"<li><b>Traducción</b> — todo lo traduce Whisper: al inglés en su modo nativo, a otros idiomas <b>de forma experimental</b>, forzando el idioma de salida (la calidad depende del par de idiomas; los idiomas grandes salen mejor). El modelo Turbo no está entrenado para traducir — los ajustes avisan mientras esté activo. «Traducir siempre al idioma de destino» traduce cada dictado sin preguntar. Sin esa casilla manda el modo de pregunta: siempre o con cuenta atrás — el diálogo de idioma aparece antes del reconocimiento y, al agotarse el tiempo, se usa el destino. El atajo de traducción aparte traduce una sola vez, sin tocar el dictado normal.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Posprocesado (LLM)</p>" +
+			"<p>Una segunda capa opcional: un modelo de lenguaje local (llama.cpp) retoca el texto reconocido según tus prompts — quita muletillas, cambia el estilo, da formato. Totalmente sin conexión, solo en el procesador.</p>" +
+			"<div class=\"mock\"><div class=\"mock-row\" style=\"color:var(--dim)\">▸ Qwen/Qwen2.5-3B-Instruct-GGUF<span style=\"margin-left:auto;color:var(--faint)\">2024-09-20</span><span>↓303k</span><span>↗</span></div>" +
+			"<div class=\"mock-row\" style=\"padding-left:18px\">q4_k_m.gguf<span style=\"margin-left:auto\">1.9 GB</span><span style=\"color:var(--green)\">● ≈3.7 GB</span><span style=\"color:var(--dim)\">⭳</span></div>" +
+			"<div class=\"mock-row\" style=\"padding-left:18px\">q8_0.gguf<span style=\"margin-left:auto\">3.6 GB</span><span style=\"color:var(--amber)\">● ≈8.2 GB</span><span style=\"color:var(--dim)\">⭳</span></div></div>" +
+			"<ul>" +
+			"<li><b>Modelos</b> — los modelos de edición instalados; el botón de opción elige el activo (se aplica al momento) y la ✕ borra (también el activo — entonces el posprocesado se apaga). El progreso de las descargas también se ve aquí.</li>" +
+			"<li><b>Búsqueda</b> — modelos GGUF en Hugging Face por nombre (por ejemplo «qwen2.5 instruct»). Cada repositorio muestra su fecha de actualización, el número de descargas y un ↗ hacia su página; al pulsar la fila se despliegan sus archivos cuantizados. El indicador ● ≈N GB se compara con la memoria <b>libre</b> (aparece encima de la lista).</li>" +
+			"<li><b>Qué cuantización elegir:</b> el número son bits por peso (Q4 — el término medio, Q8 — casi sin comprimir, Q3 — ahorra memoria a costa de calidad); K_M es mejor que K_S; IQ4 es la generación más nueva y gana a las clásicas a igualdad de tamaño. El indicador ● ≈N GB estima la memoria necesaria (el archivo más un margen para el contexto): verde cabe, ámbar va justo, rojo no cabe.</li>" +
+			"<li>Un modelo de 1,5–3B edita rápido; uno de 7–9B es bastante más listo pero tarda segundos por pasada en el procesador. El servidor LLM arranca en el primer uso y mantiene el modelo caliente.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Prompts</p>" +
+			"<div class=\"mock\"><div class=\"mock-row\"><span class=\"mock-cb on\">✓</span><b>Limpieza</b><span class=\"mock-note\">—</span><span style=\"margin-left:auto;color:var(--dim)\">✎ ✕</span></div>" +
+			"<div class=\"mock-row\"><span class=\"mock-cb\"></span><b>Estilo formal</b><span class=\"mock-note\">ctrl+alt+f</span><span style=\"margin-left:auto;color:var(--dim)\">✎ ✕</span></div></div>" +
+			"<ul>" +
+			"<li>Un prompt es una instrucción para el modelo editor. Vienen dos de fábrica: «Limpieza» (quita muletillas, repeticiones y arranques en falso, arregla la puntuación) y «Estilo formal» (reescribe con cortesía y formalidad); añade los tuyos sin límite.</li>" +
+			"<li>Los prompts marcados se aplican a cada dictado en orden, de arriba abajo (en cadena: la salida de uno es la entrada del siguiente); si no hay ninguno marcado, el texto se inserta tal como se reconoció.</li>" +
+			"<li>Un prompt puede tener su propio atajo: dictar con él aplica solo ese, una vez. El lápiz ✎ abre el editor: nombre, texto del prompt, atajo y un campo de prueba ▶ que pasa un ejemplo por el modelo en marcha desde los propios ajustes.</li>" +
+			"<li>Consejo: los modelos pequeños funcionan mucho mejor si el prompt lleva ejemplos «entrada → salida» — todos los incluidos están escritos así.</li>" +
+			"<li>Si un perfil falla (el modelo no respondió), el texto se inserta sin él: la barra muestra «Insertado sin el perfil …» y en ese caso no se pulsa Enter.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Dependencias</p>" +
+			"<ul>" +
+			"<li>Los prompts necesitan un modelo editor instalado; la traducción no depende de él — la hace Whisper solo.</li>" +
+			"<li>El modelo editor se carga en el primer uso y se queda caliente; los modelos grandes van bastante más lentos en el procesador.</li>" +
+			"<li>Mira el indicador de memoria antes de descargar: un modelo «justo» frena todo el sistema.</li>" +
+			"<li>Los controles en gris son ajustes que no intervienen en el modo actual.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Instalación y portabilidad</p>" +
+			"<ul>" +
+			"<li><b>{setup}</b> — el instalador: sin permisos de administrador, acceso directo en el menú Inicio, inicio automático si quieres y desinstalación limpia desde la configuración de Windows.</li>" +
+			"<li><b>Portátil</b> — copia toda la carpeta con el exe (a un USB, a otro equipo): ajustes, modelos y registro viven al lado y viajan con él. En el registro de Windows no se escribe nada.</li>" +
+			"<li>En el primer arranque sin modelo de reconocimiento, el programa abre el catálogo por su cuenta y espera la descarga.</li>" +
+			"<li>Requisitos: Windows 10/11 x64, un procesador con AVX2 (de 2013 en adelante, más o menos) y WebView2 Runtime para la ventana de ajustes (incluido en Windows 11).</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Área de notificación y archivos</p>" +
+			"<div class=\"mock\" style=\"max-width:290px\"><div class=\"mock-mi dim\">{app} — Listo…</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Ajustes…</div><div class=\"mock-mi\">Desactivar</div><div class=\"mock-mi\">Copiar el último resultado</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Releer config.json</div><div class=\"mock-mi\">Abrir config.json</div><div class=\"mock-mi\">Abrir el registro</div><div class=\"mock-mi\">Acerca de</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Salir</div></div>" +
+			"<ul>" +
+			"<li>Clic izquierdo en el icono — los ajustes; clic derecho — el menú. Colores del icono: verde — listo, rojo — grabando, naranja — reconociendo, gris — desactivado o error.</li>" +
+			"<li><b>config.json</b> — todos los ajustes; los cambios a mano se aplican con «Releer config.json» en el menú.</li>" +
+			"<li><b>{log}</b> — el registro, limitado automáticamente a unos 2 MB.</li>" +
+			"<li><b>models/</b> — los modelos de reconocimiento y de edición descargados.</li>" +
+			"</ul>",
 	}
 	settingsStrings["it"] = map[string]string{
 		"S_TITLE": "{app} — Impostazioni", "S_TAB_GENERAL": "Generale", "S_TAB_REC": "Riconoscimento",
@@ -637,6 +901,94 @@ func init() {
 			"<li>Profilo dell'autore: <span class=\"lnk\" onclick=\"appAuthorLink()\">github.com/Vitalii-Yemets</span></li>" +
 			"</ul>" +
 			"<p>Hai trovato un bug o hai un'idea — apri una issue nel repository.</p>",
+		"S_HELP_HTML": "<p class=\"wh\">Come funziona</p>" +
+			"<p>Tieni premuta la scorciatoia — parte la registrazione (la barra in fondo allo schermo mostra il tuo livello). Rilascia — l'audio viene riconosciuto, tradotto se serve, passato nei prompt, e il testo finale arriva dov'è il cursore. La ✕ sulla barra annulla in qualsiasi momento.</p>" +
+			"<p>Il percorso completo: <b>registrazione → riconoscimento (Whisper) → traduzione (se attiva) → prompt (LLM) → incollaggio</b>. Ogni passo si vede sulla barra.</p>" +
+			"<p class=\"wh\">La barra</p>" +
+			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\"></span><span>Parla…</span><span class=\"mock-bars\"><i style=\"height:6px\"></i><i style=\"height:13px\"></i><i style=\"height:9px\"></i><i style=\"height:16px\"></i><i style=\"height:7px\"></i><i style=\"height:12px\"></i><i style=\"height:5px\"></i></span><span class=\"mock-x\">✕</span></div></div>" +
+			"<ul>" +
+			"<li><b>Parla…</b> — registrazione: un punto rosso e le barre del livello.</li>" +
+			"<li><b>Riconosco…</b> — Whisper sta lavorando; durante la traduzione — «Traduco», durante i prompt — «Modifico: nome (1/2)».</li>" +
+			"<li><b>Inserito: N caratteri</b> — fatto; in caso di errore o silenzio compare brevemente il motivo.</li>" +
+			"<li>La ✕ a destra annulla in qualsiasi momento; la barra non ruba mai il fuoco. Barra e animazione si spengono in «Dettatura».</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Finestra della lingua</p>" +
+			"<div class=\"mock\"><div style=\"display:flex;justify-content:space-between;margin-bottom:8px\"><b>Tradurre in: (3)</b><span class=\"mock-x\">✕</span></div><div style=\"display:flex;gap:8px\"><span class=\"mock-btn on\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">ES</span></div></div>" +
+			"<p>Compare sopra la barra dopo il rilascio della scorciatoia, nelle modalità «chiedi sempre» e «chiedi con timer». I pulsanti vengono da «Lingue nella finestra»; la lingua di destinazione è evidenziata. Con il timer il titolo conta alla rovescia e allo scadere vale la destinazione. La ✕ della finestra inserisce senza tradurre, la ✕ della barra annulla tutto.</p>" +
+			"<p class=\"wh\">Inserimento sicuro</p>" +
+			"<div class=\"mock\"><div style=\"display:flex;justify-content:space-between;margin-bottom:8px\"><b style=\"color:var(--amber)\">Il fuoco è cambiato — inserire? (30)</b><span class=\"mock-x\">✕</span></div><div style=\"display:flex;gap:8px\"><span class=\"mock-btn on\">Inserisci qui</span><span class=\"mock-btn\">Copia</span></div></div>" +
+			"<ul>" +
+			"<li>La finestra di destinazione viene memorizzata nel momento in cui premi la scorciatoia. Se il fuoco è cambiato durante l'elaborazione, non viene incollato nulla — la finestra propone <b>Inserisci qui</b> (nella finestra corrente), <b>Copia</b> (negli appunti) oppure ✕. Allo scadere del tempo l'inserimento viene annullato e il testo resta nell'ultimo risultato.</li>" +
+			"<li>Invio dopo l'incollaggio viene premuto solo se la finestra di destinazione è rimasta la stessa.</li>" +
+			"<li><b>Ultimo risultato</b> — il testo finale di ogni dettatura resta in memoria fino alla successiva; nel menu dell'area di notifica c'è «Copia l'ultimo risultato». Un incollaggio fallito o un cambio di fuoco non fanno mai perdere una dettatura.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Dettatura</p>" +
+			"<ul>" +
+			"<li><b>Scorciatoia da tastiera</b> — la scorciatoia principale. Si può catturare qualsiasi combinazione; i modificatori sinistro e destro sono distinti. Le scorciatoie di dettatura, traduzione e profili devono essere uniche — un doppione impedisce il salvataggio.</li>" +
+			"<li><b>Modo</b> — tenere premuti i tasti, oppure premere una volta per iniziare e una per fermare.</li>" +
+			"<li><b>Lingua dell'interfaccia</b> — cambia subito; «Come il sistema» segue Windows.</li>" +
+			"<li><b>Lingua di riconoscimento</b> — un suggerimento per Whisper; «auto» la riconosce dal parlato.</li>" +
+			"<li><b>Suono</b> — segnali di inizio e fine: diversi set più i suoni di sistema di Windows, ▶ li fa ascoltare.</li>" +
+			"<li><b>Invio dopo l'incollaggio</b> — manda subito il testo dettato (comodo nelle chat).</li>" +
+			"<li><b>Ripristina gli appunti</b> — rimette per intero il contenuto precedente, immagini, file e testo formattato compresi. Se il contenuto non si può salvare, gli appunti restano intatti e il testo viene digitato carattere per carattere.</li>" +
+			"<li><b>Barra e animazione</b> — l'indicatore in fondo allo schermo; l'animazione si può spegnere.</li>" +
+			"<li><b>Inserimento carattere per carattere</b> — invece di Ctrl+V vengono simulati i tasti, per i campi che rifiutano di incollare.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Riconoscimento</p>" +
+			"<div class=\"mock\"><div class=\"mock-row\"><span class=\"mock-radio on\"></span><b>Small</b><span class=\"mock-note\">equilibrio tra velocità e precisione</span><span style=\"margin-left:auto\">466 MB</span></div>" +
+			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Medium (q5)</b><span class=\"mock-note\">più preciso, consigliato</span><span style=\"margin-left:auto\">539 MB ⭳</span></div>" +
+			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Turbo (q5)</b><span class=\"mock-note\">la migliore precisione su CPU</span><span style=\"margin-left:auto\">574 MB ⭳</span></div></div>" +
+			"<ul>" +
+			"<li><b>Modelli</b> — il catalogo: Base (veloce, per macchine modeste), Small (equilibrato), Medium e Turbo (più precisi e più lenti; «q5» è una versione quantizzata — un po' più piccola e rapida, quasi senza perdite) e GigaAM v3 per il russo. Il pulsante scelto indica il modello attivo (vale subito, il riconoscitore si riavvia); se il modello manca, il programma chiede se scaricarlo.</li>" +
+			"<li>Il server di riconoscimento tiene il modello in memoria tra una frase e l'altra — la prima dettatura dopo l'avvio è più lenta (caricamento), poi il riconoscimento richiede uno-tre secondi.</li>" +
+			"<li><b>Dizionario</b> — termini, nomi e abbreviazioni separati da virgole. Un suggerimento per «l'orecchio» di Whisper, perché le parole rare arrivino giuste; non sono comandi.</li>" +
+			"<li><b>Microfono</b> — scelta del dispositivo con il livello dal vivo (parla e la barra si muove: il dispositivo si sente). Se scolleghi quello scelto, subentra quello di sistema; una registrazione senza voce non viene nemmeno mandata al riconoscimento — la barra dice «Silenzio».</li>" +
+			"<li><b>Servizio</b> — il server di riconoscimento parte da solo e gira in locale. Si possono cambiare porta, percorso o puntare a un server remoto; il riconoscitore poi si riavvia da sé.</li>" +
+			"<li><b>Traduzione</b> — traduce tutto Whisper: in inglese nel suo modo nativo, nelle altre lingue <b>in via sperimentale</b>, forzando la lingua di uscita (la qualità dipende dalla coppia di lingue; le lingue grandi riescono meglio). Il modello Turbo non è addestrato per tradurre — le impostazioni avvisano finché è attivo. «Tradurre sempre nella lingua di destinazione» traduce ogni dettatura senza chiedere. Senza quella casella vale la modalità con domanda: sempre o con timer — la finestra della lingua compare prima del riconoscimento e allo scadere vale la destinazione. La scorciatoia di traduzione separata traduce una volta sola, senza toccare la dettatura normale.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Post-elaborazione (LLM)</p>" +
+			"<p>Un secondo strato facoltativo: un modello linguistico locale (llama.cpp) sistema il testo riconosciuto secondo i tuoi prompt — toglie gli intercalari, cambia lo stile, formatta. Del tutto offline, solo sulla CPU.</p>" +
+			"<div class=\"mock\"><div class=\"mock-row\" style=\"color:var(--dim)\">▸ Qwen/Qwen2.5-3B-Instruct-GGUF<span style=\"margin-left:auto;color:var(--faint)\">2024-09-20</span><span>↓303k</span><span>↗</span></div>" +
+			"<div class=\"mock-row\" style=\"padding-left:18px\">q4_k_m.gguf<span style=\"margin-left:auto\">1.9 GB</span><span style=\"color:var(--green)\">● ≈3.7 GB</span><span style=\"color:var(--dim)\">⭳</span></div>" +
+			"<div class=\"mock-row\" style=\"padding-left:18px\">q8_0.gguf<span style=\"margin-left:auto\">3.6 GB</span><span style=\"color:var(--amber)\">● ≈8.2 GB</span><span style=\"color:var(--dim)\">⭳</span></div></div>" +
+			"<ul>" +
+			"<li><b>Modelli</b> — i modelli editor installati; il pulsante sceglie quello attivo (vale subito), la ✕ elimina (anche quello attivo — allora la post-elaborazione si spegne). Anche l'avanzamento degli scaricamenti si vede qui.</li>" +
+			"<li><b>Ricerca</b> — modelli GGUF su Hugging Face per nome (per esempio «qwen2.5 instruct»). Ogni repository mostra la data dell'ultimo aggiornamento, il numero di download e un ↗ verso la pagina; un clic sulla riga apre i file quantizzati. L'indicatore ● ≈N GB si confronta con la memoria <b>libera</b> (indicata sopra l'elenco).</li>" +
+			"<li><b>Quale quantizzazione:</b> il numero sono i bit per peso (Q4 — la giusta via di mezzo, Q8 — quasi non compresso, Q3 — risparmia memoria a scapito della qualità); K_M è meglio di K_S; IQ4 è la generazione più nuova e a parità di dimensione batte le classiche. L'indicatore ● ≈N GB stima la memoria necessaria (il file più un margine per il contesto): verde ci sta, ambra è al limite, rosso non ci sta.</li>" +
+			"<li>Un modello da 1,5–3B modifica in fretta; uno da 7–9B è molto più fine ma su CPU impiega secondi a passata. Il server LLM parte al primo utilizzo e tiene il modello caldo.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Prompt</p>" +
+			"<div class=\"mock\"><div class=\"mock-row\"><span class=\"mock-cb on\">✓</span><b>Pulizia</b><span class=\"mock-note\">—</span><span style=\"margin-left:auto;color:var(--dim)\">✎ ✕</span></div>" +
+			"<div class=\"mock-row\"><span class=\"mock-cb\"></span><b>Stile formale</b><span class=\"mock-note\">ctrl+alt+f</span><span style=\"margin-left:auto;color:var(--dim)\">✎ ✕</span></div></div>" +
+			"<ul>" +
+			"<li>Un prompt è un'istruzione per il modello editor. Due arrivano già pronti: «Pulizia» (toglie intercalari, ripetizioni e false partenze, sistema la punteggiatura) e «Stile formale» (riscrive in modo cortese e formale); i tuoi puoi aggiungerli liberamente.</li>" +
+			"<li>I prompt spuntati valgono per ogni dettatura, in ordine dall'alto in basso (a catena: l'uscita di uno è l'ingresso del successivo); se non ne è spuntato nessuno, il testo viene inserito com'è stato riconosciuto.</li>" +
+			"<li>Un prompt può avere la sua scorciatoia: dettare con quella applica solo lui, una volta. La matita ✎ apre l'editor: nome, testo del prompt, scorciatoia e un campo di prova ▶ che manda un esempio al modello acceso direttamente dalle impostazioni.</li>" +
+			"<li>Consiglio: i modelli piccoli lavorano molto meglio se nel prompt ci sono esempi «ingresso → uscita» — tutti quelli inclusi sono scritti così.</li>" +
+			"<li>Se un profilo fallisce (il modello non ha risposto), il testo viene inserito senza di lui: la barra mostra «Inserito senza il profilo …» e in quel caso Invio non viene premuto.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Dipendenze</p>" +
+			"<ul>" +
+			"<li>I prompt richiedono un modello editor installato; la traduzione non ne dipende — la fa Whisper da sola.</li>" +
+			"<li>Il modello editor si carica al primo utilizzo e resta caldo; i modelli grandi su CPU sono sensibilmente più lenti.</li>" +
+			"<li>Guarda l'indicatore della memoria prima di scaricare: un modello «al limite» rallenta tutto il sistema.</li>" +
+			"<li>I controlli in grigio sono impostazioni che nella modalità corrente non fanno nulla.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Installazione e portabilità</p>" +
+			"<ul>" +
+			"<li><b>{setup}</b> — il programma di installazione: senza diritti di amministratore, collegamento nel menu Start, avvio automatico a richiesta, rimozione pulita dalle impostazioni di Windows.</li>" +
+			"<li><b>Portabile</b> — copia semplicemente tutta la cartella con l'exe (su una chiavetta, su un altro computer): impostazioni, modelli e registro stanno accanto e viaggiano con lui. Nel registro di sistema non viene scritto nulla.</li>" +
+			"<li>Al primo avvio senza modello di riconoscimento il programma apre il catalogo da solo e aspetta lo scaricamento.</li>" +
+			"<li>Requisiti: Windows 10/11 x64, una CPU con AVX2 (dal 2013 circa), WebView2 Runtime per la finestra delle impostazioni (incluso in Windows 11).</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Area di notifica e file</p>" +
+			"<div class=\"mock\" style=\"max-width:290px\"><div class=\"mock-mi dim\">{app} — Pronto…</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Impostazioni…</div><div class=\"mock-mi\">Disattiva</div><div class=\"mock-mi\">Copia l'ultimo risultato</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Rileggi config.json</div><div class=\"mock-mi\">Apri config.json</div><div class=\"mock-mi\">Apri il registro</div><div class=\"mock-mi\">Informazioni</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Esci</div></div>" +
+			"<ul>" +
+			"<li>Clic sinistro sull'icona — le impostazioni; clic destro — il menu. Colori dell'icona: verde — pronto, rosso — registrazione, arancione — riconoscimento, grigio — disattivato o errore.</li>" +
+			"<li><b>config.json</b> — tutte le impostazioni; le modifiche a mano valgono dopo «Rileggi config.json» nel menu.</li>" +
+			"<li><b>{log}</b> — il registro, limitato automaticamente a circa 2 MB.</li>" +
+			"<li><b>models/</b> — i modelli di riconoscimento e di editing scaricati.</li>" +
+			"</ul>",
 	}
 	settingsStrings["pl"] = map[string]string{
 		"S_TITLE": "{app} — Ustawienia", "S_TAB_GENERAL": "Ogólne", "S_TAB_REC": "Rozpoznawanie",
@@ -726,6 +1078,94 @@ func init() {
 			"<li>Profil autora: <span class=\"lnk\" onclick=\"appAuthorLink()\">github.com/Vitalii-Yemets</span></li>" +
 			"</ul>" +
 			"<p>Znalazłeś błąd albo masz pomysł — załóż zgłoszenie w repozytorium.</p>",
+		"S_HELP_HTML": "<p class=\"wh\">Jak to działa</p>" +
+			"<p>Przytrzymaj skrót — zaczyna się nagrywanie (pasek na dole ekranu pokazuje twój poziom). Puść — dźwięk zostaje rozpoznany, w razie potrzeby przetłumaczony, przepuszczony przez prompty, a gotowy tekst trafia tam, gdzie stoi kursor. ✕ na pasku przerywa na każdym etapie.</p>" +
+			"<p>Cała droga: <b>nagranie → rozpoznawanie (Whisper) → tłumaczenie (jeśli włączone) → prompty (LLM) → wklejenie</b>. Każdy etap widać na pasku.</p>" +
+			"<p class=\"wh\">Pasek</p>" +
+			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\"></span><span>Mów…</span><span class=\"mock-bars\"><i style=\"height:6px\"></i><i style=\"height:13px\"></i><i style=\"height:9px\"></i><i style=\"height:16px\"></i><i style=\"height:7px\"></i><i style=\"height:12px\"></i><i style=\"height:5px\"></i></span><span class=\"mock-x\">✕</span></div></div>" +
+			"<ul>" +
+			"<li><b>Mów…</b> — nagrywanie: czerwona kropka i słupki poziomu.</li>" +
+			"<li><b>Rozpoznaję…</b> — Whisper pracuje; przy tłumaczeniu — „Tłumaczę”, przy promptach — „Redaguję: nazwa (1/2)”.</li>" +
+			"<li><b>Wstawiono: N znaków</b> — gotowe; przy błędzie albo ciszy pojawia się krótki powód.</li>" +
+			"<li>✕ po prawej przerywa na każdym etapie; pasek nigdy nie zabiera fokusu. Pasek i jego animację można wyłączyć w „Dyktowaniu”.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Okno wyboru języka</p>" +
+			"<div class=\"mock\"><div style=\"display:flex;justify-content:space-between;margin-bottom:8px\"><b>Tłumaczyć na: (3)</b><span class=\"mock-x\">✕</span></div><div style=\"display:flex;gap:8px\"><span class=\"mock-btn on\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">ES</span></div></div>" +
+			"<p>Pojawia się nad paskiem po puszczeniu skrótu w trybach „pytaj za każdym razem” i „pytaj z odliczaniem”. Przyciski biorą się z „Języków w oknie”; język docelowy jest wyróżniony. W trybie z odliczaniem tytuł odlicza, a po upływie czasu obowiązuje język docelowy. ✕ w oknie wstawia bez tłumaczenia, ✕ na pasku przerywa wszystko.</p>" +
+			"<p class=\"wh\">Bezpieczne wstawianie</p>" +
+			"<div class=\"mock\"><div style=\"display:flex;justify-content:space-between;margin-bottom:8px\"><b style=\"color:var(--amber)\">Zmieniło się okno — wstawić? (30)</b><span class=\"mock-x\">✕</span></div><div style=\"display:flex;gap:8px\"><span class=\"mock-btn on\">Wstaw tutaj</span><span class=\"mock-btn\">Kopiuj</span></div></div>" +
+			"<ul>" +
+			"<li>Okno docelowe zostaje zapamiętane w chwili naciśnięcia skrótu. Jeśli fokus zmienił się w trakcie przetwarzania, nic nie zostanie wklejone — okno proponuje <b>Wstaw tutaj</b> (do bieżącego okna), <b>Kopiuj</b> (do schowka) albo ✕. Po upływie czasu wstawianie zostaje odwołane, a tekst zostaje w ostatnim wyniku.</li>" +
+			"<li>Enter po wklejeniu jest wysyłany tylko wtedy, gdy okno docelowe się nie zmieniło.</li>" +
+			"<li><b>Ostatni wynik</b> — gotowy tekst każdego dyktowania zostaje w pamięci do następnego; w menu w zasobniku jest „Kopiuj ostatni wynik”. Nieudane wklejenie albo zmiana okna nigdy nie gubią dyktowania.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Dyktowanie</p>" +
+			"<ul>" +
+			"<li><b>Skrót klawiszowy</b> — główny skrót do dyktowania. Można przechwycić dowolną kombinację; lewe i prawe modyfikatory są rozróżniane. Skróty dyktowania, tłumaczenia i profili muszą być unikalne — powtórzenie blokuje zapis.</li>" +
+			"<li><b>Tryb</b> — trzymać klawisze albo nacisnąć raz, by zacząć, i raz, by skończyć.</li>" +
+			"<li><b>Język interfejsu</b> — zmienia się od razu; „Jak w systemie” idzie za Windows.</li>" +
+			"<li><b>Język rozpoznawania</b> — podpowiedź dla Whispera; „auto” rozpoznaje go z mowy.</li>" +
+			"<li><b>Dźwięk</b> — sygnały startu i końca: kilka zestawów oraz dźwięki systemowe Windows, ▶ je odtwarza.</li>" +
+			"<li><b>Enter po wklejeniu</b> — od razu wysyła podyktowany tekst (wygodne w komunikatorach).</li>" +
+			"<li><b>Przywracanie schowka</b> — oddaje poprzednią zawartość w całości, razem z obrazami, plikami i tekstem z formatowaniem. Gdy zawartości nie da się zapisać, schowek zostaje nietknięty, a tekst jest wpisywany znak po znaku.</li>" +
+			"<li><b>Pasek i animacja</b> — wskaźnik na dole ekranu; animację można wyłączyć.</li>" +
+			"<li><b>Wstawianie znak po znaku</b> — zamiast Ctrl+V symulowane są naciśnięcia klawiszy, dla pól, które nie przyjmują wklejania.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Rozpoznawanie</p>" +
+			"<div class=\"mock\"><div class=\"mock-row\"><span class=\"mock-radio on\"></span><b>Small</b><span class=\"mock-note\">równowaga szybkości i dokładności</span><span style=\"margin-left:auto\">466 MB</span></div>" +
+			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Medium (q5)</b><span class=\"mock-note\">dokładniejszy, polecany</span><span style=\"margin-left:auto\">539 MB ⭳</span></div>" +
+			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Turbo (q5)</b><span class=\"mock-note\">najlepsza dokładność na CPU</span><span style=\"margin-left:auto\">574 MB ⭳</span></div></div>" +
+			"<ul>" +
+			"<li><b>Modele</b> — katalog: Base (szybki, na słabe komputery), Small (zrównoważony), Medium i Turbo (dokładniejsze, wolniejsze; „q5” to wersja skwantyzowana — nieco mniejsza i szybsza, prawie bez straty jakości) oraz GigaAM v3 dla rosyjskiego. Przycisk wyboru wskazuje aktywny model (działa od razu, rozpoznawanie startuje na nowo); przy brakującym modelu program pyta, czy go pobrać.</li>" +
+			"<li>Serwer rozpoznawania trzyma model w pamięci między zdaniami — pierwsze dyktowanie po starcie trwa dłużej (ładowanie), potem rozpoznanie zajmuje jedną–trzy sekundy.</li>" +
+			"<li><b>Słownik</b> — terminy, nazwy i skróty po przecinku. Podpowiedź dla „ucha” Whispera, żeby rzadkie słowa trafiały poprawnie; to nie są polecenia.</li>" +
+			"<li><b>Mikrofon</b> — wybór urządzenia z miernikiem poziomu (mów, a słupek się rusza — czyli urządzenie jest słyszane). Gdy wybrane urządzenie zniknie, wraca systemowe; nagranie bez mowy w ogóle nie trafia do rozpoznawania — pasek mówi „Cisza”.</li>" +
+			"<li><b>Usługa</b> — serwer rozpoznawania startuje sam i działa lokalnie. Można zmienić port, ścieżkę albo wskazać serwer zdalny; rozpoznawanie samo się przeładuje.</li>" +
+			"<li><b>Tłumaczenie</b> — wszystko tłumaczy Whisper: na angielski w trybie natywnym, na inne języki <b>eksperymentalnie</b>, przez wymuszenie języka wyjściowego (jakość zależy od pary językowej; duże języki wychodzą najlepiej). Model Turbo nie jest uczony tłumaczenia — ustawienia ostrzegają, dopóki jest aktywny. „Zawsze tłumacz na język docelowy” tłumaczy każde dyktowanie bez pytania. Bez tego pola obowiązuje tryb pytania: zawsze albo z odliczaniem — okno wyboru języka pojawia się przed rozpoznaniem, a po upływie czasu obowiązuje język docelowy. Osobny skrót tłumaczenia tłumaczy jednorazowo, nie zmieniając zwykłego dyktowania.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Obróbka tekstu (LLM)</p>" +
+			"<p>Nieobowiązkowa druga warstwa: lokalny model językowy (llama.cpp) poprawia rozpoznany tekst według twoich promptów — usuwa przerywniki, zmienia styl, formatuje. Całkowicie bez sieci, tylko na procesorze.</p>" +
+			"<div class=\"mock\"><div class=\"mock-row\" style=\"color:var(--dim)\">▸ Qwen/Qwen2.5-3B-Instruct-GGUF<span style=\"margin-left:auto;color:var(--faint)\">2024-09-20</span><span>↓303k</span><span>↗</span></div>" +
+			"<div class=\"mock-row\" style=\"padding-left:18px\">q4_k_m.gguf<span style=\"margin-left:auto\">1.9 GB</span><span style=\"color:var(--green)\">● ≈3.7 GB</span><span style=\"color:var(--dim)\">⭳</span></div>" +
+			"<div class=\"mock-row\" style=\"padding-left:18px\">q8_0.gguf<span style=\"margin-left:auto\">3.6 GB</span><span style=\"color:var(--amber)\">● ≈8.2 GB</span><span style=\"color:var(--dim)\">⭳</span></div></div>" +
+			"<ul>" +
+			"<li><b>Modele</b> — zainstalowane modele redaktora; przycisk wyboru wskazuje aktywny (działa od razu), ✕ usuwa (także aktywny — wtedy obróbka się wyłącza). Postęp pobierania też widać tutaj.</li>" +
+			"<li><b>Szukaj</b> — modele GGUF na Hugging Face po nazwie (na przykład „qwen2.5 instruct”). Każde repozytorium pokazuje datę ostatniej zmiany, liczbę pobrań i ↗ do strony modelu; kliknięcie wiersza rozwija pliki kwantyzacji. Wskaźnik ● ≈N GB porównuje się z <b>wolną</b> pamięcią (podaną nad listą).</li>" +
+			"<li><b>Którą kwantyzację:</b> liczba to bity na wagę (Q4 — złoty środek, Q8 — prawie bez kompresji, Q3 — oszczędza pamięć kosztem jakości); K_M jest lepsze niż K_S; IQ4 to nowsza generacja i przy tym samym rozmiarze bije klasyczne. Wskaźnik ● ≈N GB szacuje potrzebną pamięć (plik plus zapas na kontekst): zielony mieści się, bursztynowy jest na styk, czerwony nie zmieści się.</li>" +
+			"<li>Model 1,5–3B redaguje szybko; 7–9B jest wyraźnie mądrzejszy, ale na procesorze każde przejście trwa sekundy. Serwer LLM startuje przy pierwszym użyciu i trzyma model ciepły.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Prompty</p>" +
+			"<div class=\"mock\"><div class=\"mock-row\"><span class=\"mock-cb on\">✓</span><b>Porządki</b><span class=\"mock-note\">—</span><span style=\"margin-left:auto;color:var(--dim)\">✎ ✕</span></div>" +
+			"<div class=\"mock-row\"><span class=\"mock-cb\"></span><b>Styl formalny</b><span class=\"mock-note\">ctrl+alt+f</span><span style=\"margin-left:auto;color:var(--dim)\">✎ ✕</span></div></div>" +
+			"<ul>" +
+			"<li>Prompt to polecenie dla modelu redaktora. Dwa są od razu w zestawie: „Porządki” (usuwa przerywniki, powtórzenia i falstarty, poprawia interpunkcję) i „Styl formalny” (przepisuje uprzejmie i oficjalnie); własne można dodawać bez ograniczeń.</li>" +
+			"<li>Zaznaczone prompty działają na każde dyktowanie po kolei, z góry na dół (łańcuchem: wyjście jednego jest wejściem następnego); jeśli nic nie jest zaznaczone, tekst trafia taki, jaki został rozpoznany.</li>" +
+			"<li>Prompt może mieć własny skrót: dyktowanie nim stosuje tylko ten jeden, raz. Ołówek ✎ otwiera edytor: nazwa, treść promptu, skrót i pole próby ▶, które przepuszcza przykład przez działający model prosto z ustawień.</li>" +
+			"<li>Wskazówka: małe modele pracują znacznie lepiej, gdy w prompcie są przykłady „wejście → wyjście” — wszystkie dołączone są tak napisane.</li>" +
+			"<li>Gdy profil zawiedzie (model nie odpowiedział), tekst zostanie wstawiony bez niego: pasek pokaże „Wstawiono bez profilu …”, a Enter w takim razie nie zostanie naciśnięty.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Zależności</p>" +
+			"<ul>" +
+			"<li>Prompty wymagają zainstalowanego modelu redaktora; tłumaczenie od niego nie zależy — robi je sam Whisper.</li>" +
+			"<li>Model redaktora ładuje się przy pierwszym użyciu i zostaje ciepły; duże modele na procesorze są wyraźnie wolniejsze.</li>" +
+			"<li>Zerknij na wskaźnik pamięci przed pobraniem: model „na styk” spowalnia cały system.</li>" +
+			"<li>Wyszarzone elementy to ustawienia, które w bieżącym trybie nic nie robią.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Instalacja i przenośność</p>" +
+			"<ul>" +
+			"<li><b>{setup}</b> — instalator: bez praw administratora, skrót w menu Start, autostart do wyboru, czyste usunięcie z ustawień Windows.</li>" +
+			"<li><b>Przenośność</b> — po prostu skopiuj cały folder z plikiem exe (na pendrive, na inny komputer): ustawienia, modele i dziennik leżą obok i jadą razem z nim. Do rejestru nic nie jest zapisywane.</li>" +
+			"<li>Przy pierwszym uruchomieniu bez modelu rozpoznawania program sam otwiera katalog i czeka na pobranie.</li>" +
+			"<li>Wymagania: Windows 10/11 x64, procesor z AVX2 (mniej więcej od 2013), WebView2 Runtime dla okna ustawień (jest w Windows 11).</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Zasobnik i pliki</p>" +
+			"<div class=\"mock\" style=\"max-width:290px\"><div class=\"mock-mi dim\">{app} — Gotowe…</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Ustawienia…</div><div class=\"mock-mi\">Wyłącz</div><div class=\"mock-mi\">Kopiuj ostatni wynik</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Przeładuj config.json</div><div class=\"mock-mi\">Otwórz config.json</div><div class=\"mock-mi\">Otwórz dziennik</div><div class=\"mock-mi\">O programie</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Zakończ</div></div>" +
+			"<ul>" +
+			"<li>Lewy klik w ikonę — ustawienia; prawy — menu. Kolory ikony: zielony — gotowe, czerwony — nagrywanie, pomarańczowy — rozpoznawanie, szary — wyłączone albo błąd.</li>" +
+			"<li><b>config.json</b> — wszystkie ustawienia; ręczne zmiany działają po „Przeładuj config.json” w menu.</li>" +
+			"<li><b>{log}</b> — dziennik, automatycznie ograniczany do około 2 MB.</li>" +
+			"<li><b>models/</b> — pobrane modele rozpoznawania i redaktora.</li>" +
+			"</ul>",
 	}
 	msgs["uk"] = map[string]string{
 		"app.name": "{app}", "already.running": "Застосунок уже запущено (іконка в треї).",
@@ -875,5 +1315,93 @@ func init() {
 		"S_OK": "Так", "S_CANCEL": "Скасувати", "S_DL_START": "Завантажити", "S_DL_CANCEL": "Скасувати завантаження",
 		"S_DL_ASK": "Модель «%s» не завантажена (%s). Почати завантаження?",
 		"S_NOT_FOUND": "нічого", "S_MORE": "Ще %d налаштувань", "S_LESS": "Згорнути %d налаштувань",
+		"S_HELP_HTML": "<p class=\"wh\">Як це працює</p>" +
+			"<p>Тримайте сполучення — починається запис (смужка внизу екрана показує ваш рівень). Відпустіть — звук розпізнається, за потреби перекладається, проходить через промпти, і готовий текст з'являється там, де стоїть курсор. ✕ на смужці скасовує на будь-якому кроці.</p>" +
+			"<p>Увесь шлях: <b>запис → розпізнавання (Whisper) → переклад (якщо ввімкнено) → промпти (LLM) → вставка</b>. Кожен крок видно на смужці.</p>" +
+			"<p class=\"wh\">Смужка</p>" +
+			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\"></span><span>Говоріть…</span><span class=\"mock-bars\"><i style=\"height:6px\"></i><i style=\"height:13px\"></i><i style=\"height:9px\"></i><i style=\"height:16px\"></i><i style=\"height:7px\"></i><i style=\"height:12px\"></i><i style=\"height:5px\"></i></span><span class=\"mock-x\">✕</span></div></div>" +
+			"<ul>" +
+			"<li><b>Говоріть…</b> — запис: червона крапка й смужки рівня.</li>" +
+			"<li><b>Розпізнаю…</b> — Whisper працює; під час перекладу — «Перекладаю», під час промптів — «Редагую: назва (1/2)».</li>" +
+			"<li><b>Вставлено: N символів</b> — готово; при помилці чи тиші коротко пишеться причина.</li>" +
+			"<li>✕ праворуч скасовує на будь-якому кроці; смужка ніколи не забирає фокус вводу. Смужку та її анімацію можна вимкнути в «Диктуванні».</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Вікно вибору мови</p>" +
+			"<div class=\"mock\"><div style=\"display:flex;justify-content:space-between;margin-bottom:8px\"><b>Перекласти на: (3)</b><span class=\"mock-x\">✕</span></div><div style=\"display:flex;gap:8px\"><span class=\"mock-btn on\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">ES</span></div></div>" +
+			"<p>З'являється над смужкою після відпускання сполучення в режимах «питати щоразу» та «питати з відліком». Кнопки беруться з «Мов у вікні»; цільова мова виділена. У режимі з відліком заголовок відлічує, а коли час вийде — застосовується цільова. ✕ у вікні вставляє без перекладу, ✕ на смужці скасовує все.</p>" +
+			"<p class=\"wh\">Безпечна вставка</p>" +
+			"<div class=\"mock\"><div style=\"display:flex;justify-content:space-between;margin-bottom:8px\"><b style=\"color:var(--amber)\">Вікно змінилося — вставити? (30)</b><span class=\"mock-x\">✕</span></div><div style=\"display:flex;gap:8px\"><span class=\"mock-btn on\">Вставити тут</span><span class=\"mock-btn\">Копіювати</span></div></div>" +
+			"<ul>" +
+			"<li>Цільове вікно запам'ятовується в мить натискання сполучення. Якщо фокус змінився, поки оброблялася мова, нічого не вставляється — вікно пропонує <b>Вставити тут</b> (у поточне вікно), <b>Копіювати</b> (у буфер) або ✕. Коли відлік вичерпано, вставка скасовується, а текст лишається в останньому результаті.</li>" +
+			"<li>Enter після вставки натискається лише тоді, коли цільове вікно не змінилося.</li>" +
+			"<li><b>Останній результат</b> — готовий текст кожного диктування лишається в пам'яті до наступного; у меню в треї є «Копіювати останній результат». Невдала вставка чи зміна вікна ніколи не втрачають диктування.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Диктування</p>" +
+			"<ul>" +
+			"<li><b>Сполучення клавіш</b> — головне сполучення для диктування. Можна перехопити будь-яку комбінацію; ліві й праві модифікатори розрізняються. Сполучення диктування, перекладу та профілів мають бути унікальними — повтор блокує збереження.</li>" +
+			"<li><b>Режим</b> — тримати клавіші або натиснути раз, щоб почати, і раз, щоб зупинити.</li>" +
+			"<li><b>Мова інтерфейсу</b> — перемикається одразу; «Як у системі» йде за Windows.</li>" +
+			"<li><b>Мова розпізнавання</b> — підказка для Whisper; «auto» визначає її з мовлення.</li>" +
+			"<li><b>Звук</b> — сигнали початку й кінця: кілька наборів та системні звуки Windows, ▶ програє їх.</li>" +
+			"<li><b>Enter після вставки</b> — одразу надсилає продиктований текст (зручно в месенджерах).</li>" +
+			"<li><b>Відновлення буфера</b> — повертає попередній вміст повністю, разом із зображеннями, файлами й форматованим текстом. Коли вміст не вдається зберегти, буфер лишається недоторканим, а текст набирається символ за символом.</li>" +
+			"<li><b>Смужка й анімація</b> — індикатор унизу екрана; анімацію можна вимкнути.</li>" +
+			"<li><b>Вставка посимвольно</b> — замість Ctrl+V імітуються натискання клавіш, для полів, які не приймають вставку.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Розпізнавання</p>" +
+			"<div class=\"mock\"><div class=\"mock-row\"><span class=\"mock-radio on\"></span><b>Small</b><span class=\"mock-note\">рівновага швидкості й точності</span><span style=\"margin-left:auto\">466 MB</span></div>" +
+			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Medium (q5)</b><span class=\"mock-note\">точніша, рекомендована</span><span style=\"margin-left:auto\">539 MB ⭳</span></div>" +
+			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Turbo (q5)</b><span class=\"mock-note\">найкраща точність на CPU</span><span style=\"margin-left:auto\">574 MB ⭳</span></div></div>" +
+			"<ul>" +
+			"<li><b>Моделі</b> — каталог: Base (швидка, для слабких ПК), Small (збалансована), Medium і Turbo (точніші, повільніші; «q5» — квантована збірка: трохи менша й швидша майже без утрати якості), а також GigaAM v3 для російської. Радіокнопка обирає активну модель (діє одразу, розпізнавач перезапускається); якщо моделі немає, програма запитує, чи завантажити її.</li>" +
+			"<li>Сервер розпізнавання тримає модель у пам'яті між фразами — перше диктування після запуску повільніше (завантаження), далі розпізнавання займає одну-три секунди.</li>" +
+			"<li><b>Словник</b> — терміни, назви та скорочення через кому. Підказка для «вуха» Whisper, щоб рідкісні слова виходили правильно; це не команди.</li>" +
+			"<li><b>Мікрофон</b> — вибір пристрою зі шкалою рівня (говоріть — і смужка рухається, отже пристрій чути). Якщо обраний пристрій зник, береться системний; запис без мовлення взагалі не йде на розпізнавання — смужка каже «Тиша».</li>" +
+			"<li><b>Службове</b> — сервер розпізнавання запускається сам і працює локально. Порт, шлях або віддалений сервер можна змінити; розпізнавач після цього перезапуститься сам.</li>" +
+			"<li><b>Переклад</b> — усе перекладає Whisper: англійською в рідному режимі, іншими мовами <b>експериментально</b>, через примусову мову виводу (якість залежить від пари мов; великі мови виходять найкраще). Модель Turbo цього не вміє — налаштування попереджають, поки вона активна. «Завжди перекладати цільовою мовою» перекладає кожне диктування без запитань. Без цієї позначки діє режим запитання: завжди або з відліком — вікно вибору мови з'являється перед розпізнаванням, а коли час вийде, береться цільова. Окреме сполучення перекладу перекладає один раз, не змінюючи звичайного диктування.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Постобробка (LLM)</p>" +
+			"<p>Необов'язковий другий шар: локальна мовна модель (llama.cpp) править розпізнаний текст за вашими промптами — прибирає слова-паразити, змінює стиль, форматує. Повністю офлайн, лише на процесорі.</p>" +
+			"<div class=\"mock\"><div class=\"mock-row\" style=\"color:var(--dim)\">▸ Qwen/Qwen2.5-3B-Instruct-GGUF<span style=\"margin-left:auto;color:var(--faint)\">2024-09-20</span><span>↓303k</span><span>↗</span></div>" +
+			"<div class=\"mock-row\" style=\"padding-left:18px\">q4_k_m.gguf<span style=\"margin-left:auto\">1.9 GB</span><span style=\"color:var(--green)\">● ≈3.7 GB</span><span style=\"color:var(--dim)\">⭳</span></div>" +
+			"<div class=\"mock-row\" style=\"padding-left:18px\">q8_0.gguf<span style=\"margin-left:auto\">3.6 GB</span><span style=\"color:var(--amber)\">● ≈8.2 GB</span><span style=\"color:var(--dim)\">⭳</span></div></div>" +
+			"<ul>" +
+			"<li><b>Моделі</b> — встановлені моделі-редактори; радіокнопка обирає активну (діє одразу), ✕ видаляє (зокрема активну — тоді постобробка вимикається). Поступ завантажень видно теж тут.</li>" +
+			"<li><b>Пошук</b> — моделі GGUF на Hugging Face за назвою (наприклад «qwen2.5 instruct»). Кожен репозиторій показує дату оновлення, кількість завантажень і ↗ на сторінку моделі; клац по рядку розкриває файли квантування. Показник ● ≈N GB порівнюється з <b>вільною</b> пам'яттю (вона вказана над списком).</li>" +
+			"<li><b>Яке квантування:</b> число — це біти на вагу (Q4 — золота середина, Q8 — майже без стиснення, Q3 — економить пам'ять ціною якості); K_M кращий за K_S; IQ4 — новіше покоління, за однакового розміру кращий за класичні. Показник ● ≈N GB оцінює потрібну пам'ять (файл плюс запас на контекст): зелений — вміститься, бурштиновий — впритул, червоний — не вміститься.</li>" +
+			"<li>Модель на 1,5–3B редагує швидко; 7–9B помітно розумніша, але на процесорі кожен прохід триває секунди. Сервер LLM стартує при першому використанні й тримає модель теплою.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Промпти</p>" +
+			"<div class=\"mock\"><div class=\"mock-row\"><span class=\"mock-cb on\">✓</span><b>Чистка</b><span class=\"mock-note\">—</span><span style=\"margin-left:auto;color:var(--dim)\">✎ ✕</span></div>" +
+			"<div class=\"mock-row\"><span class=\"mock-cb\"></span><b>Діловий стиль</b><span class=\"mock-note\">ctrl+alt+f</span><span style=\"margin-left:auto;color:var(--dim)\">✎ ✕</span></div></div>" +
+			"<ul>" +
+			"<li>Промпт — це інструкція для моделі-редактора. Два є з коробки: «Чистка» (прибирає слова-паразити, повтори й фальстарти, лагодить пунктуацію) та «Діловий стиль» (переписує ввічливо й формально); власні додавайте скільки завгодно.</li>" +
+			"<li>Позначені промпти діють на кожне диктування по черзі, згори вниз (ланцюжком: вихід одного стає входом наступного); якщо не позначено нічого — текст вставляється таким, як розпізнано.</li>" +
+			"<li>Промпт може мати власне сполучення: диктування з ним застосовує лише його, один раз. Олівець ✎ відкриває редактор: назва, текст промпта, сполучення та поле проби ▶, яке пропускає приклад крізь запущену модель прямо з налаштувань.</li>" +
+			"<li>Порада: малі моделі працюють значно краще, коли в промпті є приклади «вхід → вихід» — усі вбудовані написані саме так.</li>" +
+			"<li>Якщо профіль не спрацював (модель не відповіла), текст вставляється без нього: смужка показує «Вставлено без профілю …», і Enter у такому разі не натискається.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Залежності</p>" +
+			"<ul>" +
+			"<li>Промпти потребують встановленої моделі-редактора; переклад від неї не залежить — його робить сам Whisper.</li>" +
+			"<li>Модель-редактор завантажується в пам'ять при першому використанні й лишається теплою; великі моделі на процесорі помітно повільніші.</li>" +
+			"<li>Погляньте на показник пам'яті перед завантаженням: модель «впритул» гальмує всю систему.</li>" +
+			"<li>Приглушені елементи — це налаштування, які в поточному режимі нічого не роблять.</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Встановлення й портативність</p>" +
+			"<ul>" +
+			"<li><b>{setup}</b> — інсталятор: без прав адміністратора, ярлик у меню «Пуск», автозапуск за бажанням, чисте видалення з налаштувань Windows.</li>" +
+			"<li><b>Портативність</b> — просто скопіюйте всю теку з exe (на флешку, на інший комп'ютер): налаштування, моделі та журнал лежать поруч і їдуть разом. У реєстр нічого не пишеться.</li>" +
+			"<li>При першому запуску без моделі розпізнавання програма сама відкриває каталог і чекає на завантаження.</li>" +
+			"<li>Вимоги: Windows 10/11 x64, процесор з AVX2 (приблизно від 2013 року), WebView2 Runtime для вікна налаштувань (входить до Windows 11).</li>" +
+			"</ul>" +
+			"<p class=\"wh\">Трей і файли</p>" +
+			"<div class=\"mock\" style=\"max-width:290px\"><div class=\"mock-mi dim\">{app} — Готово…</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Налаштування…</div><div class=\"mock-mi\">Вимкнути</div><div class=\"mock-mi\">Копіювати останній результат</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Перечитати config.json</div><div class=\"mock-mi\">Відкрити config.json</div><div class=\"mock-mi\">Відкрити журнал</div><div class=\"mock-mi\">Про програму</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Вийти</div></div>" +
+			"<ul>" +
+			"<li>Лівий клац по значку — налаштування; правий — меню. Кольори значка: зелений — готово, червоний — запис, помаранчевий — розпізнавання, сірий — вимкнено або помилка.</li>" +
+			"<li><b>config.json</b> — усі налаштування; правки вручну діють після «Перечитати config.json» у меню.</li>" +
+			"<li><b>{log}</b> — журнал, автоматично обмежений приблизно 2 МБ.</li>" +
+			"<li><b>models/</b> — завантажені моделі розпізнавання та редактора.</li>" +
+			"</ul>",
 	}
 }

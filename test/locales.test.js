@@ -8,7 +8,7 @@ const settings = fs.readFileSync(path.join(root, "settings.go"), "utf8");
 
 // How many page keys each locale is still missing today. The numbers may only
 // go down: a locale that falls further behind fails the check.
-const SETTINGS_DEBT = { ru: 0, uk: 1, de: 1, fr: 1, es: 1, it: 1, pl: 1 };
+const SETTINGS_DEBT = { ru: 0, uk: 0, de: 0, fr: 0, es: 0, it: 0, pl: 0 };
 
 function keysIn(text) {
   return new Set([...text.matchAll(/"([A-Za-z_][A-Za-z_0-9.]*)":/g)].map((m) => m[1]));
