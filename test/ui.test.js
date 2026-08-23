@@ -17,12 +17,13 @@ const dom = new JSDOM(html, {
   beforeParse(window) {
     window.confirm = () => true;
     window.appLLM = async () => JSON.stringify(llmState);
+    let micBadge = "Realtek";
     window.appState = async () =>
       JSON.stringify({ hotkey: "ctrl+win", mic: "Realtek", engine: "sherpa · gigaam-v3", llm: "model.gguf",
         ram: "8000 MB free", last: "hello", last_meta: "just now · 5 characters", ready: true, status: "Ready",
         status_line: "Ready · gigaam-v3 + ggml-small.bin · 7.8 GB free", ru_model: "gigaam-v3",
         other_model: "ggml-small.bin", llm_ok: true, mic_ok: true,
-        badges: { mic: "Realtek", models: "2", system: "" } });
+        badges: { mic: micBadge, models: "2", system: "" } });
     window.appRouting = async () =>
       JSON.stringify([
         { cond: "Speech in RU", engine: "gigaam-v3", why: "more accurate here" },
@@ -55,7 +56,12 @@ const dom = new JSDOM(html, {
     window.dragCalls = 0;
     window.appDrag = () => { window.dragCalls++; };
     window.saveCalls = 0;
-    window.appSave = async () => { window.saveCalls++; return ""; };
+    window.appSave = async (json) => {
+      window.saveCalls++;
+      const f = JSON.parse(json);
+      micBadge = f.mic_device_name ? f.mic_device_name.split(" ")[0] : "Realtek";
+      return "";
+    };
     window.appModelDel = async () => "ok";
     window.appMics = async () =>
       JSON.stringify([
@@ -94,6 +100,9 @@ function check(name, actual, expected) {
   check("status shows russian model", d.getElementById("state_ru").textContent, "gigaam-v3");
   check("status shows other-language model", d.getElementById("state_other").textContent, "ggml-small.bin");
   check("last dictation carries details", d.getElementById("state_last_meta").textContent, "just now · 5 characters");
+  const lastCS = w.getComputedStyle(d.getElementById("state_last"));
+  check("last dictation is clamped to its row", [lastCS.display, lastCS.overflow, lastCS.textOverflow, lastCS.whiteSpace], ["block", "hidden", "ellipsis", "nowrap"]);
+  check("full dictation text kept on hover", d.getElementById("state_last").title, "hello");
   check("status bar names both models", d.getElementById("st_main").textContent, "Ready · gigaam-v3 + ggml-small.bin · 7.8 GB free");
   check("sidebar badges filled", [d.getElementById("badge_mic").textContent, d.getElementById("badge_models").textContent], ["Realtek", "2"]);
   check("status bar led lit", d.getElementById("st_led").classList.contains("on"), true);
@@ -125,12 +134,13 @@ function check(name, actual, expected) {
   check("microphone list has default plus devices", mic.options.length, 3);
   check("default option is localized", mic.options[0].textContent, "System default");
   check("system default selected initially", mic.value, "");
-  mic.value = "dev1"; mic.dispatchEvent(new w.Event("change")); await sleep(30);
+  mic.value = "dev1"; mic.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(30);
   check("microphone selection kept", mic.value, "dev1");
   await sleep(260);
   check("input level meter moves", d.getElementById("mic_bar").style.width !== "" && d.getElementById("mic_bar").style.width !== "0%", true);
+  check("sidebar badge follows the chosen microphone", d.getElementById("badge_mic").textContent, "Headset");
 
-  mic.value = ""; mic.dispatchEvent(new w.Event("change")); await sleep(30);
+  mic.value = ""; mic.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(30);
   tab("text"); await sleep(30);
   check("dictionary textarea present", !!d.getElementById("whisper_prompt"), true);
   check("punctuation modes offered", d.getElementById("punctuation").options.length, 3);
@@ -185,12 +195,13 @@ function check(name, actual, expected) {
   sw.checked = !sw.checked; sw.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(220);
   check("a toggle applies itself, no Save needed", w.saveCalls > before, true);
 
-  d.querySelector('.lvlb[data-l="simple"]').click(); await sleep(120);
+  d.querySelector('.lvlb[data-l="simple"]').click(); await sleep(320);
+  check("switching the mode is reported once", d.getElementById("st_saved").textContent.includes("hidden"), true);
   check("simple mode hides advanced rows", d.querySelectorAll("#p-dictation .row[data-adv].hidden").length > 0, true);
   check("disclosure button offered", !!d.querySelector("#p-dictation .moreb"), true);
   d.querySelector("#p-dictation .moreb").click(); await sleep(60);
   check("disclosure reveals them", d.querySelectorAll("#p-dictation .row[data-adv].hidden").length, 0);
-  check("status bar counts what is hidden", d.getElementById("st_level").textContent.includes("hidden"), true);
+  check("no permanent mode line in the status bar", !!d.getElementById("st_level"), false);
   check("no switching from the status bar", !!d.getElementById("st_levelbtn"), false);
 
   const omni = d.getElementById("omni");

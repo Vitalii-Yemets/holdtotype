@@ -697,7 +697,7 @@ button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box
 .logo{width:40px;height:40px;flex:none}
 .logo svg{width:100%;height:100%;filter:drop-shadow(0 0 5px rgba(60,255,110,.7))}
 .header h1{font-size:15px;letter-spacing:2px;text-shadow:var(--glow);animation:flicker 6s infinite}
-.statusbar .ver{flex:none;color:var(--faint)}
+.statusbar .ver{margin-left:auto;flex:none;color:var(--faint)}
 @keyframes flicker{0%,93%,97%,100%{opacity:1}95%{opacity:.6}}
 @keyframes pulse{0%,100%{opacity:.35;transform:scale(.94)}50%{opacity:1;transform:scale(1)}}
 .wave{animation:pulse 1.6s infinite}
@@ -725,7 +725,6 @@ button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box
 .statusbar .led{width:6px;height:6px;border-radius:50%;background:var(--faint);flex:none}
 .statusbar .led.on{background:var(--green);box-shadow:var(--glow)}
 .statusbar .stpend{color:var(--amber)}
-.statusbar .stlvl{margin-left:auto;flex:none}
 .statusbar .stsaved{color:var(--dim)}
 .omni{margin-left:auto;display:flex;align-items:center;gap:8px;flex:none;border:1px solid var(--line);background:var(--panel);padding:4px 9px;min-width:min(320px,38%)}
 .omni:focus-within{border-color:var(--dim);box-shadow:var(--glow)}
@@ -751,7 +750,8 @@ button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box
 .scard{border:1px solid var(--line);background:var(--panel);padding:9px 11px;display:flex;flex-direction:column;gap:5px}
 .scard .k{font-size:9.5px;letter-spacing:.12em;color:var(--faint);text-transform:uppercase}
 .scard .v{font-size:12.5px;color:var(--green)}
-.lastres{flex:1;color:var(--dim);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lastres{display:block;max-width:100%;color:var(--dim);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#state_last_meta{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tab{padding:9px 14px;border:1px solid transparent;border-bottom:none;background:none;font:inherit;color:var(--dim);cursor:pointer;letter-spacing:1px;text-transform:uppercase;font-size:12px}
 .tab:hover{color:var(--green)}
 .tab.active{color:var(--green);border-color:var(--line);background:var(--panel);text-shadow:var(--glow)}
@@ -821,7 +821,7 @@ button.ghost:hover{color:var(--green)}
 .mram.bad{color:#ff6b5b}
 .mrow .msize{color:var(--dim);font-size:12px;width:70px;text-align:right}
 .badge{font-size:11px;letter-spacing:1px;padding:4px 10px;border:1px solid var(--dim);color:var(--green);text-shadow:var(--glow);text-transform:uppercase}
-button.mini{padding:5px 12px;border:1px solid var(--line);background:none;color:var(--dim);font:12px Consolas,monospace;cursor:pointer;text-transform:uppercase}
+button.mini{flex:none;padding:5px 12px;border:1px solid var(--line);background:none;color:var(--dim);font:12px Consolas,monospace;cursor:pointer;text-transform:uppercase}
 button.mini:hover{color:var(--green);border-color:var(--dim);box-shadow:var(--glow)}
 button.mini.danger:hover{color:#ff7b6b;border-color:#7a2e2e;box-shadow:0 0 7px rgba(255,110,90,.5)}
 .mpct{color:var(--amber);font-size:12px;min-width:44px;text-align:right;text-shadow:0 0 6px rgba(255,179,71,.5)}
@@ -1139,7 +1139,6 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
  <span id="st_main">—</span>
  <span class="stsaved" id="st_saved"></span>
  <span class="stpend" id="st_pend"></span>
- <span class="stlvl" id="st_level"></span>
  <span class="ver">v<span id="ver"></span></span>
 </div>
 
@@ -1512,7 +1511,11 @@ async function refreshState(){
   set("state_llm", s.llm);
   set("state_ram", s.ram);
   set("state_last", s.last);
+  const lastEl = document.getElementById("state_last");
+  if(lastEl) lastEl.title = s.last && s.last !== "—" ? s.last : "";
   set("state_last_meta", s.last_meta || "");
+  const metaEl = document.getElementById("state_last_meta");
+  if(metaEl) metaEl.title = s.last_meta || "";
   set("st_main", s.status_line || s.status);
   led("state_mic_led", s.mic_ok);
   led("state_ru_led", s.ru_model && s.ru_model.indexOf("/") < 0 && s.ready, !s.ready);
@@ -1538,7 +1541,7 @@ function initStateScreen(){
   const copy = document.getElementById("state_copy");
   if(copy) copy.onclick = ()=>{ appCopyLast(); toast(L.upd); };
   document.querySelectorAll("[data-goto]").forEach(b=>{ b.onclick = ()=>show(b.dataset.goto); });
-  setInterval(()=>{ if(curTab === "state") refreshState(); restartHint(); }, 1500);
+  setInterval(()=>{ refreshState(); restartHint(); }, 1500);
   refreshState();
 }
 let modelFilter = "all";
@@ -1796,6 +1799,7 @@ async function doSave(){
   if(langChanged){ appReload(curTab); return; }
   toast(msg);
   refreshModels();
+  refreshState();
 }
 function save(){ doSave(); }
 let curTab = "state";
@@ -1831,18 +1835,19 @@ function applyLevel(){
     btn.style.display = "";
     btn.textContent = (opened[page.id] ? L.less : L.more).replace("%d", n);
   });
-  const line = document.getElementById("st_level");
-  if(line) line.textContent = uiLevel === "simple" ? L.hidden.replace("%d", hiddenTotal()) : L.allshown;
 }
 function hiddenTotal(){
   let n = 0;
   document.querySelectorAll(".page").forEach(p=>{ if(!opened[p.id]) n += advCount(p); });
   return n;
 }
+function levelMessage(){
+  return uiLevel === "simple" ? L.hidden.replace("%d", hiddenTotal()) : L.allshown;
+}
 function setLevel(l){
   uiLevel = l;
   applyLevel();
-  applyNow();
+  applyNow(()=>toast(levelMessage()));
 }
 function searchSettings(q){
   document.querySelectorAll(".row.hit").forEach(r=>r.classList.remove("hit"));
@@ -1862,14 +1867,14 @@ function searchSettings(q){
 }
 document.getElementById("upd_check").onclick = updCheck;
 let applyTimer = null;
-function applyNow(){
+function applyNow(done){
   clearTimeout(applyTimer);
-  applyTimer = setTimeout(()=>{ doSave(); }, 120);
+  applyTimer = setTimeout(()=>{ doSave().then(()=>{ if(done) done(); }); }, 120);
 }
 document.querySelector(".content").addEventListener("change", e=>{
   if(e.target.closest("#advisor")) return;
   if(e.target.name === "mdl" || e.target.name === "llmmdl") return;
-  applyNow();
+  applyNow(()=>toast(levelMessage()));
 });
 (async()=>{ const s = JSON.parse(await appUpdateStatus()); if(s.latest && s.url) updShow(s.latest, true); })();
 document.querySelectorAll(".nav").forEach(b=>b.onclick=()=>{
