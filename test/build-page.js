@@ -86,6 +86,7 @@ const strings = {
   replempty: "No replacements yet", repldel: "Delete the replacement", replwhole: "whole words",
   replcase: "case", replfromph: "git hub", repltoph: "GitHub",
   histempty: "No history yet", histcopy: "Copy", histask: "Delete the whole dictation history?", histclear: "Clear",
+  micchecking: "Checking…",
   wiznext: "Next", wizfinish: "Finish", wizwait: "Waiting for the first phrase…",
   wizheard: "Heard:", wizhave: "Everything you need is already downloaded",
   wiztry: "Put the caret in the field below, hold %s, say a phrase and let go.",

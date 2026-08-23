@@ -102,6 +102,8 @@ const dom = new JSDOM(html, {
     window.appHistory = async (q) => { window.histQueries.push(q); return JSON.stringify(histItems.filter(i => !q || i.text.includes(q) || i.app.includes(q))); };
     window.appHistoryClear = async () => { histItems = []; };
     window.appHistoryCopy = async (at) => { window.histCopied.push(at); return true; };
+    window.micChecks = 0;
+    window.appMicCheck = async () => { window.micChecks++; return JSON.stringify({ verdict: "quiet", text: "Too quiet: peak -32 dB", peak_db: -32, voice: 0.8, clip: 0 }); };
     window.appModelDel = async () => "ok";
     window.appMics = async () =>
       JSON.stringify([
@@ -202,6 +204,12 @@ function check(name, actual, expected) {
   await sleep(260);
   check("input level meter moves", d.getElementById("mic_bar").style.width !== "" && d.getElementById("mic_bar").style.width !== "0%", true);
   check("sidebar badge follows the chosen microphone", d.getElementById("badge_mic").textContent, "Headset");
+
+  const micBtn = d.getElementById("mic_check");
+  micBtn.click(); await sleep(300);
+  check("the microphone can be checked on demand", w.micChecks, 1);
+  check("the verdict is shown in words", d.getElementById("mic_verdict").textContent, "Too quiet: peak -32 dB");
+  check("a bad verdict is marked as such", d.getElementById("mic_verdict").className, "micverdict bad");
 
   mic.value = ""; mic.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(30);
   tab("text"); await sleep(30);

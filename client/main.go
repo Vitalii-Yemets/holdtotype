@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"holdtotype/internal/audiolevel"
 	"holdtotype/internal/history"
 	"holdtotype/internal/replace"
 	"holdtotype/internal/apprules"
@@ -373,6 +375,15 @@ func main() {
 			if rerr != nil {
 				log.Printf("микрофон недоступен: %v", rerr)
 				return
+			}
+			if err := rec.Start(5); err != nil {
+				log.Printf("запись для разбора не началась: %v", err)
+			} else {
+				time.Sleep(3 * time.Second)
+				pcm := rec.Stop()
+				rep := audiolevel.Analyze(pcm)
+				log.Printf("разбор: пик %.0f дБ, RMS %.0f дБ, речь %.0f%%, обрезано %.2f%% → %s",
+					audiolevel.DBFS(rep.Peak), audiolevel.DBFS(rep.RMS), rep.VoiceRatio*100, rep.ClipRatio*100, audiolevel.Verdict(rep))
 			}
 			log.Printf("замер уровня без диктовки, 5 секунд")
 			for i := 0; i < 25; i++ {
@@ -820,8 +831,12 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 		}
 		return
 	}
-	if peak := pcmPeak(pcm); pcmIsSilent(pcm) {
-		log.Printf("тишина в записи (пик %.3f) — распознавание пропущено", peak)
+	sound := audiolevel.Analyze(pcm)
+	verdict := audiolevel.Verdict(sound)
+	log.Printf("звук: пик %.0f дБ, речь %.0f%%, обрезано %.1f%% — %s",
+		audiolevel.DBFS(sound.Peak), sound.VoiceRatio*100, sound.ClipRatio*100, verdict)
+	if verdict == audiolevel.VerdictSilent {
+		log.Printf("тишина в записи — распознавание пропущено")
 		if cfg.Overlay {
 			overlaySet(ovFlashErr, tr("ov.silence"))
 		}
@@ -924,7 +939,14 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 	if text == "" || onlyNoise.MatchString(text) {
 		log.Printf("пустой результат (%q), вставлять нечего", text)
 		if cfg.Overlay {
-			overlaySet(ovFlashErr, tr("ov.silence"))
+			switch verdict {
+			case audiolevel.VerdictClipped:
+				overlaySet(ovFlashErr, tr("ov.clipped"))
+			case audiolevel.VerdictQuiet:
+				overlaySet(ovFlashErr, tr("ov.quiet"))
+			default:
+				overlaySet(ovFlashErr, tr("ov.silence"))
+			}
 		}
 		return
 	}
@@ -1258,4 +1280,51 @@ func stripPunctuation(text string) string {
 	}
 	text = strings.Join(strings.Fields(text), " ")
 	return strings.ToLower(strings.TrimSpace(text))
+}
+
+func (a *App) micCheck() string {
+	type out struct {
+		Verdict string  `json:"verdict"`
+		Text    string  `json:"text"`
+		PeakDB  float64 `json:"peak_db"`
+		Voice   float64 `json:"voice"`
+		Clip    float64 `json:"clip"`
+	}
+	fail := func(msg string) string {
+		b, _ := json.Marshal(out{Verdict: "error", Text: msg})
+		return string(b)
+	}
+	if a.state.Load() != stIdle {
+		return fail(tr("mic.busy"))
+	}
+	a.mu.Lock()
+	rec := a.rec
+	a.mu.Unlock()
+	if rec == nil {
+		return fail(tr("ov.err.mic"))
+	}
+	if err := rec.Start(5); err != nil {
+		log.Printf("проверка микрофона: %v", err)
+		return fail(err.Error())
+	}
+	time.Sleep(3 * time.Second)
+	pcm := rec.Stop()
+	rep := audiolevel.Analyze(pcm)
+	verdict := audiolevel.Verdict(rep)
+	peak := audiolevel.DBFS(rep.Peak)
+	log.Printf("проверка микрофона: пик %.0f дБ, речь %.0f%%, обрезано %.1f%% — %s",
+		peak, rep.VoiceRatio*100, rep.ClipRatio*100, verdict)
+	text := ""
+	switch verdict {
+	case audiolevel.VerdictSilent:
+		text = tr("mic.check.silent")
+	case audiolevel.VerdictClipped:
+		text = trf("mic.check.clipped", rep.ClipRatio*100)
+	case audiolevel.VerdictQuiet:
+		text = trf("mic.check.quiet", peak)
+	default:
+		text = trf("mic.check.ok", peak, rep.VoiceRatio*100)
+	}
+	b, _ := json.Marshal(out{Verdict: verdict, Text: text, PeakDB: peak, Voice: rep.VoiceRatio, Clip: rep.ClipRatio})
+	return string(b)
 }

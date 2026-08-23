@@ -141,6 +141,9 @@ var msgs = map[string]map[string]string{
 		"ov.err.mic":            "Микрофон недоступен — проверьте устройство в настройках",
 		"ov.err.recognize":      "Ошибка распознавания (см. лог)",
 		"ov.err.paste":          "Ошибка вставки (см. лог)",
+		"mic.busy": "Идёт запись, проверка невозможна", "mic.check.ok": "Слышно хорошо: пик %.0f дБ, речь на %.0f%% записи",
+		"mic.check.quiet": "Слишком тихо: пик %.0f дБ — прибавьте громкость микрофона в Windows или сядьте ближе", "mic.check.clipped": "Перегруз: обрезано %.1f%% отсчётов — убавьте громкость микрофона", "mic.check.silent": "Речи не слышно — проверьте, тот ли выбран микрофон и не выключен ли он",
+		"ov.quiet": "Слишком тихо, почти ничего не слышно", "ov.clipped": "Перегруз — звук обрезан",
 		"ov.silence":            "Тишина — текст не распознан",
 		"ov.notranslate":        "Активная модель не переводит — вставлен исходный текст",
 		"ov.engine.fallback":    "Второй движок не поднялся — распознаю текущим",
@@ -242,6 +245,9 @@ var msgs = map[string]map[string]string{
 		"ov.err.mic":            "Microphone unavailable — check the device in Settings",
 		"ov.err.recognize":      "Recognition error (see log)",
 		"ov.err.paste":          "Paste error (see log)",
+		"mic.busy": "A dictation is in progress, cannot check now", "mic.check.ok": "Sounds good: peak %.0f dB, speech in %.0f%% of the recording",
+		"mic.check.quiet": "Too quiet: peak %.0f dB — raise the microphone level in Windows or sit closer", "mic.check.clipped": "Clipping: %.1f%% of samples cut off — lower the microphone level", "mic.check.silent": "No speech heard — check that the right microphone is picked and not muted",
+		"ov.quiet": "Too quiet, almost nothing was heard", "ov.clipped": "Clipping — the sound was cut off",
 		"ov.silence":            "Silence — nothing recognized",
 		"ov.notranslate":        "The active model cannot translate — inserted as recognized",
 		"ov.engine.fallback":    "The other engine did not start — using the current one",
@@ -473,6 +479,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_MODEL":          "Файл модели",
 		"S_MIC":            "Микрофон",
 		"S_MIC_DEFAULT":    "Системный по умолчанию",
+		"S_MIC_CHECK": "Проверить микрофон", "S_MIC_CHECK_SUB": "три секунды записи и разбор: громкость, перегруз, есть ли речь", "S_MIC_CHECKING": "Проверяю…",
 		"S_MIC_REFRESH":    "Обновить список",
 		"S_MIC_LEVEL":      "Уровень сигнала",
 		"S_MIC_QUIET":      "тихо",
@@ -557,6 +564,8 @@ var settingsStrings = map[string]map[string]string{
 			"<li>Enter после вставки нажимается только если окно-цель не менялось.</li>" +
 			"<li><b>Последний результат</b> — финальный текст каждой диктовки хранится в памяти до следующей; в меню трея есть пункт «Копировать последний результат». Ошибка вставки или смена фокуса не теряют надиктованное.</li>" +
 			"</ul>" +
+			"<p class=\"wh\">Проверка микрофона</p>" +
+			"<p>Кнопка «Проверка» на «Микрофоне» записывает три секунды и разбирает их: пиковая громкость в децибелах, доля записи, в которой действительно есть речь, и доля обрезанных отсчётов. Ответ приходит словами: «слышно хорошо», «слишком тихо — прибавьте громкость в Windows», «перегруз — убавьте громкость», «речи не слышно — тот ли микрофон выбран». То же самое считается после каждой диктовки и пишется в лог; если распознать не удалось, плашка скажет причину — тихо, перегруз или тишина, — а не просто «ничего не услышал».</p>" +
 			"<p class=\"wh\">История диктовок</p>" +
 			"<p>Раздел «История» в левом столбце хранит то, что вы надиктовали: только текст, только на этом компьютере, звук не сохраняется никогда. По умолчанию выключено — включается одним переключателем там же. Хранится заданное число дней и записей, старое удаляется само; поле «Не записывать из программ» перечисляет через запятую те, из которых не нужно сохранять ничего — менеджеры паролей, банк-клиент. Поиск ищет и по тексту, и по названию программы, кнопка рядом с записью кладёт её в буфер обмена, «Очистить» удаляет всё сразу вместе с файлом <b>{app}-history.json</b>.</p>" +
 			"<p class=\"wh\">Замены после распознавания</p>" +
@@ -824,6 +833,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_MODEL":          "Model file",
 		"S_MIC":            "Microphone",
 		"S_MIC_DEFAULT":    "System default",
+		"S_MIC_CHECK": "Check the microphone", "S_MIC_CHECK_SUB": "three seconds of recording, then a verdict: level, clipping, whether there is speech", "S_MIC_CHECKING": "Checking…",
 		"S_MIC_REFRESH":    "Refresh list",
 		"S_MIC_LEVEL":      "Input level",
 		"S_MIC_QUIET":      "quiet",
@@ -908,6 +918,8 @@ var settingsStrings = map[string]map[string]string{
 			"<li>Enter after paste is pressed only when the target window has not changed.</li>" +
 			"<li><b>Last Result</b> — the final text of every dictation is kept in memory until the next one; the tray menu has \"Copy last result\". A failed paste or focus change never loses a dictation.</li>" +
 			"</ul>" +
+			"<p class=\"wh\">Checking the microphone</p>" +
+			"<p>The Test button on the Microphone tab records three seconds and takes them apart: peak level in decibels, how much of the recording actually holds speech, and how many samples were clipped. The answer comes in words: sounds good, too quiet — raise the level in Windows, clipping — lower it, no speech heard — is the right microphone picked. The same numbers are measured after every dictation and written to the log; when recognition comes back empty the plate names the reason — too quiet, clipping or silence — instead of just saying it heard nothing.</p>" +
 			"<p class=\"wh\">History of dictations</p>" +
 			"<p>The History section in the left column keeps what you dictated: text only, on this computer only, audio is never kept. It is off by default and turns on with one switch in the same place. Entries are kept for a set number of days and up to a set count, older ones drop out on their own; \"Never record from these programs\" lists, separated by commas, the ones nothing should be saved from — password managers, banking apps. Search covers both the text and the program name, the button next to an entry puts it on the clipboard, and Clear removes everything at once along with the <b>{app}-history.json</b> file.</p>" +
 			"<p class=\"wh\">Replacements after recognition</p>" +

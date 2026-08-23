@@ -20,6 +20,9 @@ func init() {
 		"menu.about": "Über", "menu.quit": "Beenden",
 		"ov.speak": "Sprechen…", "ov.transcribing": "Erkenne", "ov.inserted": "Eingefügt: %d Zeichen",
 		"ov.err.recognize": "Erkennungsfehler (siehe Log)", "ov.err.paste": "Einfügefehler (siehe Log)",
+		"mic.busy": "Ein Diktat läuft, jetzt geht das nicht", "mic.check.ok": "Klingt gut: Spitze %.0f dB, Sprache in %.0f%% der Aufnahme",
+		"mic.check.quiet": "Zu leise: Spitze %.0f dB — Mikrofonpegel in Windows anheben oder näher sitzen", "mic.check.clipped": "Übersteuert: %.1f%% der Abtastwerte abgeschnitten — Mikrofonpegel senken", "mic.check.silent": "Keine Sprache gehört — prüfen Sie, ob das richtige Mikrofon gewählt und nicht stumm ist",
+		"ov.quiet": "Zu leise, es war fast nichts zu hören", "ov.clipped": "Übersteuert — der Ton wurde abgeschnitten",
 		"ov.silence": "Stille — nichts erkannt", "ov.server.loading": "Server lädt noch",
 		"ov.cancelled": "Abgebrochen", "ov.editing": "Bearbeite: %s", "ov.translating": "Übersetze",
 		"ov.llm.needed": "Diese Sprache benötigt das LLM-Modul", "td.title": "Übersetzen nach:", "td.plain": "Ohne Übersetzung",
@@ -76,6 +79,9 @@ func init() {
 		"menu.about": "À propos", "menu.quit": "Quitter",
 		"ov.speak": "Parlez…", "ov.transcribing": "Reconnaissance", "ov.inserted": "Inséré : %d caractères",
 		"ov.err.recognize": "Erreur de reconnaissance (voir log)", "ov.err.paste": "Erreur d'insertion (voir log)",
+		"mic.busy": "Une dictée est en cours, impossible de vérifier", "mic.check.ok": "Bon signal : crête %.0f dB, parole sur %.0f%% de l'enregistrement",
+		"mic.check.quiet": "Trop faible : crête %.0f dB — montez le niveau du micro dans Windows ou rapprochez-vous", "mic.check.clipped": "Saturation : %.1f%% des échantillons écrêtés — baissez le niveau du micro", "mic.check.silent": "Aucune parole entendue — vérifiez que le bon micro est choisi et qu'il n'est pas coupé",
+		"ov.quiet": "Trop faible, presque rien n'a été entendu", "ov.clipped": "Saturation — le son a été écrêté",
 		"ov.silence": "Silence — rien reconnu", "ov.server.loading": "Le serveur charge encore",
 		"ov.cancelled": "Annulé", "ov.editing": "Édition : %s", "ov.translating": "Traduction",
 		"ov.llm.needed": "Cette langue nécessite le module LLM", "td.title": "Traduire vers :", "td.plain": "Sans traduction",
@@ -132,6 +138,9 @@ func init() {
 		"menu.about": "Acerca de", "menu.quit": "Salir",
 		"ov.speak": "Hable…", "ov.transcribing": "Reconociendo", "ov.inserted": "Insertado: %d caracteres",
 		"ov.err.recognize": "Error de reconocimiento (vea el log)", "ov.err.paste": "Error al insertar (vea el log)",
+		"mic.busy": "Hay un dictado en curso, ahora no se puede comprobar", "mic.check.ok": "Se oye bien: pico %.0f dB, voz en el %.0f%% de la grabación",
+		"mic.check.quiet": "Demasiado bajo: pico %.0f dB — sube el nivel del micrófono en Windows o acércate", "mic.check.clipped": "Saturación: %.1f%% de muestras recortadas — baja el nivel del micrófono", "mic.check.silent": "No se oye voz — comprueba que el micrófono elegido es el correcto y no está silenciado",
+		"ov.quiet": "Demasiado bajo, casi no se oyó nada", "ov.clipped": "Saturación: el sonido se recortó",
 		"ov.silence": "Silencio — nada reconocido", "ov.server.loading": "El servidor aún carga",
 		"ov.cancelled": "Cancelado", "ov.editing": "Editando: %s", "ov.translating": "Traduciendo",
 		"ov.llm.needed": "Este idioma requiere el módulo LLM", "td.title": "Traducir a:", "td.plain": "Sin traducción",
@@ -188,6 +197,9 @@ func init() {
 		"menu.about": "Informazioni", "menu.quit": "Esci",
 		"ov.speak": "Parla…", "ov.transcribing": "Riconoscimento", "ov.inserted": "Inserito: %d caratteri",
 		"ov.err.recognize": "Errore di riconoscimento (vedi log)", "ov.err.paste": "Errore di inserimento (vedi log)",
+		"mic.busy": "C'è una dettatura in corso, ora non si può controllare", "mic.check.ok": "Si sente bene: picco %.0f dB, voce nel %.0f%% della registrazione",
+		"mic.check.quiet": "Troppo basso: picco %.0f dB — alza il livello del microfono in Windows o avvicinati", "mic.check.clipped": "Distorsione: %.1f%% dei campioni tagliati — abbassa il livello del microfono", "mic.check.silent": "Nessuna voce sentita — controlla che sia scelto il microfono giusto e non sia muto",
+		"ov.quiet": "Troppo basso, non si è sentito quasi nulla", "ov.clipped": "Distorsione: il suono è stato tagliato",
 		"ov.silence": "Silenzio — nulla riconosciuto", "ov.server.loading": "Il server sta ancora caricando",
 		"ov.cancelled": "Annullato", "ov.editing": "Modifica: %s", "ov.translating": "Traduzione",
 		"ov.llm.needed": "Questa lingua richiede il modulo LLM", "td.title": "Traduci in:", "td.plain": "Senza traduzione",
@@ -244,6 +256,9 @@ func init() {
 		"menu.about": "O programie", "menu.quit": "Zakończ",
 		"ov.speak": "Mów…", "ov.transcribing": "Rozpoznawanie", "ov.inserted": "Wstawiono: %d znaków",
 		"ov.err.recognize": "Błąd rozpoznawania (zobacz log)", "ov.err.paste": "Błąd wstawiania (zobacz log)",
+		"mic.busy": "Trwa dyktowanie, teraz nie można sprawdzić", "mic.check.ok": "Brzmi dobrze: szczyt %.0f dB, mowa w %.0f%% nagrania",
+		"mic.check.quiet": "Za cicho: szczyt %.0f dB — podnieś poziom mikrofonu w Windows albo usiądź bliżej", "mic.check.clipped": "Przesterowanie: obcięto %.1f%% próbek — zmniejsz poziom mikrofonu", "mic.check.silent": "Nie słychać mowy — sprawdź, czy wybrany jest właściwy mikrofon i czy nie jest wyciszony",
+		"ov.quiet": "Za cicho, prawie nic nie było słychać", "ov.clipped": "Przesterowanie — dźwięk został obcięty",
 		"ov.silence": "Cisza — nic nie rozpoznano", "ov.server.loading": "Serwer wciąż się ładuje",
 		"ov.cancelled": "Anulowano", "ov.editing": "Edycja: %s", "ov.translating": "Tłumaczenie",
 		"ov.llm.needed": "Ten język wymaga modułu LLM", "td.title": "Tłumacz na:", "td.plain": "Bez tłumaczenia",
@@ -346,6 +361,7 @@ func init() {
 		"S_SUB_CLIP": "Bilder und Dateien kommen unverändert zurück",
 		"S_SUB_TYPE": "hilft dort, wo ein Feld das Einfügen verweigert",
 		"S_SEC_OVERLAY": "Bildschirmanzeige",
+		"S_MIC_CHECK": "Mikrofon prüfen", "S_MIC_CHECK_SUB": "drei Sekunden Aufnahme und ein Urteil: Pegel, Übersteuerung, ob Sprache da ist", "S_MIC_CHECKING": "Prüfe…",
 		"S_MIC": "Mikrofon", "S_MIC_DEFAULT": "Systemstandard", "S_MIC_REFRESH": "Liste aktualisieren",
 		"S_MIC_LEVEL": "Eingangspegel", "S_MIC_QUIET": "still",
 		"S_ADV_TITLE": "Modell auswählen", "S_F_ALL": "alle", "S_F_RU": "Russisch",
@@ -413,6 +429,8 @@ func init() {
 			"<li>Enter nach dem Einfügen wird nur gedrückt, wenn das Zielfenster dasselbe geblieben ist.</li>" +
 			"<li><b>Letztes Ergebnis</b> — der fertige Text jedes Diktats bleibt bis zum nächsten im Speicher; im Menü im Infobereich gibt es „Letztes Ergebnis kopieren“. Ein misslungenes Einfügen oder ein Fokuswechsel kostet nie ein Diktat.</li>" +
 			"</ul>" +
+			"<p class=\"wh\">Mikrofon prüfen</p>" +
+			"<p>Die Schaltfläche „Test“ unter „Mikrofon“ nimmt drei Sekunden auf und zerlegt sie: Spitzenpegel in Dezibel, wie viel der Aufnahme wirklich Sprache enthält und wie viele Abtastwerte abgeschnitten wurden. Die Antwort kommt in Worten: klingt gut, zu leise — Pegel in Windows anheben, übersteuert — Pegel senken, keine Sprache gehört — ist das richtige Mikrofon gewählt. Dasselbe wird nach jedem Diktat gemessen und ins Log geschrieben; kommt die Erkennung leer zurück, nennt die Leiste den Grund — zu leise, übersteuert oder Stille — statt nur zu sagen, sie habe nichts gehört.</p>" +
 			"<p class=\"wh\">Verlauf der Diktate</p>" +
 			"<p>Der Abschnitt „Verlauf“ in der linken Spalte bewahrt auf, was Sie diktiert haben: nur Text, nur auf diesem Rechner, Ton wird nie gespeichert. Standardmäßig aus, eingeschaltet wird er mit einem Schalter an derselben Stelle. Einträge bleiben eine eingestellte Zahl von Tagen und bis zu einer eingestellten Anzahl, Älteres fällt von selbst heraus; „Aus diesen Programmen nie aufzeichnen“ listet durch Komma getrennt jene, aus denen nichts gespeichert werden soll — Passwortmanager, Banking. Die Suche greift auf Text und Programmnamen, die Schaltfläche neben einem Eintrag legt ihn in die Zwischenablage, und „Leeren“ entfernt alles samt der Datei <b>{app}-history.json</b>.</p>" +
 			"<p class=\"wh\">Ersetzungen nach der Erkennung</p>" +
@@ -572,6 +590,7 @@ func init() {
 		"S_SUB_CLIP": "les images et les fichiers reviennent tels quels",
 		"S_SUB_TYPE": "utile là où un champ refuse le collage",
 		"S_SEC_OVERLAY": "Bandeau à l'écran",
+		"S_MIC_CHECK": "Vérifier le microphone", "S_MIC_CHECK_SUB": "trois secondes d'enregistrement, puis un verdict : niveau, saturation, présence de parole", "S_MIC_CHECKING": "Vérification…",
 		"S_MIC": "Microphone", "S_MIC_DEFAULT": "Par défaut du système", "S_MIC_REFRESH": "Actualiser la liste",
 		"S_MIC_LEVEL": "Niveau d'entrée", "S_MIC_QUIET": "silence",
 		"S_ADV_TITLE": "Choisir un modèle", "S_F_ALL": "tous", "S_F_RU": "russe",
@@ -639,6 +658,8 @@ func init() {
 			"<li>Entrée après le collage n'est envoyée que si la fenêtre cible n'a pas changé.</li>" +
 			"<li><b>Dernier résultat</b> — le texte final de chaque dictée reste en mémoire jusqu'à la suivante ; le menu de la zone de notification propose « Copier le dernier résultat ». Un collage manqué ou un changement de focus ne fait jamais perdre une dictée.</li>" +
 			"</ul>" +
+			"<p class=\"wh\">Vérifier le microphone</p>" +
+			"<p>Le bouton « Test » de l'onglet Microphone enregistre trois secondes et les décortique : niveau de crête en décibels, part de l'enregistrement qui contient vraiment de la parole, et part d'échantillons écrêtés. La réponse est en mots : bon signal, trop faible — montez le niveau dans Windows, saturation — baissez-le, aucune parole entendue — est-ce le bon micro. Les mêmes mesures sont faites après chaque dictée et écrites dans le journal ; si la reconnaissance revient vide, le bandeau nomme la raison — trop faible, saturation ou silence — au lieu de dire simplement qu'il n'a rien entendu.</p>" +
 			"<p class=\"wh\">Historique des dictées</p>" +
 			"<p>La section « Historique » dans la colonne de gauche conserve ce que vous avez dicté : le texte seul, sur cet ordinateur seulement, l'audio n'est jamais conservé. Désactivée par défaut, elle s'active d'un interrupteur au même endroit. Les entrées restent un nombre de jours et jusqu'à un nombre d'entrées réglables, les plus anciennes disparaissent d'elles-mêmes ; « Ne jamais enregistrer depuis ces programmes » liste, séparés par des virgules, ceux dont rien ne doit être conservé — gestionnaires de mots de passe, applications bancaires. La recherche porte sur le texte et sur le nom du programme, le bouton à côté d'une entrée la met dans le presse-papiers, et « Vider » supprime tout d'un coup avec le fichier <b>{app}-history.json</b>.</p>" +
 			"<p class=\"wh\">Remplacements après la reconnaissance</p>" +
@@ -798,6 +819,7 @@ func init() {
 		"S_SUB_CLIP": "las imágenes y los archivos vuelven tal como estaban",
 		"S_SUB_TYPE": "ayuda donde un campo no admite pegar",
 		"S_SEC_OVERLAY": "Aviso en pantalla",
+		"S_MIC_CHECK": "Comprobar el micrófono", "S_MIC_CHECK_SUB": "tres segundos de grabación y un veredicto: nivel, saturación, si hay voz", "S_MIC_CHECKING": "Comprobando…",
 		"S_MIC": "Micrófono", "S_MIC_DEFAULT": "Predeterminado del sistema", "S_MIC_REFRESH": "Actualizar la lista",
 		"S_MIC_LEVEL": "Nivel de entrada", "S_MIC_QUIET": "silencio",
 		"S_ADV_TITLE": "Elegir un modelo", "S_F_ALL": "todos", "S_F_RU": "ruso",
@@ -865,6 +887,8 @@ func init() {
 			"<li>Enter tras pegar solo se envía si la ventana de destino no ha cambiado.</li>" +
 			"<li><b>Último resultado</b> — el texto final de cada dictado se guarda en memoria hasta el siguiente; el menú del área de notificación tiene «Copiar el último resultado». Un pegado fallido o un cambio de foco nunca hacen perder un dictado.</li>" +
 			"</ul>" +
+			"<p class=\"wh\">Comprobar el micrófono</p>" +
+			"<p>El botón «Test» de la pestaña Micrófono graba tres segundos y los analiza: pico en decibelios, qué parte de la grabación contiene voz de verdad y qué parte de las muestras se recortó. La respuesta llega en palabras: se oye bien, demasiado bajo — sube el nivel en Windows, saturación — bájalo, no se oye voz — ¿está elegido el micrófono correcto? Lo mismo se mide tras cada dictado y se escribe en el registro; si el reconocimiento vuelve vacío, la barra nombra el motivo — bajo, saturación o silencio — en vez de decir solo que no oyó nada.</p>" +
 			"<p class=\"wh\">Historial de dictados</p>" +
 			"<p>La sección «Historial» de la columna izquierda guarda lo que has dictado: solo el texto, solo en este equipo, el audio nunca se guarda. Está desactivada por defecto y se activa con un interruptor en el mismo sitio. Las entradas se conservan durante los días y hasta la cantidad que fijes, las viejas caen solas; «No registrar nunca desde estos programas» enumera, separados por comas, aquellos de los que no debe guardarse nada — gestores de contraseñas, banca. La búsqueda cubre el texto y el nombre del programa, el botón junto a una entrada la copia al portapapeles, y «Vaciar» borra todo de golpe junto con el archivo <b>{app}-history.json</b>.</p>" +
 			"<p class=\"wh\">Reemplazos tras el reconocimiento</p>" +
@@ -1024,6 +1048,7 @@ func init() {
 		"S_SUB_CLIP": "immagini e file tornano come erano",
 		"S_SUB_TYPE": "serve dove un campo rifiuta di incollare",
 		"S_SEC_OVERLAY": "Avviso a schermo",
+		"S_MIC_CHECK": "Controlla il microfono", "S_MIC_CHECK_SUB": "tre secondi di registrazione e un verdetto: livello, distorsione, se c'è voce", "S_MIC_CHECKING": "Controllo…",
 		"S_MIC": "Microfono", "S_MIC_DEFAULT": "Predefinito di sistema", "S_MIC_REFRESH": "Aggiorna l'elenco",
 		"S_MIC_LEVEL": "Livello d'ingresso", "S_MIC_QUIET": "silenzio",
 		"S_ADV_TITLE": "Scegli un modello", "S_F_ALL": "tutti", "S_F_RU": "russo",
@@ -1091,6 +1116,8 @@ func init() {
 			"<li>Invio dopo l'incollaggio viene premuto solo se la finestra di destinazione è rimasta la stessa.</li>" +
 			"<li><b>Ultimo risultato</b> — il testo finale di ogni dettatura resta in memoria fino alla successiva; nel menu dell'area di notifica c'è «Copia l'ultimo risultato». Un incollaggio fallito o un cambio di fuoco non fanno mai perdere una dettatura.</li>" +
 			"</ul>" +
+			"<p class=\"wh\">Controllare il microfono</p>" +
+			"<p>Il pulsante «Test» nella scheda Microfono registra tre secondi e li scompone: picco in decibel, quanta parte della registrazione contiene davvero voce e quanti campioni sono stati tagliati. La risposta arriva a parole: si sente bene, troppo basso — alza il livello in Windows, distorsione — abbassalo, nessuna voce sentita — è scelto il microfono giusto. Le stesse misure vengono fatte dopo ogni dettatura e finiscono nel log; se il riconoscimento torna vuoto, la barra dice il motivo — basso, distorsione o silenzio — invece di dire soltanto che non ha sentito nulla.</p>" +
 			"<p class=\"wh\">Cronologia delle dettature</p>" +
 			"<p>La sezione «Cronologia» nella colonna di sinistra conserva ciò che hai dettato: solo testo, solo su questo computer, l'audio non viene mai salvato. È disattivata per impostazione predefinita e si accende con un interruttore lì accanto. Le voci restano per i giorni e fino al numero che imposti, le più vecchie escono da sole; «Non registrare mai da questi programmi» elenca, separati da virgole, quelli da cui non salvare nulla — gestori di password, home banking. La ricerca copre il testo e il nome del programma, il pulsante accanto a una voce la mette negli appunti, e «Svuota» cancella tutto insieme al file <b>{app}-history.json</b>.</p>" +
 			"<p class=\"wh\">Sostituzioni dopo il riconoscimento</p>" +
@@ -1250,6 +1277,7 @@ func init() {
 		"S_SUB_CLIP": "obrazy i pliki wracają bez zmian",
 		"S_SUB_TYPE": "pomaga tam, gdzie pole nie przyjmuje wklejania",
 		"S_SEC_OVERLAY": "Pasek na ekranie",
+		"S_MIC_CHECK": "Sprawdź mikrofon", "S_MIC_CHECK_SUB": "trzy sekundy nagrania i werdykt: poziom, przesterowanie, czy jest mowa", "S_MIC_CHECKING": "Sprawdzam…",
 		"S_MIC": "Mikrofon", "S_MIC_DEFAULT": "Domyślny systemowy", "S_MIC_REFRESH": "Odśwież listę",
 		"S_MIC_LEVEL": "Poziom wejścia", "S_MIC_QUIET": "cisza",
 		"S_ADV_TITLE": "Dobierz model", "S_F_ALL": "wszystkie", "S_F_RU": "rosyjski",
@@ -1317,6 +1345,8 @@ func init() {
 			"<li>Enter po wklejeniu jest wysyłany tylko wtedy, gdy okno docelowe się nie zmieniło.</li>" +
 			"<li><b>Ostatni wynik</b> — gotowy tekst każdego dyktowania zostaje w pamięci do następnego; w menu w zasobniku jest „Kopiuj ostatni wynik”. Nieudane wklejenie albo zmiana okna nigdy nie gubią dyktowania.</li>" +
 			"</ul>" +
+			"<p class=\"wh\">Sprawdzenie mikrofonu</p>" +
+			"<p>Przycisk „Test” na karcie Mikrofon nagrywa trzy sekundy i je rozbiera: szczyt w decybelach, jaka część nagrania naprawdę zawiera mowę i ile próbek zostało obciętych. Odpowiedź przychodzi słowami: brzmi dobrze, za cicho — podnieś poziom w Windows, przesterowanie — zmniejsz go, nie słychać mowy — czy wybrany jest właściwy mikrofon. To samo mierzy się po każdym dyktowaniu i trafia do dziennika; gdy rozpoznanie wraca puste, pasek nazywa powód — cicho, przesterowanie albo cisza — zamiast mówić tylko, że nic nie usłyszał.</p>" +
 			"<p class=\"wh\">Historia dyktowań</p>" +
 			"<p>Sekcja „Historia” w lewej kolumnie przechowuje to, co podyktowałeś: tylko tekst, tylko na tym komputerze, dźwięk nigdy nie jest zapisywany. Domyślnie wyłączona, włącza się jednym przełącznikiem w tym samym miejscu. Wpisy trzymają się przez ustaloną liczbę dni i do ustalonej liczby, starsze wypadają same; „Nigdy nie zapisuj z tych programów” wymienia po przecinku te, z których nic nie ma być zapisywane — menedżery haseł, bankowość. Wyszukiwanie obejmuje tekst i nazwę programu, przycisk obok wpisu wkłada go do schowka, a „Wyczyść” usuwa wszystko razem z plikiem <b>{app}-history.json</b>.</p>" +
 			"<p class=\"wh\">Zamiany po rozpoznaniu</p>" +
@@ -1437,6 +1467,9 @@ func init() {
 		"ov.speak": "Говоріть…", "ov.transcribing": "Розпізнаю", "ov.inserted": "Вставлено: %d символів",
 		"ov.err.mic":       "Мікрофон недоступний — перевірте пристрій у налаштуваннях",
 		"ov.err.recognize": "Помилка розпізнавання (див. лог)", "ov.err.paste": "Помилка вставлення (див. лог)",
+		"mic.busy": "Триває диктування, зараз перевірити не можна", "mic.check.ok": "Чути добре: пік %.0f дБ, мовлення на %.0f%% запису",
+		"mic.check.quiet": "Надто тихо: пік %.0f дБ — додайте гучності мікрофона у Windows або сядьте ближче", "mic.check.clipped": "Перевантаження: обрізано %.1f%% відліків — зменште гучність мікрофона", "mic.check.silent": "Мовлення не чути — перевірте, чи вибрано той мікрофон і чи не вимкнений він",
+		"ov.quiet": "Надто тихо, майже нічого не чути", "ov.clipped": "Перевантаження — звук обрізано",
 		"ov.silence": "Тиша — нічого не розпізнано", "ov.server.loading": "Сервер ще завантажується",
 		"ov.cancelled": "Скасовано", "ov.editing": "Редагую: %s", "ov.translating": "Перекладаю",
 		"ov.llm.needed": "Ця мова потребує LLM-модуль", "td.title": "Перекласти на:", "td.plain": "Без перекладу",
@@ -1533,6 +1566,7 @@ func init() {
 		"S_MODELS": "Моделі розпізнавання", "S_DL": "Завантажити", "S_DEL": "Видалити",
 		"S_M_BASE": "швидка, для слабких ПК", "S_M_SMALL": "баланс швидкості й точності", "S_M_MED": "точніша, рекомендуємо", "S_M_TURBO": "максимум точності на CPU",
 		"S_M_CUSTOM": "власна (з config.json)",
+		"S_MIC_CHECK": "Перевірити мікрофон", "S_MIC_CHECK_SUB": "три секунди запису та розбір: гучність, перевантаження, чи є мовлення", "S_MIC_CHECKING": "Перевіряю…",
 		"S_MIC":      "Мікрофон", "S_MIC_DEFAULT": "Системний за замовчуванням", "S_MIC_REFRESH": "Оновити список",
 		"S_MIC_LEVEL": "Рівень сигналу", "S_MIC_QUIET": "тихо",
 		"S_THREADS": "Потоки CPU", "S_MINMS": "Мін. запис, мс", "S_MAXSEC": "Макс. запис, с",
@@ -1603,6 +1637,8 @@ func init() {
 			"<li>Enter після вставки натискається лише тоді, коли цільове вікно не змінилося.</li>" +
 			"<li><b>Останній результат</b> — готовий текст кожного диктування лишається в пам'яті до наступного; у меню в треї є «Копіювати останній результат». Невдала вставка чи зміна вікна ніколи не втрачають диктування.</li>" +
 			"</ul>" +
+			"<p class=\"wh\">Перевірка мікрофона</p>" +
+			"<p>Кнопка «Перевірка» на «Мікрофоні» записує три секунди й розбирає їх: пікова гучність у децибелах, частка запису, де справді є мовлення, і частка обрізаних відліків. Відповідь приходить словами: чути добре, надто тихо — додайте гучності у Windows, перевантаження — зменште її, мовлення не чути — чи той мікрофон вибрано. Те саме рахується після кожного диктування й пишеться в журнал; якщо розпізнати не вдалося, смужка назве причину — тихо, перевантаження чи тиша, — а не просто «нічого не почув».</p>" +
 			"<p class=\"wh\">Історія диктувань</p>" +
 			"<p>Розділ «Історія» в лівому стовпці зберігає те, що ви надиктували: лише текст, лише на цьому комп'ютері, звук не зберігається ніколи. Типово вимкнено — вмикається одним перемикачем там само. Записи тримаються задану кількість днів і до заданої кількості, старі зникають самі; поле «Не записувати з цих програм» перелічує через кому ті, з яких не треба зберігати нічого — менеджери паролів, банк-клієнт. Пошук шукає і за текстом, і за назвою програми, кнопка поруч із записом кладе його в буфер обміну, а «Очистити» видаляє все разом із файлом <b>{app}-history.json</b>.</p>" +
 			"<p class=\"wh\">Заміни після розпізнавання</p>" +

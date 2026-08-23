@@ -404,6 +404,9 @@ func (a *App) settingsThread(tab string, attempt int) {
 		_ = w.Bind("appModelDel", func(id string) string {
 			return a.deleteModel(id)
 		})
+		_ = w.Bind("appMicCheck", func() string {
+			return a.micCheck()
+		})
 		_ = w.Bind("appHistory", func(query string) string {
 			cfg := a.snapshot()
 			out, _ := json.Marshal(histStore.Search(query, cfg.HistoryMax))
@@ -790,6 +793,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"ruleprompts": "S_RULE_PROMPTS", "ruleph": "S_RULE_PH",
 		"replempty": "S_REPL_EMPTY", "repldel": "S_REPL_DEL", "replwhole": "S_REPL_WHOLE",
 		"histempty": "S_HIST_EMPTY", "histcopy": "S_HIST_COPY", "histask": "S_HIST_ASK", "histclear": "S_HIST_CLEAR",
+		"micchecking": "S_MIC_CHECKING",
 		"replcase": "S_REPL_CASE", "replfromph": "S_REPL_FROM_PH", "repltoph": "S_REPL_TO_PH",
 		"wiznext": "S_WIZ_NEXT", "wizfinish": "S_WIZ_FINISH", "wizwait": "S_WIZ_WAIT",
 		"wizheard": "S_WIZ_HEARD", "wizhave": "S_WIZ_HAVE", "wiztry": "S_WIZ_TRY_TEXT",
@@ -998,6 +1002,9 @@ button.ghost:hover{color:var(--green)}
 .histrow .mini{flex:none}
 .histfind{margin:8px 0 4px;max-width:320px}
 .histempty{color:var(--faint);font-size:12px;padding:8px 0}
+.micverdict{font-size:12.5px;line-height:1.5;color:var(--dim);padding:4px 0;min-height:18px}
+.micverdict.ok{color:var(--green);text-shadow:var(--glow)}
+.micverdict.bad{color:var(--amber)}
 .sect .mini{margin-left:auto}
 .replrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 0;border-bottom:1px solid #12241a}
 .replrow:last-child{border-bottom:none}
@@ -1239,6 +1246,9 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
   <div class="row"><label>{{S_MIC_LEVEL}}</label>
    <span class="miclevel"><i id="mic_bar"></i></span>
    <span class="mpct" id="mic_hint"></span></div>
+  <div class="row"><label>{{S_MIC_CHECK}}<span class="sub">{{S_MIC_CHECK_SUB}}</span></label>
+   <button type="button" class="mini" id="mic_check">{{S_PROF_TEST}}</button></div>
+  <div class="micverdict" id="mic_verdict"></div>
   <div class="note warn" id="mic_err"></div>
  </div>
  <div class="card">
@@ -1836,6 +1846,21 @@ async function applyMic(){
   if(note) note.textContent = "";
   doSave();
 }
+async function micCheck(){
+  const btn = document.getElementById("mic_check");
+  const out = document.getElementById("mic_verdict");
+  if(!btn || !out) return;
+  btn.disabled = true;
+  out.className = "micverdict";
+  out.textContent = L.micchecking;
+  try {
+    const r = JSON.parse(await appMicCheck());
+    out.textContent = r.text;
+    out.className = "micverdict " + (r.verdict === "ok" ? "ok" : "bad");
+  } finally {
+    btn.disabled = false;
+  }
+}
 function startMicMeter(){
   if(micTimer) return;
   micTimer = startMeter("mic_bar", "p-mic", "mic_hint");
@@ -2134,6 +2159,8 @@ function load(){
   document.getElementById("translate_ask").onchange = syncTrControls;
   document.getElementById("mic_device").onchange = applyMic;
   document.getElementById("mic_refresh").onclick = refreshMics;
+  const micChk = document.getElementById("mic_check");
+  if(micChk) micChk.onclick = micCheck;
   refreshMics();
   startMicMeter();
   if ((CFG.model || "").indexOf("turbo") >= 0) document.getElementById("tr_warn").style.display = "block";
