@@ -817,7 +817,7 @@ func settingsHTML(cfg *Config, tab string) string {
 
 const settingsPage = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>{{S_TITLE}}</title><style>
-:root{--bg:#0b0f0c;--panel:#0e1410;--line:#1d4a2b;--green:#3cff6e;--dim:#20a34a;--faint:#14803a;--amber:#ffb347;--bad:#ff7b6b;--glow:0 0 7px rgba(60,255,110,.55);--sw-on:"{{S_SW_ON}}";--sw-off:"{{S_SW_OFF}}"}
+:root{--bg:#0b0f0c;--panel:#0e1410;--line:#1d4a2b;--green:#3cff6e;--dim:#20a34a;--faint:#14803a;--amber:#ffb347;--bad:#ff7b6b;--glow:0 0 7px rgba(60,255,110,.55)}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{font:14px Consolas,"Cascadia Mono",monospace;background:var(--bg);color:var(--green);user-select:none;display:flex;flex-direction:column;overflow:hidden}
@@ -966,13 +966,11 @@ input:disabled,select:disabled{opacity:.35;cursor:default}
 #trlangs label:has(input:disabled){opacity:.45}
 input[type=text]{width:220px;max-width:100%}select{width:210px;max-width:100%}
 input[type=range]{width:150px;accent-color:var(--dim);background:transparent}
-input[type=checkbox]{appearance:none;-webkit-appearance:none;width:46px;height:18px;border:1px solid var(--dim);position:relative;cursor:pointer;background:none;flex:none;padding:0;margin:0;font:inherit}
-input[type=radio]::before{content:"";position:absolute;top:-11px;bottom:-11px;left:-9px;right:-9px}
-input[type=checkbox]::before{content:var(--sw-off);position:absolute;top:0;right:5px;line-height:16px;font-size:8px;letter-spacing:.04em;color:var(--faint)}
-input[type=checkbox]:checked::before{content:var(--sw-on);right:auto;left:5px;color:var(--green);text-shadow:var(--glow)}
-input[type=checkbox]::after{content:"";position:absolute;top:3px;left:3px;width:10px;height:10px;background:var(--dim);transition:.15s}
+input[type=checkbox]{appearance:none;-webkit-appearance:none;width:32px;height:17px;border:1px solid var(--dim);position:relative;cursor:pointer;background:none;flex:none;padding:0;margin:0}
+input[type=checkbox]::before,input[type=radio]::before{content:"";position:absolute;top:-11px;bottom:-11px;left:-9px;right:-9px}
+input[type=checkbox]::after{content:"";position:absolute;top:2px;left:2px;width:11px;height:11px;background:var(--dim);transition:.15s}
 input[type=checkbox]:checked{border-color:var(--dim)}
-input[type=checkbox]:checked::after{left:31px;background:var(--green);box-shadow:var(--glow)}
+input[type=checkbox]:checked::after{left:17px;background:var(--green);box-shadow:var(--glow)}
 input[type=checkbox]:focus-visible{outline:1px solid var(--green);outline-offset:2px}
 .row select,.row input[type=text]{border:1px solid var(--dim);background:#08100b;color:var(--green);font:inherit;font-size:11.5px;padding:4px 8px}
 .row select{flex:0 0 auto;width:auto;min-width:118px;max-width:230px}
@@ -1013,6 +1011,7 @@ button.ghost:hover{color:var(--green)}
 .replrow input[type=text]{flex:1 1 160px;min-width:120px;width:auto;font-size:12px;padding:5px 9px}
 .replrow .rarrow{flex:none;color:var(--faint)}
 .replrow label{flex:none;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--dim);white-space:nowrap}
+.replrow label input[type=checkbox]{width:28px;height:15px}
 .replcheck{display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:10px;border-top:1px solid #12241a;flex-wrap:wrap}
 .replcheck input[type=text]{flex:1 1 220px;min-width:160px;width:auto;font-size:12px;padding:5px 9px}
 .replout{flex:1 1 200px;min-width:0;font-size:12px;color:var(--green);text-shadow:var(--glow);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

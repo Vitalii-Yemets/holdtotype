@@ -40,12 +40,10 @@ button.ibtn{border:1px solid var(--line);background:none;color:var(--dim);cursor
 button.ibtn:hover{color:var(--green);border-color:var(--dim);box-shadow:var(--glow)}
 .warn{color:var(--amber);font-size:12px}
 .chk{display:flex;align-items:center;gap:9px;font-size:13px;cursor:pointer}
-.chk input{appearance:none;-webkit-appearance:none;width:46px;height:18px;border:1px solid var(--line);background:none;position:relative;flex:none;margin:0;padding:0;cursor:pointer;font:inherit}
-.chk input::before{content:"{{SWOFF}}";position:absolute;top:0;right:5px;line-height:16px;font-size:8px;letter-spacing:.04em;color:var(--faint)}
-.chk input:checked::before{content:"{{SWON}}";right:auto;left:5px;color:var(--green);text-shadow:var(--glow)}
-.chk input::after{content:"";position:absolute;top:3px;left:3px;width:10px;height:10px;background:var(--dim);transition:.15s}
+.chk input{appearance:none;-webkit-appearance:none;width:32px;height:17px;border:1px solid var(--line);background:none;position:relative;flex:none;margin:0;padding:0;cursor:pointer}
+.chk input::after{content:"";position:absolute;top:2px;left:2px;width:11px;height:11px;background:var(--dim);transition:.15s}
 .chk input:checked{border-color:var(--dim)}
-.chk input:checked::after{left:31px;background:var(--green);box-shadow:0 0 7px rgba(60,255,110,.55)}
+.chk input:checked::after{left:17px;background:var(--green);box-shadow:0 0 7px rgba(60,255,110,.55)}
 .chk input:focus-visible{outline:1px solid var(--green);outline-offset:2px}
 button.btn{padding:11px 26px;border:1px solid var(--dim);background:#0d1a11;color:var(--green);font:inherit;cursor:pointer;letter-spacing:2px;text-transform:uppercase;font-size:13px}
 button.btn.ghost{border-color:var(--line);background:none;color:var(--dim)}

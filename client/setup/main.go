@@ -23,8 +23,6 @@ func init() {
 
 var texts = map[string]map[string]string{
 	"ru": {
-		"swon":      "ВКЛ",
-		"swoff":     "ВЫКЛ",
 		"title":     appid.Name + " — установка",
 		"tagline":   "Голос → текст в позицию курсора. Полностью локально и офлайн.",
 		"path":      "Папка установки",
@@ -49,8 +47,6 @@ var texts = map[string]map[string]string{
 		"webview":   "Для установщика нужен Microsoft WebView2 Runtime (входит в Windows 11).\nСейчас откроется страница загрузки.",
 	},
 	"uk": {
-		"swon":      "УВІМК",
-		"swoff":     "ВИМК",
 		"title":     appid.Name + " — встановлення",
 		"tagline":   "Голос → текст у позицію курсора. Повністю локально й офлайн.",
 		"path":      "Тека встановлення",
@@ -75,8 +71,6 @@ var texts = map[string]map[string]string{
 		"webview":   "Для інсталятора потрібен Microsoft WebView2 Runtime (входить до Windows 11).\nЗараз відкриється сторінка завантаження.",
 	},
 	"de": {
-		"swon":      "EIN",
-		"swoff":     "AUS",
 		"title":     appid.Name + " — Installation",
 		"tagline":   "Stimme → Text an der Eingabemarke. Vollständig lokal und offline.",
 		"path":      "Installationsordner",
@@ -101,8 +95,6 @@ var texts = map[string]map[string]string{
 		"webview":   "Der Installer benötigt Microsoft WebView2 Runtime (in Windows 11 enthalten).\nDie Downloadseite wird jetzt geöffnet.",
 	},
 	"fr": {
-		"swon":      "ON",
-		"swoff":     "OFF",
 		"title":     appid.Name + " — Installation",
 		"tagline":   "Voix → texte à la position du curseur. Entièrement local et hors ligne.",
 		"path":      "Dossier d'installation",
@@ -127,8 +119,6 @@ var texts = map[string]map[string]string{
 		"webview":   "L'installateur nécessite Microsoft WebView2 Runtime (fourni avec Windows 11).\nLa page de téléchargement va s'ouvrir.",
 	},
 	"es": {
-		"swon":      "ON",
-		"swoff":     "OFF",
 		"title":     appid.Name + " — Instalación",
 		"tagline":   "Voz → texto en la posición del cursor. Totalmente local y sin conexión.",
 		"path":      "Carpeta de instalación",
@@ -153,8 +143,6 @@ var texts = map[string]map[string]string{
 		"webview":   "El instalador necesita Microsoft WebView2 Runtime (incluido en Windows 11).\nSe abrirá la página de descarga.",
 	},
 	"it": {
-		"swon":      "ON",
-		"swoff":     "OFF",
 		"title":     appid.Name + " — Installazione",
 		"tagline":   "Voce → testo nella posizione del cursore. Tutto in locale e offline.",
 		"path":      "Cartella di installazione",
@@ -179,8 +167,6 @@ var texts = map[string]map[string]string{
 		"webview":   "L'installer richiede Microsoft WebView2 Runtime (incluso in Windows 11).\nSi aprirà la pagina di download.",
 	},
 	"pl": {
-		"swon":      "ON",
-		"swoff":     "OFF",
 		"title":     appid.Name + " — Instalacja",
 		"tagline":   "Głos → tekst w miejscu kursora. Całkowicie lokalnie i offline.",
 		"path":      "Folder instalacji",
@@ -205,8 +191,6 @@ var texts = map[string]map[string]string{
 		"webview":   "Instalator wymaga Microsoft WebView2 Runtime (dołączony do Windows 11).\nZa chwilę otworzy się strona pobierania.",
 	},
 	"en": {
-		"swon":      "ON",
-		"swoff":     "OFF",
 		"title":     appid.Name + " — Setup",
 		"tagline":   "Voice → text at the cursor position. Fully local and offline.",
 		"path":      "Install folder",
@@ -269,8 +253,6 @@ func page(updateDir string) string {
 	}
 	repl := map[string]string{
 		"{{TITLE}}":        tr("title"),
-		"{{SWON}}":         tr("swon"),
-		"{{SWOFF}}":        tr("swoff"),
 		"{{APP}}":          appid.Name,
 		"{{TAGLINE}}":      tr("tagline"),
 		"{{PATH}}":         tr("path"),
