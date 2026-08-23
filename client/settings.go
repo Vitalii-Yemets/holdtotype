@@ -966,13 +966,13 @@ input:disabled,select:disabled{opacity:.35;cursor:default}
 #trlangs label:has(input:disabled){opacity:.45}
 input[type=text]{width:220px;max-width:100%}select{width:210px;max-width:100%}
 input[type=range]{width:150px;accent-color:var(--dim);background:transparent}
-input[type=checkbox]{appearance:none;-webkit-appearance:none;width:60px;height:20px;border:1px solid var(--dim);position:relative;cursor:pointer;background:none;flex:none;padding:0;margin:0;font:inherit}
+input[type=checkbox]{appearance:none;-webkit-appearance:none;width:46px;height:18px;border:1px solid var(--dim);position:relative;cursor:pointer;background:none;flex:none;padding:0;margin:0;font:inherit}
 input[type=radio]::before{content:"";position:absolute;top:-11px;bottom:-11px;left:-9px;right:-9px}
-input[type=checkbox]::before{content:var(--sw-off);position:absolute;top:0;right:8px;line-height:18px;font-size:9px;letter-spacing:.08em;color:var(--faint)}
-input[type=checkbox]:checked::before{content:var(--sw-on);right:auto;left:8px;color:var(--green);text-shadow:var(--glow)}
-input[type=checkbox]::after{content:"";position:absolute;top:3px;left:3px;width:12px;height:12px;background:var(--dim);transition:.15s}
+input[type=checkbox]::before{content:var(--sw-off);position:absolute;top:0;right:5px;line-height:16px;font-size:8px;letter-spacing:.04em;color:var(--faint)}
+input[type=checkbox]:checked::before{content:var(--sw-on);right:auto;left:5px;color:var(--green);text-shadow:var(--glow)}
+input[type=checkbox]::after{content:"";position:absolute;top:3px;left:3px;width:10px;height:10px;background:var(--dim);transition:.15s}
 input[type=checkbox]:checked{border-color:var(--dim)}
-input[type=checkbox]:checked::after{left:43px;background:var(--green);box-shadow:var(--glow)}
+input[type=checkbox]:checked::after{left:31px;background:var(--green);box-shadow:var(--glow)}
 input[type=checkbox]:focus-visible{outline:1px solid var(--green);outline-offset:2px}
 .row select,.row input[type=text]{border:1px solid var(--dim);background:#08100b;color:var(--green);font:inherit;font-size:11.5px;padding:4px 8px}
 .row select{flex:0 0 auto;width:auto;min-width:118px;max-width:230px}
