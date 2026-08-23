@@ -277,6 +277,23 @@ func main() {
 			log.Printf("routecheck: оба движка остановлены")
 			return
 		}
+		if arg == "-overlay" {
+			cfg, _ := loadConfig("config.json")
+			if cfg != nil {
+				initLang(cfg.UILanguage)
+			}
+			state := ovFlashErr
+			text := tr("ov.err.mic")
+			rest := os.Args[1:][i+1:]
+			if len(rest) > 0 && !strings.HasPrefix(rest[0], "-") {
+				text = rest[0]
+			}
+			log.Printf("демонстрация плашки: %q", text)
+			overlaySet(state, text)
+			time.Sleep(6 * time.Second)
+			overlayHide()
+			return
+		}
 		if arg == "-miclevel" {
 			cfg, _ := loadConfig("config.json")
 			device := ""

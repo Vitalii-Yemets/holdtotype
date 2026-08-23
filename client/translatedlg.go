@@ -31,7 +31,15 @@ var (
 	tdClassOnce sync.Once
 )
 
-func tdWidth() int32 {
+func tdWindow() uintptr {
+	tdMu.Lock()
+	defer tdMu.Unlock()
+	return tdHwnd
+}
+
+func tdDPI() int32 { return dpiFor(tdWindow()) }
+
+func tdWidthDIP() int32 {
 	tdMu.Lock()
 	n := int32(len(tdLangs))
 	tdMu.Unlock()
@@ -42,9 +50,12 @@ func tdWidth() int32 {
 	return w
 }
 
+func tdWidth() int32 { return scaleDPI(tdWidthDIP(), tdDPI()) }
+
 func tdBtnRect(i int32) rect {
+	dpi := tdDPI()
 	x := int32(16) + i*(tdBtnW+tdGap)
-	return rect{Left: x, Top: 56, Right: x + tdBtnW, Bottom: 56 + tdBtnH}
+	return rect{Left: scaleDPI(x, dpi), Top: scaleDPI(56, dpi), Right: scaleDPI(x+tdBtnW, dpi), Bottom: scaleDPI(56+tdBtnH, dpi)}
 }
 
 func tdHit(x, y int32) (string, bool) {
@@ -52,7 +63,8 @@ func tdHit(x, y int32) (string, bool) {
 	langs := append([]string(nil), tdLangs...)
 	tdMu.Unlock()
 	w := tdWidth()
-	if x >= w-30 && x <= w-8 && y >= 8 && y <= 30 {
+	dpi := tdDPI()
+	if x >= w-scaleDPI(34, dpi) && x <= w-scaleDPI(4, dpi) && y >= 0 && y <= scaleDPI(38, dpi) {
 		return "", true
 	}
 	for i, l := range langs {
@@ -166,12 +178,7 @@ func tdRender(hwnd, hdc uintptr) {
 		fill(rect{Left: rc.Left, Top: y, Right: rc.Right, Bottom: y + 1}, colBgLine)
 	}
 
-	if ovFont == 0 {
-		face, _ := windows.UTF16PtrFromString("Consolas")
-		ovFont, _, _ = procCreateFontW.Call(uintptr(^uintptr(15)+1), 0, 0, 0, 400,
-			0, 0, 0, 1, 0, 0, 5, 0, uintptr(unsafe.Pointer(face)))
-	}
-	procSelectObject.Call(hdc, ovFont)
+	procSelectObject.Call(hdc, uiFont(hwnd))
 	procSetBkMode.Call(hdc, 1)
 
 	title := tr("td.title")
@@ -184,8 +191,10 @@ func tdRender(hwnd, hdc uintptr) {
 		procDrawTextW.Call(hdc, uintptr(unsafe.Pointer(&u[0])), uintptr(len(u)-1),
 			uintptr(unsafe.Pointer(&r)), flags)
 	}
-	drawText(title, rect{Left: 16, Top: 14, Right: rc.Right - 40, Bottom: 46}, colGreen, 0)
-	drawText("✕", rect{Left: rc.Right - 30, Top: 8, Right: rc.Right - 8, Bottom: 30}, colGreenDm, 0x0020|0x0004|0x0001)
+	dpi := dpiFor(hwnd)
+	px := func(v int32) int32 { return scaleDPI(v, dpi) }
+	drawText(title, rect{Left: px(16), Top: px(14), Right: rc.Right - px(40), Bottom: px(46)}, colGreen, 0)
+	drawText("✕", rect{Left: rc.Right - px(30), Top: px(8), Right: rc.Right - px(8), Bottom: px(30)}, colGreenDm, 0x0020|0x0004|0x0001)
 
 	for i, l := range langs {
 		r := tdBtnRect(int32(i))
@@ -258,13 +267,15 @@ func askTranslateTarget(cfg *Config) string {
 		var wa rect
 		procSystemParametersInfoW.Call(0x30, 0, uintptr(unsafe.Pointer(&wa)), 0)
 		x := int(wa.Left) + (int(wa.Right-wa.Left)-int(w))/2
-		y := int(wa.Bottom) - tdH - ovH - 44
+		dpi := dpiFor(0)
+		h := scaleDPI(tdH, dpi)
+		y := int(wa.Bottom) - int(h) - int(scaleDPI(ovH+44, dpi))
 
 		hwnd, _, _ := procCreateWindowExW.Call(
 			wsExLayered|wsExToolWindow|wsExNoActivate|0x00000008,
 			uintptr(unsafe.Pointer(className)), 0,
 			wsPopup,
-			uintptr(x), uintptr(y), uintptr(w), tdH,
+			uintptr(x), uintptr(y), uintptr(w), uintptr(h),
 			0, 0, 0, 0,
 		)
 		if hwnd == 0 {

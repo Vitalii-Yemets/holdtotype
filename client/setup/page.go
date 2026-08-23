@@ -18,7 +18,7 @@ button.cap{width:36px;height:30px;background:none;border:1px solid var(--line);c
 button.cap:hover{color:var(--green);border-color:var(--dim)}
 button.cap.close:hover{color:#ff7b6b;border-color:#7a2e2e}
 .body{flex:1;padding:18px 22px;display:flex;flex-direction:column;gap:12px}
-.tagline{color:var(--faint);font-size:13px;line-height:1.5}
+.tagline{color:var(--dim);font-size:13px;line-height:1.5}
 label.fld{color:var(--green);font-size:13px}
 input[type=text]{width:100%;padding:8px 11px;border:1px solid var(--line);background:#08100b;color:var(--green);font:inherit;outline:none}
 input[type=text]:focus{border-color:var(--dim);box-shadow:var(--glow)}
@@ -40,7 +40,7 @@ button.btn.ghost:hover{color:var(--green);border-color:var(--dim)}
 button.btn:hover{background:#123f22;box-shadow:var(--glow)}
 .bar{height:16px;border:1px solid var(--line);background:#08100b;position:relative;overflow:hidden}
 .bar i{position:absolute;inset:0;width:0;background:linear-gradient(90deg,#123f22,var(--dim));box-shadow:var(--glow);transition:width .2s}
-.plog{color:var(--faint);font-size:12px;min-height:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plog{color:var(--dim);font-size:12px;min-height:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .err{color:#ff7b6b;font-size:12px;white-space:pre-wrap;user-select:text}
 .done-ic{font-size:34px;text-shadow:var(--glow)}
 .pathout{color:var(--dim);font-size:12px;user-select:text;word-break:break-all}

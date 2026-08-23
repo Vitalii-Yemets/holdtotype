@@ -40,14 +40,30 @@ var (
 	procSetCapture = user32.NewProc("SetCapture")
 )
 
+func tmWindow() uintptr {
+	tmMu.Lock()
+	defer tmMu.Unlock()
+	return tmHwnd
+}
+
+func tmDPI() int32 { return dpiFor(tmWindow()) }
+
+func tmW() int32 { return scaleDPI(tmWidth, tmDPI()) }
+
+func tmItemHeight() int32 { return scaleDPI(tmItemH, tmDPI()) }
+
+func tmSepHeight() int32 { return scaleDPI(tmSepH, tmDPI()) }
+
+func tmPadding() int32 { return scaleDPI(tmPad, tmDPI()) }
+
 func tmHeight() int32 {
-	h := int32(tmPad * 2)
+	h := tmPadding() * 2
 	tmMu.Lock()
 	for _, it := range tmItems {
 		if it.sep {
-			h += tmSepH
+			h += tmSepHeight()
 		} else {
-			h += tmItemH
+			h += tmItemHeight()
 		}
 	}
 	tmMu.Unlock()
@@ -55,13 +71,14 @@ func tmHeight() int32 {
 }
 
 func tmItemAt(y int32) int {
-	cur := int32(tmPad)
+	cur := tmPadding()
+	itemH, sepH := tmItemHeight(), tmSepHeight()
 	tmMu.Lock()
 	defer tmMu.Unlock()
 	for i, it := range tmItems {
-		hh := int32(tmItemH)
+		hh := itemH
 		if it.sep {
-			hh = tmSepH
+			hh = sepH
 		}
 		if y >= cur && y < cur+hh {
 			if it.sep || it.grayed {
@@ -96,7 +113,7 @@ func tmWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 		y := int32(int16(lParam >> 16 & 0xFFFF))
 		x := int32(int16(lParam & 0xFFFF))
 		idx := -1
-		if x >= 0 && x < tmWidth {
+		if x >= 0 && x < tmW() {
 			idx = tmItemAt(y)
 		}
 		tmMu.Lock()
@@ -123,7 +140,7 @@ func tmWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 	case wmLBtnDown, wmRBtnDown:
 		x := int32(int16(lParam & 0xFFFF))
 		y := int32(int16(lParam >> 16 & 0xFFFF))
-		if x < 0 || x >= tmWidth || y < 0 || y >= tmHeight() {
+		if x < 0 || x >= tmW() || y < 0 || y >= tmHeight() {
 			procShowWindow.Call(hwnd, swHide)
 			tmFinish(0)
 		}
@@ -168,12 +185,7 @@ func tmRender(hwnd, hdc uintptr) {
 		fill(rect{Left: rc.Left, Top: y, Right: rc.Right, Bottom: y + 1}, colBgLine)
 	}
 
-	if ovFont == 0 {
-		face, _ := windows.UTF16PtrFromString("Consolas")
-		ovFont, _, _ = procCreateFontW.Call(uintptr(^uintptr(15)+1), 0, 0, 0, 400,
-			0, 0, 0, 1, 0, 0, 5, 0, uintptr(unsafe.Pointer(face)))
-	}
-	procSelectObject.Call(hdc, ovFont)
+	procSelectObject.Call(hdc, uiFont(hwnd))
 	procSetBkMode.Call(hdc, 1)
 
 	tmMu.Lock()
@@ -181,15 +193,18 @@ func tmRender(hwnd, hdc uintptr) {
 	hov := tmHover
 	tmMu.Unlock()
 
-	cur := int32(tmPad)
+	dpi := dpiFor(hwnd)
+	px := func(v int32) int32 { return scaleDPI(v, dpi) }
+	itemH, sepH := px(tmItemH), px(tmSepH)
+	cur := px(tmPad)
 	for i, it := range items {
 		if it.sep {
-			mid := cur + tmSepH/2
-			fill(rect{Left: 10, Top: mid, Right: rc.Right - 10, Bottom: mid + 1}, colGreenLo)
-			cur += tmSepH
+			mid := cur + sepH/2
+			fill(rect{Left: px(10), Top: mid, Right: rc.Right - px(10), Bottom: mid + 1}, colGreenLo)
+			cur += sepH
 			continue
 		}
-		row := rect{Left: 4, Top: cur, Right: rc.Right - 4, Bottom: cur + tmItemH}
+		row := rect{Left: px(4), Top: cur, Right: rc.Right - px(4), Bottom: cur + itemH}
 		if i == hov {
 			fill(row, 0x223F12)
 		}
@@ -198,11 +213,11 @@ func tmRender(hwnd, hdc uintptr) {
 			color = colGreenDm
 		}
 		procSetTextColor.Call(hdc, color)
-		txt := rect{Left: 16, Top: cur, Right: rc.Right - 10, Bottom: cur + tmItemH}
+		txt := rect{Left: px(16), Top: cur, Right: rc.Right - px(10), Bottom: cur + itemH}
 		u, _ := windows.UTF16FromString(it.text)
 		procDrawTextW.Call(hdc, uintptr(unsafe.Pointer(&u[0])), uintptr(len(u)-1),
 			uintptr(unsafe.Pointer(&txt)), 0x0020|0x0004|0x8000)
-		cur += tmItemH
+		cur += itemH
 	}
 }
 
@@ -237,8 +252,9 @@ func showTrayMenu(items []tmItem) uintptr {
 		var wa rect
 		procSystemParametersInfoW.Call(0x30, 0, uintptr(unsafe.Pointer(&wa)), 0)
 		x := pt.X
-		if x+tmWidth > wa.Right {
-			x = wa.Right - tmWidth - 4
+		mw := scaleDPI(tmWidth, dpiFor(0))
+		if x+mw > wa.Right {
+			x = wa.Right - mw - 4
 		}
 		y := pt.Y - h
 		if y < wa.Top {
@@ -248,7 +264,7 @@ func showTrayMenu(items []tmItem) uintptr {
 			wsExLayered|wsExToolWindow|wsExNoActivate|0x00000008,
 			uintptr(unsafe.Pointer(className)), 0,
 			wsPopup,
-			uintptr(x), uintptr(y), tmWidth, uintptr(h),
+			uintptr(x), uintptr(y), uintptr(mw), uintptr(h),
 			0, 0, 0, 0,
 		)
 		if hwnd == 0 {

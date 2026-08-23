@@ -8,7 +8,7 @@ const settings = fs.readFileSync(path.join(root, "settings.go"), "utf8");
 
 // How many page keys each locale is still missing today. The numbers may only
 // go down: a locale that falls further behind fails the check.
-const SETTINGS_DEBT = { ru: 0, uk: 58, de: 69, fr: 69, es: 69, it: 69, pl: 69 };
+const SETTINGS_DEBT = { ru: 0, uk: 1, de: 1, fr: 1, es: 1, it: 1, pl: 1 };
 
 function keysIn(text) {
   return new Set([...text.matchAll(/"([A-Za-z_][A-Za-z_0-9.]*)":/g)].map((m) => m[1]));
@@ -53,7 +53,9 @@ function check(name, got, want) {
 
 const en = keysIn(settingsBlock("en"));
 const enMsgs = keysIn(msgsBlock("en"));
-const page = new Set([...settings.matchAll(/\{\{(S_[A-Z_0-9]+)\}\}/g)].map((m) => m[1]));
+const placeholders = [...settings.matchAll(/{{(S_[A-Z_0-9]+)}}/g)].map((m) => m[1]);
+const jsStrings = [...settings.matchAll(/"[a-z]+": "(S_[A-Z_0-9]+)"/g)].map((m) => m[1]);
+const page = new Set([...placeholders, ...jsStrings]);
 
 check("every key the page asks for exists in English", [...page].filter((k) => !en.has(k)), []);
 check("English carries the whole page", page.size > 100, true);

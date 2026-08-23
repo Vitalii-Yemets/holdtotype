@@ -164,6 +164,9 @@ func (a *App) settingsThread(tab string, attempt int) {
 		if c := a.snapshot(); c.SettingsW >= 660 && c.SettingsH >= 420 {
 			winW, winH = c.SettingsW, c.SettingsH
 		}
+		dpi := dpiFor(0)
+		winW = int(scaleDPI(int32(winW), dpi))
+		winH = int(scaleDPI(int32(winH), dpi))
 		lastWndW, lastWndH = 0, 0
 		stopHider := hideWebViewWindowEarly(strS("S_TITLE"))
 		w := createWebView(winW, winH)
@@ -416,8 +419,13 @@ func (a *App) settingsThread(tab string, attempt int) {
 		w.SetHtml(settingsHTML(a.snapshot(), tab))
 		w.Run()
 		log.Printf("openSettings: окно закрыто")
-		if lastWndW >= 660 && lastWndH >= 420 {
-			nw, nh := int(lastWndW), int(lastWndH)
+		savedDPI := dpiFor(settingsHwnd.Load())
+		if savedDPI < 72 {
+			savedDPI = 96
+		}
+		dipW, dipH := lastWndW*96/savedDPI, lastWndH*96/savedDPI
+		if dipW >= 660 && dipH >= 420 {
+			nw, nh := int(dipW), int(dipH)
 			a.mu.Lock()
 			changed := a.cfg.SettingsW != nw || a.cfg.SettingsH != nh
 			if changed {
@@ -687,7 +695,8 @@ func settingsHTML(cfg *Config, tab string) string {
 		"confirmdel": "S_CONFIRM_DEL", "free": "S_FREE", "updnone": "S_UPD_NONE",
 		"micdefault": "S_MIC_DEFAULT", "micquiet": "S_MIC_QUIET", "get": "S_STATE_GET", "change": "S_CHANGE_MODEL",
 		"remotewarn": "S_REMOTE_WARN", "remoteask": "S_REMOTE_ASK", "remotebadge": "S_REMOTE_BADGE",
-		"ok": "S_OK", "cancel": "S_CANCEL", "dlask": "S_DL_ASK", "dlstart": "S_DL_START", "dlcancel": "S_DL_CANCEL",
+		"ok": "S_OK", "cancel": "S_CANCEL", "dlask": "S_DL_ASK", "dlstart": "S_DL_START", "dlcancel": "S_DL_CANCEL", "nofound": "S_NOT_FOUND",
+		"advprimary": "S_ADV_PRIMARY", "advcompanion": "S_ADV_COMPANION", "advhave": "S_ADV_HAVE", "advapply": "S_ADV_APPLY", "advask": "S_ADV_ASK",
 		"more": "S_MORE", "less": "S_LESS",
 		"updavail": "S_UPD_AVAIL", "updgo": "S_UPD_GO", "upderr": "S_UPD_ERR", "upddl": "S_UPD_DL",
 	} {
@@ -713,7 +722,7 @@ const settingsPage = `<!DOCTYPE html>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{font:14px Consolas,"Cascadia Mono",monospace;background:var(--bg);color:var(--green);user-select:none;display:flex;flex-direction:column;overflow:hidden}
-body::after{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(transparent 0 2px,rgba(0,0,0,.18) 2px 3px)}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(transparent 0 2px,rgba(0,0,0,.12) 2px 3px)}
 .content{flex:1;overflow-y:auto;overflow-x:hidden;min-height:0}
 ::-webkit-scrollbar{width:10px}
 ::-webkit-scrollbar-track{background:var(--bg)}
@@ -747,9 +756,9 @@ button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box
 .scard .led.on{background:var(--green);box-shadow:var(--glow)}
 .scard .led.warn{background:var(--amber)}
 .scard .mini{align-self:flex-start}
-.row .sub{display:block;font-size:10.5px;color:var(--faint);margin-top:2px;letter-spacing:0}
+.row .sub{display:block;font-size:10.5px;color:var(--dim);margin-top:2px;letter-spacing:0}
 .row .lbl{flex:1;min-width:0}
-.statusbar{border-top:1px solid var(--line);padding:6px 14px;display:flex;gap:12px;align-items:center;font-size:11px;color:var(--faint);flex-wrap:nowrap;white-space:nowrap}
+.statusbar{border-top:1px solid var(--line);padding:6px 14px;display:flex;gap:12px;align-items:center;font-size:11px;color:var(--dim);flex-wrap:nowrap;white-space:nowrap}
 .statusbar #st_main{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .statusbar .stsaved,.statusbar .stremote{flex:none}
 .statusbar .stremote{color:var(--amber);border:1px solid var(--amber);padding:0 5px;letter-spacing:.08em}
@@ -765,10 +774,12 @@ button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box
 .omni:focus-within{border-color:var(--dim);box-shadow:var(--glow)}
 .omni input[type=text]{flex:1;min-width:0;width:auto;background:none;border:0;box-shadow:none;outline:none;color:var(--green);font:inherit;font-size:11.5px;padding:0;user-select:text;-webkit-user-select:text}
 .omni input[type=text]:focus{border:0;box-shadow:none}
-.omni input::placeholder{color:var(--faint)}
+.omni input::placeholder{color:var(--dim)}
 .omni svg{flex:none;color:var(--faint)}
 .omni:focus-within svg{color:var(--dim)}
 .omni .okey{flex:none;font-size:9px;letter-spacing:.06em;color:var(--faint);border:1px solid var(--line);padding:1px 5px}
+.omni .ocount{flex:none;font-size:10px;color:var(--dim);white-space:nowrap}
+.omni .ocount.none{color:var(--amber)}
 .lvlsw{display:flex;flex:none;border:1px solid var(--line);background:var(--panel)}
 .lvlb{appearance:none;border:0;background:none;color:var(--faint);font:inherit;font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:4px 11px;cursor:pointer}
 .lvlb:hover{color:var(--dim)}
@@ -808,20 +819,21 @@ button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box
 .row label .sub{display:block;font-size:10.5px;color:var(--faint);margin-top:2px;letter-spacing:0}
 .row select{flex:0 1 auto;min-width:0;max-width:100%}
 .row input[type=text]{flex:0 1 auto;min-width:0}
-.row .hint{font-size:11px;color:var(--faint)}
-input[type=text],input[type=number],select{padding:7px 10px;border:1px solid var(--line);background:#08100b;color:var(--green);font:inherit;outline:none}
+.row .hint{font-size:11px;color:var(--dim)}
+input[type=text],input[type=number],select{padding:7px 10px;border:1px solid var(--dim);background:#08100b;color:var(--green);font:inherit;outline:none}
 input:focus,select:focus{border-color:var(--dim);box-shadow:var(--glow)}
-input::placeholder{color:var(--faint);opacity:.7}
+input::placeholder{color:var(--dim)}
 input:disabled,select:disabled{opacity:.35;cursor:default}
 #trlangs label:has(input:disabled){opacity:.45}
 input[type=text]{width:220px;max-width:100%}select{width:210px;max-width:100%}
 input[type=range]{width:150px;accent-color:var(--dim);background:transparent}
-input[type=checkbox]{appearance:none;-webkit-appearance:none;width:32px;height:17px;border:1px solid var(--line);position:relative;cursor:pointer;background:none;flex:none;padding:0;margin:0}
-input[type=checkbox]::after{content:"";position:absolute;top:2px;left:2px;width:11px;height:11px;background:var(--faint);transition:.15s}
+input[type=checkbox]{appearance:none;-webkit-appearance:none;width:32px;height:17px;border:1px solid var(--dim);position:relative;cursor:pointer;background:none;flex:none;padding:0;margin:0}
+input[type=checkbox]::before,input[type=radio]::before{content:"";position:absolute;top:-11px;bottom:-11px;left:-9px;right:-9px}
+input[type=checkbox]::after{content:"";position:absolute;top:2px;left:2px;width:11px;height:11px;background:var(--dim);transition:.15s}
 input[type=checkbox]:checked{border-color:var(--dim)}
 input[type=checkbox]:checked::after{left:17px;background:var(--green);box-shadow:var(--glow)}
 input[type=checkbox]:focus-visible{outline:1px solid var(--green);outline-offset:2px}
-.row select,.row input[type=text]{border:1px solid var(--line);background:#08100b;color:var(--green);font:inherit;font-size:11.5px;padding:4px 8px}
+.row select,.row input[type=text]{border:1px solid var(--dim);background:#08100b;color:var(--green);font:inherit;font-size:11.5px;padding:4px 8px}
 .row select{flex:0 0 auto;width:auto;min-width:118px;max-width:230px}
 .row input[type=text]{flex:0 0 auto;width:min(230px,50%)}
 .row .val{color:var(--dim);font-size:11.5px;min-width:44px;text-align:right}
@@ -839,13 +851,13 @@ button.ghost:hover{color:var(--green)}
 .toast.show{opacity:1}
 .mrow{display:flex;align-items:center;gap:9px;padding:7px 2px;border-bottom:1px solid #12241a;flex-wrap:wrap}
 .mrow:last-child{border-bottom:none}
-input[type=radio]{appearance:none;-webkit-appearance:none;width:15px;height:15px;flex:none;margin:0;padding:0;border:1px solid var(--line);border-radius:50%;background:#08100b;position:relative;cursor:pointer}
+input[type=radio]{appearance:none;-webkit-appearance:none;width:15px;height:15px;flex:none;margin:0;padding:0;border:1px solid var(--dim);border-radius:50%;background:#08100b;position:relative;cursor:pointer}
 input[type=radio]:checked{border-color:var(--green)}
 input[type=radio]:checked::after{content:"";position:absolute;top:3px;left:3px;width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:var(--glow)}
 input[type=radio]:disabled{opacity:.4;cursor:default}
 input[type=radio]:focus-visible{outline:1px solid var(--green);outline-offset:2px}
 .mrow .mname{width:132px;font-weight:700;white-space:nowrap}
-.mrow .mdesc{flex:1;color:var(--faint);font-size:12px}
+.mrow .mdesc{flex:1;color:var(--dim);font-size:12px}
 .mtag{font-size:9px;border:1px solid var(--line);color:var(--faint);padding:0 4px;margin-left:6px;vertical-align:middle;letter-spacing:.06em}
 .rrow{display:flex;align-items:center;gap:9px;padding:6px 2px;font-size:12px;color:var(--dim);flex-wrap:wrap}
 .rrow .rcond{min-width:132px;color:var(--green)}
@@ -859,12 +871,17 @@ input[type=radio]:focus-visible{outline:1px solid var(--green);outline-offset:2p
 .fchip:hover{color:var(--dim)}
 .fchip.on{background:var(--dim);color:#08100b;border-color:var(--dim)}
 #advisor{border:1px solid var(--line);padding:10px 11px;margin-bottom:9px;display:flex;flex-direction:column;gap:9px}
+.advrow{display:flex;align-items:center;gap:9px;font-size:12px;padding:3px 0}
+.advrow .advrole{width:74px;color:var(--faint);text-transform:uppercase;font-size:10px;letter-spacing:.1em}
+.advrow .advname{flex:1;color:var(--green)}
+.advrow .advstate{color:var(--amber)}
+.advrow .advstate.ok{color:var(--dim)}
 .advq{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:11.5px;color:var(--faint)}
 .advq select{background:#08100b;border:1px solid var(--line);color:var(--green);font:inherit;font-size:11.5px;padding:2px 6px;margin-left:5px}
 .advchk{display:flex;align-items:center;gap:5px}
 .advout{font-size:12px;color:var(--green);line-height:1.5;min-height:1em}
 .mrow.hidden{display:none}
-.mram{color:var(--faint);font-size:10.5px;width:74px;text-align:right}
+.mram{color:var(--dim);font-size:10.5px;width:74px;text-align:right}
 .mram.warn{color:var(--amber)}
 .mram.bad{color:#ff6b5b}
 .mrow .msize{color:var(--dim);font-size:12px;width:70px;text-align:right}
@@ -876,7 +893,7 @@ button.mini.danger:hover{color:#ff7b6b;border-color:#7a2e2e;box-shadow:0 0 7px r
 .sect{color:var(--dim);font-size:11px;letter-spacing:.14em;text-transform:uppercase;margin:0 0 4px;display:flex;align-items:center;gap:8px}
 .hfhome{margin-left:auto;cursor:pointer;color:var(--dim);font-size:11px;letter-spacing:1px;border:1px solid var(--line);padding:3px 9px;text-transform:none}
 .hfhome:hover{color:var(--green);border-color:var(--dim);box-shadow:var(--glow)}
-.ramline{display:flex;align-items:center;flex-wrap:wrap;gap:6px;color:var(--faint);font-size:12px;margin:4px 0 10px}
+.ramline{display:flex;align-items:center;flex-wrap:wrap;gap:6px;color:var(--dim);font-size:12px;margin:4px 0 10px}
 .ramline b{color:var(--green);font-size:14px;text-shadow:var(--glow);margin-right:4px}
 .ramline .dot{margin-left:12px;font-size:10px}
 .subhead{color:var(--dim);font-size:11px;letter-spacing:1px;text-transform:uppercase;margin:14px 0 2px;padding-top:10px;border-top:1px solid #12241a}
@@ -943,7 +960,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
   <button type="button" class="lvlb" data-l="simple">{{S_LVL_SIMPLE}}</button>
   <button type="button" class="lvlb" data-l="all">{{S_LVL_ALL}}</button>
  </span>
- <label class="omni"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="15.5" y1="15.5" x2="21" y2="21"/></svg><input id="omni" type="text" placeholder="{{S_SEARCH}}" autocomplete="off"><span class="okey">Ctrl K</span></label>
+ <label class="omni"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="15.5" y1="15.5" x2="21" y2="21"/></svg><input id="omni" type="text" placeholder="{{S_SEARCH}}" autocomplete="off"><span class="ocount" id="ocount"></span><span class="okey">Ctrl K</span></label>
  <div class="capbtns">
   <button class="cap" onclick="appMin()">&#9472;</button>
   <button class="cap close" onclick="appClose()">&#10005;</button>
@@ -1620,15 +1637,48 @@ function initModelFilters(){
         document.getElementById("adv_lang").value,
         document.getElementById("adv_prio").value,
         document.getElementById("adv_tr").checked));
-      document.getElementById("adv_out").textContent = r.text + " (" + r.ram + ")";
-      if(r.primary){
-        selModel = r.primary;
-        modelFilter = "all";
-        document.querySelectorAll(".fchip").forEach(o=>o.classList.toggle("on", o.dataset.f === "all"));
-        refreshModels();
-      }
+      renderAdvice(r);
     };
   }
+}
+function renderAdvice(r){
+  const out = document.getElementById("adv_out");
+  if(!out) return;
+  out.innerHTML = "";
+  const head = document.createElement("div");
+  head.textContent = r.text + " (" + r.ram + ")";
+  out.appendChild(head);
+  const plan = r.plan || [];
+  plan.forEach((p, i)=>{
+    const row = document.createElement("div");
+    row.className = "advrow";
+    row.innerHTML = '<span class="advrole">'+(i === 0 ? L.advprimary : L.advcompanion)+'</span>'+
+      '<span class="advname">'+esc(p.name)+'</span>'+
+      '<span class="advstate'+(p.installed ? " ok" : "")+'">'+(p.installed ? L.advhave : (p.size ? p.size+" MB" : L.dlstart))+'</span>';
+    out.appendChild(row);
+  });
+  const missing = plan.filter(p=>!p.installed);
+  if(!plan.length) return;
+  const apply = document.createElement("button");
+  apply.type = "button";
+  apply.className = "mini";
+  apply.textContent = L.advapply;
+  apply.onclick = async ()=>{
+    if(missing.length && !await askConfirm(L.advask.replace("%s", missing.map(p=>p.name).join(", ")).replace("%s", r.need + " MB"), L.dlstart)) return;
+    modelFilter = "all";
+    document.querySelectorAll(".fchip").forEach(o=>o.classList.toggle("on", o.dataset.f === "all"));
+    for(const p of missing) await appModelDl(p.id);
+    if(missing.length) pendingDl = missing[missing.length-1].id;
+    const first = plan[0];
+    if(first.installed){
+      selModel = first.id;
+      await doSave();
+    } else {
+      selModel = first.id;
+    }
+    refreshModels();
+  };
+  out.appendChild(apply);
 }
 async function refreshRouting(){
   const host = document.getElementById("routing");
@@ -1882,6 +1932,14 @@ function show(p){
 let uiLevel = CFG.ui_level || "simple";
 const opened = {};
 function advCount(page){ return page.querySelectorAll(".row[data-adv]").length; }
+function bindLabels(){
+  document.querySelectorAll(".row").forEach(row=>{
+    const label = row.querySelector("label");
+    if(!label || label.htmlFor) return;
+    const field = row.querySelector('input[type=checkbox], input[type=text], input[type=number], select');
+    if(field && field.id) label.htmlFor = field.id;
+  });
+}
 function applyLevel(){
   document.querySelectorAll(".lvlb").forEach(b=>b.classList.toggle("on", b.dataset.l === uiLevel));
   document.querySelectorAll(".page").forEach(page=>{
@@ -1910,13 +1968,17 @@ function setLevel(l){
   applyLevel();
   applyNow();
 }
-function searchSettings(q){
-  document.querySelectorAll(".row.hit").forEach(r=>r.classList.remove("hit"));
-  const s = q.trim().toLowerCase();
-  if(s.length < 2) return;
-  const rows = [...document.querySelectorAll(".page .row")];
-  const hit = rows.find(r=>r.textContent.toLowerCase().includes(s));
-  if(!hit) return;
+let hits = [];
+let hitAt = -1;
+function searchMatches(s){
+  const items = [...document.querySelectorAll(".page .row, .page .mrow")];
+  return items.filter(r=>r.textContent.toLowerCase().includes(s));
+}
+function showHit(i){
+  document.querySelectorAll(".hit").forEach(r=>r.classList.remove("hit"));
+  if(!hits.length) return;
+  hitAt = (i + hits.length) % hits.length;
+  const hit = hits[hitAt];
   const page = hit.closest(".page");
   show(page.id.slice(2));
   if(hit.hasAttribute("data-adv") && uiLevel === "simple"){
@@ -1925,6 +1987,36 @@ function searchSettings(q){
   }
   hit.classList.add("hit");
   if(hit.scrollIntoView) hit.scrollIntoView({block:"center"});
+  updSearchCount();
+}
+function updSearchCount(){
+  const el = document.getElementById("ocount");
+  if(!el) return;
+  const q = document.getElementById("omni");
+  if(!q || q.value.trim().length < 2){ el.textContent = ""; el.classList.remove("none"); return; }
+  el.classList.toggle("none", hits.length === 0);
+  el.textContent = hits.length ? (hitAt + 1) + "/" + hits.length : L.nofound;
+}
+function searchSettings(q){
+  const s = q.trim().toLowerCase();
+  if(s.length < 2){
+    document.querySelectorAll(".hit").forEach(r=>r.classList.remove("hit"));
+    hits = [];
+    hitAt = -1;
+    updSearchCount();
+    return;
+  }
+  hits = searchMatches(s);
+  hitAt = -1;
+  if(!hits.length){
+    document.querySelectorAll(".hit").forEach(r=>r.classList.remove("hit"));
+    updSearchCount();
+    return;
+  }
+  showHit(0);
+}
+function searchStep(delta){
+  if(hits.length) showHit(hitAt + delta);
 }
 document.getElementById("upd_check").onclick = updCheck;
 let applyTimer = null;
@@ -1952,6 +2044,7 @@ load();
   initModelFilters();
   initStateScreen();
   initRemote();
+  bindLabels();
   applyLevel();
   document.querySelectorAll(".lvlb").forEach(b=>b.onclick=()=>setLevel(b.dataset.l));
   const omni = document.getElementById("omni");
@@ -1960,6 +2053,7 @@ load();
     document.addEventListener("keydown", e=>{
       if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k"){ e.preventDefault(); omni.focus(); omni.select(); }
       if(e.key === "Escape" && document.activeElement === omni){ omni.value = ""; searchSettings(""); omni.blur(); }
+      if(e.key === "Enter" && document.activeElement === omni){ e.preventDefault(); searchStep(e.shiftKey ? -1 : 1); }
     });
   }
   await refreshModels();

@@ -29,27 +29,37 @@ var (
 	fdClassOnce sync.Once
 )
 
+func fdDPI() int32 { return dpiFor(fdWindow()) }
+
+func fdWindow() uintptr {
+	fdMu.Lock()
+	defer fdMu.Unlock()
+	return fdHwnd
+}
+
 func fdWidth() int32 {
 	w := int32(16 + fdBtn1W + fdGapX + fdBtn2W + 16 + 34)
 	if w < 300 {
 		w = 300
 	}
-	return w
+	return scaleDPI(w, fdDPI())
 }
 
 func fdBtnRect(i int32) rect {
+	dpi := fdDPI()
 	x := int32(16)
 	w := int32(fdBtn1W)
 	if i == 1 {
 		x += fdBtn1W + fdGapX
 		w = fdBtn2W
 	}
-	return rect{Left: x, Top: 56, Right: x + w, Bottom: 56 + fdBtnH}
+	return rect{Left: scaleDPI(x, dpi), Top: scaleDPI(56, dpi), Right: scaleDPI(x+w, dpi), Bottom: scaleDPI(56+fdBtnH, dpi)}
 }
 
 func fdHit(x, y int32) (string, bool) {
 	w := fdWidth()
-	if x >= w-30 && x <= w-8 && y >= 8 && y <= 30 {
+	dpi := fdDPI()
+	if x >= w-scaleDPI(34, dpi) && x <= w-scaleDPI(4, dpi) && y >= 0 && y <= scaleDPI(38, dpi) {
 		return "", true
 	}
 	for i, id := range []string{"here", "copy"} {
@@ -160,12 +170,7 @@ func fdRender(hwnd, hdc uintptr) {
 		fill(rect{Left: rc.Left, Top: y, Right: rc.Right, Bottom: y + 1}, colBgLine)
 	}
 
-	if ovFont == 0 {
-		face, _ := windows.UTF16PtrFromString("Consolas")
-		ovFont, _, _ = procCreateFontW.Call(uintptr(^uintptr(15)+1), 0, 0, 0, 400,
-			0, 0, 0, 1, 0, 0, 5, 0, uintptr(unsafe.Pointer(face)))
-	}
-	procSelectObject.Call(hdc, ovFont)
+	procSelectObject.Call(hdc, uiFont(hwnd))
 	procSetBkMode.Call(hdc, 1)
 
 	title := tr("fd.title")
@@ -178,8 +183,10 @@ func fdRender(hwnd, hdc uintptr) {
 		procDrawTextW.Call(hdc, uintptr(unsafe.Pointer(&u[0])), uintptr(len(u)-1),
 			uintptr(unsafe.Pointer(&r)), flags)
 	}
-	drawText(title, rect{Left: 16, Top: 14, Right: rc.Right - 40, Bottom: 46}, colAmber, 0)
-	drawText("✕", rect{Left: rc.Right - 30, Top: 8, Right: rc.Right - 8, Bottom: 30}, colGreenDm, 0x0020|0x0004|0x0001)
+	dpi := dpiFor(hwnd)
+	px := func(v int32) int32 { return scaleDPI(v, dpi) }
+	drawText(title, rect{Left: px(16), Top: px(14), Right: rc.Right - px(40), Bottom: px(46)}, colAmber, 0)
+	drawText("✕", rect{Left: rc.Right - px(30), Top: px(8), Right: rc.Right - px(8), Bottom: px(30)}, colGreenDm, 0x0020|0x0004|0x0001)
 
 	labels := []string{tr("fd.here"), tr("fd.copy")}
 	for i, l := range labels {
@@ -220,17 +227,19 @@ func askFocusMismatch() string {
 			procRegisterClassExW.Call(uintptr(unsafe.Pointer(&wc)))
 		})
 		className, _ := windows.UTF16PtrFromString(appid.Class("FocusDlg"))
-		w := fdWidth()
+		dpi := dpiFor(0)
+		w := scaleDPI(int32(16+fdBtn1W+fdGapX+fdBtn2W+16+34), dpi)
+		h := scaleDPI(fdHeight, dpi)
 		var wa rect
 		procSystemParametersInfoW.Call(0x30, 0, uintptr(unsafe.Pointer(&wa)), 0)
 		x := int(wa.Left) + (int(wa.Right-wa.Left)-int(w))/2
-		y := int(wa.Bottom) - fdHeight - ovH - 44
+		y := int(wa.Bottom) - int(h) - int(scaleDPI(ovH+44, dpi))
 
 		hwnd, _, _ := procCreateWindowExW.Call(
 			wsExLayered|wsExToolWindow|wsExNoActivate|0x00000008,
 			uintptr(unsafe.Pointer(className)), 0,
 			wsPopup,
-			uintptr(x), uintptr(y), uintptr(w), fdHeight,
+			uintptr(x), uintptr(y), uintptr(w), uintptr(h),
 			0, 0, 0, 0,
 		)
 		if hwnd == 0 {

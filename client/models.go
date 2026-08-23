@@ -515,11 +515,29 @@ func (a *App) deleteModel(id string) string {
 	return tr("model.del.ok")
 }
 
+type advicePart struct {
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	SizeMB    int    `json:"size"`
+	Installed bool   `json:"installed"`
+}
+
+
 type adviceOut struct {
-	Primary   string `json:"primary"`
-	Companion string `json:"companion"`
-	Text      string `json:"text"`
-	RAM       string `json:"ram"`
+	Primary   string       `json:"primary"`
+	Companion string       `json:"companion"`
+	Text      string       `json:"text"`
+	RAM       string       `json:"ram"`
+	Plan      []advicePart `json:"plan"`
+	NeedMB    int          `json:"need"`
+}
+
+func advicePartOf(id string) (advicePart, bool) {
+	m := findModel(id)
+	if m == nil {
+		return advicePart{}, false
+	}
+	return advicePart{ID: m.ID, Name: m.NameKey, SizeMB: m.SizeMB, Installed: m.installed()}, true
 }
 
 func modelDisplayName(id string) string {
@@ -556,11 +574,26 @@ func adviseModel(lang, priority string, needTranslate bool) string {
 			parts = append(parts, trf("adv.companion", modelDisplayName(res.Companion)))
 		}
 	}
+	var plan []advicePart
+	need := 0
+	for _, id := range []string{res.Primary, res.Companion} {
+		if id == "" {
+			continue
+		}
+		if p, ok := advicePartOf(id); ok {
+			plan = append(plan, p)
+			if !p.Installed {
+				need += p.SizeMB
+			}
+		}
+	}
 	out, _ := json.Marshal(adviceOut{
 		Primary:   res.Primary,
 		Companion: res.Companion,
 		Text:      strings.Join(parts, " "),
 		RAM:       trf("adv.ram", free),
+		Plan:      plan,
+		NeedMB:    need,
 	})
 	return string(out)
 }

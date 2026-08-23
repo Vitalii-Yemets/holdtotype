@@ -172,7 +172,8 @@ var (
 	procCallWindowProcW = user32.NewProc("CallWindowProcW")
 
 	minSizeOld         uintptr
-	minSizeW, minSizeH int32
+	minSizeW, minSizeH       int32
+	minSizeDIPW, minSizeDIPH int32
 	minSizeOnce        sync.Once
 	minSizeCB          uintptr
 )
@@ -183,6 +184,16 @@ var (
 )
 
 func minSizeProc(hwnd, msg, wp, lp uintptr) uintptr {
+	if msg == 0x02E0 && lp != 0 {
+		suggested := (*rect)(unsafe.Pointer(lp))
+		procSetWindowPos.Call(hwnd, 0, uintptr(suggested.Left), uintptr(suggested.Top),
+			uintptr(suggested.Right-suggested.Left), uintptr(suggested.Bottom-suggested.Top), 0x0004|0x0010)
+		dpi := int32(wp & 0xFFFF)
+		if dpi >= 72 {
+			minSizeW = scaleDPI(minSizeDIPW, dpi)
+			minSizeH = scaleDPI(minSizeDIPH, dpi)
+		}
+	}
 	r, _, _ := procCallWindowProcW.Call(minSizeOld, hwnd, msg, wp, lp)
 	if msg == 0x0024 && lp != 0 {
 		mmi := (*minMaxInfo)(unsafe.Pointer(lp))
@@ -199,7 +210,9 @@ func minSizeProc(hwnd, msg, wp, lp uintptr) uintptr {
 
 func applyMinSize(hwnd uintptr, w, h int32) {
 	minSizeOnce.Do(func() { minSizeCB = syscall.NewCallback(minSizeProc) })
-	minSizeW, minSizeH = w, h
+	minSizeDIPW, minSizeDIPH = w, h
+	dpi := dpiFor(hwnd)
+	minSizeW, minSizeH = scaleDPI(w, dpi), scaleDPI(h, dpi)
 	const gwlpWndproc = ^uintptr(3)
 	old, _, _ := procSetWindowLongPtrW.Call(hwnd, gwlpWndproc, minSizeCB)
 	minSizeOld = old
@@ -277,3 +290,24 @@ func windowTitle(hwnd uintptr) string {
 	}
 	return windows.UTF16ToString(buf[:n])
 }
+
+var (
+	procGetDpiForWindow = user32.NewProc("GetDpiForWindow")
+	procGetDpiForSystem = user32.NewProc("GetDpiForSystem")
+)
+
+func dpiFor(hwnd uintptr) int32 {
+	if hwnd != 0 && procGetDpiForWindow.Find() == nil {
+		if d, _, _ := procGetDpiForWindow.Call(hwnd); d >= 72 {
+			return int32(d)
+		}
+	}
+	if procGetDpiForSystem.Find() == nil {
+		if d, _, _ := procGetDpiForSystem.Call(); d >= 72 {
+			return int32(d)
+		}
+	}
+	return 96
+}
+
+func scaleDPI(v, dpi int32) int32 { return v * dpi / 96 }

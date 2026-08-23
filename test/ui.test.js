@@ -58,7 +58,14 @@ const dom = new JSDOM(html, {
       llmState = { installed: [], downloads: [], ram: 16384, ram_free: 9000 };
       return "deleted";
     };
-    window.appAdvise = async () => JSON.stringify({ primary: "gigaam-v3", companion: "small", text: "I recommend GigaAM v3.", ram: "8000 MB free" });
+    window.appAdvise = async () => JSON.stringify({
+      primary: "gigaam-v3", companion: "small", text: "I recommend GigaAM v3.", ram: "8000 MB free",
+      need: 232,
+      plan: [
+        { id: "gigaam-v3", name: "GigaAM v3", size: 232, installed: false },
+        { id: "small", name: "Small", size: 466, installed: true },
+      ],
+    });
     for (const name of [
       "appLLMDlFile", "appLLMTest", "appHFPage", "appHFHome", "appRepoLink",
       "appAuthorLink", "appCapture", "appCaptureCombo", "appReload",
@@ -230,6 +237,17 @@ function check(name, actual, expected) {
   d.querySelector('#models button[data-a="cancel"][data-id="base"]').click(); await sleep(250);
   check("stopping asks the program to stop", w.cancelCalls, ["base"]);
   check("a stopped download offers to start again", !!d.querySelector('#models button[data-a="dl"][data-id="base"]'), true);
+
+  tab("models"); await sleep(60);
+  d.getElementById("adv_open").click(); await sleep(30);
+  d.getElementById("adv_go").click(); await sleep(150);
+  check("the recommendation is a plan, not a sentence", d.querySelectorAll("#adv_out .advrow").length, 2);
+  check("the plan says which one is already here", [...d.querySelectorAll("#adv_out .advstate")].map(s=>s.className.includes("ok")), [false, true]);
+  const dlBefore = w.dlCalls.length;
+  d.querySelector("#adv_out button.mini").click(); await sleep(80);
+  check("applying the plan asks about the download", !!d.querySelector(".modal-bg"), true);
+  d.querySelector(".modal .btn.yes").click(); await sleep(300);
+  check("applying the plan downloads what is missing", w.dlCalls.length > dlBefore, true);
   tab("about"); await sleep(60);
   check("about section shown", shown("about"), true);
   check("about carries version, help and author", d.querySelectorAll("#p-about .card").length, 3);
@@ -252,6 +270,15 @@ function check(name, actual, expected) {
   omni.value = "S_PORT"; omni.dispatchEvent(new w.Event("input")); await sleep(120);
   check("search jumps to the section", shown("system"), true);
   check("search highlights the row", d.querySelectorAll(".row.hit").length, 1);
+  check("search says how many it found", /^1\/\d+$/.test(d.getElementById("ocount").textContent), true);
+  const firstHit = d.querySelector(".hit");
+  const total = Number(d.getElementById("ocount").textContent.split("/")[1]);
+  omni.dispatchEvent(new w.KeyboardEvent("keydown", { key: "Enter", bubbles: true })); await sleep(120);
+  check("Enter walks to the next match", total > 1 ? d.querySelector(".hit") !== firstHit : d.querySelector(".hit") === firstHit, true);
+  omni.value = "zzzznothing"; omni.dispatchEvent(new w.Event("input")); await sleep(120);
+  check("a search with no matches says so", d.getElementById("ocount").textContent, "none");
+  check("a search with no matches highlights nothing", d.querySelectorAll(".hit").length, 0);
+  omni.value = ""; omni.dispatchEvent(new w.Event("input")); await sleep(60);
 
   d.querySelector('.lvlb[data-l="all"]').click(); await sleep(80);
   check("no save button left", !!d.querySelector(".footer"), false);
@@ -290,6 +317,14 @@ function check(name, actual, expected) {
   check("remote recognition is announced", d.getElementById("st_remote").textContent, "REMOTE");
   w.setRemote(false); await sleep(1700);
   check("local recognition says nothing", d.getElementById("st_remote").textContent, "");
+
+  tab("dictation"); await sleep(80);
+  const enterRow = d.getElementById("auto_enter").closest(".row");
+  check("the label is tied to its switch", enterRow.querySelector("label").htmlFor, "auto_enter");
+  const wasOn = d.getElementById("auto_enter").checked;
+  enterRow.querySelector("label").click(); await sleep(200);
+  check("clicking the text flips the switch", d.getElementById("auto_enter").checked, !wasOn);
+  enterRow.querySelector("label").click(); await sleep(200);
   check("no unsaved-changes dialog left", !!d.getElementById("modalbg"), false);
 
   tab("system"); await sleep(80);
