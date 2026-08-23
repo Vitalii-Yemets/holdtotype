@@ -169,6 +169,9 @@ func measureOverlayWidth(state int, text string) int32 {
 	}
 	defer procReleaseDC.Call(0, hdc)
 	old, _, _ := procSelectObject.Call(hdc, overlayFont())
+	if state == ovProcessing {
+		text += "..."
+	}
 	u, err := windows.UTF16FromString(text)
 	if err != nil {
 		return base
@@ -318,6 +321,9 @@ func overlayWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 			procShowWindow.Call(hwnd, swHide)
 			return 0
 		}
+		if !ovAnim.Load() || (st != ovRecording && st != ovProcessing) {
+			return 0
+		}
 		overlayRenderDirect(hwnd)
 		return 0
 	case wmPaint:
@@ -340,6 +346,7 @@ func overlayWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 			return 1
 		}
 	case wmDestroy:
+		ovBuf.release()
 		procPostQuitMessage.Call(0)
 		return 0
 	}
@@ -360,10 +367,24 @@ func stateColors(st int) (bright, dim uintptr) {
 	}
 }
 
+var ovBuf backBuf
+
+func overlayFrame(hwnd, hdc uintptr) {
+	var rc rect
+	procGetClientRect.Call(hwnd, uintptr(unsafe.Pointer(&rc)))
+	mem := ovBuf.begin(hdc, rc.Right-rc.Left, rc.Bottom-rc.Top)
+	if mem == 0 {
+		overlayRender(hwnd, hdc)
+		return
+	}
+	overlayRender(hwnd, mem)
+	ovBuf.blit(hdc)
+}
+
 func overlayPaint(hwnd uintptr) {
 	var ps paintStruct
 	hdc, _, _ := procBeginPaint.Call(hwnd, uintptr(unsafe.Pointer(&ps)))
-	overlayRender(hwnd, hdc)
+	overlayFrame(hwnd, hdc)
 	procEndPaint.Call(hwnd, uintptr(unsafe.Pointer(&ps)))
 }
 
@@ -372,7 +393,7 @@ func overlayRenderDirect(hwnd uintptr) {
 	if hdc == 0 {
 		return
 	}
-	overlayRender(hwnd, hdc)
+	overlayFrame(hwnd, hdc)
 	procReleaseDC.Call(hwnd, hdc)
 }
 

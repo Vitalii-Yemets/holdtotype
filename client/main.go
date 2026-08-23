@@ -313,6 +313,16 @@ func main() {
 			if len(rest) > 0 && !strings.HasPrefix(rest[0], "-") {
 				text = rest[0]
 			}
+			if len(rest) > 1 && !strings.HasPrefix(rest[1], "-") {
+				switch rest[1] {
+				case "rec":
+					state = ovRecording
+				case "proc":
+					state = ovProcessing
+				case "ok":
+					state = ovFlashOK
+				}
+			}
 			log.Printf("демонстрация плашки: %q", text)
 			overlaySet(state, text)
 			time.Sleep(6 * time.Second)

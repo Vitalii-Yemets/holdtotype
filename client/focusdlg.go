@@ -130,6 +130,7 @@ func fdWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 		}
 		return 0
 	case wmDestroy:
+		fdBuf.release()
 		procPostQuitMessage.Call(0)
 		return 0
 	}
@@ -137,19 +138,33 @@ func fdWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 	return r
 }
 
+var fdBuf backBuf
+
+func fdFrame(hwnd, hdc uintptr) {
+	var rc rect
+	procGetClientRect.Call(hwnd, uintptr(unsafe.Pointer(&rc)))
+	mem := fdBuf.begin(hdc, rc.Right-rc.Left, rc.Bottom-rc.Top)
+	if mem == 0 {
+		fdRender(hwnd, hdc)
+		return
+	}
+	fdRender(hwnd, mem)
+	fdBuf.blit(hdc)
+}
+
 func fdPaintDirect(hwnd uintptr) {
 	hdc, _, _ := procGetDC.Call(hwnd)
 	if hdc == 0 {
 		return
 	}
-	fdRender(hwnd, hdc)
+	fdFrame(hwnd, hdc)
 	procReleaseDC.Call(hwnd, hdc)
 }
 
 func fdPaint(hwnd uintptr) {
 	var ps paintStruct
 	hdc, _, _ := procBeginPaint.Call(hwnd, uintptr(unsafe.Pointer(&ps)))
-	fdRender(hwnd, hdc)
+	fdFrame(hwnd, hdc)
 	procEndPaint.Call(hwnd, uintptr(unsafe.Pointer(&ps)))
 }
 

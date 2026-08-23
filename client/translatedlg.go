@@ -136,6 +136,7 @@ func tdWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 		}
 		return 0
 	case wmDestroy:
+		tdBuf.release()
 		procPostQuitMessage.Call(0)
 		return 0
 	}
@@ -143,19 +144,33 @@ func tdWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 	return r
 }
 
+var tdBuf backBuf
+
+func tdFrame(hwnd, hdc uintptr) {
+	var rc rect
+	procGetClientRect.Call(hwnd, uintptr(unsafe.Pointer(&rc)))
+	mem := tdBuf.begin(hdc, rc.Right-rc.Left, rc.Bottom-rc.Top)
+	if mem == 0 {
+		tdRender(hwnd, hdc)
+		return
+	}
+	tdRender(hwnd, mem)
+	tdBuf.blit(hdc)
+}
+
 func tdPaintDirect(hwnd uintptr) {
 	hdc, _, _ := procGetDC.Call(hwnd)
 	if hdc == 0 {
 		return
 	}
-	tdRender(hwnd, hdc)
+	tdFrame(hwnd, hdc)
 	procReleaseDC.Call(hwnd, hdc)
 }
 
 func tdPaint(hwnd uintptr) {
 	var ps paintStruct
 	hdc, _, _ := procBeginPaint.Call(hwnd, uintptr(unsafe.Pointer(&ps)))
-	tdRender(hwnd, hdc)
+	tdFrame(hwnd, hdc)
 	procEndPaint.Call(hwnd, uintptr(unsafe.Pointer(&ps)))
 }
 
