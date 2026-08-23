@@ -300,6 +300,13 @@ func init() {
 		"S_SND_SPEECH": "System (Sprache)", "S_SND_CHIME": "Glöckchen", "S_SND_SOFT": "Sanft", "S_SND_MARIMBA": "Marimba",
 		"S_SND_BLIP": "Blip", "S_SND_POP": "Pop",
 		"S_AUTOENTER": "Enter nach dem Einfügen drücken (Auto-Senden)", "S_RESTORE": "Zwischenablage nach Einfügen wiederherstellen",
+		"S_SEC_RULES": "Regeln pro Programm", "S_RULES_HINT": "Für einzelne Programme kann das Einfügen anders laufen. Die erste passende Regel gewinnt.",
+		"S_RULE_ADD": "Regel hinzufügen", "S_RULE_PH": "chrome.exe, msedge.exe",
+		"S_RULE_PASTE_INH": "Einfügen: wie sonst", "S_RULE_ENTER_INH": "Enter: wie sonst", "S_RULE_DELAY_NONE": "ohne Verzögerung", "S_RULE_PROMPT_INH": "Prompts: wie sonst",
+		"S_RULE_CLIP": "Zwischenablage", "S_RULE_TYPE": "zeichenweise", "S_RULE_ENTER_ON": "mit Enter", "S_RULE_ENTER_OFF": "ohne Enter",
+		"S_RULE_NOPROMPT": "ohne Prompts", "S_RULE_LAST": "zuletzt eingefügt in: %s", "S_RULE_EMPTY": "Noch keine Regeln",
+		"S_RULE_DEL": "Regel löschen", "S_RULE_PROMPTS": "Prompts",
+		"S_PASTE_DELAY": "Verzögerung vor dem Einfügen", "S_PASTE_DELAY_SUB": "wenn das Programm den Text noch nicht annimmt",
 		"S_OVPOS": "Wo die Leiste erscheint", "S_OVPOS_SUB": "am Cursor — neben der Eingabestelle; zeigt die App sie nicht, dann neben dem Mauszeiger",
 		"S_OVPOS_BOTTOM": "Unten am Bildschirm", "S_OVPOS_TOP": "Oben am Bildschirm", "S_OVPOS_CARET": "Am Cursor",
 		"S_OVTEXT": "Erkannten Text anzeigen", "S_OVTEXT_SUB": "auf der Leiste nach dem Einfügen, statt der Zeichenzahl",
@@ -397,6 +404,8 @@ func init() {
 			"<li>Enter nach dem Einfügen wird nur gedrückt, wenn das Zielfenster dasselbe geblieben ist.</li>" +
 			"<li><b>Letztes Ergebnis</b> — der fertige Text jedes Diktats bleibt bis zum nächsten im Speicher; im Menü im Infobereich gibt es „Letztes Ergebnis kopieren“. Ein misslungenes Einfügen oder ein Fokuswechsel kostet nie ein Diktat.</li>" +
 			"</ul>" +
+			"<p class=\"wh\">Regeln pro Programm</p>" +
+			"<p>Unter „Diktat“ lassen sich Regeln für einzelne Programme festlegen: womit eingefügt wird (Zwischenablage oder zeichenweise), ob Enter gedrückt wird, wie lange vor dem Einfügen gewartet wird und welche Prompts gelten. Ein Programm wird über seinen Dateinamen angegeben — <b>chrome.exe</b>; in einer Regel dürfen mehrere durch Komma stehen, ein Stern am Ende fängt alle Namen mit diesem Anfang. Die erste passende Regel gewinnt; ohne Regeln oder ohne Treffer gilt alles wie in den allgemeinen Einstellungen. Die Schaltfläche neben der Liste trägt das zuletzt beschriebene Programm ein.</p>" +
 			"<p class=\"wh\">Diktat</p>" +
 			"<ul>" +
 			"<li><b>Tastenkürzel</b> — das Hauptkürzel fürs Diktieren. Jede Kombination lässt sich aufnehmen; linke und rechte Modifikatoren werden unterschieden. Kürzel für Diktat, Übersetzung und Profile müssen eindeutig sein — eine Dopplung verhindert das Speichern.</li>" +
@@ -504,6 +513,13 @@ func init() {
 		"S_SND_SPEECH": "Système (voix)", "S_SND_CHIME": "Clochette", "S_SND_SOFT": "Doux", "S_SND_MARIMBA": "Marimba",
 		"S_SND_BLIP": "Blip", "S_SND_POP": "Pop",
 		"S_AUTOENTER": "Appuyer Entrée après insertion (envoi auto)", "S_RESTORE": "Restaurer le presse-papiers après insertion",
+		"S_SEC_RULES": "Règles par application", "S_RULES_HINT": "L'insertion peut fonctionner autrement pour certains programmes. La première règle qui correspond l'emporte.",
+		"S_RULE_ADD": "Ajouter une règle", "S_RULE_PH": "chrome.exe, msedge.exe",
+		"S_RULE_PASTE_INH": "insertion : comme partout", "S_RULE_ENTER_INH": "Entrée : comme partout", "S_RULE_DELAY_NONE": "sans délai", "S_RULE_PROMPT_INH": "prompts : comme partout",
+		"S_RULE_CLIP": "presse-papiers", "S_RULE_TYPE": "caractère par caractère", "S_RULE_ENTER_ON": "avec Entrée", "S_RULE_ENTER_OFF": "sans Entrée",
+		"S_RULE_NOPROMPT": "sans prompts", "S_RULE_LAST": "dernière insertion : %s", "S_RULE_EMPTY": "Aucune règle pour l'instant",
+		"S_RULE_DEL": "Supprimer la règle", "S_RULE_PROMPTS": "Prompts",
+		"S_PASTE_DELAY": "Délai avant l'insertion", "S_PASTE_DELAY_SUB": "quand le programme n'est pas encore prêt",
 		"S_OVPOS": "Où afficher le bandeau", "S_OVPOS_SUB": "au curseur — près de l'endroit où vous tapez ; si l'application ne le montre pas, près du pointeur",
 		"S_OVPOS_BOTTOM": "En bas de l'écran", "S_OVPOS_TOP": "En haut de l'écran", "S_OVPOS_CARET": "Au curseur",
 		"S_OVTEXT": "Afficher le texte reconnu", "S_OVTEXT_SUB": "sur le bandeau après l'insertion, au lieu du nombre de caractères",
@@ -601,6 +617,8 @@ func init() {
 			"<li>Entrée après le collage n'est envoyée que si la fenêtre cible n'a pas changé.</li>" +
 			"<li><b>Dernier résultat</b> — le texte final de chaque dictée reste en mémoire jusqu'à la suivante ; le menu de la zone de notification propose « Copier le dernier résultat ». Un collage manqué ou un changement de focus ne fait jamais perdre une dictée.</li>" +
 			"</ul>" +
+			"<p class=\"wh\">Règles par application</p>" +
+			"<p>Dans « Dictée », vous pouvez définir des règles pour certains programmes : avec quoi insérer (presse-papiers ou caractère par caractère), s'il faut appuyer sur Entrée, combien de temps attendre avant d'insérer et quels prompts appliquer. Un programme se désigne par son fichier — <b>chrome.exe</b> ; une règle peut en lister plusieurs séparés par des virgules, et une astérisque finale attrape tous les noms qui commencent ainsi. La première règle qui correspond l'emporte ; sans règle, ou sans correspondance, tout fonctionne comme dans les réglages généraux. Le bouton à côté de la liste inscrit le programme où vous avez inséré en dernier.</p>" +
 			"<p class=\"wh\">Dictée</p>" +
 			"<ul>" +
 			"<li><b>Raccourci clavier</b> — le raccourci principal. N'importe quelle combinaison peut être capturée ; les modificateurs gauche et droit sont distingués. Les raccourcis de dictée, de traduction et de profils doivent être uniques — un doublon empêche l'enregistrement.</li>" +
@@ -708,6 +726,13 @@ func init() {
 		"S_SND_SPEECH": "Sistema (voz)", "S_SND_CHIME": "Campanilla", "S_SND_SOFT": "Suave", "S_SND_MARIMBA": "Marimba",
 		"S_SND_BLIP": "Blip", "S_SND_POP": "Pop",
 		"S_AUTOENTER": "Pulsar Enter tras insertar (envío auto)", "S_RESTORE": "Restaurar portapapeles tras insertar",
+		"S_SEC_RULES": "Reglas por aplicación", "S_RULES_HINT": "La inserción puede funcionar de otra forma en programas concretos. Gana la primera regla que coincide.",
+		"S_RULE_ADD": "Añadir una regla", "S_RULE_PH": "chrome.exe, msedge.exe",
+		"S_RULE_PASTE_INH": "inserción: como siempre", "S_RULE_ENTER_INH": "Intro: como siempre", "S_RULE_DELAY_NONE": "sin retraso", "S_RULE_PROMPT_INH": "prompts: como siempre",
+		"S_RULE_CLIP": "portapapeles", "S_RULE_TYPE": "carácter a carácter", "S_RULE_ENTER_ON": "con Intro", "S_RULE_ENTER_OFF": "sin Intro",
+		"S_RULE_NOPROMPT": "sin prompts", "S_RULE_LAST": "última inserción: %s", "S_RULE_EMPTY": "Todavía no hay reglas",
+		"S_RULE_DEL": "Eliminar la regla", "S_RULE_PROMPTS": "Prompts",
+		"S_PASTE_DELAY": "Retraso antes de insertar", "S_PASTE_DELAY_SUB": "cuando el programa aún no acepta el texto",
 		"S_OVPOS": "Dónde mostrar la barra", "S_OVPOS_SUB": "en el cursor: junto al punto de escritura; si la aplicación no lo expone, junto al puntero",
 		"S_OVPOS_BOTTOM": "Abajo en la pantalla", "S_OVPOS_TOP": "Arriba en la pantalla", "S_OVPOS_CARET": "En el cursor",
 		"S_OVTEXT": "Mostrar el texto reconocido", "S_OVTEXT_SUB": "en la barra tras insertar, en vez del número de caracteres",
@@ -805,6 +830,8 @@ func init() {
 			"<li>Enter tras pegar solo se envía si la ventana de destino no ha cambiado.</li>" +
 			"<li><b>Último resultado</b> — el texto final de cada dictado se guarda en memoria hasta el siguiente; el menú del área de notificación tiene «Copiar el último resultado». Un pegado fallido o un cambio de foco nunca hacen perder un dictado.</li>" +
 			"</ul>" +
+			"<p class=\"wh\">Reglas por aplicación</p>" +
+			"<p>En «Dictado» puedes fijar reglas para programas concretos: con qué insertar (portapapeles o carácter a carácter), si pulsar Intro, cuánto esperar antes de insertar y qué prompts aplicar. El programa se indica por su archivo — <b>chrome.exe</b>; una regla puede listar varios separados por comas, y un asterisco final atrapa todos los nombres que empiecen igual. Gana la primera regla que coincide; sin reglas, o si ninguna coincide, todo funciona como en los ajustes generales. El botón junto a la lista rellena el programa donde insertaste por última vez.</p>" +
 			"<p class=\"wh\">Dictado</p>" +
 			"<ul>" +
 			"<li><b>Atajo de teclado</b> — el atajo principal. Se puede capturar cualquier combinación; los modificadores izquierdo y derecho se distinguen. Los atajos de dictado, traducción y perfiles deben ser únicos — uno repetido impide guardar.</li>" +
@@ -912,6 +939,13 @@ func init() {
 		"S_SND_SPEECH": "Sistema (voce)", "S_SND_CHIME": "Campanello", "S_SND_SOFT": "Morbido", "S_SND_MARIMBA": "Marimba",
 		"S_SND_BLIP": "Blip", "S_SND_POP": "Pop",
 		"S_AUTOENTER": "Premi Invio dopo l'inserimento (invio auto)", "S_RESTORE": "Ripristina appunti dopo l'inserimento",
+		"S_SEC_RULES": "Regole per applicazione", "S_RULES_HINT": "L'inserimento può funzionare diversamente in certi programmi. Vince la prima regola che corrisponde.",
+		"S_RULE_ADD": "Aggiungi una regola", "S_RULE_PH": "chrome.exe, msedge.exe",
+		"S_RULE_PASTE_INH": "inserimento: come sempre", "S_RULE_ENTER_INH": "Invio: come sempre", "S_RULE_DELAY_NONE": "senza ritardo", "S_RULE_PROMPT_INH": "prompt: come sempre",
+		"S_RULE_CLIP": "appunti", "S_RULE_TYPE": "carattere per carattere", "S_RULE_ENTER_ON": "con Invio", "S_RULE_ENTER_OFF": "senza Invio",
+		"S_RULE_NOPROMPT": "senza prompt", "S_RULE_LAST": "ultimo inserimento: %s", "S_RULE_EMPTY": "Ancora nessuna regola",
+		"S_RULE_DEL": "Elimina la regola", "S_RULE_PROMPTS": "Prompt",
+		"S_PASTE_DELAY": "Ritardo prima di inserire", "S_PASTE_DELAY_SUB": "quando il programma non è ancora pronto",
 		"S_OVPOS": "Dove mostrare la barra", "S_OVPOS_SUB": "al cursore — accanto al punto in cui scrivi; se l'app non lo espone, accanto al puntatore",
 		"S_OVPOS_BOTTOM": "In basso sullo schermo", "S_OVPOS_TOP": "In alto sullo schermo", "S_OVPOS_CARET": "Al cursore",
 		"S_OVTEXT": "Mostrare il testo riconosciuto", "S_OVTEXT_SUB": "sulla barra dopo l'inserimento, invece del numero di caratteri",
@@ -1009,6 +1043,8 @@ func init() {
 			"<li>Invio dopo l'incollaggio viene premuto solo se la finestra di destinazione è rimasta la stessa.</li>" +
 			"<li><b>Ultimo risultato</b> — il testo finale di ogni dettatura resta in memoria fino alla successiva; nel menu dell'area di notifica c'è «Copia l'ultimo risultato». Un incollaggio fallito o un cambio di fuoco non fanno mai perdere una dettatura.</li>" +
 			"</ul>" +
+			"<p class=\"wh\">Regole per applicazione</p>" +
+			"<p>In «Dettatura» puoi impostare regole per programmi specifici: con che cosa inserire (appunti o carattere per carattere), se premere Invio, quanto attendere prima di inserire e quali prompt applicare. Il programma si indica con il nome del file — <b>chrome.exe</b>; in una regola se ne possono elencare più d'uno separati da virgole, e un asterisco finale cattura tutti i nomi che iniziano così. Vince la prima regola che corrisponde; senza regole, o se nessuna corrisponde, tutto funziona come nelle impostazioni generali. Il pulsante accanto all'elenco inserisce il programma in cui hai scritto l'ultima volta.</p>" +
 			"<p class=\"wh\">Dettatura</p>" +
 			"<ul>" +
 			"<li><b>Scorciatoia da tastiera</b> — la scorciatoia principale. Si può catturare qualsiasi combinazione; i modificatori sinistro e destro sono distinti. Le scorciatoie di dettatura, traduzione e profili devono essere uniche — un doppione impedisce il salvataggio.</li>" +
@@ -1116,6 +1152,13 @@ func init() {
 		"S_SND_SPEECH": "Systemowy (mowa)", "S_SND_CHIME": "Dzwonek", "S_SND_SOFT": "Miękki", "S_SND_MARIMBA": "Marimba",
 		"S_SND_BLIP": "Blip", "S_SND_POP": "Pop",
 		"S_AUTOENTER": "Naciśnij Enter po wstawieniu (auto-wysyłka)", "S_RESTORE": "Przywróć schowek po wstawieniu",
+		"S_SEC_RULES": "Reguły dla programów", "S_RULES_HINT": "W wybranych programach wstawianie może działać inaczej. Wygrywa pierwsza pasująca reguła.",
+		"S_RULE_ADD": "Dodaj regułę", "S_RULE_PH": "chrome.exe, msedge.exe",
+		"S_RULE_PASTE_INH": "wstawianie: jak zwykle", "S_RULE_ENTER_INH": "Enter: jak zwykle", "S_RULE_DELAY_NONE": "bez opóźnienia", "S_RULE_PROMPT_INH": "prompty: jak zwykle",
+		"S_RULE_CLIP": "schowek", "S_RULE_TYPE": "znak po znaku", "S_RULE_ENTER_ON": "z Enterem", "S_RULE_ENTER_OFF": "bez Entera",
+		"S_RULE_NOPROMPT": "bez promptów", "S_RULE_LAST": "ostatnie wstawienie: %s", "S_RULE_EMPTY": "Na razie brak reguł",
+		"S_RULE_DEL": "Usuń regułę", "S_RULE_PROMPTS": "Prompty",
+		"S_PASTE_DELAY": "Opóźnienie przed wstawieniem", "S_PASTE_DELAY_SUB": "gdy program nie zdąża przyjąć tekstu",
 		"S_OVPOS": "Gdzie pokazywać pasek", "S_OVPOS_SUB": "przy kursorze — obok miejsca pisania; jeśli aplikacja go nie pokazuje, obok wskaźnika myszy",
 		"S_OVPOS_BOTTOM": "Na dole ekranu", "S_OVPOS_TOP": "Na górze ekranu", "S_OVPOS_CARET": "Przy kursorze",
 		"S_OVTEXT": "Pokazywać rozpoznany tekst", "S_OVTEXT_SUB": "na pasku po wstawieniu, zamiast liczby znaków",
@@ -1213,6 +1256,8 @@ func init() {
 			"<li>Enter po wklejeniu jest wysyłany tylko wtedy, gdy okno docelowe się nie zmieniło.</li>" +
 			"<li><b>Ostatni wynik</b> — gotowy tekst każdego dyktowania zostaje w pamięci do następnego; w menu w zasobniku jest „Kopiuj ostatni wynik”. Nieudane wklejenie albo zmiana okna nigdy nie gubią dyktowania.</li>" +
 			"</ul>" +
+			"<p class=\"wh\">Reguły dla programów</p>" +
+			"<p>W „Dyktowaniu” można ustawić reguły dla wybranych programów: czym wstawiać (schowkiem czy znak po znaku), czy naciskać Enter, ile czekać przed wstawieniem i jakie prompty stosować. Program wskazuje się nazwą pliku — <b>chrome.exe</b>; w jednej regule można wymienić kilka po przecinku, a gwiazdka na końcu łapie wszystkie nazwy o takim początku. Wygrywa pierwsza pasująca reguła; gdy reguł nie ma albo żadna nie pasuje, wszystko działa jak w ustawieniach ogólnych. Przycisk obok listy wpisuje program, do którego wstawiano ostatnio.</p>" +
 			"<p class=\"wh\">Dyktowanie</p>" +
 			"<ul>" +
 			"<li><b>Skrót klawiszowy</b> — główny skrót do dyktowania. Można przechwycić dowolną kombinację; lewe i prawe modyfikatory są rozróżniane. Skróty dyktowania, tłumaczenia i profili muszą być unikalne — powtórzenie blokuje zapis.</li>" +
@@ -1399,6 +1444,13 @@ func init() {
 		"S_SND_SPEECH": "Системний (мовлення)", "S_SND_CHIME": "Дзвіночок", "S_SND_SOFT": "М'який", "S_SND_MARIMBA": "Марімба",
 		"S_SND_BLIP": "Бліп", "S_SND_POP": "Поп",
 		"S_AUTOENTER": "Enter після вставлення (автовідправлення)", "S_RESTORE": "Відновлювати буфер обміну після вставлення",
+		"S_SEC_RULES": "Правила для програм", "S_RULES_HINT": "Для окремих програм вставка може працювати інакше. Виграє перше відповідне правило.",
+		"S_RULE_ADD": "Додати правило", "S_RULE_PH": "chrome.exe, msedge.exe",
+		"S_RULE_PASTE_INH": "вставка: як усюди", "S_RULE_ENTER_INH": "Enter: як усюди", "S_RULE_DELAY_NONE": "без затримки", "S_RULE_PROMPT_INH": "промпти: як усюди",
+		"S_RULE_CLIP": "буфер обміну", "S_RULE_TYPE": "посимвольно", "S_RULE_ENTER_ON": "з Enter", "S_RULE_ENTER_OFF": "без Enter",
+		"S_RULE_NOPROMPT": "без промптів", "S_RULE_LAST": "остання вставка: %s", "S_RULE_EMPTY": "Правил поки немає",
+		"S_RULE_DEL": "Видалити правило", "S_RULE_PROMPTS": "Промпти",
+		"S_PASTE_DELAY": "Затримка перед вставкою", "S_PASTE_DELAY_SUB": "коли програма не встигає прийняти текст",
 		"S_OVPOS": "Де показувати смужку", "S_OVPOS_SUB": "біля курсора — поряд із місцем введення; якщо застосунок його не показує, поряд із вказівником миші",
 		"S_OVPOS_BOTTOM": "Унизу екрана", "S_OVPOS_TOP": "Угорі екрана", "S_OVPOS_CARET": "Біля курсора",
 		"S_OVTEXT": "Показувати розпізнаний текст", "S_OVTEXT_SUB": "у смужці після вставки, замість кількості символів",
@@ -1477,6 +1529,8 @@ func init() {
 			"<li>Enter після вставки натискається лише тоді, коли цільове вікно не змінилося.</li>" +
 			"<li><b>Останній результат</b> — готовий текст кожного диктування лишається в пам'яті до наступного; у меню в треї є «Копіювати останній результат». Невдала вставка чи зміна вікна ніколи не втрачають диктування.</li>" +
 			"</ul>" +
+			"<p class=\"wh\">Правила для програм</p>" +
+			"<p>У «Диктуванні» можна задати правила для окремих програм: чим вставляти (буфером чи посимвольно), чи натискати Enter, скільки чекати перед вставкою та які промпти застосовувати. Програма вказується іменем файлу — <b>chrome.exe</b>; в одному правилі їх можна перелічити через кому, а зірочка в кінці ловить усі імена з таким початком. Виграє перше відповідне правило; якщо правил немає або жодне не підійшло, усе працює як у загальних налаштуваннях. Кнопка поруч зі списком підставляє програму, куди вставляли востаннє.</p>" +
 			"<p class=\"wh\">Диктування</p>" +
 			"<ul>" +
 			"<li><b>Сполучення клавіш</b> — головне сполучення для диктування. Можна перехопити будь-яку комбінацію; ліві й праві модифікатори розрізняються. Сполучення диктування, перекладу та профілів мають бути унікальними — повтор блокує збереження.</li>" +

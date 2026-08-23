@@ -36,7 +36,7 @@ const dom = new JSDOM(html, {
       JSON.stringify({ hotkey: "ctrl+win", mic: "Realtek", engine: "sherpa · gigaam-v3", llm: "model.gguf",
         ram: "8000 MB free", last: "hello", last_meta: "just now · 5 characters", ready: true, status: "Ready",
         status_line: "Ready · gigaam-v3 + ggml-small.bin · 7.8 GB free", ru_model: "gigaam-v3",
-        other_model: "ggml-small.bin", llm_ok: true, mic_ok: true, last_at: lastAt,
+        other_model: "ggml-small.bin", llm_ok: true, mic_ok: true, last_at: lastAt, last_app: "chrome.exe",
         remote: remote,
         ru_state: ruState, other_state: otherState,
         badges: { mic: micBadge, models: "2", system: "" } });
@@ -194,6 +194,35 @@ function check(name, actual, expected) {
   ovtext.checked = false; ovtext.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
   check("turning it off is saved", w.lastSaveForm.overlay_text, false);
   ovtext.checked = true; ovtext.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
+
+  tab("dictation"); await sleep(60);
+  check("with no rules the list says so", d.querySelector("#rulesbody .ruleempty").textContent, "No rules yet");
+  check("the last program is offered as a rule", d.getElementById("rule_last").textContent, "last insertion: chrome.exe");
+  d.getElementById("rule_last").click(); await sleep(300);
+  check("one click makes a rule for it", d.querySelectorAll("#rulesbody .rulerow").length, 1);
+  check("the rule carries the program", w.lastSaveForm.app_rules[0].match, "chrome.exe");
+  const rrow = d.querySelector("#rulesbody .rulerow");
+  const rpaste = rrow.querySelector(".rpaste");
+  check("a rule inherits until told otherwise", [rpaste.value, rpaste.options[0].textContent], ["", "insertion: as set"]);
+  rpaste.value = "type"; rpaste.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
+  check("the insertion method is saved", w.lastSaveForm.app_rules[0].paste_mode, "type");
+  const renter = rrow.querySelector(".renter");
+  renter.value = "off"; renter.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
+  check("Enter can be turned off for one program", w.lastSaveForm.app_rules[0].auto_enter, "off");
+  const rdelay = rrow.querySelector(".rdelay");
+  rdelay.value = "250"; rdelay.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
+  check("the delay is saved as a number", w.lastSaveForm.app_rules[0].delay_ms, 250);
+  const rprof = rrow.querySelector(".rprof");
+  check("prompts of the rule offer every profile", rprof.options.length, 4);
+  rprof.value = "-"; rprof.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
+  check("a program can be left without prompts", [w.lastSaveForm.app_rules[0].use_profiles, w.lastSaveForm.app_rules[0].profiles], [true, []]);
+  rprof.value = "formal"; rprof.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
+  check("or given its own prompt", w.lastSaveForm.app_rules[0].profiles, ["formal"]);
+  d.getElementById("rule_add").click(); await sleep(100);
+  check("more rules can be added", d.querySelectorAll("#rulesbody .rulerow").length, 2);
+  d.querySelectorAll("#rulesbody .rdel")[1].click(); await sleep(300);
+  check("and deleted", d.querySelectorAll("#rulesbody .rulerow").length, 1);
+  check("deleting leaves the other rule alone", w.lastSaveForm.app_rules.length, 1);
 
   tab("system"); await sleep(30);
   check("service settings shown", [shown("system"), !!d.getElementById("server_url")], [true, true]);

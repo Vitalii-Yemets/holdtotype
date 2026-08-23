@@ -370,6 +370,13 @@ var settingsStrings = map[string]map[string]string{
 		"S_AUTOENTER":      "Нажимать Enter после вставки (автоотправка)",
 		"S_RESTORE":        "Восстанавливать буфер обмена после вставки",
 		"S_OVERLAY":        "Индикатор внизу экрана",
+		"S_SEC_RULES": "Правила по приложениям", "S_RULES_HINT": "Для отдельных программ вставка может работать иначе. Выигрывает первое подходящее правило.",
+		"S_RULE_ADD": "Добавить правило", "S_RULE_PH": "chrome.exe, msedge.exe",
+		"S_RULE_PASTE_INH": "вставка: как везде", "S_RULE_ENTER_INH": "Enter: как везде", "S_RULE_DELAY_NONE": "без задержки", "S_RULE_PROMPT_INH": "промпты: как везде",
+		"S_RULE_CLIP": "буфер обмена", "S_RULE_TYPE": "посимвольно", "S_RULE_ENTER_ON": "с Enter", "S_RULE_ENTER_OFF": "без Enter",
+		"S_RULE_NOPROMPT": "без промптов", "S_RULE_LAST": "последняя вставка: %s", "S_RULE_EMPTY": "Правил пока нет",
+		"S_RULE_DEL": "Удалить правило", "S_RULE_PROMPTS": "Промпты",
+		"S_PASTE_DELAY": "Задержка перед вставкой", "S_PASTE_DELAY_SUB": "если программа не успевает принять текст",
 		"S_OVPOS": "Где показывать плашку", "S_OVPOS_SUB": "у курсора — рядом с местом ввода; если приложение его не показывает, рядом с указателем мыши",
 		"S_OVPOS_BOTTOM": "Внизу экрана", "S_OVPOS_TOP": "Вверху экрана", "S_OVPOS_CARET": "У курсора",
 		"S_OVTEXT": "Показывать распознанный текст", "S_OVTEXT_SUB": "в плашке после вставки, вместо числа символов",
@@ -541,6 +548,8 @@ var settingsStrings = map[string]map[string]string{
 			"<li>Enter после вставки нажимается только если окно-цель не менялось.</li>" +
 			"<li><b>Последний результат</b> — финальный текст каждой диктовки хранится в памяти до следующей; в меню трея есть пункт «Копировать последний результат». Ошибка вставки или смена фокуса не теряют надиктованное.</li>" +
 			"</ul>" +
+			"<p class=\"wh\">Правила по приложениям</p>" +
+			"<p>На «Диктовке» можно задать правила для отдельных программ: чем вставлять (буфером или посимвольно), нажимать ли Enter, сколько ждать перед вставкой и какие промпты применять. Программа указывается именем файла — <b>chrome.exe</b>; в одном правиле их можно перечислить через запятую, а звёздочка в конце ловит все имена с таким началом. Выигрывает первое подходящее правило; если правил нет или ни одно не подошло, всё работает как в общих настройках. Кнопка рядом со списком подставляет программу, в которую вставляли в последний раз.</p>" +
 			"<p class=\"wh\">Основные</p>" +
 			"<ul>" +
 			"<li><b>Сочетание клавиш</b> — главный хоткей диктовки. Захватывается любая комбинация, различаются левые/правые модификаторы. Хоткеи диктовки, перевода и профилей не должны совпадать — дубликат не даст сохранить настройки.</li>" +
@@ -699,6 +708,13 @@ var settingsStrings = map[string]map[string]string{
 		"S_AUTOENTER":      "Press Enter after paste (auto-submit)",
 		"S_RESTORE":        "Restore clipboard after paste",
 		"S_OVERLAY":        "On-screen indicator",
+		"S_SEC_RULES": "Rules per application", "S_RULES_HINT": "Insertion can work differently for particular programs. The first matching rule wins.",
+		"S_RULE_ADD": "Add a rule", "S_RULE_PH": "chrome.exe, msedge.exe",
+		"S_RULE_PASTE_INH": "insertion: as set", "S_RULE_ENTER_INH": "Enter: as set", "S_RULE_DELAY_NONE": "no delay", "S_RULE_PROMPT_INH": "prompts: as set",
+		"S_RULE_CLIP": "clipboard", "S_RULE_TYPE": "character by character", "S_RULE_ENTER_ON": "with Enter", "S_RULE_ENTER_OFF": "without Enter",
+		"S_RULE_NOPROMPT": "no prompts", "S_RULE_LAST": "last insertion: %s", "S_RULE_EMPTY": "No rules yet",
+		"S_RULE_DEL": "Delete the rule", "S_RULE_PROMPTS": "Prompts",
+		"S_PASTE_DELAY": "Delay before inserting", "S_PASTE_DELAY_SUB": "when the program is not ready for the text yet",
 		"S_OVPOS": "Where to show the plate", "S_OVPOS_SUB": "at the cursor — next to where you type; if the app hides it, next to the mouse pointer",
 		"S_OVPOS_BOTTOM": "Bottom of the screen", "S_OVPOS_TOP": "Top of the screen", "S_OVPOS_CARET": "At the cursor",
 		"S_OVTEXT": "Show the recognised text", "S_OVTEXT_SUB": "on the plate after insertion, instead of the character count",
@@ -870,6 +886,8 @@ var settingsStrings = map[string]map[string]string{
 			"<li>Enter after paste is pressed only when the target window has not changed.</li>" +
 			"<li><b>Last Result</b> — the final text of every dictation is kept in memory until the next one; the tray menu has \"Copy last result\". A failed paste or focus change never loses a dictation.</li>" +
 			"</ul>" +
+			"<p class=\"wh\">Rules per application</p>" +
+			"<p>On the Dictation tab you can set rules for particular programs: what to insert with (the clipboard or character by character), whether to press Enter, how long to wait before inserting and which prompts to apply. A program is named by its file — <b>chrome.exe</b>; one rule can list several, separated by commas, and a trailing asterisk catches every name with that beginning. The first matching rule wins; with no rules, or none that match, everything works as in the general settings. The button next to the list fills in the program you last inserted into.</p>" +
 			"<p class=\"wh\">General</p>" +
 			"<ul>" +
 			"<li><b>Keyboard shortcut</b> — the main dictation hotkey. Any combination can be captured; left/right modifiers are distinguished. Dictation, translation and profile hotkeys must be unique — a duplicate blocks saving.</li>" +

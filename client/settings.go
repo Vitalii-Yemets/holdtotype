@@ -2,6 +2,7 @@ package main
 
 
 import (
+	"holdtotype/internal/apprules"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -105,6 +106,7 @@ type settingsForm struct {
 	ModelID          string `json:"model_id"`
 	Threads          int    `json:"threads"`
 	MinRecordMs      int    `json:"min_record_ms"`
+	PasteDelayMs     int    `json:"paste_delay_ms"`
 	MaxRecordSeconds int    `json:"max_record_seconds"`
 	ServerAutostart  bool   `json:"server_autostart"`
 	CheckUpdates     bool   `json:"check_updates"`
@@ -125,6 +127,7 @@ type settingsForm struct {
 	TranslateAskLangs   []string  `json:"translate_ask_langs"`
 	TranslateDefault    bool      `json:"translate_default"`
 	ActiveProfiles      []string  `json:"active_profiles"`
+	AppRules            []apprules.Rule `json:"app_rules"`
 	LLMModelFile        string    `json:"llm_model_file"`
 	Profiles            []Profile `json:"profiles"`
 }
@@ -532,6 +535,9 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	if f.MinRecordMs >= 0 {
 		c.MinRecordMs = f.MinRecordMs
 	}
+	if f.PasteDelayMs >= 0 && f.PasteDelayMs <= 5000 {
+		c.PasteDelayMs = f.PasteDelayMs
+	}
 	if f.MaxRecordSeconds > 0 {
 		c.MaxRecordSeconds = f.MaxRecordSeconds
 	}
@@ -610,6 +616,9 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 		}
 		c.ActiveProfiles = aps
 	}
+	if f.AppRules != nil {
+		c.AppRules = apprules.Clean(f.AppRules)
+	}
 	llmChanged := false
 	if f.LLMModelFile != "" && !strings.ContainsAny(f.LLMModelFile, "/\\") && strings.HasSuffix(f.LLMModelFile, ".gguf") {
 		if _, err := os.Stat(filepath.Join("models", f.LLMModelFile)); err == nil {
@@ -683,6 +692,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"language":              cfg.Language,
 		"threads":               cfg.Threads,
 		"min_record_ms":         cfg.MinRecordMs,
+		"paste_delay_ms":        cfg.PasteDelayMs,
 		"max_record_seconds":    cfg.MaxRecordSeconds,
 		"server_autostart":      cfg.ServerAutostart,
 		"check_updates":         cfg.CheckUpdates,
@@ -696,6 +706,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"whisper_prompt":        cfg.WhisperPrompt,
 		"translate_default":     cfg.TranslateDefault,
 		"active_profiles":       cfg.ActiveProfiles,
+		"app_rules":             cfg.AppRules,
 		"translate_hotkey":      cfg.TranslateHotkey,
 		"translate_target":      cfg.TranslateTarget,
 		"translate_ask":         cfg.TranslateAsk,
@@ -725,6 +736,11 @@ func settingsHTML(cfg *Config, tab string) string {
 		"ok": "S_OK", "cancel": "S_CANCEL", "dlask": "S_DL_ASK", "dlstart": "S_DL_START", "dlcancel": "S_DL_CANCEL", "nofound": "S_NOT_FOUND",
 		"advprimary": "S_ADV_PRIMARY", "advcompanion": "S_ADV_COMPANION", "advhave": "S_ADV_HAVE", "advapply": "S_ADV_APPLY", "advask": "S_ADV_ASK",
 		"more": "S_MORE", "less": "S_LESS",
+		"pasteinh": "S_RULE_PASTE_INH", "enterinh": "S_RULE_ENTER_INH", "delaynone": "S_RULE_DELAY_NONE", "promptinh": "S_RULE_PROMPT_INH",
+		"ruleclip": "S_RULE_CLIP", "ruletype": "S_RULE_TYPE",
+		"ruleenteron": "S_RULE_ENTER_ON", "ruleenteroff": "S_RULE_ENTER_OFF", "rulenoprompt": "S_RULE_NOPROMPT",
+		"rulelast": "S_RULE_LAST", "ruleempty": "S_RULE_EMPTY", "ruledel": "S_RULE_DEL",
+		"ruleprompts": "S_RULE_PROMPTS", "ruleph": "S_RULE_PH",
 		"wiznext": "S_WIZ_NEXT", "wizfinish": "S_WIZ_FINISH", "wizwait": "S_WIZ_WAIT",
 		"wizheard": "S_WIZ_HEARD", "wizhave": "S_WIZ_HAVE", "wiztry": "S_WIZ_TRY_TEXT",
 		"updavail": "S_UPD_AVAIL", "updgo": "S_UPD_GO", "upderr": "S_UPD_ERR", "upddl": "S_UPD_DL",
@@ -918,6 +934,17 @@ button.ghost:hover{color:var(--green)}
 .footer{flex:none;display:flex;gap:12px;align-items:center;padding:10px 16px;background:var(--panel);border-top:1px solid var(--line)}
 .toast{color:var(--amber);font-size:13px;opacity:0;transition:opacity .3s;text-shadow:0 0 6px rgba(255,179,71,.5)}
 .toast.show{opacity:1}
+.rulerow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid #12241a}
+.rulerow:last-child{border-bottom:none}
+.rulerow input[type=text]{flex:1 1 190px;min-width:150px;width:auto;font-size:12px;padding:5px 9px}
+.rulerow select{flex:0 0 auto;width:auto;min-width:118px;font-size:11.5px;padding:4px 8px}
+.rulerow .rdel{flex:none;border:1px solid var(--line);background:none;color:var(--dim);font:inherit;font-size:12px;cursor:pointer;padding:4px 9px}
+.rulerow .rdel:hover{color:#ff7b6b;border-color:#7a2e2e}
+.rulefoot{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
+.rulefoot .ghost{border-color:var(--line);color:var(--faint)}
+.rulefoot .ghost:empty{display:none}
+.ruleempty{color:var(--faint);font-size:12px;padding:6px 0}
+.card>.hint{font-size:11.5px;color:var(--dim);margin-bottom:6px;line-height:1.5}
 .mrow{display:flex;align-items:center;gap:9px;padding:7px 2px;border-bottom:1px solid #12241a;flex-wrap:wrap}
 .mrow:last-child{border-bottom:none}
 input[type=radio]{appearance:none;-webkit-appearance:none;width:15px;height:15px;flex:none;margin:0;padding:0;border:1px solid var(--dim);border-radius:50%;background:#08100b;position:relative;cursor:pointer}
@@ -1092,6 +1119,17 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
   <div class="row"><label>{{S_AUTOENTER}}<span class="sub">{{S_SUB_ENTER}}</span></label><input type="checkbox" id="auto_enter"></div>
   <div class="row" data-adv><label>{{S_RESTORE}}<span class="sub">{{S_SUB_CLIP}}</span></label><input type="checkbox" id="restore_clipboard"></div>
   <div class="row"><label>{{S_TYPEMODE}}<span class="sub">{{S_SUB_TYPE}}</span></label><input type="checkbox" id="type_mode"></div>
+  <div class="row" data-adv><label>{{S_PASTE_DELAY}}<span class="sub">{{S_PASTE_DELAY_SUB}}</span></label>
+   <select id="paste_delay_ms"><option value="0">0 ms</option><option value="50">50 ms</option><option value="100">100 ms</option><option value="250">250 ms</option><option value="500">500 ms</option><option value="1000">1000 ms</option></select></div>
+ </div>
+ <div class="card">
+  <div class="sect">{{S_SEC_RULES}}</div>
+  <div class="hint">{{S_RULES_HINT}}</div>
+  <div id="rulesbody"></div>
+  <div class="rulefoot">
+   <button type="button" class="mini" id="rule_add">{{S_RULE_ADD}}</button>
+   <button type="button" class="mini ghost" id="rule_last"></button>
+  </div>
  </div>
  <div class="card">
   <div class="sect">{{S_SEC_OVERLAY}}</div>
@@ -1376,7 +1414,7 @@ window.onerror = function(m, s, l, c){ if(window.appJSError) appJSError(String(m
 const CFG = {{CFG}};
 const bools = ["beep","auto_enter","restore_clipboard","overlay","overlay_text","animation","type_mode","server_autostart","check_updates"];
 const texts = ["server_exe","server_url"];
-const nums  = ["threads","min_record_ms","max_record_seconds","translate_ask_seconds","server_port"];
+const nums  = ["threads","min_record_ms","max_record_seconds","translate_ask_seconds","server_port","paste_delay_ms"];
 const sels  = ["ui_language","language","sound_theme","translate_target","translate_ask","hotkey_mode","overlay_position"];
 const trAll = ["en","de","fr","es","it","pl","ru","uk"];
 const L = {{L_JSON}};
@@ -1986,7 +2024,7 @@ function toast(msg, severity){
 }
 
 const sliders = [];
-const numSels = ["threads","min_record_ms","max_record_seconds","translate_ask_seconds"];
+const numSels = ["threads","min_record_ms","max_record_seconds","translate_ask_seconds","paste_delay_ms"];
 function load(){
   document.getElementById("punctuation").value = CFG.punctuation || "model";
   document.getElementById("whisper_prompt").value = CFG.whisper_prompt || "";
@@ -2073,6 +2111,7 @@ async function doSave(){
     translate_ask_langs: trAll.filter(l=>document.getElementById("tl_"+l).checked),
     translate_default: translateDefault,
     active_profiles: activeProfiles,
+    app_rules: rules,
     llm_model_file: selLLM||"",
     profiles: profiles};
   bools.forEach(k=>f[k]=document.getElementById(k).checked);
@@ -2362,6 +2401,114 @@ function initWizard(){
     if(wizStep === 3) wizPollTry();
   }, 800);
 }
+let rules = (CFG.app_rules || []).map(r=>({...r}));
+function ruleOpts(sel, items, value){
+  sel.innerHTML = "";
+  items.forEach(it=>{
+    const o = document.createElement("option");
+    o.value = it[0];
+    o.textContent = it[1];
+    sel.appendChild(o);
+  });
+  sel.value = [...sel.options].some(o=>o.value===value) ? value : items[0][0];
+}
+function ruleProfileValue(r){
+  if(!r.use_profiles) return "";
+  if(!r.profiles || !r.profiles.length) return "-";
+  return r.profiles[0];
+}
+function renderRules(){
+  const body = document.getElementById("rulesbody");
+  if(!body) return;
+  body.innerHTML = "";
+  if(!rules.length){
+    const empty = document.createElement("div");
+    empty.className = "ruleempty";
+    empty.textContent = L.ruleempty;
+    body.appendChild(empty);
+  }
+  rules.forEach((r, i)=>{
+    const row = document.createElement("div");
+    row.className = "rulerow";
+
+    const app = document.createElement("input");
+    app.type = "text";
+    app.className = "rmatch";
+    app.value = r.match || "";
+    app.placeholder = L.ruleph;
+    app.oninput = ()=>{ rules[i].match = app.value; };
+    app.onchange = ()=>{ rules[i].match = app.value; applyNow(); };
+    row.appendChild(app);
+
+    const paste = document.createElement("select");
+    paste.className = "rpaste";
+    ruleOpts(paste, [["", L.pasteinh], ["clipboard", L.ruleclip], ["type", L.ruletype]], r.paste_mode || "");
+    paste.onchange = ()=>{ rules[i].paste_mode = paste.value; applyNow(); };
+    row.appendChild(paste);
+
+    const enter = document.createElement("select");
+    enter.className = "renter";
+    ruleOpts(enter, [["", L.enterinh], ["on", L.ruleenteron], ["off", L.ruleenteroff]], r.auto_enter || "");
+    enter.onchange = ()=>{ rules[i].auto_enter = enter.value; applyNow(); };
+    row.appendChild(enter);
+
+    const delay = document.createElement("select");
+    delay.className = "rdelay";
+    ruleOpts(delay, [["0", L.delaynone], ["50", "50 ms"], ["100", "100 ms"], ["250", "250 ms"], ["500", "500 ms"], ["1000", "1000 ms"]], String(r.delay_ms || 0));
+    delay.onchange = ()=>{ rules[i].delay_ms = parseInt(delay.value) || 0; applyNow(); };
+    row.appendChild(delay);
+
+    const prof = document.createElement("select");
+    prof.className = "rprof";
+    prof.title = L.ruleprompts;
+    const items = [["", L.promptinh], ["-", L.rulenoprompt]];
+    profiles.forEach(p=>items.push([p.id, p.name]));
+    ruleOpts(prof, items, ruleProfileValue(r));
+    prof.onchange = ()=>{
+      const v = prof.value;
+      rules[i].use_profiles = v !== "";
+      rules[i].profiles = v === "" || v === "-" ? [] : [v];
+      applyNow();
+    };
+    row.appendChild(prof);
+
+    const del = document.createElement("button");
+    del.type = "button";
+    del.className = "rdel";
+    del.title = L.ruledel;
+    del.textContent = "✕";
+    del.onclick = ()=>{ rules.splice(i, 1); renderRules(); applyNow(); };
+    row.appendChild(del);
+
+    body.appendChild(row);
+  });
+}
+function initRules(){
+  const add = document.getElementById("rule_add");
+  if(!add) return;
+  add.onclick = ()=>{
+    rules.push({id: "r" + Date.now(), match: "", paste_mode: "", auto_enter: "", delay_ms: 0, use_profiles: false, profiles: []});
+    renderRules();
+    const last = document.querySelectorAll("#rulesbody .rmatch");
+    if(last.length) last[last.length - 1].focus();
+  };
+  renderRules();
+}
+async function refreshLastApp(){
+  const btn = document.getElementById("rule_last");
+  if(!btn) return;
+  const s = JSON.parse(await appState());
+  const exe = s.last_app || "";
+  btn.textContent = exe ? L.rulelast.replace("%s", exe) : "";
+  btn.onclick = ()=>{
+    if(!exe) return;
+    const known = rules.some(r=>(r.match || "").toLowerCase().includes(exe.toLowerCase()));
+    if(known) return;
+    rules.push({id: "r" + Date.now(), match: exe, paste_mode: "", auto_enter: "", delay_ms: 0, use_profiles: false, profiles: []});
+    renderRules();
+    applyNow();
+  };
+}
 async function initAutorun(){
   const box = document.getElementById("autorun");
   if(!box) return;
@@ -2406,6 +2553,8 @@ load();
   initRemote();
   initWizard();
   initAutorun();
+  initRules();
+  refreshLastApp();
   bindLabels();
   applyLevel();
   document.querySelectorAll(".lvlb").forEach(b=>b.onclick=()=>setLevel(b.dataset.l));

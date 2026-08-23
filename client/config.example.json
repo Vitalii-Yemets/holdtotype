@@ -25,6 +25,8 @@
   "overlay": true,
   "overlay_position": "bottom",
   "overlay_text": true,
+  "paste_delay_ms": 0,
+  "app_rules": [],
   "animation": true,
   "ui_language": "auto",
   "max_record_seconds": 120,

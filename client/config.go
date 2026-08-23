@@ -2,6 +2,7 @@ package main
 
 import (
 	"holdtotype/internal/mojibake"
+	"holdtotype/internal/apprules"
 	"holdtotype/internal/routing"
 
 	"bytes"
@@ -78,6 +79,7 @@ type Config struct {
 	Overlay          bool   `json:"overlay"`
 	OverlayPos       string `json:"overlay_position"`
 	OverlayText      bool   `json:"overlay_text"`
+	PasteDelayMs     int    `json:"paste_delay_ms"`
 	Animation        bool   `json:"animation"`
 	UILanguage       string `json:"ui_language"`
 	MaxRecordSeconds int    `json:"max_record_seconds"`
@@ -101,6 +103,7 @@ type Config struct {
 	CheckUpdates        bool      `json:"check_updates"`
 	MicDevice           string    `json:"mic_device"`
 	MicDeviceName       string    `json:"mic_device_name"`
+	AppRules            []apprules.Rule `json:"app_rules"`
 	WizardDone          bool      `json:"wizard_done"`
 }
 

@@ -255,6 +255,9 @@ func restoreClipboard(fmts []clipFormat) error {
 
 func pasteText(cfg *Config, text string) error {
 	waitModifiersReleased(3 * time.Second)
+	if cfg.PasteDelayMs > 0 {
+		time.Sleep(time.Duration(cfg.PasteDelayMs) * time.Millisecond)
+	}
 
 	if cfg.PasteMode == "type" {
 		return typeUnicode(text)

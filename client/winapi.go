@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strings"
 	"path/filepath"
 	"sync"
 	"syscall"
@@ -361,4 +362,39 @@ func workAreaForPoint(x, y int32) rect {
 	}
 	procSystemParametersInfoW.Call(0x30, 0, uintptr(unsafe.Pointer(&wa)), 0)
 	return wa
+}
+
+var (
+	procOpenProcess                = kernel32.NewProc("OpenProcess")
+	procQueryFullProcessImageNameW = kernel32.NewProc("QueryFullProcessImageNameW")
+	procCloseHandleW               = kernel32.NewProc("CloseHandle")
+	procGetWindowThreadPID         = user32.NewProc("GetWindowThreadProcessId")
+)
+
+func processNameOf(hwnd uintptr) string {
+	if hwnd == 0 || hwnd == 1 {
+		return ""
+	}
+	var pid uint32
+	procGetWindowThreadPID.Call(hwnd, uintptr(unsafe.Pointer(&pid)))
+	if pid == 0 {
+		return ""
+	}
+	h, _, _ := procOpenProcess.Call(0x1000, 0, uintptr(pid))
+	if h == 0 {
+		return ""
+	}
+	defer procCloseHandleW.Call(h)
+	buf := make([]uint16, 520)
+	size := uint32(len(buf))
+	ok, _, _ := procQueryFullProcessImageNameW.Call(h, 0,
+		uintptr(unsafe.Pointer(&buf[0])), uintptr(unsafe.Pointer(&size)))
+	if ok == 0 {
+		return ""
+	}
+	full := windows.UTF16ToString(buf[:size])
+	if i := strings.LastIndexAny(full, `\/`); i >= 0 {
+		return full[i+1:]
+	}
+	return full
 }

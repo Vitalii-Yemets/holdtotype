@@ -1,6 +1,7 @@
 package main
 
 import (
+	"holdtotype/internal/apprules"
 	"unsafe"
 	"holdtotype/internal/evqueue"
 
@@ -67,6 +68,7 @@ type App struct {
 	lastResult   string
 	lastResultAt time.Time
 	lastTarget   string
+	lastProcess  string
 	updVer     string
 	updURL     string
 
@@ -290,6 +292,23 @@ func main() {
 				log.Printf("демонстрация диалогов: выбор языка перевода")
 				log.Printf("ответ: %q", askTranslateTarget(cfg))
 			}
+			return
+		}
+		if arg == "-rulecheck" {
+			cfg, cerr := loadConfig("config.json")
+			if cerr != nil {
+				log.Printf("конфигурация: %v", cerr)
+				return
+			}
+			log.Printf("rulecheck: три секунды на переключение в нужное окно")
+			time.Sleep(3 * time.Second)
+			fg, _, _ := procGetForegroundWindow.Call()
+			exe := processNameOf(fg)
+			log.Printf("rulecheck: окно=%q процесс=%q", windowTitle(fg), exe)
+			c := *cfg
+			applyAppRule(&c, exe)
+			log.Printf("rulecheck: вставка=%s enter=%v задержка=%d промпты=%v",
+				c.PasteMode, c.AutoEnter, c.PasteDelayMs, c.ActiveProfiles)
 			return
 		}
 		if arg == "-dpi" {
@@ -717,9 +736,10 @@ func (a *App) handleDown(profileID string) {
 		return
 	}
 	a.gen++
+	a.sessionTarget, _, _ = procGetForegroundWindow.Call()
+	applyAppRule(cfg, processNameOf(a.sessionTarget))
 	a.sessionCfg = cfg
 	a.sessionProfile = profileID
-	a.sessionTarget, _, _ = procGetForegroundWindow.Call()
 	a.state.Store(stRecording)
 	traySetIcon(trayRecording)
 	a.setStatus(tr("status.recording"))
@@ -932,6 +952,7 @@ func (a *App) insertResult(ctx context.Context, cfg *Config, start time.Time, te
 	a.lastResult = text
 	a.lastResultAt = time.Now()
 	a.lastTarget = windowTitle(targetWnd)
+	a.lastProcess = processNameOf(targetWnd)
 	a.mu.Unlock()
 
 	allowEnter := cfg.AutoEnter && skipped == ""
@@ -994,6 +1015,33 @@ func (a *App) insertResult(ctx context.Context, cfg *Config, start time.Time, te
 
 func oneLine(s string) string {
 	return strings.Join(strings.Fields(s), " ")
+}
+
+func applyAppRule(cfg *Config, exe string) {
+	if exe == "" || len(cfg.AppRules) == 0 {
+		return
+	}
+	rule, ok := apprules.Find(cfg.AppRules, exe)
+	if !ok {
+		return
+	}
+	if rule.Paste == apprules.PasteClipboard || rule.Paste == apprules.PasteType {
+		cfg.PasteMode = rule.Paste
+	}
+	switch rule.Enter {
+	case apprules.EnterOn:
+		cfg.AutoEnter = true
+	case apprules.EnterOff:
+		cfg.AutoEnter = false
+	}
+	if rule.DelayMs > 0 {
+		cfg.PasteDelayMs = rule.DelayMs
+	}
+	if rule.UseProfiles {
+		cfg.ActiveProfiles = append([]string(nil), rule.Profiles...)
+	}
+	log.Printf("правило для %s: вставка=%s enter=%v задержка=%d мс промпты=%v",
+		exe, cfg.PasteMode, cfg.AutoEnter, cfg.PasteDelayMs, cfg.ActiveProfiles)
 }
 
 func (a *App) changeHotkey() {

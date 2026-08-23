@@ -607,6 +607,7 @@ type stateOut struct {
 	Last     string `json:"last"`
 	LastMeta string `json:"last_meta"`
 	LastAt   int64  `json:"last_at"`
+	LastApp  string `json:"last_app"`
 	Ready    bool   `json:"ready"`
 	Status   string `json:"status"`
 
@@ -702,6 +703,7 @@ func (a *App) stateSnapshot() string {
 	a.mu.Lock()
 	ready := a.ready
 	stamp := a.lastResultAt
+	lastApp := a.lastProcess
 	target := a.lastTarget
 	rec := a.rec
 	last := a.lastResult
@@ -762,6 +764,7 @@ func (a *App) stateSnapshot() string {
 		Last:       last,
 		LastMeta:   lastMeta,
 		LastAt:     lastAt,
+		LastApp:    lastApp,
 		Ready:      ready,
 		Status:     status,
 		RuModel:    ruModel,
