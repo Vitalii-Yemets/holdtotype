@@ -561,7 +561,10 @@ type stateOut struct {
 	LLMOK      bool   `json:"llm_ok"`
 	MicOK      bool   `json:"mic_ok"`
 	StatusLine string `json:"status_line"`
-	RestartPending bool   `json:"restart_pending"`
+	RestartHint string `json:"restart_hint"`
+	Remote      bool   `json:"remote"`
+	RuState     string `json:"ru_state"`
+	OtherState  string `json:"other_state"`
 	Badges     struct {
 		Mic    string `json:"mic"`
 		Models string `json:"models"`
@@ -601,13 +604,68 @@ func systemWarnings(cfg *Config) int {
 	return n
 }
 
+func modelStateFor(cfg *Config, engine string) string {
+	var id string
+	installed := false
+	switch engine {
+	case engineSherpa:
+		installed = sherpaInstalled(cfg)
+		dir := filepath.Base(filepath.Clean(cfg.SherpaModel))
+		for i := range modelCatalog {
+			if modelCatalog[i].Engine == engineSherpa && modelCatalog[i].Dir == dir {
+				id = modelCatalog[i].ID
+			}
+		}
+	default:
+		if strings.TrimSpace(cfg.ServerURL) != "" {
+			return "remote"
+		}
+		if _, err := os.Stat(cfg.Model); err == nil {
+			installed = true
+		}
+		file := filepath.Base(cfg.Model)
+		for i := range modelCatalog {
+			if modelCatalog[i].Engine != engineSherpa && modelCatalog[i].File == file {
+				id = modelCatalog[i].ID
+			}
+		}
+	}
+	if installed {
+		return "ready"
+	}
+	if id != "" {
+		dlMu.Lock()
+		st := dl[id]
+		dlMu.Unlock()
+		if st != nil && st.active {
+			return "downloading"
+		}
+	}
+	return "missing"
+}
+
+func (a *App) restartHint() string {
+	a.mu.Lock()
+	fields := a.restartFields
+	a.mu.Unlock()
+	if len(fields) == 0 {
+		return ""
+	}
+	var names []string
+	for _, key := range []string{"S_PORT", "S_THREADS", "S_SERVEREXE", "S_SERVERURL", "S_AUTOSTART"} {
+		if fields[key] {
+			names = append(names, strS(key))
+		}
+	}
+	return fmt.Sprintf(strS("S_RESTART_HINT"), strings.Join(names, ", "))
+}
+
 func (a *App) stateSnapshot() string {
 	cfg := a.snapshot()
 	a.mu.Lock()
 	ready := a.ready
 	rec := a.rec
 	last := a.lastResult
-	pending := a.restartPending
 	a.mu.Unlock()
 
 	mic := strS("S_MIC_DEFAULT")
@@ -650,6 +708,10 @@ func (a *App) stateSnapshot() string {
 	if !sherpaInstalled(cfg) {
 		ruModel = strS("S_NOT_INSTALLED")
 	}
+	otherModel := filepath.Base(cfg.Model)
+	if modelStateFor(cfg, engineWhisper) == "missing" {
+		otherModel = strS("S_NOT_INSTALLED")
+	}
 	st := stateOut{
 		Hotkey:     cfg.Hotkey,
 		Mic:        mic,
@@ -661,11 +723,14 @@ func (a *App) stateSnapshot() string {
 		Ready:      ready,
 		Status:     status,
 		RuModel:    ruModel,
-		OtherModel: filepath.Base(cfg.Model),
+		OtherModel: otherModel,
 		LLMOK:      llmInstalled(cfg),
 		MicOK:      rec != nil,
 		StatusLine: statusLine(cfg, ready, free),
-		RestartPending: pending,
+		RestartHint: a.restartHint(),
+		Remote:      strings.TrimSpace(cfg.ServerURL) != "",
+		RuState:     modelStateFor(cfg, engineSherpa),
+		OtherState:  modelStateFor(cfg, engineWhisper),
 	}
 	st.Badges.Mic = micBadge(mic)
 	st.Badges.Models = itoaSafe(installedModelCount())

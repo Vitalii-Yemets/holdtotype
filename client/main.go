@@ -66,7 +66,7 @@ type App struct {
 	lastResult   string
 	lastResultAt time.Time
 	lastTarget   string
-	restartPending bool
+	restartFields map[string]bool
 	updVer     string
 	updURL     string
 

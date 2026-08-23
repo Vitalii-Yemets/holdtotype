@@ -53,7 +53,9 @@ const cfg = {
 };
 
 const strings = {
-  nohot: "-", dl: "Download", del: 'Delete "x"', hint: "Applied on save",
+  nohot: "-", dl: "Download", del: 'Delete "x"', mdlready: "Model downloaded",
+  get: "Download", change: "Change", remotewarn: "Audio will be sent to this server.",
+  remoteask: "Send audio to %s?", remotebadge: "REMOTE",
   add: "Add profile", pname: "Name", pprompt: "Prompt", phot: "Hotkey",
   pset: "Set", pclr: "Clear", ptest: "Test", fitok: "fits", fitwarn: "tight",
   fitbad: "no RAM", ram: "RAM:", hfph: "model name", nollm: "no models",

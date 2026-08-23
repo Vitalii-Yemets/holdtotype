@@ -25,8 +25,15 @@ button.ibtn{border:1px solid var(--line);background:none;color:var(--dim);cursor
 button.ibtn:hover{color:var(--green);border-color:var(--dim);box-shadow:var(--glow)}
 .warn{color:var(--amber);font-size:12px}
 .chk{display:flex;align-items:center;gap:9px;font-size:13px;cursor:pointer}
-.chk input{width:16px;height:16px;accent-color:var(--dim);cursor:pointer}
+.chk input{appearance:none;-webkit-appearance:none;width:32px;height:17px;border:1px solid var(--line);background:none;position:relative;flex:none;margin:0;padding:0;cursor:pointer}
+.chk input::after{content:"";position:absolute;top:2px;left:2px;width:11px;height:11px;background:var(--dim);transition:.15s}
+.chk input:checked{border-color:var(--dim)}
+.chk input:checked::after{left:17px;background:var(--green);box-shadow:0 0 7px rgba(60,255,110,.55)}
+.chk input:focus-visible{outline:1px solid var(--green);outline-offset:2px}
 button.btn{padding:11px 26px;border:1px solid var(--dim);background:#0d1a11;color:var(--green);font:inherit;cursor:pointer;letter-spacing:2px;text-transform:uppercase;font-size:13px}
+button.btn.ghost{border-color:var(--line);background:none;color:var(--dim)}
+button.btn.ghost:hover{color:var(--green);border-color:var(--dim)}
+.foot{gap:8px}
 button.btn:hover{background:#123f22;box-shadow:var(--glow)}
 .bar{height:16px;border:1px solid var(--line);background:#08100b;position:relative;overflow:hidden}
 .bar i{position:absolute;inset:0;width:0;background:linear-gradient(90deg,#123f22,var(--dim));box-shadow:var(--glow);transition:width .2s}
@@ -63,6 +70,7 @@ button.btn:hover{background:#123f22;box-shadow:var(--glow)}
   <label class="chk"><input type="checkbox" id="autorun"> {{AUTORUN}}</label>
   </div>
   <label class="chk"><input type="checkbox" id="launch" checked> {{LAUNCH}}</label>
+  <div class="err" id="operr"></div>
   <div class="foot"><button class="btn" onclick="startInstall()">{{INSTALL}}</button></div>
  </div>
 
@@ -71,6 +79,10 @@ button.btn:hover{background:#123f22;box-shadow:var(--glow)}
   <div class="bar"><i id="fill"></i></div>
   <div class="plog" id="plog"></div>
   <div class="err" id="perr"></div>
+  <div class="foot" id="pfoot" style="display:none">
+   <button class="btn" onclick="startInstall()">{{RETRY}}</button>
+   <button class="btn ghost" onclick="backToOptions()">{{BACK}}</button>
+  </div>
  </div>
 
  <div class="step" id="st-done">
@@ -93,9 +105,23 @@ async function pickDir(){
   const p = await appBrowse();
   if(p) document.getElementById("dir").value = p;
 }
+function backToOptions(){
+  document.getElementById("pfoot").style.display = "none";
+  document.getElementById("perr").textContent = "";
+  show("st-opts");
+}
 function startInstall(){
   const dir = document.getElementById("dir").value.trim();
-  if(!dir) return;
+  if(!dir){
+    show("st-opts");
+    document.getElementById("operr").textContent = {{NODIR_JS}};
+    document.getElementById("dir").focus();
+    return;
+  }
+  document.getElementById("operr").textContent = "";
+  document.getElementById("perr").textContent = "";
+  document.getElementById("pfoot").style.display = "none";
+  document.getElementById("fill").style.width = "0%";
   show("st-prog");
   appInstall(dir, document.getElementById("shortcut").checked, document.getElementById("autorun").checked,
     UPDATING ? "" : document.getElementById("model").value, UPDATING);
@@ -107,6 +133,7 @@ function setupProgress(pct, name){
 function setupDone(err, warn, dir){
   if(err){
     document.getElementById("perr").textContent = err;
+    document.getElementById("pfoot").style.display = "";
     return;
   }
   document.getElementById("outdir").textContent = dir;

@@ -25,6 +25,14 @@ jobs:
         run: node ui.test.js
         working-directory: test
 
+      - name: Run installer checks
+        run: node setup.test.js
+        working-directory: test
+
+      - name: Check locale coverage
+        run: node locales.test.js
+        working-directory: test
+
   go-tests:
     name: Go tests and vet
     runs-on: ubuntu-latest

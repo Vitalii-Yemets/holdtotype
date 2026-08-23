@@ -41,6 +41,9 @@ var texts = map[string]map[string]string{
 		"warnmodel": "Модель не скачалась — приложение предложит её при первом запуске.",
 		"finish":    "ГОТОВО",
 		"err":       "Ошибка установки",
+		"retry":     "ПОВТОРИТЬ",
+		"back":      "НАЗАД",
+		"nodir":     "Укажите папку установки",
 		"webview":   "Для установщика нужен Microsoft WebView2 Runtime (входит в Windows 11).\nСейчас откроется страница загрузки.",
 	},
 	"uk": {
@@ -62,6 +65,9 @@ var texts = map[string]map[string]string{
 		"warnmodel": "Модель не завантажилася — застосунок запропонує її при першому запуску.",
 		"finish":    "ГОТОВО",
 		"err":       "Помилка встановлення",
+		"retry":     "ПОВТОРИТИ",
+		"back":      "НАЗАД",
+		"nodir":     "Вкажіть теку встановлення",
 		"webview":   "Для інсталятора потрібен Microsoft WebView2 Runtime (входить до Windows 11).\nЗараз відкриється сторінка завантаження.",
 	},
 	"en": {
@@ -83,6 +89,9 @@ var texts = map[string]map[string]string{
 		"warnmodel": "The model could not be downloaded — the app will offer it on first run.",
 		"finish":    "FINISH",
 		"err":       "Install error",
+		"retry":     "RETRY",
+		"back":      "BACK",
+		"nodir":     "Choose the installation folder",
 		"webview":   "The installer requires Microsoft WebView2 Runtime (bundled with Windows 11).\nThe download page will open now.",
 	},
 }
@@ -141,6 +150,9 @@ func page(updateDir string) string {
 		"{{DONEAT}}":       tr("doneat"),
 		"{{WARNMODEL_JS}}": template_jsstr(tr("warnmodel")),
 		"{{FINISH}}":       tr("finish"),
+		"{{RETRY}}":        tr("retry"),
+		"{{BACK}}":         tr("back"),
+		"{{NODIR_JS}}":     template_jsstr(tr("nodir")),
 		"{{VERSION}}":      appVersion,
 		"{{DEFDIR}}":       template_jsstr(defDir),
 	}

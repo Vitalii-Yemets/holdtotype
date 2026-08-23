@@ -18,13 +18,22 @@ const dom = new JSDOM(html, {
     window.confirm = () => true;
     window.appLLM = async () => JSON.stringify(llmState);
     let micBadge = "Realtek";
-    let restartPending = false;
+    let restartFields = "";
+    let micFails = false;
+    let ruState = "ready";
+    let otherState = "ready";
+    let remote = false;
+    window.micSelectCalls = 0;
+    window.setMicFails = (v) => { micFails = v; };
+    window.setModelStates = (ru, other) => { ruState = ru; otherState = other; };
+    window.setRemote = (v) => { remote = v; };
     window.appState = async () =>
       JSON.stringify({ hotkey: "ctrl+win", mic: "Realtek", engine: "sherpa · gigaam-v3", llm: "model.gguf",
         ram: "8000 MB free", last: "hello", last_meta: "just now · 5 characters", ready: true, status: "Ready",
         status_line: "Ready · gigaam-v3 + ggml-small.bin · 7.8 GB free", ru_model: "gigaam-v3",
         other_model: "ggml-small.bin", llm_ok: true, mic_ok: true,
-        restart_pending: restartPending,
+        restart_hint: restartFields, remote: remote,
+        ru_state: ruState, other_state: otherState,
         badges: { mic: micBadge, models: "2", system: "" } });
     window.appRouting = async () =>
       JSON.stringify([
@@ -62,8 +71,8 @@ const dom = new JSDOM(html, {
       window.saveCalls++;
       const f = JSON.parse(json);
       micBadge = f.mic_device_name ? f.mic_device_name.split(" ")[0] : "Realtek";
-      if(Number(f.server_port) !== 8910) restartPending = true;
-      return "Saved";
+      if(Number(f.server_port) !== 8910) restartFields = "Restart HoldToType to apply: Port";
+      return JSON.stringify({ ok: true, severity: "ok", message: "Saved" });
     };
     window.appModelDel = async () => "ok";
     window.appMics = async () =>
@@ -72,7 +81,11 @@ const dom = new JSDOM(html, {
         { id: "dev2", name: "Webcam microphone", default: false },
       ]);
     window.appMicLevel = async () => 0.42;
-    window.appMicSelect = async () => "";
+    window.appMicSelect = async () => {
+      window.micSelectCalls++;
+      if(micFails) return JSON.stringify({ ok: false, severity: "error", message: "Microphone busy" });
+      return JSON.stringify({ ok: true, severity: "ok" });
+    };
     window.appUpdateStatus = async () => JSON.stringify({ current: "0.0.0", latest: "", url: "" });
     window.appCheckUpdate = async () => JSON.stringify({ current: "0.0.0", latest: "v0.0.0", newer: false });
   },
@@ -227,13 +240,39 @@ function check(name, actual, expected) {
   check("version sits in the status bar", !!d.querySelector("#statusbar #ver"), true);
   check("version left the title bar", !!d.querySelector(".header #ver"), false);
 
+
+  tab("mic"); await sleep(120);
+  const micSel = d.getElementById("mic_device");
+  micSel.value = "dev1"; micSel.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
+  const savesBefore = w.saveCalls;
+  w.setMicFails(true);
+  micSel.value = "dev2"; micSel.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
+  check("a microphone that refuses is rolled back", micSel.value, "dev1");
+  check("the refusal stays on screen", d.getElementById("mic_err").textContent, "Microphone busy");
+  check("a refused microphone is not saved", w.saveCalls, savesBefore);
+  w.setMicFails(false);
+
+  w.setModelStates("missing", "downloading"); await sleep(1700);
+  check("a missing model is not green", d.getElementById("state_ru_led").className.includes("on"), false);
+  check("a missing model warns", d.getElementById("state_ru_led").className.includes("warn"), true);
+  check("a missing model offers to download it", d.getElementById("state_ru_btn").textContent, "Download");
+  check("a model being downloaded is not green", d.getElementById("state_other_led").className.includes("on"), false);
+  w.setModelStates("ready", "ready"); await sleep(1700);
+  check("an installed model is green", d.getElementById("state_ru_led").className.includes("on"), true);
+
+  w.setRemote(true); await sleep(1700);
+  check("remote recognition is announced", d.getElementById("st_remote").textContent, "REMOTE");
+  w.setRemote(false); await sleep(1700);
+  check("local recognition says nothing", d.getElementById("st_remote").textContent, "");
   check("no unsaved-changes dialog left", !!d.getElementById("modalbg"), false);
 
   tab("system"); await sleep(80);
   const port = d.getElementById("server_port");
   port.value = "8999"; port.dispatchEvent(new w.Event("change", { bubbles: true }));
   await sleep(400);
-  check("the port says it needs a restart", d.getElementById("st_pend").textContent, "Applied on save");
+  const pendText = d.getElementById("st_pend").textContent;
+  check("the port says it needs a restart", pendText, "Restart HoldToType to apply: Port");
+  check("the restart hint never mentions Save", /save/i.test(pendText), false);
 
   check("no page errors", errors, []);
 

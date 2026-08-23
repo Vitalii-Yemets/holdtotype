@@ -45,7 +45,7 @@ Hold a hotkey — speak. Release — the transcribed text is pasted right where 
 - 📦 **Built-in model catalog** — recognition models download in one click; GGUF models for the LLM are searched on Hugging Face with last-update date, download counts and a color indicator showing whether the model fits your RAM.
 - 🎚️ **Microphone control** — pick the input device from the settings, watch a live level meter before dictating, and keep working when a headset is unplugged (the app falls back to the system default automatically). Silent recordings are never sent to recognition, so background noise can't turn into invented text.
 - 📖 **Recognition dictionary** — terms and abbreviations hint rare words to Whisper; a multilingual starter set is preinstalled.
-- 🗣️ **8 UI languages** — English, Ukrainian, Russian, German, French, Spanish, Italian, Polish; switching is instant, "Same as system" follows Windows.
+- 🗣️ **UI languages** — English and Russian are complete. Ukrainian is about half translated, German, French, Spanish, Italian and Polish about a third; the rest of those interfaces falls back to English. Switching is instant, "Same as system" follows Windows.
 - 🔊 **Sound themes** — several synthesized cue sets plus Windows system sounds, with preview.
 - ⚡ **Nothing to save** — every change applies the moment you make it; the Save button is gone, and the two settings that genuinely need a restart say so in the status bar.
 - 🔍 **Find a setting** — Ctrl+K, a word, and the window jumps to the right section and highlights the row, even when the row is hidden by simple mode.

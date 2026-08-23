@@ -182,9 +182,9 @@ func (a *App) settingsThread(tab string, attempt int) {
 		_ = w.Bind("appSave", func(formJSON string) string {
 			var f settingsForm
 			if err := json.Unmarshal([]byte(formJSON), &f); err != nil {
-				return err.Error()
+				return jsonResult(saveResult{Severity: "error", Message: err.Error()})
 			}
-			return a.applySettings(&f)
+			return jsonResult(a.applySettings(&f))
 		})
 		_ = w.Bind("appCapture", func() {
 			go func() {
@@ -360,13 +360,13 @@ func (a *App) settingsThread(tab string, attempt int) {
 			rec := a.rec
 			a.mu.Unlock()
 			if rec == nil {
-				return ""
+				return jsonResult(saveResult{Severity: "error", Message: tr("ov.err.mic")})
 			}
 			if err := rec.SetDevice(id); err != nil {
 				log.Printf("выбор микрофона: %v", err)
-				return err.Error()
+				return jsonResult(saveResult{Severity: "error", Message: err.Error()})
 			}
-			return ""
+			return jsonResult(saveResult{OK: true, Severity: "ok"})
 		})
 		_ = w.Bind("appJSError", func(msg string) {
 			log.Printf("ошибка страницы настроек: %s", msg)
@@ -422,16 +422,22 @@ func (a *App) settingsThread(tab string, attempt int) {
 	}()
 }
 
-func (a *App) applySettings(f *settingsForm) string {
+type saveResult struct {
+	OK       bool   `json:"ok"`
+	Severity string `json:"severity"`
+	Message  string `json:"message"`
+}
+
+func (a *App) applySettings(f *settingsForm) saveResult {
 	if _, err := parseHotkey(f.Hotkey); err != nil {
-		return err.Error()
+		return saveResult{Severity: "error", Message: err.Error()}
 	}
 	combos := []string{f.Hotkey, f.TranslateHotkey}
 	for _, p := range f.Profiles {
 		combos = append(combos, p.Hotkey)
 	}
 	if dup := hotkeys.FindDuplicate(combos); dup != "" {
-		return trf("err.hotkey.dup", dup)
+		return saveResult{Severity: "error", Message: trf("err.hotkey.dup", dup)}
 	}
 
 	a.mu.Lock()
@@ -589,32 +595,38 @@ func (a *App) applySettings(f *settingsForm) string {
 	initLang(c.UILanguage)
 	if err := saveConfig("config.json", &c); err != nil {
 		log.Printf("сохранение конфига: %v", err)
-		return err.Error()
+		return saveResult{Severity: "error", Message: err.Error()}
 	}
 	a.refreshIdleUI()
 	if modelChanged {
 		a.requestServerRestart()
 	}
 
-	restartNeeded := c.ServerPort != old.ServerPort ||
-		c.Threads != old.Threads ||
-		c.ServerURL != old.ServerURL ||
-		c.ServerExe != old.ServerExe ||
-		c.ServerAutostart != old.ServerAutostart
-	if restartNeeded {
-		a.mu.Lock()
-		a.restartPending = true
-		a.mu.Unlock()
+	changed := map[string]bool{
+		"S_PORT":      c.ServerPort != old.ServerPort,
+		"S_THREADS":   c.Threads != old.Threads,
+		"S_SERVERURL": c.ServerURL != old.ServerURL,
+		"S_SERVEREXE": c.ServerExe != old.ServerExe,
+		"S_AUTOSTART": c.ServerAutostart != old.ServerAutostart,
 	}
+	restartNeeded := false
+	a.mu.Lock()
+	if a.restartFields == nil {
+		a.restartFields = map[string]bool{}
+	}
+	for key, ch := range changed {
+		if ch {
+			a.restartFields[key] = true
+			restartNeeded = true
+		}
+	}
+	a.mu.Unlock()
+
 	log.Printf("настройки сохранены: hotkey=%s ui=%s model=%s restart=%v", c.Hotkey, c.UILanguage, c.Model, restartNeeded)
-	switch {
-	case restartNeeded:
-		return strS("S_RESTART")
-	case modelChanged:
-		return tr("model.switching")
-	default:
-		return strS("S_SAVED")
+	if modelChanged {
+		return saveResult{OK: true, Severity: "ok", Message: tr("model.switching")}
 	}
+	return saveResult{OK: true, Severity: "ok", Message: strS("S_SAVED")}
 }
 
 func settingsHTML(cfg *Config, tab string) string {
@@ -660,14 +672,15 @@ func settingsHTML(cfg *Config, tab string) string {
 	str := strS
 	lMap := map[string]string{"nohot": "—"}
 	for jsKey, sKey := range map[string]string{
-		"dl": "S_DL", "del": "S_DEL", "hint": "S_APPLY_HINT", "add": "S_PROF_ADD",
+		"dl": "S_DL", "del": "S_DEL", "mdlready": "S_MODEL_READY", "add": "S_PROF_ADD",
 		"pname": "S_PROF_NAME", "pprompt": "S_PROF_PROMPT", "phot": "S_PROF_HOTKEY",
 		"pset": "S_PROF_SET", "pclr": "S_PROF_CLEAR", "ptest": "S_PROF_TEST",
 		"fitok": "S_FIT_OK", "fitwarn": "S_FIT_WARN", "fitbad": "S_FIT_BAD",
 		"ram": "S_RAM", "hfph": "S_HF_PH", "nollm": "S_NO_LLM", "nollmp": "S_NO_LLM_PROF",
 		"upd": "S_UPDATED", "pedit": "S_PROF_EDIT", "pclose": "S_PROF_CLOSE",
 		"confirmdel": "S_CONFIRM_DEL", "free": "S_FREE", "updnone": "S_UPD_NONE",
-		"micdefault": "S_MIC_DEFAULT", "micquiet": "S_MIC_QUIET",
+		"micdefault": "S_MIC_DEFAULT", "micquiet": "S_MIC_QUIET", "get": "S_STATE_GET", "change": "S_CHANGE_MODEL",
+		"remotewarn": "S_REMOTE_WARN", "remoteask": "S_REMOTE_ASK", "remotebadge": "S_REMOTE_BADGE",
 		"more": "S_MORE", "less": "S_LESS",
 		"updavail": "S_UPD_AVAIL", "updgo": "S_UPD_GO", "upderr": "S_UPD_ERR", "upddl": "S_UPD_DL",
 	} {
@@ -676,15 +689,20 @@ func settingsHTML(cfg *Config, tab string) string {
 	lJSON, _ := json.Marshal(lMap)
 
 	pairs := []string{"{{CFG}}", string(cfgJSON), "{{L_JSON}}", string(lJSON), "{{APP}}", appid.Name}
+	remote := strings.TrimSpace(cfg.ServerURL) != ""
 	for k := range settingsStrings["en"] {
-		pairs = append(pairs, "{{"+k+"}}", str(k))
+		v := str(k)
+		if k == "S_ABOUT_HTML" && remote {
+			v += `<p class="warn">` + str("S_REMOTE_ABOUT") + `</p>`
+		}
+		pairs = append(pairs, "{{"+k+"}}", v)
 	}
 	return strings.NewReplacer(pairs...).Replace(settingsPage)
 }
 
 const settingsPage = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>{{S_TITLE}}</title><style>
-:root{--bg:#0b0f0c;--panel:#0e1410;--line:#1d4a2b;--green:#3cff6e;--dim:#20a34a;--faint:#14803a;--amber:#ffb347;--glow:0 0 7px rgba(60,255,110,.55)}
+:root{--bg:#0b0f0c;--panel:#0e1410;--line:#1d4a2b;--green:#3cff6e;--dim:#20a34a;--faint:#14803a;--amber:#ffb347;--bad:#ff7b6b;--glow:0 0 7px rgba(60,255,110,.55)}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{font:14px Consolas,"Cascadia Mono",monospace;background:var(--bg);color:var(--green);user-select:none;display:flex;flex-direction:column;overflow:hidden}
@@ -726,11 +744,17 @@ button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box
 .row .lbl{flex:1;min-width:0}
 .statusbar{border-top:1px solid var(--line);padding:6px 14px;display:flex;gap:12px;align-items:center;font-size:11px;color:var(--faint);flex-wrap:nowrap;white-space:nowrap}
 .statusbar #st_main{min-width:0;overflow:hidden;text-overflow:ellipsis}
-.statusbar .stsaved,.statusbar .stpend{flex:none}
+.statusbar .stsaved,.statusbar .stpend,.statusbar .stremote{flex:none}
+.statusbar .stremote{color:var(--amber);border:1px solid var(--amber);padding:0 5px;letter-spacing:.08em}
+.statusbar .stremote:empty{display:none;border:0;padding:0}
 .statusbar .led{width:6px;height:6px;border-radius:50%;background:var(--faint);flex:none}
 .statusbar .led.on{background:var(--green);box-shadow:var(--glow)}
 .statusbar .stpend{color:var(--amber)}
 .statusbar .stsaved{color:var(--dim)}
+.statusbar .stsaved.warn{color:var(--amber)}
+.statusbar .stsaved.bad{color:var(--bad)}
+.note.warn{font-size:11px;color:var(--amber);line-height:1.5;padding:2px 0 6px}
+.note.warn:empty{display:none}
 .omni{margin-left:auto;display:flex;align-items:center;gap:8px;flex:none;border:1px solid var(--line);background:var(--panel);padding:4px 9px;min-width:min(320px,38%)}
 .omni:focus-within{border-color:var(--dim);box-shadow:var(--glow)}
 .omni input[type=text]{flex:1;min-width:0;width:auto;background:none;border:0;box-shadow:none;outline:none;color:var(--green);font:inherit;font-size:11.5px;padding:0;user-select:text;-webkit-user-select:text}
@@ -855,15 +879,16 @@ button.iconbtn{border:none;background:none;padding:2px 5px;color:var(--dim);curs
 button.iconbtn:hover{color:var(--green);filter:drop-shadow(0 0 4px rgba(60,255,110,.6))}
 button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,110,90,.5))}
 .about p{margin:8px 0;line-height:1.55;user-select:text;color:var(--green)}
+.about p.warn{color:var(--amber);border-left:2px solid var(--amber);padding-left:9px}
 .about b{text-shadow:var(--glow)}
 .about .wh{color:var(--dim);font-size:12px;letter-spacing:1px;text-transform:uppercase;margin:16px 0 4px;border-bottom:1px solid #12241a;padding-bottom:3px}
 .about ul{margin:4px 0 10px 20px;padding:0}
 .about li{margin:4px 0;line-height:1.55;color:var(--green);user-select:text}
-.mock{background:#0a0e0b;border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin:8px 0;max-width:420px;box-shadow:inset 0 0 14px rgba(60,255,110,.06)}
+.mock{background:#0a0e0b;border:1px solid var(--line);padding:10px 14px;margin:8px 0;max-width:420px}
 .mock-pill{display:flex;align-items:center;gap:10px}
 .mock-dot{width:11px;height:11px;border-radius:50%;background:#ff5b4d;box-shadow:0 0 8px rgba(255,91,77,.8);flex:none}
 .mock-bars{display:flex;gap:2px;align-items:center}
-.mock-bars i{display:block;width:3px;background:var(--green);border-radius:1px}
+.mock-bars i{display:block;width:3px;background:var(--green)}
 .mock-x{margin-left:auto;color:var(--dim)}
 .mock-btn{border:1px solid var(--line);padding:5px 14px;color:var(--dim);font-size:13px}
 .mock-btn.on{border-color:var(--green);color:var(--green);text-shadow:var(--glow)}
@@ -929,10 +954,10 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
    <span class="miclevel"><i id="state_mic_bar"></i></span></div>
   <div class="scard"><span class="k">{{S_STATE_RU}}</span>
    <span class="v"><i class="led" id="state_ru_led"></i><span id="state_ru">—</span></span>
-   <button class="mini" data-goto="models">{{S_CHANGE_MODEL}}</button></div>
+   <button class="mini" id="state_ru_btn" data-goto="models">{{S_CHANGE_MODEL}}</button></div>
   <div class="scard"><span class="k">{{S_STATE_OTHER}}</span>
    <span class="v"><i class="led" id="state_other_led"></i><span id="state_other">—</span></span>
-   <button class="mini" data-goto="models">{{S_CHANGE_MODEL}}</button></div>
+   <button class="mini" id="state_other_btn" data-goto="models">{{S_CHANGE_MODEL}}</button></div>
   <div class="scard"><span class="k">{{S_STATE_PROC}}</span>
    <span class="v"><i class="led" id="state_llm_led"></i><span id="state_llm">—</span></span>
    <button class="mini" data-goto="models">{{S_PICK_MODEL}}</button></div>
@@ -958,7 +983,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
   <div class="sect">{{S_SEC_BEHAVIOR}}</div>
   <div class="row"><label>{{S_AUTOENTER}}<span class="sub">{{S_SUB_ENTER}}</span></label><input type="checkbox" id="auto_enter"></div>
   <div class="row" data-adv><label>{{S_RESTORE}}<span class="sub">{{S_SUB_CLIP}}</span></label><input type="checkbox" id="restore_clipboard"></div>
-  <div class="row" data-adv><label>{{S_TYPEMODE}}<span class="sub">{{S_SUB_TYPE}}</span></label><input type="checkbox" id="type_mode"></div>
+  <div class="row"><label>{{S_TYPEMODE}}<span class="sub">{{S_SUB_TYPE}}</span></label><input type="checkbox" id="type_mode"></div>
  </div>
  <div class="card">
   <div class="sect">{{S_SEC_OVERLAY}}</div>
@@ -975,6 +1000,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
   <div class="row"><label>{{S_MIC_LEVEL}}</label>
    <span class="miclevel"><i id="mic_bar"></i></span>
    <span class="mpct" id="mic_hint"></span></div>
+  <div class="note warn" id="mic_err"></div>
  </div>
  <div class="card">
   <div class="sect">{{S_SEC_SOUND}}</div>
@@ -1121,6 +1147,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
   <div class="row" data-adv><label>{{S_PORT}}<span class="sub">{{S_SUB_PORT}}</span></label><input type="text" id="server_port" style="width:90px"></div>
   <div class="row" data-adv><label>{{S_SERVEREXE}}</label><input type="text" id="server_exe"></div>
   <div class="row" data-adv><label>{{S_SERVERURL}}<div class="hint">{{S_URLHINT}}</div></label><input type="text" id="server_url"></div>
+  <div class="note warn" id="remote_warn"></div>
  </div>
 </div>
 
@@ -1139,6 +1166,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
  <span class="led" id="st_led"></span>
  <span id="st_main">—</span>
  <span class="stsaved" id="st_saved"></span>
+ <span class="stremote" id="st_remote"></span>
  <span class="stpend" id="st_pend"></span>
  <span class="ver">v<span id="ver"></span></span>
 </div>
@@ -1441,6 +1469,7 @@ async function refreshMics(){
     sel.appendChild(o);
   });
   sel.value = [...sel.options].some(o=>o.value===chosen) ? chosen : "";
+  micChosen = sel.value;
 }
 function startMeter(barId, pageId, hintId){
   return setInterval(async ()=>{
@@ -1487,12 +1516,18 @@ function llmTestResult(out){
   if(el) el.textContent = out;
 }
 
+let micChosen = "";
 let selModel = null;
 let activeModelId = null;
 let pendingDl = null;
 async function refreshState(){
   const s = JSON.parse(await appState());
   const set = (id, v)=>{ const el = document.getElementById(id); if(el) el.textContent = v; };
+  const capLed = (ledId, btnId, state)=>{
+    led(ledId, state === "ready" || state === "remote", state === "missing" || state === "downloading");
+    const b = document.getElementById(btnId);
+    if(b) b.textContent = state === "missing" ? L.get : L.change;
+  };
   const led = (id, on, warn)=>{
     const el = document.getElementById(id);
     if(!el) return;
@@ -1513,8 +1548,8 @@ async function refreshState(){
   if(metaEl) metaEl.title = s.last_meta || "";
   set("st_main", s.status_line || s.status);
   led("state_mic_led", s.mic_ok);
-  led("state_ru_led", s.ru_model && s.ru_model.indexOf("/") < 0 && s.ready, !s.ready);
-  led("state_other_led", true);
+  capLed("state_ru_led", "state_ru_btn", s.ru_state);
+  capLed("state_other_led", "state_other_btn", s.other_state);
   led("state_llm_led", s.llm_ok, !s.llm_ok);
   led("st_led", s.ready);
   const badge = (id, v, full)=>{
@@ -1527,7 +1562,9 @@ async function refreshState(){
   badge("badge_models", s.badges && s.badges.models);
   badge("badge_system", s.badges && s.badges.system);
   const pend = document.getElementById("st_pend");
-  if(pend) pend.textContent = s.restart_pending ? L.hint : "";
+  if(pend) pend.textContent = s.restart_hint || "";
+  const rem = document.getElementById("st_remote");
+  if(rem) rem.textContent = s.remote ? L.remotebadge : "";
 }
 function initStateScreen(){
   const copy = document.getElementById("state_copy");
@@ -1598,9 +1635,9 @@ async function refreshModels(){
   if(pendingDl){
     const row = rows.find(m=>m.id===pendingDl);
     if(!row){ pendingDl = null; }
-    else if(row.state === "installed"){ pendingDl = null; toast(L.hint); }
+    else if(row.state === "installed"){ pendingDl = null; toast(L.mdlready); }
     else if(row.state === "active"){ pendingDl = null; }
-    else if(row.state === "absent" && row.err){ pendingDl = null; toast(row.err); }
+    else if(row.state === "absent" && row.err){ pendingDl = null; toast(row.err, "error"); }
   }
   const checkedId = selModel || activeModelId;
   const el = document.getElementById("models");
@@ -1649,13 +1686,14 @@ async function refreshModels(){
   });
   if(busy || pendingDl) setTimeout(refreshModels, 700);
 }
-function toast(msg){
+function toast(msg, severity){
   if(!msg) return;
   const t = document.getElementById("st_saved");
   if(!t) return;
   t.textContent = msg;
+  t.className = "stsaved" + (severity === "error" ? " bad" : severity === "warn" ? " warn" : "");
   clearTimeout(toast._t);
-  toast._t = setTimeout(()=>{ t.textContent = ""; }, 2200);
+  toast._t = setTimeout(()=>{ t.textContent = ""; t.className = "stsaved"; }, severity === "error" ? 6000 : 2200);
 }
 
 const sliders = [];
@@ -1669,7 +1707,19 @@ function load(){
   trd.onchange = ()=>{ translateDefault = trd.checked; syncTrControls(); };
   document.getElementById("translate_ask").onchange = syncTrControls;
   const micSel = document.getElementById("mic_device");
-  micSel.onchange = async ()=>{ const e = await appMicSelect(micSel.value); if(e) toast(e); };
+  micSel.onchange = async ()=>{
+    const r = JSON.parse(await appMicSelect(micSel.value));
+    const note = document.getElementById("mic_err");
+    if(!r.ok){
+      micSel.value = micChosen;
+      if(note) note.textContent = r.message || "";
+      toast(r.message, "error");
+      return;
+    }
+    micChosen = micSel.value;
+    if(note) note.textContent = "";
+    doSave();
+  };
   document.getElementById("mic_refresh").onclick = refreshMics;
   refreshMics();
   startMicMeter();
@@ -1697,6 +1747,28 @@ function load(){
     el.value = v;
   });
   syncTrControls();
+}
+function syncRemoteWarn(){
+  const el = document.getElementById("server_url");
+  const note = document.getElementById("remote_warn");
+  if(!el || !note) return;
+  note.textContent = el.value.trim() ? L.remotewarn : "";
+}
+function initRemote(){
+  const el = document.getElementById("server_url");
+  if(!el) return;
+  let known = el.value.trim();
+  syncRemoteWarn();
+  el.addEventListener("change", ()=>{
+    const url = el.value.trim();
+    if(url && url !== known && !confirm(L.remoteask.replace("%s", url))){
+      el.value = known;
+      syncRemoteWarn();
+      return;
+    }
+    known = url;
+    syncRemoteWarn();
+  });
 }
 function syncTrControls(){
   const always = document.getElementById("tr_default").checked;
@@ -1729,9 +1801,9 @@ async function doSave(){
   nums.forEach(k=>f[k]=parseInt(document.getElementById(k).value)||0);
   sels.forEach(k=>f[k]=document.getElementById(k).value);
   const langChanged = f.ui_language !== (CFG.ui_language || "auto");
-  const msg = await appSave(JSON.stringify(f));
+  const r = JSON.parse(await appSave(JSON.stringify(f)));
   if(langChanged){ appReload(curTab); return; }
-  toast(msg);
+  toast(r.message, r.severity);
   refreshModels();
   refreshState();
 }
@@ -1800,6 +1872,7 @@ function applyNow(){
 document.querySelector(".content").addEventListener("change", e=>{
   if(e.target.closest("#advisor")) return;
   if(e.target.name === "mdl" || e.target.name === "llmmdl") return;
+  if(e.target.id === "mic_device") return;
   applyNow();
 });
 (async()=>{ const s = JSON.parse(await appUpdateStatus()); if(s.latest && s.url) updShow(s.latest, true); })();
@@ -1815,6 +1888,7 @@ load();
 (async ()=>{
   initModelFilters();
   initStateScreen();
+  initRemote();
   applyLevel();
   document.querySelectorAll(".lvlb").forEach(b=>b.onclick=()=>setLevel(b.dataset.l));
   const omni = document.getElementById("omni");
@@ -1834,3 +1908,11 @@ show(tabAlias[CFG._tab] || "state");
 setTimeout(()=>{ if(window.appReady) appReady(); }, 400);
 </script>
 </body></html>`
+
+func jsonResult(v any) string {
+	out, err := json.Marshal(v)
+	if err != nil {
+		return `{"ok":false,"severity":"error","message":"json"}`
+	}
+	return string(out)
+}

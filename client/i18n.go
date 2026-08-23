@@ -369,7 +369,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_RESTORE":        "Восстанавливать буфер обмена после вставки",
 		"S_OVERLAY":        "Индикатор внизу экрана",
 		"S_ANIM":           "Анимация записи и распознавания",
-		"S_TYPEMODE":       "Посимвольный ввод (для полей, где запрещена вставка)",
+		"S_TYPEMODE":       "Вставлять посимвольно, а не через буфер",
 		"S_RECLANG":        "Язык распознавания",
 		"S_RECAUTO":        "Автоопределение",
 		"S_MODELS":         "Модели распознавания",
@@ -430,7 +430,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_SUB_MINMS":      "отсекает случайные нажатия",
 		"S_SUB_ENTER":      "отправляет сообщение сразу",
 		"S_SUB_CLIP":       "картинки и файлы возвращаются как были",
-		"S_SUB_TYPE":       "для полей, где вставка из буфера запрещена",
+		"S_SUB_TYPE":       "помогает там, где поле запрещает вставку из буфера",
 		"S_SUB_THREADS":    "больше потоков — не всегда быстрее, проверьте на своей машине",
 		"S_SUB_PUNCT":      "откуда берутся знаки препинания и заглавные",
 		"S_SUB_TRTARGET":   "на английский переводит Whisper, остальные — экспериментально",
@@ -461,11 +461,15 @@ var settingsStrings = map[string]map[string]string{
 		"S_AUTOSTART":      "Запускать whisper-server автоматически",
 		"S_PORT":           "Порт",
 		"S_SERVEREXE":      "Путь к whisper-server",
-		"S_SERVERURL":      "Внешний сервер (URL)",
+		"S_SERVERURL":      "Удалённый сервер распознавания (URL)",
 		"S_URLHINT":        "Если задан — свой сервер не запускается",
-		"S_SAVE":           "Сохранить",
+		"S_REMOTE_WARN":    "Звук будет уходить на этот сервер. Локальный режим выключен.",
+		"S_REMOTE_ASK":     "Аудио перестанет обрабатываться на этом компьютере и будет отправляться на %s. Включить удалённый режим?",
+		"S_REMOTE_BADGE":   "УДАЛЁННО",
+		"S_REMOTE_ABOUT":   "Сейчас задан удалённый сервер: звук уходит на него, и обещание выше не действует.",
 		"S_SAVED":          "Сохранено",
-		"S_RESTART":        "Сохранено. Модель/язык/сервер применятся после перезапуска",
+		"S_RESTART_HINT":   "Перезапустите {app}, чтобы применить: %s",
+		"S_STATE_GET":      "Скачать",
 		"S_SUB_INFO":       "Информация",
 		"S_SUB_HELP":       "Справка",
 		"S_UPD":            "Обновления",
@@ -535,7 +539,7 @@ var settingsStrings = map[string]map[string]string{
 			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Medium (q5)</b><span class=\"mock-note\">точнее, рекомендуем</span><span style=\"margin-left:auto\">539 MB ⭳</span></div>" +
 			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Turbo (q5)</b><span class=\"mock-note\">максимум точности на CPU</span><span style=\"margin-left:auto\">574 MB ⭳</span></div></div>" +
 			"<ul>" +
-			"<li><b>Модели</b> — каталог моделей Whisper: Base (быстрая, для слабых ПК), Small (баланс), Medium и Turbo (точнее и медленнее; «q5» — квантованная версия: чуть меньше и быстрее почти без потери качества). Радиокнопка выбирает активную (применяется по «Сохранить», распознаватель перезапустится); клик по радио нескачанной модели сразу загружает её с официального репозитория whisper.cpp на Hugging Face. Одна модель обслуживает и распознавание, и перевод.</li>" +
+			"<li><b>Модели</b> — каталог моделей Whisper: Base (быстрая, для слабых ПК), Small (баланс), Medium и Turbo (точнее и медленнее; «q5» — квантованная версия: чуть меньше и быстрее почти без потери качества). Радиокнопка выбирает активную (применяется сразу, распознаватель перезапустится); клик по радио нескачанной модели сразу загружает её с официального репозитория whisper.cpp на Hugging Face. Одна модель обслуживает и распознавание, и перевод.</li>" +
 			"<li>Модель держится в памяти сервером whisper-server между фразами — поэтому первая диктовка после запуска чуть дольше (загрузка), дальше распознавание занимает 1–3 секунды.</li>" +
 			"<li><b>Словарь</b> — термины, имена и аббревиатуры через запятую. Это подсказка «слуху» Whisper, чтобы редкие слова распознавались правильно; это не команды.</li>" +
 			"<li><b>Параметры</b> — выбор микрофона со шкалой уровня (говорите — полоса двигается, значит устройство слышит), потоки CPU (больше — быстрее распознавание), минимальная длительность записи (отсекает случайные нажатия), максимальная (автостоп записи). Если выбранное устройство отключить, приложение само переключится на системное; запись без речи не отправляется на распознавание — покажет «Тишина».</li>" +
@@ -548,7 +552,7 @@ var settingsStrings = map[string]map[string]string{
 			"<div class=\"mock-row\" style=\"padding-left:18px\">q4_k_m.gguf<span style=\"margin-left:auto\">1.9 GB</span><span style=\"color:var(--green)\">● ≈3.7 GB</span><span style=\"color:var(--dim)\">⭳</span></div>" +
 			"<div class=\"mock-row\" style=\"padding-left:18px\">q8_0.gguf<span style=\"margin-left:auto\">3.6 GB</span><span style=\"color:var(--amber)\">● ≈8.2 GB</span><span style=\"color:var(--dim)\">⭳</span></div></div>" +
 			"<ul>" +
-			"<li><b>Модели</b> — установленные LLM-модели редактора; радиокнопка выбирает активную (по «Сохранить»), крестик удаляет (можно и активную — тогда постобработка отключится). Здесь же виден прогресс загрузок.</li>" +
+			"<li><b>Модели</b> — установленные LLM-модели редактора; радиокнопка выбирает активную (применяется сразу), крестик удаляет (можно и активную — тогда постобработка отключится). Здесь же виден прогресс загрузок.</li>" +
 			"<li><b>Поиск</b> — GGUF-модели на Hugging Face по имени (например, «qwen2.5 instruct»). У репозитория: дата последнего обновления, число загрузок и ссылка ↗ на страницу модели; клик по строке раскрывает файлы-кванты. Индикатор ● ≈N GB сравнивается со <b>свободной</b> оперативной памятью (она показана над списком).</li>" +
 			"<li><b>Как выбрать квант:</b> цифра — сколько бит на вес (Q4 — золотая середина, Q8 — почти без сжатия, Q3 — экономия памяти ценой качества); K_M точнее K_S; IQ4 — новое поколение, лучше классических при том же размере. Индикатор ● ≈N GB — оценка нужной оперативной памяти (файл + запас на контекст): зелёный — помещается, жёлтый — впритык, красный — не хватит.</li>" +
 			"<li>Модель 1.5–3B — быстрая редактура; 7–9B — заметно умнее, но на CPU каждая обработка занимает секунды. llama-server поднимается при первом использовании и держит модель в памяти наготове.</li>" +
@@ -585,7 +589,7 @@ var settingsStrings = map[string]map[string]string{
 			"<li><b>{log}</b> — журнал работы, автоматически ограничен ~2 МБ.</li>" +
 			"<li><b>models/</b> — скачанные модели Whisper и LLM.</li>" +
 			"</ul>",
-		"S_APPLY_HINT": "Модель переключится после нажатия «Сохранить»",
+		"S_MODEL_READY": "Модель загружена — выберите её, чтобы переключиться",
 		"S_VERSION":    "Версия",
 	},
 	"en": {
@@ -657,7 +661,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_RESTORE":        "Restore clipboard after paste",
 		"S_OVERLAY":        "On-screen indicator",
 		"S_ANIM":           "Recording & transcribing animation",
-		"S_TYPEMODE":       "Type character-by-character (for paste-blocked fields)",
+		"S_TYPEMODE":       "Insert character-by-character instead of the clipboard",
 		"S_RECLANG":        "Recognition language",
 		"S_RECAUTO":        "Auto-detect",
 		"S_MODELS":         "Recognition models",
@@ -718,7 +722,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_SUB_MINMS":      "ignores accidental key presses",
 		"S_SUB_ENTER":      "sends the message right away",
 		"S_SUB_CLIP":       "images and files come back as they were",
-		"S_SUB_TYPE":       "for fields where pasting is blocked",
+		"S_SUB_TYPE":       "helps where a field refuses a clipboard paste",
 		"S_SUB_THREADS":    "more threads is not always faster — measure on your machine",
 		"S_SUB_PUNCT":      "where punctuation and capitals come from",
 		"S_SUB_TRTARGET":   "English is native for Whisper, other targets are experimental",
@@ -749,11 +753,15 @@ var settingsStrings = map[string]map[string]string{
 		"S_AUTOSTART":      "Start whisper-server automatically",
 		"S_PORT":           "Port",
 		"S_SERVEREXE":      "whisper-server path",
-		"S_SERVERURL":      "External server (URL)",
+		"S_SERVERURL":      "Remote recognition server (URL)",
 		"S_URLHINT":        "If set, the local server is not started",
-		"S_SAVE":           "Save",
+		"S_REMOTE_WARN":    "Audio will be sent to this server. Local mode is off.",
+		"S_REMOTE_ASK":     "Audio will stop being processed on this computer and will be sent to %s. Turn remote mode on?",
+		"S_REMOTE_BADGE":   "REMOTE",
+		"S_REMOTE_ABOUT":   "A remote server is set: audio is sent to it, and the promise above does not hold while it is on.",
 		"S_SAVED":          "Saved",
-		"S_RESTART":        "Saved. Model/language/server apply after restart",
+		"S_RESTART_HINT":   "Restart {app} to apply: %s",
+		"S_STATE_GET":      "Download",
 		"S_SUB_INFO":       "Info",
 		"S_SUB_HELP":       "Guide",
 		"S_UPD":            "Updates",
@@ -823,7 +831,7 @@ var settingsStrings = map[string]map[string]string{
 			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Medium (q5)</b><span class=\"mock-note\">more accurate, recommended</span><span style=\"margin-left:auto\">539 MB ⭳</span></div>" +
 			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Turbo (q5)</b><span class=\"mock-note\">best CPU accuracy</span><span style=\"margin-left:auto\">574 MB ⭳</span></div></div>" +
 			"<ul>" +
-			"<li><b>Models</b> — the Whisper catalog: Base (fast, weak PCs), Small (balanced), Medium and Turbo (more accurate, slower; \"q5\" means a quantized build — slightly smaller and faster with almost no quality loss). The radio selects the active one (applied on Save; the recognizer restarts); clicking the radio of a missing model downloads it from the official whisper.cpp repository on Hugging Face. One model serves both recognition and translation.</li>" +
+			"<li><b>Models</b> — the Whisper catalog: Base (fast, weak PCs), Small (balanced), Medium and Turbo (more accurate, slower; \"q5\" means a quantized build — slightly smaller and faster with almost no quality loss). The radio selects the active one (applied at once; the recognizer restarts); clicking the radio of a missing model downloads it from the official whisper.cpp repository on Hugging Face. One model serves both recognition and translation.</li>" +
 			"<li>whisper-server keeps the model in memory between phrases — the first dictation after startup is slower (loading), afterwards recognition takes 1–3 seconds.</li>" +
 			"<li><b>Dictionary</b> — comma-separated terms, names and abbreviations. A hint for Whisper's \"ear\" so rare words are recognized correctly; not commands.</li>" +
 			"<li><b>Parameters</b> — microphone selection with a live level meter (speak and the bar moves, so you know the device is heard), CPU threads (more = faster transcription), minimum recording length (filters accidental presses), maximum length (auto-stop). If the chosen device is unplugged the app falls back to the system default; a recording with no speech is never sent for recognition — it reports \"Silence\" instead.</li>" +
@@ -836,7 +844,7 @@ var settingsStrings = map[string]map[string]string{
 			"<div class=\"mock-row\" style=\"padding-left:18px\">q4_k_m.gguf<span style=\"margin-left:auto\">1.9 GB</span><span style=\"color:var(--green)\">● ≈3.7 GB</span><span style=\"color:var(--dim)\">⭳</span></div>" +
 			"<div class=\"mock-row\" style=\"padding-left:18px\">q8_0.gguf<span style=\"margin-left:auto\">3.6 GB</span><span style=\"color:var(--amber)\">● ≈8.2 GB</span><span style=\"color:var(--dim)\">⭳</span></div></div>" +
 			"<ul>" +
-			"<li><b>Models</b> — installed LLM editing models; the radio selects the active one (on Save), ✕ deletes (the active one too — post-processing then turns off). Download progress shows here as well.</li>" +
+			"<li><b>Models</b> — installed LLM editing models; the radio selects the active one (applied at once), ✕ deletes (the active one too — post-processing then turns off). Download progress shows here as well.</li>" +
 			"<li><b>Search</b> — GGUF models on Hugging Face by name (e.g. \"qwen2.5 instruct\"). Each repository shows its last update date, download count and a ↗ link to the model page; clicking a row expands its quant files. The ● ≈N GB indicator is compared against the <b>free</b> RAM (shown above the list).</li>" +
 			"<li><b>Picking a quant:</b> the number is bits per weight (Q4 — the sweet spot, Q8 — nearly uncompressed, Q3 — saves RAM at a quality cost); K_M beats K_S; IQ4 is the newer generation, better than classic quants at the same size. The ● ≈N GB indicator estimates the RAM needed (file plus context headroom): green fits, amber is tight, red won't fit.</li>" +
 			"<li>A 1.5–3B model gives fast editing; 7–9B is noticeably smarter but each pass takes seconds on CPU. llama-server starts on first use and keeps the model warm in memory.</li>" +
@@ -873,7 +881,7 @@ var settingsStrings = map[string]map[string]string{
 			"<li><b>{log}</b> — the log, automatically capped at ~2 MB.</li>" +
 			"<li><b>models/</b> — downloaded Whisper and LLM models.</li>" +
 			"</ul>",
-		"S_APPLY_HINT": "The model will switch after you press Save",
+		"S_MODEL_READY": "Model downloaded — pick it to switch",
 		"S_VERSION":    "Version",
 	},
 }

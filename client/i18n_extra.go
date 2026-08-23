@@ -173,8 +173,7 @@ func init() {
 		"S_THREADS":  "CPU-Threads", "S_MINMS": "Min. Aufnahme, ms", "S_MAXSEC": "Max. Aufnahme, s",
 		"S_AUTOSTART": "whisper-server automatisch starten", "S_PORT": "Port", "S_SERVEREXE": "Pfad zu whisper-server",
 		"S_SERVERURL": "Externer Server (URL)", "S_URLHINT": "Falls gesetzt, wird kein lokaler Server gestartet",
-		"S_SAVE": "Speichern", "S_SAVED": "Gespeichert", "S_RESTART": "Gespeichert. Modell/Server nach Neustart",
-		"S_APPLY_HINT": "Das Modell wechselt nach dem Speichern",
+		"S_SAVED": "Gespeichert",
 		"S_ABOUT_HTML": "<p><b>Stimme → Text an der Cursorposition.</b></p><p>Cursor in ein Eingabefeld setzen, Shortcut halten, sprechen, loslassen — der Text wird eingefügt.</p><p>Vollständig lokal und offline. Technik: <b>Go + WinAPI</b>, <b>WebView2</b>, <b>whisper.cpp</b>, <b>llama.cpp</b>, <b>miniaudio</b>; Modelle von Hugging Face.</p><p>Logs überschreiten nie ~2 MB.</p>",
 		"S_VERSION":    "Version",
 	}
@@ -204,8 +203,7 @@ func init() {
 		"S_THREADS":  "Threads CPU", "S_MINMS": "Enreg. min, ms", "S_MAXSEC": "Enreg. max, s",
 		"S_AUTOSTART": "Démarrer whisper-server automatiquement", "S_PORT": "Port", "S_SERVEREXE": "Chemin de whisper-server",
 		"S_SERVERURL": "Serveur externe (URL)", "S_URLHINT": "Si défini, le serveur local ne démarre pas",
-		"S_SAVE": "Enregistrer", "S_SAVED": "Enregistré", "S_RESTART": "Enregistré. Modèle/serveur après redémarrage",
-		"S_APPLY_HINT": "Le modèle changera après l'enregistrement",
+		"S_SAVED": "Enregistré",
 		"S_ABOUT_HTML": "<p><b>Voix → texte à la position du curseur.</b></p><p>Placez le curseur, maintenez le raccourci, parlez, relâchez — le texte s'insère.</p><p>Entièrement local et hors ligne. Technologies : <b>Go + WinAPI</b>, <b>WebView2</b>, <b>whisper.cpp</b>, <b>llama.cpp</b>, <b>miniaudio</b> ; modèles depuis Hugging Face.</p><p>Les logs ne dépassent jamais ~2 Mo.</p>",
 		"S_VERSION":    "Version",
 	}
@@ -235,8 +233,7 @@ func init() {
 		"S_THREADS":  "Hilos de CPU", "S_MINMS": "Grab. mín, ms", "S_MAXSEC": "Grab. máx, s",
 		"S_AUTOSTART": "Iniciar whisper-server automáticamente", "S_PORT": "Puerto", "S_SERVEREXE": "Ruta de whisper-server",
 		"S_SERVERURL": "Servidor externo (URL)", "S_URLHINT": "Si se define, no se inicia el servidor local",
-		"S_SAVE": "Guardar", "S_SAVED": "Guardado", "S_RESTART": "Guardado. Modelo/servidor tras reinicio",
-		"S_APPLY_HINT": "El modelo cambiará tras guardar",
+		"S_SAVED": "Guardado",
 		"S_ABOUT_HTML": "<p><b>Voz → texto en la posición del cursor.</b></p><p>Coloque el cursor, mantenga el atajo, hable, suelte — el texto se inserta.</p><p>Totalmente local y sin conexión. Tecnologías: <b>Go + WinAPI</b>, <b>WebView2</b>, <b>whisper.cpp</b>, <b>llama.cpp</b>, <b>miniaudio</b>; modelos de Hugging Face.</p><p>Los logs nunca superan ~2 MB.</p>",
 		"S_VERSION":    "Versión",
 	}
@@ -266,8 +263,7 @@ func init() {
 		"S_THREADS":  "Thread CPU", "S_MINMS": "Registrazione min, ms", "S_MAXSEC": "Registrazione max, s",
 		"S_AUTOSTART": "Avvia whisper-server automaticamente", "S_PORT": "Porta", "S_SERVEREXE": "Percorso whisper-server",
 		"S_SERVERURL": "Server esterno (URL)", "S_URLHINT": "Se impostato, il server locale non parte",
-		"S_SAVE": "Salva", "S_SAVED": "Salvato", "S_RESTART": "Salvato. Modello/server dopo riavvio",
-		"S_APPLY_HINT": "Il modello cambierà dopo il salvataggio",
+		"S_SAVED": "Salvato",
 		"S_ABOUT_HTML": "<p><b>Voce → testo alla posizione del cursore.</b></p><p>Posiziona il cursore, tieni la scorciatoia, parla, rilascia — il testo viene inserito.</p><p>Completamente locale e offline. Tecnologie: <b>Go + WinAPI</b>, <b>WebView2</b>, <b>whisper.cpp</b>, <b>llama.cpp</b>, <b>miniaudio</b>; modelli da Hugging Face.</p><p>I log non superano mai ~2 MB.</p>",
 		"S_VERSION":    "Versione",
 	}
@@ -297,8 +293,7 @@ func init() {
 		"S_THREADS":  "Wątki CPU", "S_MINMS": "Min. nagranie, ms", "S_MAXSEC": "Maks. nagranie, s",
 		"S_AUTOSTART": "Uruchamiaj whisper-server automatycznie", "S_PORT": "Port", "S_SERVEREXE": "Ścieżka whisper-server",
 		"S_SERVERURL": "Serwer zewnętrzny (URL)", "S_URLHINT": "Jeśli ustawiony, lokalny serwer nie startuje",
-		"S_SAVE": "Zapisz", "S_SAVED": "Zapisano", "S_RESTART": "Zapisano. Model/serwer po restarcie",
-		"S_APPLY_HINT": "Model zmieni się po zapisaniu",
+		"S_SAVED": "Zapisano",
 		"S_ABOUT_HTML": "<p><b>Głos → tekst w pozycji kursora.</b></p><p>Ustaw kursor, przytrzymaj skrót, mów, puść — tekst zostanie wstawiony.</p><p>W pełni lokalnie i offline. Technologie: <b>Go + WinAPI</b>, <b>WebView2</b>, <b>whisper.cpp</b>, <b>llama.cpp</b>, <b>miniaudio</b>; modele z Hugging Face.</p><p>Logi nigdy nie przekraczają ~2 MB.</p>",
 		"S_VERSION":    "Wersja",
 	}
@@ -393,8 +388,7 @@ func init() {
 		"S_THREADS": "Потоки CPU", "S_MINMS": "Мін. запис, мс", "S_MAXSEC": "Макс. запис, с",
 		"S_AUTOSTART": "Запускати whisper-server автоматично", "S_PORT": "Порт", "S_SERVEREXE": "Шлях до whisper-server",
 		"S_SERVERURL": "Зовнішній сервер (URL)", "S_URLHINT": "Якщо задано — свій сервер не запускається",
-		"S_SAVE": "Зберегти", "S_SAVED": "Збережено", "S_RESTART": "Збережено. Модель/мова/сервер застосуються після перезапуску",
-		"S_APPLY_HINT": "Модель перемкнеться після натискання «Зберегти»",
+		"S_SAVED": "Збережено",
 		"S_ABOUT_HTML": "<p><b>Голос → текст у позицію курсора.</b></p><p>Поставте курсор у поле введення, утримуйте сполучення клавіш, скажіть фразу, відпустіть — текст вставиться сам.</p><p>Повністю локально й офлайн. Технології: <b>Go + WinAPI</b>, <b>WebView2</b>, <b>whisper.cpp</b>, <b>llama.cpp</b>, <b>miniaudio</b>; моделі з Hugging Face.</p><p>Логи не перевищують ~2 МБ.</p>",
 		"S_VERSION":    "Версія",
 	}
