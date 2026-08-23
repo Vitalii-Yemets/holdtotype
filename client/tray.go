@@ -153,7 +153,7 @@ func trayWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 	case wmTrayCallback:
 		switch lParam {
 		case wmLButtonUp, wmLButtonDbl:
-			go trayApp.openSettings("general")
+			go trayApp.openSettings("state")
 		case wmRButtonUp:
 			trayShowMenu(hwnd)
 		}
@@ -215,7 +215,7 @@ func trayShowMenu(hwnd uintptr) {
 			}
 		}
 	case cmdSettings:
-		go a.openSettings("general")
+		go a.openSettings("state")
 	case cmdToggle:
 		a.toggleEnabled()
 	case cmdReload:

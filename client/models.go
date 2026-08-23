@@ -544,3 +544,58 @@ func adviseModel(lang, priority string, needTranslate bool) string {
 	})
 	return string(out)
 }
+
+type stateOut struct {
+	Hotkey string `json:"hotkey"`
+	Mic    string `json:"mic"`
+	Engine string `json:"engine"`
+	LLM    string `json:"llm"`
+	RAM    string `json:"ram"`
+	Last   string `json:"last"`
+	Ready  bool   `json:"ready"`
+	Status string `json:"status"`
+}
+
+func (a *App) stateSnapshot() string {
+	cfg := a.snapshot()
+	a.mu.Lock()
+	ready := a.ready
+	rec := a.rec
+	last := a.lastResult
+	a.mu.Unlock()
+
+	mic := strS("S_MIC_DEFAULT")
+	if cfg.MicDeviceName != "" {
+		mic = cfg.MicDeviceName
+	} else if rec != nil {
+		for _, d := range rec.devices() {
+			if d.Default {
+				mic = d.Name
+				break
+			}
+		}
+	}
+	llm := strS("S_NO_LLM")
+	if llmInstalled(cfg) {
+		llm = filepath.Base(cfg.LLMModel)
+	}
+	_, free := ramMB()
+	status := tr("status.loading")
+	if ready {
+		status = trf("status.ready", cfg.Hotkey)
+	}
+	if last == "" {
+		last = "—"
+	}
+	out, _ := json.Marshal(stateOut{
+		Hotkey: cfg.Hotkey,
+		Mic:    mic,
+		Engine: primaryEngine(cfg) + " · " + filepath.Base(filepath.Clean(activeModelPath(cfg))),
+		LLM:    llm,
+		RAM:    trf("adv.ram", free),
+		Last:   last,
+		Ready:  ready,
+		Status: status,
+	})
+	return string(out)
+}

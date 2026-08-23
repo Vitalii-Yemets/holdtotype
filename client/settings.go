@@ -1,5 +1,6 @@
 package main
 
+
 import (
 	"context"
 	"encoding/json"
@@ -194,6 +195,19 @@ func (a *App) settingsThread(tab string, attempt int) {
 		})
 		_ = w.Bind("appModels", func() string {
 			return a.modelRows()
+		})
+		_ = w.Bind("appCopyLast", func() {
+			a.mu.Lock()
+			text := a.lastResult
+			a.mu.Unlock()
+			if text != "" {
+				if err := setClipboardText(text); err != nil {
+					log.Printf("копирование последнего результата: %v", err)
+				}
+			}
+		})
+		_ = w.Bind("appState", func() string {
+			return a.stateSnapshot()
 		})
 		_ = w.Bind("appRouting", func() string {
 			out, _ := json.Marshal(routeRows(a.snapshot()))
@@ -677,6 +691,24 @@ button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box
 @keyframes pulse{0%,100%{opacity:.35;transform:scale(.94)}50%{opacity:1;transform:scale(1)}}
 .wave{animation:pulse 1.6s infinite}
 .tabs{display:flex;flex-wrap:wrap;gap:2px;padding:10px 16px 0;border-bottom:1px solid var(--line)}
+.shell{display:flex;flex:1;min-height:0}
+.snav{width:168px;flex:none;border-right:1px solid var(--line);padding:6px 0;display:flex;flex-direction:column;gap:1px;overflow-y:auto}
+.snav .ngrp{font-size:9px;letter-spacing:.16em;color:var(--faint);padding:12px 12px 3px;text-transform:uppercase}
+.nav{appearance:none;border:0;background:none;text-align:left;font:inherit;font-size:12.5px;color:var(--dim);padding:8px 12px;cursor:pointer;border-left:2px solid transparent}
+.nav:hover{color:var(--green)}
+.nav.active{color:var(--green);border-left-color:var(--green);background:var(--panel);text-shadow:var(--glow)}
+.statusbar{border-top:1px solid var(--line);padding:6px 14px;display:flex;gap:12px;align-items:center;font-size:11px;color:var(--faint);flex-wrap:wrap}
+.statusbar .led{width:6px;height:6px;border-radius:50%;background:var(--faint);flex:none}
+.statusbar .led.on{background:var(--green);box-shadow:var(--glow)}
+.statusbar .stpend{margin-left:auto;color:var(--amber)}
+.hero{display:flex;align-items:center;gap:12px;border:1px solid var(--line);background:var(--panel);padding:12px 14px;margin-bottom:10px;flex-wrap:wrap}
+.herokey{border:1px solid var(--dim);color:var(--green);padding:5px 12px;font-size:14px;letter-spacing:1px}
+.herotext{font-size:12px;color:var(--dim)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:12px}
+.scard{border:1px solid var(--line);background:var(--panel);padding:9px 11px;display:flex;flex-direction:column;gap:5px}
+.scard .k{font-size:9.5px;letter-spacing:.12em;color:var(--faint);text-transform:uppercase}
+.scard .v{font-size:12.5px;color:var(--green)}
+.lastres{flex:1;color:var(--dim);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tab{padding:9px 14px;border:1px solid transparent;border-bottom:none;background:none;font:inherit;color:var(--dim);cursor:pointer;letter-spacing:1px;text-transform:uppercase;font-size:12px}
 .tab:hover{color:var(--green)}
 .tab.active{color:var(--green);border-color:var(--line);background:var(--panel);text-shadow:var(--glow)}
@@ -815,39 +847,64 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
   <button class="cap close" onclick="guardClose()">&#10005;</button>
  </div>
 </div>
-<div class="tabs" id="tabbar">
- <button class="tab" data-p="general">{{S_TAB_GENERAL}}</button>
- <button class="tab" data-p="rec">{{S_TAB_REC}}</button>
- <button class="tab" data-p="proc">{{S_TAB_PROC}}</button>
- <button class="tab" data-p="about">{{S_TAB_ABOUT}}</button>
-</div>
+<div class="shell">
+<nav class="snav" id="snav">
+ <span class="ngrp">{{S_GRP_WORK}}</span>
+ <button class="nav" data-p="state">{{S_NAV_STATE}}</button>
+ <button class="nav" data-p="dictation">{{S_NAV_DICT}}</button>
+ <button class="nav" data-p="mic">{{S_NAV_MIC}}</button>
+ <span class="ngrp">{{S_GRP_REC}}</span>
+ <button class="nav" data-p="models">{{S_NAV_MODELS}}</button>
+ <button class="nav" data-p="text">{{S_NAV_TEXT}}</button>
+ <button class="nav" data-p="translate">{{S_NAV_TR}}</button>
+ <span class="ngrp">{{S_GRP_OTHER}}</span>
+ <button class="nav" data-p="system">{{S_NAV_SYSTEM}}</button>
+ <button class="nav" data-p="about">{{S_NAV_ABOUT}}</button>
+</nav>
 
 <div class="content">
-<div class="page" id="p-general">
+<div class="page" id="p-state">
+ <div class="hero"><span class="herokey" id="state_hotkey"></span><span class="herotext">{{S_STATE_HINT}}</span></div>
+ <div class="cards">
+  <div class="scard"><span class="k">{{S_NAV_MIC}}</span><span class="v" id="state_mic">—</span></div>
+  <div class="scard"><span class="k">{{S_STATE_ENGINE}}</span><span class="v" id="state_engine">—</span></div>
+  <div class="scard"><span class="k">{{S_STATE_PROC}}</span><span class="v" id="state_llm">—</span></div>
+  <div class="scard"><span class="k">{{S_STATE_MEM}}</span><span class="v" id="state_ram">—</span></div>
+ </div>
+ <div class="sect">{{S_STATE_LAST}}</div>
+ <div class="row"><span class="lastres" id="state_last">—</span>
+  <button class="mini" id="state_copy">{{S_STATE_COPY}}</button></div>
+</div>
+
+<div class="page" id="p-dictation">
  <div class="card">
   <div class="row"><label>{{S_HOTKEY}}</label>
    <div class="hotkey-box"><span class="hotkey-val" id="hotkey"></span>
    <button class="btn" onclick="appCapture()">{{S_CHANGE}}</button></div></div>
-  <div class="row"><label>{{S_UILANG}}</label>
-   <select id="ui_language">
-    <option value="auto">{{S_AUTO}}</option>
-    <option value="en">English</option>
-    <option value="ru">Русский</option>
-    <option value="uk">Українська</option>
-    <option value="de">Deutsch</option>
-    <option value="fr">Français</option>
-    <option value="es">Español</option>
-    <option value="it">Italiano</option>
-    <option value="pl">Polski</option>
-   </select></div>
-  <div class="row"><label>{{S_RECLANG}}</label>
-   <select id="language">
-    <option value="auto">{{S_RECAUTO}}</option>
-    <option value="ru">Русский</option><option value="en">English</option>
-    <option value="uk">Українська</option><option value="de">Deutsch</option>
-    <option value="fr">Français</option><option value="es">Español</option>
-    <option value="pl">Polski</option>
-   </select></div>
+  <div class="row"><label>{{S_MINMS}}</label><span class="val" id="min_record_ms_v"></span><input type="range" id="min_record_ms" min="0" max="1000" step="50"></div>
+  <div class="row"><label>{{S_MAXSEC}}</label><span class="val" id="max_record_seconds_v"></span><input type="range" id="max_record_seconds" min="10" max="300" step="10"></div>
+ </div>
+ <div class="card">
+  <div class="sect">{{S_SEC_BEHAVIOR}}</div>
+  <div class="row"><label>{{S_AUTOENTER}}</label><input type="checkbox" id="auto_enter"></div>
+  <div class="row"><label>{{S_RESTORE}}</label><input type="checkbox" id="restore_clipboard"></div>
+  <div class="row"><label>{{S_TYPEMODE}}</label><input type="checkbox" id="type_mode"></div>
+ </div>
+ <div class="card">
+  <div class="sect">{{S_SEC_OVERLAY}}</div>
+  <div class="row"><label>{{S_OVERLAY}}</label><input type="checkbox" id="overlay"></div>
+  <div class="row"><label>{{S_ANIM}}</label><input type="checkbox" id="animation"></div>
+ </div>
+</div>
+
+<div class="page" id="p-mic">
+ <div class="card">
+  <div class="row"><label>{{S_MIC}}</label>
+   <select id="mic_device"><option value="">{{S_MIC_DEFAULT}}</option></select>
+   <button class="iconbtn" id="mic_refresh" title="{{S_MIC_REFRESH}}">&#8635;</button></div>
+  <div class="row"><label>{{S_MIC_LEVEL}}</label>
+   <span class="miclevel"><i id="mic_bar"></i></span>
+   <span class="mpct" id="mic_hint"></span></div>
  </div>
  <div class="card">
   <div class="sect">{{S_SEC_SOUND}}</div>
@@ -863,43 +920,10 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
     <option value="pop">{{S_SND_POP}}</option>
    </select></div>
  </div>
- <div class="card">
-  <div class="sect">{{S_SEC_BEHAVIOR}}</div>
-  <div class="row"><label>{{S_AUTOENTER}}</label><input type="checkbox" id="auto_enter"></div>
-  <div class="row"><label>{{S_RESTORE}}</label><input type="checkbox" id="restore_clipboard"></div>
-  <div class="row"><label>{{S_OVERLAY}}</label><input type="checkbox" id="overlay"></div>
-  <div class="row"><label>{{S_ANIM}}</label><input type="checkbox" id="animation"></div>
-  <div class="row"><label>{{S_TYPEMODE}}</label><input type="checkbox" id="type_mode"></div>
- </div>
 </div>
 
-<div class="page" id="p-rec">
+<div class="page" id="p-models">
  <div class="card">
-  <div class="subtabs">
-   <button class="stab" data-s="models">{{S_SUB_MODELS}}</button>
-   <button class="stab" data-s="dict">{{S_SUB_DICT}}</button>
-   <button class="stab" data-s="params">{{S_SUB_PARAMS}}</button>
-   <button class="stab" data-s="server">{{S_TAB_SERVER}}</button>
-   <button class="stab" data-s="translate">{{S_SUB_TR}}</button>
-  </div>
-  <div id="rec-params" class="spage">
-  <div class="row"><label>{{S_PUNCT}}</label>
-   <select id="punctuation">
-    <option value="model">{{S_PUNCT_MODEL}}</option>
-    <option value="llm">{{S_PUNCT_LLM}}</option>
-    <option value="off">{{S_PUNCT_OFF}}</option>
-   </select></div>
-  <div class="row"><label>{{S_MIC}}</label>
-   <select id="mic_device"><option value="">{{S_MIC_DEFAULT}}</option></select>
-   <button class="iconbtn" id="mic_refresh" title="{{S_MIC_REFRESH}}">&#8635;</button></div>
-  <div class="row"><label>{{S_MIC_LEVEL}}</label>
-   <span class="miclevel"><i id="mic_bar"></i></span>
-   <span class="mpct" id="mic_hint"></span></div>
-  <div class="row"><label>{{S_THREADS}}</label><span class="val" id="threads_v"></span><input type="range" id="threads" min="1" max="16" step="1"></div>
-  <div class="row"><label>{{S_MINMS}}</label><span class="val" id="min_record_ms_v"></span><input type="range" id="min_record_ms" min="0" max="1000" step="50"></div>
-  <div class="row"><label>{{S_MAXSEC}}</label><span class="val" id="max_record_seconds_v"></span><input type="range" id="max_record_seconds" min="10" max="300" step="10"></div>
-  </div>
-  <div id="rec-models" class="spage">
   <div id="routing"></div>
   <div class="advbar">
    <button type="button" class="mini" id="adv_open">{{S_ADV_TITLE}}</button>
@@ -925,12 +949,48 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
    <div id="adv_out" class="advout"></div>
   </div>
   <div id="models"></div>
-  </div>
-  <div id="rec-dict" class="spage">
+ </div>
+ <div class="card">
+  <div class="row"><label>{{S_RECLANG}}</label>
+   <select id="language">
+    <option value="auto">{{S_RECAUTO}}</option>
+    <option value="ru">Русский</option><option value="en">English</option>
+    <option value="uk">Українська</option><option value="de">Deutsch</option>
+    <option value="fr">Français</option><option value="es">Español</option>
+    <option value="pl">Polski</option>
+   </select></div>
+  <div class="row"><label>{{S_THREADS}}</label><span class="val" id="threads_v"></span><input type="range" id="threads" min="1" max="16" step="1"></div>
+ </div>
+ <div class="card">
+  <div class="sect">{{S_SEC_LLM}}<span class="hfhome" onclick="appHFHome()" title="huggingface.co">Hugging Face ↗</span></div>
+  <div id="proc-models" class="spage on"></div>
+  <div id="proc-search" class="spage on"></div>
+ </div>
+</div>
+
+<div class="page" id="p-text">
+ <div class="card">
+  <div class="row"><label>{{S_PUNCT}}</label>
+   <select id="punctuation">
+    <option value="model">{{S_PUNCT_MODEL}}</option>
+    <option value="llm">{{S_PUNCT_LLM}}</option>
+    <option value="off">{{S_PUNCT_OFF}}</option>
+   </select></div>
+ </div>
+ <div class="card">
+  <div class="sect">{{S_SUB_DICT}}</div>
   <div style="color:var(--faint);font-size:12px;margin-bottom:6px">{{S_DICT_HINT}}</div>
-  <textarea id="whisper_prompt" rows="14" style="width:100%;min-height:180px;height:38vh;padding:8px 11px;border:1px solid var(--line);background:#08100b;color:var(--green);font:inherit;line-height:1.5;outline:none;resize:vertical"></textarea>
-  </div>
-  <div id="rec-translate" class="spage">
+  <textarea id="whisper_prompt" rows="10" style="width:100%;min-height:150px;height:26vh;padding:8px 11px;border:1px solid var(--line);background:#08100b;color:var(--green);font:inherit;line-height:1.5;outline:none;resize:vertical"></textarea>
+ </div>
+ <div class="card">
+  <div class="sect">{{S_SUB_PROMPTS}}</div>
+  <div style="color:var(--faint);font-size:12px;margin-bottom:8px">{{S_LLM_HINT}}</div>
+  <div id="profbody"></div>
+ </div>
+</div>
+
+<div class="page" id="p-translate">
+ <div class="card">
   <div style="color:var(--faint);font-size:12px;margin-bottom:6px">{{S_TR_HINT}}</div>
   <div id="tr_warn" style="display:none;color:var(--amber);font-size:12px;margin-bottom:6px">{{S_TR_TURBO}}</div>
   <div class="row"><label>{{S_TR_DEFAULT}}</label><input type="checkbox" id="tr_default"></div>
@@ -963,58 +1023,52 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
     <label style="flex:none"><input type="checkbox" id="tl_ru"> RU</label>
     <label style="flex:none"><input type="checkbox" id="tl_uk"> UK</label>
    </span></div>
-  </div>
-  <div id="rec-server" class="spage">
+ </div>
+</div>
+
+<div class="page" id="p-system">
+ <div class="card">
+  <div class="row"><label>{{S_UILANG}}</label>
+   <select id="ui_language">
+    <option value="auto">{{S_AUTO}}</option>
+    <option value="en">English</option>
+    <option value="ru">Русский</option>
+    <option value="uk">Українська</option>
+    <option value="de">Deutsch</option>
+    <option value="fr">Français</option>
+    <option value="es">Español</option>
+    <option value="it">Italiano</option>
+    <option value="pl">Polski</option>
+   </select></div>
+  <div class="row"><label>{{S_UPD}}</label>
+   <button class="mini" id="upd_check">{{S_UPD_CHECK}}</button></div>
+  <div class="row"><label>{{S_UPD_AUTO}}</label><input type="checkbox" id="check_updates"></div>
+  <div id="upd_out" style="font-size:12px;min-height:18px;color:var(--amber)"></div>
+ </div>
+ <div class="card">
+  <div class="sect">{{S_SEC_SERVICE}}</div>
   <div class="row"><label>{{S_AUTOSTART}}</label><input type="checkbox" id="server_autostart"></div>
   <div class="row"><label>{{S_PORT}}</label><input type="text" id="server_port" style="width:90px"></div>
   <div class="row"><label>{{S_SERVEREXE}}</label><input type="text" id="server_exe"></div>
   <div class="row"><label>{{S_SERVERURL}}<div class="hint">{{S_URLHINT}}</div></label><input type="text" id="server_url"></div>
-  </div>
- </div>
-</div>
-
-<div class="page" id="p-proc">
- <div style="color:var(--faint);font-size:12px;letter-spacing:1px;margin:0 2px 10px">{{S_PIPE}}</div>
- <div class="card">
-  <div class="subtabs">
-   <button class="stab" data-s="models">{{S_SUB_MODELS}}</button>
-   <button class="stab" data-s="search">{{S_SUB_SEARCH}}</button>
-   <button class="stab" data-s="prompts">{{S_SUB_PROMPTS}}</button>
-   <span class="hfhome" onclick="appHFHome()" title="huggingface.co">Hugging Face ↗</span>
-  </div>
-  <div id="proc-models" class="spage"></div>
-  <div id="proc-search" class="spage"></div>
-  <div id="proc-prompts" class="spage">
-   <div style="color:var(--faint);font-size:12px;margin-bottom:8px">{{S_LLM_HINT}}</div>
-   <div id="profbody"></div>
-  </div>
  </div>
 </div>
 
 <div class="page about" id="p-about">
  <div class="card">
-  <div class="subtabs">
-   <button class="stab" data-s="info">{{S_SUB_INFO}}</button>
-   <button class="stab" data-s="help">{{S_SUB_HELP}}</button>
-   <button class="stab" data-s="author">{{S_SUB_AUTHOR}}</button>
-  </div>
-  <div id="about-info" class="spage">
   <p style="font-size:15px;letter-spacing:2px"><b>{{APP}}</b> <span id="ver2"></span></p>
   {{S_ABOUT_HTML}}
-  <div class="row" style="border-top:1px solid #12241a;margin-top:10px;padding-top:12px">
-   <label>{{S_UPD}}</label>
-   <button class="mini" id="upd_check">{{S_UPD_CHECK}}</button></div>
-  <div class="row"><label>{{S_UPD_AUTO}}</label><input type="checkbox" id="check_updates"></div>
-  <div id="upd_out" style="font-size:12px;min-height:18px;color:var(--amber)"></div>
-  </div>
-  <div id="about-help" class="spage">
-  {{S_HELP_HTML}}
-  </div>
-  <div id="about-author" class="spage">
-  {{S_AUTHOR_HTML}}
-  </div>
  </div>
+ <div class="card">{{S_HELP_HTML}}</div>
+ <div class="card">{{S_AUTHOR_HTML}}</div>
 </div>
+</div>
+</div>
+
+<div class="statusbar" id="statusbar">
+ <span class="led" id="st_led"></span>
+ <span id="st_main">—</span>
+ <span class="stpend" id="st_pend"></span>
 </div>
 
 <div class="footer">
@@ -1065,11 +1119,7 @@ function fitLabel(f, need){
   return '<span title="'+esc(tip)+'" style="color:'+col+';font-size:12px;white-space:nowrap">&#9679; &#8776;'+gb+' GB</span>';
 }
 const curSubs = {};
-function showSub(page, s){
-  curSubs[page] = s;
-  document.querySelectorAll("#p-"+page+" .stab").forEach(b=>b.classList.toggle("on", b.dataset.s===s));
-  document.querySelectorAll("#p-"+page+" .spage").forEach(el=>el.classList.toggle("on", el.id===page+"-"+s));
-}
+function showSub(){}
 async function refreshLLM(){
   const st = JSON.parse(await appLLM());
   const installed = st.installed || [];
@@ -1077,7 +1127,6 @@ async function refreshLLM(){
     const act = installed.find(m=>m.active);
     if(act) selLLM = act.file;
   }
-  if(!curSubs.proc) showSub("proc", installed.length ? "models" : "search");
 
   const body = document.getElementById("proc-models");
   body.innerHTML = "";
@@ -1196,7 +1245,6 @@ function renderHF(){
         b.onclick = async e=>{
           e.stopPropagation();
           await appLLMDlFile(b.dataset.repo, b.dataset.file);
-          showSub("proc", "models");
           refreshLLM();
         };
       });
@@ -1341,8 +1389,8 @@ function startMicMeter(){
   micTimer = setInterval(async ()=>{
     const bar = document.getElementById("mic_bar");
     if(!bar) return;
-    const page = document.getElementById("rec-params");
-    if(!page || !page.classList.contains("on") || !document.getElementById("p-rec").classList.contains("active")){
+    const page = document.getElementById("p-mic");
+    if(!page || !page.classList.contains("active")){
       bar.style.width = "0%";
       return;
     }
@@ -1379,6 +1427,25 @@ let selModel = null;
 let activeModelId = null;
 let pendingDl = null;
 let baseline = null;
+async function refreshState(){
+  const s = JSON.parse(await appState());
+  const set = (id, v)=>{ const el = document.getElementById(id); if(el) el.textContent = v; };
+  set("state_hotkey", s.hotkey);
+  set("state_mic", s.mic);
+  set("state_engine", s.engine);
+  set("state_llm", s.llm);
+  set("state_ram", s.ram);
+  set("state_last", s.last);
+  set("st_main", s.status);
+  const led = document.getElementById("st_led");
+  if(led) led.classList.toggle("on", !!s.ready);
+}
+function initStateScreen(){
+  const copy = document.getElementById("state_copy");
+  if(copy) copy.onclick = ()=>{ appCopyLast(); toast(L.upd); };
+  setInterval(()=>{ if(curTab === "state") refreshState(); }, 3000);
+  refreshState();
+}
 let modelFilter = "all";
 function modelPassesFilter(m){
   switch(modelFilter){
@@ -1627,24 +1694,20 @@ async function doSave(){
   refreshModels();
 }
 function save(){ doSave(); }
-let curTab = "general";
+let curTab = "state";
 function show(p){
   curTab = p;
-  document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active", b.dataset.p===p));
+  document.querySelectorAll(".nav").forEach(b=>b.classList.toggle("active", b.dataset.p===p));
   document.querySelectorAll(".page").forEach(el=>el.classList.toggle("active", el.id==="p-"+p));
-  document.querySelector(".footer").style.display = (p==="about") ? "none" : "flex";
+  document.querySelector(".footer").style.display = (p==="about"||p==="state") ? "none" : "flex";
+  if(p==="state") refreshState();
+  document.querySelector(".content").scrollTop = 0;
 }
-document.querySelectorAll(".stab").forEach(b=>b.onclick=()=>showSub(b.closest(".page").id.slice(2), b.dataset.s));
 document.getElementById("upd_check").onclick = updCheck;
 (async()=>{ const s = JSON.parse(await appUpdateStatus()); if(s.latest && s.url) updShow(s.latest, true); })();
-document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{
+document.querySelectorAll(".nav").forEach(b=>b.onclick=()=>{
   const p = b.dataset.p;
-  if(p === curTab) return;
-  if(dirty()){
-    askUnsaved(async s=>{ if(s){ await doSave(); } else { revert(); } show(p); });
-  } else {
-    show(p);
-  }
+  if(p !== curTab) show(p);
 });
 document.querySelector(".header").addEventListener("mousedown", e=>{
   if(e.target.closest(".cap")) return;
@@ -1653,15 +1716,14 @@ document.querySelector(".header").addEventListener("mousedown", e=>{
 load();
 (async ()=>{
   initModelFilters();
+  initStateScreen();
   await refreshModels();
   await refreshLLM();
   baseline = formState();
   if(window.appReady) appReady();
 })();
-showSub("rec", "models");
-showSub("about", "info");
-show(["about","rec","proc","server"].includes(CFG._tab) ? (CFG._tab==="server" ? "rec" : CFG._tab) : "general");
-if(CFG._tab === "server") showSub("rec", "server");
+const tabAlias = {general:"state", rec:"models", proc:"text", server:"system", about:"about", state:"state", dictation:"dictation", mic:"mic", models:"models", text:"text", translate:"translate", system:"system"};
+show(tabAlias[CFG._tab] || "state");
 setTimeout(()=>{ if(window.appReady) appReady(); }, 400);
 </script>
 </body></html>`

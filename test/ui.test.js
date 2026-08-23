@@ -17,6 +17,8 @@ const dom = new JSDOM(html, {
   beforeParse(window) {
     window.confirm = () => true;
     window.appLLM = async () => JSON.stringify(llmState);
+    window.appState = async () =>
+      JSON.stringify({ hotkey: "ctrl+win", mic: "Realtek", engine: "sherpa · gigaam-v3", llm: "model.gguf", ram: "8000 MB free", last: "hello", ready: true, status: "Ready" });
     window.appRouting = async () =>
       JSON.stringify([
         { cond: "Speech in RU", engine: "gigaam-v3", why: "more accurate here" },
@@ -42,7 +44,7 @@ const dom = new JSDOM(html, {
       "appLLMDlFile", "appLLMTest", "appHFPage", "appHFHome", "appRepoLink",
       "appAuthorLink", "appCapture", "appCaptureCombo", "appReload",
       "appPreviewSound", "appModelDl", "appMin", "appClose", "appDrag",
-      "appDoUpdate", "appReady", "appJSError",
+      "appDoUpdate", "appReady", "appJSError", "appCopyLast",
     ]) {
       window[name] = () => {};
     }
@@ -77,35 +79,56 @@ function check(name, actual, expected) {
 
   check("page script executed", d.getElementById("ver").textContent, "0.0.0-test");
 
-  const tab = (p) => d.querySelector(`.tab[data-p="${p}"]`).click();
-  const sub = (page, s) => d.querySelector(`#p-${page} .stab[data-s="${s}"]`).click();
-  const visible = (id) => d.getElementById(id).classList.contains("on");
+  const tab = (p) => d.querySelector(`.nav[data-p="${p}"]`).click();
+  const shown = (p) => d.getElementById(`p-${p}`).classList.contains("active");
 
-  tab("rec"); await sleep(80);
-  check("recognition opens on Models", visible("rec-models"), true);
-  check("recognition models listed", d.querySelectorAll('#rec-models input[name="mdl"]').length, 3);
+  check("opens on the status screen", shown("state"), true);
+  check("status hotkey shown", d.getElementById("state_hotkey").textContent, "ctrl+win");
+  check("status engine shown", d.getElementById("state_engine").textContent, "sherpa · gigaam-v3");
+  check("status bar filled", d.getElementById("st_main").textContent, "Ready");
+  check("status bar led lit", d.getElementById("st_led").classList.contains("on"), true);
+
+  check("eight sections in the sidebar", d.querySelectorAll(".nav").length, 8);
+  const everySetting = [
+    "hotkey", "min_record_ms", "max_record_seconds", "auto_enter", "restore_clipboard",
+    "type_mode", "overlay", "animation", "mic_device", "mic_bar", "beep", "sound_theme",
+    "routing", "models", "language", "threads", "punctuation", "whisper_prompt", "profbody",
+    "tr_default", "translate_target", "translate_ask", "translate_ask_seconds", "tr_hotkey",
+    "tl_en", "ui_language", "upd_check", "check_updates", "server_autostart", "server_port",
+    "server_exe", "server_url", "proc-models", "proc-search", "ver2",
+  ];
+  const missing = everySetting.filter((id) => !d.getElementById(id));
+  check("every setting is present in the new window", missing, []);
+
+  tab("models"); await sleep(80);
+  check("models section shown", shown("models"), true);
+  check("recognition models listed", d.querySelectorAll('#p-models input[name="mdl"]').length, 3);
   check("model filters rendered", d.querySelectorAll(".fchip").length, 5);
-  check("ram estimate shown", d.querySelectorAll("#rec-models .mram").length, 3);
+  check("ram estimate shown", d.querySelectorAll("#p-models .mram").length, 3);
   check("routing panel rows", d.querySelectorAll("#routing .rrow").length, 3);
   check("routing shows engine", d.querySelectorAll("#routing .reng")[0].textContent, "gigaam-v3");
-  check("engine tags rendered", d.querySelectorAll("#rec-models .mtag").length, 3);
-  check("russian engine tagged RU", d.querySelectorAll("#rec-models .mtag")[2].textContent, "RU");
-  sub("rec", "params"); await sleep(120);
+  check("engine tags rendered", d.querySelectorAll("#p-models .mtag").length, 3);
+  check("russian engine tagged RU", d.querySelectorAll("#p-models .mtag")[2].textContent, "RU");
+
+  tab("mic"); await sleep(120);
   const mic = d.getElementById("mic_device");
   check("microphone list has default plus devices", mic.options.length, 3);
   check("default option is localized", mic.options[0].textContent, "System default");
   check("system default selected initially", mic.value, "");
   mic.value = "dev1"; mic.dispatchEvent(new w.Event("change")); await sleep(30);
   check("microphone selection kept", mic.value, "dev1");
-  await sleep(200);
+  await sleep(260);
   check("input level meter moves", d.getElementById("mic_bar").style.width !== "" && d.getElementById("mic_bar").style.width !== "0%", true);
 
-  sub("rec", "dict"); await sleep(30);
-  check("dictionary textarea is large", d.getElementById("whisper_prompt").getAttribute("rows"), "14");
-  sub("rec", "server"); await sleep(30);
-  check("server subtab shown", [visible("rec-server"), visible("rec-params")], [true, false]);
+  mic.value = ""; mic.dispatchEvent(new w.Event("change")); await sleep(30);
+  tab("text"); await sleep(30);
+  check("dictionary textarea present", !!d.getElementById("whisper_prompt"), true);
+  check("punctuation modes offered", d.getElementById("punctuation").options.length, 3);
 
-  sub("rec", "translate"); await sleep(30);
+  tab("system"); await sleep(30);
+  check("service settings shown", [shown("system"), !!d.getElementById("server_url")], [true, true]);
+
+  tab("translate"); await sleep(30);
   const trd = d.getElementById("tr_default");
   const ask = d.getElementById("translate_ask");
   const state = () => [
@@ -124,9 +147,7 @@ function check(name, actual, expected) {
   ask.value = "timeout"; ask.dispatchEvent(new w.Event("change"));
   check("timeout mode keeps target editable", state(), [false, false, false, false]);
 
-  tab("proc"); await sleep(80);
-  check("post-processing opens on Models", visible("proc-models"), true);
-  sub("proc", "prompts"); await sleep(30);
+  tab("text"); await sleep(80);
   const pb = d.getElementById("profbody");
   check("prompts listed", pb.querySelectorAll("input.profcb").length, 2);
 
@@ -139,18 +160,15 @@ function check(name, actual, expected) {
   d.getElementById("pf_close").click(); await sleep(60);
   check("prompt editor closes via collapse button", !!d.getElementById("pf_name"), false);
 
-  sub("proc", "models"); await sleep(30);
+  tab("models"); await sleep(30);
   const del = d.querySelector('#proc-models button[data-a="ldel"]');
   check("active LLM model can be deleted", !!del, true);
   del.click(); await sleep(200);
   check("model list empty after delete", d.querySelectorAll('#proc-models input[name="llmmdl"]').length, 0);
 
   tab("about"); await sleep(60);
-  check("about opens on Info", visible("about-info"), true);
-  sub("about", "help"); await sleep(30);
-  check("guide subtab shown", visible("about-help"), true);
-  sub("about", "author"); await sleep(30);
-  check("author subtab shown", visible("about-author"), true);
+  check("about section shown", shown("about"), true);
+  check("about carries version, help and author", d.querySelectorAll("#p-about .card").length, 3);
 
   check("no page errors", errors, []);
 

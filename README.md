@@ -25,9 +25,9 @@ Hold a hotkey — speak. Release — the transcribed text is pasted right where 
 
 ## 📸 Screenshots
 
-| Installer | Settings |
+| Installer | Status screen |
 |---|---|
-| ![Installer](docs/setup.png) | ![General](docs/settings-general.png) |
+| ![Installer](docs/setup.png) | ![Status](docs/settings-general.png) |
 | **Model catalog** | **Post-processing (LLM)** |
 | ![Models](docs/models.png) | ![Post-processing](docs/postprocessing.png) |
 
@@ -47,6 +47,7 @@ Hold a hotkey — speak. Release — the transcribed text is pasted right where 
 - 📖 **Recognition dictionary** — terms and abbreviations hint rare words to Whisper; a multilingual starter set is preinstalled.
 - 🗣️ **8 UI languages** — English, Ukrainian, Russian, German, French, Spanish, Italian, Polish; switching is instant, "Same as system" follows Windows.
 - 🔊 **Sound themes** — several synthesized cue sets plus Windows system sounds, with preview.
+- 🖥️ **One window, eight sections** — a sidebar instead of tabs inside tabs: Status, Dictation, Microphone, Models, Text, Translation, System, About. The Status screen answers "is everything ready" at a glance — hotkey, microphone, engine and model, free memory, last dictation — and a status bar keeps that answer visible from every section.
 - 🖥️ **Tray application** — color-coded status icon, quick menu, a Pip-Boy-terminal-styled settings window that remembers its size.
 - 💾 **Portable** — the folder is self-contained: copy it to a USB stick and run on another PC; nothing is written to the registry.
 - 🛡️ **Private** — zero network requests while dictating; internet is only needed to download models.
