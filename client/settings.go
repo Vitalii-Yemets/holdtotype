@@ -98,6 +98,8 @@ type settingsForm struct {
 	MicDevice        string `json:"mic_device"`
 	MicDeviceName    string `json:"mic_device_name"`
 	Punctuation      string `json:"punctuation"`
+	HotkeyMode       string `json:"hotkey_mode"`
+	UILevel          string `json:"ui_level"`
 	ServerPort       int    `json:"server_port"`
 	ServerExe        string `json:"server_exe"`
 	ServerURL        string `json:"server_url"`
@@ -486,6 +488,12 @@ func (a *App) applySettings(f *settingsForm) string {
 	if validPunctuation(f.Punctuation) {
 		c.Punctuation = f.Punctuation
 	}
+	if validHotkeyMode(f.HotkeyMode) {
+		c.HotkeyMode = f.HotkeyMode
+	}
+	if validUILevel(f.UILevel) {
+		c.UILevel = f.UILevel
+	}
 	c.MicDevice = f.MicDevice
 	c.MicDeviceName = f.MicDeviceName
 	if f.ServerPort > 0 {
@@ -623,6 +631,8 @@ func settingsHTML(cfg *Config, tab string) string {
 		"check_updates":         cfg.CheckUpdates,
 		"mic_device":            cfg.MicDevice,
 		"punctuation":           cfg.Punctuation,
+		"hotkey_mode":           cfg.HotkeyMode,
+		"ui_level":              cfg.UILevel,
 		"server_port":           cfg.ServerPort,
 		"server_exe":            cfg.ServerExe,
 		"server_url":            cfg.ServerURL,
@@ -653,6 +663,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"upd": "S_UPDATED", "pedit": "S_PROF_EDIT", "pclose": "S_PROF_CLOSE",
 		"confirmdel": "S_CONFIRM_DEL", "free": "S_FREE", "updnone": "S_UPD_NONE",
 		"micdefault": "S_MIC_DEFAULT", "micquiet": "S_MIC_QUIET",
+		"more": "S_MORE", "less": "S_LESS", "hidden": "S_HIDDEN", "showall": "S_SHOWALL", "showsimple": "S_SHOWSIMPLE",
 		"updavail": "S_UPD_AVAIL", "updgo": "S_UPD_GO", "upderr": "S_UPD_ERR", "upddl": "S_UPD_DL",
 	} {
 		lMap[jsKey] = str(sKey)
@@ -712,6 +723,21 @@ button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box
 .statusbar .led{width:6px;height:6px;border-radius:50%;background:var(--faint);flex:none}
 .statusbar .led.on{background:var(--green);box-shadow:var(--glow)}
 .statusbar .stpend{margin-left:auto;color:var(--amber)}
+.statusbar .stsaved{color:var(--dim)}
+.omni{margin-left:auto;display:flex;align-items:center;gap:7px;border:1px solid var(--line);padding:3px 8px;background:#08100b;min-width:min(230px,32%)}
+.omni input{flex:1;min-width:0;background:none;border:0;outline:none;color:var(--green);font:inherit;font-size:11.5px;padding:0}
+.omni input::placeholder{color:var(--faint)}
+.omni .omag{color:var(--faint);font-size:12px}
+.omni .okey{font-size:9px;color:var(--faint);border:1px solid var(--line);padding:0 4px}
+.lvlsw{display:flex;border:1px solid var(--line);flex:none}
+.lvlb{appearance:none;border:0;background:none;color:var(--faint);font:inherit;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;padding:3px 9px;cursor:pointer}
+.lvlb:hover{color:var(--dim)}
+.lvlb.on{background:var(--dim);color:#08100b}
+.row.hidden{display:none}
+.row.hit{background:#101d14;box-shadow:inset 2px 0 0 var(--green)}
+.moreb{appearance:none;background:none;border:1px dashed var(--line);color:var(--faint);font:inherit;font-size:11px;padding:6px 10px;margin:6px 0 0;cursor:pointer}
+.moreb:hover{color:var(--dim);border-color:var(--dim)}
+.stlink{background:none;border:0;color:var(--dim);font:inherit;font-size:11px;text-decoration:underline;cursor:pointer;padding:0}
 .hero{display:flex;align-items:center;gap:12px;border:1px solid var(--line);background:var(--panel);padding:12px 14px;margin-bottom:10px;flex-wrap:wrap}
 .herokey{border:1px solid var(--dim);color:var(--green);padding:5px 12px;font-size:14px;letter-spacing:1px}
 .herotext{font-size:12px;color:var(--dim)}
@@ -862,7 +888,12 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
   </g>
  </svg></div>
  <h1>{{APP}}</h1>
- <span class="ver" style="margin-left:auto">v<span id="ver"></span></span>
+ <label class="omni"><span class="omag">&#9906;</span><input id="omni" type="text" placeholder="{{S_SEARCH}}" autocomplete="off"><span class="okey">Ctrl K</span></label>
+ <span class="lvlsw">
+  <button type="button" class="lvlb" data-l="simple">{{S_LVL_SIMPLE}}</button>
+  <button type="button" class="lvlb" data-l="all">{{S_LVL_ALL}}</button>
+ </span>
+ <span class="ver">v<span id="ver"></span></span>
  <div class="capbtns">
   <button class="cap" onclick="appMin()">&#9472;</button>
   <button class="cap close" onclick="guardClose()">&#10005;</button>
@@ -912,19 +943,21 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
   <div class="row"><label>{{S_HOTKEY}}</label>
    <div class="hotkey-box"><span class="hotkey-val" id="hotkey"></span>
    <button class="btn" onclick="appCapture()">{{S_CHANGE}}</button></div></div>
-  <div class="row"><label>{{S_MINMS}}<span class="sub">{{S_SUB_MINMS}}</span></label><select id="min_record_ms"><option value="0">0 ms</option><option value="100">100 ms</option><option value="150">150 ms</option><option value="200">200 ms</option><option value="300">300 ms</option><option value="500">500 ms</option><option value="750">750 ms</option><option value="1000">1000 ms</option></select></div>
-  <div class="row"><label>{{S_MAXSEC}}</label><select id="max_record_seconds"><option value="30">30 s</option><option value="60">60 s</option><option value="120">120 s</option><option value="180">180 s</option><option value="300">300 s</option></select></div>
+  <div class="row"><label>{{S_HOTMODE}}<span class="sub">{{S_SUB_HOTMODE}}</span></label>
+   <select id="hotkey_mode"><option value="hold">{{S_HOTMODE_HOLD}}</option><option value="toggle">{{S_HOTMODE_TOGGLE}}</option></select></div>
+  <div class="row" data-adv><label>{{S_MINMS}}<span class="sub">{{S_SUB_MINMS}}</span></label><select id="min_record_ms"><option value="0">0 ms</option><option value="100">100 ms</option><option value="150">150 ms</option><option value="200">200 ms</option><option value="300">300 ms</option><option value="500">500 ms</option><option value="750">750 ms</option><option value="1000">1000 ms</option></select></div>
+  <div class="row" data-adv><label>{{S_MAXSEC}}</label><select id="max_record_seconds"><option value="30">30 s</option><option value="60">60 s</option><option value="120">120 s</option><option value="180">180 s</option><option value="300">300 s</option></select></div>
  </div>
  <div class="card">
   <div class="sect">{{S_SEC_BEHAVIOR}}</div>
   <div class="row"><label>{{S_AUTOENTER}}<span class="sub">{{S_SUB_ENTER}}</span></label><input type="checkbox" id="auto_enter"></div>
-  <div class="row"><label>{{S_RESTORE}}<span class="sub">{{S_SUB_CLIP}}</span></label><input type="checkbox" id="restore_clipboard"></div>
-  <div class="row"><label>{{S_TYPEMODE}}<span class="sub">{{S_SUB_TYPE}}</span></label><input type="checkbox" id="type_mode"></div>
+  <div class="row" data-adv><label>{{S_RESTORE}}<span class="sub">{{S_SUB_CLIP}}</span></label><input type="checkbox" id="restore_clipboard"></div>
+  <div class="row" data-adv><label>{{S_TYPEMODE}}<span class="sub">{{S_SUB_TYPE}}</span></label><input type="checkbox" id="type_mode"></div>
  </div>
  <div class="card">
   <div class="sect">{{S_SEC_OVERLAY}}</div>
   <div class="row"><label>{{S_OVERLAY}}</label><input type="checkbox" id="overlay"></div>
-  <div class="row"><label>{{S_ANIM}}</label><input type="checkbox" id="animation"></div>
+  <div class="row" data-adv><label>{{S_ANIM}}</label><input type="checkbox" id="animation"></div>
  </div>
 </div>
 
@@ -940,7 +973,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
  <div class="card">
   <div class="sect">{{S_SEC_SOUND}}</div>
   <div class="row"><label>{{S_BEEP}}</label><input type="checkbox" id="beep"></div>
-  <div class="row"><label>{{S_SOUND}}</label>
+  <div class="row" data-adv><label>{{S_SOUND}}</label>
    <button class="mini" onclick="appPreviewSound(document.getElementById('sound_theme').value)">&#9654;</button>
    <select id="sound_theme">
     <option value="speech">{{S_SND_SPEECH}}</option>
@@ -990,7 +1023,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
     <option value="fr">Français</option><option value="es">Español</option>
     <option value="pl">Polski</option>
    </select></div>
-  <div class="row"><label>{{S_THREADS}}<span class="sub">{{S_SUB_THREADS}}</span></label><select id="threads"><option value="1">1</option><option value="2">2</option><option value="4">4</option><option value="6">6</option><option value="8">8</option><option value="12">12</option><option value="16">16</option></select></div>
+  <div class="row" data-adv><label>{{S_THREADS}}<span class="sub">{{S_SUB_THREADS}}</span></label><select id="threads"><option value="1">1</option><option value="2">2</option><option value="4">4</option><option value="6">6</option><option value="8">8</option><option value="12">12</option><option value="16">16</option></select></div>
  </div>
  <div class="card">
   <div class="sect">{{S_SEC_LLM}}<span class="hfhome" onclick="appHFHome()" title="huggingface.co">Hugging Face ↗</span></div>
@@ -1038,12 +1071,12 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
     <option value="always">{{S_TR_ASK_ALWAYS}}</option>
     <option value="timeout">{{S_TR_ASK_TIMEOUT}}</option>
    </select></div>
-  <div class="row"><label>{{S_TR_SECONDS}}</label><select id="translate_ask_seconds"><option value="2">2 s</option><option value="3">3 s</option><option value="4">4 s</option><option value="5">5 s</option><option value="7">7 s</option><option value="10">10 s</option></select></div>
-  <div class="row"><label>{{S_PROF_HOTKEY}}</label>
+  <div class="row" data-adv><label>{{S_TR_SECONDS}}</label><select id="translate_ask_seconds"><option value="2">2 s</option><option value="3">3 s</option><option value="4">4 s</option><option value="5">5 s</option><option value="7">7 s</option><option value="10">10 s</option></select></div>
+  <div class="row" data-adv><label>{{S_PROF_HOTKEY}}</label>
    <span class="hotkey-val" id="tr_hotkey" style="min-width:110px"></span>
    <button class="mini" id="tr_set">{{S_PROF_SET}}</button>
    <button class="mini" id="tr_clear">{{S_PROF_CLEAR}}</button></div>
-  <div class="row"><label>{{S_TR_LANGS}}</label>
+  <div class="row" data-adv><label>{{S_TR_LANGS}}</label>
    <span id="trlangs" style="display:flex;gap:9px;flex-wrap:wrap">
     <label style="flex:none"><input type="checkbox" id="tl_en"> EN</label>
     <label style="flex:none"><input type="checkbox" id="tl_de"> DE</label>
@@ -1073,15 +1106,15 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
    </select></div>
   <div class="row"><label>{{S_UPD}}</label>
    <button class="mini" id="upd_check">{{S_UPD_CHECK}}</button></div>
-  <div class="row"><label>{{S_UPD_AUTO}}<span class="sub">{{S_SUB_UPD}}</span></label><input type="checkbox" id="check_updates"></div>
+  <div class="row" data-adv><label>{{S_UPD_AUTO}}<span class="sub">{{S_SUB_UPD}}</span></label><input type="checkbox" id="check_updates"></div>
   <div id="upd_out" style="font-size:12px;min-height:18px;color:var(--amber)"></div>
  </div>
  <div class="card">
-  <div class="sect">{{S_SEC_SERVICE}}</div>
-  <div class="row"><label>{{S_AUTOSTART}}<span class="sub">{{S_SUB_AUTOSTART}}</span></label><input type="checkbox" id="server_autostart"></div>
-  <div class="row"><label>{{S_PORT}}<span class="sub">{{S_SUB_PORT}}</span></label><input type="text" id="server_port" style="width:90px"></div>
-  <div class="row"><label>{{S_SERVEREXE}}</label><input type="text" id="server_exe"></div>
-  <div class="row"><label>{{S_SERVERURL}}<div class="hint">{{S_URLHINT}}</div></label><input type="text" id="server_url"></div>
+  <div class="sect" data-adv>{{S_SEC_SERVICE}}</div>
+  <div class="row" data-adv><label>{{S_AUTOSTART}}<span class="sub">{{S_SUB_AUTOSTART}}</span></label><input type="checkbox" id="server_autostart"></div>
+  <div class="row" data-adv><label>{{S_PORT}}<span class="sub">{{S_SUB_PORT}}</span></label><input type="text" id="server_port" style="width:90px"></div>
+  <div class="row" data-adv><label>{{S_SERVEREXE}}</label><input type="text" id="server_exe"></div>
+  <div class="row" data-adv><label>{{S_SERVERURL}}<div class="hint">{{S_URLHINT}}</div></label><input type="text" id="server_url"></div>
  </div>
 </div>
 
@@ -1099,13 +1132,13 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
 <div class="statusbar" id="statusbar">
  <span class="led" id="st_led"></span>
  <span id="st_main">—</span>
+ <span class="stsaved" id="st_saved"></span>
+ <span class="stlevel" id="st_level"></span>
+ <button type="button" class="stlink" id="st_levelbtn"></button>
  <span class="stpend" id="st_pend"></span>
 </div>
 
-<div class="footer">
- <button class="btn" onclick="save()">{{S_SAVE}}</button>
- <span class="toast" id="toast"></span>
-</div>
+
 
 <div class="modal-bg" id="modalbg">
  <div class="modal">
@@ -1123,7 +1156,7 @@ const CFG = {{CFG}};
 const bools = ["beep","auto_enter","restore_clipboard","overlay","animation","type_mode","server_autostart","check_updates"];
 const texts = ["server_exe","server_url"];
 const nums  = ["threads","min_record_ms","max_record_seconds","translate_ask_seconds","server_port"];
-const sels  = ["ui_language","language","sound_theme","translate_target","translate_ask"];
+const sels  = ["ui_language","language","sound_theme","translate_target","translate_ask","hotkey_mode"];
 const trAll = ["en","de","fr","es","it","pl","ru","uk"];
 const L = {{L_JSON}};
 const I_DL = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12"/><path d="M6 11l6 6 6-6"/><path d="M4 21h16"/></svg>';
@@ -1189,7 +1222,7 @@ async function refreshLLM(){
     body.appendChild(div);
   });
   body.querySelectorAll('input[name="llmmdl"]').forEach(r=>{
-    r.onchange = ()=>{ selLLM = r.value; toast(L.hint); refreshLLM(); };
+    r.onchange = async ()=>{ selLLM = r.value; await doSave(); refreshLLM(); };
   });
   body.querySelectorAll("button[data-a='ldel']").forEach(b=>{
     b.onclick = async ()=>{
@@ -1596,8 +1629,8 @@ async function refreshModels(){
       if(row.state === "absent"){
         pendingDl = id;
         await appModelDl(id);
-      } else if(row.state === "installed"){
-        toast(L.hint);
+      } else {
+        await doSave();
       }
       refreshModels();
     };
@@ -1671,15 +1704,14 @@ function askUnsaved(cb){
   document.getElementById("mNo").onclick = ()=>done(false);
   bg.onclick = e => { if(e.target === bg) done(undefined); };
 }
-function guardClose(){
-  if(!dirty()) return appClose();
-  askUnsaved(async s=>{ if(s) await doSave(); appClose(); });
-}
+function guardClose(){ appClose(); }
 function toast(msg){
   if(!msg) return;
-  const t = document.getElementById("toast");
-  t.textContent = msg; t.classList.add("show");
-  setTimeout(()=>t.classList.remove("show"), 2500);
+  const t = document.getElementById("st_saved");
+  if(!t) return;
+  t.textContent = msg;
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=>{ t.textContent = ""; }, 2200);
 }
 
 const sliders = [];
@@ -1740,6 +1772,7 @@ async function doSave(){
   const f={hotkey:CFG.hotkey, model_id:selModel||"",
     mic_device: micSel.value,
     punctuation: document.getElementById("punctuation").value,
+    ui_level: uiLevel,
     mic_device_name: micSel.value ? micSel.options[micSel.selectedIndex].textContent : "",
     whisper_prompt: document.getElementById("whisper_prompt").value,
     translate_hotkey: translateHotkey,
@@ -1765,11 +1798,75 @@ function show(p){
   curTab = p;
   document.querySelectorAll(".nav").forEach(b=>b.classList.toggle("active", b.dataset.p===p));
   document.querySelectorAll(".page").forEach(el=>el.classList.toggle("active", el.id==="p-"+p));
-  document.querySelector(".footer").style.display = (p==="about"||p==="state") ? "none" : "flex";
   if(p==="state") refreshState();
   document.querySelector(".content").scrollTop = 0;
 }
+let uiLevel = CFG.ui_level || "simple";
+const opened = {};
+function advCount(page){ return page.querySelectorAll(".row[data-adv]").length; }
+function applyLevel(){
+  document.querySelectorAll(".lvlb").forEach(b=>b.classList.toggle("on", b.dataset.l === uiLevel));
+  document.querySelectorAll(".page").forEach(page=>{
+    const show = uiLevel === "all" || opened[page.id];
+    page.querySelectorAll("[data-adv]").forEach(el=>el.classList.toggle("hidden", !show));
+    let btn = page.querySelector(".moreb");
+    const n = advCount(page);
+    if(uiLevel === "all" || n === 0){
+      if(btn) btn.style.display = "none";
+      return;
+    }
+    if(!btn){
+      btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "moreb";
+      btn.onclick = ()=>{ opened[page.id] = !opened[page.id]; applyLevel(); };
+      page.appendChild(btn);
+    }
+    btn.style.display = "";
+    btn.textContent = (opened[page.id] ? L.less : L.more).replace("%d", n);
+  });
+  const line = document.getElementById("st_level");
+  if(line) line.textContent = uiLevel === "simple" ? L.hidden.replace("%d", hiddenTotal()) : "";
+  const sw = document.getElementById("st_levelbtn");
+  if(sw) sw.textContent = uiLevel === "simple" ? L.showall : L.showsimple;
+}
+function hiddenTotal(){
+  let n = 0;
+  document.querySelectorAll(".page").forEach(p=>{ if(!opened[p.id]) n += advCount(p); });
+  return n;
+}
+function setLevel(l){
+  uiLevel = l;
+  applyLevel();
+  applyNow();
+}
+function searchSettings(q){
+  document.querySelectorAll(".row.hit").forEach(r=>r.classList.remove("hit"));
+  const s = q.trim().toLowerCase();
+  if(s.length < 2) return;
+  const rows = [...document.querySelectorAll(".page .row")];
+  const hit = rows.find(r=>r.textContent.toLowerCase().includes(s));
+  if(!hit) return;
+  const page = hit.closest(".page");
+  show(page.id.slice(2));
+  if(hit.hasAttribute("data-adv") && uiLevel === "simple"){
+    opened[page.id] = true;
+    applyLevel();
+  }
+  hit.classList.add("hit");
+  if(hit.scrollIntoView) hit.scrollIntoView({block:"center"});
+}
 document.getElementById("upd_check").onclick = updCheck;
+let applyTimer = null;
+function applyNow(){
+  clearTimeout(applyTimer);
+  applyTimer = setTimeout(()=>{ doSave(); }, 120);
+}
+document.querySelector(".content").addEventListener("change", e=>{
+  if(e.target.closest("#advisor")) return;
+  if(e.target.name === "mdl" || e.target.name === "llmmdl") return;
+  applyNow();
+});
 (async()=>{ const s = JSON.parse(await appUpdateStatus()); if(s.latest && s.url) updShow(s.latest, true); })();
 document.querySelectorAll(".nav").forEach(b=>b.onclick=()=>{
   const p = b.dataset.p;
@@ -1783,6 +1880,18 @@ load();
 (async ()=>{
   initModelFilters();
   initStateScreen();
+  applyLevel();
+  document.querySelectorAll(".lvlb").forEach(b=>b.onclick=()=>setLevel(b.dataset.l));
+  const st = document.getElementById("st_levelbtn");
+  if(st) st.onclick = ()=>setLevel(uiLevel === "simple" ? "all" : "simple");
+  const omni = document.getElementById("omni");
+  if(omni){
+    omni.addEventListener("input", ()=>searchSettings(omni.value));
+    document.addEventListener("keydown", e=>{
+      if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k"){ e.preventDefault(); omni.focus(); omni.select(); }
+      if(e.key === "Escape" && document.activeElement === omni){ omni.value = ""; searchSettings(""); omni.blur(); }
+    });
+  }
   await refreshModels();
   await refreshLLM();
   baseline = formState();

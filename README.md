@@ -47,6 +47,10 @@ Hold a hotkey — speak. Release — the transcribed text is pasted right where 
 - 📖 **Recognition dictionary** — terms and abbreviations hint rare words to Whisper; a multilingual starter set is preinstalled.
 - 🗣️ **8 UI languages** — English, Ukrainian, Russian, German, French, Spanish, Italian, Polish; switching is instant, "Same as system" follows Windows.
 - 🔊 **Sound themes** — several synthesized cue sets plus Windows system sounds, with preview.
+- ⚡ **Nothing to save** — every change applies the moment you make it; the Save button is gone, and the two settings that genuinely need a restart say so in the status bar.
+- 🔍 **Find a setting** — Ctrl+K, a word, and the window jumps to the right section and highlights the row, even when the row is hidden by simple mode.
+- 🎚️ **Simple mode** — new installs open with 15 rarely-touched settings folded away behind "N more settings" in each section; the status bar always says how many are hidden and offers to show everything. Upgrades keep the full view, because taking away settings someone has already seen is a regression.
+- ⏯️ **Hold or toggle** — hold the keys as before, or press once to start and once to stop.
 - 🖥️ **One window, eight sections** — a sidebar instead of tabs inside tabs: Status, Dictation, Microphone, Models, Text, Translation, System, About. The Status screen answers "is everything ready" at a glance — hotkey, microphone, engine and model, free memory, last dictation — and a status bar keeps that answer visible from every section.
 - 🖥️ **Tray application** — color-coded status icon, quick menu, a Pip-Boy-terminal-styled settings window that remembers its size.
 - 💾 **Portable** — the folder is self-contained: copy it to a USB stick and run on another PC; nothing is written to the registry.

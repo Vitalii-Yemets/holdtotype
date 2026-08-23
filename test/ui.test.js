@@ -52,7 +52,8 @@ const dom = new JSDOM(html, {
     ]) {
       window[name] = () => {};
     }
-    window.appSave = async () => "";
+    window.saveCalls = 0;
+    window.appSave = async () => { window.saveCalls++; return ""; };
     window.appModelDel = async () => "ok";
     window.appMics = async () =>
       JSON.stringify([
@@ -176,6 +177,26 @@ function check(name, actual, expected) {
   tab("about"); await sleep(60);
   check("about section shown", shown("about"), true);
   check("about carries version, help and author", d.querySelectorAll("#p-about .card").length, 3);
+
+  const before = w.saveCalls;
+  const sw = d.getElementById("auto_enter");
+  sw.checked = !sw.checked; sw.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(220);
+  check("a toggle applies itself, no Save needed", w.saveCalls > before, true);
+
+  d.querySelector('.lvlb[data-l="simple"]').click(); await sleep(120);
+  check("simple mode hides advanced rows", d.querySelectorAll("#p-dictation .row[data-adv].hidden").length > 0, true);
+  check("disclosure button offered", !!d.querySelector("#p-dictation .moreb"), true);
+  d.querySelector("#p-dictation .moreb").click(); await sleep(60);
+  check("disclosure reveals them", d.querySelectorAll("#p-dictation .row[data-adv].hidden").length, 0);
+  check("status bar counts what is hidden", d.getElementById("st_level").textContent.includes("hidden"), true);
+
+  const omni = d.getElementById("omni");
+  omni.value = "S_PORT"; omni.dispatchEvent(new w.Event("input")); await sleep(120);
+  check("search jumps to the section", shown("system"), true);
+  check("search highlights the row", d.querySelectorAll(".row.hit").length, 1);
+
+  d.querySelector('.lvlb[data-l="all"]').click(); await sleep(80);
+  check("no save button left", !!d.querySelector(".footer"), false);
 
   check("no page errors", errors, []);
 

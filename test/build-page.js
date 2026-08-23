@@ -15,6 +15,8 @@ if (start < marker.length || end < 0) {
 const cfg = {
   hotkey: "ctrl+win",
   ui_language: "en",
+  ui_level: "all",
+  hotkey_mode: "hold",
   language: "ru",
   beep: true,
   sound_theme: "speech",
@@ -59,12 +61,14 @@ const strings = {
   confirmdel: 'Delete the "%s" model?', free: "free", updnone: "latest",
   updavail: "Version %s available.", updgo: "Update", upderr: "Check failed",
   upddl: "Downloading", micdefault: "System default", micquiet: "quiet",
+  more: "%d more settings", less: "Collapse %d settings", hidden: "Simple mode · settings hidden: %d",
+  showall: "Show everything", showsimple: "Back to simple",
 };
 
 let html = src.slice(start, end);
 html = html.split("{{CFG}}").join(JSON.stringify(cfg));
 html = html.split("{{L_JSON}}").join(JSON.stringify(strings));
-html = html.replace(/\{\{[A-Z_0-9]+\}\}/g, "X");
+html = html.replace(/{{([A-Z_0-9]+)}}/g, "$1");
 
 const out = path.join(__dirname, "page.html");
 fs.writeFileSync(out, html, "utf8");

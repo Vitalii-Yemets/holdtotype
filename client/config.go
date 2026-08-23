@@ -17,7 +17,18 @@ type Profile struct {
 	Hotkey string `json:"hotkey"`
 }
 
-const configVersion = 2
+const configVersion = 3
+
+const (
+	hotkeyHold   = "hold"
+	hotkeyToggle = "toggle"
+	levelSimple  = "simple"
+	levelAll     = "all"
+)
+
+func validHotkeyMode(v string) bool { return v == hotkeyHold || v == hotkeyToggle }
+
+func validUILevel(v string) bool { return v == levelSimple || v == levelAll }
 
 const (
 	punctFromModel = "model"
@@ -46,6 +57,8 @@ type Config struct {
 	SherpaThreads    int    `json:"sherpa_threads"`
 	EngineIdleMin    int    `json:"engine_idle_minutes"`
 	Punctuation      string `json:"punctuation"`
+	HotkeyMode       string `json:"hotkey_mode"`
+	UILevel          string `json:"ui_level"`
 	PasteMode        string `json:"paste_mode"`
 	RestoreClipboard bool   `json:"restore_clipboard"`
 	Beep             bool   `json:"beep"`
@@ -111,6 +124,8 @@ func defaultConfig() *Config {
 		SherpaThreads:    4,
 		EngineIdleMin:    10,
 		Punctuation:      punctFromModel,
+		HotkeyMode:       hotkeyHold,
+		UILevel:          levelSimple,
 		SherpaModel:      "models/gigaam-v3",
 		PasteMode:        "clipboard",
 		RestoreClipboard: true,
@@ -205,6 +220,16 @@ func loadConfig(path string) (*Config, error) {
 	cfg.ConfigVersion = configVersion
 	if !validPunctuation(cfg.Punctuation) {
 		cfg.Punctuation = punctFromModel
+	}
+	if !validHotkeyMode(cfg.HotkeyMode) {
+		cfg.HotkeyMode = hotkeyHold
+	}
+	if !validUILevel(cfg.UILevel) {
+		cfg.UILevel = levelSimple
+	}
+	if fileConfigVersion(data) < 3 {
+		cfg.UILevel = levelAll
+		migrated = true
 	}
 	if cfg.SherpaThreads <= 0 {
 		cfg.SherpaThreads = 4

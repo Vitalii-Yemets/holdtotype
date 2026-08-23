@@ -585,6 +585,9 @@ func (a *App) worker() {
 			case evDown:
 				a.handleDown(ev.profile)
 			case evUp:
+				if a.snapshot().HotkeyMode == hotkeyToggle {
+					continue
+				}
 				a.handleStop(0)
 			case evTimeout:
 				a.handleStop(ev.gen)
@@ -621,10 +624,15 @@ func (a *App) handleCancel() {
 }
 
 func (a *App) handleDown(profileID string) {
+	cfg := a.snapshot()
+	if a.state.Load() == stRecording && cfg.HotkeyMode == hotkeyToggle {
+		log.Printf("фиксация: второе нажатие останавливает запись")
+		a.handleStop(0)
+		return
+	}
 	if a.state.Load() != stIdle {
 		return
 	}
-	cfg := a.snapshot()
 	if profileID == "main" {
 		profileID = ""
 	}
