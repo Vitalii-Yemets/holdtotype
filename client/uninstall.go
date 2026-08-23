@@ -49,7 +49,7 @@ func runUninstall(silent bool) {
 	}
 	files := []string{"whisper-server.exe", "llama-server.exe", "config.default.json", "README.md"}
 	if delData {
-		files = append(files, "config.json", appid.LogFile, appid.LogFile+".old")
+		files = append(files, "config.json", appid.LogFile, appid.LogFile+".old", appid.HistoryFile)
 		_ = os.RemoveAll(filepath.Join(dir, "models"))
 	}
 	for _, f := range files {

@@ -7,6 +7,7 @@ const (
 	Exe      = Slug + ".exe"
 	SetupExe = Slug + "-setup.exe"
 	LogFile  = Slug + ".log"
+	HistoryFile = Slug + "-history.json"
 	Portable = Slug + "-portable.zip"
 
 	InstallDirName = Name
@@ -25,7 +26,7 @@ const (
 	PrevSlug = "voxterminal"
 )
 
-var Version = "0.21.0"
+var Version = "0.22.0"
 
 func Class(suffix string) string { return Name + suffix }
 

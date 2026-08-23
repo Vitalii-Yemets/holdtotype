@@ -1,6 +1,7 @@
 package main
 
 import (
+	"holdtotype/internal/history"
 	"holdtotype/internal/mojibake"
 	"holdtotype/internal/apprules"
 	"holdtotype/internal/replace"
@@ -106,6 +107,10 @@ type Config struct {
 	MicDeviceName       string    `json:"mic_device_name"`
 	AppRules            []apprules.Rule `json:"app_rules"`
 	Replacements        []replace.Rule  `json:"replacements"`
+	HistoryOn           bool      `json:"history"`
+	HistoryDays         int       `json:"history_days"`
+	HistoryMax          int       `json:"history_max"`
+	HistorySkip         string    `json:"history_skip"`
 	WizardDone          bool      `json:"wizard_done"`
 }
 
@@ -162,6 +167,8 @@ func defaultConfig() *Config {
 		LLMExe:           "llama-server.exe",
 		LLMModel:         "models/" + llmFile,
 		WizardDone:       true,
+		HistoryDays:      history.DefaultKeepDays,
+		HistoryMax:       history.DefaultMax,
 	}
 }
 

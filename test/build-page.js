@@ -47,6 +47,10 @@ const cfg = {
   active_profiles: ["clean"],
   app_rules: [],
   replacements: [],
+  history: false,
+  history_days: 7,
+  history_max: 200,
+  history_skip: "",
   paste_delay_ms: 0,
   profiles: [
     { id: "clean", name: "Cleanup", prompt: "p1", hotkey: "" },
@@ -81,6 +85,7 @@ const strings = {
   ruleprompts: "Prompts", ruleph: "chrome.exe, msedge.exe",
   replempty: "No replacements yet", repldel: "Delete the replacement", replwhole: "whole words",
   replcase: "case", replfromph: "git hub", repltoph: "GitHub",
+  histempty: "No history yet", histcopy: "Copy", histask: "Delete the whole dictation history?", histclear: "Clear",
   wiznext: "Next", wizfinish: "Finish", wizwait: "Waiting for the first phrase…",
   wizheard: "Heard:", wizhave: "Everything you need is already downloaded",
   wiztry: "Put the caret in the field below, hold %s, say a phrase and let go.",

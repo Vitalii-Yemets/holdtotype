@@ -300,6 +300,11 @@ func init() {
 		"S_SND_SPEECH": "System (Sprache)", "S_SND_CHIME": "Glöckchen", "S_SND_SOFT": "Sanft", "S_SND_MARIMBA": "Marimba",
 		"S_SND_BLIP": "Blip", "S_SND_POP": "Pop",
 		"S_AUTOENTER": "Enter nach dem Einfügen drücken (Auto-Senden)", "S_RESTORE": "Zwischenablage nach Einfügen wiederherstellen",
+		"S_NAV_HISTORY": "Verlauf", "S_HIST_ON": "Verlauf der Diktate führen", "S_HIST_ON_SUB": "nur Text, auf diesem Rechner; Ton wird nie gespeichert",
+		"S_HIST_DAYS": "Wie viele Tage aufbewahren", "S_HIST_MAX": "Wie viele Einträge aufbewahren",
+		"S_HIST_SKIP": "Aus diesen Programmen nie aufzeichnen", "S_HIST_SKIP_SUB": "durch Komma getrennt: keepass.exe, 1password.exe",
+		"S_HIST_LIST": "Einträge", "S_HIST_CLEAR": "Leeren", "S_HIST_COPY": "Kopieren",
+		"S_HIST_FIND": "Im Verlauf suchen…", "S_HIST_EMPTY": "Noch kein Verlauf", "S_HIST_ASK": "Den gesamten Diktatverlauf löschen?",
 		"S_SEC_REPLACE": "Ersetzungen nach der Erkennung", "S_REPLACE_HINT": "Falsch Gehörtes wird zu dem, was gemeint war — vor Prompts und Übersetzung. Von oben nach unten angewendet.",
 		"S_REPL_ADD": "Ersetzung hinzufügen", "S_REPL_FROM_PH": "git hub", "S_REPL_TO_PH": "GitHub",
 		"S_REPL_WHOLE": "ganze Wörter", "S_REPL_CASE": "Groß-/Kleinschreibung", "S_REPL_EMPTY": "Noch keine Ersetzungen",
@@ -408,6 +413,8 @@ func init() {
 			"<li>Enter nach dem Einfügen wird nur gedrückt, wenn das Zielfenster dasselbe geblieben ist.</li>" +
 			"<li><b>Letztes Ergebnis</b> — der fertige Text jedes Diktats bleibt bis zum nächsten im Speicher; im Menü im Infobereich gibt es „Letztes Ergebnis kopieren“. Ein misslungenes Einfügen oder ein Fokuswechsel kostet nie ein Diktat.</li>" +
 			"</ul>" +
+			"<p class=\"wh\">Verlauf der Diktate</p>" +
+			"<p>Der Abschnitt „Verlauf“ in der linken Spalte bewahrt auf, was Sie diktiert haben: nur Text, nur auf diesem Rechner, Ton wird nie gespeichert. Standardmäßig aus, eingeschaltet wird er mit einem Schalter an derselben Stelle. Einträge bleiben eine eingestellte Zahl von Tagen und bis zu einer eingestellten Anzahl, Älteres fällt von selbst heraus; „Aus diesen Programmen nie aufzeichnen“ listet durch Komma getrennt jene, aus denen nichts gespeichert werden soll — Passwortmanager, Banking. Die Suche greift auf Text und Programmnamen, die Schaltfläche neben einem Eintrag legt ihn in die Zwischenablage, und „Leeren“ entfernt alles samt der Datei <b>{app}-history.json</b>.</p>" +
 			"<p class=\"wh\">Ersetzungen nach der Erkennung</p>" +
 			"<p>Unter „Text“ lässt sich auflisten, was das Modell falsch hört und was daraus werden soll: „git hub“ → GitHub, Nachnamen, hauseigene Begriffe. Ersetzungen laufen direkt nach der Erkennung — vor der Übersetzung und vor den Prompts, damit der Editor bereits die richtigen Wörter bekommt. Standardmäßig gelten ganze Wörter und keine Groß-/Kleinschreibung; die beiden Schalter daneben ändern das. Regeln greifen von oben nach unten. Das Feld darunter probiert sie an jedem Satz aus, ganz ohne Diktat.</p>" +
 			"<p class=\"wh\">Regeln pro Programm</p>" +
@@ -519,6 +526,11 @@ func init() {
 		"S_SND_SPEECH": "Système (voix)", "S_SND_CHIME": "Clochette", "S_SND_SOFT": "Doux", "S_SND_MARIMBA": "Marimba",
 		"S_SND_BLIP": "Blip", "S_SND_POP": "Pop",
 		"S_AUTOENTER": "Appuyer Entrée après insertion (envoi auto)", "S_RESTORE": "Restaurer le presse-papiers après insertion",
+		"S_NAV_HISTORY": "Historique", "S_HIST_ON": "Conserver l'historique des dictées", "S_HIST_ON_SUB": "texte seul, sur cet ordinateur ; l'audio n'est jamais conservé",
+		"S_HIST_DAYS": "Combien de jours conserver", "S_HIST_MAX": "Combien d'entrées conserver",
+		"S_HIST_SKIP": "Ne jamais enregistrer depuis ces programmes", "S_HIST_SKIP_SUB": "séparés par des virgules : keepass.exe, 1password.exe",
+		"S_HIST_LIST": "Entrées", "S_HIST_CLEAR": "Vider", "S_HIST_COPY": "Copier",
+		"S_HIST_FIND": "Chercher dans l'historique…", "S_HIST_EMPTY": "Pas encore d'historique", "S_HIST_ASK": "Supprimer tout l'historique des dictées ?",
 		"S_SEC_REPLACE": "Remplacements après la reconnaissance", "S_REPLACE_HINT": "Ce qui a été mal entendu devient ce que vous vouliez dire — avant les prompts et la traduction. Appliqués de haut en bas.",
 		"S_REPL_ADD": "Ajouter un remplacement", "S_REPL_FROM_PH": "git hub", "S_REPL_TO_PH": "GitHub",
 		"S_REPL_WHOLE": "mots entiers", "S_REPL_CASE": "casse", "S_REPL_EMPTY": "Aucun remplacement pour l'instant",
@@ -627,6 +639,8 @@ func init() {
 			"<li>Entrée après le collage n'est envoyée que si la fenêtre cible n'a pas changé.</li>" +
 			"<li><b>Dernier résultat</b> — le texte final de chaque dictée reste en mémoire jusqu'à la suivante ; le menu de la zone de notification propose « Copier le dernier résultat ». Un collage manqué ou un changement de focus ne fait jamais perdre une dictée.</li>" +
 			"</ul>" +
+			"<p class=\"wh\">Historique des dictées</p>" +
+			"<p>La section « Historique » dans la colonne de gauche conserve ce que vous avez dicté : le texte seul, sur cet ordinateur seulement, l'audio n'est jamais conservé. Désactivée par défaut, elle s'active d'un interrupteur au même endroit. Les entrées restent un nombre de jours et jusqu'à un nombre d'entrées réglables, les plus anciennes disparaissent d'elles-mêmes ; « Ne jamais enregistrer depuis ces programmes » liste, séparés par des virgules, ceux dont rien ne doit être conservé — gestionnaires de mots de passe, applications bancaires. La recherche porte sur le texte et sur le nom du programme, le bouton à côté d'une entrée la met dans le presse-papiers, et « Vider » supprime tout d'un coup avec le fichier <b>{app}-history.json</b>.</p>" +
 			"<p class=\"wh\">Remplacements après la reconnaissance</p>" +
 			"<p>Dans « Texte », vous pouvez lister ce que le modèle entend mal et ce que cela doit devenir : « git hub » → GitHub, des noms propres, des termes maison. Les remplacements s'appliquent juste après la reconnaissance — avant la traduction et avant les prompts — pour que l'éditeur reçoive déjà les bons mots. Par défaut ils visent les mots entiers et ignorent la casse ; les deux interrupteurs à côté changent cela. Les règles s'appliquent de haut en bas. Le champ du dessous les essaie sur n'importe quelle phrase, sans dicter.</p>" +
 			"<p class=\"wh\">Règles par application</p>" +
@@ -738,6 +752,11 @@ func init() {
 		"S_SND_SPEECH": "Sistema (voz)", "S_SND_CHIME": "Campanilla", "S_SND_SOFT": "Suave", "S_SND_MARIMBA": "Marimba",
 		"S_SND_BLIP": "Blip", "S_SND_POP": "Pop",
 		"S_AUTOENTER": "Pulsar Enter tras insertar (envío auto)", "S_RESTORE": "Restaurar portapapeles tras insertar",
+		"S_NAV_HISTORY": "Historial", "S_HIST_ON": "Guardar el historial de dictados", "S_HIST_ON_SUB": "solo texto, en este equipo; el audio nunca se guarda",
+		"S_HIST_DAYS": "Cuántos días guardar", "S_HIST_MAX": "Cuántas entradas guardar",
+		"S_HIST_SKIP": "No registrar nunca desde estos programas", "S_HIST_SKIP_SUB": "separados por comas: keepass.exe, 1password.exe",
+		"S_HIST_LIST": "Entradas", "S_HIST_CLEAR": "Vaciar", "S_HIST_COPY": "Copiar",
+		"S_HIST_FIND": "Buscar en el historial…", "S_HIST_EMPTY": "Todavía no hay historial", "S_HIST_ASK": "¿Eliminar todo el historial de dictados?",
 		"S_SEC_REPLACE": "Reemplazos tras el reconocimiento", "S_REPLACE_HINT": "Lo que se oyó mal se convierte en lo que querías decir, antes de los prompts y la traducción. Se aplican de arriba abajo.",
 		"S_REPL_ADD": "Añadir un reemplazo", "S_REPL_FROM_PH": "git hub", "S_REPL_TO_PH": "GitHub",
 		"S_REPL_WHOLE": "palabras completas", "S_REPL_CASE": "mayúsculas", "S_REPL_EMPTY": "Todavía no hay reemplazos",
@@ -846,6 +865,8 @@ func init() {
 			"<li>Enter tras pegar solo se envía si la ventana de destino no ha cambiado.</li>" +
 			"<li><b>Último resultado</b> — el texto final de cada dictado se guarda en memoria hasta el siguiente; el menú del área de notificación tiene «Copiar el último resultado». Un pegado fallido o un cambio de foco nunca hacen perder un dictado.</li>" +
 			"</ul>" +
+			"<p class=\"wh\">Historial de dictados</p>" +
+			"<p>La sección «Historial» de la columna izquierda guarda lo que has dictado: solo el texto, solo en este equipo, el audio nunca se guarda. Está desactivada por defecto y se activa con un interruptor en el mismo sitio. Las entradas se conservan durante los días y hasta la cantidad que fijes, las viejas caen solas; «No registrar nunca desde estos programas» enumera, separados por comas, aquellos de los que no debe guardarse nada — gestores de contraseñas, banca. La búsqueda cubre el texto y el nombre del programa, el botón junto a una entrada la copia al portapapeles, y «Vaciar» borra todo de golpe junto con el archivo <b>{app}-history.json</b>.</p>" +
 			"<p class=\"wh\">Reemplazos tras el reconocimiento</p>" +
 			"<p>En «Texto» puedes enumerar lo que el modelo oye mal y en qué debe convertirse: «git hub» → GitHub, apellidos, términos internos. Los reemplazos se aplican justo después del reconocimiento — antes de la traducción y de los prompts — para que el editor ya reciba las palabras correctas. Por defecto buscan palabras completas y no distinguen mayúsculas; los dos interruptores de al lado lo cambian. Las reglas se aplican de arriba abajo. El campo de abajo las prueba con cualquier frase, sin dictar.</p>" +
 			"<p class=\"wh\">Reglas por aplicación</p>" +
@@ -957,6 +978,11 @@ func init() {
 		"S_SND_SPEECH": "Sistema (voce)", "S_SND_CHIME": "Campanello", "S_SND_SOFT": "Morbido", "S_SND_MARIMBA": "Marimba",
 		"S_SND_BLIP": "Blip", "S_SND_POP": "Pop",
 		"S_AUTOENTER": "Premi Invio dopo l'inserimento (invio auto)", "S_RESTORE": "Ripristina appunti dopo l'inserimento",
+		"S_NAV_HISTORY": "Cronologia", "S_HIST_ON": "Conservare la cronologia delle dettature", "S_HIST_ON_SUB": "solo testo, su questo computer; l'audio non viene mai salvato",
+		"S_HIST_DAYS": "Quanti giorni conservare", "S_HIST_MAX": "Quante voci conservare",
+		"S_HIST_SKIP": "Non registrare mai da questi programmi", "S_HIST_SKIP_SUB": "separati da virgole: keepass.exe, 1password.exe",
+		"S_HIST_LIST": "Voci", "S_HIST_CLEAR": "Svuota", "S_HIST_COPY": "Copia",
+		"S_HIST_FIND": "Cerca nella cronologia…", "S_HIST_EMPTY": "Ancora nessuna cronologia", "S_HIST_ASK": "Eliminare tutta la cronologia delle dettature?",
 		"S_SEC_REPLACE": "Sostituzioni dopo il riconoscimento", "S_REPLACE_HINT": "Ciò che è stato sentito male diventa ciò che intendevi — prima dei prompt e della traduzione. Applicate dall'alto in basso.",
 		"S_REPL_ADD": "Aggiungi una sostituzione", "S_REPL_FROM_PH": "git hub", "S_REPL_TO_PH": "GitHub",
 		"S_REPL_WHOLE": "parole intere", "S_REPL_CASE": "maiuscole", "S_REPL_EMPTY": "Ancora nessuna sostituzione",
@@ -1065,6 +1091,8 @@ func init() {
 			"<li>Invio dopo l'incollaggio viene premuto solo se la finestra di destinazione è rimasta la stessa.</li>" +
 			"<li><b>Ultimo risultato</b> — il testo finale di ogni dettatura resta in memoria fino alla successiva; nel menu dell'area di notifica c'è «Copia l'ultimo risultato». Un incollaggio fallito o un cambio di fuoco non fanno mai perdere una dettatura.</li>" +
 			"</ul>" +
+			"<p class=\"wh\">Cronologia delle dettature</p>" +
+			"<p>La sezione «Cronologia» nella colonna di sinistra conserva ciò che hai dettato: solo testo, solo su questo computer, l'audio non viene mai salvato. È disattivata per impostazione predefinita e si accende con un interruttore lì accanto. Le voci restano per i giorni e fino al numero che imposti, le più vecchie escono da sole; «Non registrare mai da questi programmi» elenca, separati da virgole, quelli da cui non salvare nulla — gestori di password, home banking. La ricerca copre il testo e il nome del programma, il pulsante accanto a una voce la mette negli appunti, e «Svuota» cancella tutto insieme al file <b>{app}-history.json</b>.</p>" +
 			"<p class=\"wh\">Sostituzioni dopo il riconoscimento</p>" +
 			"<p>In «Testo» puoi elencare ciò che il modello sente male e in che cosa deve diventare: «git hub» → GitHub, cognomi, termini interni. Le sostituzioni si applicano subito dopo il riconoscimento — prima della traduzione e prima dei prompt — così l'editor riceve già le parole giuste. Per impostazione predefinita cercano parole intere e ignorano le maiuscole; i due interruttori accanto lo cambiano. Le regole si applicano dall'alto in basso. Il campo in fondo le prova su qualsiasi frase, senza dettare.</p>" +
 			"<p class=\"wh\">Regole per applicazione</p>" +
@@ -1176,6 +1204,11 @@ func init() {
 		"S_SND_SPEECH": "Systemowy (mowa)", "S_SND_CHIME": "Dzwonek", "S_SND_SOFT": "Miękki", "S_SND_MARIMBA": "Marimba",
 		"S_SND_BLIP": "Blip", "S_SND_POP": "Pop",
 		"S_AUTOENTER": "Naciśnij Enter po wstawieniu (auto-wysyłka)", "S_RESTORE": "Przywróć schowek po wstawieniu",
+		"S_NAV_HISTORY": "Historia", "S_HIST_ON": "Przechowuj historię dyktowań", "S_HIST_ON_SUB": "tylko tekst, na tym komputerze; dźwięk nigdy nie jest zapisywany",
+		"S_HIST_DAYS": "Ile dni przechowywać", "S_HIST_MAX": "Ile wpisów przechowywać",
+		"S_HIST_SKIP": "Nigdy nie zapisuj z tych programów", "S_HIST_SKIP_SUB": "po przecinku: keepass.exe, 1password.exe",
+		"S_HIST_LIST": "Wpisy", "S_HIST_CLEAR": "Wyczyść", "S_HIST_COPY": "Kopiuj",
+		"S_HIST_FIND": "Szukaj w historii…", "S_HIST_EMPTY": "Na razie brak historii", "S_HIST_ASK": "Usunąć całą historię dyktowań?",
 		"S_SEC_REPLACE": "Zamiany po rozpoznaniu", "S_REPLACE_HINT": "To, co zostało źle usłyszane, staje się tym, co miałeś na myśli — przed promptami i tłumaczeniem. Stosowane od góry do dołu.",
 		"S_REPL_ADD": "Dodaj zamianę", "S_REPL_FROM_PH": "git hub", "S_REPL_TO_PH": "GitHub",
 		"S_REPL_WHOLE": "całe słowa", "S_REPL_CASE": "wielkość liter", "S_REPL_EMPTY": "Na razie brak zamian",
@@ -1284,6 +1317,8 @@ func init() {
 			"<li>Enter po wklejeniu jest wysyłany tylko wtedy, gdy okno docelowe się nie zmieniło.</li>" +
 			"<li><b>Ostatni wynik</b> — gotowy tekst każdego dyktowania zostaje w pamięci do następnego; w menu w zasobniku jest „Kopiuj ostatni wynik”. Nieudane wklejenie albo zmiana okna nigdy nie gubią dyktowania.</li>" +
 			"</ul>" +
+			"<p class=\"wh\">Historia dyktowań</p>" +
+			"<p>Sekcja „Historia” w lewej kolumnie przechowuje to, co podyktowałeś: tylko tekst, tylko na tym komputerze, dźwięk nigdy nie jest zapisywany. Domyślnie wyłączona, włącza się jednym przełącznikiem w tym samym miejscu. Wpisy trzymają się przez ustaloną liczbę dni i do ustalonej liczby, starsze wypadają same; „Nigdy nie zapisuj z tych programów” wymienia po przecinku te, z których nic nie ma być zapisywane — menedżery haseł, bankowość. Wyszukiwanie obejmuje tekst i nazwę programu, przycisk obok wpisu wkłada go do schowka, a „Wyczyść” usuwa wszystko razem z plikiem <b>{app}-history.json</b>.</p>" +
 			"<p class=\"wh\">Zamiany po rozpoznaniu</p>" +
 			"<p>W „Tekście” można wypisać, co model słyszy źle i w co ma to zamienić: „git hub” → GitHub, nazwiska, wewnętrzne terminy. Zamiany działają zaraz po rozpoznaniu — przed tłumaczeniem i przed promptami, więc edytor dostaje już właściwe słowa. Domyślnie szukają całych słów i nie zważają na wielkość liter; dwa przełączniki obok to zmieniają. Reguły działają od góry do dołu. Pole poniżej sprawdza je na dowolnym zdaniu, bez dyktowania.</p>" +
 			"<p class=\"wh\">Reguły dla programów</p>" +
@@ -1474,6 +1509,11 @@ func init() {
 		"S_SND_SPEECH": "Системний (мовлення)", "S_SND_CHIME": "Дзвіночок", "S_SND_SOFT": "М'який", "S_SND_MARIMBA": "Марімба",
 		"S_SND_BLIP": "Бліп", "S_SND_POP": "Поп",
 		"S_AUTOENTER": "Enter після вставлення (автовідправлення)", "S_RESTORE": "Відновлювати буфер обміну після вставлення",
+		"S_NAV_HISTORY": "Історія", "S_HIST_ON": "Зберігати історію диктувань", "S_HIST_ON_SUB": "лише текст, на цьому комп'ютері; звук не зберігається ніколи",
+		"S_HIST_DAYS": "Скільки днів зберігати", "S_HIST_MAX": "Скільки записів зберігати",
+		"S_HIST_SKIP": "Не записувати з цих програм", "S_HIST_SKIP_SUB": "через кому: keepass.exe, 1password.exe",
+		"S_HIST_LIST": "Записи", "S_HIST_CLEAR": "Очистити", "S_HIST_COPY": "Копіювати",
+		"S_HIST_FIND": "Знайти в історії…", "S_HIST_EMPTY": "Історії поки немає", "S_HIST_ASK": "Видалити всю історію диктувань?",
 		"S_SEC_REPLACE": "Заміни після розпізнавання", "S_REPLACE_HINT": "Те, що почулося неправильно, стає тим, що ви мали на увазі — до промптів і перекладу. Застосовуються згори вниз.",
 		"S_REPL_ADD": "Додати заміну", "S_REPL_FROM_PH": "гіт хаб", "S_REPL_TO_PH": "GitHub",
 		"S_REPL_WHOLE": "цілі слова", "S_REPL_CASE": "регістр", "S_REPL_EMPTY": "Замін поки немає",
@@ -1563,6 +1603,8 @@ func init() {
 			"<li>Enter після вставки натискається лише тоді, коли цільове вікно не змінилося.</li>" +
 			"<li><b>Останній результат</b> — готовий текст кожного диктування лишається в пам'яті до наступного; у меню в треї є «Копіювати останній результат». Невдала вставка чи зміна вікна ніколи не втрачають диктування.</li>" +
 			"</ul>" +
+			"<p class=\"wh\">Історія диктувань</p>" +
+			"<p>Розділ «Історія» в лівому стовпці зберігає те, що ви надиктували: лише текст, лише на цьому комп'ютері, звук не зберігається ніколи. Типово вимкнено — вмикається одним перемикачем там само. Записи тримаються задану кількість днів і до заданої кількості, старі зникають самі; поле «Не записувати з цих програм» перелічує через кому ті, з яких не треба зберігати нічого — менеджери паролів, банк-клієнт. Пошук шукає і за текстом, і за назвою програми, кнопка поруч із записом кладе його в буфер обміну, а «Очистити» видаляє все разом із файлом <b>{app}-history.json</b>.</p>" +
 			"<p class=\"wh\">Заміни після розпізнавання</p>" +
 			"<p>У «Тексті» можна перелічити, що модель чує неправильно і на що це змінювати: «гіт хаб» → GitHub, прізвища, внутрішні терміни. Заміни спрацьовують одразу після розпізнавання — до перекладу й до промптів, тому редактор отримує вже правильні слова. Типово шукаються цілі слова й без урахування регістру, два перемикачі поруч це змінюють. Правила застосовуються згори вниз. Поле внизу перевіряє їх на будь-якій фразі, нічого не диктуючи.</p>" +
 			"<p class=\"wh\">Правила для програм</p>" +

@@ -370,6 +370,11 @@ var settingsStrings = map[string]map[string]string{
 		"S_AUTOENTER":      "Нажимать Enter после вставки (автоотправка)",
 		"S_RESTORE":        "Восстанавливать буфер обмена после вставки",
 		"S_OVERLAY":        "Индикатор внизу экрана",
+		"S_NAV_HISTORY": "История", "S_HIST_ON": "Хранить историю диктовок", "S_HIST_ON_SUB": "только текст, на этом компьютере; звук не сохраняется никогда",
+		"S_HIST_DAYS": "Сколько дней хранить", "S_HIST_MAX": "Сколько записей хранить",
+		"S_HIST_SKIP": "Не записывать из программ", "S_HIST_SKIP_SUB": "через запятую: keepass.exe, 1password.exe",
+		"S_HIST_LIST": "Записи", "S_HIST_CLEAR": "Очистить", "S_HIST_COPY": "Копировать",
+		"S_HIST_FIND": "Найти в истории…", "S_HIST_EMPTY": "Истории пока нет", "S_HIST_ASK": "Удалить всю историю диктовок?",
 		"S_SEC_REPLACE": "Замены после распознавания", "S_REPLACE_HINT": "Что услышано неправильно, заменяется на правильное — до промптов и перевода. Порядок сверху вниз.",
 		"S_REPL_ADD": "Добавить замену", "S_REPL_FROM_PH": "гит хаб", "S_REPL_TO_PH": "GitHub",
 		"S_REPL_WHOLE": "целые слова", "S_REPL_CASE": "регистр", "S_REPL_EMPTY": "Замен пока нет",
@@ -552,6 +557,8 @@ var settingsStrings = map[string]map[string]string{
 			"<li>Enter после вставки нажимается только если окно-цель не менялось.</li>" +
 			"<li><b>Последний результат</b> — финальный текст каждой диктовки хранится в памяти до следующей; в меню трея есть пункт «Копировать последний результат». Ошибка вставки или смена фокуса не теряют надиктованное.</li>" +
 			"</ul>" +
+			"<p class=\"wh\">История диктовок</p>" +
+			"<p>Раздел «История» в левом столбце хранит то, что вы надиктовали: только текст, только на этом компьютере, звук не сохраняется никогда. По умолчанию выключено — включается одним переключателем там же. Хранится заданное число дней и записей, старое удаляется само; поле «Не записывать из программ» перечисляет через запятую те, из которых не нужно сохранять ничего — менеджеры паролей, банк-клиент. Поиск ищет и по тексту, и по названию программы, кнопка рядом с записью кладёт её в буфер обмена, «Очистить» удаляет всё сразу вместе с файлом <b>{app}-history.json</b>.</p>" +
 			"<p class=\"wh\">Замены после распознавания</p>" +
 			"<p>На «Тексте» можно перечислить, что модель слышит неправильно и во что это превращать: «гит хаб» → GitHub, фамилии, внутренние термины. Замены применяются сразу после распознавания — до перевода и до промптов, поэтому редактор получает уже правильные слова. По умолчанию ищутся целые слова и без учёта регистра, обе галочки рядом это меняют. Правила применяются сверху вниз. Поле внизу проверяет их на любой фразе, не диктуя.</p>" +
 			"<p class=\"wh\">Правила по приложениям</p>" +
@@ -714,6 +721,11 @@ var settingsStrings = map[string]map[string]string{
 		"S_AUTOENTER":      "Press Enter after paste (auto-submit)",
 		"S_RESTORE":        "Restore clipboard after paste",
 		"S_OVERLAY":        "On-screen indicator",
+		"S_NAV_HISTORY": "History", "S_HIST_ON": "Keep a history of dictations", "S_HIST_ON_SUB": "text only, on this computer; audio is never kept",
+		"S_HIST_DAYS": "How many days to keep", "S_HIST_MAX": "How many entries to keep",
+		"S_HIST_SKIP": "Never record from these programs", "S_HIST_SKIP_SUB": "comma-separated: keepass.exe, 1password.exe",
+		"S_HIST_LIST": "Entries", "S_HIST_CLEAR": "Clear", "S_HIST_COPY": "Copy",
+		"S_HIST_FIND": "Search the history…", "S_HIST_EMPTY": "No history yet", "S_HIST_ASK": "Delete the whole dictation history?",
 		"S_SEC_REPLACE": "Replacements after recognition", "S_REPLACE_HINT": "What was misheard becomes what you meant — before prompts and translation. Applied from top to bottom.",
 		"S_REPL_ADD": "Add a replacement", "S_REPL_FROM_PH": "git hub", "S_REPL_TO_PH": "GitHub",
 		"S_REPL_WHOLE": "whole words", "S_REPL_CASE": "case", "S_REPL_EMPTY": "No replacements yet",
@@ -896,6 +908,8 @@ var settingsStrings = map[string]map[string]string{
 			"<li>Enter after paste is pressed only when the target window has not changed.</li>" +
 			"<li><b>Last Result</b> — the final text of every dictation is kept in memory until the next one; the tray menu has \"Copy last result\". A failed paste or focus change never loses a dictation.</li>" +
 			"</ul>" +
+			"<p class=\"wh\">History of dictations</p>" +
+			"<p>The History section in the left column keeps what you dictated: text only, on this computer only, audio is never kept. It is off by default and turns on with one switch in the same place. Entries are kept for a set number of days and up to a set count, older ones drop out on their own; \"Never record from these programs\" lists, separated by commas, the ones nothing should be saved from — password managers, banking apps. Search covers both the text and the program name, the button next to an entry puts it on the clipboard, and Clear removes everything at once along with the <b>{app}-history.json</b> file.</p>" +
 			"<p class=\"wh\">Replacements after recognition</p>" +
 			"<p>On the Text tab you can list what the model mishears and what it should become: \"git hub\" → GitHub, surnames, in-house terms. Replacements run right after recognition — before translation and before the prompts — so the editor already gets the right words. By default they match whole words and ignore case; the two switches next to each row change that. Rules apply from top to bottom. The field at the bottom tries them on any phrase without dictating.</p>" +
 			"<p class=\"wh\">Rules per application</p>" +

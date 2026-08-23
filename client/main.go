@@ -1,6 +1,7 @@
 package main
 
 import (
+	"holdtotype/internal/history"
 	"holdtotype/internal/replace"
 	"holdtotype/internal/apprules"
 	"unsafe"
@@ -969,7 +970,9 @@ func (a *App) insertResult(ctx context.Context, cfg *Config, start time.Time, te
 	a.lastResultAt = time.Now()
 	a.lastTarget = windowTitle(targetWnd)
 	a.lastProcess = processNameOf(targetWnd)
+	targetApp := a.lastProcess
 	a.mu.Unlock()
+	a.rememberDictation(cfg, text, targetApp)
 
 	allowEnter := cfg.AutoEnter && skipped == ""
 	if targetWnd != 0 {
@@ -1031,6 +1034,25 @@ func (a *App) insertResult(ctx context.Context, cfg *Config, start time.Time, te
 
 func oneLine(s string) string {
 	return strings.Join(strings.Fields(s), " ")
+}
+
+var histStore = history.Open(appid.HistoryFile)
+
+func (a *App) rememberDictation(cfg *Config, text, app string) {
+	if !cfg.HistoryOn || strings.TrimSpace(text) == "" {
+		return
+	}
+	if skip := strings.TrimSpace(cfg.HistorySkip); skip != "" && app != "" {
+		if _, hit := apprules.Find([]apprules.Rule{{Match: skip}}, app); hit {
+			log.Printf("история: %s в списке исключений, не записываю", app)
+			return
+		}
+	}
+	now := time.Now()
+	item := history.Item{At: now.UnixMilli(), Text: text, App: app}
+	if err := histStore.Add(item, now.UnixMilli(), cfg.HistoryDays, cfg.HistoryMax); err != nil {
+		log.Printf("история: %v", err)
+	}
 }
 
 func applyAppRule(cfg *Config, exe string) {

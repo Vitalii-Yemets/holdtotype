@@ -108,6 +108,10 @@ type settingsForm struct {
 	Threads          int    `json:"threads"`
 	MinRecordMs      int    `json:"min_record_ms"`
 	PasteDelayMs     int    `json:"paste_delay_ms"`
+	HistoryOn        bool   `json:"history"`
+	HistoryDays      int    `json:"history_days"`
+	HistoryMax       int    `json:"history_max"`
+	HistorySkip      string `json:"history_skip"`
 	MaxRecordSeconds int    `json:"max_record_seconds"`
 	ServerAutostart  bool   `json:"server_autostart"`
 	CheckUpdates     bool   `json:"check_updates"`
@@ -400,6 +404,28 @@ func (a *App) settingsThread(tab string, attempt int) {
 		_ = w.Bind("appModelDel", func(id string) string {
 			return a.deleteModel(id)
 		})
+		_ = w.Bind("appHistory", func(query string) string {
+			cfg := a.snapshot()
+			out, _ := json.Marshal(histStore.Search(query, cfg.HistoryMax))
+			return string(out)
+		})
+		_ = w.Bind("appHistoryClear", func() {
+			if err := histStore.Clear(); err != nil {
+				log.Printf("история: очистка: %v", err)
+			}
+		})
+		_ = w.Bind("appHistoryCopy", func(at float64) bool {
+			for _, it := range histStore.Items() {
+				if it.At == int64(at) {
+					if err := setClipboardText(it.Text); err != nil {
+						log.Printf("копирование из истории: %v", err)
+						return false
+					}
+					return true
+				}
+			}
+			return false
+		})
 		_ = w.Bind("appTestReplace", func(text string) string {
 			return replace.Apply(a.snapshot().Replacements, text)
 		})
@@ -543,6 +569,14 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	if f.PasteDelayMs >= 0 && f.PasteDelayMs <= 5000 {
 		c.PasteDelayMs = f.PasteDelayMs
 	}
+	c.HistoryOn = f.HistoryOn
+	if f.HistoryDays > 0 {
+		c.HistoryDays = f.HistoryDays
+	}
+	if f.HistoryMax > 0 {
+		c.HistoryMax = f.HistoryMax
+	}
+	c.HistorySkip = strings.TrimSpace(f.HistorySkip)
 	if f.MaxRecordSeconds > 0 {
 		c.MaxRecordSeconds = f.MaxRecordSeconds
 	}
@@ -701,6 +735,10 @@ func settingsHTML(cfg *Config, tab string) string {
 		"threads":               cfg.Threads,
 		"min_record_ms":         cfg.MinRecordMs,
 		"paste_delay_ms":        cfg.PasteDelayMs,
+		"history":               cfg.HistoryOn,
+		"history_days":          cfg.HistoryDays,
+		"history_max":           cfg.HistoryMax,
+		"history_skip":          cfg.HistorySkip,
 		"max_record_seconds":    cfg.MaxRecordSeconds,
 		"server_autostart":      cfg.ServerAutostart,
 		"check_updates":         cfg.CheckUpdates,
@@ -751,6 +789,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"rulelast": "S_RULE_LAST", "ruleempty": "S_RULE_EMPTY", "ruledel": "S_RULE_DEL",
 		"ruleprompts": "S_RULE_PROMPTS", "ruleph": "S_RULE_PH",
 		"replempty": "S_REPL_EMPTY", "repldel": "S_REPL_DEL", "replwhole": "S_REPL_WHOLE",
+		"histempty": "S_HIST_EMPTY", "histcopy": "S_HIST_COPY", "histask": "S_HIST_ASK", "histclear": "S_HIST_CLEAR",
 		"replcase": "S_REPL_CASE", "replfromph": "S_REPL_FROM_PH", "repltoph": "S_REPL_TO_PH",
 		"wiznext": "S_WIZ_NEXT", "wizfinish": "S_WIZ_FINISH", "wizwait": "S_WIZ_WAIT",
 		"wizheard": "S_WIZ_HEARD", "wizhave": "S_WIZ_HAVE", "wiztry": "S_WIZ_TRY_TEXT",
@@ -951,6 +990,15 @@ button.ghost:hover{color:var(--green)}
 .rulerow select{flex:0 0 auto;width:auto;min-width:118px;font-size:11.5px;padding:4px 8px}
 .rdel{flex:none;border:1px solid var(--line);background:none;color:var(--dim);font:inherit;font-size:12px;cursor:pointer;padding:4px 9px}
 .rdel:hover{color:#ff7b6b;border-color:#7a2e2e}
+.histrow{display:flex;align-items:flex-start;gap:10px;padding:9px 2px;border-bottom:1px solid #12241a}
+.histrow:last-child{border-bottom:none}
+.histmeta{flex:none;width:150px;font-size:10.5px;color:var(--faint);line-height:1.5}
+.histmeta b{display:block;color:var(--dim);font-weight:400}
+.histtext{flex:1;min-width:0;font-size:12.5px;line-height:1.5;color:var(--green);user-select:text;overflow-wrap:anywhere}
+.histrow .mini{flex:none}
+.histfind{margin:8px 0 4px;max-width:320px}
+.histempty{color:var(--faint);font-size:12px;padding:8px 0}
+.sect .mini{margin-left:auto}
 .replrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 0;border-bottom:1px solid #12241a}
 .replrow:last-child{border-bottom:none}
 .replrow input[type=text]{flex:1 1 160px;min-width:120px;width:auto;font-size:12px;padding:5px 9px}
@@ -1092,6 +1140,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
  <span class="ngrp">{{S_GRP_WORK}}</span>
  <button class="nav" data-p="state"><span class="nlabel">{{S_NAV_STATE}}</span></button>
  <button class="nav" data-p="dictation"><span class="nlabel">{{S_NAV_DICT}}</span></button>
+ <button class="nav" data-p="history"><span class="nlabel">{{S_NAV_HISTORY}}</span><span class="nbadge" id="badge_history"></span></button>
  <button class="nav" data-p="mic"><span class="nlabel">{{S_NAV_MIC}}</span><span class="nbadge" id="badge_mic"></span></button>
  <span class="ngrp">{{S_GRP_REC}}</span>
  <button class="nav" data-p="models"><span class="nlabel">{{S_NAV_MODELS}}</span><span class="nbadge" id="badge_models"></span></button>
@@ -1126,6 +1175,21 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
   <span class="val" id="state_ram">—</span></div>
 </div>
 
+<div class="page" id="p-history">
+ <div class="card">
+  <div class="row"><label>{{S_HIST_ON}}<span class="sub">{{S_HIST_ON_SUB}}</span></label><input type="checkbox" id="history"></div>
+  <div class="row" data-adv><label>{{S_HIST_DAYS}}</label>
+   <select id="history_days"><option value="1">1</option><option value="3">3</option><option value="7">7</option><option value="30">30</option></select></div>
+  <div class="row" data-adv><label>{{S_HIST_MAX}}</label>
+   <select id="history_max"><option value="50">50</option><option value="100">100</option><option value="200">200</option><option value="500">500</option></select></div>
+  <div class="row" data-adv><label>{{S_HIST_SKIP}}<span class="sub">{{S_HIST_SKIP_SUB}}</span></label><input type="text" id="history_skip"></div>
+ </div>
+ <div class="card" id="histcard">
+  <div class="sect">{{S_HIST_LIST}}<button type="button" class="mini" id="hist_clear">{{S_HIST_CLEAR}}</button></div>
+  <label class="omni histfind"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="15.5" y1="15.5" x2="21" y2="21"/></svg><input id="hist_find" type="text" placeholder="{{S_HIST_FIND}}" autocomplete="off"></label>
+  <div id="histbody"></div>
+ </div>
+</div>
 <div class="page" id="p-dictation">
  <div class="card">
   <div class="row"><label>{{S_HOTKEY}}</label>
@@ -1446,9 +1510,9 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
 <script>
 window.onerror = function(m, s, l, c){ if(window.appJSError) appJSError(String(m) + " @line " + l + ":" + c); };
 const CFG = {{CFG}};
-const bools = ["beep","auto_enter","restore_clipboard","overlay","overlay_text","animation","type_mode","server_autostart","check_updates"];
-const texts = ["server_exe","server_url"];
-const nums  = ["threads","min_record_ms","max_record_seconds","translate_ask_seconds","server_port","paste_delay_ms"];
+const bools = ["beep","auto_enter","restore_clipboard","overlay","overlay_text","animation","type_mode","server_autostart","check_updates","history"];
+const texts = ["server_exe","server_url","history_skip"];
+const nums  = ["threads","min_record_ms","max_record_seconds","translate_ask_seconds","server_port","paste_delay_ms","history_days","history_max"];
 const sels  = ["ui_language","language","sound_theme","translate_target","translate_ask","hotkey_mode","overlay_position"];
 const trAll = ["en","de","fr","es","it","pl","ru","uk"];
 const L = {{L_JSON}};
@@ -1845,6 +1909,7 @@ async function refreshState(){
   badge("badge_mic", s.badges && s.badges.mic, s.mic);
   badge("badge_models", s.badges && s.badges.models);
   badge("badge_system", s.badges && s.badges.system);
+  badge("badge_history", s.badges && s.badges.history);
   const rem = document.getElementById("st_remote");
   if(rem) rem.textContent = s.remote ? L.remotebadge : "";
 }
@@ -2058,7 +2123,7 @@ function toast(msg, severity){
 }
 
 const sliders = [];
-const numSels = ["threads","min_record_ms","max_record_seconds","translate_ask_seconds","paste_delay_ms"];
+const numSels = ["threads","min_record_ms","max_record_seconds","translate_ask_seconds","paste_delay_ms","history_days","history_max"];
 function load(){
   document.getElementById("punctuation").value = CFG.punctuation || "model";
   document.getElementById("whisper_prompt").value = CFG.whisper_prompt || "";
@@ -2167,6 +2232,7 @@ function show(p){
   document.querySelectorAll(".nav").forEach(b=>b.classList.toggle("active", b.dataset.p===p));
   document.querySelectorAll(".page").forEach(el=>el.classList.toggle("active", el.id==="p-"+p));
   if(p==="state") refreshState();
+  if(p==="history") refreshHistory();
   document.querySelector(".content").scrollTop = 0;
 }
 let uiLevel = CFG.ui_level || "simple";
@@ -2436,6 +2502,67 @@ function initWizard(){
     if(wizStep === 3) wizPollTry();
   }, 800);
 }
+function histWhen(ms){
+  const d = new Date(ms);
+  const pad = n=>String(n).padStart(2, "0");
+  const today = new Date();
+  const sameDay = d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth() && d.getDate() === today.getDate();
+  const time = pad(d.getHours()) + ":" + pad(d.getMinutes());
+  return sameDay ? time : pad(d.getDate()) + "." + pad(d.getMonth() + 1) + " " + time;
+}
+async function refreshHistory(){
+  const body = document.getElementById("histbody");
+  if(!body) return;
+  const q = (document.getElementById("hist_find") || {}).value || "";
+  const items = JSON.parse(await appHistory(q));
+  body.innerHTML = "";
+  if(!items.length){
+    const empty = document.createElement("div");
+    empty.className = "histempty";
+    empty.textContent = q ? L.nofound : L.histempty;
+    body.appendChild(empty);
+    return;
+  }
+  items.forEach(it=>{
+    const row = document.createElement("div");
+    row.className = "histrow";
+    const meta = document.createElement("div");
+    meta.className = "histmeta";
+    meta.innerHTML = "<b>" + esc(histWhen(it.at)) + "</b>" + esc(it.app || "");
+    row.appendChild(meta);
+    const text = document.createElement("div");
+    text.className = "histtext";
+    text.textContent = it.text;
+    row.appendChild(text);
+    const copy = document.createElement("button");
+    copy.type = "button";
+    copy.className = "mini";
+    copy.textContent = L.histcopy;
+    copy.onclick = async ()=>{ await appHistoryCopy(it.at); toast(L.upd, "ok"); };
+    row.appendChild(copy);
+    body.appendChild(row);
+  });
+}
+function initHistory(){
+  const find = document.getElementById("hist_find");
+  if(!find) return;
+  let t = null;
+  find.addEventListener("input", ()=>{
+    clearTimeout(t);
+    t = setTimeout(refreshHistory, 200);
+  });
+  const clear = document.getElementById("hist_clear");
+  if(clear){
+    clear.onclick = async ()=>{
+      if(!await askConfirm(L.histask, L.histclear)) return;
+      await appHistoryClear();
+      refreshHistory();
+      refreshState();
+    };
+  }
+  const on = document.getElementById("history");
+  if(on) on.addEventListener("change", ()=>setTimeout(refreshHistory, 300));
+}
 let repls = (CFG.replacements || []).map(r=>({...r}));
 function renderRepls(){
   const body = document.getElementById("replbody");
@@ -2686,6 +2813,7 @@ load();
   initAutorun();
   initRules();
   initRepls();
+  initHistory();
   refreshLastApp();
   bindLabels();
   applyLevel();
@@ -2704,7 +2832,7 @@ load();
   await refreshLLM();
   if(window.appReady) appReady();
 })();
-const tabAlias = {general:"state", rec:"models", proc:"text", server:"system", about:"about", state:"state", dictation:"dictation", mic:"mic", models:"models", text:"text", translate:"translate", system:"system"};
+const tabAlias = {general:"state", rec:"models", proc:"text", server:"system", about:"about", state:"state", dictation:"dictation", history:"history", mic:"mic", models:"models", text:"text", translate:"translate", system:"system"};
 show(tabAlias[CFG._tab] || "state");
 if(CFG._wizard || CFG._tab === "wizard") wizStart();
 setTimeout(()=>{ if(window.appReady) appReady(); }, 400);

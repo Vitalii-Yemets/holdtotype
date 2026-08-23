@@ -623,6 +623,7 @@ type stateOut struct {
 		Mic    string `json:"mic"`
 		Models string `json:"models"`
 		System string `json:"system"`
+		History string `json:"history"`
 	} `json:"badges"`
 }
 
@@ -778,6 +779,7 @@ func (a *App) stateSnapshot() string {
 	}
 	st.Badges.Mic = micBadge(mic)
 	st.Badges.Models = itoaSafe(installedModelCount())
+	st.Badges.History = histBadge()
 	if w := systemWarnings(cfg); w > 0 {
 		st.Badges.System = itoaSafe(w)
 	}
@@ -841,4 +843,12 @@ func cancelDownload(id string) bool {
 	}
 	st.cancel()
 	return true
+}
+
+func histBadge() string {
+	n := histStore.Count()
+	if n == 0 {
+		return ""
+	}
+	return itoaSafe(n)
 }

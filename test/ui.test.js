@@ -96,6 +96,12 @@ const dom = new JSDOM(html, {
     };
     window.replaceCalls = [];
     window.appTestReplace = async (t) => { window.replaceCalls.push(t); return t.replace(/git hub/gi, "GitHub"); };
+    let histItems = [{ at: 1700000000000, text: "выложи на GitHub", app: "chrome.exe" }, { at: 1699999000000, text: "привет команде", app: "Telegram.exe" }];
+    window.histQueries = [];
+    window.histCopied = [];
+    window.appHistory = async (q) => { window.histQueries.push(q); return JSON.stringify(histItems.filter(i => !q || i.text.includes(q) || i.app.includes(q))); };
+    window.appHistoryClear = async () => { histItems = []; };
+    window.appHistoryCopy = async (at) => { window.histCopied.push(at); return true; };
     window.appModelDel = async () => "ok";
     window.appMics = async () =>
       JSON.stringify([
@@ -146,7 +152,25 @@ function check(name, actual, expected) {
   check("sidebar badges filled", [d.getElementById("badge_mic").textContent, d.getElementById("badge_models").textContent], ["Realtek", "2"]);
   check("status bar led lit", d.getElementById("st_led").classList.contains("on"), true);
 
-  check("eight sections in the sidebar", d.querySelectorAll(".nav").length, 8);
+  check("nine sections in the sidebar", d.querySelectorAll(".nav").length, 9);
+
+  tab("history"); await sleep(300);
+  check("history is a screen of its own", shown("history"), true);
+  check("history is off until asked for", d.getElementById("history").checked, false);
+  check("the dictations are listed", d.querySelectorAll("#histbody .histrow").length, 2);
+  check("each entry names the program", d.querySelector("#histbody .histmeta").textContent.includes("chrome.exe"), true);
+  check("each entry carries the text", d.querySelector("#histbody .histtext").textContent, "выложи на GitHub");
+  d.querySelector("#histbody .mini").click(); await sleep(200);
+  check("an entry can be copied", w.histCopied, [1700000000000]);
+  const hfind = d.getElementById("hist_find");
+  hfind.value = "Telegram"; hfind.dispatchEvent(new w.Event("input", { bubbles: true })); await sleep(400);
+  check("search reaches the program itself", w.histQueries[w.histQueries.length - 1], "Telegram");
+  check("search narrows the list", d.querySelectorAll("#histbody .histrow").length, 1);
+  hfind.value = ""; hfind.dispatchEvent(new w.Event("input", { bubbles: true })); await sleep(400);
+  d.getElementById("hist_clear").click(); await sleep(150);
+  check("clearing the history asks first", !!d.querySelector(".modal-bg"), true);
+  d.querySelector(".modal .btn.yes").click(); await sleep(400);
+  check("after clearing the list says it is empty", d.querySelector("#histbody .histempty").textContent, "No history yet");
   const everySetting = [
     "hotkey", "min_record_ms", "max_record_seconds", "auto_enter", "restore_clipboard",
     "type_mode", "overlay", "overlay_position", "overlay_text", "animation", "mic_device", "mic_bar", "beep", "sound_theme",
