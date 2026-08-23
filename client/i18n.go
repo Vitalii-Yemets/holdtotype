@@ -517,6 +517,8 @@ var settingsStrings = map[string]map[string]string{
 		"S_HELP_HTML": "<p class=\"wh\">Как это работает</p>" +
 			"<p>Зажмите сочетание клавиш — начнётся запись с микрофона (оверлей внизу экрана показывает уровень голоса). Отпустите — звук распознаётся, затем при необходимости переводится и прогоняется через промпты, и готовый текст вставляется в позицию курсора. Крестик на оверлее отменяет операцию на любой стадии.</p>" +
 			"<p>Полный конвейер: <b>запись → распознавание (Whisper) → перевод (если включён) → промпты (LLM) → вставка</b>. Каждая стадия видна на оверлее.</p>" +
+			"<p class=\"wh\">Первый запуск</p>" +
+			"<p>При самом первом запуске открывается мастер из пяти шагов: язык интерфейса, язык диктовки (модель он подберёт и скачает сам), сочетание клавиш и микрофон с живой полоской уровня, поле для пробной диктовки и, последним, запуск вместе с Windows. Мастер можно пропустить — всё работает и без него; вернуть его — запуском <b>{exe} -wizard</b>. При обновлении он не появляется.</p>" +
 			"<p class=\"wh\">Оверлей</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\"></span><span>Говорите…</span><span class=\"mock-bars\"><i style=\"height:6px\"></i><i style=\"height:13px\"></i><i style=\"height:9px\"></i><i style=\"height:16px\"></i><i style=\"height:7px\"></i><i style=\"height:12px\"></i><i style=\"height:5px\"></i></span><span class=\"mock-x\">✕</span></div></div>" +
 			"<ul>" +
@@ -525,7 +527,7 @@ var settingsStrings = map[string]map[string]string{
 			"<li><b>Вставлено: N симв.</b> — готово; при ошибке или тишине — короткое сообщение о причине.</li>" +
 			"<li>Крестик ✕ справа отменяет операцию на любой стадии; фокус ввода оверлей не забирает. Показывать плашку и её анимацию можно отключить на «Основных».</li>" +
 			"</ul>" +
-			"<p class=\"wh\">Диалог выбора языка</p>" +
+			"<p class=\"wh\">Вопрос о языке перевода</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Распознаю…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Переводить на:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Без перевода</span></div></div>" +
 			"<p>Спрашивает сама плашка второй строкой, как только вы отпустили сочетание, — в режимах «Спрашивать всегда» и «Спрашивать с таймаутом». Набор кнопок — «Языки в диалоге», подсвечен целевой язык. В режиме с таймаутом под этой кнопкой укорачивается полоска: когда она кончится, применится подсвеченный язык. <b>Без перевода</b> вставляет как услышано; крестик плашки отменяет операцию целиком. Клавиатура тоже работает: Enter — подсвеченный ответ, 1…9 — кнопка по номеру, Esc — отмена.</p>" +
 			"<p class=\"wh\">Безопасная вставка</p>" +
@@ -612,8 +614,8 @@ var settingsStrings = map[string]map[string]string{
 		"S_WIZ_TRY_PH":     "текст появится здесь",
 		"S_WIZ_T_DONE":     "Готово",
 		"S_WIZ_DONE_TEXT":  "{app} живёт в трее: левый клик по значку — настройки, правый — меню. Диктовать можно в любом окне, где есть курсор ввода.",
-		"S_WIZ_AUTORUN":    "Запускать вместе с Windows",
-		"S_WIZ_AUTORUN_SUB": "Ярлык в автозагрузке текущего пользователя",
+		"S_AUTORUN":    "Запускать вместе с Windows",
+		"S_AUTORUN_SUB": "Ярлык в автозагрузке текущего пользователя",
 		"S_WIZ_SKIP":       "Пропустить",
 		"S_WIZ_BACK":       "Назад",
 		"S_WIZ_NEXT":       "Дальше",
@@ -840,6 +842,8 @@ var settingsStrings = map[string]map[string]string{
 		"S_HELP_HTML": "<p class=\"wh\">How it works</p>" +
 			"<p>Hold the shortcut — recording starts (the overlay at the bottom of the screen shows your voice level). Release — the audio is transcribed, optionally translated and run through prompts, and the final text is inserted at the cursor. The ✕ on the overlay cancels at any stage.</p>" +
 			"<p>Full pipeline: <b>record → transcribe (Whisper) → translate (if enabled) → prompts (LLM) → paste</b>. Every stage is visible on the overlay.</p>" +
+			"<p class=\"wh\">First run</p>" +
+			"<p>The very first launch opens a five-step wizard: the interface language, the language you will dictate in (it picks and downloads the model for you), the shortcut and microphone with a live level bar, a field to try a dictation into, and — last — starting with Windows. You can skip it and everything still works; <b>{exe} -wizard</b> brings it back. Upgrades never see it.</p>" +
 			"<p class=\"wh\">Overlay</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\"></span><span>Speak…</span><span class=\"mock-bars\"><i style=\"height:6px\"></i><i style=\"height:13px\"></i><i style=\"height:9px\"></i><i style=\"height:16px\"></i><i style=\"height:7px\"></i><i style=\"height:12px\"></i><i style=\"height:5px\"></i></span><span class=\"mock-x\">✕</span></div></div>" +
 			"<ul>" +
@@ -848,7 +852,7 @@ var settingsStrings = map[string]map[string]string{
 			"<li><b>Inserted: N chars</b> — done; on errors or silence a short reason is shown.</li>" +
 			"<li>The ✕ on the right cancels at any stage; the overlay never steals input focus. The overlay and its animation can be turned off on the General tab.</li>" +
 			"</ul>" +
-			"<p class=\"wh\">Language dialog</p>" +
+			"<p class=\"wh\">The translation question</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Transcribing…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Translate to:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">No translation</span></div></div>" +
 			"<p>The plate itself asks, on a second line, the moment you let the shortcut go — in the \"always ask\" and \"ask with a countdown\" modes. The buttons come from \"Languages in the dialog\"; the target language is highlighted. With a countdown, a line under that button shrinks: when it runs out, the highlighted language is used. <b>No translation</b> inserts the text as it was heard; the ✕ on the plate cancels the whole operation. The keyboard works too: Enter takes the highlighted answer, 1…9 pick a button by number, Esc cancels.</p>" +
 			"<p class=\"wh\">Safe insertion</p>" +
@@ -935,8 +939,8 @@ var settingsStrings = map[string]map[string]string{
 		"S_WIZ_TRY_PH":     "the text will appear here",
 		"S_WIZ_T_DONE":     "All set",
 		"S_WIZ_DONE_TEXT":  "{app} lives in the tray: left-click the icon for the settings, right-click for the menu. You can dictate into any window that has a text caret.",
-		"S_WIZ_AUTORUN":    "Start with Windows",
-		"S_WIZ_AUTORUN_SUB": "An entry in the current user's startup list",
+		"S_AUTORUN":    "Start with Windows",
+		"S_AUTORUN_SUB": "An entry in the current user's startup list",
 		"S_WIZ_SKIP":       "Skip",
 		"S_WIZ_BACK":       "Back",
 		"S_WIZ_NEXT":       "Next",

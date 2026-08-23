@@ -150,7 +150,7 @@ function check(name, actual, expected) {
     "routing", "models", "language", "threads", "punctuation", "whisper_prompt", "profbody",
     "tr_default", "translate_target", "translate_ask", "translate_ask_seconds", "tr_hotkey",
     "tl_en", "ui_language", "upd_check", "check_updates", "server_autostart", "server_port",
-    "server_exe", "server_url", "proc-models", "proc-search", "ver2",
+    "server_exe", "server_url", "proc-models", "proc-search", "ver2", "autorun",
   ];
   const missing = everySetting.filter((id) => !d.getElementById(id));
   check("every setting is present in the new window", missing, []);
@@ -183,6 +183,13 @@ function check(name, actual, expected) {
 
   tab("system"); await sleep(30);
   check("service settings shown", [shown("system"), !!d.getElementById("server_url")], [true, true]);
+  const autorun = d.getElementById("autorun");
+  const autorunBefore = w.autorunCalls.length;
+  autorun.checked = true; autorun.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(200);
+  check("starting with Windows is a switch of its own", w.autorunCalls.length, autorunBefore + 1);
+  check("it is not written into the config", w.autorunCalls[w.autorunCalls.length - 1], true);
+  autorun.checked = false; autorun.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(200);
+  check("and it can be turned back off", w.autorunCalls[w.autorunCalls.length - 1], false);
 
   tab("translate"); await sleep(30);
   const trd = d.getElementById("tr_default");
@@ -379,7 +386,7 @@ function check(name, actual, expected) {
   d.getElementById("wiz_next").click(); await sleep(250);
   check("finishing hides the wizard", d.getElementById("wiz").classList.contains("on"), false);
   check("finishing is remembered", w.wizardDone, 1);
-  check("the autostart answer is passed on", w.autorunCalls, [true]);
+  check("the autostart answer is passed on", w.autorunCalls[w.autorunCalls.length - 1], true);
   check("finishing lands on the status screen", shown("state"), true);
 
   w.wizStart(); await sleep(150);

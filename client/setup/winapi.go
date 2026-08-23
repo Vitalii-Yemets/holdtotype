@@ -166,6 +166,16 @@ func uiLang() string {
 		return "ru"
 	case 0x22:
 		return "uk"
+	case 0x07:
+		return "de"
+	case 0x0C:
+		return "fr"
+	case 0x0A:
+		return "es"
+	case 0x10:
+		return "it"
+	case 0x15:
+		return "pl"
 	}
 	return "en"
 }

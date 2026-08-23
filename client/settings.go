@@ -868,6 +868,18 @@ button.btn.ghost:hover{color:var(--green);border-color:var(--dim);background:non
 .row select{flex:0 1 auto;min-width:0;max-width:100%}
 .row input[type=text]{flex:0 1 auto;min-width:0}
 .row .hint{font-size:11px;color:var(--dim)}
+select{color-scheme:dark}
+option{background:#0b100d;color:var(--green)}
+option:checked{background:linear-gradient(#123f22,#123f22);color:var(--green)}
+select,::picker(select){appearance:base-select}
+::picker(select){background:#0b100d;border:1px solid var(--line);padding:2px;margin-top:2px;color:var(--green)}
+::picker(select) option{padding:6px 10px;background:none;color:var(--dim);border:0;font:inherit;min-height:0}
+::picker(select) option:hover,::picker(select) option:focus{background:#123f22;color:var(--green);outline:none}
+::picker(select) option:checked{color:var(--green);text-shadow:var(--glow)}
+option::checkmark{display:none}
+select::picker-icon{color:var(--faint)}
+select:open::picker-icon{transform:rotate(180deg)}
+select:open{border-color:var(--dim)}
 input[type=text],input[type=number],select{padding:7px 10px;border:1px solid var(--dim);background:#08100b;color:var(--green);font:inherit;outline:none}
 input:focus,select:focus{border-color:var(--dim);box-shadow:var(--glow)}
 input::placeholder{color:var(--dim)}
@@ -1223,6 +1235,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
     <option value="it">Italiano</option>
     <option value="pl">Polski</option>
    </select></div>
+  <div class="row"><label>{{S_AUTORUN}}<span class="sub">{{S_AUTORUN_SUB}}</span></label><input type="checkbox" id="autorun"></div>
   <div class="row"><label>{{S_UPD}}</label>
    <button class="mini" id="upd_check">{{S_UPD_CHECK}}</button></div>
   <div class="row" data-adv><label>{{S_UPD_AUTO}}<span class="sub">{{S_SUB_UPD}}</span></label><input type="checkbox" id="check_updates"></div>
@@ -1328,7 +1341,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
    <div class="wizbig">&#10003;</div>
    <div class="wizh">{{S_WIZ_T_DONE}}</div>
    <div class="wiztext">{{S_WIZ_DONE_TEXT}}</div>
-   <div class="row" style="max-width:430px"><label class="lbl" for="wiz_auto">{{S_WIZ_AUTORUN}}<span class="sub">{{S_WIZ_AUTORUN_SUB}}</span></label><input type="checkbox" id="wiz_auto"></div>
+   <div class="row" style="max-width:430px"><label class="lbl" for="wiz_auto">{{S_AUTORUN}}<span class="sub">{{S_AUTORUN_SUB}}</span></label><input type="checkbox" id="wiz_auto"></div>
   </div>
  </div>
  <div class="wizfoot">
@@ -2281,7 +2294,9 @@ async function wizDone(){
   wizEl("wiz_auto").checked = await appAutorun();
 }
 async function wizFinish(){
-  await appSetAutorun(wizEl("wiz_auto").checked);
+  const on = await appSetAutorun(wizEl("wiz_auto").checked);
+  const box = wizEl("autorun");
+  if(box) box.checked = on;
   await appWizardDone();
   wizClose();
 }
@@ -2331,6 +2346,15 @@ function initWizard(){
     if(wizStep === 3) wizPollTry();
   }, 800);
 }
+async function initAutorun(){
+  const box = document.getElementById("autorun");
+  if(!box) return;
+  box.checked = await appAutorun();
+  box.onchange = async ()=>{
+    box.checked = await appSetAutorun(box.checked);
+    toast(L.upd, "ok");
+  };
+}
 function wizStart(){
   wizOn = true;
   wizEl("wiz").classList.add("on");
@@ -2347,7 +2371,7 @@ function applyNow(){
 document.querySelector(".content").addEventListener("change", e=>{
   if(e.target.closest("#advisor")) return;
   if(e.target.name === "mdl" || e.target.name === "llmmdl") return;
-  if(e.target.id === "mic_device") return;
+  if(e.target.id === "mic_device" || e.target.id === "autorun") return;
   applyNow();
 });
 (async()=>{ const s = JSON.parse(await appUpdateStatus()); if(s.latest && s.url) updShow(s.latest, true); })();
@@ -2365,6 +2389,7 @@ load();
   initStateScreen();
   initRemote();
   initWizard();
+  initAutorun();
   bindLabels();
   applyLevel();
   document.querySelectorAll(".lvlb").forEach(b=>b.onclick=()=>setLevel(b.dataset.l));

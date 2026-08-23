@@ -22,7 +22,18 @@ button.cap.close:hover{color:#ff7b6b;border-color:#7a2e2e}
 label.fld{color:var(--green);font-size:13px}
 input[type=text]{width:100%;padding:8px 11px;border:1px solid var(--line);background:#08100b;color:var(--green);font:inherit;outline:none}
 input[type=text]:focus{border-color:var(--dim);box-shadow:var(--glow)}
-select{padding:8px 11px;border:1px solid var(--line);background:#08100b;color:var(--green);font:inherit;outline:none;cursor:pointer;max-width:100%}
+select{padding:8px 11px;border:1px solid var(--line);background:#08100b;color:var(--green);font:inherit;outline:none;cursor:pointer;max-width:100%;color-scheme:dark}
+option{background:#0b100d;color:var(--green)}
+option:checked{background:linear-gradient(#123f22,#123f22);color:var(--green)}
+select,::picker(select){appearance:base-select}
+::picker(select){background:#0b100d;border:1px solid var(--line);padding:2px;margin-top:2px;color:var(--green)}
+::picker(select) option{padding:6px 10px;background:none;color:var(--dim);border:0;font:inherit;min-height:0}
+::picker(select) option:hover,::picker(select) option:focus{background:#123f22;color:var(--green);outline:none}
+::picker(select) option:checked{color:var(--green);text-shadow:var(--glow)}
+option::checkmark{display:none}
+select::picker-icon{color:var(--faint)}
+select:open::picker-icon{transform:rotate(180deg)}
+select:open{border-color:var(--dim)}
 select:focus{border-color:var(--dim);box-shadow:var(--glow)}
 button.ibtn{border:1px solid var(--line);background:none;color:var(--dim);cursor:pointer;padding:0 13px;line-height:0}
 button.ibtn:hover{color:var(--green);border-color:var(--dim);box-shadow:var(--glow)}

@@ -373,6 +373,8 @@ func init() {
 		"S_HELP_HTML": "<p class=\"wh\">Wie es funktioniert</p>" +
 			"<p>Kürzel halten — die Aufnahme läuft (die Leiste am unteren Bildschirmrand zeigt Ihren Pegel). Loslassen — der Ton wird erkannt, bei Bedarf übersetzt und durch die Prompts geschickt, und der fertige Text landet an der Cursorposition. Das ✕ auf der Leiste bricht in jedem Schritt ab.</p>" +
 			"<p>Der ganze Weg: <b>Aufnahme → Erkennung (Whisper) → Übersetzung (falls aktiv) → Prompts (LLM) → Einfügen</b>. Jeder Schritt ist auf der Leiste zu sehen.</p>" +
+			"<p class=\"wh\">Erster Start</p>" +
+			"<p>Beim allerersten Start öffnet sich ein Assistent mit fünf Schritten: Sprache der Oberfläche, Sprache des Diktats (das Modell sucht er aus und lädt es), Tastenkürzel und Mikrofon mit Pegelbalken, ein Feld zum Ausprobieren und zuletzt der Start mit Windows. Überspringen geht — es läuft auch so; zurückholen mit <b>{exe} -wizard</b>. Bei einem Update erscheint er nicht.</p>" +
 			"<p class=\"wh\">Die Leiste</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\"></span><span>Sprechen…</span><span class=\"mock-bars\"><i style=\"height:6px\"></i><i style=\"height:13px\"></i><i style=\"height:9px\"></i><i style=\"height:16px\"></i><i style=\"height:7px\"></i><i style=\"height:12px\"></i><i style=\"height:5px\"></i></span><span class=\"mock-x\">✕</span></div></div>" +
 			"<ul>" +
@@ -381,7 +383,7 @@ func init() {
 			"<li><b>Eingefügt: N Zeichen</b> — fertig; bei Fehlern oder Stille steht dort kurz der Grund.</li>" +
 			"<li>Das ✕ rechts bricht in jedem Schritt ab; die Leiste nimmt niemals den Eingabefokus. Leiste und Animation lassen sich unter „Diktat“ abschalten.</li>" +
 			"</ul>" +
-			"<p class=\"wh\">Sprachdialog</p>" +
+			"<p class=\"wh\">Die Frage nach der Übersetzung</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Erkenne…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Übersetzen nach:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Ohne Übersetzung</span></div></div>" +
 			"<p>Die Leiste fragt selbst, auf einer zweiten Zeile, sobald Sie das Kürzel loslassen — in den Modi „jedes Mal fragen“ und „mit Timeout fragen“. Die Schaltflächen kommen aus „Sprachen im Dialog“; die Zielsprache ist hervorgehoben. Mit Timeout schrumpft unter dieser Schaltfläche ein Strich: läuft er aus, gilt die hervorgehobene Sprache. <b>Ohne Übersetzung</b> fügt den Text so ein, wie er gehört wurde; das ✕ auf der Leiste bricht alles ab. Auch die Tastatur geht: Enter nimmt die hervorgehobene Antwort, 1…9 wählen eine Schaltfläche, Esc bricht ab.</p>" +
 			"<p class=\"wh\">Sicheres Einfügen</p>" +
@@ -469,8 +471,8 @@ func init() {
 		"S_WIZ_TRY_PH":     "hier erscheint der Text",
 		"S_WIZ_T_DONE":     "Fertig",
 		"S_WIZ_DONE_TEXT":  "{app} wohnt im Infobereich: Linksklick auf das Symbol öffnet die Einstellungen, Rechtsklick das Menü. Diktieren können Sie in jedem Fenster mit Eingabemarke.",
-		"S_WIZ_AUTORUN":    "Mit Windows starten",
-		"S_WIZ_AUTORUN_SUB": "Ein Eintrag im Autostart des aktuellen Benutzers",
+		"S_AUTORUN":    "Mit Windows starten",
+		"S_AUTORUN_SUB": "Ein Eintrag im Autostart des aktuellen Benutzers",
 		"S_WIZ_SKIP":       "Überspringen",
 		"S_WIZ_BACK":       "Zurück",
 		"S_WIZ_NEXT":       "Weiter",
@@ -571,6 +573,8 @@ func init() {
 		"S_HELP_HTML": "<p class=\"wh\">Comment ça marche</p>" +
 			"<p>Maintenez le raccourci — l'enregistrement commence (le bandeau en bas de l'écran montre votre niveau). Relâchez — l'audio est reconnu, traduit si besoin, passé dans les prompts, et le texte final arrive à l'endroit du curseur. Le ✕ du bandeau annule à n'importe quelle étape.</p>" +
 			"<p>Le chemin complet : <b>enregistrement → reconnaissance (Whisper) → traduction (si activée) → prompts (LLM) → collage</b>. Chaque étape est visible sur le bandeau.</p>" +
+			"<p class=\"wh\">Premier lancement</p>" +
+			"<p>Le tout premier lancement ouvre un assistant en cinq étapes : la langue de l'interface, la langue de dictée (il choisit et télécharge le modèle), le raccourci et le microphone avec une barre de niveau, un champ pour essayer une dictée et, enfin, le démarrage avec Windows. Vous pouvez le passer, tout fonctionne quand même ; <b>{exe} -wizard</b> le rappelle. Une mise à jour ne l'affiche pas.</p>" +
 			"<p class=\"wh\">Le bandeau</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\"></span><span>Parlez…</span><span class=\"mock-bars\"><i style=\"height:6px\"></i><i style=\"height:13px\"></i><i style=\"height:9px\"></i><i style=\"height:16px\"></i><i style=\"height:7px\"></i><i style=\"height:12px\"></i><i style=\"height:5px\"></i></span><span class=\"mock-x\">✕</span></div></div>" +
 			"<ul>" +
@@ -579,7 +583,7 @@ func init() {
 			"<li><b>Inséré : N caractères</b> — terminé ; en cas d'erreur ou de silence, la raison s'affiche brièvement.</li>" +
 			"<li>Le ✕ à droite annule à n'importe quelle étape ; le bandeau ne prend jamais le focus. Le bandeau et son animation se désactivent dans « Dictée ».</li>" +
 			"</ul>" +
-			"<p class=\"wh\">Dialogue de langue</p>" +
+			"<p class=\"wh\">La question de la traduction</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Reconnaissance…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Traduire vers :</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Sans traduction</span></div></div>" +
 			"<p>C'est le bandeau lui-même qui demande, sur une deuxième ligne, dès que vous relâchez le raccourci — dans les modes « demander à chaque fois » et « demander avec délai ». Les boutons viennent de « Langues du dialogue » ; la langue cible est mise en avant. Avec un délai, un trait se raccourcit sous ce bouton : à la fin, la langue mise en avant s'applique. <b>Sans traduction</b> insère le texte tel qu'il a été entendu ; le ✕ du bandeau annule tout. Le clavier fonctionne aussi : Entrée prend la réponse mise en avant, 1…9 choisissent un bouton, Échap annule.</p>" +
 			"<p class=\"wh\">Insertion sûre</p>" +
@@ -667,8 +671,8 @@ func init() {
 		"S_WIZ_TRY_PH":     "le texte apparaîtra ici",
 		"S_WIZ_T_DONE":     "C'est prêt",
 		"S_WIZ_DONE_TEXT":  "{app} vit dans la zone de notification : clic gauche sur l'icône pour les paramètres, clic droit pour le menu. Vous pouvez dicter dans toute fenêtre dotée d'un curseur de saisie.",
-		"S_WIZ_AUTORUN":    "Démarrer avec Windows",
-		"S_WIZ_AUTORUN_SUB": "Une entrée au démarrage de l'utilisateur courant",
+		"S_AUTORUN":    "Démarrer avec Windows",
+		"S_AUTORUN_SUB": "Une entrée au démarrage de l'utilisateur courant",
 		"S_WIZ_SKIP":       "Passer",
 		"S_WIZ_BACK":       "Retour",
 		"S_WIZ_NEXT":       "Suivant",
@@ -769,6 +773,8 @@ func init() {
 		"S_HELP_HTML": "<p class=\"wh\">Cómo funciona</p>" +
 			"<p>Mantén el atajo — empieza la grabación (la barra en la parte inferior de la pantalla muestra tu nivel). Suelta — el audio se reconoce, se traduce si hace falta, pasa por los prompts y el texto final aparece donde está el cursor. La ✕ de la barra cancela en cualquier momento.</p>" +
 			"<p>El camino completo: <b>grabación → reconocimiento (Whisper) → traducción (si está activa) → prompts (LLM) → pegado</b>. Cada paso se ve en la barra.</p>" +
+			"<p class=\"wh\">Primer inicio</p>" +
+			"<p>El primer inicio abre un asistente de cinco pasos: el idioma de la interfaz, el idioma en el que vas a dictar (él elige y descarga el modelo), el atajo y el micrófono con barra de nivel, un campo para probar un dictado y, por último, iniciar con Windows. Puedes omitirlo y todo sigue funcionando; <b>{exe} -wizard</b> lo trae de vuelta. Al actualizar no aparece.</p>" +
 			"<p class=\"wh\">La barra</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\"></span><span>Habla…</span><span class=\"mock-bars\"><i style=\"height:6px\"></i><i style=\"height:13px\"></i><i style=\"height:9px\"></i><i style=\"height:16px\"></i><i style=\"height:7px\"></i><i style=\"height:12px\"></i><i style=\"height:5px\"></i></span><span class=\"mock-x\">✕</span></div></div>" +
 			"<ul>" +
@@ -777,7 +783,7 @@ func init() {
 			"<li><b>Insertado: N caracteres</b> — listo; si hay error o silencio, se muestra el motivo en corto.</li>" +
 			"<li>La ✕ de la derecha cancela en cualquier momento; la barra nunca roba el foco. La barra y su animación se apagan en «Dictado».</li>" +
 			"</ul>" +
-			"<p class=\"wh\">Diálogo de idioma</p>" +
+			"<p class=\"wh\">La pregunta de la traducción</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Reconociendo…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Traducir a:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Sin traducción</span></div></div>" +
 			"<p>Pregunta la propia barra, en una segunda línea, en cuanto sueltas el atajo — en los modos «preguntar siempre» y «preguntar con cuenta atrás». Los botones vienen de «Idiomas del diálogo»; el idioma de destino está resaltado. Con cuenta atrás, bajo ese botón se acorta una línea: cuando se agota, se aplica el idioma resaltado. <b>Sin traducción</b> inserta el texto tal como se oyó; la ✕ de la barra cancela toda la operación. El teclado también sirve: Intro toma la respuesta resaltada, 1…9 eligen un botón, Esc cancela.</p>" +
 			"<p class=\"wh\">Inserción segura</p>" +
@@ -865,8 +871,8 @@ func init() {
 		"S_WIZ_TRY_PH":     "el texto aparecerá aquí",
 		"S_WIZ_T_DONE":     "Listo",
 		"S_WIZ_DONE_TEXT":  "{app} vive en la bandeja: clic izquierdo en el icono para los ajustes, clic derecho para el menú. Puedes dictar en cualquier ventana que tenga cursor de texto.",
-		"S_WIZ_AUTORUN":    "Iniciar con Windows",
-		"S_WIZ_AUTORUN_SUB": "Una entrada en el inicio del usuario actual",
+		"S_AUTORUN":    "Iniciar con Windows",
+		"S_AUTORUN_SUB": "Una entrada en el inicio del usuario actual",
 		"S_WIZ_SKIP":       "Omitir",
 		"S_WIZ_BACK":       "Atrás",
 		"S_WIZ_NEXT":       "Siguiente",
@@ -967,6 +973,8 @@ func init() {
 		"S_HELP_HTML": "<p class=\"wh\">Come funziona</p>" +
 			"<p>Tieni premuta la scorciatoia — parte la registrazione (la barra in fondo allo schermo mostra il tuo livello). Rilascia — l'audio viene riconosciuto, tradotto se serve, passato nei prompt, e il testo finale arriva dov'è il cursore. La ✕ sulla barra annulla in qualsiasi momento.</p>" +
 			"<p>Il percorso completo: <b>registrazione → riconoscimento (Whisper) → traduzione (se attiva) → prompt (LLM) → incollaggio</b>. Ogni passo si vede sulla barra.</p>" +
+			"<p class=\"wh\">Primo avvio</p>" +
+			"<p>Al primissimo avvio si apre una procedura in cinque passi: la lingua dell'interfaccia, la lingua in cui detterai (il modello lo sceglie e lo scarica lui), la scorciatoia e il microfono con la barra del livello, un campo per provare una dettatura e, per ultimo, l'avvio con Windows. Puoi saltarla e funziona lo stesso; <b>{exe} -wizard</b> la riporta. Con un aggiornamento non compare.</p>" +
 			"<p class=\"wh\">La barra</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\"></span><span>Parla…</span><span class=\"mock-bars\"><i style=\"height:6px\"></i><i style=\"height:13px\"></i><i style=\"height:9px\"></i><i style=\"height:16px\"></i><i style=\"height:7px\"></i><i style=\"height:12px\"></i><i style=\"height:5px\"></i></span><span class=\"mock-x\">✕</span></div></div>" +
 			"<ul>" +
@@ -975,7 +983,7 @@ func init() {
 			"<li><b>Inserito: N caratteri</b> — fatto; in caso di errore o silenzio compare brevemente il motivo.</li>" +
 			"<li>La ✕ a destra annulla in qualsiasi momento; la barra non ruba mai il fuoco. Barra e animazione si spengono in «Dettatura».</li>" +
 			"</ul>" +
-			"<p class=\"wh\">Finestra della lingua</p>" +
+			"<p class=\"wh\">La domanda sulla traduzione</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Riconoscimento…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Tradurre in:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Senza traduzione</span></div></div>" +
 			"<p>È la barra stessa a chiedere, su una seconda riga, appena rilasci la scorciatoia — nelle modalità «chiedi sempre» e «chiedi con timer». I pulsanti vengono da «Lingue nella finestra»; la lingua di destinazione è evidenziata. Con il timer, sotto quel pulsante si accorcia una linea: quando finisce vale la lingua evidenziata. <b>Senza traduzione</b> inserisce il testo così come è stato sentito; la ✕ della barra annulla tutta l'operazione. Funziona anche la tastiera: Invio prende la risposta evidenziata, 1…9 scelgono un pulsante, Esc annulla.</p>" +
 			"<p class=\"wh\">Inserimento sicuro</p>" +
@@ -1063,8 +1071,8 @@ func init() {
 		"S_WIZ_TRY_PH":     "il testo apparirà qui",
 		"S_WIZ_T_DONE":     "Fatto",
 		"S_WIZ_DONE_TEXT":  "{app} vive nell'area di notifica: clic sinistro sull'icona per le impostazioni, destro per il menu. Puoi dettare in qualsiasi finestra con un cursore di testo.",
-		"S_WIZ_AUTORUN":    "Avvia con Windows",
-		"S_WIZ_AUTORUN_SUB": "Una voce nell'avvio automatico dell'utente corrente",
+		"S_AUTORUN":    "Avvia con Windows",
+		"S_AUTORUN_SUB": "Una voce nell'avvio automatico dell'utente corrente",
 		"S_WIZ_SKIP":       "Salta",
 		"S_WIZ_BACK":       "Indietro",
 		"S_WIZ_NEXT":       "Avanti",
@@ -1165,6 +1173,8 @@ func init() {
 		"S_HELP_HTML": "<p class=\"wh\">Jak to działa</p>" +
 			"<p>Przytrzymaj skrót — zaczyna się nagrywanie (pasek na dole ekranu pokazuje twój poziom). Puść — dźwięk zostaje rozpoznany, w razie potrzeby przetłumaczony, przepuszczony przez prompty, a gotowy tekst trafia tam, gdzie stoi kursor. ✕ na pasku przerywa na każdym etapie.</p>" +
 			"<p>Cała droga: <b>nagranie → rozpoznawanie (Whisper) → tłumaczenie (jeśli włączone) → prompty (LLM) → wklejenie</b>. Każdy etap widać na pasku.</p>" +
+			"<p class=\"wh\">Pierwsze uruchomienie</p>" +
+			"<p>Przy pierwszym uruchomieniu otwiera się kreator z pięciu kroków: język interfejsu, język dyktowania (model dobierze i pobierze sam), skrót i mikrofon z paskiem poziomu, pole do próbnego dyktowania i na końcu uruchamianie z Windows. Można go pominąć — wszystko i tak działa; <b>{exe} -wizard</b> przywraca go. Przy aktualizacji się nie pojawia.</p>" +
 			"<p class=\"wh\">Pasek</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\"></span><span>Mów…</span><span class=\"mock-bars\"><i style=\"height:6px\"></i><i style=\"height:13px\"></i><i style=\"height:9px\"></i><i style=\"height:16px\"></i><i style=\"height:7px\"></i><i style=\"height:12px\"></i><i style=\"height:5px\"></i></span><span class=\"mock-x\">✕</span></div></div>" +
 			"<ul>" +
@@ -1173,7 +1183,7 @@ func init() {
 			"<li><b>Wstawiono: N znaków</b> — gotowe; przy błędzie albo ciszy pojawia się krótki powód.</li>" +
 			"<li>✕ po prawej przerywa na każdym etapie; pasek nigdy nie zabiera fokusu. Pasek i jego animację można wyłączyć w „Dyktowaniu”.</li>" +
 			"</ul>" +
-			"<p class=\"wh\">Okno wyboru języka</p>" +
+			"<p class=\"wh\">Pytanie o tłumaczenie</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Rozpoznawanie…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Tłumaczyć na:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Bez tłumaczenia</span></div></div>" +
 			"<p>Pyta sam pasek, w drugim wierszu, gdy tylko puścisz skrót — w trybach „pytaj za każdym razem” i „pytaj z odliczaniem”. Przyciski biorą się z „Języków w oknie”; język docelowy jest wyróżniony. Przy odliczaniu pod tym przyciskiem skraca się kreska: gdy zniknie, obowiązuje wyróżniony język. <b>Bez tłumaczenia</b> wstawia tekst tak, jak został usłyszany; ✕ na pasku przerywa całą operację. Klawiatura też działa: Enter wybiera wyróżnioną odpowiedź, 1…9 wskazują przycisk, Esc przerywa.</p>" +
 			"<p class=\"wh\">Bezpieczne wstawianie</p>" +
@@ -1261,8 +1271,8 @@ func init() {
 		"S_WIZ_TRY_PH":     "tutaj pojawi się tekst",
 		"S_WIZ_T_DONE":     "Gotowe",
 		"S_WIZ_DONE_TEXT":  "{app} mieszka w zasobniku: lewy klik w ikonę — ustawienia, prawy — menu. Dyktować możesz w każdym oknie, w którym jest kursor tekstu.",
-		"S_WIZ_AUTORUN":    "Uruchamiaj z Windows",
-		"S_WIZ_AUTORUN_SUB": "Wpis w autostarcie bieżącego użytkownika",
+		"S_AUTORUN":    "Uruchamiaj z Windows",
+		"S_AUTORUN_SUB": "Wpis w autostarcie bieżącego użytkownika",
 		"S_WIZ_SKIP":       "Pomiń",
 		"S_WIZ_BACK":       "Wstecz",
 		"S_WIZ_NEXT":       "Dalej",
@@ -1423,6 +1433,8 @@ func init() {
 		"S_HELP_HTML": "<p class=\"wh\">Як це працює</p>" +
 			"<p>Тримайте сполучення — починається запис (смужка внизу екрана показує ваш рівень). Відпустіть — звук розпізнається, за потреби перекладається, проходить через промпти, і готовий текст з'являється там, де стоїть курсор. ✕ на смужці скасовує на будь-якому кроці.</p>" +
 			"<p>Увесь шлях: <b>запис → розпізнавання (Whisper) → переклад (якщо ввімкнено) → промпти (LLM) → вставка</b>. Кожен крок видно на смужці.</p>" +
+			"<p class=\"wh\">Перший запуск</p>" +
+			"<p>При найпершому запуску відкривається майстер із п'яти кроків: мова інтерфейсу, мова диктування (модель він добере й завантажить сам), сполучення клавіш і мікрофон із живою смужкою рівня, поле для пробного диктування і, останнім, запуск разом із Windows. Майстер можна пропустити — усе працює й без нього; повернути — запуском <b>{exe} -wizard</b>. Під час оновлення він не з'являється.</p>" +
 			"<p class=\"wh\">Смужка</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\"></span><span>Говоріть…</span><span class=\"mock-bars\"><i style=\"height:6px\"></i><i style=\"height:13px\"></i><i style=\"height:9px\"></i><i style=\"height:16px\"></i><i style=\"height:7px\"></i><i style=\"height:12px\"></i><i style=\"height:5px\"></i></span><span class=\"mock-x\">✕</span></div></div>" +
 			"<ul>" +
@@ -1431,7 +1443,7 @@ func init() {
 			"<li><b>Вставлено: N символів</b> — готово; при помилці чи тиші коротко пишеться причина.</li>" +
 			"<li>✕ праворуч скасовує на будь-якому кроці; смужка ніколи не забирає фокус вводу. Смужку та її анімацію можна вимкнути в «Диктуванні».</li>" +
 			"</ul>" +
-			"<p class=\"wh\">Вікно вибору мови</p>" +
+			"<p class=\"wh\">Питання про переклад</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Розпізнаю…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Перекласти на:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Без перекладу</span></div></div>" +
 			"<p>Питає сама смужка, другим рядком, щойно ви відпустили сполучення, — у режимах «питати щоразу» та «питати з відліком». Кнопки беруться з «Мов у вікні»; цільова мова виділена. У режимі з відліком під цією кнопкою коротшає риска: коли вона скінчиться, застосується виділена мова. <b>Без перекладу</b> вставляє текст так, як почуто; хрестик смужки скасовує операцію цілком. Клавіатура теж працює: Enter — виділена відповідь, 1…9 — кнопка за номером, Esc — скасувати.</p>" +
 			"<p class=\"wh\">Безпечна вставка</p>" +
@@ -1519,8 +1531,8 @@ func init() {
 		"S_WIZ_TRY_PH":     "текст з'явиться тут",
 		"S_WIZ_T_DONE":     "Готово",
 		"S_WIZ_DONE_TEXT":  "{app} живе у треї: лівий клік по значку — налаштування, правий — меню. Диктувати можна в будь-якому вікні, де є курсор введення.",
-		"S_WIZ_AUTORUN":    "Запускати разом із Windows",
-		"S_WIZ_AUTORUN_SUB": "Запис в автозапуску поточного користувача",
+		"S_AUTORUN":    "Запускати разом із Windows",
+		"S_AUTORUN_SUB": "Запис в автозапуску поточного користувача",
 		"S_WIZ_SKIP":       "Пропустити",
 		"S_WIZ_BACK":       "Назад",
 		"S_WIZ_NEXT":       "Далі",
