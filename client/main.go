@@ -309,6 +309,7 @@ func main() {
 			cfg, _ := loadConfig("config.json")
 			if cfg != nil {
 				initLang(cfg.UILanguage)
+				applyTheme(cfg.Theme)
 				setOverlayPos(cfg.OverlayPos)
 			}
 			log.Printf("демонстрация диалогов: смена фокуса")
@@ -390,6 +391,7 @@ func main() {
 			cfg, _ := loadConfig("config.json")
 			if cfg != nil {
 				initLang(cfg.UILanguage)
+				applyTheme(cfg.Theme)
 				setOverlayPos(cfg.OverlayPos)
 			}
 			state := ovFlashErr
@@ -416,6 +418,7 @@ func main() {
 			overlayHide()
 			return
 		}
+
 		if arg == "-miclevel" {
 			cfg, _ := loadConfig("config.json")
 			device := ""
@@ -463,6 +466,7 @@ func main() {
 		return
 	}
 	initLang(cfg.UILanguage)
+	applyTheme(cfg.Theme)
 	setOverlayPos(cfg.OverlayPos)
 
 	app := &App{
@@ -1622,4 +1626,3 @@ func (a *App) resetSettings() {
 	log.Printf("настройки сброшены к заводским (модели, история и промпты сохранены)")
 	a.reloadConfig()
 }
-

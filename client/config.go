@@ -8,6 +8,7 @@ import (
 	"holdtotype/internal/profiles"
 	"holdtotype/internal/replace"
 	"holdtotype/internal/routing"
+	"holdtotype/internal/theme"
 
 	"bytes"
 	"encoding/json"
@@ -73,6 +74,7 @@ type Config struct {
 	Punctuation      string `json:"punctuation"`
 	HotkeyMode       string `json:"hotkey_mode"`
 	UILevel          string `json:"ui_level"`
+	Theme            string `json:"theme"`
 	PasteMode        string `json:"paste_mode"`
 	RestoreClipboard bool   `json:"restore_clipboard"`
 	Beep             bool   `json:"beep"`
@@ -175,6 +177,7 @@ func defaultConfig() *Config {
 		Punctuation:      punctFromModel,
 		HotkeyMode:       hotkeyHold,
 		UILevel:          levelSimple,
+		Theme:            theme.Default,
 		SherpaModel:      "models/gigaam-v3",
 		PasteMode:        "clipboard",
 		RestoreClipboard: true,
@@ -304,6 +307,9 @@ func loadConfig(path string) (*Config, error) {
 	}
 	if !validHotkeyMode(cfg.HotkeyMode) {
 		cfg.HotkeyMode = hotkeyHold
+	}
+	if !theme.Valid(cfg.Theme) {
+		cfg.Theme = theme.Default
 	}
 	if !validUILevel(cfg.UILevel) {
 		cfg.UILevel = levelSimple

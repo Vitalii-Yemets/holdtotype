@@ -61,8 +61,8 @@ func iconPNG(glow color.NRGBA, badge ...color.NRGBA) []byte {
 
 	if len(badge) > 0 {
 		b := badge[0]
-		for y := sz - 11; y < sz - 2; y++ {
-			for x := sz - 11; x < sz - 2; x++ {
+		for y := sz - 11; y < sz-2; y++ {
+			for x := sz - 11; x < sz-2; x++ {
 				img.SetNRGBA(x, y, b)
 			}
 		}
@@ -115,3 +115,13 @@ var (
 	iconDisabled   = iconPNG(color.NRGBA{R: 0x5A, G: 0x6E, B: 0x60, A: 255})
 	iconError      = iconPNG(color.NRGBA{R: 0x5A, G: 0x6E, B: 0x60, A: 255}, color.NRGBA{R: 0xFF, G: 0x6B, B: 0x6B, A: 255})
 )
+
+func loadTrayIcons() map[int]uintptr {
+	return map[int]uintptr{
+		trayIdle:       hIconFromPNG(iconIdle),
+		trayRecording:  hIconFromPNG(iconRecording),
+		trayProcessing: hIconFromPNG(iconProcessing),
+		trayOff:        hIconFromPNG(iconDisabled),
+		trayError:      hIconFromPNG(iconError),
+	}
+}

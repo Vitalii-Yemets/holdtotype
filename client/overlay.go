@@ -78,18 +78,19 @@ func blendCol(a, b uintptr, t float64) uintptr {
 	return mix(0) | mix(8) | mix(16)
 }
 
-const (
-	colBg      = 0x0C0F0B
-	colBgLine  = 0x0A0C09
-	colGreen   = 0x6EFF3C
-	colGreenDm = 0x4AA320
-	colGreenLo = 0x2B4A1D
-	colRed     = 0x6B6BFF
-	colRedDm   = 0x26265C
-	colAmber   = 0x47B3FF
-	colAmberDm = 0x20455C
-	colBad     = 0x6B6BFF
-	colBadDm   = 0x26265C
+var (
+	colBg      uintptr = 0x0C0F0B
+	colBgLine  uintptr = 0x0A0C09
+	colGreen   uintptr = 0x6EFF3C
+	colGreenDm uintptr = 0x4AA320
+	colGreenLo uintptr = 0x2B4A1D
+	colRed     uintptr = 0x6B6BFF
+	colRedDm   uintptr = 0x26265C
+	colAmber   uintptr = 0x47B3FF
+	colAmberDm uintptr = 0x20455C
+	colBad     uintptr = 0x6B6BFF
+	colBadDm   uintptr = 0x26265C
+	colAskBg   uintptr = 0x0D100B
 )
 
 var (

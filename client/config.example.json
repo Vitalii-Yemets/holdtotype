@@ -15,6 +15,7 @@
   "punctuation": "model",
   "hotkey_mode": "hold",
   "ui_level": "simple",
+  "theme": "green",
   "config_version": 3,
   "sherpa_model": "models/gigaam-v3",
   "paste_mode": "clipboard",

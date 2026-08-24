@@ -35,6 +35,7 @@ const values = {
   DLCANCEL: "STOP THE DOWNLOAD",
   DLSTOPPING_JS: '"Stopping the download…"',
   DLSTOPPED_JS: '"The model was not downloaded — the app will offer it on first run."',
+  THEME_VARS: "--bg:#0b0f0c;--panel:#0e1410;--line:#1d4a2b;--green:#3cff6e;--dim:#20a34a;--faint:#14803a;--amber:#ffb347;--bad:#ff7b6b;--rgb:60,255,110;--glow:0 0 7px rgba(60,255,110,.55)",
   FINISH: "FINISH",
   RETRY: "RETRY",
   BACK: "BACK",

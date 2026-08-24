@@ -22,6 +22,7 @@ import (
 	"holdtotype/internal/hotkeys"
 
 	"holdtotype/internal/appid"
+	"holdtotype/internal/theme"
 )
 
 var (
@@ -120,6 +121,7 @@ type settingsForm struct {
 	Punctuation      string `json:"punctuation"`
 	HotkeyMode       string `json:"hotkey_mode"`
 	UILevel          string `json:"ui_level"`
+	Theme            string `json:"theme"`
 	ServerPort       int    `json:"server_port"`
 	ServerExe        string `json:"server_exe"`
 	ServerURL        string `json:"server_url"`
@@ -647,6 +649,13 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	if validUILevel(f.UILevel) {
 		c.UILevel = f.UILevel
 	}
+	if theme.Valid(f.Theme) && f.Theme != c.Theme {
+		c.Theme = f.Theme
+		applyTheme(c.Theme)
+		trayReloadIcons(trayIdle)
+		a.refreshIdleUI()
+		overlayRefresh()
+	}
 	c.MicDevice = f.MicDevice
 	c.MicDeviceName = f.MicDeviceName
 	if f.ServerPort < 1024 || f.ServerPort > 65535 {
@@ -825,6 +834,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"punctuation":             cfg.Punctuation,
 		"hotkey_mode":             cfg.HotkeyMode,
 		"ui_level":                cfg.UILevel,
+		"theme":                   cfg.Theme,
 		"server_port":             cfg.ServerPort,
 		"server_exe":              cfg.ServerExe,
 		"server_exe_path":         resolveServerExe(cfg.ServerExe),
@@ -894,7 +904,7 @@ func settingsHTML(cfg *Config, tab string) string {
 	}
 	lJSON, _ := json.Marshal(lMap)
 
-	pairs := []string{"{{CFG}}", string(cfgJSON), "{{L_JSON}}", string(lJSON), "{{APP}}", appid.Name}
+	pairs := []string{"{{CFG}}", string(cfgJSON), "{{L_JSON}}", string(lJSON), "{{APP}}", appid.Name, "{{THEME_VARS}}", theme.Get(cfg.Theme).CSSVars(), "{{THEME_LIST}}", themeListJSON()}
 	remote := strings.TrimSpace(cfg.ServerURL) != ""
 	for k := range settingsStrings["en"] {
 		v := str(k)
@@ -908,7 +918,7 @@ func settingsHTML(cfg *Config, tab string) string {
 
 const settingsPage = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>{{S_TITLE}}</title><style>
-:root{--bg:#0b0f0c;--panel:#0e1410;--line:#1d4a2b;--green:#3cff6e;--dim:#20a34a;--faint:#14803a;--amber:#ffb347;--bad:#ff7b6b;--glow:0 0 7px rgba(60,255,110,.55)}
+:root{{{THEME_VARS}}}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{font:14px Consolas,"Cascadia Mono",monospace;background:var(--bg);color:var(--green);user-select:none;display:flex;flex-direction:column;overflow:hidden}
@@ -918,13 +928,13 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;background:rep
 ::-webkit-scrollbar-track{background:var(--bg)}
 ::-webkit-scrollbar-thumb{background:var(--line);border:2px solid var(--bg)}
 ::-webkit-scrollbar-thumb:hover{background:var(--dim)}
-.header{display:flex;align-items:center;gap:14px;padding:12px 12px 12px 20px;overflow:hidden;border-bottom:1px solid var(--line);box-shadow:0 1px 12px rgba(60,255,110,.12);cursor:default}
+.header{display:flex;align-items:center;gap:14px;padding:12px 12px 12px 20px;overflow:hidden;border-bottom:1px solid var(--line);box-shadow:0 1px 12px rgba(var(--rgb),.12);cursor:default}
 .capbtns{display:flex;gap:6px;margin-left:10px;flex:none}
 button.cap{width:36px;height:30px;background:none;border:1px solid var(--line);color:var(--dim);font:14px Consolas,monospace;cursor:pointer;padding:0}
 button.cap:hover{background:#123f22;color:var(--green);box-shadow:var(--glow)}
 button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box-shadow:0 0 7px rgba(255,110,90,.5)}
 .logo{width:40px;height:40px;flex:none}
-.logo svg{width:100%;height:100%;filter:drop-shadow(0 0 5px rgba(60,255,110,.7))}
+.logo svg{width:100%;height:100%;filter:drop-shadow(0 0 5px rgba(var(--rgb),.7))}
 .header h1{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:15px;letter-spacing:2px;text-shadow:var(--glow);animation:flicker 6s infinite}
 .statusbar .ver{margin-left:auto;flex:none;color:var(--dim)}
 @keyframes flicker{0%,93%,97%,100%{opacity:1}95%{opacity:.6}}
@@ -979,7 +989,7 @@ button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box
 .omni .ocount.none{color:var(--amber)}
 .wiz{position:fixed;inset:0;z-index:30;background:var(--bg);display:none;flex-direction:column}
 .wiz.on{display:flex}
-.wizhead{display:flex;align-items:center;gap:14px;padding:12px 12px 12px 20px;border-bottom:1px solid var(--line);box-shadow:0 1px 12px rgba(60,255,110,.12)}
+.wizhead{display:flex;align-items:center;gap:14px;padding:12px 12px 12px 20px;border-bottom:1px solid var(--line);box-shadow:0 1px 12px rgba(var(--rgb),.12)}
 .wizhead h2{font-size:14px;letter-spacing:2px;text-shadow:var(--glow);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .wizbody{flex:1;min-height:0;overflow-y:auto;padding:22px 26px}
 .wizstep{display:none;flex-direction:column;gap:14px}
@@ -1015,7 +1025,7 @@ button.btn.ghost:hover{color:var(--green);border-color:var(--dim);background:non
 .moreb{appearance:none;background:none;border:1px dashed var(--line);color:var(--dim);font:inherit;font-size:11px;padding:6px 10px;margin:6px 0 0;cursor:pointer}
 .moreb:hover{color:var(--dim);border-color:var(--dim)}
 .modal-bg{position:fixed;inset:0;background:rgba(3,7,4,.78);display:flex;align-items:center;justify-content:center;z-index:20}
-.modal{background:var(--panel);border:1px solid var(--dim);box-shadow:0 0 24px rgba(60,255,110,.18);padding:20px 22px;max-width:380px;display:flex;flex-direction:column;gap:16px}
+.modal{background:var(--panel);border:1px solid var(--dim);box-shadow:0 0 24px rgba(var(--rgb),.18);padding:20px 22px;max-width:380px;display:flex;flex-direction:column;gap:16px}
 .modal p{font-size:13px;line-height:1.55;color:var(--green)}
 .modal-btns{display:flex;gap:10px;justify-content:flex-end}
 .modal .btn{padding:7px 18px;border:1px solid var(--dim);background:#0d1a11;color:var(--green);font:inherit;font-size:12px;letter-spacing:1px;text-transform:uppercase;cursor:pointer}
@@ -1184,18 +1194,23 @@ button.mini.danger:hover{color:#ff7b6b;border-color:#7a2e2e;box-shadow:0 0 7px r
 #hf_clr{appearance:none;background:none;border:0;font:inherit;position:absolute;right:9px;top:50%;transform:translateY(-50%);color:var(--dim);cursor:pointer;display:none;font-size:13px;padding:2px 4px}
 #hf_clr:hover{color:var(--green);text-shadow:var(--glow)}
 #hf_go{appearance:none;background:none;border:0;font:inherit;position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--dim);cursor:pointer;line-height:0;padding:3px}
-#hf_go:hover{color:var(--green);filter:drop-shadow(0 0 4px rgba(60,255,110,.6))}
+#hf_go:hover{color:var(--green);filter:drop-shadow(0 0 4px rgba(var(--rgb),.6))}
 .hfrepo{appearance:none;background:none;border:0;font:inherit;color:inherit;display:flex;align-items:center;gap:9px;flex:1;min-width:0;text-align:left;cursor:pointer;padding:2px 0}
 .hfrepo .mdesc{flex:1;color:var(--dim);min-width:0;overflow:hidden;text-overflow:ellipsis}
 .hfupd{color:var(--dim);font-size:12px;flex:none}
 .hflink{appearance:none;background:none;border:0;font:inherit;color:var(--dim);cursor:pointer;padding:0 4px}
 .hflink:hover{color:var(--green)}
 button.iconbtn{border:none;background:none;padding:2px 5px;color:var(--dim);cursor:pointer;line-height:1;font:13px Consolas,monospace}
-button.iconbtn:hover{color:var(--green);filter:drop-shadow(0 0 4px rgba(60,255,110,.6))}
+button.iconbtn:hover{color:var(--green);filter:drop-shadow(0 0 4px rgba(var(--rgb),.6))}
 button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,110,90,.5))}
 .about p{margin:8px 0;line-height:1.55;user-select:text;color:var(--green);max-width:80ch}
 .about li{max-width:78ch}
 .toc{display:flex;flex-wrap:wrap;gap:6px 14px;margin:6px 0 4px;max-width:80ch}
+.swatches{display:flex;gap:6px;margin-left:auto}
+.swatch{width:16px;height:16px;border:1px solid var(--line);cursor:pointer;padding:0;background:none}
+.swatch i{display:block;width:100%;height:100%}
+.swatch.on{border-color:var(--green);box-shadow:var(--glow)}
+.swatch:focus-visible{outline:1px solid var(--green);outline-offset:2px}
 .toc a{color:var(--dim);font-size:12px;text-decoration:none;border-bottom:1px dotted var(--line)}
 .toc a:hover{color:var(--green);border-bottom-color:var(--dim)}
 .toc a:focus-visible{outline:1px solid var(--green);outline-offset:2px}
@@ -1232,14 +1247,14 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
 </style></head><body>
 <div class="header">
  <div class="logo"><svg viewBox="0 0 64 64">
-  <rect x="2" y="2" width="60" height="60" rx="12" fill="#0e1410" stroke="#1d4a2b" stroke-width="2"/>
-  <g stroke="#3cff6e" stroke-width="4" fill="none" stroke-linecap="round">
-   <rect x="26" y="12" width="12" height="20" rx="6" fill="#3cff6e"/>
+  <rect x="2" y="2" width="60" height="60" rx="12" fill="var(--panel)" stroke="var(--line)" stroke-width="2"/>
+  <g stroke="var(--green)" stroke-width="4" fill="none" stroke-linecap="round">
+   <rect x="26" y="12" width="12" height="20" rx="6" fill="var(--green)"/>
    <path d="M19 27a13 13 0 0 0 26 0"/>
    <line x1="32" y1="40" x2="32" y2="46"/>
    <line x1="24" y1="49" x2="40" y2="49"/>
   </g>
-  <g stroke="#3cff6e" stroke-width="2.5" fill="none" stroke-linecap="round">
+  <g stroke="var(--green)" stroke-width="2.5" fill="none" stroke-linecap="round">
    <path class="wave" d="M13 20a17 17 0 0 0 0 14" style="animation-delay:.2s"/>
    <path class="wave" d="M51 20a17 17 0 0 1 0 14" style="animation-delay:.6s"/>
   </g>
@@ -1540,6 +1555,14 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
     <option value="it">Italiano</option>
     <option value="pl">Polski</option>
    </select></div>
+  <div class="row"><label>{{S_THEME}}<span class="sub">{{S_THEME_SUB}}</span></label>
+   <span class="swatches" id="theme_swatches"></span>
+   <select id="theme">
+    <option value="green">{{S_THEME_GREEN}}</option>
+    <option value="amber">{{S_THEME_AMBER}}</option>
+    <option value="blue">{{S_THEME_BLUE}}</option>
+    <option value="pink">{{S_THEME_PINK}}</option>
+   </select></div>
   <div class="row"><label>{{S_AUTORUN}}<span class="sub">{{S_AUTORUN_SUB}}</span></label><input type="checkbox" id="autorun"></div>
   <div class="row"><label>{{S_UPD}}</label>
    <button class="mini" id="upd_check">{{S_UPD_CHECK}}</button></div>
@@ -1587,14 +1610,14 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
 <div class="wiz" id="wiz">
  <div class="wizhead" id="wizhead">
   <div class="logo"><svg viewBox="0 0 64 64">
-   <rect x="2" y="2" width="60" height="60" rx="12" fill="#0e1410" stroke="#1d4a2b" stroke-width="2"/>
-   <g stroke="#3cff6e" stroke-width="4" fill="none" stroke-linecap="round">
-    <rect x="26" y="12" width="12" height="20" rx="6" fill="#3cff6e"/>
+   <rect x="2" y="2" width="60" height="60" rx="12" fill="var(--panel)" stroke="var(--line)" stroke-width="2"/>
+   <g stroke="var(--green)" stroke-width="4" fill="none" stroke-linecap="round">
+    <rect x="26" y="12" width="12" height="20" rx="6" fill="var(--green)"/>
     <path d="M19 27a13 13 0 0 0 26 0"/>
     <line x1="32" y1="40" x2="32" y2="46"/>
     <line x1="24" y1="49" x2="40" y2="49"/>
    </g>
-   <g stroke="#3cff6e" stroke-width="2.5" fill="none" stroke-linecap="round">
+   <g stroke="var(--green)" stroke-width="2.5" fill="none" stroke-linecap="round">
     <path class="wave" d="M13 20a17 17 0 0 0 0 14" style="animation-delay:.2s"/>
     <path class="wave" d="M51 20a17 17 0 0 1 0 14" style="animation-delay:.6s"/>
    </g>
@@ -1679,7 +1702,7 @@ let exeStored = CFG.server_exe || "";
 let exeUnlocked = false;
 let remoteURL = (CFG.server_url || "").trim();
 const nums  = ["threads","min_record_ms","max_record_seconds","translate_ask_seconds","server_port","paste_delay_ms","history_days","history_max"];
-const sels  = ["ui_language","language","sound_theme","translate_target","translate_ask","hotkey_mode","overlay_position"];
+const sels  = ["ui_language","language","sound_theme","translate_target","translate_ask","hotkey_mode","overlay_position","theme"];
 const trAll = ["en","de","fr","es","it","pl","ru","uk"];
 const L = {{L_JSON}};
 const I_DL = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12"/><path d="M6 11l6 6 6-6"/><path d="M4 21h16"/></svg>';
@@ -1694,6 +1717,47 @@ let expandedID = null;
 let captureFor = null;
 
 function esc(s){ const d=document.createElement("span"); d.textContent=s||""; return d.innerHTML; }
+const THEMES = {{THEME_LIST}};
+function applyThemeVars(id){
+  const p = THEMES[id] || THEMES.green;
+  if(!p) return;
+  const root = document.documentElement.style;
+  root.setProperty("--bg", p.bg);
+  root.setProperty("--panel", p.panel);
+  root.setProperty("--line", p.line);
+  root.setProperty("--green", p.accent);
+  root.setProperty("--dim", p.dim);
+  root.setProperty("--faint", p.faint);
+  root.setProperty("--amber", p.warn);
+  root.setProperty("--bad", p.bad);
+  root.setProperty("--rgb", p.rgb);
+  root.setProperty("--glow", p.glow);
+}
+function initTheme(){
+  const sel = document.getElementById("theme");
+  const box = document.getElementById("theme_swatches");
+  if(!sel || !box) return;
+  box.innerHTML = "";
+  [...sel.options].forEach(o=>{
+    const id = o.value;
+    if(!THEMES[id]) return;
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "swatch" + (id === sel.value ? " on" : "");
+    b.dataset.theme = id;
+    b.title = o.textContent;
+    const i = document.createElement("i");
+    i.style.background = THEMES[id].accent;
+    b.appendChild(i);
+    b.onclick = ()=>{ sel.value = id; sel.dispatchEvent(new Event("change", {bubbles:true})); };
+    box.appendChild(b);
+  });
+  sel.addEventListener("change", ()=>{
+    applyThemeVars(sel.value);
+    box.querySelectorAll(".swatch").forEach(b=>b.classList.toggle("on", b.dataset.theme === sel.value));
+  });
+  applyThemeVars(sel.value);
+}
 function initServerExe(){
   const box = document.getElementById("server_exe");
   const edit = document.getElementById("exe_edit");
@@ -2514,6 +2578,7 @@ function load(){
     if(![...el.options].some(o=>o.value===v)){const o=document.createElement("option");o.value=v;o.textContent=v;el.appendChild(o);}
     el.value=v;
   });
+  initTheme();
   numSels.forEach(k=>{
     const el = document.getElementById(k), v = String(CFG[k]);
     if(![...el.options].some(o=>o.value===v)){

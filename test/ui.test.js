@@ -189,6 +189,23 @@ function check(name, actual, expected) {
   check("the models badge explains itself", d.getElementById("badge_models").title, "Installed models");
   check("icon buttons carry a name for screen readers", d.getElementById("mic_refresh").getAttribute("aria-label"), d.getElementById("mic_refresh").title);
   check("the open section is announced", d.querySelector(".nav[data-p=state]").getAttribute("aria-selected"), "true");
+
+  tab("system"); await sleep(200);
+  const themeSel = d.getElementById("theme");
+  check("the four palettes are offered", [...themeSel.options].map(o=>o.value), ["green", "amber", "blue", "pink"]);
+  check("green is the one in use", themeSel.value, "green");
+  check("every palette has a swatch", d.querySelectorAll("#theme_swatches .swatch").length, 4);
+  check("the swatch of the current palette is marked", d.querySelector("#theme_swatches .swatch.on").dataset.theme, "green");
+  d.querySelector('#theme_swatches .swatch[data-theme="amber"]').click();
+  await sleep(200);
+  check("picking a swatch picks the palette", themeSel.value, "amber");
+  check("the window repaints at once", d.documentElement.style.getPropertyValue("--green"), "#ff9e2c");
+  check("and the warning colour comes with it", d.documentElement.style.getPropertyValue("--amber"), "#ffd24a");
+  check("the mark moves to the new palette", d.querySelector("#theme_swatches .swatch.on").dataset.theme, "amber");
+  await sleep(700);
+  check("the choice is written into the settings", w.saveForms.some(f=>f.theme === "amber"), true);
+  d.querySelector('#theme_swatches .swatch[data-theme="green"]').click();
+  await sleep(700);
   check("the closed sections are not", d.querySelector(".nav[data-p=models]").getAttribute("aria-selected"), "false");
   check("each screen is a panel with a name", [d.getElementById("p-state").getAttribute("role"), d.getElementById("p-state").getAttribute("aria-label")], ["tabpanel", "S_NAV_STATE"]);
   w.setHotkey("win+l", "win+l is taken by Windows: lock the computer. Dictation may never start");

@@ -255,13 +255,7 @@ func trayShowMenu(hwnd uintptr) {
 
 func runTray(a *App) {
 	trayApp = a
-	trayIcons = map[int]uintptr{
-		trayIdle:       hIconFromPNG(iconIdle),
-		trayRecording:  hIconFromPNG(iconRecording),
-		trayProcessing: hIconFromPNG(iconProcessing),
-		trayOff:        hIconFromPNG(iconDisabled),
-		trayError:      hIconFromPNG(iconError),
-	}
+	trayIcons = loadTrayIcons()
 
 	if name, err := windows.UTF16PtrFromString("TaskbarCreated"); err == nil {
 		wmTaskbarCreated, _, _ = procRegisterWindowMessageW.Call(uintptr(unsafe.Pointer(name)))
@@ -306,4 +300,11 @@ func runTray(a *App) {
 	nid = trayNotifyData()
 	trayMu.Unlock()
 	procShellNotifyIconW.Call(nimDelete, uintptr(unsafe.Pointer(&nid)))
+}
+
+func trayReloadIcons(state int) {
+	trayMu.Lock()
+	trayIcons = loadTrayIcons()
+	trayMu.Unlock()
+	traySetIcon(state)
 }

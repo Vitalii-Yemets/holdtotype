@@ -1,8 +1,8 @@
 package main
 
 import (
-	"strings"
 	"path/filepath"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -62,9 +62,9 @@ func applyDarkCaption(hwnd uintptr) {
 		procDwmSetWindowAttribute.Call(hwnd, attr, uintptr(unsafe.Pointer(&value)), 4)
 	}
 	set(20, 1)
-	set(35, 0x0C0F0B)
-	set(36, 0x6EFF3C)
-	set(34, 0x2B4A1D)
+	set(35, uint32(colBg))
+	set(36, uint32(colGreen))
+	set(34, uint32(colGreenLo))
 	set(33, 2)
 }
 
@@ -173,11 +173,11 @@ type minMaxInfo struct {
 var (
 	procCallWindowProcW = user32.NewProc("CallWindowProcW")
 
-	minSizeOld         uintptr
+	minSizeOld               uintptr
 	minSizeW, minSizeH       int32
 	minSizeDIPW, minSizeDIPH int32
-	minSizeOnce        sync.Once
-	minSizeCB          uintptr
+	minSizeOnce              sync.Once
+	minSizeCB                uintptr
 )
 
 var (

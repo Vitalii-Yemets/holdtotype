@@ -16,6 +16,7 @@ const cfg = {
   hotkey: "ctrl+win",
   ui_language: "en",
   ui_level: "all",
+  theme: "green",
   hotkey_mode: "hold",
   language: "ru",
   model: "models/ggml-large-v3-turbo-q5_0.bin",
@@ -117,8 +118,17 @@ const HELP_HTML = [
   '<p>The installer downloads nothing by default.</p>',
 ].join("");
 
+const THEME_LIST = {
+  green: { bg: "#0b0f0c", panel: "#0e1410", line: "#1d4a2b", accent: "#3cff6e", dim: "#20a34a", faint: "#14803a", warn: "#ffb347", bad: "#ff7b6b", rgb: "60,255,110", glow: "0 0 7px rgba(60,255,110,.55)" },
+  amber: { bg: "#100c0a", panel: "#17110d", line: "#4a3018", accent: "#ff9e2c", dim: "#b56a12", faint: "#8a4f0d", warn: "#ffd24a", bad: "#ff6b5b", rgb: "255,158,44", glow: "0 0 7px rgba(255,158,44,.55)" },
+  blue: { bg: "#0b0e10", panel: "#0e1317", line: "#1d3a4a", accent: "#4cc3ff", dim: "#1c7fb8", faint: "#14608f", warn: "#ffb347", bad: "#ff7b6b", rgb: "76,195,255", glow: "0 0 7px rgba(76,195,255,.55)" },
+  pink: { bg: "#100b0e", panel: "#170e14", line: "#4a1d3a", accent: "#ff6ec7", dim: "#b82f86", faint: "#8f2467", warn: "#ffb347", bad: "#ff6b6b", rgb: "255,110,199", glow: "0 0 7px rgba(255,110,199,.55)" },
+};
+
 let html = src.slice(start, end);
 html = html.split("{{S_HELP_HTML}}").join(HELP_HTML);
+html = html.split("{{THEME_LIST}}").join(JSON.stringify(THEME_LIST));
+html = html.split("{{THEME_VARS}}").join("--bg:#0b0f0c;--panel:#0e1410;--line:#1d4a2b;--green:#3cff6e;--dim:#20a34a;--faint:#14803a;--amber:#ffb347;--bad:#ff7b6b;--rgb:60,255,110;--glow:0 0 7px rgba(60,255,110,.55)");
 html = html.split("{{CFG}}").join(JSON.stringify(cfg));
 html = html.split("{{L_JSON}}").join(JSON.stringify(strings));
 html = html.replace(/{{([A-Z_0-9]+)}}/g, "$1");

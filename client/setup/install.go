@@ -20,6 +20,7 @@ import (
 	"golang.org/x/sys/windows/registry"
 
 	"holdtotype/internal/appid"
+	"holdtotype/internal/theme"
 )
 
 //go:embed payload.zip
@@ -344,4 +345,24 @@ func install(dir string, shortcut, autorun, touchAutorun, updates bool, modelID 
 	}
 	progress(100, "")
 	return warn, nil
+}
+
+func installedTheme(dir string) string {
+	if dir == "" {
+		return theme.Default
+	}
+	data, err := os.ReadFile(filepath.Join(dir, "config.json"))
+	if err != nil {
+		return theme.Default
+	}
+	var cfg struct {
+		Theme string `json:"theme"`
+	}
+	if err := json.Unmarshal(data, &cfg); err != nil {
+		return theme.Default
+	}
+	if !theme.Valid(cfg.Theme) {
+		return theme.Default
+	}
+	return cfg.Theme
 }

@@ -341,7 +341,7 @@ func askRender(hwnd, hdc uintptr, rc rect, fill func(rect, uintptr), drawText fu
 			border, txt = colGreen, colGreen
 		}
 		fill(rect{Left: r.Left - 1, Top: r.Top - 1, Right: r.Right + 1, Bottom: r.Bottom + 1}, border)
-		fill(r, 0x0B100D)
+		fill(r, colAskBg)
 		label := r
 		if i < 9 {
 			label.Left += px(ovBtnNum)
