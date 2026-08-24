@@ -155,6 +155,7 @@ type modelRow struct {
 	Trans  bool   `json:"translate"`
 	RAM    int    `json:"ram"`
 	Fit    string `json:"fit"`
+	Slot   bool   `json:"slot"`
 }
 
 func ramFit(needMB, freeMB int) string {
@@ -185,6 +186,7 @@ func (a *App) modelRows() string {
 		}
 		have := m.installed()
 		active := m.isActive(cfg)
+		row.Slot = m.slotMatches(cfg) && have
 		dlMu.Lock()
 		st := dl[m.ID]
 		dlMu.Unlock()

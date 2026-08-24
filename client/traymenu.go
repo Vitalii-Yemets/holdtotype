@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"sync/atomic"
 	"runtime"
 	"sync"
@@ -334,4 +335,67 @@ func showTrayMenu(items []tmItem) uintptr {
 		procPostMessageW.Call(hwnd, wmClose, 0, 0)
 	}
 	return id
+}
+
+func tmActive() bool {
+	tmMu.Lock()
+	defer tmMu.Unlock()
+	return tmDone != nil
+}
+
+func tmMove(step int) {
+	tmMu.Lock()
+	if tmDone == nil || len(tmItems) == 0 {
+		tmMu.Unlock()
+		return
+	}
+	n := len(tmItems)
+	idx := tmHover
+	for i := 0; i < n; i++ {
+		idx += step
+		if idx < 0 {
+			idx = n - 1
+		}
+		if idx >= n {
+			idx = 0
+		}
+		if !tmItems[idx].sep && !tmItems[idx].grayed {
+			tmHover = idx
+			break
+		}
+	}
+	hwnd := tmHwnd
+	tmMu.Unlock()
+	if hwnd != 0 {
+		procInvalidateRect.Call(hwnd, 0, 0)
+	}
+}
+
+func tmKey(vk uint32) bool {
+	if !tmActive() {
+		return false
+	}
+	switch vk {
+	case vkUp:
+		tmMove(-1)
+		return true
+	case vkDown:
+		tmMove(1)
+		return true
+	case vkReturn:
+		tmMu.Lock()
+		id := uintptr(0)
+		if tmHover >= 0 && tmHover < len(tmItems) {
+			id = tmItems[tmHover].id
+		}
+		tmMu.Unlock()
+		log.Printf("трей-меню: выбор с клавиатуры")
+		tmFinish(id)
+		return true
+	case vkEscape:
+		log.Printf("трей-меню: закрыто клавишей")
+		tmFinish(0)
+		return true
+	}
+	return false
 }

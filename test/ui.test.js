@@ -59,7 +59,7 @@ const dom = new JSDOM(html, {
     window.appModels = async () =>
       JSON.stringify([
         { id: "base", name: "Base", desc: "fast", size: 142, state: modelStates.base, pct: 12, engine: "whisper", langs: "*" },
-        { id: "small", name: "Small", desc: "balanced", size: 466, state: modelStates.small, engine: "whisper", langs: "*" },
+        { id: "small", name: "Small", desc: "balanced", size: 466, state: modelStates.small, engine: "whisper", langs: "*", slot: true },
         { id: "gigaam-v3", name: "GigaAM v3", desc: "russian", size: 232, state: modelStates["gigaam-v3"], pct: 5, engine: "sherpa", langs: "ru", punct: true },
       ]);
     window.appLLMSearch = async () =>
@@ -223,7 +223,10 @@ function check(name, actual, expected) {
 
   tab("models"); await sleep(80);
   check("models section shown", shown("models"), true);
-  check("recognition models listed", d.querySelectorAll('#p-models input[name="mdl"]').length, 3);
+  check("recognition models listed", d.querySelectorAll('#p-models input[name^="mdl-"]').length, 3);
+  check("the list is split into two slots", [...d.querySelectorAll("#models .mslot")].map(h=>h.dataset.slot), ["ru", "other"]);
+  check("the russian slot holds the russian engine", d.querySelectorAll('#models .mrow[data-slot="ru"]').length, 1);
+  check("every other language shares the second slot", d.querySelectorAll('#models .mrow[data-slot="other"]').length, 2);
   check("model filters rendered", d.querySelectorAll(".fchip").length, 5);
   const recLangs = [...d.getElementById("language").options].map(o=>o.value);
   check("italian can be dictated too", recLangs.includes("it"), true);
@@ -231,7 +234,7 @@ function check(name, actual, expected) {
   check("routing panel rows", d.querySelectorAll("#routing .rrow").length, 3);
   check("routing shows engine", d.querySelectorAll("#routing .reng")[0].textContent, "gigaam-v3");
   check("engine tags rendered", d.querySelectorAll("#p-models .mtag").length, 3);
-  check("russian engine tagged RU", d.querySelectorAll("#p-models .mtag")[2].textContent, "RU");
+  check("russian engine tagged RU", d.querySelector('#models .mrow[data-slot="ru"] .mtag').textContent, "RU");
   d.getElementById("mcheck").click(); await sleep(250);
   check("installed models can be checked", w.modelChecks, 1);
   check("the check says what it found", d.getElementById("mcheck_out").textContent, "Damaged files: Small (ggml-small.bin)");
@@ -427,19 +430,39 @@ function check(name, actual, expected) {
   check("deleting a model asks first", !!d.querySelector(".modal-bg"), true);
   check("the question is asked in the app style, not by the browser", d.querySelectorAll(".modal .btn").length, 2);
   check("the way out comes first, the action second", [...d.querySelectorAll(".modal .btn")].map(b=>b.className), ["btn ghost", "btn yes"]);
+  check("the question keeps the focus on the way out", d.activeElement.className, "btn ghost");
+  check("the question is a dialog for the reader", d.querySelector(".modal").getAttribute("aria-modal"), "true");
+  check("the window behind is out of reach while it is open", !!d.querySelector(".content[inert]"), true);
+  d.dispatchEvent(new w.KeyboardEvent("keydown", { key: "Tab", bubbles: true }));
+  check("Tab moves between the two answers and no further", d.activeElement.className, "btn yes");
+  d.dispatchEvent(new w.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+  await sleep(150);
+  check("Escape closes it as a no", !!d.querySelector(".modal-bg"), false);
+  check("and the window behind comes back", !!d.querySelector(".content[inert]"), false);
+  del.click(); await sleep(150);
   d.querySelector(".modal .btn.yes").click(); await sleep(250);
   check("the question closes with the answer", !!d.querySelector(".modal-bg"), false);
   check("model list empty after delete", d.querySelectorAll('#proc-models input[name="llmmdl"]').length, 0);
 
+  d.getElementById("hf_q").value = "qwen";
+  d.getElementById("hf_go").click(); await sleep(300);
+  check("searching Hugging Face is a button, not a decoration", d.getElementById("hf_go").tagName, "BUTTON");
+  const repo = d.querySelector(".hfrepo");
+  check("a found repository is a button too", !!repo, true);
+  check("and it says whether it is open", repo.getAttribute("aria-expanded"), "false");
+  repo.click(); await sleep(300);
+  check("opening it lists the files", d.querySelectorAll('#hf_results button[data-repo]').length, 1);
+  check("and the button now says it is open", d.querySelector(".hfrepo").getAttribute("aria-expanded"), "true");
+
 
   tab("models"); await sleep(120);
-  const pickAbsent = () => d.querySelector('#models input[name="mdl"][value="base"]');
+  const pickAbsent = () => d.querySelector('#models input[value="base"]');
   pickAbsent().click(); await sleep(80);
   check("picking a model that is not here asks first", !!d.querySelector(".modal-bg"), true);
   check("the question names the model and its size", d.querySelector(".modal p").textContent.includes("Base") && d.querySelector(".modal p").textContent.includes("142 MB"), true);
   d.querySelector(".modal .btn.ghost").click(); await sleep(250);
   check("saying no downloads nothing", w.dlCalls.length, 0);
-  check("saying no puts the choice back", d.querySelector('#models input[name="mdl"][value="small"]').checked, true);
+  check("saying no puts the choice back", d.querySelector('#models input[value="small"]').checked, true);
 
   pickAbsent().click(); await sleep(80);
   d.querySelector(".modal .btn.yes").click(); await sleep(250);
@@ -457,7 +480,7 @@ function check(name, actual, expected) {
   check("a finished download is applied by itself", w.saveForms.slice(savesBeforeDl).map((f) => f.model_id), ["base"]);
   check("and the program says the model is ready", d.getElementById("st_saved").textContent, "Model downloaded");
 
-  const activeDel = () => d.querySelector('#models .mrow input[name="mdl"][value="small"]').parentElement.querySelector('button[data-a="del"]');
+  const activeDel = () => d.querySelector('#models .mrow input[value="small"]').parentElement.querySelector('button[data-a="del"]');
   check("the model in use can be removed too — that is the way out of a full disk", !!activeDel(), true);
   activeDel().click(); await sleep(150);
   check("removing the model in use warns what it costs", d.querySelector(".modal p").textContent.includes("Recognition stops"), true);
@@ -491,6 +514,8 @@ function check(name, actual, expected) {
   check("disclosure reveals them", d.querySelectorAll("#p-dictation .row[data-adv].hidden").length, 0);
   check("no permanent mode line in the status bar", !!d.getElementById("st_level"), false);
   check("no switching from the status bar", !!d.getElementById("st_levelbtn"), false);
+  check("simple mode folds the expert text blocks away", d.querySelectorAll("#p-text .card[data-adv].hidden").length, 3);
+  check("but punctuation and the dictionary stay in sight", d.querySelectorAll("#p-text .card:not([data-adv])").length >= 2, true);
 
   const omni = d.getElementById("omni");
   omni.value = "S_PORT"; omni.dispatchEvent(new w.Event("input")); await sleep(120);
@@ -504,6 +529,9 @@ function check(name, actual, expected) {
   omni.value = "zzzznothing"; omni.dispatchEvent(new w.Event("input")); await sleep(120);
   check("a search with no matches says so", d.getElementById("ocount").textContent, "none");
   check("a search with no matches highlights nothing", d.querySelectorAll(".hit").length, 0);
+  omni.value = "S_SEC_CMD"; omni.dispatchEvent(new w.Event("input")); await sleep(200);
+  check("search finds a heading, not only a setting row", shown("text"), true);
+  check("and the heading itself is what is highlighted", !!d.querySelector("#p-text .sect.hit"), true);
   omni.value = ""; omni.dispatchEvent(new w.Event("input")); await sleep(60);
 
   d.querySelector('.lvlb[data-l="all"]').click(); await sleep(80);

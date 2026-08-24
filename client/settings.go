@@ -859,6 +859,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"cmdpnewline": "S_CMD_P_NEWLINE", "cmdpparagraph": "S_CMD_P_PARAGRAPH", "cmdpcancel": "S_CMD_P_CANCEL",
 		"histempty": "S_HIST_EMPTY", "histcopy": "S_HIST_COPY", "histask": "S_HIST_ASK", "histclear": "S_HIST_CLEAR",
 		"micchecking": "S_MIC_CHECKING", "mchecking": "S_MCHECK_RUN", "histinsert": "S_HIST_INSERT",
+		"slotru": "S_STATE_RU", "slotother": "S_STATE_OTHER",
 		"replcase": "S_REPL_CASE", "replfromph": "S_REPL_FROM_PH", "repltoph": "S_REPL_TO_PH",
 		"wiznext": "S_WIZ_NEXT", "wizfinish": "S_WIZ_FINISH", "wizwait": "S_WIZ_WAIT",
 		"wizheard": "S_WIZ_HEARD", "wizhave": "S_WIZ_HAVE", "wiztry": "S_WIZ_TRY_TEXT",
@@ -1094,6 +1095,8 @@ button.ghost:hover{color:var(--green)}
 .rulefoot .ghost:empty{display:none}
 .ruleempty{color:var(--dim);font-size:12px;padding:6px 0}
 .card>.hint{font-size:11.5px;color:var(--dim);margin-bottom:6px;line-height:1.5}
+.mslot{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);padding:11px 2px 3px;border-bottom:1px solid var(--line);margin-bottom:2px}
+.mslot.hidden{display:none}
 .mrow{display:flex;align-items:center;gap:9px;padding:7px 2px;border-bottom:1px solid #12241a;flex-wrap:wrap}
 .mrow:last-child{border-bottom:none}
 input[type=radio]{appearance:none;-webkit-appearance:none;width:15px;height:15px;flex:none;margin:0;padding:0;border:1px solid var(--dim);border-radius:50%;background:#08100b;position:relative;cursor:pointer}
@@ -1153,10 +1156,15 @@ button.stab.on{color:var(--green);border-color:var(--line);background:var(--bg);
 .subtabs .hfhome{margin-bottom:6px}
 .spage{display:none}
 .spage.on{display:block}
-#hf_clr{position:absolute;right:9px;top:50%;transform:translateY(-50%);color:var(--dim);cursor:pointer;display:none;font-size:13px;padding:2px 4px}
+#hf_clr{appearance:none;background:none;border:0;font:inherit;position:absolute;right:9px;top:50%;transform:translateY(-50%);color:var(--dim);cursor:pointer;display:none;font-size:13px;padding:2px 4px}
 #hf_clr:hover{color:var(--green);text-shadow:var(--glow)}
-#hf_go{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--dim);cursor:pointer;line-height:0;padding:3px}
+#hf_go{appearance:none;background:none;border:0;font:inherit;position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--dim);cursor:pointer;line-height:0;padding:3px}
 #hf_go:hover{color:var(--green);filter:drop-shadow(0 0 4px rgba(60,255,110,.6))}
+.hfrepo{appearance:none;background:none;border:0;font:inherit;color:inherit;display:flex;align-items:center;gap:9px;flex:1;min-width:0;text-align:left;cursor:pointer;padding:2px 0}
+.hfrepo .mdesc{flex:1;color:var(--dim);min-width:0;overflow:hidden;text-overflow:ellipsis}
+.hfupd{color:var(--dim);font-size:12px;flex:none}
+.hflink{appearance:none;background:none;border:0;font:inherit;color:var(--dim);cursor:pointer;padding:0 4px}
+.hflink:hover{color:var(--green)}
 button.iconbtn{border:none;background:none;padding:2px 5px;color:var(--dim);cursor:pointer;line-height:1;font:13px Consolas,monospace}
 button.iconbtn:hover{color:var(--green);filter:drop-shadow(0 0 4px rgba(60,255,110,.6))}
 button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,110,90,.5))}
@@ -1412,7 +1420,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
   <div class="hint">{{S_DICT_HINT}}</div>
   <textarea id="whisper_prompt" rows="10" style="width:100%;min-height:150px;height:26vh;padding:8px 11px;border:1px solid var(--line);background:#08100b;color:var(--green);font:inherit;line-height:1.5;outline:none;resize:vertical"></textarea>
  </div>
- <div class="card">
+ <div class="card" data-adv>
   <div class="sect">{{S_SEC_REPLACE}}</div>
   <div class="hint">{{S_REPLACE_HINT}}</div>
   <div id="replbody"></div>
@@ -1420,7 +1428,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
    <button type="button" class="mini" id="repl_add">{{S_REPL_ADD}}</button>
   </div>
  </div>
- <div class="card">
+ <div class="card" data-adv>
   <div class="sect">{{S_SEC_CMD}}</div>
   <div class="hint">{{S_CMD_HINT}}</div>
   <div id="cmdbody"></div>
@@ -1438,7 +1446,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
    <span class="replout" id="repl_out"></span>
   </div>
  </div>
- <div class="card">
+ <div class="card" data-adv>
   <div class="sect">{{S_SUB_PROMPTS}}</div>
   <div class="hint">{{S_LLM_HINT}}</div>
   <div id="profbody"></div>
@@ -1716,8 +1724,8 @@ async function refreshLLM(){
   sbody.innerHTML = '<div class="row" style="padding-top:0">'+
     '<span style="position:relative;flex:1;display:flex;min-width:0">'+
     '<input type="text" id="hf_q" placeholder="'+L.hfph+'" style="flex:1;min-width:0;padding-left:34px;padding-right:30px">'+
-    '<span id="hf_clr">&#10005;</span>'+
-    '<span id="hf_go">'+I_FIND+'</span></span></div>'+
+    '<button type="button" id="hf_clr" title="'+L.cancel+'">&#10005;</button>'+
+    '<button type="button" id="hf_go" title="'+L.hfph+'">'+I_FIND+'</button></span></div>'+
     '<div class="ramline">'+L.ram+' <b>'+((st.ram_free||st.ram)/1024).toFixed(1)+'</b> / '+(st.ram/1024).toFixed(0)+' GB '+L.free+
     ''+
       '<span class="dot" style="color:var(--green)">&#9679;</span>'+L.fitok+
@@ -1753,13 +1761,13 @@ function renderHF(){
   hfRepos.forEach(r=>{
     const div = document.createElement("div");
     div.className = "mrow";
-    div.style.cursor = "pointer";
-    div.innerHTML = '<span class="mdesc" style="flex:1;color:var(--dim)">'+(hfOpenRepo===r.id?"▾ ":"▸ ")+esc(r.id)+'</span>'+
-      '<span title="'+L.upd+'" style="color:var(--dim);font-size:12px">'+esc(r.updated||"")+'</span>'+
-      '<span class="msize">↓'+(r.downloads>=1000000?(r.downloads/1000000).toFixed(1)+"M":(r.downloads/1000).toFixed(0)+"k")+'</span>'+
-      '<span class="hflink" title="huggingface.co/'+esc(r.id)+'" style="color:var(--dim);cursor:pointer;padding:0 4px">↗</span>';
+    div.innerHTML = '<button type="button" class="hfrepo" aria-expanded="'+(hfOpenRepo===r.id)+'">'+
+      '<span class="mdesc">'+(hfOpenRepo===r.id?"▾ ":"▸ ")+esc(r.id)+'</span>'+
+      '<span title="'+L.upd+'" class="hfupd">'+esc(r.updated||"")+'</span>'+
+      '<span class="msize">↓'+(r.downloads>=1000000?(r.downloads/1000000).toFixed(1)+"M":(r.downloads/1000).toFixed(0)+"k")+'</span></button>'+
+      '<button type="button" class="hflink" title="huggingface.co/'+esc(r.id)+'">↗</button>';
     div.querySelector(".hflink").onclick = e=>{ e.stopPropagation(); appHFPage(r.id); };
-    div.onclick = async ()=>{
+    div.querySelector(".hfrepo").onclick = async ()=>{
       if(hfOpenRepo === r.id){ hfOpenRepo = null; hfFiles = []; renderHF(); return; }
       hfOpenRepo = r.id; hfFiles = [];
       renderHF();
@@ -2191,15 +2199,27 @@ async function refreshModels(){
     else if(row.state === "active"){ pendingDl = null; toast(L.mdlready, "ok"); }
     else if(row.state === "absent" && row.err){ pendingDl = null; toast(row.err, "error"); }
   }
-  const checkedId = selModel || activeModelId;
   const el = document.getElementById("models");
   el.innerHTML = "";
   let busy = false;
-  rows.forEach(m=>{
+  const slotOf = m=>m.engine === "sherpa" ? "ru" : "other";
+  const groups = [
+    {slot: "ru", title: L.slotru, rows: rows.filter(m=>slotOf(m) === "ru")},
+    {slot: "other", title: L.slotother, rows: rows.filter(m=>slotOf(m) !== "ru")},
+  ];
+  groups.forEach(g=>{
+    if(!g.rows.length) return;
+    const head = document.createElement("div");
+    head.className = "mslot";
+    head.dataset.slot = g.slot;
+    head.textContent = g.title;
+    el.appendChild(head);
+  g.rows.forEach(m=>{
     const div = document.createElement("div");
     div.className = "mrow";
-    const checked = checkedId === m.id ? " checked" : "";
-    const radio = '<input type="radio" name="mdl" value="'+m.id+'"'+checked+(m.id==="custom"?" disabled":"")+'>';
+    div.dataset.slot = g.slot;
+    const checked = (selModel === m.id || (!selModel && m.slot)) ? " checked" : "";
+    const radio = '<input type="radio" name="mdl-'+g.slot+'" value="'+m.id+'"'+checked+(m.id==="custom"?" disabled":"")+'>';
     let right = "";
     if(m.state === "downloading"){ busy = true; right = '<span class="mpct">'+(m.pct>0?m.pct+"%":"…")+'</span><button class="iconbtn danger" title="'+L.dlcancel+'" data-a="cancel" data-id="'+m.id+'">&#10005;</button>'; }
     else if(m.state === "absent") right = '<button class="iconbtn" title="'+L.dl+'" data-a="dl" data-id="'+m.id+'">'+I_DL+'</button>';
@@ -2210,7 +2230,12 @@ async function refreshModels(){
     if(!modelPassesFilter(m)) div.classList.add("hidden");
     el.appendChild(div);
   });
-  el.querySelectorAll('input[name="mdl"]').forEach(r=>{
+  });
+  el.querySelectorAll(".mslot").forEach(h=>{
+    const shown = [...el.querySelectorAll('.mrow[data-slot="'+h.dataset.slot+'"]')].some(r=>!r.classList.contains("hidden"));
+    h.classList.toggle("hidden", !shown);
+  });
+  el.querySelectorAll('input[name^="mdl-"]').forEach(r=>{
     r.onchange = async ()=>{
       const id = r.value;
       const row = rows.find(m=>m.id===id);
@@ -2227,6 +2252,7 @@ async function refreshModels(){
       } else {
         selModel = id;
         await doSave();
+        selModel = null;
       }
       refreshModels();
     };
@@ -2276,10 +2302,25 @@ function askConfirm(text, okText, cancelText){
     no.type = "button";
     no.className = "btn ghost";
     no.textContent = cancelText || L.cancel;
-    const done = v => { bg.remove(); document.removeEventListener("keydown", onKey, true); resolve(v); };
+    const from = document.activeElement;
+    const done = v => {
+      bg.remove();
+      document.removeEventListener("keydown", onKey, true);
+      document.querySelectorAll(".content, .snav, .header").forEach(el=>el.removeAttribute("inert"));
+      if(from && from.focus) from.focus();
+      resolve(v);
+    };
     function onKey(e){
-      if(e.key === "Escape"){ e.preventDefault(); done(false); }
-      if(e.key === "Enter"){ e.preventDefault(); done(true); }
+      if(e.key === "Escape"){ e.preventDefault(); done(false); return; }
+      if(e.key === "Enter"){
+        e.preventDefault();
+        done(document.activeElement === yes);
+        return;
+      }
+      if(e.key === "Tab"){
+        e.preventDefault();
+        (document.activeElement === no ? yes : no).focus();
+      }
     }
     yes.onclick = ()=>done(true);
     no.onclick = ()=>done(false);
@@ -2289,9 +2330,12 @@ function askConfirm(text, okText, cancelText){
     row.appendChild(yes);
     box.appendChild(p);
     box.appendChild(row);
+    box.setAttribute("role", "dialog");
+    box.setAttribute("aria-modal", "true");
     bg.appendChild(box);
+    document.querySelectorAll(".content, .snav, .header").forEach(el=>el.setAttribute("inert", ""));
     document.body.appendChild(bg);
-    yes.focus();
+    no.focus();
   });
 }
 function toast(msg, severity){
@@ -2438,7 +2482,7 @@ function show(p){
 }
 let uiLevel = CFG.ui_level || "simple";
 const opened = {};
-function advCount(page){ return page.querySelectorAll(".row[data-adv]").length; }
+function advCount(page){ return page.querySelectorAll(".row[data-adv], .card[data-adv]").length; }
 function bindLabels(){
   document.querySelectorAll(".row").forEach(row=>{
     const label = row.querySelector("label");
@@ -2477,9 +2521,16 @@ function setLevel(l){
 }
 let hits = [];
 let hitAt = -1;
+let searchFrom = null;
 function searchMatches(s){
-  const items = [...document.querySelectorAll(".page .row, .page .mrow")];
-  return items.filter(r=>r.textContent.toLowerCase().includes(s));
+  const items = [...document.querySelectorAll(".page .row, .page .mrow, .page .sect, .page .hint, .page .mslot, .page .wizh")];
+  const seen = new Set();
+  return items.filter(r=>{
+    if(!r.textContent.toLowerCase().includes(s)) return false;
+    if(seen.has(r)) return false;
+    seen.add(r);
+    return true;
+  });
 }
 function showHit(i){
   document.querySelectorAll(".hit").forEach(r=>r.classList.remove("hit"));
@@ -3154,8 +3205,8 @@ load();
     omni.addEventListener("input", ()=>searchSettings(omni.value));
     document.addEventListener("keydown", e=>{
       if(wizOn) return;
-      if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k"){ e.preventDefault(); omni.focus(); omni.select(); }
-      if(e.key === "Escape" && document.activeElement === omni){ omni.value = ""; searchSettings(""); omni.blur(); }
+      if((e.ctrlKey || e.metaKey) && (e.code === "KeyK" || e.key.toLowerCase() === "k")){ e.preventDefault(); searchFrom = document.activeElement; omni.focus(); omni.select(); }
+      if(e.key === "Escape" && document.activeElement === omni){ omni.value = ""; searchSettings(""); omni.blur(); if(searchFrom && searchFrom.focus) searchFrom.focus(); searchFrom = null; }
       if(e.key === "Enter" && document.activeElement === omni){ e.preventDefault(); searchStep(e.shiftKey ? -1 : 1); }
     });
   }

@@ -125,6 +125,10 @@ const vkEscape = 0x1B
 
 const vkReturn = 0x0D
 
+const vkUp = 0x26
+
+const vkDown = 0x28
+
 type hotkeyHook struct {
 	mu       sync.Mutex
 	combos   []comboDef
@@ -352,6 +356,9 @@ func (h *hotkeyHook) hookProc(nCode, wParam, lParam uintptr) uintptr {
 					}
 				}
 				if down && askActive() && askKey(k.VkCode) {
+					return 1
+				}
+				if down && tmActive() && tmKey(k.VkCode) {
 					return 1
 				}
 				h.keyEvent(k.VkCode, down)
