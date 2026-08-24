@@ -4,11 +4,11 @@ const (
 	Name = "HoldToType"
 	Slug = "holdtotype"
 
-	Exe      = Slug + ".exe"
-	SetupExe = Slug + "-setup.exe"
-	LogFile  = Slug + ".log"
+	Exe         = Slug + ".exe"
+	SetupExe    = Slug + "-setup.exe"
+	LogFile     = Slug + ".log"
 	HistoryFile = Slug + "-history.json"
-	Portable = Slug + "-portable.zip"
+	Portable    = Slug + "-portable.zip"
 
 	InstallDirName = Name
 	ShortcutName   = Name + ".lnk"
@@ -26,7 +26,7 @@ const (
 	PrevSlug = "voxterminal"
 )
 
-var Version = "0.34.0"
+var Version = "0.35.0"
 
 func Class(suffix string) string { return Name + suffix }
 

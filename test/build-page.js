@@ -106,7 +106,19 @@ const strings = {
   wiztry: "Put the caret in the field below, hold %s, say a phrase and let go.",
 };
 
+const HELP_HTML = [
+  '<p class="wh">How it works</p>',
+  '<p>Hold the shortcut, say a phrase, let go — the text lands at the caret.</p>',
+  '<p class="wh">Overlay</p>',
+  '<ul><li>Every answer carries a number: 1…9 pick one, Enter takes the highlighted one.</li></ul>',
+  '<p class="wh">Tray and files</p>',
+  '<ul><li><b>config.json</b> — all settings; edits made by hand apply through Re-read in the System section.</li></ul>',
+  '<p class="wh">Install and portability</p>',
+  '<p>The installer downloads nothing by default.</p>',
+].join("");
+
 let html = src.slice(start, end);
+html = html.split("{{S_HELP_HTML}}").join(HELP_HTML);
 html = html.split("{{CFG}}").join(JSON.stringify(cfg));
 html = html.split("{{L_JSON}}").join(JSON.stringify(strings));
 html = html.replace(/{{([A-Z_0-9]+)}}/g, "$1");

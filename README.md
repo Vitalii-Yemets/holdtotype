@@ -103,7 +103,7 @@ Download the archive from Releases (or build `dist/` yourself), copy the folder 
 
 Icon colors: green — ready, red — recording, orange — transcribing, grey — disabled/error.
 
-A full description of every feature lives in the **Guide** inside About (a mini-wiki with illustrations).
+A full description of every feature lives in the **Guide** inside About (a mini-wiki with illustrations). It opens with a table of contents, keeps its lines at a readable width, names the sections the way the sidebar does, and the search in the header (Ctrl+K) reaches into it — a word from the guide is found just like a setting.
 
 ### Safe insertion
 
@@ -125,7 +125,7 @@ Left-click the tray icon to open the settings window. Nine sections in the sideb
 | **Text** | where punctuation comes from, the recognition dictionary, replacements, voice commands with save-to-file and load-from-file, and the chain of post-processing prompts |
 | **Translation** | target language, when to ask, dialog languages, a separate translation hotkey |
 | **System** | UI language, starting with Windows and updates; folded away: opening the log, re-reading config.json, resetting the settings, whisper-server autostart, port, path, external server URL |
-| **About** | version, a detailed guide-wiki, about the author |
+| **About** | version, a detailed guide-wiki with a table of contents, about the author |
 
 Everything applies the moment you change it — there is no Save button and no dialog about unsaved changes. Questions the app asks are proper dialogs: the window behind is out of reach while one is open, Tab stays inside it, Escape means no, and the focus starts on the safe answer. Settings that describe the recognition server (port, threads, server path, remote URL, autostart) restart the recognizer in place, so nothing waits for an app restart. Errors are written in words — "no connection to huggingface.co", "the disk is full" — with the library's own text kept for the log; a shortcut Windows has already taken is called out the moment you pick it. Settings that do not apply in the current mode are greyed out automatically, and so are buttons with nothing to act on — *Copy* with no last dictation, *Clear* with an empty history. Models are called the same everywhere — "Small", "GigaAM v3" — on the Status screen, in the routing table, in the status bar and in the question before a deletion.
 

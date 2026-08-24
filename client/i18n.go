@@ -123,7 +123,6 @@ var msgs = map[string]map[string]string{
 		"menu.settings":         "Настройки…",
 		"menu.enable":           "Включить",
 		"menu.disable":          "Выключить",
-		"menu.reload":           "Перечитать config.json",
 		"menu.open.config":      "Открыть config.json",
 		"menu.open.log":         "Открыть лог",
 		"menu.about":            "О приложении",
@@ -204,29 +203,29 @@ var msgs = map[string]map[string]string{
 		"cap.selected":           "Выбрано: %s",
 		"cap.cancelled":          "Отменено",
 		"hk.taken":               "Сочетание %s занято Windows: %s. Диктовка может не начаться",
-		"hk.lock":            "блокировка компьютера",
-		"hk.desktop":         "показать рабочий стол",
-		"hk.explorer":        "проводник",
-		"hk.run":             "окно «Выполнить»",
-		"hk.settings":        "параметры Windows",
-		"hk.search":          "поиск",
-		"hk.center":          "центр уведомлений",
-		"hk.menu":            "меню опытного пользователя",
-		"hk.clipboard":       "журнал буфера обмена",
-		"hk.gamebar":         "игровая панель",
-		"hk.voice":           "голосовой ввод Windows",
-		"hk.project":         "проецирование на экран",
-		"hk.tasks":           "представление задач",
-		"hk.layout":          "смена раскладки",
-		"hk.newdesktop":      "новый рабочий стол",
-		"hk.closedesktop":    "закрыть рабочий стол",
-		"hk.snip":            "снимок экрана",
-		"hk.switch":          "переключение окон",
-		"hk.close":           "закрыть окно",
-		"hk.cycle":           "перебор окон",
-		"hk.start":          "меню «Пуск»",
-		"hk.taskmgr":        "диспетчер задач",
-		"hk.secure":         "экран безопасности",
+		"hk.lock":                "блокировка компьютера",
+		"hk.desktop":             "показать рабочий стол",
+		"hk.explorer":            "проводник",
+		"hk.run":                 "окно «Выполнить»",
+		"hk.settings":            "параметры Windows",
+		"hk.search":              "поиск",
+		"hk.center":              "центр уведомлений",
+		"hk.menu":                "меню опытного пользователя",
+		"hk.clipboard":           "журнал буфера обмена",
+		"hk.gamebar":             "игровая панель",
+		"hk.voice":               "голосовой ввод Windows",
+		"hk.project":             "проецирование на экран",
+		"hk.tasks":               "представление задач",
+		"hk.layout":              "смена раскладки",
+		"hk.newdesktop":          "новый рабочий стол",
+		"hk.closedesktop":        "закрыть рабочий стол",
+		"hk.snip":                "снимок экрана",
+		"hk.switch":              "переключение окон",
+		"hk.close":               "закрыть окно",
+		"hk.cycle":               "перебор окон",
+		"hk.start":               "меню «Пуск»",
+		"hk.taskmgr":             "диспетчер задач",
+		"hk.secure":              "экран безопасности",
 		"err.hotkey.dup":         "Сочетание «%s» назначено дважды — хоткеи не должны совпадать",
 		"cfg.err.recovered":      "config.json повреждён (%s).\nФайл сохранён как %s, настройки сброшены к значениям по умолчанию.",
 		"err.disk.space":         "мало места на диске: свободно %d МБ, нужно ~%d МБ",
@@ -290,7 +289,6 @@ var msgs = map[string]map[string]string{
 		"menu.settings":         "Settings…",
 		"menu.enable":           "Enable",
 		"menu.disable":          "Disable",
-		"menu.reload":           "Reload config.json",
 		"menu.open.config":      "Open config.json",
 		"menu.open.log":         "Open log",
 		"menu.about":            "About",
@@ -371,29 +369,29 @@ var msgs = map[string]map[string]string{
 		"cap.selected":           "Selected: %s",
 		"cap.cancelled":          "Cancelled",
 		"hk.taken":               "%s is taken by Windows: %s. Dictation may never start",
-		"hk.lock":            "lock the computer",
-		"hk.desktop":         "show the desktop",
-		"hk.explorer":        "File Explorer",
-		"hk.run":             "the Run box",
-		"hk.settings":        "Windows Settings",
-		"hk.search":          "search",
-		"hk.center":          "notification centre",
-		"hk.menu":            "the power user menu",
-		"hk.clipboard":       "clipboard history",
-		"hk.gamebar":         "Game Bar",
-		"hk.voice":           "Windows voice typing",
-		"hk.project":         "projecting to a screen",
-		"hk.tasks":           "Task View",
-		"hk.layout":          "switching the keyboard layout",
-		"hk.newdesktop":      "a new virtual desktop",
-		"hk.closedesktop":    "closing the virtual desktop",
-		"hk.snip":            "the screenshot tool",
-		"hk.switch":          "switching windows",
-		"hk.close":           "closing the window",
-		"hk.cycle":           "cycling windows",
-		"hk.start":          "the Start menu",
-		"hk.taskmgr":        "Task Manager",
-		"hk.secure":         "the security screen",
+		"hk.lock":                "lock the computer",
+		"hk.desktop":             "show the desktop",
+		"hk.explorer":            "File Explorer",
+		"hk.run":                 "the Run box",
+		"hk.settings":            "Windows Settings",
+		"hk.search":              "search",
+		"hk.center":              "notification centre",
+		"hk.menu":                "the power user menu",
+		"hk.clipboard":           "clipboard history",
+		"hk.gamebar":             "Game Bar",
+		"hk.voice":               "Windows voice typing",
+		"hk.project":             "projecting to a screen",
+		"hk.tasks":               "Task View",
+		"hk.layout":              "switching the keyboard layout",
+		"hk.newdesktop":          "a new virtual desktop",
+		"hk.closedesktop":        "closing the virtual desktop",
+		"hk.snip":                "the screenshot tool",
+		"hk.switch":              "switching windows",
+		"hk.close":               "closing the window",
+		"hk.cycle":               "cycling windows",
+		"hk.start":               "the Start menu",
+		"hk.taskmgr":             "Task Manager",
+		"hk.secure":              "the security screen",
 		"err.hotkey.dup":         "The \"%s\" shortcut is assigned twice — hotkeys must be unique",
 		"cfg.err.recovered":      "config.json is corrupted (%s).\nThe file was saved as %s and settings were reset to defaults.",
 		"err.disk.space":         "low disk space: %d MB free, ~%d MB needed",
@@ -437,7 +435,7 @@ var settingsStrings = map[string]map[string]string{
 	"ru": {
 		"S_TITLE":          "{app} — настройки",
 		"S_TR_HINT":        "Перевод выполняет Whisper: на английский — штатным режимом, на остальные языки — экспериментально, принудительным языком вывода (качество зависит от пары языков).",
-		"S_TR_TURBO":       "⚠ Активная модель Turbo не обучена переводу на английский — для перевода выберите другую модель на вкладке «Модели».",
+		"S_TR_TURBO":       "⚠ Активная модель Turbo не обучена переводу на английский — для перевода выберите другую модель в разделе «Модели».",
 		"S_TR_DEFAULT":     "Всегда переводить на целевой язык",
 		"S_TR_TARGET":      "Целевой язык",
 		"S_TR_ASK":         "Выбор языка",
@@ -454,8 +452,8 @@ var settingsStrings = map[string]map[string]string{
 		"S_FIT_BAD":        "не хватит памяти",
 		"S_RAM":            "Память компьютера:",
 		"S_HF_PH":          "Название модели — например, qwen2.5 instruct",
-		"S_NO_LLM":         "Пока не установлено ни одной модели — найдите и скачайте на вкладке «Поиск».",
-		"S_NO_LLM_PROF":    "Промпты станут доступны после установки модели (вкладки «Модели» и «Поиск»).",
+		"S_NO_LLM":         "Пока не установлено ни одной модели — найдите и скачайте в поле поиска ниже.",
+		"S_NO_LLM_PROF":    "Промпты станут доступны после установки модели — раздел «Модели», список модели-редактора внизу.",
 		"S_PROF_EDIT":      "Редактировать",
 		"S_PROF_CLOSE":     "Свернуть",
 		"S_CONFIRM_DEL":    "Удалить модель «%s»? Её можно будет скачать заново.",
@@ -675,7 +673,7 @@ var settingsStrings = map[string]map[string]string{
 			"<p>Логи ограничены ~2 МБ на диске.</p>",
 		"S_HELP_HTML": "<p class=\"wh\">Как это работает</p>" +
 			"<p>Зажмите сочетание клавиш — начнётся запись с микрофона (оверлей внизу экрана показывает уровень голоса). Отпустите — звук распознаётся, затем при необходимости переводится и прогоняется через промпты, и готовый текст вставляется в позицию курсора. Крестик на оверлее отменяет операцию на любой стадии.</p>" +
-			"<p>Полный конвейер: <b>запись → распознавание (Whisper) → перевод (если включён) → промпты (LLM) → вставка</b>. Каждая стадия видна на оверлее.</p>" +
+			"<p>Полный конвейер: <b>запись → распознавание (русский — GigaAM, остальные языки — Whisper) → перевод (если включён) → промпты (LLM) → вставка</b>. Каждая стадия видна на оверлее.</p>" +
 			"<p class=\"wh\">Первый запуск</p>" +
 			"<p>При самом первом запуске открывается мастер из пяти шагов: язык интерфейса, язык диктовки (модель он подберёт и скачает сам), сочетание клавиш и микрофон с живой полоской уровня, поле для пробной диктовки и, последним, запуск вместе с Windows. Мастер можно пропустить — всё работает и без него; вернуть его — запуском <b>{exe} -wizard</b>. При обновлении он не появляется.</p>" +
 			"<p class=\"wh\">Оверлей</p>" +
@@ -686,6 +684,7 @@ var settingsStrings = map[string]map[string]string{
 			"<li><b>Вставлено: N симв.</b> — готово; при ошибке или тишине — короткое сообщение о причине.</li>" +
 			"<li>Крестик ✕ справа отменяет операцию на любой стадии; фокус ввода оверлей не забирает. Показывать плашку и её анимацию можно отключить на «Основных».</li>" +
 			"<li>Где показывать плашку — внизу экрана, вверху или у курсора — и показывать ли в ней сам распознанный текст вместо числа символов, настраивается на «Диктовке».</li>" +
+			"<li>Пока плашка о чём-то спрашивает, верхняя строка так и говорит — «Жду ответа», и точка перестаёт мигать. У каждой кнопки свой номер: 1…9 выбирают ответ, Enter берёт подсвеченный, Esc отменяет всё; клавиши подписаны справа в той же строке. За десять секунд до предела записи на плашке идёт янтарный обратный отсчёт.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Вопрос о языке перевода</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Распознаю…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Переводить на:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Без перевода</span></div></div>" +
@@ -715,7 +714,7 @@ var settingsStrings = map[string]map[string]string{
 			"<p>На «Тексте» можно перечислить, что модель слышит неправильно и во что это превращать: «гит хаб» → GitHub, фамилии, внутренние термины. Замены применяются сразу после распознавания, до промптов, поэтому редактор получает уже правильные слова. Перевод на английский делает сам распознаватель, поэтому замены видят уже переведённый текст. По умолчанию ищутся целые слова и без учёта регистра, обе галочки рядом это меняют. Правила применяются сверху вниз. Поле внизу проверяет их на любой фразе, не диктуя.</p>" +
 			"<p class=\"wh\">Правила по приложениям</p>" +
 			"<p>На «Диктовке» можно задать правила для отдельных программ: чем вставлять (буфером или посимвольно), нажимать ли Enter, сколько ждать перед вставкой и какие промпты применять. Программа указывается именем файла — <b>chrome.exe</b>; в одном правиле их можно перечислить через запятую, а звёздочка в конце ловит все имена с таким началом. Выигрывает первое подходящее правило; если правил нет или ни одно не подошло, всё работает как в общих настройках. Кнопка рядом со списком подставляет программу, в которую вставляли в последний раз.</p>" +
-			"<p class=\"wh\">Основные</p>" +
+			"<p class=\"wh\">Основные настройки</p>" +
 			"<ul>" +
 			"<li><b>Сочетание клавиш</b> — главный хоткей диктовки. Захватывается любая комбинация, различаются левые/правые модификаторы. Хоткеи диктовки, перевода и профилей не должны совпадать — дубликат не даст сохранить настройки.</li>" +
 			"<li><b>Язык интерфейса</b> — переключается мгновенно, «как в системе» берёт язык Windows.</li>" +
@@ -726,15 +725,16 @@ var settingsStrings = map[string]map[string]string{
 			"<li><b>Оверлей и анимация</b> — индикатор состояния внизу экрана; анимацию можно отключить.</li>" +
 			"<li><b>Посимвольный ввод</b> — вставка имитацией клавиатуры вместо Ctrl+V, для полей, где вставка из буфера не работает.</li>" +
 			"</ul>" +
-			"<p class=\"wh\">Распознавание (Whisper)</p>" +
+			"<p class=\"wh\">Распознавание</p>" +
 			"<div class=\"mock\"><div class=\"mock-row\"><span class=\"mock-radio on\"></span><b>Small</b><span class=\"mock-note\">баланс скорости и точности</span><span style=\"margin-left:auto\">466 MB</span></div>" +
 			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Medium (q5)</b><span class=\"mock-note\">точнее, рекомендуем</span><span style=\"margin-left:auto\">539 MB ⭳</span></div>" +
 			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Turbo (q5)</b><span class=\"mock-note\">максимум точности на CPU</span><span style=\"margin-left:auto\">574 MB ⭳</span></div></div>" +
 			"<ul>" +
+			"<li><b>Два слота</b> — одна модель для русской речи (GigaAM v3: точнее на русском и сама ставит знаки препинания) и одна для остальных языков и перевода. На экране «Состояние» и в таблице маршрутизации над каталогом видно, куда уходит каждый случай; советчик отвечает моделью и причиной выбора.</li>" +
 			"<li><b>Модели</b> — каталог моделей Whisper: Base (быстрая, для слабых ПК), Small (баланс), Medium и Turbo (точнее и медленнее; «q5» — квантованная версия: чуть меньше и быстрее почти без потери качества). Радиокнопка выбирает активную (применяется сразу, распознаватель перезапустится); клик по радио нескачанной модели сразу загружает её с официального репозитория whisper.cpp на Hugging Face. Одна модель обслуживает и распознавание, и перевод.</li>" +
 			"<li>Модель держится в памяти сервером whisper-server между фразами — поэтому первая диктовка после запуска чуть дольше (загрузка), дальше распознавание занимает 1–3 секунды.</li>" +
 			"<li><b>Словарь</b> — термины, имена и аббревиатуры через запятую. Это подсказка «слуху» Whisper, чтобы редкие слова распознавались правильно; это не команды.</li>" +
-			"<li><b>Параметры</b> — выбор микрофона со шкалой уровня (говорите — полоса двигается, значит устройство слышит), потоки CPU (больше — быстрее распознавание), минимальная длительность записи (отсекает случайные нажатия), максимальная (автостоп записи). Если выбранное устройство отключить, приложение само переключится на системное; запись без речи не отправляется на распознавание — покажет «Тишина».</li>" +
+			"<li><b>Микрофон и скорость</b> — выбор микрофона со шкалой уровня (говорите — полоса двигается, значит устройство слышит), потоки CPU (больше — быстрее распознавание), минимальная длительность записи (отсекает случайные нажатия), максимальная (автостоп записи). Если выбранное устройство отключить, приложение само переключится на системное; запись без речи не отправляется на распознавание — покажет «Тишина».</li>" +
 			"<li><b>Сервер</b> — whisper-server запускается автоматически и работает локально. Можно сменить порт или указать URL внешнего сервера — тогда локальный не используется.</li>" +
 			"<li><b>Перевод</b> — весь перевод выполняет Whisper: на английский — встроенным режимом перевода, на остальные языки — <b>экспериментально</b>, принудительным языком вывода (качество зависит от пары языков; на крупные языки лучше). Модель Turbo переводу не обучена — при ней настройки покажут предупреждение. «Всегда переводить на целевой язык» — каждая диктовка основным сочетанием переводится на выбранную цель без вопросов. Со снятым чекбоксом работает режим «Спрашивать»: всегда или с таймаутом — перед распознаванием появляется диалог выбора языка, по истечении секунд берётся целевой. Отдельный хоткей перевода переводит разово, не трогая обычную диктовку. Неприменимые при текущем режиме настройки автоматически гаснут серым.</li>" +
 			"</ul>" +
@@ -745,7 +745,7 @@ var settingsStrings = map[string]map[string]string{
 			"<div class=\"mock-row\" style=\"padding-left:18px\">q8_0.gguf<span style=\"margin-left:auto\">3.6 GB</span><span style=\"color:var(--amber)\">● ≈8.2 GB</span><span style=\"color:var(--dim)\">⭳</span></div></div>" +
 			"<ul>" +
 			"<li><b>Модели</b> — установленные LLM-модели редактора; радиокнопка выбирает активную (применяется сразу), крестик удаляет (можно и активную — тогда постобработка отключится). Здесь же виден прогресс загрузок.</li>" +
-			"<li><b>Поиск</b> — GGUF-модели на Hugging Face по имени (например, «qwen2.5 instruct»). У репозитория: дата последнего обновления, число загрузок и ссылка ↗ на страницу модели; клик по строке раскрывает файлы-кванты. Индикатор ● ≈N GB сравнивается со <b>свободной</b> оперативной памятью (она показана над списком).</li>" +
+			"<li><b>Поиск модели</b> — GGUF-модели на Hugging Face по имени (например, «qwen2.5 instruct»). У репозитория: дата последнего обновления, число загрузок и ссылка ↗ на страницу модели; клик по строке раскрывает файлы-кванты. Индикатор ● ≈N GB сравнивается со <b>свободной</b> оперативной памятью (она показана над списком).</li>" +
 			"<li><b>Как выбрать квант:</b> цифра — сколько бит на вес (Q4 — золотая середина, Q8 — почти без сжатия, Q3 — экономия памяти ценой качества); K_M точнее K_S; IQ4 — новое поколение, лучше классических при том же размере. Индикатор ● ≈N GB — оценка нужной оперативной памяти (файл + запас на контекст): зелёный — помещается, жёлтый — впритык, красный — не хватит.</li>" +
 			"<li>Модель 1.5–3B — быстрая редактура; 7–9B — заметно умнее, но на CPU каждая обработка занимает секунды. llama-server поднимается при первом использовании и держит модель в памяти наготове.</li>" +
 			"</ul>" +
@@ -769,15 +769,16 @@ var settingsStrings = map[string]map[string]string{
 			"<p class=\"wh\">Установка и переносимость</p>" +
 			"<ul>" +
 			"<li><b>{setup}</b> — инсталлер: ставит без прав администратора, ярлык в Пуске, опциональный автозапуск, корректное удаление через «Установку и удаление программ».</li>" +
+			"<li>Установщик ничего не качает по умолчанию: модель подберёт и скачает мастер при первом запуске. Если модель всё же выбрана — для русского это GigaAM v3, для остальных языков Whisper, — загрузку можно остановить кнопкой, и установка всё равно дойдёт до конца. Там же галочка «Проверять обновления»: ответ записывается в настройки приложения.</li>" +
 			"<li><b>Портативный вариант</b> — просто скопируйте папку с exe целиком (на флешку, другой ПК): настройки, модели и лог живут рядом с exe и переезжают вместе с ним. В реестр ничего не пишется.</li>" +
 			"<li>При первом запуске без модели распознавания приложение само откроет каталог моделей и дождётся скачивания.</li>" +
 			"<li>Требования: Windows 10/11 x64, CPU с AVX2 (~2013+), WebView2 Runtime для окна настроек (в Windows 11 есть).</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Трей и файлы</p>" +
-			"<div class=\"mock\" style=\"max-width:290px\"><div class=\"mock-mi dim\">{app} — Готов…</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Настройки…</div><div class=\"mock-mi\">Выключить</div><div class=\"mock-mi\">Копировать последний результат</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Перечитать config.json</div><div class=\"mock-mi\">Открыть config.json</div><div class=\"mock-mi\">Открыть лог</div><div class=\"mock-mi\">О приложении</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Выход</div></div>" +
+			"<div class=\"mock\" style=\"max-width:290px\"><div class=\"mock-mi dim\">{app} — Готов…</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Настройки…</div><div class=\"mock-mi\">Выключить</div><div class=\"mock-mi\">Копировать последний результат</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Открыть config.json</div><div class=\"mock-mi\">Открыть лог</div><div class=\"mock-mi\">О приложении</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Выход</div></div>" +
 			"<ul>" +
 			"<li>Левый клик по иконке в трее — настройки; правый — меню. Цвет иконки: зелёный — готов, красный — запись, оранжевый — распознавание, серый — выключено или ошибка.</li>" +
-			"<li><b>config.json</b> — все настройки; правки вручную применяются через «Перечитать config.json» в трее.</li>" +
+			"<li><b>config.json</b> — все настройки; правки вручную применяются кнопкой «Перечитать» в разделе «Система». Там же — «Открыть лог» и «Сбросить настройки»: сброс возвращает всё к заводскому виду, но модели, историю и промпты не трогает.</li>" +
 			"<li><b>{log}</b> — журнал работы, автоматически ограничен ~2 МБ.</li>" +
 			"<li><b>models/</b> — скачанные модели Whisper и LLM.</li>" +
 			"</ul>",
@@ -807,7 +808,7 @@ var settingsStrings = map[string]map[string]string{
 	"en": {
 		"S_TITLE":          "{app} — Settings",
 		"S_TR_HINT":        "Translation is done by Whisper: to English — native mode, to other languages — experimentally, by forcing the output language (quality depends on the language pair).",
-		"S_TR_TURBO":       "⚠ The active Turbo model is not trained for translation to English — pick another model on the Models tab for translating.",
+		"S_TR_TURBO":       "⚠ The active Turbo model is not trained for translation to English — pick another model in the Models section for translating.",
 		"S_TR_DEFAULT":     "Always translate to the target language",
 		"S_TR_TARGET":      "Target language",
 		"S_TR_ASK":         "Language choice",
@@ -824,8 +825,8 @@ var settingsStrings = map[string]map[string]string{
 		"S_FIT_BAD":        "not enough RAM",
 		"S_RAM":            "Computer RAM:",
 		"S_HF_PH":          "Model name — e.g. qwen2.5 instruct",
-		"S_NO_LLM":         "No models installed yet — find and download one on the Search tab.",
-		"S_NO_LLM_PROF":    "Prompts become available once a model is installed (see Models and Search tabs).",
+		"S_NO_LLM":         "No models installed yet — find and download one in the search field below.",
+		"S_NO_LLM_PROF":    "Prompts become available once a model is installed — the Models section, the editing-model list at the bottom.",
 		"S_PROF_EDIT":      "Edit",
 		"S_PROF_CLOSE":     "Collapse",
 		"S_CONFIRM_DEL":    "Delete the \"%s\" model? It can be downloaded again.",
@@ -1045,7 +1046,7 @@ var settingsStrings = map[string]map[string]string{
 			"<p>Logs never exceed ~2 MB on disk.</p>",
 		"S_HELP_HTML": "<p class=\"wh\">How it works</p>" +
 			"<p>Hold the shortcut — recording starts (the overlay at the bottom of the screen shows your voice level). Release — the audio is transcribed, optionally translated and run through prompts, and the final text is inserted at the cursor. The ✕ on the overlay cancels at any stage.</p>" +
-			"<p>Full pipeline: <b>record → transcribe (Whisper) → translate (if enabled) → prompts (LLM) → paste</b>. Every stage is visible on the overlay.</p>" +
+			"<p>Full pipeline: <b>record → recognise (GigaAM for Russian, Whisper for the rest) → translate (if enabled) → prompts (LLM) → paste</b>. Every stage is visible on the overlay.</p>" +
 			"<p class=\"wh\">First run</p>" +
 			"<p>The very first launch opens a five-step wizard: the interface language, the language you will dictate in (it picks and downloads the model for you), the shortcut and microphone with a live level bar, a field to try a dictation into, and — last — starting with Windows. You can skip it and everything still works; <b>{exe} -wizard</b> brings it back. Upgrades never see it.</p>" +
 			"<p class=\"wh\">Overlay</p>" +
@@ -1054,8 +1055,9 @@ var settingsStrings = map[string]map[string]string{
 			"<li><b>Speak…</b> — recording: a red dot and live voice-level bars.</li>" +
 			"<li><b>Transcribing…</b> — Whisper is processing; while translating — \"Translating\", while running prompts — \"Editing: name (1/2)\".</li>" +
 			"<li><b>Inserted: N chars</b> — done; on errors or silence a short reason is shown.</li>" +
-			"<li>The ✕ on the right cancels at any stage; the overlay never steals input focus. The overlay and its animation can be turned off on the General tab.</li>" +
-			"<li>Where the plate appears — bottom of the screen, top, or at the cursor — and whether it shows the recognised text itself instead of a character count, is set on the Dictation tab.</li>" +
+			"<li>The ✕ on the right cancels at any stage; the overlay never steals input focus. The plate and its animation can be turned off in the Dictation section.</li>" +
+			"<li>Where the plate appears — bottom of the screen, top, or at the cursor — and whether it shows the recognised text itself instead of a character count, is set on the Dictation section.</li>" +
+			"<li>While the plate is asking something its top line says so — \"Waiting for your answer\" — and the dot stops pulsing. Every answer carries a number: 1…9 pick one, Enter takes the highlighted one, Esc cancels everything; the keys are spelled out at the right of the same row. Ten seconds before the recording limit an amber countdown runs on the plate.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">The translation question</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Transcribing…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Translate to:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">No translation</span></div></div>" +
@@ -1068,24 +1070,24 @@ var settingsStrings = map[string]map[string]string{
 			"<li><b>Last Result</b> — the final text of every dictation is kept in memory until the next one; the tray menu has \"Copy last result\". A failed paste or focus change never loses a dictation.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Checking the microphone</p>" +
-			"<p>The Test button on the Microphone tab records three seconds and takes them apart: peak level in decibels, how much of the recording actually holds speech, and how many samples were clipped. The answer comes in words: sounds good, too quiet — raise the level in Windows, clipping — lower it, no speech heard — is the right microphone picked. The same numbers are measured after every dictation and written to the log; when recognition comes back empty the plate names the reason — too quiet, clipping or silence — instead of just saying it heard nothing.</p>" +
+			"<p>The Test button on the Microphone section records three seconds and takes them apart: peak level in decibels, how much of the recording actually holds speech, and how many samples were clipped. The answer comes in words: sounds good, too quiet — raise the level in Windows, clipping — lower it, no speech heard — is the right microphone picked. The same numbers are measured after every dictation and written to the log; when recognition comes back empty the plate names the reason — too quiet, clipping or silence — instead of just saying it heard nothing.</p>" +
 			"<p class=\"wh\">Pausing the recording</p>" +
-			"<p>In toggle mode (press once to start, press again to stop) a separate shortcut can pause: the Dictation tab, the \"Pause the recording\" row. Press it and the recording freezes — the plate says Paused and nothing is recorded; press again and it goes on, keeping everything said before the pause. The recording length limit does not fire while paused.</p>" +
+			"<p>In toggle mode (press once to start, press again to stop) a separate shortcut can pause: the Dictation section, the \"Pause the recording\" row. Press it and the recording freezes — the plate says Paused and nothing is recorded; press again and it goes on, keeping everything said before the pause. The recording length limit does not fire while paused.</p>" +
 			"<p class=\"wh\">Pasting from the history</p>" +
 			"<p>Every entry in the history has a Paste button: it brings back the window you opened the settings from and pastes the text there, like an ordinary dictation. When there is nowhere to go back to, the text simply lands on the clipboard and the program says so.</p>" +
 			"<p class=\"wh\">The lists in one file</p>" +
-			"<p>Replacements and voice commands can be saved into a single .json file and loaded on another computer — the buttons under the command list on the Text tab. Loading overwrites nothing: only the lines that are not there yet are added, and the program says how many were added and how many were skipped.</p>" +
+			"<p>Replacements and voice commands can be saved into a single .json file and loaded on another computer — the buttons under the command list on the Text section. Loading overwrites nothing: only the lines that are not there yet are added, and the program says how many were added and how many were skipped.</p>" +
 			"<p class=\"wh\">File integrity</p>" +
-			"<p>Every model in the catalog has a known SHA-256 reference hash. After a download the file is compared against it: no match — the file is deleted and the download can be repeated. The Check button on the Models tab compares the models already installed the same way, and when the program updates itself the downloaded installer is checked too — a foreign file will not be started.</p>" +
+			"<p>Every model in the catalog has a known SHA-256 reference hash. After a download the file is compared against it: no match — the file is deleted and the download can be repeated. The Check button on the Models section compares the models already installed the same way, and when the program updates itself the downloaded installer is checked too — a foreign file will not be started.</p>" +
 			"<p class=\"wh\">History of dictations</p>" +
 			"<p>The History section in the left column keeps what you dictated: text only, on this computer only, audio is never kept. It is off by default and turns on with one switch in the same place. Entries are kept for a set number of days and up to a set count, older ones drop out on their own; \"Never record from these programs\" lists, separated by commas, the ones nothing should be saved from — password managers, banking apps. Search covers both the text and the program name, the button next to an entry puts it on the clipboard, and Clear removes everything at once along with the <b>{app}-history.json</b> file.</p>" +
 			"<p class=\"wh\">Voice commands</p>" +
-			"<p>Under the replacements on the Text tab there is a list of commands: what you say turns into an action instead of words. \"New line\" and \"new paragraph\" put in a break — models never do; \"cancel\" throws the whole dictation away and inserts nothing; \"insert text\" drops in anything you like, an emoticon included. The button next to the list fills it with the usual phrases in the language of the interface. Commands are matched as whole words and run after the replacements, so the prompts and the translation already get the finished text. Spare spaces around the breaks are cleaned up. The field below tries both replacements and commands on any phrase: a break shows as ⏎.</p>" +
+			"<p>Under the replacements on the Text section there is a list of commands: what you say turns into an action instead of words. \"New line\" and \"new paragraph\" put in a break — models never do; \"cancel\" throws the whole dictation away and inserts nothing; \"insert text\" drops in anything you like, an emoticon included. The button next to the list fills it with the usual phrases in the language of the interface. Commands are matched as whole words and run after the replacements, so the prompts and the translation already get the finished text. Spare spaces around the breaks are cleaned up. The field below tries both replacements and commands on any phrase: a break shows as ⏎.</p>" +
 			"<p class=\"wh\">Replacements after recognition</p>" +
-			"<p>On the Text tab you can list what the model mishears and what it should become: \"git hub\" → GitHub, surnames, in-house terms. Replacements run right after recognition, before the prompts, so the editor already gets the right words. Translation into English happens inside recognition, so replacements see the translated text. By default they match whole words and ignore case; the two switches next to each row change that. Rules apply from top to bottom. The field at the bottom tries them on any phrase without dictating.</p>" +
+			"<p>On the Text section you can list what the model mishears and what it should become: \"git hub\" → GitHub, surnames, in-house terms. Replacements run right after recognition, before the prompts, so the editor already gets the right words. Translation into English happens inside recognition, so replacements see the translated text. By default they match whole words and ignore case; the two switches next to each row change that. Rules apply from top to bottom. The field at the bottom tries them on any phrase without dictating.</p>" +
 			"<p class=\"wh\">Rules per application</p>" +
-			"<p>On the Dictation tab you can set rules for particular programs: what to insert with (the clipboard or character by character), whether to press Enter, how long to wait before inserting and which prompts to apply. A program is named by its file — <b>chrome.exe</b>; one rule can list several, separated by commas, and a trailing asterisk catches every name with that beginning. The first matching rule wins; with no rules, or none that match, everything works as in the general settings. The button next to the list fills in the program you last inserted into.</p>" +
-			"<p class=\"wh\">General</p>" +
+			"<p>On the Dictation section you can set rules for particular programs: what to insert with (the clipboard or character by character), whether to press Enter, how long to wait before inserting and which prompts to apply. A program is named by its file — <b>chrome.exe</b>; one rule can list several, separated by commas, and a trailing asterisk catches every name with that beginning. The first matching rule wins; with no rules, or none that match, everything works as in the general settings. The button next to the list fills in the program you last inserted into.</p>" +
+			"<p class=\"wh\">The main settings</p>" +
 			"<ul>" +
 			"<li><b>Keyboard shortcut</b> — the main dictation hotkey. Any combination can be captured; left/right modifiers are distinguished. Dictation, translation and profile hotkeys must be unique — a duplicate blocks saving.</li>" +
 			"<li><b>UI language</b> — switches instantly; \"Same as system\" follows Windows.</li>" +
@@ -1096,15 +1098,16 @@ var settingsStrings = map[string]map[string]string{
 			"<li><b>Overlay and animation</b> — the status indicator at the bottom of the screen; animation can be turned off.</li>" +
 			"<li><b>Type mode</b> — inserts text by simulating keystrokes instead of Ctrl+V, for fields where clipboard paste does not work.</li>" +
 			"</ul>" +
-			"<p class=\"wh\">Recognition (Whisper)</p>" +
+			"<p class=\"wh\">Recognition</p>" +
 			"<div class=\"mock\"><div class=\"mock-row\"><span class=\"mock-radio on\"></span><b>Small</b><span class=\"mock-note\">speed/accuracy balance</span><span style=\"margin-left:auto\">466 MB</span></div>" +
 			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Medium (q5)</b><span class=\"mock-note\">more accurate, recommended</span><span style=\"margin-left:auto\">539 MB ⭳</span></div>" +
 			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Turbo (q5)</b><span class=\"mock-note\">best CPU accuracy</span><span style=\"margin-left:auto\">574 MB ⭳</span></div></div>" +
 			"<ul>" +
+			"<li><b>Two slots</b> — one model for Russian speech (GigaAM v3: more accurate on Russian and it punctuates by itself) and one for every other language and for translation. The Status screen and the routing table above the catalog show which model each case goes to; the picker answers with a model and the reason for it.</li>" +
 			"<li><b>Models</b> — the Whisper catalog: Base (fast, weak PCs), Small (balanced), Medium and Turbo (more accurate, slower; \"q5\" means a quantized build — slightly smaller and faster with almost no quality loss). The radio selects the active one (applied at once; the recognizer restarts); clicking the radio of a missing model downloads it from the official whisper.cpp repository on Hugging Face. One model serves both recognition and translation.</li>" +
 			"<li>whisper-server keeps the model in memory between phrases — the first dictation after startup is slower (loading), afterwards recognition takes 1–3 seconds.</li>" +
 			"<li><b>Dictionary</b> — comma-separated terms, names and abbreviations. A hint for Whisper's \"ear\" so rare words are recognized correctly; not commands.</li>" +
-			"<li><b>Parameters</b> — microphone selection with a live level meter (speak and the bar moves, so you know the device is heard), CPU threads (more = faster transcription), minimum recording length (filters accidental presses), maximum length (auto-stop). If the chosen device is unplugged the app falls back to the system default; a recording with no speech is never sent for recognition — it reports \"Silence\" instead.</li>" +
+			"<li><b>Microphone and speed</b> — microphone selection with a live level meter (speak and the bar moves, so you know the device is heard), CPU threads (more = faster transcription), minimum recording length (filters accidental presses), maximum length (auto-stop). If the chosen device is unplugged the app falls back to the system default; a recording with no speech is never sent for recognition — it reports \"Silence\" instead.</li>" +
 			"<li><b>Server</b> — whisper-server starts automatically and runs locally. You can change the port or point to an external server URL — then the local one is not used.</li>" +
 			"<li><b>Translation</b> — all translation is done by Whisper: to English via its native translate mode, to other languages <b>experimentally</b>, by forcing the output language (quality depends on the language pair; major languages work best). The Turbo model is not trained for translation — the settings show a warning when it is active. \"Always translate to the target language\" makes every main-hotkey dictation translate to the chosen target with no questions. With the checkbox off, the ask mode applies: always or with a timeout — a language dialog appears before transcription and the target is used when time runs out. The separate translation hotkey translates once without affecting normal dictation. Settings that do not apply in the current mode are greyed out automatically.</li>" +
 			"</ul>" +
@@ -1115,7 +1118,7 @@ var settingsStrings = map[string]map[string]string{
 			"<div class=\"mock-row\" style=\"padding-left:18px\">q8_0.gguf<span style=\"margin-left:auto\">3.6 GB</span><span style=\"color:var(--amber)\">● ≈8.2 GB</span><span style=\"color:var(--dim)\">⭳</span></div></div>" +
 			"<ul>" +
 			"<li><b>Models</b> — installed LLM editing models; the radio selects the active one (applied at once), ✕ deletes (the active one too — post-processing then turns off). Download progress shows here as well.</li>" +
-			"<li><b>Search</b> — GGUF models on Hugging Face by name (e.g. \"qwen2.5 instruct\"). Each repository shows its last update date, download count and a ↗ link to the model page; clicking a row expands its quant files. The ● ≈N GB indicator is compared against the <b>free</b> RAM (shown above the list).</li>" +
+			"<li><b>Finding a model</b> — GGUF models on Hugging Face by name (e.g. \"qwen2.5 instruct\"). Each repository shows its last update date, download count and a ↗ link to the model page; clicking a row expands its quant files. The ● ≈N GB indicator is compared against the <b>free</b> RAM (shown above the list).</li>" +
 			"<li><b>Picking a quant:</b> the number is bits per weight (Q4 — the sweet spot, Q8 — nearly uncompressed, Q3 — saves RAM at a quality cost); K_M beats K_S; IQ4 is the newer generation, better than classic quants at the same size. The ● ≈N GB indicator estimates the RAM needed (file plus context headroom): green fits, amber is tight, red won't fit.</li>" +
 			"<li>A 1.5–3B model gives fast editing; 7–9B is noticeably smarter but each pass takes seconds on CPU. llama-server starts on first use and keeps the model warm in memory.</li>" +
 			"</ul>" +
@@ -1139,15 +1142,16 @@ var settingsStrings = map[string]map[string]string{
 			"<p class=\"wh\">Install and portability</p>" +
 			"<ul>" +
 			"<li><b>{setup}</b> — the installer: no admin rights needed, Start Menu shortcut, optional autostart, clean removal via \"Apps & features\".</li>" +
+			"<li>The installer downloads nothing by default: the wizard picks and fetches the model on first run. If a model is picked anyway — GigaAM v3 for Russian, Whisper for every other language — the download can be stopped with a button and the installation still finishes. The update-check switch sits there too, and the answer is written into the app's settings.</li>" +
 			"<li><b>Portable</b> — just copy the whole folder with the exe (to a USB stick, another PC): settings, models and the log live next to the exe and travel with it. Nothing is written to the registry.</li>" +
 			"<li>On first run without a recognition model the app opens the model catalog itself and waits for the download.</li>" +
 			"<li>Requirements: Windows 10/11 x64, a CPU with AVX2 (~2013+), WebView2 Runtime for the settings window (included in Windows 11).</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Tray and files</p>" +
-			"<div class=\"mock\" style=\"max-width:290px\"><div class=\"mock-mi dim\">{app} — Ready…</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Settings…</div><div class=\"mock-mi\">Disable</div><div class=\"mock-mi\">Copy last result</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Reload config.json</div><div class=\"mock-mi\">Open config.json</div><div class=\"mock-mi\">Open log</div><div class=\"mock-mi\">About</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Quit</div></div>" +
+			"<div class=\"mock\" style=\"max-width:290px\"><div class=\"mock-mi dim\">{app} — Ready…</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Settings…</div><div class=\"mock-mi\">Disable</div><div class=\"mock-mi\">Copy last result</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Open config.json</div><div class=\"mock-mi\">Open log</div><div class=\"mock-mi\">About</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Quit</div></div>" +
 			"<ul>" +
 			"<li>Left-click the tray icon — settings; right-click — the menu. Icon colors: green — ready, red — recording, orange — transcribing, grey — disabled or error.</li>" +
-			"<li><b>config.json</b> — all settings; manual edits apply via \"Reload config.json\" in the tray menu.</li>" +
+			"<li><b>config.json</b> — all settings; edits made by hand apply through <b>Re-read</b> in the System section. The log and <b>Reset the settings</b> live there too: a reset puts everything back to factory and leaves models, history and prompts alone.</li>" +
 			"<li><b>{log}</b> — the log, automatically capped at ~2 MB.</li>" +
 			"<li><b>models/</b> — downloaded Whisper and LLM models.</li>" +
 			"</ul>",

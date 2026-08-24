@@ -4,6 +4,10 @@ const { JSDOM } = require("jsdom");
 
 const html = fs.readFileSync(path.join(__dirname, "page.html"), "utf8");
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+function searchFinds(w, d, needle) {
+  const hits = w.searchMatches(needle.toLowerCase());
+  return hits.some((el) => el.closest("#p-about"));
+}
 
 let llmState = {
   installed: [{ file: "model.gguf", size: 4929, active: true }],
@@ -193,6 +197,14 @@ function check(name, actual, expected) {
   w.setHotkey("ctrl+win", "");
 
   check("nine sections in the sidebar", d.querySelectorAll(".nav").length, 9);
+
+  tab("about"); await sleep(200);
+  const toc = d.querySelector("#p-about .toc");
+  const helpCard = toc && toc.closest(".card");
+  check("the help opens with a table of contents", !!toc, true);
+  check("every help heading is listed", toc ? toc.querySelectorAll("a").length : 0, helpCard ? helpCard.querySelectorAll(".wh").length : -1);
+  check("the contents link to the headings", toc ? toc.querySelector("a").getAttribute("href") : "", "#" + (helpCard ? helpCard.querySelector(".wh").id : ""));
+  check("the help is reachable from search", searchFinds(w, d, "config.json"), true);
 
   tab("history"); await sleep(300);
   check("history is a screen of its own", shown("history"), true);

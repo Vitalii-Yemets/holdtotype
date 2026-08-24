@@ -1193,7 +1193,14 @@ button.mini.danger:hover{color:#ff7b6b;border-color:#7a2e2e;box-shadow:0 0 7px r
 button.iconbtn{border:none;background:none;padding:2px 5px;color:var(--dim);cursor:pointer;line-height:1;font:13px Consolas,monospace}
 button.iconbtn:hover{color:var(--green);filter:drop-shadow(0 0 4px rgba(60,255,110,.6))}
 button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,110,90,.5))}
-.about p{margin:8px 0;line-height:1.55;user-select:text;color:var(--green)}
+.about p{margin:8px 0;line-height:1.55;user-select:text;color:var(--green);max-width:80ch}
+.about li{max-width:78ch}
+.toc{display:flex;flex-wrap:wrap;gap:6px 14px;margin:6px 0 4px;max-width:80ch}
+.toc a{color:var(--dim);font-size:12px;text-decoration:none;border-bottom:1px dotted var(--line)}
+.toc a:hover{color:var(--green);border-bottom-color:var(--dim)}
+.toc a:focus-visible{outline:1px solid var(--green);outline-offset:2px}
+.about .wh:target,.about .wh.hit{color:var(--green);text-shadow:var(--glow)}
+.about p.hit,.about li.hit{background:#101d14;box-shadow:inset 2px 0 0 var(--green);padding-left:7px}
 .about p.warn{color:var(--amber);border-left:2px solid var(--amber);padding-left:9px}
 .about b{text-shadow:var(--glow)}
 .about .wh{color:var(--dim);font-size:12px;letter-spacing:1px;text-transform:uppercase;margin:16px 0 4px;border-bottom:1px solid #12241a;padding-bottom:3px}
@@ -1710,6 +1717,27 @@ function initServerExe(){
     toast(L.upd, "ok");
   };
   box.onchange = ()=>{ if(exeUnlocked){ exeStored = box.value.trim(); doSave(); } };
+}
+function buildToc(){
+  let card = null, best = 0;
+  document.querySelectorAll("#p-about .card").forEach(c=>{
+    const n = c.querySelectorAll(".wh").length;
+    if(n > best){ best = n; card = c; }
+  });
+  if(!card || best < 3) return;
+  const heads = [...card.querySelectorAll(".wh")];
+  const toc = document.createElement("nav");
+  toc.className = "toc";
+  toc.setAttribute("aria-label", card.querySelector(".wh").textContent);
+  heads.forEach((h, i)=>{
+    if(!h.id) h.id = "wh" + i;
+    const a = document.createElement("a");
+    a.href = "#" + h.id;
+    a.textContent = h.textContent;
+    a.onclick = (e)=>{ e.preventDefault(); h.scrollIntoView({block:"start"}); h.classList.add("hit"); setTimeout(()=>h.classList.remove("hit"), 1500); };
+    toc.appendChild(a);
+  });
+  card.insertBefore(toc, card.firstChild);
 }
 function labelPages(){
   document.querySelectorAll(".nav").forEach(b=>{
@@ -2630,7 +2658,7 @@ let hits = [];
 let hitAt = -1;
 let searchFrom = null;
 function searchMatches(s){
-  const items = [...document.querySelectorAll(".page .row, .page .mrow, .page .sect, .page .hint, .page .mslot, .page .wizh")];
+  const items = [...document.querySelectorAll(".page .row, .page .mrow, .page .sect, .page .hint, .page .mslot, .page .wizh, .about p, .about li")];
   const seen = new Set();
   return items.filter(r=>{
     if(!r.textContent.toLowerCase().includes(s)) return false;
@@ -3334,6 +3362,7 @@ load();
   applyLevel();
   ariaFromTitle(document);
   labelPages();
+  buildToc();
   document.querySelectorAll(".lvlb").forEach(b=>b.onclick=()=>setLevel(b.dataset.l));
   const omni = document.getElementById("omni");
   if(omni){

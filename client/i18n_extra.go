@@ -16,7 +16,7 @@ func init() {
 		"status.recording": "Aufnahme läuft…", "status.transcribing": "Erkenne…", "status.disabled": "Deaktiviert",
 		"status.server.restart": "Erkennungsserver abgestürzt, Neustart…", "status.cfg.err": "Fehler in config.json (siehe Log)",
 		"menu.settings": "Einstellungen…", "menu.enable": "Aktivieren", "menu.disable": "Deaktivieren",
-		"menu.reload": "config.json neu laden", "menu.open.config": "config.json öffnen", "menu.open.log": "Log öffnen",
+		"menu.open.config": "config.json öffnen", "menu.open.log": "Log öffnen",
 		"menu.about": "Über", "menu.quit": "Beenden",
 		"ov.speak": "Sprechen…", "ov.transcribing": "Erkenne", "ov.asking": "Warte auf Ihre Antwort", "ov.inserted": "Eingefügt: %d Zeichen", "ov.left": "noch %d s", "ov.esc": "1…9 · Enter · Esc bricht ab", "err.net.dns": "Keine Verbindung zu %s — Internet prüfen", "err.net.timeout": "Der Server hat nicht rechtzeitig geantwortet — erneut versuchen", "err.net.down": "Verbindung nicht möglich — Internet prüfen", "err.net.cert": "Die Verbindung ist nicht sicher — Datum und Virenschutz prüfen", "err.answer": "Der Server antwortete unverständlich — später versuchen", "err.file.missing": "Datei nicht gefunden", "err.file.denied": "Kein Zugriff auf die Datei — das Programm schließen, das sie hält", "err.disk.full": "Kein Speicherplatz auf der Festplatte", "err.cancelled": "Abgebrochen", "err.generic": "Hat nicht geklappt — Einzelheiten im Protokoll", "err.server.launch": "%s konnte nicht gestartet werden — Serverpfad unter System prüfen",
 		"ov.err.recognize": "Erkennungsfehler (siehe Log)", "ov.err.paste": "Nicht eingefügt — der Text steht im letzten Ergebnis",
@@ -100,7 +100,7 @@ func init() {
 		"status.recording": "Enregistrement…", "status.transcribing": "Reconnaissance…", "status.disabled": "Désactivé",
 		"status.server.restart": "Serveur planté, redémarrage…", "status.cfg.err": "Erreur dans config.json (voir log)",
 		"menu.settings": "Réglages…", "menu.enable": "Activer", "menu.disable": "Désactiver",
-		"menu.reload": "Recharger config.json", "menu.open.config": "Ouvrir config.json", "menu.open.log": "Ouvrir le log",
+		"menu.open.config": "Ouvrir config.json", "menu.open.log": "Ouvrir le log",
 		"menu.about": "À propos", "menu.quit": "Quitter",
 		"ov.speak": "Parlez…", "ov.transcribing": "Reconnaissance", "ov.asking": "En attente de votre réponse", "ov.inserted": "Inséré : %d caractères", "ov.left": "%d s restantes", "ov.esc": "1…9 · Entrée · Échap annule", "err.net.dns": "Pas de connexion à %s — vérifiez internet", "err.net.timeout": "Le serveur n'a pas répondu à temps — réessayez", "err.net.down": "Connexion impossible — vérifiez internet", "err.net.cert": "La connexion n'est pas sécurisée — vérifiez la date et l'antivirus", "err.answer": "Le serveur a répondu de façon incompréhensible — réessayez plus tard", "err.file.missing": "Fichier introuvable", "err.file.denied": "Pas d'accès au fichier — fermez le programme qui le retient", "err.disk.full": "Le disque est plein", "err.cancelled": "Annulé", "err.generic": "Cela n'a pas fonctionné — détails dans le journal", "err.server.launch": "Impossible de lancer %s — vérifiez le chemin du serveur dans Système",
 		"ov.err.recognize": "Erreur de reconnaissance (voir log)", "ov.err.paste": "Non collé — le texte est dans le dernier résultat",
@@ -184,7 +184,7 @@ func init() {
 		"status.recording": "Grabando…", "status.transcribing": "Reconociendo…", "status.disabled": "Desactivado",
 		"status.server.restart": "Servidor caído, reiniciando…", "status.cfg.err": "Error en config.json (vea el log)",
 		"menu.settings": "Ajustes…", "menu.enable": "Activar", "menu.disable": "Desactivar",
-		"menu.reload": "Recargar config.json", "menu.open.config": "Abrir config.json", "menu.open.log": "Abrir log",
+		"menu.open.config": "Abrir config.json", "menu.open.log": "Abrir log",
 		"menu.about": "Acerca de", "menu.quit": "Salir",
 		"ov.speak": "Hable…", "ov.transcribing": "Reconociendo", "ov.asking": "Esperando tu respuesta", "ov.inserted": "Insertado: %d caracteres", "ov.left": "quedan %d s", "ov.esc": "1…9 · Enter · Esc cancela", "err.net.dns": "Sin conexión con %s — revise internet", "err.net.timeout": "El servidor no respondió a tiempo — inténtelo otra vez", "err.net.down": "No se pudo conectar — revise internet", "err.net.cert": "La conexión no es segura — revise la fecha y el antivirus", "err.answer": "El servidor respondió de forma incomprensible — inténtelo más tarde", "err.file.missing": "Archivo no encontrado", "err.file.denied": "Sin acceso al archivo — cierre el programa que lo retiene", "err.disk.full": "El disco está lleno", "err.cancelled": "Cancelado", "err.generic": "No funcionó — los detalles están en el registro", "err.server.launch": "No se pudo iniciar %s — revise la ruta del servidor en Sistema",
 		"ov.err.recognize": "Error de reconocimiento (vea el log)", "ov.err.paste": "No se pegó: el texto está en el último resultado",
@@ -268,7 +268,7 @@ func init() {
 		"status.recording": "Registrazione…", "status.transcribing": "Riconoscimento…", "status.disabled": "Disattivato",
 		"status.server.restart": "Server bloccato, riavvio…", "status.cfg.err": "Errore in config.json (vedi log)",
 		"menu.settings": "Impostazioni…", "menu.enable": "Attiva", "menu.disable": "Disattiva",
-		"menu.reload": "Ricarica config.json", "menu.open.config": "Apri config.json", "menu.open.log": "Apri log",
+		"menu.open.config": "Apri config.json", "menu.open.log": "Apri log",
 		"menu.about": "Informazioni", "menu.quit": "Esci",
 		"ov.speak": "Parla…", "ov.transcribing": "Riconoscimento", "ov.asking": "Attendo la tua risposta", "ov.inserted": "Inserito: %d caratteri", "ov.left": "%d s rimasti", "ov.esc": "1…9 · Invio · Esc annulla", "err.net.dns": "Nessuna connessione a %s — controlla internet", "err.net.timeout": "Il server non ha risposto in tempo — riprova", "err.net.down": "Impossibile connettersi — controlla internet", "err.net.cert": "La connessione non è sicura — controlla la data e l'antivirus", "err.answer": "Il server ha risposto in modo incomprensibile — riprova più tardi", "err.file.missing": "File non trovato", "err.file.denied": "Nessun accesso al file — chiudi il programma che lo tiene", "err.disk.full": "Il disco è pieno", "err.cancelled": "Annullato", "err.generic": "Non ha funzionato — i dettagli sono nel registro", "err.server.launch": "Impossibile avviare %s — controlla il percorso del server in Sistema",
 		"ov.err.recognize": "Errore di riconoscimento (vedi log)", "ov.err.paste": "Non incollato: il testo è nell'ultimo risultato",
@@ -352,7 +352,7 @@ func init() {
 		"status.recording": "Nagrywanie…", "status.transcribing": "Rozpoznawanie…", "status.disabled": "Wyłączone",
 		"status.server.restart": "Serwer padł, restart…", "status.cfg.err": "Błąd w config.json (zobacz log)",
 		"menu.settings": "Ustawienia…", "menu.enable": "Włącz", "menu.disable": "Wyłącz",
-		"menu.reload": "Przeładuj config.json", "menu.open.config": "Otwórz config.json", "menu.open.log": "Otwórz log",
+		"menu.open.config": "Otwórz config.json", "menu.open.log": "Otwórz log",
 		"menu.about": "O programie", "menu.quit": "Zakończ",
 		"ov.speak": "Mów…", "ov.transcribing": "Rozpoznawanie", "ov.asking": "Czekam na odpowiedź", "ov.inserted": "Wstawiono: %d znaków", "ov.left": "zostało %d s", "ov.esc": "1…9 · Enter · Esc anuluje", "err.net.dns": "Brak połączenia z %s — sprawdź internet", "err.net.timeout": "Serwer nie odpowiedział na czas — spróbuj ponownie", "err.net.down": "Nie udało się połączyć — sprawdź internet", "err.net.cert": "Połączenie nie jest bezpieczne — sprawdź datę i antywirus", "err.answer": "Serwer odpowiedział niezrozumiale — spróbuj później", "err.file.missing": "Nie znaleziono pliku", "err.file.denied": "Brak dostępu do pliku — zamknij program, który go trzyma", "err.disk.full": "Brak miejsca na dysku", "err.cancelled": "Anulowano", "err.generic": "Nie udało się — szczegóły w dzienniku", "err.server.launch": "Nie udało się uruchomić %s — sprawdź ścieżkę serwera w sekcji System",
 		"ov.err.recognize": "Błąd rozpoznawania (zobacz log)", "ov.err.paste": "Nie wklejono — tekst jest w ostatnim wyniku",
@@ -506,7 +506,7 @@ func init() {
 		"S_PUNCT":       "Satzzeichen und Großschreibung", "S_SUB_PUNCT": "woher Satzzeichen und Großschreibung kommen",
 		"S_PUNCT_MODEL": "vom Modell", "S_PUNCT_LLM": "vom Bearbeitungsmodell", "S_PUNCT_OFF": "entfernen",
 		"S_SUB_DICT": "Wörterbuch", "S_SUB_PROMPTS": "Prompts",
-		"S_TR_TURBO":     "⚠ Das aktive Turbo-Modell ist nicht für die Übersetzung ins Englische trainiert — wählen Sie zum Übersetzen ein anderes Modell im Reiter „Modelle“.",
+		"S_TR_TURBO":     "⚠ Das aktive Turbo-Modell ist nicht für die Übersetzung ins Englische trainiert — wählen Sie zum Übersetzen ein anderes Modell im Bereich „Modelle“.",
 		"S_SUB_TRTARGET": "Englisch ist für Whisper nativ, andere Zielsprachen sind experimentell",
 		"S_TR_EXP":       "außer Englisch erzwingt die App die Ausgabesprache, statt zu übersetzen — der Text kann in der gesprochenen Sprache bleiben",
 		"S_REMOTE_ABOUT": "Ein entfernter Server ist eingestellt: Audio wird dorthin gesendet, und das Versprechen oben gilt so lange nicht.",
@@ -519,8 +519,8 @@ func init() {
 		"S_MODEL_READY": "Modell geladen — wählen Sie es aus, um zu wechseln",
 		"S_FIT_OK":      "passt", "S_FIT_WARN": "knapp", "S_FIT_BAD": "zu wenig RAM", "S_RAM": "Arbeitsspeicher:",
 		"S_HF_PH":       "Modellname — z. B. qwen2.5 instruct",
-		"S_NO_LLM":      "Noch keine Modelle installiert — im Reiter „Suche“ eines finden und laden.",
-		"S_NO_LLM_PROF": "Prompts stehen zur Verfügung, sobald ein Modell installiert ist (siehe Reiter „Modelle“ und „Suche“).",
+		"S_NO_LLM":      "Noch keine Modelle installiert — im Suchfeld unten eines finden und laden.",
+		"S_NO_LLM_PROF": "Prompts stehen zur Verfügung, sobald ein Modell installiert ist — Bereich „Modelle“, die Liste des Bearbeitungsmodells unten.",
 		"S_UPDATED":     "Modell zuletzt aktualisiert", "S_PROF_EDIT": "Bearbeiten", "S_PROF_CLOSE": "Einklappen",
 		"S_CONFIRM_DEL": "Modell „%s“ löschen? Es kann erneut geladen werden.", "S_FREE": "frei",
 		"S_DEL_ACTIVE":     "Das aktive Modell „%s“ löschen? Die Erkennung hält an, bis Sie ein anderes wählen — herunterladen können Sie es gleich hier.",
@@ -541,7 +541,7 @@ func init() {
 			"<p>Fehler gefunden oder eine Idee — eröffnen Sie ein Issue im Repository.</p>",
 		"S_HELP_HTML": "<p class=\"wh\">Wie es funktioniert</p>" +
 			"<p>Kürzel halten — die Aufnahme läuft (die Leiste am unteren Bildschirmrand zeigt Ihren Pegel). Loslassen — der Ton wird erkannt, bei Bedarf übersetzt und durch die Prompts geschickt, und der fertige Text landet an der Cursorposition. Das ✕ auf der Leiste bricht in jedem Schritt ab.</p>" +
-			"<p>Der ganze Weg: <b>Aufnahme → Erkennung (Whisper) → Übersetzung (falls aktiv) → Prompts (LLM) → Einfügen</b>. Jeder Schritt ist auf der Leiste zu sehen.</p>" +
+			"<p>Der ganze Weg: <b>Aufnahme → Erkennung (GigaAM für Russisch, sonst Whisper) → Übersetzung (falls aktiv) → Prompts (LLM) → Einfügen</b>. Jeder Schritt ist auf der Leiste zu sehen.</p>" +
 			"<p class=\"wh\">Erster Start</p>" +
 			"<p>Beim allerersten Start öffnet sich ein Assistent mit fünf Schritten: Sprache der Oberfläche, Sprache des Diktats (das Modell sucht er aus und lädt es), Tastenkürzel und Mikrofon mit Pegelbalken, ein Feld zum Ausprobieren und zuletzt der Start mit Windows. Überspringen geht — es läuft auch so; zurückholen mit <b>{exe} -wizard</b>. Bei einem Update erscheint er nicht.</p>" +
 			"<p class=\"wh\">Die Leiste</p>" +
@@ -552,6 +552,7 @@ func init() {
 			"<li><b>Eingefügt: N Zeichen</b> — fertig; bei Fehlern oder Stille steht dort kurz der Grund.</li>" +
 			"<li>Das ✕ rechts bricht in jedem Schritt ab; die Leiste nimmt niemals den Eingabefokus. Leiste und Animation lassen sich unter „Diktat“ abschalten.</li>" +
 			"<li>Wo die Leiste erscheint — unten, oben oder am Cursor — und ob sie den erkannten Text statt der Zeichenzahl zeigt, stellen Sie unter „Diktat“ ein.</li>" +
+			"<li>Solange die Leiste fragt, sagt ihre obere Zeile genau das — „Warte auf Ihre Antwort“ — und der Punkt hört auf zu pulsieren. Jede Antwort trägt ihre Nummer: 1…9 wählen eine aus, Enter nimmt die hervorgehobene, Esc bricht alles ab; die Tasten stehen rechts in derselben Zeile. Zehn Sekunden vor dem Aufnahmelimit läuft auf der Leiste ein bernsteinfarbener Countdown.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Die Frage nach der Übersetzung</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Erkenne…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Übersetzen nach:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Ohne Übersetzung</span></div></div>" +
@@ -566,17 +567,17 @@ func init() {
 			"<p class=\"wh\">Mikrofon prüfen</p>" +
 			"<p>Die Schaltfläche „Test“ unter „Mikrofon“ nimmt drei Sekunden auf und zerlegt sie: Spitzenpegel in Dezibel, wie viel der Aufnahme wirklich Sprache enthält und wie viele Abtastwerte abgeschnitten wurden. Die Antwort kommt in Worten: klingt gut, zu leise — Pegel in Windows anheben, übersteuert — Pegel senken, keine Sprache gehört — ist das richtige Mikrofon gewählt. Dasselbe wird nach jedem Diktat gemessen und ins Log geschrieben; kommt die Erkennung leer zurück, nennt die Leiste den Grund — zu leise, übersteuert oder Stille — statt nur zu sagen, sie habe nichts gehört.</p>" +
 			"<p class=\"wh\">Aufnahme pausieren</p>" +
-			"<p>Im Umschaltmodus (einmal drücken startet, noch einmal stoppt) lässt sich ein eigenes Kürzel für die Pause festlegen: Reiter „Diktat“, Zeile „Aufnahme pausieren“. Ein Druck hält die Aufnahme an — die Leiste zeigt „Pause“ und es wird nichts aufgezeichnet; noch ein Druck und es geht weiter, alles vor der Pause bleibt erhalten. Die Längenbegrenzung greift während der Pause nicht.</p>" +
+			"<p>Im Umschaltmodus (einmal drücken startet, noch einmal stoppt) lässt sich ein eigenes Kürzel für die Pause festlegen: Bereich „Diktat“, Zeile „Aufnahme pausieren“. Ein Druck hält die Aufnahme an — die Leiste zeigt „Pause“ und es wird nichts aufgezeichnet; noch ein Druck und es geht weiter, alles vor der Pause bleibt erhalten. Die Längenbegrenzung greift während der Pause nicht.</p>" +
 			"<p class=\"wh\">Aus dem Verlauf einfügen</p>" +
 			"<p>Jeder Eintrag im Verlauf hat die Schaltfläche „Einfügen“: sie holt das Fenster zurück, aus dem Sie die Einstellungen geöffnet haben, und fügt den Text dort ein wie ein gewöhnliches Diktat. Gibt es kein solches Fenster, landet der Text einfach in der Zwischenablage, und das Programm sagt es.</p>" +
 			"<p class=\"wh\">Die Listen in einer Datei</p>" +
-			"<p>Ersetzungen und Sprachbefehle lassen sich in eine .json-Datei speichern und auf einem anderen Rechner laden — die Schaltflächen unter der Befehlsliste im Reiter „Text“. Beim Laden wird nichts überschrieben: nur die Zeilen, die noch fehlen, kommen hinzu, und das Programm nennt die Zahl der hinzugefügten und der übersprungenen.</p>" +
+			"<p>Ersetzungen und Sprachbefehle lassen sich in eine .json-Datei speichern und auf einem anderen Rechner laden — die Schaltflächen unter der Befehlsliste im Bereich „Text“. Beim Laden wird nichts überschrieben: nur die Zeilen, die noch fehlen, kommen hinzu, und das Programm nennt die Zahl der hinzugefügten und der übersprungenen.</p>" +
 			"<p class=\"wh\">Unversehrtheit der Dateien</p>" +
-			"<p>Zu jedem Modell aus dem Katalog gehört ein bekannter SHA-256-Referenz-Hash. Nach dem Herunterladen wird die Datei damit verglichen: passt sie nicht, wird sie gelöscht und der Download kann wiederholt werden. Die Schaltfläche „Prüfen“ im Reiter „Modelle“ vergleicht die bereits installierten Modelle genauso, und beim Update wird auch das heruntergeladene Installationsprogramm geprüft — eine fremde Datei wird nicht gestartet.</p>" +
+			"<p>Zu jedem Modell aus dem Katalog gehört ein bekannter SHA-256-Referenz-Hash. Nach dem Herunterladen wird die Datei damit verglichen: passt sie nicht, wird sie gelöscht und der Download kann wiederholt werden. Die Schaltfläche „Prüfen“ im Bereich „Modelle“ vergleicht die bereits installierten Modelle genauso, und beim Update wird auch das heruntergeladene Installationsprogramm geprüft — eine fremde Datei wird nicht gestartet.</p>" +
 			"<p class=\"wh\">Verlauf der Diktate</p>" +
 			"<p>Der Abschnitt „Verlauf“ in der linken Spalte bewahrt auf, was Sie diktiert haben: nur Text, nur auf diesem Rechner, Ton wird nie gespeichert. Standardmäßig aus, eingeschaltet wird er mit einem Schalter an derselben Stelle. Einträge bleiben eine eingestellte Zahl von Tagen und bis zu einer eingestellten Anzahl, Älteres fällt von selbst heraus; „Aus diesen Programmen nie aufzeichnen“ listet durch Komma getrennt jene, aus denen nichts gespeichert werden soll — Passwortmanager, Banking. Die Suche greift auf Text und Programmnamen, die Schaltfläche neben einem Eintrag legt ihn in die Zwischenablage, und „Leeren“ entfernt alles samt der Datei <b>{app}-history.json</b>.</p>" +
 			"<p class=\"wh\">Sprachbefehle</p>" +
-			"<p>Unter den Ersetzungen auf der Registerkarte „Text“ steht eine Liste von Befehlen: Gesagtes wird zur Handlung statt zu Wörtern. „Neue Zeile“ und „neuer Absatz“ setzen einen Umbruch — Modelle tun das nie; „abbrechen“ verwirft das ganze Diktat und fügt nichts ein; „Text einfügen“ setzt beliebiges ein, auch ein Smiley. Die Schaltfläche neben der Liste füllt sie mit den üblichen Wendungen in der Sprache der Oberfläche. Befehle werden als ganze Wörter erkannt und laufen nach den Ersetzungen, damit Prompts und Übersetzung schon den fertigen Text bekommen. Überflüssige Leerzeichen um die Umbrüche verschwinden von selbst. Das Feld darunter probiert Ersetzungen und Befehle an jedem Satz: ein Umbruch erscheint als ⏎.</p>" +
+			"<p>Unter den Ersetzungen im Bereich „Text“ steht eine Liste von Befehlen: Gesagtes wird zur Handlung statt zu Wörtern. „Neue Zeile“ und „neuer Absatz“ setzen einen Umbruch — Modelle tun das nie; „abbrechen“ verwirft das ganze Diktat und fügt nichts ein; „Text einfügen“ setzt beliebiges ein, auch ein Smiley. Die Schaltfläche neben der Liste füllt sie mit den üblichen Wendungen in der Sprache der Oberfläche. Befehle werden als ganze Wörter erkannt und laufen nach den Ersetzungen, damit Prompts und Übersetzung schon den fertigen Text bekommen. Überflüssige Leerzeichen um die Umbrüche verschwinden von selbst. Das Feld darunter probiert Ersetzungen und Befehle an jedem Satz: ein Umbruch erscheint als ⏎.</p>" +
 			"<p class=\"wh\">Ersetzungen nach der Erkennung</p>" +
 			"<p>Unter „Text“ lässt sich auflisten, was das Modell falsch hört und was daraus werden soll: „git hub“ → GitHub, Nachnamen, hauseigene Begriffe. Ersetzungen laufen direkt nach der Erkennung, vor den Prompts, damit der Editor bereits die richtigen Wörter bekommt. Die Übersetzung ins Englische passiert innerhalb der Erkennung, die Ersetzungen sehen also bereits den übersetzten Text. Standardmäßig gelten ganze Wörter und keine Groß-/Kleinschreibung; die beiden Schalter daneben ändern das. Regeln greifen von oben nach unten. Das Feld darunter probiert sie an jedem Satz aus, ganz ohne Diktat.</p>" +
 			"<p class=\"wh\">Regeln pro Programm</p>" +
@@ -599,6 +600,7 @@ func init() {
 			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Turbo (q5)</b><span class=\"mock-note\">beste Genauigkeit auf der CPU</span><span style=\"margin-left:auto\">574 MB ⭳</span></div></div>" +
 			"<ul>" +
 			"<li><b>Modelle</b> — der Katalog: Base (schnell, für schwache Rechner), Small (ausgewogen), Medium und Turbo (genauer, langsamer; „q5“ ist eine quantisierte Fassung — etwas kleiner und schneller, fast ohne Qualitätsverlust) sowie GigaAM v3 für Russisch. Der Radioknopf wählt das aktive Modell (gilt sofort, die Erkennung startet neu); bei einem fehlenden Modell fragt das Programm, ob es geladen werden soll.</li>" +
+			"<li><b>Zwei Plätze</b> — ein Modell für russische Sprache (GigaAM v3: genauer auf Russisch und setzt die Satzzeichen selbst) und eines für alle anderen Sprachen und für die Übersetzung. Der Status-Bildschirm und die Routing-Tabelle über dem Katalog zeigen, welches Modell welchen Fall übernimmt; der Ratgeber antwortet mit einem Modell und dem Grund dafür.</li>" +
 			"<li>Der Erkennungsserver hält das Modell zwischen den Sätzen im Speicher — das erste Diktat nach dem Start dauert länger (Laden), danach braucht die Erkennung ein bis drei Sekunden.</li>" +
 			"<li><b>Wörterbuch</b> — Begriffe, Namen und Abkürzungen, durch Kommas getrennt. Ein Hinweis für Whispers „Gehör“, damit seltene Wörter richtig ankommen; keine Befehle.</li>" +
 			"<li><b>Mikrofon</b> — Gerätewahl mit Pegelanzeige (sprechen Sie, und der Balken bewegt sich, dann wird das Gerät gehört). Wird das gewählte Gerät abgezogen, greift das Systemgerät; eine Aufnahme ohne Sprache wird gar nicht erst zur Erkennung geschickt — stattdessen meldet die Leiste „Stille“.</li>" +
@@ -636,15 +638,16 @@ func init() {
 			"<p class=\"wh\">Installation und Portabilität</p>" +
 			"<ul>" +
 			"<li><b>{setup}</b> — das Installationsprogramm: ohne Administratorrechte, Verknüpfung im Startmenü, Autostart auf Wunsch, sauberes Entfernen über die Windows-Einstellungen.</li>" +
+			"<li>Das Installationsprogramm lädt standardmäßig nichts: der Assistent wählt das Modell beim ersten Start und lädt es. Wird doch eines gewählt — GigaAM v3 für Russisch, Whisper für alle anderen Sprachen —, lässt sich der Download mit einer Taste anhalten, und die Installation läuft trotzdem zu Ende. Dort steht auch der Schalter „Nach Updates suchen“, und die Antwort landet in den Einstellungen der App.</li>" +
 			"<li><b>Portabel</b> — kopieren Sie einfach den ganzen Ordner mit der exe (auf einen USB-Stick, an einen anderen Rechner): Einstellungen, Modelle und Protokoll liegen daneben und reisen mit. In die Registry wird nichts geschrieben.</li>" +
 			"<li>Ist beim ersten Start kein Erkennungsmodell da, öffnet das Programm den Katalog selbst und wartet auf den Download.</li>" +
 			"<li>Voraussetzungen: Windows 10/11 x64, eine CPU mit AVX2 (etwa ab 2013), WebView2 Runtime für das Einstellungsfenster (in Windows 11 enthalten).</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Menü im Infobereich und Dateien</p>" +
-			"<div class=\"mock\" style=\"max-width:290px\"><div class=\"mock-mi dim\">{app} — Bereit…</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Einstellungen…</div><div class=\"mock-mi\">Ausschalten</div><div class=\"mock-mi\">Letztes Ergebnis kopieren</div><hr class=\"mock-sep\"><div class=\"mock-mi\">config.json neu lesen</div><div class=\"mock-mi\">config.json öffnen</div><div class=\"mock-mi\">Protokoll öffnen</div><div class=\"mock-mi\">Über</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Beenden</div></div>" +
+			"<div class=\"mock\" style=\"max-width:290px\"><div class=\"mock-mi dim\">{app} — Bereit…</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Einstellungen…</div><div class=\"mock-mi\">Ausschalten</div><div class=\"mock-mi\">Letztes Ergebnis kopieren</div><hr class=\"mock-sep\"><div class=\"mock-mi\">config.json öffnen</div><div class=\"mock-mi\">Protokoll öffnen</div><div class=\"mock-mi\">Über</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Beenden</div></div>" +
 			"<ul>" +
 			"<li>Linksklick auf das Symbol im Infobereich — die Einstellungen; Rechtsklick — das Menü. Farben des Symbols: grün — bereit, rot — Aufnahme, orange — Erkennung, grau — ausgeschaltet oder Fehler.</li>" +
-			"<li><b>config.json</b> — alle Einstellungen; von Hand geänderte Werte gelten nach „config.json neu lesen“ im Menü.</li>" +
+			"<li><b>config.json</b> — alle Einstellungen; von Hand geänderte Werte gelten nach <b>Neu einlesen</b> im Bereich „System“. Dort stehen auch „Protokoll öffnen“ und „Einstellungen zurücksetzen“: das Zurücksetzen stellt den Werkszustand her und lässt Modelle, Verlauf und Prompts unberührt.</li>" +
 			"<li><b>{log}</b> — das Protokoll, automatisch auf etwa 2 MB begrenzt.</li>" +
 			"<li><b>models/</b> — die geladenen Erkennungs- und Bearbeitungsmodelle.</li>" +
 			"</ul>",
@@ -754,7 +757,7 @@ func init() {
 		"S_PUNCT":       "Ponctuation et majuscules", "S_SUB_PUNCT": "d'où viennent la ponctuation et les majuscules",
 		"S_PUNCT_MODEL": "du modèle", "S_PUNCT_LLM": "par le modèle d'édition", "S_PUNCT_OFF": "retirer",
 		"S_SUB_DICT": "Dictionnaire", "S_SUB_PROMPTS": "Prompts",
-		"S_TR_TURBO":     "⚠ Le modèle Turbo actif n'est pas entraîné pour la traduction vers l'anglais — choisissez un autre modèle dans l'onglet « Modèles » pour traduire.",
+		"S_TR_TURBO":     "⚠ Le modèle Turbo actif n'est pas entraîné pour la traduction vers l'anglais — choisissez un autre modèle dans la section « Modèles » pour traduire.",
 		"S_SUB_TRTARGET": "l'anglais est natif pour Whisper, les autres cibles sont expérimentales",
 		"S_TR_EXP":       "hors anglais, l'application impose la langue de sortie au lieu de traduire — le texte peut rester dans la langue parlée",
 		"S_REMOTE_ABOUT": "Un serveur distant est configuré : l'audio y est envoyé, et la promesse ci-dessus ne tient pas tant qu'il est actif.",
@@ -767,8 +770,8 @@ func init() {
 		"S_MODEL_READY": "Modèle téléchargé — choisissez-le pour basculer",
 		"S_FIT_OK":      "tient", "S_FIT_WARN": "juste", "S_FIT_BAD": "mémoire insuffisante", "S_RAM": "Mémoire de l'ordinateur :",
 		"S_HF_PH":       "Nom du modèle — par ex. qwen2.5 instruct",
-		"S_NO_LLM":      "Aucun modèle installé pour l'instant — trouvez-en un dans l'onglet « Recherche ».",
-		"S_NO_LLM_PROF": "Les prompts deviennent disponibles dès qu'un modèle est installé (onglets « Modèles » et « Recherche »).",
+		"S_NO_LLM":      "Aucun modèle installé pour l'instant — trouvez-en un dans le champ de recherche ci-dessous.",
+		"S_NO_LLM_PROF": "Les prompts deviennent disponibles dès qu'un modèle est installé — section « Modèles », la liste du modèle d'édition en bas.",
 		"S_UPDATED":     "Dernière mise à jour du modèle", "S_PROF_EDIT": "Modifier", "S_PROF_CLOSE": "Replier",
 		"S_CONFIRM_DEL": "Supprimer le modèle « %s » ? Il pourra être téléchargé à nouveau.", "S_FREE": "libre",
 		"S_DEL_ACTIVE":     "Supprimer le modèle actif « %s » ? La reconnaissance s'arrête jusqu'à ce que vous en choisissiez un autre — vous pouvez le télécharger ici même.",
@@ -789,7 +792,7 @@ func init() {
 			"<p>Un bug ou une idée — ouvrez une issue dans le dépôt.</p>",
 		"S_HELP_HTML": "<p class=\"wh\">Comment ça marche</p>" +
 			"<p>Maintenez le raccourci — l'enregistrement commence (le bandeau en bas de l'écran montre votre niveau). Relâchez — l'audio est reconnu, traduit si besoin, passé dans les prompts, et le texte final arrive à l'endroit du curseur. Le ✕ du bandeau annule à n'importe quelle étape.</p>" +
-			"<p>Le chemin complet : <b>enregistrement → reconnaissance (Whisper) → traduction (si activée) → prompts (LLM) → collage</b>. Chaque étape est visible sur le bandeau.</p>" +
+			"<p>Le chemin complet : <b>enregistrement → reconnaissance (GigaAM pour le russe, Whisper sinon) → traduction (si activée) → prompts (LLM) → collage</b>. Chaque étape est visible sur le bandeau.</p>" +
 			"<p class=\"wh\">Premier lancement</p>" +
 			"<p>Le tout premier lancement ouvre un assistant en cinq étapes : la langue de l'interface, la langue de dictée (il choisit et télécharge le modèle), le raccourci et le microphone avec une barre de niveau, un champ pour essayer une dictée et, enfin, le démarrage avec Windows. Vous pouvez le passer, tout fonctionne quand même ; <b>{exe} -wizard</b> le rappelle. Une mise à jour ne l'affiche pas.</p>" +
 			"<p class=\"wh\">Le bandeau</p>" +
@@ -800,6 +803,7 @@ func init() {
 			"<li><b>Inséré : N caractères</b> — terminé ; en cas d'erreur ou de silence, la raison s'affiche brièvement.</li>" +
 			"<li>Le ✕ à droite annule à n'importe quelle étape ; le bandeau ne prend jamais le focus. Le bandeau et son animation se désactivent dans « Dictée ».</li>" +
 			"<li>Où le bandeau apparaît — en bas, en haut ou au curseur — et s'il affiche le texte reconnu au lieu d'un nombre de caractères, se règle dans « Dictée ».</li>" +
+			"<li>Tant que le bandeau pose une question, sa ligne du haut le dit — « En attente de votre réponse » — et le point cesse de clignoter. Chaque réponse porte son numéro : 1…9 en choisissent une, Entrée prend celle qui est mise en avant, Échap annule tout ; les touches sont rappelées à droite, sur la même ligne. Dix secondes avant la limite d'enregistrement, un compte à rebours ambre s'affiche sur le bandeau.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">La question de la traduction</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Reconnaissance…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Traduire vers :</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Sans traduction</span></div></div>" +
@@ -812,19 +816,19 @@ func init() {
 			"<li><b>Dernier résultat</b> — le texte final de chaque dictée reste en mémoire jusqu'à la suivante ; le menu de la zone de notification propose « Copier le dernier résultat ». Un collage manqué ou un changement de focus ne fait jamais perdre une dictée.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Vérifier le microphone</p>" +
-			"<p>Le bouton « Test » de l'onglet Microphone enregistre trois secondes et les décortique : niveau de crête en décibels, part de l'enregistrement qui contient vraiment de la parole, et part d'échantillons écrêtés. La réponse est en mots : bon signal, trop faible — montez le niveau dans Windows, saturation — baissez-le, aucune parole entendue — est-ce le bon micro. Les mêmes mesures sont faites après chaque dictée et écrites dans le journal ; si la reconnaissance revient vide, le bandeau nomme la raison — trop faible, saturation ou silence — au lieu de dire simplement qu'il n'a rien entendu.</p>" +
+			"<p>Le bouton « Test » de la section Microphone enregistre trois secondes et les décortique : niveau de crête en décibels, part de l'enregistrement qui contient vraiment de la parole, et part d'échantillons écrêtés. La réponse est en mots : bon signal, trop faible — montez le niveau dans Windows, saturation — baissez-le, aucune parole entendue — est-ce le bon micro. Les mêmes mesures sont faites après chaque dictée et écrites dans le journal ; si la reconnaissance revient vide, le bandeau nomme la raison — trop faible, saturation ou silence — au lieu de dire simplement qu'il n'a rien entendu.</p>" +
 			"<p class=\"wh\">Mettre l'enregistrement en pause</p>" +
-			"<p>En mode bascule (une pression démarre, une autre arrête), un raccourci à part peut mettre en pause : onglet « Dictée », ligne « Mettre l'enregistrement en pause ». Une pression fige l'enregistrement — le bandeau affiche « Pause » et plus rien n'est enregistré ; une autre le relance, et tout ce qui a été dit avant reste. La limite de durée ne se déclenche pas pendant la pause.</p>" +
+			"<p>En mode bascule (une pression démarre, une autre arrête), un raccourci à part peut mettre en pause : section « Dictée », ligne « Mettre l'enregistrement en pause ». Une pression fige l'enregistrement — le bandeau affiche « Pause » et plus rien n'est enregistré ; une autre le relance, et tout ce qui a été dit avant reste. La limite de durée ne se déclenche pas pendant la pause.</p>" +
 			"<p class=\"wh\">Coller depuis l'historique</p>" +
 			"<p>Chaque entrée de l'historique a un bouton « Coller » : il ramène la fenêtre depuis laquelle vous avez ouvert les réglages et y colle le texte, comme une dictée ordinaire. S'il n'y a nulle part où revenir, le texte est simplement placé dans le presse-papiers et le programme le dit.</p>" +
 			"<p class=\"wh\">Les listes dans un seul fichier</p>" +
-			"<p>Les remplacements et les commandes vocales peuvent être enregistrés dans un fichier .json et chargés sur un autre ordinateur — les boutons sous la liste des commandes, onglet « Texte ». Le chargement n'écrase rien : seules les lignes absentes sont ajoutées, et le programme indique combien ont été ajoutées et combien ignorées.</p>" +
+			"<p>Les remplacements et les commandes vocales peuvent être enregistrés dans un fichier .json et chargés sur un autre ordinateur — les boutons sous la liste des commandes, section « Texte ». Le chargement n'écrase rien : seules les lignes absentes sont ajoutées, et le programme indique combien ont été ajoutées et combien ignorées.</p>" +
 			"<p class=\"wh\">Intégrité des fichiers</p>" +
-			"<p>Chaque modèle du catalogue a une empreinte SHA-256 de référence. Après le téléchargement, le fichier lui est comparé : s'il ne correspond pas, il est supprimé et le téléchargement peut être repris. Le bouton « Vérifier » de l'onglet « Modèles » compare de la même façon les modèles déjà installés, et lors d'une mise à jour l'installateur téléchargé est vérifié aussi — un fichier étranger ne sera pas lancé.</p>" +
+			"<p>Chaque modèle du catalogue a une empreinte SHA-256 de référence. Après le téléchargement, le fichier lui est comparé : s'il ne correspond pas, il est supprimé et le téléchargement peut être repris. Le bouton « Vérifier » de la section « Modèles » compare de la même façon les modèles déjà installés, et lors d'une mise à jour l'installateur téléchargé est vérifié aussi — un fichier étranger ne sera pas lancé.</p>" +
 			"<p class=\"wh\">Historique des dictées</p>" +
 			"<p>La section « Historique » dans la colonne de gauche conserve ce que vous avez dicté : le texte seul, sur cet ordinateur seulement, l'audio n'est jamais conservé. Désactivée par défaut, elle s'active d'un interrupteur au même endroit. Les entrées restent un nombre de jours et jusqu'à un nombre d'entrées réglables, les plus anciennes disparaissent d'elles-mêmes ; « Ne jamais enregistrer depuis ces programmes » liste, séparés par des virgules, ceux dont rien ne doit être conservé — gestionnaires de mots de passe, applications bancaires. La recherche porte sur le texte et sur le nom du programme, le bouton à côté d'une entrée la met dans le presse-papiers, et « Vider » supprime tout d'un coup avec le fichier <b>{app}-history.json</b>.</p>" +
 			"<p class=\"wh\">Commandes vocales</p>" +
-			"<p>Sous les remplacements, dans l'onglet Texte, il y a une liste de commandes : ce que vous dites devient une action au lieu de mots. « Nouvelle ligne » et « nouveau paragraphe » posent un saut — les modèles ne le font jamais ; « annuler » jette toute la dictée sans rien insérer ; « insérer du texte » place ce que vous voulez, un émoticône compris. Le bouton à côté de la liste la remplit des formules habituelles dans la langue de l'interface. Les commandes sont reconnues en mots entiers et s'appliquent après les remplacements, si bien que les prompts et la traduction reçoivent déjà le texte fini. Les espaces en trop autour des sauts disparaissent d'eux-mêmes. Le champ du dessous essaie remplacements et commandes sur n'importe quelle phrase : un saut s'affiche comme ⏎.</p>" +
+			"<p>Sous les remplacements, dans la section Texte, il y a une liste de commandes : ce que vous dites devient une action au lieu de mots. « Nouvelle ligne » et « nouveau paragraphe » posent un saut — les modèles ne le font jamais ; « annuler » jette toute la dictée sans rien insérer ; « insérer du texte » place ce que vous voulez, un émoticône compris. Le bouton à côté de la liste la remplit des formules habituelles dans la langue de l'interface. Les commandes sont reconnues en mots entiers et s'appliquent après les remplacements, si bien que les prompts et la traduction reçoivent déjà le texte fini. Les espaces en trop autour des sauts disparaissent d'eux-mêmes. Le champ du dessous essaie remplacements et commandes sur n'importe quelle phrase : un saut s'affiche comme ⏎.</p>" +
 			"<p class=\"wh\">Remplacements après la reconnaissance</p>" +
 			"<p>Dans « Texte », vous pouvez lister ce que le modèle entend mal et ce que cela doit devenir : « git hub » → GitHub, des noms propres, des termes maison. Les remplacements s'appliquent juste après la reconnaissance, avant les prompts, pour que l'éditeur reçoive déjà les bons mots. La traduction vers l'anglais se fait pendant la reconnaissance : les remplacements voient donc le texte déjà traduit. Par défaut ils visent les mots entiers et ignorent la casse ; les deux interrupteurs à côté changent cela. Les règles s'appliquent de haut en bas. Le champ du dessous les essaie sur n'importe quelle phrase, sans dicter.</p>" +
 			"<p class=\"wh\">Règles par application</p>" +
@@ -847,6 +851,7 @@ func init() {
 			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Turbo (q5)</b><span class=\"mock-note\">meilleure précision sur CPU</span><span style=\"margin-left:auto\">574 MB ⭳</span></div></div>" +
 			"<ul>" +
 			"<li><b>Modèles</b> — le catalogue : Base (rapide, pour machines modestes), Small (équilibré), Medium et Turbo (plus précis, plus lents ; « q5 » est une version quantifiée — un peu plus petite et plus rapide, presque sans perte) ainsi que GigaAM v3 pour le russe. Le bouton radio choisit le modèle actif (appliqué aussitôt, la reconnaissance redémarre) ; pour un modèle absent, le programme demande s'il faut le télécharger.</li>" +
+			"<li><b>Deux places</b> — un modèle pour le russe (GigaAM v3 : plus précis en russe et il met la ponctuation lui-même) et un pour toutes les autres langues et pour la traduction. L'écran État et le tableau d'acheminement au-dessus du catalogue montrent quel modèle prend quel cas ; le conseiller répond par un modèle et la raison de ce choix.</li>" +
 			"<li>Le serveur de reconnaissance garde le modèle en mémoire entre les phrases — la première dictée après le démarrage est plus lente (chargement), ensuite la reconnaissance prend une à trois secondes.</li>" +
 			"<li><b>Dictionnaire</b> — termes, noms et abréviations séparés par des virgules. Une indication pour « l'oreille » de Whisper afin que les mots rares passent correctement ; ce ne sont pas des commandes.</li>" +
 			"<li><b>Microphone</b> — choix de l'appareil avec un niveau en direct (parlez et la barre bouge : l'appareil est bien entendu). Si l'appareil choisi est débranché, celui du système prend le relais ; un enregistrement sans parole n'est jamais envoyé à la reconnaissance — le bandeau annonce « Silence ».</li>" +
@@ -884,15 +889,16 @@ func init() {
 			"<p class=\"wh\">Installation et portabilité</p>" +
 			"<ul>" +
 			"<li><b>{setup}</b> — l'installateur : sans droits administrateur, raccourci dans le menu Démarrer, démarrage automatique si vous le souhaitez, suppression propre depuis les paramètres de Windows.</li>" +
+			"<li>L'installateur ne télécharge rien par défaut : l'assistant choisit et récupère le modèle au premier lancement. Si un modèle est tout de même choisi — GigaAM v3 pour le russe, Whisper pour les autres langues — le téléchargement peut être arrêté d'un bouton et l'installation va quand même à son terme. La case « Vérifier les mises à jour » est là aussi, et la réponse est écrite dans les réglages de l'application.</li>" +
 			"<li><b>Portable</b> — copiez simplement tout le dossier contenant l'exe (sur une clé USB, vers un autre PC) : réglages, modèles et journal vivent à côté et voyagent avec. Rien n'est écrit dans le registre.</li>" +
 			"<li>Au premier lancement sans modèle de reconnaissance, le programme ouvre lui-même le catalogue et attend le téléchargement.</li>" +
 			"<li>Prérequis : Windows 10/11 x64, un processeur avec AVX2 (à partir de 2013 environ), WebView2 Runtime pour la fenêtre des réglages (inclus dans Windows 11).</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Zone de notification et fichiers</p>" +
-			"<div class=\"mock\" style=\"max-width:290px\"><div class=\"mock-mi dim\">{app} — Prêt…</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Réglages…</div><div class=\"mock-mi\">Désactiver</div><div class=\"mock-mi\">Copier le dernier résultat</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Relire config.json</div><div class=\"mock-mi\">Ouvrir config.json</div><div class=\"mock-mi\">Ouvrir le journal</div><div class=\"mock-mi\">À propos</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Quitter</div></div>" +
+			"<div class=\"mock\" style=\"max-width:290px\"><div class=\"mock-mi dim\">{app} — Prêt…</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Réglages…</div><div class=\"mock-mi\">Désactiver</div><div class=\"mock-mi\">Copier le dernier résultat</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Ouvrir config.json</div><div class=\"mock-mi\">Ouvrir le journal</div><div class=\"mock-mi\">À propos</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Quitter</div></div>" +
 			"<ul>" +
 			"<li>Clic gauche sur l'icône — les réglages ; clic droit — le menu. Couleurs de l'icône : vert — prêt, rouge — enregistrement, orange — reconnaissance, gris — désactivé ou erreur.</li>" +
-			"<li><b>config.json</b> — tous les réglages ; les modifications à la main s'appliquent via « Relire config.json » dans le menu.</li>" +
+			"<li><b>config.json</b> — tous les réglages ; les modifications à la main s'appliquent via <b>Relire</b> dans la section « Système ». On y trouve aussi « Ouvrir le journal » et « Réinitialiser les réglages » : la réinitialisation revient à l'état d'usine et laisse les modèles, l'historique et les prompts en place.</li>" +
 			"<li><b>{log}</b> — le journal, limité automatiquement à environ 2 Mo.</li>" +
 			"<li><b>models/</b> — les modèles de reconnaissance et d'édition téléchargés.</li>" +
 			"</ul>",
@@ -1002,7 +1008,7 @@ func init() {
 		"S_PUNCT":       "Puntuación y mayúsculas", "S_SUB_PUNCT": "de dónde salen la puntuación y las mayúsculas",
 		"S_PUNCT_MODEL": "del modelo", "S_PUNCT_LLM": "del modelo editor", "S_PUNCT_OFF": "quitar",
 		"S_SUB_DICT": "Diccionario", "S_SUB_PROMPTS": "Prompts",
-		"S_TR_TURBO":     "⚠ El modelo Turbo activo no está entrenado para traducir al inglés — elige otro modelo en la pestaña «Modelos» para traducir.",
+		"S_TR_TURBO":     "⚠ El modelo Turbo activo no está entrenado para traducir al inglés — elige otro modelo en la sección «Modelos» para traducir.",
 		"S_SUB_TRTARGET": "el inglés es nativo para Whisper, los demás destinos son experimentales",
 		"S_TR_EXP":       "salvo el inglés, la aplicación fuerza el idioma de salida en vez de traducir: el texto puede quedarse en el idioma hablado",
 		"S_REMOTE_ABOUT": "Hay un servidor remoto configurado: el audio se envía allí y la promesa anterior no se cumple mientras esté activo.",
@@ -1015,8 +1021,8 @@ func init() {
 		"S_MODEL_READY": "Modelo descargado — elígelo para cambiar",
 		"S_FIT_OK":      "cabe", "S_FIT_WARN": "justo", "S_FIT_BAD": "falta memoria", "S_RAM": "Memoria del equipo:",
 		"S_HF_PH":       "Nombre del modelo — p. ej. qwen2.5 instruct",
-		"S_NO_LLM":      "Todavía no hay modelos instalados — busca uno en la pestaña «Búsqueda».",
-		"S_NO_LLM_PROF": "Los prompts estarán disponibles en cuanto haya un modelo instalado (pestañas «Modelos» y «Búsqueda»).",
+		"S_NO_LLM":      "Todavía no hay modelos instalados — busca uno en el campo de búsqueda de abajo.",
+		"S_NO_LLM_PROF": "Los prompts estarán disponibles en cuanto haya un modelo instalado — sección «Modelos», la lista del modelo editor abajo.",
 		"S_UPDATED":     "Última actualización del modelo", "S_PROF_EDIT": "Editar", "S_PROF_CLOSE": "Plegar",
 		"S_CONFIRM_DEL": "¿Eliminar el modelo «%s»? Se puede descargar de nuevo.", "S_FREE": "libre",
 		"S_DEL_ACTIVE":     "¿Eliminar el modelo activo «%s»? El reconocimiento se detiene hasta que elijas otro, y puedes descargarlo aquí mismo.",
@@ -1037,7 +1043,7 @@ func init() {
 			"<p>¿Has encontrado un fallo o tienes una idea? Abre un issue en el repositorio.</p>",
 		"S_HELP_HTML": "<p class=\"wh\">Cómo funciona</p>" +
 			"<p>Mantén el atajo — empieza la grabación (la barra en la parte inferior de la pantalla muestra tu nivel). Suelta — el audio se reconoce, se traduce si hace falta, pasa por los prompts y el texto final aparece donde está el cursor. La ✕ de la barra cancela en cualquier momento.</p>" +
-			"<p>El camino completo: <b>grabación → reconocimiento (Whisper) → traducción (si está activa) → prompts (LLM) → pegado</b>. Cada paso se ve en la barra.</p>" +
+			"<p>El camino completo: <b>grabación → reconocimiento (GigaAM para el ruso, Whisper para el resto) → traducción (si está activa) → prompts (LLM) → pegado</b>. Cada paso se ve en la barra.</p>" +
 			"<p class=\"wh\">Primer inicio</p>" +
 			"<p>El primer inicio abre un asistente de cinco pasos: el idioma de la interfaz, el idioma en el que vas a dictar (él elige y descarga el modelo), el atajo y el micrófono con barra de nivel, un campo para probar un dictado y, por último, iniciar con Windows. Puedes omitirlo y todo sigue funcionando; <b>{exe} -wizard</b> lo trae de vuelta. Al actualizar no aparece.</p>" +
 			"<p class=\"wh\">La barra</p>" +
@@ -1048,6 +1054,7 @@ func init() {
 			"<li><b>Insertado: N caracteres</b> — listo; si hay error o silencio, se muestra el motivo en corto.</li>" +
 			"<li>La ✕ de la derecha cancela en cualquier momento; la barra nunca roba el foco. La barra y su animación se apagan en «Dictado».</li>" +
 			"<li>Dónde aparece la barra — abajo, arriba o en el cursor — y si muestra el texto reconocido en vez del número de caracteres, se ajusta en «Dictado».</li>" +
+			"<li>Mientras la barra pregunta algo, su línea de arriba lo dice — «Esperando tu respuesta» — y el punto deja de parpadear. Cada respuesta lleva su número: 1…9 eligen una, Enter toma la resaltada, Esc cancela todo; las teclas están escritas a la derecha, en la misma fila. Diez segundos antes del límite de grabación, en la barra corre una cuenta atrás ámbar.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">La pregunta de la traducción</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Reconociendo…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Traducir a:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Sin traducción</span></div></div>" +
@@ -1060,19 +1067,19 @@ func init() {
 			"<li><b>Último resultado</b> — el texto final de cada dictado se guarda en memoria hasta el siguiente; el menú del área de notificación tiene «Copiar el último resultado». Un pegado fallido o un cambio de foco nunca hacen perder un dictado.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Comprobar el micrófono</p>" +
-			"<p>El botón «Test» de la pestaña Micrófono graba tres segundos y los analiza: pico en decibelios, qué parte de la grabación contiene voz de verdad y qué parte de las muestras se recortó. La respuesta llega en palabras: se oye bien, demasiado bajo — sube el nivel en Windows, saturación — bájalo, no se oye voz — ¿está elegido el micrófono correcto? Lo mismo se mide tras cada dictado y se escribe en el registro; si el reconocimiento vuelve vacío, la barra nombra el motivo — bajo, saturación o silencio — en vez de decir solo que no oyó nada.</p>" +
+			"<p>El botón «Test» de la sección Micrófono graba tres segundos y los analiza: pico en decibelios, qué parte de la grabación contiene voz de verdad y qué parte de las muestras se recortó. La respuesta llega en palabras: se oye bien, demasiado bajo — sube el nivel en Windows, saturación — bájalo, no se oye voz — ¿está elegido el micrófono correcto? Lo mismo se mide tras cada dictado y se escribe en el registro; si el reconocimiento vuelve vacío, la barra nombra el motivo — bajo, saturación o silencio — en vez de decir solo que no oyó nada.</p>" +
 			"<p class=\"wh\">Pausar la grabación</p>" +
-			"<p>En modo conmutador (una pulsación empieza, otra termina) se puede asignar un atajo aparte para la pausa: pestaña «Dictado», fila «Pausar la grabación». Una pulsación congela la grabación —el rótulo muestra «Pausa» y no se graba nada—, otra la reanuda y conserva todo lo dicho antes. El límite de duración no salta durante la pausa.</p>" +
+			"<p>En modo conmutador (una pulsación empieza, otra termina) se puede asignar un atajo aparte para la pausa: sección «Dictado», fila «Pausar la grabación». Una pulsación congela la grabación —el rótulo muestra «Pausa» y no se graba nada—, otra la reanuda y conserva todo lo dicho antes. El límite de duración no salta durante la pausa.</p>" +
 			"<p class=\"wh\">Pegar desde el historial</p>" +
 			"<p>Cada entrada del historial tiene el botón «Pegar»: devuelve el foco a la ventana desde la que abrió los ajustes y pega allí el texto, como un dictado normal. Si no hay adónde volver, el texto se queda en el portapapeles y el programa lo avisa.</p>" +
 			"<p class=\"wh\">Las listas en un archivo</p>" +
-			"<p>Las sustituciones y las órdenes de voz pueden guardarse en un archivo .json y cargarse en otro ordenador: los botones bajo la lista de órdenes en la pestaña «Texto». La carga no borra nada: solo se añaden las líneas que faltan, y el programa dice cuántas se añadieron y cuántas se omitieron.</p>" +
+			"<p>Las sustituciones y las órdenes de voz pueden guardarse en un archivo .json y cargarse en otro ordenador: los botones bajo la lista de órdenes en la sección «Texto». La carga no borra nada: solo se añaden las líneas que faltan, y el programa dice cuántas se añadieron y cuántas se omitieron.</p>" +
 			"<p class=\"wh\">Integridad de los archivos</p>" +
-			"<p>Cada modelo del catálogo tiene un hash SHA-256 de referencia. Tras la descarga el archivo se compara con él: si no coincide, se borra y la descarga puede repetirse. El botón «Comprobar» de la pestaña «Modelos» compara igual los modelos ya instalados, y al actualizar el programa también se comprueba el instalador descargado: un archivo ajeno no se ejecutará.</p>" +
+			"<p>Cada modelo del catálogo tiene un hash SHA-256 de referencia. Tras la descarga el archivo se compara con él: si no coincide, se borra y la descarga puede repetirse. El botón «Comprobar» de la sección «Modelos» compara igual los modelos ya instalados, y al actualizar el programa también se comprueba el instalador descargado: un archivo ajeno no se ejecutará.</p>" +
 			"<p class=\"wh\">Historial de dictados</p>" +
 			"<p>La sección «Historial» de la columna izquierda guarda lo que has dictado: solo el texto, solo en este equipo, el audio nunca se guarda. Está desactivada por defecto y se activa con un interruptor en el mismo sitio. Las entradas se conservan durante los días y hasta la cantidad que fijes, las viejas caen solas; «No registrar nunca desde estos programas» enumera, separados por comas, aquellos de los que no debe guardarse nada — gestores de contraseñas, banca. La búsqueda cubre el texto y el nombre del programa, el botón junto a una entrada la copia al portapapeles, y «Vaciar» borra todo de golpe junto con el archivo <b>{app}-history.json</b>.</p>" +
 			"<p class=\"wh\">Comandos de voz</p>" +
-			"<p>Bajo los reemplazos, en la pestaña Texto, hay una lista de comandos: lo que dices se convierte en una acción en lugar de en palabras. «Nueva línea» y «nuevo párrafo» ponen un salto — los modelos nunca lo hacen; «cancelar» descarta todo el dictado sin insertar nada; «insertar texto» coloca lo que quieras, incluso un emoticono. El botón junto a la lista la rellena con las frases habituales en el idioma de la interfaz. Los comandos se buscan como palabras completas y se aplican tras los reemplazos, así que los prompts y la traducción reciben ya el texto terminado. Los espacios sobrantes junto a los saltos se limpian solos. El campo de abajo prueba reemplazos y comandos con cualquier frase: un salto se muestra como ⏎.</p>" +
+			"<p>Bajo los reemplazos, en la sección Texto, hay una lista de comandos: lo que dices se convierte en una acción en lugar de en palabras. «Nueva línea» y «nuevo párrafo» ponen un salto — los modelos nunca lo hacen; «cancelar» descarta todo el dictado sin insertar nada; «insertar texto» coloca lo que quieras, incluso un emoticono. El botón junto a la lista la rellena con las frases habituales en el idioma de la interfaz. Los comandos se buscan como palabras completas y se aplican tras los reemplazos, así que los prompts y la traducción reciben ya el texto terminado. Los espacios sobrantes junto a los saltos se limpian solos. El campo de abajo prueba reemplazos y comandos con cualquier frase: un salto se muestra como ⏎.</p>" +
 			"<p class=\"wh\">Reemplazos tras el reconocimiento</p>" +
 			"<p>En «Texto» puedes enumerar lo que el modelo oye mal y en qué debe convertirse: «git hub» → GitHub, apellidos, términos internos. Los reemplazos se aplican justo después del reconocimiento, antes de los prompts, para que el editor ya reciba las palabras correctas. La traducción al inglés ocurre dentro del reconocimiento, así que los reemplazos ven el texto ya traducido. Por defecto buscan palabras completas y no distinguen mayúsculas; los dos interruptores de al lado lo cambian. Las reglas se aplican de arriba abajo. El campo de abajo las prueba con cualquier frase, sin dictar.</p>" +
 			"<p class=\"wh\">Reglas por aplicación</p>" +
@@ -1095,6 +1102,7 @@ func init() {
 			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Turbo (q5)</b><span class=\"mock-note\">la mejor precisión en CPU</span><span style=\"margin-left:auto\">574 MB ⭳</span></div></div>" +
 			"<ul>" +
 			"<li><b>Modelos</b> — el catálogo: Base (rápido, para equipos modestos), Small (equilibrado), Medium y Turbo (más precisos y más lentos; «q5» es una versión cuantizada — algo más pequeña y rápida, casi sin pérdida) y GigaAM v3 para el ruso. El botón de opción elige el modelo activo (se aplica al momento y el reconocedor se reinicia); si falta el modelo, el programa pregunta si lo descarga.</li>" +
+			"<li><b>Dos plazas</b> — un modelo para el ruso (GigaAM v3: más preciso en ruso y pone la puntuación por su cuenta) y otro para los demás idiomas y para la traducción. La pantalla Estado y la tabla de rutas encima del catálogo enseñan qué modelo se lleva cada caso; el asesor responde con un modelo y el motivo.</li>" +
 			"<li>El servidor de reconocimiento mantiene el modelo en memoria entre frases — el primer dictado tras arrancar tarda más (carga) y luego el reconocimiento lleva de uno a tres segundos.</li>" +
 			"<li><b>Diccionario</b> — términos, nombres y abreviaturas separados por comas. Una pista para el «oído» de Whisper, para que las palabras raras salgan bien; no son órdenes.</li>" +
 			"<li><b>Micrófono</b> — elección del dispositivo con medidor de nivel (habla y la barra se mueve: el dispositivo se oye). Si desconectas el elegido, se usa el del sistema; una grabación sin voz no se manda a reconocer — la barra dice «Silencio».</li>" +
@@ -1132,15 +1140,16 @@ func init() {
 			"<p class=\"wh\">Instalación y portabilidad</p>" +
 			"<ul>" +
 			"<li><b>{setup}</b> — el instalador: sin permisos de administrador, acceso directo en el menú Inicio, inicio automático si quieres y desinstalación limpia desde la configuración de Windows.</li>" +
+			"<li>El instalador no descarga nada por defecto: el asistente elige y baja el modelo en el primer arranque. Si aun así se elige uno — GigaAM v3 para el ruso, Whisper para los demás idiomas — la descarga se puede detener con un botón y la instalación termina igualmente. Allí está también la casilla «Buscar actualizaciones», y la respuesta se escribe en los ajustes de la aplicación.</li>" +
 			"<li><b>Portátil</b> — copia toda la carpeta con el exe (a un USB, a otro equipo): ajustes, modelos y registro viven al lado y viajan con él. En el registro de Windows no se escribe nada.</li>" +
 			"<li>En el primer arranque sin modelo de reconocimiento, el programa abre el catálogo por su cuenta y espera la descarga.</li>" +
 			"<li>Requisitos: Windows 10/11 x64, un procesador con AVX2 (de 2013 en adelante, más o menos) y WebView2 Runtime para la ventana de ajustes (incluido en Windows 11).</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Área de notificación y archivos</p>" +
-			"<div class=\"mock\" style=\"max-width:290px\"><div class=\"mock-mi dim\">{app} — Listo…</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Ajustes…</div><div class=\"mock-mi\">Desactivar</div><div class=\"mock-mi\">Copiar el último resultado</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Releer config.json</div><div class=\"mock-mi\">Abrir config.json</div><div class=\"mock-mi\">Abrir el registro</div><div class=\"mock-mi\">Acerca de</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Salir</div></div>" +
+			"<div class=\"mock\" style=\"max-width:290px\"><div class=\"mock-mi dim\">{app} — Listo…</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Ajustes…</div><div class=\"mock-mi\">Desactivar</div><div class=\"mock-mi\">Copiar el último resultado</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Abrir config.json</div><div class=\"mock-mi\">Abrir el registro</div><div class=\"mock-mi\">Acerca de</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Salir</div></div>" +
 			"<ul>" +
 			"<li>Clic izquierdo en el icono — los ajustes; clic derecho — el menú. Colores del icono: verde — listo, rojo — grabando, naranja — reconociendo, gris — desactivado o error.</li>" +
-			"<li><b>config.json</b> — todos los ajustes; los cambios a mano se aplican con «Releer config.json» en el menú.</li>" +
+			"<li><b>config.json</b> — todos los ajustes; los cambios a mano se aplican con <b>Releer</b> en la sección «Sistema». Allí están también «Abrir el registro» y «Restablecer los ajustes»: el restablecimiento vuelve al estado de fábrica y deja modelos, historial y prompts como están.</li>" +
 			"<li><b>{log}</b> — el registro, limitado automáticamente a unos 2 MB.</li>" +
 			"<li><b>models/</b> — los modelos de reconocimiento y de edición descargados.</li>" +
 			"</ul>",
@@ -1250,7 +1259,7 @@ func init() {
 		"S_PUNCT":       "Punteggiatura e maiuscole", "S_SUB_PUNCT": "da dove arrivano punteggiatura e maiuscole",
 		"S_PUNCT_MODEL": "dal modello", "S_PUNCT_LLM": "dal modello editor", "S_PUNCT_OFF": "togliere",
 		"S_SUB_DICT": "Dizionario", "S_SUB_PROMPTS": "Prompt",
-		"S_TR_TURBO":     "⚠ Il modello Turbo attivo non è addestrato per la traduzione in inglese — per tradurre scegli un altro modello nella scheda «Modelli».",
+		"S_TR_TURBO":     "⚠ Il modello Turbo attivo non è addestrato per la traduzione in inglese — per tradurre scegli un altro modello nella sezione «Modelli».",
 		"S_SUB_TRTARGET": "l'inglese è nativo per Whisper, le altre lingue di destinazione sono sperimentali",
 		"S_TR_EXP":       "tranne l'inglese, l'app forza la lingua di uscita invece di tradurre: il testo può restare nella lingua parlata",
 		"S_REMOTE_ABOUT": "È impostato un server remoto: l'audio viene inviato lì e la promessa qui sopra non vale finché è attivo.",
@@ -1263,8 +1272,8 @@ func init() {
 		"S_MODEL_READY": "Modello scaricato — scegli per passare a lui",
 		"S_FIT_OK":      "ci sta", "S_FIT_WARN": "al limite", "S_FIT_BAD": "memoria insufficiente", "S_RAM": "Memoria del computer:",
 		"S_HF_PH":       "Nome del modello — per es. qwen2.5 instruct",
-		"S_NO_LLM":      "Ancora nessun modello installato — cercane uno nella scheda «Ricerca».",
-		"S_NO_LLM_PROF": "I prompt diventano disponibili appena è installato un modello (schede «Modelli» e «Ricerca»).",
+		"S_NO_LLM":      "Ancora nessun modello installato — cercane uno nel campo di ricerca qui sotto.",
+		"S_NO_LLM_PROF": "I prompt diventano disponibili appena è installato un modello — sezione «Modelli», l'elenco del modello editor in basso.",
 		"S_UPDATED":     "Ultimo aggiornamento del modello", "S_PROF_EDIT": "Modifica", "S_PROF_CLOSE": "Riduci",
 		"S_CONFIRM_DEL": "Eliminare il modello «%s»? Si potrà scaricare di nuovo.", "S_FREE": "liberi",
 		"S_DEL_ACTIVE":     "Eliminare il modello attivo «%s»? Il riconoscimento si ferma finché non ne scegli un altro, che puoi scaricare qui stesso.",
@@ -1285,7 +1294,7 @@ func init() {
 			"<p>Hai trovato un bug o hai un'idea — apri una issue nel repository.</p>",
 		"S_HELP_HTML": "<p class=\"wh\">Come funziona</p>" +
 			"<p>Tieni premuta la scorciatoia — parte la registrazione (la barra in fondo allo schermo mostra il tuo livello). Rilascia — l'audio viene riconosciuto, tradotto se serve, passato nei prompt, e il testo finale arriva dov'è il cursore. La ✕ sulla barra annulla in qualsiasi momento.</p>" +
-			"<p>Il percorso completo: <b>registrazione → riconoscimento (Whisper) → traduzione (se attiva) → prompt (LLM) → incollaggio</b>. Ogni passo si vede sulla barra.</p>" +
+			"<p>Il percorso completo: <b>registrazione → riconoscimento (GigaAM per il russo, Whisper per il resto) → traduzione (se attiva) → prompt (LLM) → incollaggio</b>. Ogni passo si vede sulla barra.</p>" +
 			"<p class=\"wh\">Primo avvio</p>" +
 			"<p>Al primissimo avvio si apre una procedura in cinque passi: la lingua dell'interfaccia, la lingua in cui detterai (il modello lo sceglie e lo scarica lui), la scorciatoia e il microfono con la barra del livello, un campo per provare una dettatura e, per ultimo, l'avvio con Windows. Puoi saltarla e funziona lo stesso; <b>{exe} -wizard</b> la riporta. Con un aggiornamento non compare.</p>" +
 			"<p class=\"wh\">La barra</p>" +
@@ -1296,6 +1305,7 @@ func init() {
 			"<li><b>Inserito: N caratteri</b> — fatto; in caso di errore o silenzio compare brevemente il motivo.</li>" +
 			"<li>La ✕ a destra annulla in qualsiasi momento; la barra non ruba mai il fuoco. Barra e animazione si spengono in «Dettatura».</li>" +
 			"<li>Dove appare la barra — in basso, in alto o al cursore — e se mostra il testo riconosciuto invece del numero di caratteri, si imposta in «Dettatura».</li>" +
+			"<li>Finché la barra fa una domanda, la riga in alto lo dice — «Attendo la tua risposta» — e il punto smette di pulsare. Ogni risposta ha il suo numero: 1…9 ne scelgono una, Invio prende quella evidenziata, Esc annulla tutto; i tasti sono scritti a destra, sulla stessa riga. Dieci secondi prima del limite di registrazione, sulla barra scorre un conto alla rovescia ambra.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">La domanda sulla traduzione</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Riconoscimento…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Tradurre in:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Senza traduzione</span></div></div>" +
@@ -1308,19 +1318,19 @@ func init() {
 			"<li><b>Ultimo risultato</b> — il testo finale di ogni dettatura resta in memoria fino alla successiva; nel menu dell'area di notifica c'è «Copia l'ultimo risultato». Un incollaggio fallito o un cambio di fuoco non fanno mai perdere una dettatura.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Controllare il microfono</p>" +
-			"<p>Il pulsante «Test» nella scheda Microfono registra tre secondi e li scompone: picco in decibel, quanta parte della registrazione contiene davvero voce e quanti campioni sono stati tagliati. La risposta arriva a parole: si sente bene, troppo basso — alza il livello in Windows, distorsione — abbassalo, nessuna voce sentita — è scelto il microfono giusto. Le stesse misure vengono fatte dopo ogni dettatura e finiscono nel log; se il riconoscimento torna vuoto, la barra dice il motivo — basso, distorsione o silenzio — invece di dire soltanto che non ha sentito nulla.</p>" +
+			"<p>Il pulsante «Test» nella sezione Microfono registra tre secondi e li scompone: picco in decibel, quanta parte della registrazione contiene davvero voce e quanti campioni sono stati tagliati. La risposta arriva a parole: si sente bene, troppo basso — alza il livello in Windows, distorsione — abbassalo, nessuna voce sentita — è scelto il microfono giusto. Le stesse misure vengono fatte dopo ogni dettatura e finiscono nel log; se il riconoscimento torna vuoto, la barra dice il motivo — basso, distorsione o silenzio — invece di dire soltanto che non ha sentito nulla.</p>" +
 			"<p class=\"wh\">Mettere in pausa la registrazione</p>" +
-			"<p>In modalità interruttore (una pressione avvia, un'altra ferma) si può assegnare una scorciatoia a parte per la pausa: scheda «Dettatura», riga «Metti in pausa la registrazione». Una pressione ferma la registrazione — la targhetta mostra «Pausa» e non viene registrato nulla — un'altra la riprende, e tutto ciò che è stato detto prima resta. Il limite di durata non scatta durante la pausa.</p>" +
+			"<p>In modalità interruttore (una pressione avvia, un'altra ferma) si può assegnare una scorciatoia a parte per la pausa: sezione «Dettatura», riga «Metti in pausa la registrazione». Una pressione ferma la registrazione — la targhetta mostra «Pausa» e non viene registrato nulla — un'altra la riprende, e tutto ciò che è stato detto prima resta. Il limite di durata non scatta durante la pausa.</p>" +
 			"<p class=\"wh\">Incollare dalla cronologia</p>" +
 			"<p>Ogni voce della cronologia ha il pulsante «Incolla»: riporta in primo piano la finestra da cui avete aperto le impostazioni e vi incolla il testo, come una dettatura normale. Se non c'è dove tornare, il testo finisce semplicemente negli appunti e il programma lo dice.</p>" +
 			"<p class=\"wh\">Le liste in un solo file</p>" +
-			"<p>Sostituzioni e comandi vocali si possono salvare in un file .json e caricare su un altro computer: i pulsanti sotto l'elenco dei comandi nella scheda «Testo». Il caricamento non cancella nulla: vengono aggiunte solo le righe che mancano, e il programma dice quante ne ha aggiunte e quante saltate.</p>" +
+			"<p>Sostituzioni e comandi vocali si possono salvare in un file .json e caricare su un altro computer: i pulsanti sotto l'elenco dei comandi nella sezione «Testo». Il caricamento non cancella nulla: vengono aggiunte solo le righe che mancano, e il programma dice quante ne ha aggiunte e quante saltate.</p>" +
 			"<p class=\"wh\">Integrità dei file</p>" +
-			"<p>Per ogni modello del catalogo è noto l'hash SHA-256 di riferimento. Dopo lo scaricamento il file viene confrontato con esso: se non coincide, il file viene eliminato e lo scaricamento si può ripetere. Il pulsante «Controlla» nella scheda «Modelli» confronta allo stesso modo i modelli già installati, e all'aggiornamento del programma viene controllato anche l'installatore scaricato: un file estraneo non verrà avviato.</p>" +
+			"<p>Per ogni modello del catalogo è noto l'hash SHA-256 di riferimento. Dopo lo scaricamento il file viene confrontato con esso: se non coincide, il file viene eliminato e lo scaricamento si può ripetere. Il pulsante «Controlla» nella sezione «Modelli» confronta allo stesso modo i modelli già installati, e all'aggiornamento del programma viene controllato anche l'installatore scaricato: un file estraneo non verrà avviato.</p>" +
 			"<p class=\"wh\">Cronologia delle dettature</p>" +
 			"<p>La sezione «Cronologia» nella colonna di sinistra conserva ciò che hai dettato: solo testo, solo su questo computer, l'audio non viene mai salvato. È disattivata per impostazione predefinita e si accende con un interruttore lì accanto. Le voci restano per i giorni e fino al numero che imposti, le più vecchie escono da sole; «Non registrare mai da questi programmi» elenca, separati da virgole, quelli da cui non salvare nulla — gestori di password, home banking. La ricerca copre il testo e il nome del programma, il pulsante accanto a una voce la mette negli appunti, e «Svuota» cancella tutto insieme al file <b>{app}-history.json</b>.</p>" +
 			"<p class=\"wh\">Comandi vocali</p>" +
-			"<p>Sotto le sostituzioni, nella scheda Testo, c'è un elenco di comandi: ciò che dici diventa un'azione invece che parole. «Nuova riga» e «nuovo paragrafo» inseriscono un a capo — i modelli non lo fanno mai; «annulla» butta via l'intera dettatura senza inserire nulla; «inserire testo» mette quello che vuoi, faccina compresa. Il pulsante accanto all'elenco lo riempie con le formule solite nella lingua dell'interfaccia. I comandi sono riconosciuti come parole intere e si applicano dopo le sostituzioni, così i prompt e la traduzione ricevono già il testo finito. Gli spazi di troppo attorno agli a capo spariscono da soli. Il campo in fondo prova sostituzioni e comandi su qualsiasi frase: un a capo appare come ⏎.</p>" +
+			"<p>Sotto le sostituzioni, nella sezione Testo, c'è un elenco di comandi: ciò che dici diventa un'azione invece che parole. «Nuova riga» e «nuovo paragrafo» inseriscono un a capo — i modelli non lo fanno mai; «annulla» butta via l'intera dettatura senza inserire nulla; «inserire testo» mette quello che vuoi, faccina compresa. Il pulsante accanto all'elenco lo riempie con le formule solite nella lingua dell'interfaccia. I comandi sono riconosciuti come parole intere e si applicano dopo le sostituzioni, così i prompt e la traduzione ricevono già il testo finito. Gli spazi di troppo attorno agli a capo spariscono da soli. Il campo in fondo prova sostituzioni e comandi su qualsiasi frase: un a capo appare come ⏎.</p>" +
 			"<p class=\"wh\">Sostituzioni dopo il riconoscimento</p>" +
 			"<p>In «Testo» puoi elencare ciò che il modello sente male e in che cosa deve diventare: «git hub» → GitHub, cognomi, termini interni. Le sostituzioni si applicano subito dopo il riconoscimento, prima dei prompt, così l'editor riceve già le parole giuste. La traduzione in inglese avviene dentro il riconoscimento, quindi le sostituzioni vedono il testo già tradotto. Per impostazione predefinita cercano parole intere e ignorano le maiuscole; i due interruttori accanto lo cambiano. Le regole si applicano dall'alto in basso. Il campo in fondo le prova su qualsiasi frase, senza dettare.</p>" +
 			"<p class=\"wh\">Regole per applicazione</p>" +
@@ -1343,6 +1353,7 @@ func init() {
 			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Turbo (q5)</b><span class=\"mock-note\">la migliore precisione su CPU</span><span style=\"margin-left:auto\">574 MB ⭳</span></div></div>" +
 			"<ul>" +
 			"<li><b>Modelli</b> — il catalogo: Base (veloce, per macchine modeste), Small (equilibrato), Medium e Turbo (più precisi e più lenti; «q5» è una versione quantizzata — un po' più piccola e rapida, quasi senza perdite) e GigaAM v3 per il russo. Il pulsante scelto indica il modello attivo (vale subito, il riconoscitore si riavvia); se il modello manca, il programma chiede se scaricarlo.</li>" +
+			"<li><b>Due posti</b> — un modello per il russo (GigaAM v3: più preciso in russo e mette la punteggiatura da sé) e uno per tutte le altre lingue e per la traduzione. La schermata Stato e la tabella di instradamento sopra il catalogo mostrano quale modello prende quale caso; il consigliere risponde con un modello e il motivo.</li>" +
 			"<li>Il server di riconoscimento tiene il modello in memoria tra una frase e l'altra — la prima dettatura dopo l'avvio è più lenta (caricamento), poi il riconoscimento richiede uno-tre secondi.</li>" +
 			"<li><b>Dizionario</b> — termini, nomi e abbreviazioni separati da virgole. Un suggerimento per «l'orecchio» di Whisper, perché le parole rare arrivino giuste; non sono comandi.</li>" +
 			"<li><b>Microfono</b> — scelta del dispositivo con il livello dal vivo (parla e la barra si muove: il dispositivo si sente). Se scolleghi quello scelto, subentra quello di sistema; una registrazione senza voce non viene nemmeno mandata al riconoscimento — la barra dice «Silenzio».</li>" +
@@ -1380,15 +1391,16 @@ func init() {
 			"<p class=\"wh\">Installazione e portabilità</p>" +
 			"<ul>" +
 			"<li><b>{setup}</b> — il programma di installazione: senza diritti di amministratore, collegamento nel menu Start, avvio automatico a richiesta, rimozione pulita dalle impostazioni di Windows.</li>" +
+			"<li>Il programma di installazione non scarica nulla per impostazione predefinita: la procedura guidata sceglie e scarica il modello al primo avvio. Se un modello viene comunque scelto — GigaAM v3 per il russo, Whisper per le altre lingue — lo scaricamento si può fermare con un pulsante e l'installazione arriva lo stesso in fondo. Lì c'è anche la casella «Cerca aggiornamenti», e la risposta finisce nelle impostazioni dell'app.</li>" +
 			"<li><b>Portabile</b> — copia semplicemente tutta la cartella con l'exe (su una chiavetta, su un altro computer): impostazioni, modelli e registro stanno accanto e viaggiano con lui. Nel registro di sistema non viene scritto nulla.</li>" +
 			"<li>Al primo avvio senza modello di riconoscimento il programma apre il catalogo da solo e aspetta lo scaricamento.</li>" +
 			"<li>Requisiti: Windows 10/11 x64, una CPU con AVX2 (dal 2013 circa), WebView2 Runtime per la finestra delle impostazioni (incluso in Windows 11).</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Area di notifica e file</p>" +
-			"<div class=\"mock\" style=\"max-width:290px\"><div class=\"mock-mi dim\">{app} — Pronto…</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Impostazioni…</div><div class=\"mock-mi\">Disattiva</div><div class=\"mock-mi\">Copia l'ultimo risultato</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Rileggi config.json</div><div class=\"mock-mi\">Apri config.json</div><div class=\"mock-mi\">Apri il registro</div><div class=\"mock-mi\">Informazioni</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Esci</div></div>" +
+			"<div class=\"mock\" style=\"max-width:290px\"><div class=\"mock-mi dim\">{app} — Pronto…</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Impostazioni…</div><div class=\"mock-mi\">Disattiva</div><div class=\"mock-mi\">Copia l'ultimo risultato</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Apri config.json</div><div class=\"mock-mi\">Apri il registro</div><div class=\"mock-mi\">Informazioni</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Esci</div></div>" +
 			"<ul>" +
 			"<li>Clic sinistro sull'icona — le impostazioni; clic destro — il menu. Colori dell'icona: verde — pronto, rosso — registrazione, arancione — riconoscimento, grigio — disattivato o errore.</li>" +
-			"<li><b>config.json</b> — tutte le impostazioni; le modifiche a mano valgono dopo «Rileggi config.json» nel menu.</li>" +
+			"<li><b>config.json</b> — tutte le impostazioni; le modifiche a mano valgono dopo <b>Rileggi</b> nella sezione «Sistema». Lì ci sono anche «Apri il registro» e «Ripristina le impostazioni»: il ripristino torna allo stato di fabbrica e lascia modelli, cronologia e prompt dove sono.</li>" +
 			"<li><b>{log}</b> — il registro, limitato automaticamente a circa 2 MB.</li>" +
 			"<li><b>models/</b> — i modelli di riconoscimento e di editing scaricati.</li>" +
 			"</ul>",
@@ -1498,7 +1510,7 @@ func init() {
 		"S_PUNCT":       "Znaki i wielkie litery", "S_SUB_PUNCT": "skąd biorą się znaki interpunkcyjne i wielkie litery",
 		"S_PUNCT_MODEL": "z modelu", "S_PUNCT_LLM": "od modelu redaktora", "S_PUNCT_OFF": "usuwać",
 		"S_SUB_DICT": "Słownik", "S_SUB_PROMPTS": "Prompty",
-		"S_TR_TURBO":     "⚠ Aktywny model Turbo nie jest uczony tłumaczenia na angielski — do tłumaczenia wybierz inny model w zakładce „Modele”.",
+		"S_TR_TURBO":     "⚠ Aktywny model Turbo nie jest uczony tłumaczenia na angielski — do tłumaczenia wybierz inny model w sekcji „Modele”.",
 		"S_SUB_TRTARGET": "angielski jest dla Whispera natywny, pozostałe języki docelowe są eksperymentalne",
 		"S_TR_EXP":       "poza angielskim aplikacja wymusza język wyjścia zamiast tłumaczyć — tekst może zostać w języku mowy",
 		"S_REMOTE_ABOUT": "Ustawiony jest serwer zdalny: dźwięk trafia do niego, a obietnica powyżej wtedy nie obowiązuje.",
@@ -1511,8 +1523,8 @@ func init() {
 		"S_MODEL_READY": "Model pobrany — wybierz go, żeby przełączyć",
 		"S_FIT_OK":      "mieści się", "S_FIT_WARN": "na styk", "S_FIT_BAD": "za mało pamięci", "S_RAM": "Pamięć komputera:",
 		"S_HF_PH":       "Nazwa modelu — np. qwen2.5 instruct",
-		"S_NO_LLM":      "Nie ma jeszcze żadnego modelu — znajdź go w zakładce „Szukaj”.",
-		"S_NO_LLM_PROF": "Prompty staną się dostępne, gdy będzie zainstalowany model (zakładki „Modele” i „Szukaj”).",
+		"S_NO_LLM":      "Nie ma jeszcze żadnego modelu — znajdź go w polu wyszukiwania poniżej.",
+		"S_NO_LLM_PROF": "Prompty staną się dostępne, gdy będzie zainstalowany model — sekcja „Modele”, lista modelu-redaktora na dole.",
 		"S_UPDATED":     "Ostatnia aktualizacja modelu", "S_PROF_EDIT": "Edytuj", "S_PROF_CLOSE": "Zwiń",
 		"S_CONFIRM_DEL": "Usunąć model „%s”? Będzie można pobrać go ponownie.", "S_FREE": "wolne",
 		"S_DEL_ACTIVE":     "Usunąć aktywny model „%s”? Rozpoznawanie zatrzyma się, dopóki nie wybierzesz innego — pobrać go można tutaj.",
@@ -1533,7 +1545,7 @@ func init() {
 			"<p>Znalazłeś błąd albo masz pomysł — załóż zgłoszenie w repozytorium.</p>",
 		"S_HELP_HTML": "<p class=\"wh\">Jak to działa</p>" +
 			"<p>Przytrzymaj skrót — zaczyna się nagrywanie (pasek na dole ekranu pokazuje twój poziom). Puść — dźwięk zostaje rozpoznany, w razie potrzeby przetłumaczony, przepuszczony przez prompty, a gotowy tekst trafia tam, gdzie stoi kursor. ✕ na pasku przerywa na każdym etapie.</p>" +
-			"<p>Cała droga: <b>nagranie → rozpoznawanie (Whisper) → tłumaczenie (jeśli włączone) → prompty (LLM) → wklejenie</b>. Każdy etap widać na pasku.</p>" +
+			"<p>Cała droga: <b>nagranie → rozpoznawanie (rosyjski — GigaAM, pozostałe języki — Whisper) → tłumaczenie (jeśli włączone) → prompty (LLM) → wklejenie</b>. Każdy etap widać na pasku.</p>" +
 			"<p class=\"wh\">Pierwsze uruchomienie</p>" +
 			"<p>Przy pierwszym uruchomieniu otwiera się kreator z pięciu kroków: język interfejsu, język dyktowania (model dobierze i pobierze sam), skrót i mikrofon z paskiem poziomu, pole do próbnego dyktowania i na końcu uruchamianie z Windows. Można go pominąć — wszystko i tak działa; <b>{exe} -wizard</b> przywraca go. Przy aktualizacji się nie pojawia.</p>" +
 			"<p class=\"wh\">Pasek</p>" +
@@ -1544,6 +1556,7 @@ func init() {
 			"<li><b>Wstawiono: N znaków</b> — gotowe; przy błędzie albo ciszy pojawia się krótki powód.</li>" +
 			"<li>✕ po prawej przerywa na każdym etapie; pasek nigdy nie zabiera fokusu. Pasek i jego animację można wyłączyć w „Dyktowaniu”.</li>" +
 			"<li>Gdzie pojawia się pasek — na dole, na górze albo przy kursorze — i czy pokazuje rozpoznany tekst zamiast liczby znaków, ustawia się w „Dyktowaniu”.</li>" +
+			"<li>Dopóki pasek o coś pyta, górny wiersz tak właśnie mówi — „Czekam na odpowiedź” — a kropka przestaje pulsować. Każda odpowiedź ma swój numer: 1…9 wybierają jedną, Enter bierze wyróżnioną, Esc anuluje wszystko; klawisze są wypisane po prawej, w tym samym wierszu. Na dziesięć sekund przed limitem nagrania na pasku biegnie bursztynowe odliczanie.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Pytanie o tłumaczenie</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Rozpoznawanie…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Tłumaczyć na:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Bez tłumaczenia</span></div></div>" +
@@ -1556,19 +1569,19 @@ func init() {
 			"<li><b>Ostatni wynik</b> — gotowy tekst każdego dyktowania zostaje w pamięci do następnego; w menu w zasobniku jest „Kopiuj ostatni wynik”. Nieudane wklejenie albo zmiana okna nigdy nie gubią dyktowania.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Sprawdzenie mikrofonu</p>" +
-			"<p>Przycisk „Test” na karcie Mikrofon nagrywa trzy sekundy i je rozbiera: szczyt w decybelach, jaka część nagrania naprawdę zawiera mowę i ile próbek zostało obciętych. Odpowiedź przychodzi słowami: brzmi dobrze, za cicho — podnieś poziom w Windows, przesterowanie — zmniejsz go, nie słychać mowy — czy wybrany jest właściwy mikrofon. To samo mierzy się po każdym dyktowaniu i trafia do dziennika; gdy rozpoznanie wraca puste, pasek nazywa powód — cicho, przesterowanie albo cisza — zamiast mówić tylko, że nic nie usłyszał.</p>" +
+			"<p>Przycisk „Test” w sekcji Mikrofon nagrywa trzy sekundy i je rozbiera: szczyt w decybelach, jaka część nagrania naprawdę zawiera mowę i ile próbek zostało obciętych. Odpowiedź przychodzi słowami: brzmi dobrze, za cicho — podnieś poziom w Windows, przesterowanie — zmniejsz go, nie słychać mowy — czy wybrany jest właściwy mikrofon. To samo mierzy się po każdym dyktowaniu i trafia do dziennika; gdy rozpoznanie wraca puste, pasek nazywa powód — cicho, przesterowanie albo cisza — zamiast mówić tylko, że nic nie usłyszał.</p>" +
 			"<p class=\"wh\">Wstrzymanie nagrania</p>" +
 			"<p>W trybie przełącznika (jedno naciśnięcie zaczyna, kolejne kończy) można ustawić osobny skrót do pauzy: karta „Dyktowanie”, wiersz „Wstrzymaj nagranie”. Naciśnięcie zatrzymuje nagranie — plakietka pokazuje „Pauza” i nic nie jest zapisywane; kolejne wznawia je, a wszystko powiedziane wcześniej zostaje. Ograniczenie długości nie zadziała w czasie pauzy.</p>" +
 			"<p class=\"wh\">Wklejanie z historii</p>" +
 			"<p>Każdy wpis w historii ma przycisk „Wklej”: przywraca okno, z którego otworzyliście ustawienia, i wkleja tam tekst jak zwykłe dyktowanie. Gdy nie ma dokąd wracać, tekst po prostu trafia do schowka, a program o tym mówi.</p>" +
 			"<p class=\"wh\">Listy w jednym pliku</p>" +
-			"<p>Zamiany i polecenia głosowe można zapisać do jednego pliku .json i wczytać na innym komputerze — przyciski pod listą poleceń na karcie „Tekst”. Wczytanie niczego nie kasuje: dodawane są tylko wiersze, których jeszcze nie ma, a program powie, ile dodano i ile pominięto.</p>" +
+			"<p>Zamiany i polecenia głosowe można zapisać do jednego pliku .json i wczytać na innym komputerze — przyciski pod listą poleceń w sekcji „Tekst”. Wczytanie niczego nie kasuje: dodawane są tylko wiersze, których jeszcze nie ma, a program powie, ile dodano i ile pominięto.</p>" +
 			"<p class=\"wh\">Nienaruszalność plików</p>" +
-			"<p>Dla każdego modelu z katalogu znany jest wzorcowy skrót SHA-256. Po pobraniu plik jest z nim porównywany: gdy się nie zgadza, plik zostaje usunięty i pobieranie można powtórzyć. Przycisk „Sprawdź” na karcie „Modele” tak samo porównuje modele już zainstalowane, a przy aktualizacji programu sprawdzany jest też pobrany instalator — obcy plik się nie uruchomi.</p>" +
+			"<p>Dla każdego modelu z katalogu znany jest wzorcowy skrót SHA-256. Po pobraniu plik jest z nim porównywany: gdy się nie zgadza, plik zostaje usunięty i pobieranie można powtórzyć. Przycisk „Sprawdź” w sekcji „Modele” tak samo porównuje modele już zainstalowane, a przy aktualizacji programu sprawdzany jest też pobrany instalator — obcy plik się nie uruchomi.</p>" +
 			"<p class=\"wh\">Historia dyktowań</p>" +
 			"<p>Sekcja „Historia” w lewej kolumnie przechowuje to, co podyktowałeś: tylko tekst, tylko na tym komputerze, dźwięk nigdy nie jest zapisywany. Domyślnie wyłączona, włącza się jednym przełącznikiem w tym samym miejscu. Wpisy trzymają się przez ustaloną liczbę dni i do ustalonej liczby, starsze wypadają same; „Nigdy nie zapisuj z tych programów” wymienia po przecinku te, z których nic nie ma być zapisywane — menedżery haseł, bankowość. Wyszukiwanie obejmuje tekst i nazwę programu, przycisk obok wpisu wkłada go do schowka, a „Wyczyść” usuwa wszystko razem z plikiem <b>{app}-history.json</b>.</p>" +
 			"<p class=\"wh\">Komendy głosowe</p>" +
-			"<p>Pod zamianami na karcie „Tekst” jest lista komend: to, co powiesz, zamienia się w działanie zamiast w słowa. „Nowy wiersz” i „nowy akapit” wstawiają złamanie — modele nigdy tego nie robią; „anuluj” wyrzuca całe dyktowanie i nic nie wstawia; „wstawić tekst” wkłada cokolwiek, choćby uśmieszek. Przycisk obok listy wypełnia ją typowymi zwrotami w języku interfejsu. Komendy rozpoznawane są jako całe słowa i działają po zamianach, więc prompty i tłumaczenie dostają już gotowy tekst. Zbędne spacje wokół złamań znikają same. Pole poniżej sprawdza zamiany i komendy na dowolnym zdaniu: złamanie pokazuje się jako ⏎.</p>" +
+			"<p>Pod zamianami w sekcji „Tekst” jest lista komend: to, co powiesz, zamienia się w działanie zamiast w słowa. „Nowy wiersz” i „nowy akapit” wstawiają złamanie — modele nigdy tego nie robią; „anuluj” wyrzuca całe dyktowanie i nic nie wstawia; „wstawić tekst” wkłada cokolwiek, choćby uśmieszek. Przycisk obok listy wypełnia ją typowymi zwrotami w języku interfejsu. Komendy rozpoznawane są jako całe słowa i działają po zamianach, więc prompty i tłumaczenie dostają już gotowy tekst. Zbędne spacje wokół złamań znikają same. Pole poniżej sprawdza zamiany i komendy na dowolnym zdaniu: złamanie pokazuje się jako ⏎.</p>" +
 			"<p class=\"wh\">Zamiany po rozpoznaniu</p>" +
 			"<p>W „Tekście” można wypisać, co model słyszy źle i w co ma to zamienić: „git hub” → GitHub, nazwiska, wewnętrzne terminy. Zamiany działają zaraz po rozpoznaniu, przed promptami, więc edytor dostaje już właściwe słowa. Tłumaczenie na angielski dzieje się wewnątrz rozpoznawania, więc zamiany widzą już przetłumaczony tekst. Domyślnie szukają całych słów i nie zważają na wielkość liter; dwa przełączniki obok to zmieniają. Reguły działają od góry do dołu. Pole poniżej sprawdza je na dowolnym zdaniu, bez dyktowania.</p>" +
 			"<p class=\"wh\">Reguły dla programów</p>" +
@@ -1591,6 +1604,7 @@ func init() {
 			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Turbo (q5)</b><span class=\"mock-note\">najlepsza dokładność na CPU</span><span style=\"margin-left:auto\">574 MB ⭳</span></div></div>" +
 			"<ul>" +
 			"<li><b>Modele</b> — katalog: Base (szybki, na słabe komputery), Small (zrównoważony), Medium i Turbo (dokładniejsze, wolniejsze; „q5” to wersja skwantyzowana — nieco mniejsza i szybsza, prawie bez straty jakości) oraz GigaAM v3 dla rosyjskiego. Przycisk wyboru wskazuje aktywny model (działa od razu, rozpoznawanie startuje na nowo); przy brakującym modelu program pyta, czy go pobrać.</li>" +
+			"<li><b>Dwa miejsca</b> — jeden model dla rosyjskiego (GigaAM v3: dokładniejszy po rosyjsku i sam stawia znaki przestankowe) i jeden dla pozostałych języków oraz dla tłumaczenia. Ekran „Stan” i tabela tras nad katalogiem pokazują, który model bierze który przypadek; doradca odpowiada modelem i powodem wyboru.</li>" +
 			"<li>Serwer rozpoznawania trzyma model w pamięci między zdaniami — pierwsze dyktowanie po starcie trwa dłużej (ładowanie), potem rozpoznanie zajmuje jedną–trzy sekundy.</li>" +
 			"<li><b>Słownik</b> — terminy, nazwy i skróty po przecinku. Podpowiedź dla „ucha” Whispera, żeby rzadkie słowa trafiały poprawnie; to nie są polecenia.</li>" +
 			"<li><b>Mikrofon</b> — wybór urządzenia z miernikiem poziomu (mów, a słupek się rusza — czyli urządzenie jest słyszane). Gdy wybrane urządzenie zniknie, wraca systemowe; nagranie bez mowy w ogóle nie trafia do rozpoznawania — pasek mówi „Cisza”.</li>" +
@@ -1628,15 +1642,16 @@ func init() {
 			"<p class=\"wh\">Instalacja i przenośność</p>" +
 			"<ul>" +
 			"<li><b>{setup}</b> — instalator: bez praw administratora, skrót w menu Start, autostart do wyboru, czyste usunięcie z ustawień Windows.</li>" +
+			"<li>Instalator domyślnie nic nie pobiera: model wybierze i pobierze kreator przy pierwszym uruchomieniu. Jeśli model jednak zostanie wybrany — GigaAM v3 dla rosyjskiego, Whisper dla pozostałych języków — pobieranie można zatrzymać przyciskiem, a instalacja i tak dobiegnie końca. Jest tam też pole „Sprawdzaj aktualizacje”, a odpowiedź trafia do ustawień aplikacji.</li>" +
 			"<li><b>Przenośność</b> — po prostu skopiuj cały folder z plikiem exe (na pendrive, na inny komputer): ustawienia, modele i dziennik leżą obok i jadą razem z nim. Do rejestru nic nie jest zapisywane.</li>" +
 			"<li>Przy pierwszym uruchomieniu bez modelu rozpoznawania program sam otwiera katalog i czeka na pobranie.</li>" +
 			"<li>Wymagania: Windows 10/11 x64, procesor z AVX2 (mniej więcej od 2013), WebView2 Runtime dla okna ustawień (jest w Windows 11).</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Zasobnik i pliki</p>" +
-			"<div class=\"mock\" style=\"max-width:290px\"><div class=\"mock-mi dim\">{app} — Gotowe…</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Ustawienia…</div><div class=\"mock-mi\">Wyłącz</div><div class=\"mock-mi\">Kopiuj ostatni wynik</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Przeładuj config.json</div><div class=\"mock-mi\">Otwórz config.json</div><div class=\"mock-mi\">Otwórz dziennik</div><div class=\"mock-mi\">O programie</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Zakończ</div></div>" +
+			"<div class=\"mock\" style=\"max-width:290px\"><div class=\"mock-mi dim\">{app} — Gotowe…</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Ustawienia…</div><div class=\"mock-mi\">Wyłącz</div><div class=\"mock-mi\">Kopiuj ostatni wynik</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Otwórz config.json</div><div class=\"mock-mi\">Otwórz dziennik</div><div class=\"mock-mi\">O programie</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Zakończ</div></div>" +
 			"<ul>" +
 			"<li>Lewy klik w ikonę — ustawienia; prawy — menu. Kolory ikony: zielony — gotowe, czerwony — nagrywanie, pomarańczowy — rozpoznawanie, szary — wyłączone albo błąd.</li>" +
-			"<li><b>config.json</b> — wszystkie ustawienia; ręczne zmiany działają po „Przeładuj config.json” w menu.</li>" +
+			"<li><b>config.json</b> — wszystkie ustawienia; ręczne zmiany działają po <b>Wczytaj</b> w sekcji „System”. Tam są też „Otwórz dziennik” i „Przywróć ustawienia”: przywrócenie wraca do stanu fabrycznego i nie rusza modeli, historii ani promptów.</li>" +
 			"<li><b>{log}</b> — dziennik, automatycznie ograniczany do około 2 MB.</li>" +
 			"<li><b>models/</b> — pobrane modele rozpoznawania i redaktora.</li>" +
 			"</ul>",
@@ -1678,7 +1693,7 @@ func init() {
 		"status.server.restart": "Сервер розпізнавання впав, перезапускаю…", "status.cfg.err": "Помилка в config.json (див. лог)",
 		"status.nomodel": "Модель розпізнавання не завантажена — оберіть її в налаштуваннях",
 		"menu.settings":  "Налаштування…", "menu.enable": "Увімкнути", "menu.disable": "Вимкнути",
-		"menu.reload": "Перечитати config.json", "menu.open.config": "Відкрити config.json", "menu.open.log": "Відкрити лог",
+		"menu.open.config": "Відкрити config.json", "menu.open.log": "Відкрити лог",
 		"menu.about": "Про застосунок", "menu.quit": "Вихід",
 		"menu.lastcopy": "Копіювати останній результат",
 		"ov.copied":     "Скопійовано в буфер обміну", "ov.kept": "Скасовано — текст в «Останньому результаті»",
@@ -1749,7 +1764,7 @@ func init() {
 	settingsStrings["uk"] = map[string]string{
 		"S_TITLE": "{app} — налаштування", "S_DICT_HINT": "Терміни, імена та абревіатури через кому — підказка слуху, не команди. Працює для Whisper; російська мова через GigaAM це ігнорує. Типовий набір іде за мовою розпізнавання, доки ви не впишете своє.",
 		"S_TR_HINT":    "Переклад виконує Whisper: англійською — штатним режимом, іншими мовами — експериментально, примусовою мовою виводу (якість залежить від пари мов).",
-		"S_TR_TURBO":   "⚠ Активна модель Turbo не навчена перекладу англійською — для перекладу оберіть іншу модель на вкладці «Моделі».",
+		"S_TR_TURBO":   "⚠ Активна модель Turbo не навчена перекладу англійською — для перекладу оберіть іншу модель у розділі «Моделі».",
 		"S_TR_DEFAULT": "Завжди перекладати цільовою мовою", "S_TR_TARGET": "Цільова мова", "S_TR_ASK": "Вибір мови", "S_TR_ASK_NEVER": "Не запитувати",
 		"S_TR_ASK_ALWAYS": "Запитувати щоразу", "S_TR_ASK_TIMEOUT": "Запитувати з таймаутом", "S_TR_SECONDS": "Таймаут, с",
 		"S_TR_LANGS": "Мови в діалозі",
@@ -1774,8 +1789,8 @@ func init() {
 			"<p>Знайшли помилку або маєте ідею — створіть issue в репозиторії.</p>",
 		"S_RAM": "Пам'ять комп'ютера:", "S_HF_PH": "Назва моделі — наприклад, qwen2.5 instruct",
 		"S_FIT_OK": "поміститься", "S_FIT_WARN": "впритул", "S_FIT_BAD": "не вистачить пам'яті",
-		"S_NO_LLM":      "Ще не встановлено жодної моделі — знайдіть і завантажте на вкладці «Пошук».",
-		"S_NO_LLM_PROF": "Промпти стануть доступні після встановлення моделі (вкладки «Моделі» та «Пошук»).",
+		"S_NO_LLM":      "Ще не встановлено жодної моделі — знайдіть і завантажте в полі пошуку нижче.",
+		"S_NO_LLM_PROF": "Промпти стануть доступні після встановлення моделі — розділ «Моделі», список моделі-редактора внизу.",
 		"S_UPDATED":     "Дата останнього оновлення моделі",
 		"S_HOTKEY":      "Сполучення клавіш", "S_CHANGE": "Змінити…", "S_UILANG": "Мова інтерфейсу", "S_AUTO": "Як у системі",
 		"S_SEC_SOUND": "Звук", "S_SEC_BEHAVIOR": "Поведінка", "S_BEEP": "Звукові сигнали запису", "S_SOUND": "Сигнал",
@@ -1866,7 +1881,7 @@ func init() {
 		"S_NOT_FOUND": "нічого", "S_MORE": "Ще %d налаштувань", "S_LESS": "Згорнути %d налаштувань",
 		"S_HELP_HTML": "<p class=\"wh\">Як це працює</p>" +
 			"<p>Тримайте сполучення — починається запис (смужка внизу екрана показує ваш рівень). Відпустіть — звук розпізнається, за потреби перекладається, проходить через промпти, і готовий текст з'являється там, де стоїть курсор. ✕ на смужці скасовує на будь-якому кроці.</p>" +
-			"<p>Увесь шлях: <b>запис → розпізнавання (Whisper) → переклад (якщо ввімкнено) → промпти (LLM) → вставка</b>. Кожен крок видно на смужці.</p>" +
+			"<p>Увесь шлях: <b>запис → розпізнавання (російська — GigaAM, інші мови — Whisper) → переклад (якщо ввімкнено) → промпти (LLM) → вставка</b>. Кожен крок видно на смужці.</p>" +
 			"<p class=\"wh\">Перший запуск</p>" +
 			"<p>При найпершому запуску відкривається майстер із п'яти кроків: мова інтерфейсу, мова диктування (модель він добере й завантажить сам), сполучення клавіш і мікрофон із живою смужкою рівня, поле для пробного диктування і, останнім, запуск разом із Windows. Майстер можна пропустити — усе працює й без нього; повернути — запуском <b>{exe} -wizard</b>. Під час оновлення він не з'являється.</p>" +
 			"<p class=\"wh\">Смужка</p>" +
@@ -1877,6 +1892,7 @@ func init() {
 			"<li><b>Вставлено: N символів</b> — готово; при помилці чи тиші коротко пишеться причина.</li>" +
 			"<li>✕ праворуч скасовує на будь-якому кроці; смужка ніколи не забирає фокус вводу. Смужку та її анімацію можна вимкнути в «Диктуванні».</li>" +
 			"<li>Де з'являється смужка — унизу, угорі чи біля курсора — і чи показує вона сам розпізнаний текст замість кількості символів, налаштовується в «Диктуванні».</li>" +
+			"<li>Поки смужка про щось питає, верхній рядок так і каже — «Чекаю на відповідь», і крапка перестає блимати. Кожна відповідь має свій номер: 1…9 обирають одну, Enter бере підсвічену, Esc скасовує все; клавіші підписані праворуч у тому ж рядку. За десять секунд до межі запису на смужці йде бурштиновий зворотний відлік.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Питання про переклад</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Розпізнаю…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Перекласти на:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Без перекладу</span></div></div>" +
@@ -1924,6 +1940,7 @@ func init() {
 			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Turbo (q5)</b><span class=\"mock-note\">найкраща точність на CPU</span><span style=\"margin-left:auto\">574 MB ⭳</span></div></div>" +
 			"<ul>" +
 			"<li><b>Моделі</b> — каталог: Base (швидка, для слабких ПК), Small (збалансована), Medium і Turbo (точніші, повільніші; «q5» — квантована збірка: трохи менша й швидша майже без утрати якості), а також GigaAM v3 для російської. Радіокнопка обирає активну модель (діє одразу, розпізнавач перезапускається); якщо моделі немає, програма запитує, чи завантажити її.</li>" +
+			"<li><b>Два слоти</b> — одна модель для російського мовлення (GigaAM v3: точніша російською й сама ставить розділові знаки) і одна для решти мов та для перекладу. Екран «Стан» і таблиця маршрутизації над каталогом показують, куди йде кожен випадок; порадник відповідає моделлю та причиною вибору.</li>" +
 			"<li>Сервер розпізнавання тримає модель у пам'яті між фразами — перше диктування після запуску повільніше (завантаження), далі розпізнавання займає одну-три секунди.</li>" +
 			"<li><b>Словник</b> — терміни, назви та скорочення через кому. Підказка для «вуха» Whisper, щоб рідкісні слова виходили правильно; це не команди.</li>" +
 			"<li><b>Мікрофон</b> — вибір пристрою зі шкалою рівня (говоріть — і смужка рухається, отже пристрій чути). Якщо обраний пристрій зник, береться системний; запис без мовлення взагалі не йде на розпізнавання — смужка каже «Тиша».</li>" +
@@ -1961,15 +1978,16 @@ func init() {
 			"<p class=\"wh\">Встановлення й портативність</p>" +
 			"<ul>" +
 			"<li><b>{setup}</b> — інсталятор: без прав адміністратора, ярлик у меню «Пуск», автозапуск за бажанням, чисте видалення з налаштувань Windows.</li>" +
+			"<li>Інсталятор нічого не завантажує за замовчуванням: модель добере й завантажить майстер під час першого запуску. Якщо модель усе ж обрано — GigaAM v3 для російської, Whisper для решти мов — завантаження можна зупинити кнопкою, і встановлення все одно дійде до кінця. Там же галочка «Перевіряти оновлення», і відповідь записується в налаштування застосунку.</li>" +
 			"<li><b>Портативність</b> — просто скопіюйте всю теку з exe (на флешку, на інший комп'ютер): налаштування, моделі та журнал лежать поруч і їдуть разом. У реєстр нічого не пишеться.</li>" +
 			"<li>При першому запуску без моделі розпізнавання програма сама відкриває каталог і чекає на завантаження.</li>" +
 			"<li>Вимоги: Windows 10/11 x64, процесор з AVX2 (приблизно від 2013 року), WebView2 Runtime для вікна налаштувань (входить до Windows 11).</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Трей і файли</p>" +
-			"<div class=\"mock\" style=\"max-width:290px\"><div class=\"mock-mi dim\">{app} — Готово…</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Налаштування…</div><div class=\"mock-mi\">Вимкнути</div><div class=\"mock-mi\">Копіювати останній результат</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Перечитати config.json</div><div class=\"mock-mi\">Відкрити config.json</div><div class=\"mock-mi\">Відкрити журнал</div><div class=\"mock-mi\">Про програму</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Вийти</div></div>" +
+			"<div class=\"mock\" style=\"max-width:290px\"><div class=\"mock-mi dim\">{app} — Готово…</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Налаштування…</div><div class=\"mock-mi\">Вимкнути</div><div class=\"mock-mi\">Копіювати останній результат</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Відкрити config.json</div><div class=\"mock-mi\">Відкрити журнал</div><div class=\"mock-mi\">Про програму</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Вийти</div></div>" +
 			"<ul>" +
 			"<li>Лівий клац по значку — налаштування; правий — меню. Кольори значка: зелений — готово, червоний — запис, помаранчевий — розпізнавання, сірий — вимкнено або помилка.</li>" +
-			"<li><b>config.json</b> — усі налаштування; правки вручну діють після «Перечитати config.json» у меню.</li>" +
+			"<li><b>config.json</b> — усі налаштування; правки вручну діють після кнопки <b>Перечитати</b> в розділі «Система». Там же — «Відкрити лог» і «Скинути налаштування»: скидання повертає все до заводського вигляду й не чіпає моделі, історію та промпти.</li>" +
 			"<li><b>{log}</b> — журнал, автоматично обмежений приблизно 2 МБ.</li>" +
 			"<li><b>models/</b> — завантажені моделі розпізнавання та редактора.</li>" +
 			"</ul>",
