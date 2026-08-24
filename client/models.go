@@ -227,7 +227,7 @@ func (a *App) downloadModel(id string) {
 		a.startMultiDownload(id, m)
 		return
 	}
-	a.startDownload(id, m.File, modelBaseURL+m.File)
+	a.startDownload(id, m.File, modelBaseURL+m.File, m.SizeMB)
 }
 
 func (a *App) startMultiDownload(key string, m *modelInfo) {
@@ -385,7 +385,7 @@ func downloadFile(ctx context.Context, url, final string, progress func(written 
 	return written, nil
 }
 
-func (a *App) startDownload(key, file, url string) {
+func (a *App) startDownload(key, file, url string, sizeMB int) {
 	dlMu.Lock()
 	if st := dl[key]; st != nil && st.active {
 		dlMu.Unlock()
@@ -397,7 +397,7 @@ func (a *App) startDownload(key, file, url string) {
 
 	go func() {
 		defer cancel()
-		err := a.doDownload(ctx, key, file, url)
+		err := a.doDownload(ctx, key, file, url, sizeMB)
 		dlMu.Lock()
 		switch {
 		case errors.Is(err, context.Canceled):
@@ -474,20 +474,28 @@ func cleanupStaleParts() {
 	}
 }
 
-func (a *App) doDownload(ctx context.Context, key, file, url string) error {
+func (a *App) doDownload(ctx context.Context, key, file, url string, sizeMB int) error {
 	if err := os.MkdirAll("models", 0o755); err != nil {
 		return err
 	}
 	final := filepath.Join("models", file)
 	if m := findModel(key); m != nil && m.SizeMB > 0 {
-		if free := freeDiskMB("models"); free >= 0 && free < m.SizeMB+512 {
-			return fmt.Errorf("%s", trf("err.disk.space", free, m.SizeMB))
+		sizeMB = m.SizeMB
+	}
+	if sizeMB > 0 {
+		need := sizeMB
+		if fi, serr := os.Stat(final + ".part"); serr == nil {
+			need -= int(fi.Size() / (1024 * 1024))
+			if need < 0 {
+				need = 0
+			}
+			log.Printf("%s: уже скачано %d МБ, осталось ~%d МБ", file, int(fi.Size()/(1024*1024)), need)
+		}
+		if free := freeDiskMB("models"); free >= 0 && free < need+512 {
+			return fmt.Errorf("%s", trf("err.disk.space", free, need))
 		}
 	}
-	total := int64(0)
-	if m := findModel(key); m != nil {
-		total = int64(m.SizeMB) * 1024 * 1024
-	}
+	total := int64(sizeMB) * 1024 * 1024
 	_, err := downloadFile(ctx, url, final, func(written int64) {
 		if total <= 0 {
 			return
@@ -518,13 +526,18 @@ func (a *App) doDownload(ctx context.Context, key, file, url string) error {
 	return nil
 }
 
-func (a *App) deleteModel(id string) string {
+func (a *App) deleteModel(id string, force bool) string {
 	m := findModel(id)
 	if m == nil {
 		return ""
 	}
 	if m.isActive(a.snapshot()) {
-		return tr("model.del.active")
+		if !force {
+			return tr("model.del.active")
+		}
+		log.Printf("удаляю активную модель %s по подтверждению — распознавание остановится до выбора другой", m.ID)
+		a.requestServerRestart()
+		time.Sleep(800 * time.Millisecond)
 	}
 	dlMu.Lock()
 	if st := dl[id]; st != nil && st.active {

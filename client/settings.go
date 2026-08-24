@@ -255,8 +255,8 @@ func (a *App) settingsThread(tab string, attempt int) {
 		_ = w.Bind("appLLM", func() string {
 			return a.llmStatus()
 		})
-		_ = w.Bind("appLLMDlFile", func(repo, file string) {
-			a.llmDownloadFile(repo, file)
+		_ = w.Bind("appLLMDlFile", func(repo, file string, sizeMB float64) {
+			a.llmDownloadFile(repo, file, int(sizeMB))
 		})
 		_ = w.Bind("appLLMDel", func(file string) string {
 			return a.llmDelete(file)
@@ -404,8 +404,8 @@ func (a *App) settingsThread(tab string, attempt int) {
 				w.SetHtml(settingsHTML(a.snapshot(), tabName))
 			})
 		})
-		_ = w.Bind("appModelDel", func(id string) string {
-			return a.deleteModel(id)
+		_ = w.Bind("appModelDel", func(id string, force bool) string {
+			return a.deleteModel(id, force)
 		})
 		_ = w.Bind("appCheckModels", func() string {
 			return a.verifyModels()
@@ -825,7 +825,8 @@ func settingsHTML(cfg *Config, tab string) string {
 		"fitok": "S_FIT_OK", "fitwarn": "S_FIT_WARN", "fitbad": "S_FIT_BAD",
 		"ram": "S_RAM", "hfph": "S_HF_PH", "nollm": "S_NO_LLM", "nollmp": "S_NO_LLM_PROF",
 		"upd": "S_UPDATED", "pedit": "S_PROF_EDIT", "pclose": "S_PROF_CLOSE",
-		"confirmdel": "S_CONFIRM_DEL", "free": "S_FREE", "updnone": "S_UPD_NONE",
+		"confirmdel": "S_CONFIRM_DEL", "delactive": "S_DEL_ACTIVE", "wizneedmodel": "S_WIZ_NEED_MODEL",
+		"free": "S_FREE", "updnone": "S_UPD_NONE",
 		"micdefault": "S_MIC_DEFAULT", "micquiet": "S_MIC_QUIET", "get": "S_STATE_GET", "change": "S_CHANGE_MODEL",
 		"remotewarn": "S_REMOTE_WARN", "remoteask": "S_REMOTE_ASK", "remotebadge": "S_REMOTE_BADGE",
 		"ok": "S_OK", "cancel": "S_CANCEL", "dlask": "S_DL_ASK", "dlstart": "S_DL_START", "dlcancel": "S_DL_CANCEL", "nofound": "S_NOT_FOUND",
@@ -1656,7 +1657,8 @@ async function refreshLLM(){
     const div = document.createElement("div");
     div.className = "mrow";
     if(d.pct >= 0){ busy = true;
-      div.innerHTML = '<span class="mdesc" style="flex:1">'+esc(d.file)+'</span><span class="mpct">'+(d.pct>0?d.pct+"%":"…")+'</span>';
+      div.innerHTML = '<span class="mdesc" style="flex:1">'+esc(d.file)+'</span><span class="mpct">'+(d.pct>0?d.pct+"%":"…")+'</span>'+
+        '<button class="iconbtn danger" title="'+L.dlcancel+'" data-a="lcancel" data-f="'+esc(d.file)+'">&#10005;</button>';
     } else {
       div.innerHTML = '<span class="mdesc" style="flex:1">'+esc(d.file)+'</span><span class="mpct">! '+esc(d.err)+'</span>';
     }
@@ -1664,6 +1666,12 @@ async function refreshLLM(){
   });
   body.querySelectorAll('input[name="llmmdl"]').forEach(r=>{
     r.onchange = async ()=>{ selLLM = r.value; await doSave(); refreshLLM(); };
+  });
+  body.querySelectorAll("button[data-a='lcancel']").forEach(b=>{
+    b.onclick = async ()=>{
+      await appModelCancel("llm-" + b.dataset.f);
+      refreshLLM();
+    };
   });
   body.querySelectorAll("button[data-a='ldel']").forEach(b=>{
     b.onclick = async ()=>{
@@ -1742,13 +1750,13 @@ function renderHF(){
         fd.innerHTML = '<span class="mdesc" style="flex:1">'+esc(f.file)+'</span>'+
           '<span class="msize">'+(f.size>=1024?(f.size/1024).toFixed(1)+" GB":f.size+" MB")+'</span>'+
           '<span>'+fitLabel(f.fit, f.need)+'</span>'+
-          '<button class="iconbtn" title="'+L.dl+'" data-repo="'+esc(r.id)+'" data-file="'+esc(f.file)+'">'+I_DL+'</button>';
+          '<button class="iconbtn" title="'+L.dl+'" data-repo="'+esc(r.id)+'" data-file="'+esc(f.file)+'" data-size="'+(f.size||0)+'">'+I_DL+'</button>';
         box.appendChild(fd);
       });
       box.querySelectorAll("button[data-repo]").forEach(b=>{
         b.onclick = async e=>{
           e.stopPropagation();
-          await appLLMDlFile(b.dataset.repo, b.dataset.file);
+          await appLLMDlFile(b.dataset.repo, b.dataset.file, parseInt(b.dataset.size) || 0);
           refreshLLM();
         };
       });
@@ -2138,11 +2146,12 @@ async function refreshModels(){
   refreshRouting();
   const activeRow = rows.find(m=>m.state==="active");
   activeModelId = activeRow ? activeRow.id : null;
+  let applyDone = null;
   if(pendingDl){
     const row = rows.find(m=>m.id===pendingDl);
     if(!row){ pendingDl = null; }
-    else if(row.state === "installed"){ pendingDl = null; toast(L.mdlready); }
-    else if(row.state === "active"){ pendingDl = null; }
+    else if(row.state === "installed"){ applyDone = pendingDl; pendingDl = null; }
+    else if(row.state === "active"){ pendingDl = null; toast(L.mdlready, "ok"); }
     else if(row.state === "absent" && row.err){ pendingDl = null; toast(row.err, "error"); }
   }
   const checkedId = selModel || activeModelId;
@@ -2157,7 +2166,7 @@ async function refreshModels(){
     let right = "";
     if(m.state === "downloading"){ busy = true; right = '<span class="mpct">'+(m.pct>0?m.pct+"%":"…")+'</span><button class="iconbtn danger" title="'+L.dlcancel+'" data-a="cancel" data-id="'+m.id+'">&#10005;</button>'; }
     else if(m.state === "absent") right = '<button class="iconbtn" title="'+L.dl+'" data-a="dl" data-id="'+m.id+'">'+I_DL+'</button>';
-    else if(m.state === "installed") right = '<button class="iconbtn danger" title="'+L.del+'" data-a="del" data-id="'+m.id+'">&#10005;</button>';
+    else if(m.state === "installed" || (m.state === "active" && m.id !== "custom")) right = '<button class="iconbtn danger" title="'+L.del+'" data-a="del" data-id="'+m.id+'">&#10005;</button>';
     const tag = m.engine === "sherpa" ? '<span class="mtag">RU</span>' : (m.langs === "*" ? '<span class="mtag">99</span>' : "");
     const ram = m.ram ? '<span class="mram '+(m.fit||"")+'">≈'+m.ram+' MB RAM</span>' : '<span class="mram"></span>';
     div.innerHTML = radio+'<span class="mname">'+m.name+tag+'</span><span class="mdesc">'+m.desc+'</span>'+ram+'<span class="msize">'+(m.size?m.size+" MB":"")+'</span><span>'+right+'</span>';
@@ -2194,13 +2203,23 @@ async function refreshModels(){
         if(selModel === b.dataset.id) selModel = null;
       }
       else {
-        if(!await askConfirm(L.confirmdel.replace("%s", b.dataset.id), L.del)) return;
-        toast(await appModelDel(b.dataset.id));
+        const isActive = b.dataset.id === activeModelId;
+        const ask = isActive ? L.delactive.replace("%s", b.dataset.id) : L.confirmdel.replace("%s", b.dataset.id);
+        if(!await askConfirm(ask, L.del)) return;
+        toast(await appModelDel(b.dataset.id, isActive));
         if(selModel === b.dataset.id) selModel = null;
       }
       refreshModels();
     };
   });
+  if(applyDone){
+    selModel = applyDone;
+    await doSave();
+    toast(L.mdlready, "ok");
+    refreshState();
+    return;
+  }
+  if(busy || pendingDl) setTimeout(refreshModels, 900);
 }
 function askConfirm(text, okText, cancelText){
   return new Promise(resolve=>{
@@ -2483,6 +2502,7 @@ function wizShow(n){
     dots.appendChild(d);
   }
   wizEl("wiz_back").style.display = wizStep ? "" : "none";
+  wizSyncNav();
   wizEl("wiz_skip").style.display = wizStep === WIZ_N - 1 ? "none" : "";
   wizEl("wiz_next").textContent = wizStep === WIZ_N - 1 ? L.wizfinish : L.wiznext;
   wizEl("wizbody").scrollTop = 0;
@@ -2515,14 +2535,24 @@ async function wizAdvise(){
   out.textContent = missing.length ? "" : L.wizhave;
   out.classList.toggle("ok", !missing.length);
   wizDlIds = [];
+  wizSyncNav();
 }
 async function wizApplyModel(){
-  if(!wizPlan.length) return;
-  const first = wizPlan[0];
-  if(!first.installed) return;
-  selModel = first.id;
-  await doSave();
+  const ready = wizPlan.filter(p=>p.installed);
+  if(!ready.length) return;
+  for(const p of ready){
+    selModel = p.id;
+    await doSave();
+  }
   refreshModels();
+  wizSyncNav();
+}
+function wizSyncNav(){
+  const next = wizEl("wiz_next");
+  if(!next) return;
+  const waiting = wizStep === 1 && (wizDlIds.length > 0 || !wizPlan.some(p=>p.installed));
+  next.disabled = waiting;
+  next.title = waiting ? L.wizneedmodel : "";
 }
 async function wizDownload(){
   const missing = wizPlan.filter(p=>!p.installed);
@@ -2531,6 +2561,7 @@ async function wizDownload(){
   wizEl("wiz_dlrow").style.display = "";
   wizEl("wiz_dlout").textContent = "";
   wizDlIds = missing.map(p=>p.id);
+  wizSyncNav();
   for(const p of missing) await appModelDl(p.id);
 }
 async function wizPollDl(){
@@ -2555,6 +2586,7 @@ async function wizPollDl(){
     const out = wizEl("wiz_dlout");
     out.textContent = err;
     out.classList.remove("ok");
+    wizSyncNav();
     return;
   }
   if(done === wizDlIds.length){
@@ -2643,7 +2675,7 @@ function initWizard(){
   }, 120);
   setInterval(()=>{
     if(!wizOn) return;
-    if(wizStep === 1) wizPollDl();
+    if(wizDlIds.length) wizPollDl();
     if(wizStep === 3) wizPollTry();
   }, 800);
 }

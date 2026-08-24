@@ -258,12 +258,12 @@ func (a *App) llmStatus() string {
 	return string(out)
 }
 
-func (a *App) llmDownloadFile(repo, file string) {
+func (a *App) llmDownloadFile(repo, file string, sizeMB int) {
 	if !repoOK(repo) || strings.Contains(file, "/") || strings.Contains(file, "\\") || !strings.HasSuffix(file, ".gguf") {
 		return
 	}
 	u := "https://huggingface.co/" + repo + "/resolve/main/" + file
-	a.startDownload("llm-"+file, file, u)
+	a.startDownload("llm-"+file, file, u, sizeMB)
 }
 
 func (a *App) llmDelete(file string) string {

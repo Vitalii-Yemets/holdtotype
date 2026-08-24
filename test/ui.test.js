@@ -50,6 +50,7 @@ const dom = new JSDOM(html, {
     window.dlCalls = [];
     window.cancelCalls = [];
     window.appModelDl = async (id) => { window.dlCalls.push(id); modelStates[id] = "downloading"; };
+    window.finishDl = (id) => { modelStates[id] = "installed"; };
     window.appModelCancel = async (id) => { window.cancelCalls.push(id); modelStates[id] = "absent"; return true; };
     window.appModels = async () =>
       JSON.stringify([
@@ -84,6 +85,7 @@ const dom = new JSDOM(html, {
     window.dragCalls = 0;
     window.appDrag = () => { window.dragCalls++; };
     window.saveCalls = 0;
+    window.saveForms = [];
     window.lastSave = {};
     window.appSave = async (json) => {
       window.saveCalls++;
@@ -91,6 +93,7 @@ const dom = new JSDOM(html, {
       micBadge = f.mic_device_name ? f.mic_device_name.split(" ")[0] : "Realtek";
       const message = Number(f.server_port) === 8910 ? "Saved" : "Restarting the recognizer…";
       window.lastSaveForm = f;
+      window.saveForms.push(f);
       window.lastSave = { ok: true, severity: "ok", message };
       return JSON.stringify(window.lastSave);
     };
@@ -123,7 +126,8 @@ const dom = new JSDOM(html, {
     };
     window.micChecks = 0;
     window.appMicCheck = async () => { window.micChecks++; return JSON.stringify({ verdict: "quiet", text: "Too quiet: peak -32 dB", peak_db: -32, voice: 0.8, clip: 0 }); };
-    window.appModelDel = async () => "ok";
+    window.delCalls = [];
+    window.appModelDel = async (id, force) => { window.delCalls.push([id, force]); if(force) modelStates[id] = "absent"; return "ok"; };
     window.appMics = async () =>
       JSON.stringify([
         { id: "dev1", name: "Headset (USB)", default: false },
@@ -430,6 +434,21 @@ function check(name, actual, expected) {
   check("stopping asks the program to stop", w.cancelCalls, ["base"]);
   check("a stopped download offers to start again", !!d.querySelector('#models button[data-a="dl"][data-id="base"]'), true);
 
+  pickAbsent().click(); await sleep(80);
+  d.querySelector(".modal .btn.yes").click(); await sleep(250);
+  check("the row shows the download running", !!d.querySelector('#models button[data-a="cancel"][data-id="base"]'), true);
+  const savesBeforeDl = w.saveForms.length;
+  w.finishDl("base"); await sleep(1400);
+  check("a finished download is applied by itself", w.saveForms.slice(savesBeforeDl).map((f) => f.model_id), ["base"]);
+  check("and the program says the model is ready", d.getElementById("st_saved").textContent, "Model downloaded");
+
+  const activeDel = () => d.querySelector('#models .mrow input[name="mdl"][value="small"]').parentElement.querySelector('button[data-a="del"]');
+  check("the model in use can be removed too — that is the way out of a full disk", !!activeDel(), true);
+  activeDel().click(); await sleep(150);
+  check("removing the model in use warns what it costs", d.querySelector(".modal p").textContent.includes("Recognition stops"), true);
+  d.querySelector(".modal .btn.yes").click(); await sleep(300);
+  check("and the program is told this was meant", w.delCalls[w.delCalls.length - 1], ["small", true]);
+
   tab("models"); await sleep(60);
   d.getElementById("adv_open").click(); await sleep(30);
   d.getElementById("adv_go").click(); await sleep(150);
@@ -543,6 +562,11 @@ function check(name, actual, expected) {
   d.getElementById("wiz_dl").click(); await sleep(200);
   check("the wizard downloads what the plan is missing", w.dlCalls.length > wizDlBefore, true);
   check("the wizard shows the download running", d.getElementById("wiz_dlrow").style.display, "");
+  check("the wizard does not let you walk past a download", d.getElementById("wiz_next").disabled, true);
+  w.finishDl("gigaam-v3"); await sleep(1200);
+  check("a finished download opens the way on", d.getElementById("wiz_next").disabled, false);
+  check("and both models of the plan are applied, not just the first",
+    w.saveForms.slice(-2).map((f) => f.model_id), ["gigaam-v3", "small"]);
 
   d.getElementById("wiz_next").click(); await sleep(300);
   check("the third step names the shortcut", d.getElementById("wiz_hot").textContent, "ctrl+win");
