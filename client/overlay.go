@@ -31,6 +31,7 @@ const (
 	wmMouseMove  = 0x0200
 	wmLBtnUp     = 0x0202
 	wmSetCursor  = 0x0020
+	wmDpiChanged = 0x02E0
 	ovW          = 390
 	ovH          = 52
 	ovTimerID    = 1
@@ -150,13 +151,16 @@ func overlayWidth() int32 {
 
 func overlayFont() uintptr { return uiFont(overlayHwnd()) }
 
+func overlayMeasureFont() uintptr { return uiFontDPI(overlayDPI()) }
+
 var (
 	fontMu    sync.Mutex
 	fontCache = map[int32]uintptr{}
 )
 
-func uiFont(hwnd uintptr) uintptr {
-	dpi := dpiFor(hwnd)
+func uiFont(hwnd uintptr) uintptr { return uiFontDPI(dpiFor(hwnd)) }
+
+func uiFontDPI(dpi int32) uintptr {
 	fontMu.Lock()
 	defer fontMu.Unlock()
 	if f, ok := fontCache[dpi]; ok {
@@ -179,10 +183,15 @@ func overlayHwnd() uintptr {
 
 func measureOverlayWidth(state int, text string) int32 {
 	need := measureStatusWidth(state, text)
-	dpi := dpiFor(overlayHwnd())
+	dpi := overlayDPI()
 	if aw := askWidthDIP(); aw > 0 {
 		if w := scaleDPI(aw, dpi); w > need {
 			need = w
+		}
+	}
+	if state == ovFlashOK || state == ovFlashErr {
+		if lim := scaleDPI(640, dpi); need > lim {
+			need = lim
 		}
 	}
 	wa := overlayWorkArea()
@@ -193,7 +202,7 @@ func measureOverlayWidth(state int, text string) int32 {
 }
 
 func measureStatusWidth(state int, text string) int32 {
-	dpi := dpiFor(overlayHwnd())
+	dpi := overlayDPI()
 	base := scaleDPI(ovW, dpi)
 	if text == "" || state == ovRecording {
 		return base
@@ -203,7 +212,7 @@ func measureStatusWidth(state int, text string) int32 {
 		return base
 	}
 	defer procReleaseDC.Call(0, hdc)
-	old, _, _ := procSelectObject.Call(hdc, overlayFont())
+	old, _, _ := procSelectObject.Call(hdc, overlayMeasureFont())
 	if state == ovProcessing {
 		text += "..."
 	}
@@ -240,7 +249,7 @@ func resizeOverlay(hwnd uintptr, width int32) {
 	if hwnd == 0 {
 		return
 	}
-	h := scaleDPI(overlayHeightDIP(), dpiFor(hwnd))
+	h := scaleDPI(overlayHeightDIP(), overlayDPI())
 	x, y := overlayOrigin(width, h)
 	ovWidthMu.Lock()
 	same := ovWidth == width && ovHeight == h && ovX == x && ovY == y
@@ -270,10 +279,10 @@ func overlaySet(state int, text string) {
 	ovState = state
 	ovText = text
 	if state == ovFlashOK {
-		ovFlashEnd = time.Now().Add(1500 * time.Millisecond)
+		ovFlashEnd = time.Now().Add(flashLife(text, 1500))
 	}
 	if state == ovFlashErr {
-		ovFlashEnd = time.Now().Add(3000 * time.Millisecond)
+		ovFlashEnd = time.Now().Add(flashLife(text, 3000))
 	}
 	hwnd := ovHwnd
 	ovMu.Unlock()
@@ -281,6 +290,14 @@ func overlaySet(state int, text string) {
 	if hwnd != 0 {
 		procPostMessageW.Call(hwnd, wmOvSet, 0, 0)
 	}
+}
+
+func flashLife(text string, base int) time.Duration {
+	d := time.Duration(base)*time.Millisecond + time.Duration(len([]rune(text)))*30*time.Millisecond
+	if d > 5*time.Second {
+		d = 5 * time.Second
+	}
+	return d
 }
 
 func overlayHide() { overlaySet(ovHidden, "") }
@@ -351,6 +368,10 @@ func overlayWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 			procShowWindow.Call(hwnd, swShowNoActivate)
 			procInvalidateRect.Call(hwnd, 0, 0)
 		}
+		return 0
+	case wmDpiChanged:
+		log.Printf("оверлей: масштаб экрана сменился, пересчитываю плашку")
+		go overlayRefresh()
 		return 0
 	case wmTimer:
 		ovTick++
@@ -499,7 +520,7 @@ func overlayRender(hwnd, hdc uintptr) {
 		fill(rect{Left: rc.Left, Top: y, Right: rc.Right, Bottom: y + 1}, colBgLine)
 	}
 	pulse := 0.0
-	if anim && (st == ovRecording || st == ovProcessing) {
+	if anim && !askActive() && (st == ovRecording || st == ovProcessing) {
 		pulse = math.Abs(math.Sin(float64(ovTick) * 0.18))
 	}
 	drawDot := func(cx, cy, r int32, color uintptr) {
@@ -535,7 +556,7 @@ func overlayRender(hwnd, hdc uintptr) {
 	}
 
 	overlayFont()
-	if st == ovProcessing {
+	if st == ovProcessing && !askActive() {
 		if text == "" {
 			text = tr("ov.transcribing")
 		}
@@ -608,4 +629,12 @@ func overlayNote(text string) {
 func overlayWorkArea() rect {
 	anchor := anchorRect()
 	return workAreaForPoint(anchor.Left, anchor.Top)
+}
+
+func overlayDPI() int32 {
+	anchor := anchorRect()
+	if d := dpiForPoint(anchor.Left, anchor.Top); d >= 72 {
+		return d
+	}
+	return dpiFor(overlayHwnd())
 }

@@ -180,6 +180,10 @@ function check(name, actual, expected) {
   check("status bar names both models", d.getElementById("st_main").textContent, "Ready · gigaam-v3 + ggml-small.bin · 7.8 GB free");
   check("sidebar badges filled", [d.getElementById("badge_mic").textContent, d.getElementById("badge_models").textContent], ["Realtek", "2"]);
   check("status bar led lit", d.getElementById("st_led").classList.contains("on"), true);
+  check("the post-processing card offers what the state calls for", d.getElementById("state_llm_btn").textContent, "Change");
+  check("copying the last dictation is offered", d.getElementById("state_copy").disabled, false);
+  check("the models badge explains itself", d.getElementById("badge_models").title, "Installed models");
+  check("icon buttons carry a name for screen readers", d.getElementById("mic_refresh").getAttribute("aria-label"), d.getElementById("mic_refresh").title);
 
   check("nine sections in the sidebar", d.querySelectorAll(".nav").length, 9);
 

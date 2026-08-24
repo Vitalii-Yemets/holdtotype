@@ -85,9 +85,9 @@ func primaryEngine(cfg *Config) string {
 
 func engineModelName(cfg *Config, engine string) string {
 	if engine == engineSherpa {
-		return filepath.Base(filepath.Clean(cfg.SherpaModel))
+		return modelNameForPath(cfg.SherpaModel)
 	}
-	return filepath.Base(cfg.Model)
+	return modelNameForPath(cfg.Model)
 }
 
 type routeRow struct {

@@ -64,7 +64,7 @@ func textWidthDIP(s string) int32 {
 		return int32(len([]rune(s))) * 8
 	}
 	defer procReleaseDC.Call(0, hdc)
-	old, _, _ := procSelectObject.Call(hdc, overlayFont())
+	old, _, _ := procSelectObject.Call(hdc, overlayMeasureFont())
 	u, err := windows.UTF16FromString(s)
 	if err != nil {
 		return int32(len([]rune(s))) * 8
@@ -75,7 +75,7 @@ func textWidthDIP(s string) int32 {
 	if old != 0 {
 		procSelectObject.Call(hdc, old)
 	}
-	dpi := dpiFor(overlayHwnd())
+	dpi := overlayDPI()
 	if dpi < 72 {
 		dpi = 96
 	}
@@ -84,7 +84,7 @@ func textWidthDIP(s string) int32 {
 
 func askMaxWidthDIP() int32 {
 	wa := overlayWorkArea()
-	dpi := dpiFor(overlayHwnd())
+	dpi := overlayDPI()
 	if dpi < 72 {
 		dpi = 96
 	}
@@ -244,11 +244,13 @@ func overlayAsk(prompt string, choices []ovChoice, seconds int) string {
 	}
 	askMu.Unlock()
 
+	ovMu.Lock()
+	prevState, prevText := ovState, ovText
+	ovMu.Unlock()
 	if hidden {
-		overlaySet(ovProcessing, tr("ov.transcribing"))
-	} else {
-		overlayRefresh()
+		prevState, prevText = ovProcessing, tr("ov.transcribing")
 	}
+	overlaySet(ovProcessing, tr("ov.asking"))
 
 	res := <-ch
 
@@ -263,7 +265,7 @@ func overlayAsk(prompt string, choices []ovChoice, seconds int) string {
 	if forced {
 		overlayHide()
 	} else {
-		overlayRefresh()
+		overlaySet(prevState, prevText)
 	}
 	log.Printf("вопрос %q → %q", prompt, res)
 	return res

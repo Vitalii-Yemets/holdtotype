@@ -411,6 +411,10 @@ func (a *App) settingsThread(tab string, attempt int) {
 			log.Printf("настройки: запрошен повтор запуска распознавателя")
 			a.requestServerRestart()
 		})
+		_ = w.Bind("appOpenLog", func() {
+			log.Printf("настройки: открываю лог")
+			shellOpen(appid.LogFile)
+		})
 		_ = w.Bind("appCheckModels", func() string {
 			return a.verifyModels()
 		})
@@ -845,9 +849,11 @@ func settingsHTML(cfg *Config, tab string) string {
 		"upd": "S_UPDATED", "pedit": "S_PROF_EDIT", "pclose": "S_PROF_CLOSE",
 		"confirmdel": "S_CONFIRM_DEL", "delactive": "S_DEL_ACTIVE", "wizneedmodel": "S_WIZ_NEED_MODEL",
 		"free": "S_FREE", "updnone": "S_UPD_NONE",
+		"badgemodels": "S_BADGE_MODELS", "badgemiss": "S_BADGE_MISS", "badgesystem": "S_BADGE_SYSTEM", "badgehist": "S_BADGE_HIST",
 		"micdefault": "S_MIC_DEFAULT", "micquiet": "S_MIC_QUIET", "get": "S_STATE_GET", "change": "S_CHANGE_MODEL",
 		"remotewarn": "S_REMOTE_WARN", "remoteask": "S_REMOTE_ASK", "remotebadge": "S_REMOTE_BADGE",
 		"ok": "S_OK", "cancel": "S_CANCEL", "dlask": "S_DL_ASK", "dlstart": "S_DL_START", "dlcancel": "S_DL_CANCEL", "nofound": "S_NOT_FOUND",
+		"advrolemain": "S_ADV_ROLE_MAIN", "advrolesecond": "S_ADV_ROLE_SECOND",
 		"advprimary": "S_ADV_PRIMARY", "advcompanion": "S_ADV_COMPANION", "advhave": "S_ADV_HAVE", "advapply": "S_ADV_APPLY", "advask": "S_ADV_ASK",
 		"more": "S_MORE", "less": "S_LESS",
 		"pasteinh": "S_RULE_PASTE_INH", "enterinh": "S_RULE_ENTER_INH", "delaynone": "S_RULE_DELAY_NONE", "promptinh": "S_RULE_PROMPT_INH",
@@ -925,10 +931,12 @@ button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box
 .nbadge{flex:none;max-width:64px;font-size:9px;padding:1px 5px;border:1px solid var(--line);color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .nbadge:empty{display:none}
 .nbadge.warn{color:var(--amber);border-color:var(--amber)}
+.nbadge.miss{color:var(--amber);border-color:var(--amber);box-shadow:0 0 6px rgba(255,176,0,.35)}
 .scard .led{width:6px;height:6px;border-radius:50%;background:var(--faint);display:inline-block;margin-right:6px;flex:none}
 .scard .led.on{background:var(--green);box-shadow:var(--glow)}
 .scard .led.warn{background:var(--amber)}
 .scard .mini{align-self:flex-start}
+.scard .miclevel{flex:none;width:100%;max-width:220px}
 .row .sub{display:block;font-size:10.5px;color:var(--dim);margin-top:2px;letter-spacing:0}
 .row .lbl{flex:1;min-width:0}
 .statusbar{border-top:1px solid var(--line);padding:6px 14px;display:flex;gap:12px;align-items:center;font-size:11px;color:var(--dim);flex-wrap:nowrap;white-space:nowrap}
@@ -1013,7 +1021,7 @@ button.btn.ghost:hover{color:var(--green);border-color:var(--dim);background:non
 .tab{padding:9px 14px;border:1px solid transparent;border-bottom:none;background:none;font:inherit;color:var(--dim);cursor:pointer;letter-spacing:1px;text-transform:uppercase;font-size:12px}
 .tab:hover{color:var(--green)}
 .tab.active{color:var(--green);border-color:var(--line);background:var(--panel);text-shadow:var(--glow)}
-.page{display:none;padding:14px 16px}
+.page{display:none;padding:14px 16px;max-width:900px}
 .page.active{display:block}
 .card{background:none;border:0;padding:0;margin:0 0 18px}
 .row{display:flex;align-items:center;gap:10px;padding:9px 0;flex-wrap:wrap;border-bottom:1px solid #12241a}
@@ -1054,7 +1062,7 @@ input[type=checkbox]:focus-visible{outline:1px solid var(--green);outline-offset
 .row input[type=text]{flex:0 0 auto;width:min(230px,50%)}
 .row .val{color:var(--dim);font-size:11.5px;min-width:44px;text-align:right}
 button,select,input[type=checkbox],input[type=radio],input[type=range]{cursor:pointer}
-button:disabled{cursor:default}
+button:disabled{cursor:default;opacity:.35}
 .val{min-width:52px;text-align:right;color:var(--green);text-shadow:var(--glow);font-weight:700}
 .hotkey-box{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .hotkey-val{font-weight:700;font-size:15px;background:#08100b;border:1px solid var(--line);padding:8px 14px;min-width:150px;text-align:center;text-shadow:var(--glow);letter-spacing:1px}
@@ -1126,6 +1134,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .advrow{display:flex;align-items:center;gap:9px;font-size:12px;padding:3px 0}
 .advrow .advrole{width:74px;color:var(--dim);text-transform:uppercase;font-size:10px;letter-spacing:.1em}
 .advrow .advname{flex:1;color:var(--green)}
+.advrow .advwhy{display:block;color:var(--dim);font-size:11px;letter-spacing:0;text-transform:none}
 .advrow .advstate{color:var(--amber)}
 .advrow .advstate.ok{color:var(--dim)}
 .advq{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:11.5px;color:var(--dim)}
@@ -1150,15 +1159,8 @@ button.mini.danger:hover{color:#ff7b6b;border-color:#7a2e2e;box-shadow:0 0 7px r
 .ramline .dot{margin-left:12px;font-size:10px}
 .subhead{color:var(--dim);font-size:11px;letter-spacing:1px;text-transform:uppercase;margin:14px 0 2px;padding-top:10px;border-top:1px solid #12241a}
 #hf_results{max-height:44vh;overflow-y:auto;overscroll-behavior:contain}
-.miclevel{flex:1;min-width:120px;height:14px;border:1px solid var(--line);background:#08100b;position:relative;overflow:hidden}
+.miclevel{flex:0 1 220px;min-width:120px;max-width:220px;height:14px;border:1px solid var(--line);background:#08100b;position:relative;overflow:hidden}
 .miclevel i{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,var(--faint),var(--green));box-shadow:var(--glow);transition:width .08s linear}
-.subtabs{display:flex;flex-wrap:wrap;gap:2px;align-items:flex-end;border-bottom:1px solid var(--line);margin-bottom:10px}
-button.stab{padding:9px 11px;border:1px solid transparent;border-bottom:none;background:none;font:inherit;color:var(--dim);cursor:pointer;letter-spacing:1px;text-transform:uppercase;font-size:12px}
-button.stab:hover{color:var(--green)}
-button.stab.on{color:var(--green);border-color:var(--line);background:var(--bg);text-shadow:var(--glow)}
-.subtabs .hfhome{margin-bottom:6px}
-.spage{display:none}
-.spage.on{display:block}
 #hf_clr{appearance:none;background:none;border:0;font:inherit;position:absolute;right:9px;top:50%;transform:translateY(-50%);color:var(--dim);cursor:pointer;display:none;font-size:13px;padding:2px 4px}
 #hf_clr:hover{color:var(--green);text-shadow:var(--glow)}
 #hf_go{appearance:none;background:none;border:0;font:inherit;position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--dim);cursor:pointer;line-height:0;padding:3px}
@@ -1262,7 +1264,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
    <button class="mini" id="state_other_btn" data-goto="models">{{S_CHANGE_MODEL}}</button></div>
   <div class="scard"><span class="k">{{S_STATE_PROC}}</span>
    <span class="v"><i class="led" id="state_llm_led"></i><span id="state_llm">—</span></span>
-   <button class="mini" data-goto="models">{{S_PICK_MODEL}}</button></div>
+   <button class="mini" id="state_llm_btn" data-goto="models">{{S_PICK_MODEL}}</button></div>
  </div>
  <div class="sect">{{S_STATE_LAST}}</div>
  <div class="row"><span class="lbl"><span class="lastres" id="state_last">—</span><span class="sub" id="state_last_meta"></span></span>
@@ -1512,6 +1514,8 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
    <button class="mini" id="upd_check">{{S_UPD_CHECK}}</button></div>
   <div class="row" data-adv><label>{{S_UPD_AUTO}}<span class="sub">{{S_SUB_UPD}}</span></label><input type="checkbox" id="check_updates"></div>
   <div id="upd_out" style="font-size:12px;min-height:18px;color:var(--amber)"></div>
+  <div class="row" data-adv><label>{{S_LOG}}<span class="sub">{{S_LOG_SUB}}</span></label>
+   <button class="mini" id="log_open">{{S_LOG_OPEN}}</button></div>
  </div>
  <div class="card">
   <div class="sect" data-adv>{{S_SEC_SERVICE}}</div>
@@ -1650,6 +1654,19 @@ let expandedID = null;
 let captureFor = null;
 
 function esc(s){ const d=document.createElement("span"); d.textContent=s||""; return d.innerHTML; }
+function ariaFromTitle(root){
+  const scope = root && root.querySelectorAll ? root : document;
+  scope.querySelectorAll("button[title]:not([aria-label]),select[title]:not([aria-label])").forEach(b=>{
+    const t = b.textContent.trim();
+    if(!t || t.length <= 2 || b.classList.contains("iconbtn")) b.setAttribute("aria-label", b.getAttribute("title"));
+  });
+}
+if(typeof MutationObserver === "function"){
+  new MutationObserver(list=>{
+    list.forEach(m=>m.addedNodes.forEach(n=>{ if(n.nodeType === 1) ariaFromTitle(n.parentNode || n); }));
+  }).observe(document.documentElement, {childList:true, subtree:true});
+}
+
 
 let selLLM = null;
 let hfRepos = [];
@@ -1662,8 +1679,6 @@ function fitLabel(f, need){
   const tip = f==="ok" ? L.fitok : (f==="warn" ? L.fitwarn : L.fitbad);
   return '<span title="'+esc(tip)+'" style="color:'+col+';font-size:12px;white-space:nowrap">&#9679; &#8776;'+gb+' GB</span>';
 }
-const curSubs = {};
-function showSub(){}
 async function refreshLLM(){
   const st = JSON.parse(await appLLM());
   const installed = st.installed || [];
@@ -2069,6 +2084,8 @@ async function refreshState(){
   set("state_llm", s.llm);
   set("state_ram", s.ram);
   set("state_last", s.last);
+  const copyBtn = document.getElementById("state_copy");
+  if(copyBtn) copyBtn.disabled = !s.last || s.last === "—";
   const lastEl = document.getElementById("state_last");
   if(lastEl) lastEl.title = s.last && s.last !== "—" ? s.last : "";
   set("state_last_meta", s.last_meta || "");
@@ -2079,17 +2096,21 @@ async function refreshState(){
   capLed("state_ru_led", "state_ru_btn", s.ru_state);
   capLed("state_other_led", "state_other_btn", s.other_state);
   led("state_llm_led", s.llm_ok, !s.llm_ok);
+  const llmBtn = document.getElementById("state_llm_btn");
+  if(llmBtn) llmBtn.textContent = s.llm_ok ? L.change : L.get;
   led("st_led", s.ready);
-  const badge = (id, v, full)=>{
+  const badge = (id, v, full, cls)=>{
     const el = document.getElementById(id);
     if(!el) return;
     el.textContent = v || "";
     el.title = full || v || "";
+    el.classList.toggle("miss", cls === "miss");
   };
+  const missing = s.ru_state === "missing" || s.other_state === "missing";
   badge("badge_mic", s.badges && s.badges.mic, s.mic);
-  badge("badge_models", s.badges && s.badges.models);
-  badge("badge_system", s.badges && s.badges.system);
-  badge("badge_history", s.badges && s.badges.history);
+  badge("badge_models", s.badges && s.badges.models, missing ? L.badgemiss : L.badgemodels, missing ? "miss" : "");
+  badge("badge_system", s.badges && s.badges.system, L.badgesystem);
+  badge("badge_history", s.badges && s.badges.history, L.badgehist);
   const rem = document.getElementById("st_remote");
   if(rem) rem.textContent = s.remote ? L.remotebadge : "";
 }
@@ -2226,7 +2247,7 @@ async function refreshModels(){
     let right = "";
     if(m.state === "downloading"){ busy = true; right = '<span class="mpct">'+(m.pct>0?m.pct+"%":"…")+'</span><button class="iconbtn danger" title="'+L.dlcancel+'" data-a="cancel" data-id="'+m.id+'">&#10005;</button>'; }
     else if(m.state === "absent") right = '<button class="iconbtn" title="'+L.dl+'" data-a="dl" data-id="'+m.id+'">'+I_DL+'</button>';
-    else if(m.state === "installed" || (m.state === "active" && m.id !== "custom")) right = '<button class="iconbtn danger" title="'+L.del+'" data-a="del" data-id="'+m.id+'">&#10005;</button>';
+    else if(m.state === "installed" || (m.state === "active" && m.id !== "custom")) right = '<button class="iconbtn danger" title="'+L.del+'" data-a="del" data-id="'+m.id+'" data-name="'+esc(m.name)+'">&#10005;</button>';
     const tag = m.engine === "sherpa" ? '<span class="mtag">RU</span>' : (m.langs === "*" ? '<span class="mtag">99</span>' : "");
     const ram = m.ram ? '<span class="mram '+(m.fit||"")+'">≈'+m.ram+' MB RAM</span>' : '<span class="mram"></span>';
     div.innerHTML = radio+'<span class="mname">'+m.name+tag+'</span><span class="mdesc">'+m.desc+'</span>'+ram+'<span class="msize">'+(m.size?m.size+" MB":"")+'</span><span>'+right+'</span>';
@@ -2270,7 +2291,8 @@ async function refreshModels(){
       }
       else {
         const isActive = b.dataset.id === activeModelId;
-        const ask = isActive ? L.delactive.replace("%s", b.dataset.id) : L.confirmdel.replace("%s", b.dataset.id);
+        const mname = b.dataset.name || b.dataset.id;
+        const ask = isActive ? L.delactive.replace("%s", mname) : L.confirmdel.replace("%s", mname);
         if(!await askConfirm(ask, L.del)) return;
         toast(await appModelDel(b.dataset.id, isActive));
         if(selModel === b.dataset.id) selModel = null;
@@ -2351,7 +2373,6 @@ function toast(msg, severity){
   toast._t = setTimeout(()=>{ t.textContent = ""; t.className = "stsaved"; }, severity === "error" ? 6000 : 2200);
 }
 
-const sliders = [];
 const numSels = ["threads","min_record_ms","max_record_seconds","translate_ask_seconds","paste_delay_ms","history_days","history_max"];
 function load(){
   document.getElementById("punctuation").value = CFG.punctuation || "model";
@@ -2473,7 +2494,6 @@ async function doSave(){
   refreshModels();
   refreshState();
 }
-function save(){ doSave(); }
 let curTab = "state";
 function show(p){
   curTab = p;
@@ -2613,7 +2633,7 @@ async function wizAdvise(){
     const row = document.createElement("div");
     row.className = "advrow";
     row.innerHTML = '<span class="advrole">'+(i === 0 ? L.advprimary : L.advcompanion)+'</span>'+
-      '<span class="advname">'+esc(p.name)+'</span>'+
+      '<span class="advname">'+esc(p.name)+'<span class="advwhy">'+(i === 0 ? L.advrolemain : L.advrolesecond)+'</span></span>'+
       '<span class="advstate'+(p.installed ? " ok" : "")+'">'+(p.installed ? L.advhave : (p.size ? p.size+" MB" : ""))+'</span>';
     box.appendChild(row);
   });
@@ -2715,7 +2735,7 @@ async function wizPollTry(){
   out.classList.add("ok");
 }
 async function wizDone(){
-  wizEl("wiz_auto").checked = await appAutorun();
+  wizEl("wiz_auto").checked = true;
 }
 async function wizFinish(){
   const on = await appSetAutorun(wizEl("wiz_auto").checked);
@@ -2783,6 +2803,7 @@ async function refreshHistory(){
   if(!body) return;
   const q = (document.getElementById("hist_find") || {}).value || "";
   const items = JSON.parse(await appHistory(q));
+  syncHistList(!items.length && !q);
   body.innerHTML = "";
   if(!items.length){
     const empty = document.createElement("div");
@@ -2838,7 +2859,22 @@ function initHistory(){
     };
   }
   const on = document.getElementById("history");
-  if(on) on.addEventListener("change", ()=>setTimeout(refreshHistory, 300));
+  if(on) on.addEventListener("change", ()=>{ syncHistControls(); setTimeout(refreshHistory, 300); });
+  syncHistControls();
+}
+function syncHistControls(){
+  const on = document.getElementById("history");
+  if(!on) return;
+  ["history_days","history_max"].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.disabled = !on.checked;
+  });
+}
+function syncHistList(empty){
+  ["hist_clear","hist_find"].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el && !(id === "hist_find" && el.value)) el.disabled = !!empty;
+  });
 }
 let cmds = (CFG.commands || []).map(c=>({...c}));
 function renderCmds(){
@@ -3168,6 +3204,8 @@ function wizStart(){
   wizShow(0);
 }
 document.getElementById("upd_check").onclick = updCheck;
+const logBtn = document.getElementById("log_open");
+if(logBtn) logBtn.onclick = ()=>appOpenLog();
 let applyTimer = null;
 function applyNow(){
   clearTimeout(applyTimer);
@@ -3202,6 +3240,7 @@ load();
   refreshLastApp();
   bindLabels();
   applyLevel();
+  ariaFromTitle(document);
   document.querySelectorAll(".lvlb").forEach(b=>b.onclick=()=>setLevel(b.dataset.l));
   const omni = document.getElementById("omni");
   if(omni){

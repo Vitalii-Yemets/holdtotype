@@ -92,7 +92,7 @@ button.btn:hover{background:#123f22;box-shadow:var(--glow)}
   <label class="fld">{{MODEL}}</label>
   <select id="model">{{MODELOPTS}}</select>
   <label class="chk"><input type="checkbox" id="shortcut" checked> {{SHORTCUT}}</label>
-  <label class="chk"><input type="checkbox" id="autorun"> {{AUTORUN}}</label>
+  <label class="chk"><input type="checkbox" id="autorun" checked> {{AUTORUN}}</label>
   </div>
   <label class="chk"><input type="checkbox" id="launch" checked> {{LAUNCH}}</label>
   <div class="err" id="operr"></div>

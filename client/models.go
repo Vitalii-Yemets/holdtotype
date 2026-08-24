@@ -594,6 +594,24 @@ func modelDisplayName(id string) string {
 	return id
 }
 
+func modelNameForPath(p string) string {
+	p = strings.TrimSpace(p)
+	if p == "" {
+		return ""
+	}
+	base := filepath.Base(filepath.Clean(p))
+	for i := range modelCatalog {
+		m := &modelCatalog[i]
+		if m.File != "" && filepath.Base(m.File) == base {
+			return m.NameKey
+		}
+		if m.Dir != "" && filepath.Base(filepath.Clean(m.Dir)) == base {
+			return m.NameKey
+		}
+	}
+	return base
+}
+
 func adviseModel(lang, priority string, needTranslate bool) string {
 	_, free := ramMB()
 	res := advisor.Recommend(advisor.Input{
@@ -799,18 +817,18 @@ func (a *App) stateSnapshot() string {
 		lastMeta = strings.Join(parts, " · ")
 	}
 
-	ruModel := filepath.Base(filepath.Clean(cfg.SherpaModel))
+	ruModel := modelNameForPath(cfg.SherpaModel)
 	if !sherpaInstalled(cfg) {
 		ruModel = strS("S_NOT_INSTALLED")
 	}
-	otherModel := filepath.Base(cfg.Model)
+	otherModel := modelNameForPath(cfg.Model)
 	if modelStateFor(cfg, engineWhisper) == "missing" {
 		otherModel = strS("S_NOT_INSTALLED")
 	}
 	st := stateOut{
 		Hotkey:     cfg.Hotkey,
 		Mic:        mic,
-		Engine:     primaryEngine(cfg) + " · " + filepath.Base(filepath.Clean(activeModelPath(cfg))),
+		Engine:     primaryEngine(cfg) + " · " + modelNameForPath(activeModelPath(cfg)),
 		LLM:        llm,
 		RAM:        trf("adv.ram", free),
 		Last:       last,
@@ -879,9 +897,9 @@ func statusLine(cfg *Config, ready bool, freeMB int) string {
 	if !ready {
 		return tr("status.loading")
 	}
-	models := filepath.Base(filepath.Clean(activeModelPath(cfg)))
+	models := modelNameForPath(activeModelPath(cfg))
 	if primaryEngine(cfg) == engineSherpa {
-		models += " + " + filepath.Base(cfg.Model)
+		models += " + " + modelNameForPath(cfg.Model)
 	}
 	return trf("status.line", models, float64(freeMB)/1024)
 }

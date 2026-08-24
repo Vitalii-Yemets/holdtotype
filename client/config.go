@@ -121,18 +121,41 @@ func presetProfiles() []Profile {
 	cleanPrompt := "You clean up dictated text: remove filler words, repetitions and false starts; fix punctuation and capitalization. Always answer in the same language as the input, never translate.\nExample input: nu eee koroche ya khotel nu skazat privet vsem privet\nExample output: Ya khotel skazat: privet vsem!\nReturn only the cleaned text, nothing else."
 	formalPrompt := "You rewrite dictated text in a polite, formal business style. Always answer in the same language as the input, never translate.\nExample input: надо переделать отчет до завтра\nExample output: Пожалуйста, переработайте отчёт к завтрашнему дню.\nReturn only the rewritten text, nothing else."
 	translatePrompt := "Translate the following text to English. Return only the translation, nothing else."
-	if lang() == "ru" {
-		return []Profile{
-			{ID: "clean", Name: "Чистка речи", Prompt: cleanPrompt},
-			{ID: "formal", Name: "Деловой стиль", Prompt: formalPrompt},
-			{ID: "translate-en", Name: "Перевод → English (качественный)", Prompt: translatePrompt},
-		}
-	}
 	return []Profile{
 		{ID: "clean", Name: "Cleanup", Prompt: cleanPrompt},
 		{ID: "formal", Name: "Business style", Prompt: formalPrompt},
 		{ID: "translate-en", Name: "Translate → English (quality)", Prompt: translatePrompt},
 	}
+}
+
+var legacyProfileNames = map[string][]string{
+	"clean":        {"Чистка речи", "Очищення мовлення"},
+	"formal":       {"Деловой стиль", "Діловий стиль"},
+	"translate-en": {"Перевод → English (качественный)", "Переклад → English (якісний)"},
+}
+
+func renameLegacyProfiles(cfg *Config) bool {
+	changed := false
+	presets := presetProfiles()
+	for i := range cfg.Profiles {
+		old, ok := legacyProfileNames[cfg.Profiles[i].ID]
+		if !ok {
+			continue
+		}
+		for _, name := range old {
+			if cfg.Profiles[i].Name != name {
+				continue
+			}
+			for _, p := range presets {
+				if p.ID == cfg.Profiles[i].ID {
+					log.Printf("имя встроенного промпта %s переведено на английский", p.ID)
+					cfg.Profiles[i].Name = p.Name
+					changed = true
+				}
+			}
+		}
+	}
+	return changed
 }
 
 func defaultConfig() *Config {
@@ -323,6 +346,9 @@ func loadConfig(path string) (*Config, error) {
 	if cfg.Profiles == nil {
 		cfg.Profiles = presetProfiles()
 	}
+	if renameLegacyProfiles(cfg) {
+		migrated = true
+	}
 	if cfg.DefaultProfile == "wtranslate" {
 		cfg.TranslateDefault = true
 		cfg.DefaultProfile = ""
@@ -375,7 +401,6 @@ func loadConfig(path string) (*Config, error) {
 	return cfg, nil
 }
 
-var translateLangs = []string{"en", "de", "fr", "es", "it", "pl", "ru"}
 
 var translateLangNames = map[string]string{
 	"en": "English", "de": "German", "fr": "French", "es": "Spanish",
