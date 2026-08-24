@@ -641,6 +641,9 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	c.ServerExe = f.ServerExe
 	c.ServerURL = strings.TrimSpace(f.ServerURL)
 	c.WhisperPrompt = strings.TrimSpace(f.WhisperPrompt)
+	if c.Language != old.Language {
+		syncDictionary(&c)
+	}
 	if f.Profiles != nil {
 		var cleaned []Profile
 		for _, p := range f.Profiles {

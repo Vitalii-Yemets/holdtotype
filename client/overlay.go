@@ -122,6 +122,17 @@ func ovCancelActive() bool {
 	return st == ovRecording || st == ovProcessing || st == ovPaused
 }
 
+func ovShowsClose(st int) bool {
+	return st == ovRecording || st == ovProcessing || st == ovPaused || st == ovFlashOK || st == ovFlashErr
+}
+
+func ovFlashState() bool {
+	ovMu.Lock()
+	st := ovState
+	ovMu.Unlock()
+	return st == ovFlashOK || st == ovFlashErr
+}
+
 
 var (
 	ovWidth   = int32(ovW)
@@ -262,7 +273,7 @@ func overlaySet(state int, text string) {
 		ovFlashEnd = time.Now().Add(1500 * time.Millisecond)
 	}
 	if state == ovFlashErr {
-		ovFlashEnd = time.Now().Add(5500 * time.Millisecond)
+		ovFlashEnd = time.Now().Add(3000 * time.Millisecond)
 	}
 	hwnd := ovHwnd
 	ovMu.Unlock()
@@ -377,6 +388,11 @@ func overlayWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 			askFinish(id)
 			return 0
 		}
+		if ovInCloseZone(x, y) && ovFlashState() {
+			log.Printf("оверлей: вспышка закрыта нажатием")
+			overlayHide()
+			return 0
+		}
 		if ovInCloseZone(x, y) && (ovCancelActive() || askActive()) {
 			if askActive() {
 				askFinish("")
@@ -395,7 +411,7 @@ func overlayWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 			procSetCursor.Call(cur)
 			return 1
 		}
-		if (ovCancelActive() || askActive()) && ovInCloseZone(pt.X, pt.Y) {
+		if (ovCancelActive() || askActive() || ovFlashState()) && ovInCloseZone(pt.X, pt.Y) {
 			cur, _, _ := procLoadCursorW.Call(0, 32649)
 			procSetCursor.Call(cur)
 			return 1
@@ -561,7 +577,7 @@ func overlayRender(hwnd, hdc uintptr) {
 		}
 	}
 
-	if st == ovRecording || st == ovProcessing {
+	if ovShowsClose(st) {
 		xr := rect{Left: rc.Right - px(34), Top: 0, Right: rc.Right - px(8), Bottom: px(ovH)}
 		xs, _ := windows.UTF16FromString("✕")
 		procSetTextColor.Call(hdc, colGreenDm)

@@ -135,6 +135,7 @@ var msgs = map[string]map[string]string{
 		"fd.title":              "Фокус сменился — вставить?",
 		"fd.here":               "Вставить сюда",
 		"fd.copy":               "Копировать",
+		"fd.keep":               "Оставить",
 		"ov.speak":              "Говорите…",
 		"ov.transcribing":       "Распознаю",
 		"ov.inserted":           "Вставлено: %d симв.",
@@ -263,6 +264,7 @@ var msgs = map[string]map[string]string{
 		"fd.title":              "Focus changed — insert?",
 		"fd.here":               "Insert here",
 		"fd.copy":               "Copy",
+		"fd.keep":               "Keep it",
 		"ov.speak":              "Speak…",
 		"ov.transcribing":       "Transcribing",
 		"ov.inserted":           "Inserted: %d chars",
@@ -375,7 +377,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_TAB_SERVER":     "Сервер",
 		"S_PIPE":           "голос ▸ распознавание ▸ редактура ▸ вставка",
 		"S_DICT":           "Словарь распознавания",
-		"S_DICT_HINT":      "Термины, имена и аббревиатуры через запятую — подсказка слуху, не команды.",
+		"S_DICT_HINT":      "Термины, имена и аббревиатуры через запятую — подсказка слуху, не команды. Работает для Whisper; на русскую речь через GigaAM не влияет. Набор по умолчанию меняется вместе с языком распознавания, пока вы не впишете своё.",
 		"S_LLM":            "Профили обработки",
 		"S_LLM_HINT":       "Отмеченные профили применяются по очереди, сверху вниз, при обычной диктовке. Ничего не отмечено — текст вставляется как есть. Хоткей профиля применяет разово только его.",
 		"S_LLM_MODEL":      "Модель-редактор (LLM)",
@@ -621,7 +623,7 @@ var settingsStrings = map[string]map[string]string{
 			"<p class=\"wh\">Безопасная вставка</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Распознаю…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span style=\"color:var(--amber)\">Фокус сменился — вставить?</span><span class=\"mock-btn on mock-cd\">Вставить сюда</span><span class=\"mock-btn\">Копировать</span></div></div>" +
 			"<ul>" +
-			"<li>Окно-цель запоминается в момент нажатия хоткея. Если за время обработки фокус сменился, текст не вставляется — плашка спрашивает второй строкой: <b>Вставить сюда</b> (в текущее окно), <b>Копировать</b> (в буфер обмена) или крестик. По истечении отсчёта вставка отменяется, текст остаётся в «Последнем результате».</li>" +
+			"<li>Окно-цель запоминается в момент нажатия хоткея. Если за время обработки фокус сменился, текст не вставляется — плашка спрашивает второй строкой: <b>Вставить сюда</b> (в текущее окно), <b>Копировать</b> (в буфер обмена) или <b>Оставить</b>. Если промолчать, через 30 секунд сам выбирается «Оставить»: никуда ничего не вставляется, текст лежит в «Последнем результате» и в буфере обмена.</li>" +
 			"<li>Enter после вставки нажимается только если окно-цель не менялось.</li>" +
 			"<li><b>Последний результат</b> — финальный текст каждой диктовки хранится в памяти до следующей; в меню трея есть пункт «Копировать последний результат». Ошибка вставки или смена фокуса не теряют надиктованное.</li>" +
 			"</ul>" +
@@ -752,7 +754,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_TAB_SERVER":     "Server",
 		"S_PIPE":           "voice ▸ recognition ▸ editing ▸ paste",
 		"S_DICT":           "Recognition dictionary",
-		"S_DICT_HINT":      "Comma-separated terms, names and abbreviations — a hint for the ear, not commands.",
+		"S_DICT_HINT":      "Comma-separated terms, names and abbreviations — a hint for the ear, not commands. It works for Whisper; Russian speech through GigaAM ignores it. The default set follows the recognition language until you write your own.",
 		"S_LLM":            "Processing profiles",
 		"S_LLM_HINT":       "Checked profiles apply one after another, top to bottom, on regular dictation. Nothing checked — text is inserted as is. A profile's hotkey applies just that profile once.",
 		"S_LLM_MODEL":      "Editing model (LLM)",
@@ -998,7 +1000,7 @@ var settingsStrings = map[string]map[string]string{
 			"<p class=\"wh\">Safe insertion</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Transcribing…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span style=\"color:var(--amber)\">Focus changed — insert?</span><span class=\"mock-btn on mock-cd\">Insert here</span><span class=\"mock-btn\">Copy</span></div></div>" +
 			"<ul>" +
-			"<li>The target window is captured the moment you press the hotkey. If focus changed while the speech was being processed, nothing is pasted — the plate asks on its second line: <b>Insert here</b> (into the current window), <b>Copy</b> (to the clipboard) or the ✕. When the countdown expires the insertion is cancelled and the text stays in Last Result.</li>" +
+			"<li>The target window is captured the moment you press the hotkey. If focus changed while the speech was being processed, nothing is pasted — the plate asks on its second line: <b>Insert here</b> (into the current window), <b>Copy</b> (to the clipboard) or <b>Keep it</b>. Say nothing and after 30 seconds it picks Keep it by itself: nothing is inserted anywhere, and the text stays in Last Result and on the clipboard.</li>" +
 			"<li>Enter after paste is pressed only when the target window has not changed.</li>" +
 			"<li><b>Last Result</b> — the final text of every dictation is kept in memory until the next one; the tray menu has \"Copy last result\". A failed paste or focus change never loses a dictation.</li>" +
 			"</ul>" +

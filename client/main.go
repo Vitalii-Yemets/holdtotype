@@ -448,6 +448,11 @@ func main() {
 	}
 
 	if !acquireSingleInstance() {
+		initLang(configUILanguage("config.json"))
+		if openSettingsInRunningInstance() {
+			log.Printf("уже запущено — открыл настройки работающего экземпляра")
+			return
+		}
 		msgBox(tr("app.name"), tr("already.running"))
 		return
 	}
@@ -860,9 +865,11 @@ func (a *App) handleDown(profileID string) {
 	}
 	a.mu.Lock()
 	rec := a.rec
-	ok := a.enabled && a.ready && !a.capturing && rec != nil
+	enabled, ready, capturing, backendErr := a.enabled, a.ready, a.capturing, a.backendErr
+	ok := enabled && ready && !capturing && rec != nil
 	a.mu.Unlock()
 	if !ok {
+		a.explainIgnoredPress(cfg, enabled, capturing, backendErr, rec != nil)
 		return
 	}
 	if err := rec.Start(cfg.MaxRecordSeconds); err != nil {
@@ -1157,7 +1164,8 @@ func (a *App) insertResult(ctx context.Context, cfg *Config, start time.Time, te
 				}
 				return
 			default:
-				log.Printf("вставка отменена, текст сохранён в последнем результате")
+				_ = setClipboardText(text)
+				log.Printf("вставка отменена, текст сохранён в последнем результате и в буфере")
 				if cfg.Overlay {
 					overlaySet(ovFlashErr, tr("ov.kept"))
 				}
@@ -1478,6 +1486,9 @@ func (a *App) backendFailed(text string) {
 	a.mu.Unlock()
 	a.setStatus(text)
 	traySetIcon(trayError)
+	if cfg := a.snapshot(); cfg != nil && cfg.Overlay {
+		overlaySet(ovFlashErr, text)
+	}
 }
 
 func (a *App) waitRetry() bool {
@@ -1549,4 +1560,31 @@ func (a *App) handleMicLost() {
 		}
 	}
 	a.refreshIdleUI()
+}
+
+func (a *App) explainIgnoredPress(cfg *Config, enabled, capturing bool, backendErr string, haveRec bool) {
+	switch {
+	case capturing:
+		return
+	case !enabled:
+		log.Printf("нажатие пропущено: приложение выключено в трее")
+		return
+	case backendErr != "":
+		log.Printf("нажатие пропущено: распознаватель не поднялся")
+		if cfg.Overlay {
+			overlaySet(ovFlashErr, backendErr)
+		}
+		playCue(cfg.Beep, cfg.SoundTheme, cueError)
+	case !haveRec:
+		log.Printf("нажатие пропущено: микрофон недоступен")
+		if cfg.Overlay {
+			overlaySet(ovFlashErr, tr("ov.err.mic"))
+		}
+		playCue(cfg.Beep, cfg.SoundTheme, cueError)
+	default:
+		log.Printf("нажатие пропущено: распознаватель ещё готовится")
+		if cfg.Overlay {
+			overlaySet(ovFlashErr, tr("status.loading"))
+		}
+	}
 }

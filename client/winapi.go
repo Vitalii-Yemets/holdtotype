@@ -407,3 +407,16 @@ func ownWindow(hwnd uintptr) bool {
 	procGetWindowThreadPID.Call(hwnd, uintptr(unsafe.Pointer(&pid)))
 	return pid != 0 && pid == uint32(windows.GetCurrentProcessId())
 }
+
+func openSettingsInRunningInstance() bool {
+	cls, err := windows.UTF16PtrFromString(appid.Class("TrayWnd"))
+	if err != nil {
+		return false
+	}
+	hwnd, _, _ := procFindWindowW.Call(uintptr(unsafe.Pointer(cls)), 0)
+	if hwnd == 0 {
+		return false
+	}
+	r, _, _ := procPostMessageW.Call(hwnd, wmTrayCallback, 0, wmLButtonUp)
+	return r != 0
+}

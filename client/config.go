@@ -13,6 +13,9 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"reflect"
+	"sort"
+	"strings"
 	"sync"
 )
 
@@ -162,7 +165,7 @@ func defaultConfig() *Config {
 		UILanguage:       "auto",
 		MaxRecordSeconds: 120,
 		MinRecordMs:      300,
-		WhisperPrompt:    "Whisper, whisper.cpp, Docker, Go, LLM, llama.cpp, Qwen, UI, UX, API, HTTP, JSON, GitHub, Windows, exe, ggml, промпт, хоткей, чекбокс, радиокнопка, таймаут, конфиг, вкладка, секция, диктовка, распознавание, постобработка, перевод, интерфейс, локализация, сочетание клавиш, буфер обмена, курсор, микрофон, модель, сервер, трей, оверлей, плашка, скролл, ползунок, диалог, кнопка, профиль, hotkey, checkbox, timeout, dictation, transcription, translation, clipboard, cursor, microphone, overlay, slider, settings, диктування, розпізнавання, налаштування, буфер обміну, Einstellungen, Tastenkürzel, Zwischenablage, Übersetzung, paramètres, raccourci clavier, presse-papiers, traduction, ajustes, atajo de teclado, portapapeles, traducción, impostazioni, scorciatoia, appunti, traduzione, ustawienia, skrót klawiszowy, schowek, tłumaczenie",
+		WhisperPrompt:    builtinDictionary(lang()),
 		LLMPort:          8911,
 		LLMExe:           "llama-server.exe",
 		LLMModel:         "models/" + llmFile,
@@ -231,8 +234,8 @@ func loadConfig(path string) (*Config, error) {
 		return nil, err
 	}
 	data = bytes.TrimPrefix(data, []byte{0xEF, 0xBB, 0xBF})
+	logUnknownConfigKeys(data, cfg)
 	dec := json.NewDecoder(bytes.NewReader(data))
-	dec.DisallowUnknownFields()
 	if err := dec.Decode(cfg); err != nil {
 		broken := path + ".broken"
 		_ = os.Rename(path, broken)
@@ -246,6 +249,9 @@ func loadConfig(path string) (*Config, error) {
 		return cfg, nil
 	}
 	migrated := fileConfigVersion(data) != configVersion
+	if syncDictionary(cfg) {
+		migrated = true
+	}
 	if fixConfigText(cfg) {
 		log.Printf("конфигурация: текст был испорчен сторонним редактором — кодировка восстановлена")
 		migrated = true
@@ -393,4 +399,47 @@ func fileConfigVersion(data []byte) int {
 		return 0
 	}
 	return probe.ConfigVersion
+}
+
+func logUnknownConfigKeys(data []byte, cfg *Config) {
+	var raw map[string]json.RawMessage
+	if json.Unmarshal(data, &raw) != nil {
+		return
+	}
+	known := map[string]bool{}
+	t := reflect.TypeOf(*cfg)
+	for i := 0; i < t.NumField(); i++ {
+		tag := t.Field(i).Tag.Get("json")
+		if tag == "" || tag == "-" {
+			continue
+		}
+		known[strings.Split(tag, ",")[0]] = true
+	}
+	var extra []string
+	for k := range raw {
+		if !known[k] {
+			extra = append(extra, k)
+		}
+	}
+	if len(extra) > 0 {
+		sort.Strings(extra)
+		log.Printf("конфигурация: незнакомые поля пропущены — %s", strings.Join(extra, ", "))
+	}
+}
+
+func configUILanguage(path string) string {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return "auto"
+	}
+	var probe struct {
+		UILanguage string `json:"ui_language"`
+	}
+	if json.Unmarshal(bytes.TrimPrefix(data, []byte{0xEF, 0xBB, 0xBF}), &probe) != nil {
+		return "auto"
+	}
+	if probe.UILanguage == "" {
+		return "auto"
+	}
+	return probe.UILanguage
 }

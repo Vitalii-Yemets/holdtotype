@@ -26,7 +26,7 @@ const (
 	PrevSlug = "voxterminal"
 )
 
-var Version = "0.31.0"
+var Version = "0.32.0"
 
 func Class(suffix string) string { return Name + suffix }
 

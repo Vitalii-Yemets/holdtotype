@@ -348,8 +348,9 @@ func askTranslateTarget(cfg *Config) string {
 
 func askFocusMismatch() string {
 	return overlayAsk(tr("fd.title"), []ovChoice{
-		{id: "here", label: tr("fd.here"), def: true},
+		{id: "here", label: tr("fd.here")},
 		{id: "copy", label: tr("fd.copy")},
+		{id: "keep", label: tr("fd.keep"), def: true},
 	}, 30)
 }
 

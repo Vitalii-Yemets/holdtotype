@@ -50,7 +50,7 @@ Hold a hotkey — speak. Release — the transcribed text is pasted right where 
 - 🔤 **Replacements after recognition** — a list of what the model mishears and what it should become: `git hub` → GitHub, surnames, in-house terms. They run right after recognition and before the prompts, match whole words and ignore case by default, and a field right there tries them on any phrase without dictating.
 - 🗣️ **Voice commands** — say "new line" and get a line break, "new paragraph" and get two, "cancel" and the dictation is thrown away without inserting anything; or have a phrase drop in any text you like. One button fills the list with the usual phrases in your language. They run after the replacements, so prompts and translation get the finished text.
 - 🕘 **History of dictations** — off by default; turn it on and the last N dictations stay on this machine as text (never audio), searchable by text or by the program they went into, one click to copy, one to paste it back into the window you came from, one to wipe them all. The list of programs nothing is ever recorded from — password managers, banking apps — sits next to the switch and is never folded away. The retention you set is enforced when the history is opened and whenever you change it, not only when the next dictation arrives.
-- 📖 **Recognition dictionary** — terms and abbreviations hint rare words to Whisper; a multilingual starter set is preinstalled.
+- 📖 **Recognition dictionary** — terms and abbreviations hint rare words to Whisper. A starter set of development and internet vocabulary comes preinstalled and follows the recognition language; write your own and it is never touched again. It works for Whisper, so Russian speech going through GigaAM ignores it.
 - 🗣️ **8 UI languages** — English, Ukrainian, Russian, German, French, Spanish, Italian, Polish. Everything is translated: screens, dialogs, the overlay, the tray, the uninstaller and the in-app guide. Switching is instant, "Same as system" follows Windows.
 - 🔊 **Sound themes** — several synthesized cue sets plus Windows system sounds, with preview.
 - ⚡ **Nothing to save, nothing to restart** — every change applies the moment you make it; the Save button is gone. The settings that describe the recognition server — port, threads, server path, remote URL, autostart — restart the recognizer itself, which takes about a second; the app is never asked to be restarted. A setting is written to disk before it is applied: if the file cannot be written, the old values stay in force and the window says so instead of pretending. A value the program refuses — a port outside 1024–65535, an empty list of languages for the translation question — is reported, not silently dropped.
@@ -108,7 +108,7 @@ A full description of every feature lives in the **Guide** inside About (a mini-
 
 <p align="center"><img src="docs/overlay-ask.png" alt="The plate asking where to insert" width="420"></p>
 
-Speech processing takes a few seconds — if you switch windows in the meantime, HoldToType notices that the focus no longer matches the window you dictated into. Nothing is pasted blindly: the plate grows a second line and asks, with a countdown shrinking under the highlighted answer — insert into the current window, copy the text to the clipboard, or do nothing. Enter takes the highlighted answer, 1…9 pick a button, Esc cancels. The result is also kept in memory — the tray menu's *Copy last result* recovers any dictation whose insertion failed.
+Speech processing takes a few seconds — if you switch windows in the meantime, HoldToType notices that the focus no longer matches the window you dictated into. Nothing is pasted blindly: the plate grows a second line and asks: insert into the current window, copy the text to the clipboard, or keep it. The countdown runs under the safe answer — say nothing and after 30 seconds the text simply stays with you, in Last Result and on the clipboard, rather than being typed somewhere you were not looking. Enter takes the highlighted answer, 1…9 pick a button, Esc cancels. The result is also kept in memory — the tray menu's *Copy last result* recovers any dictation whose insertion failed.
 
 ## ⚙️ Settings
 
@@ -206,7 +206,7 @@ The servers are hidden child processes tied to a Job Object: they die together w
 
 **Data boundary:** everything is processed locally. The only exception is the optional *External server URL* setting (System section) — when set, recorded audio is sent to that server instead of the local one. The app asks before it applies such an address and applies nothing until you answer yes; an address typed but not confirmed is never saved, not even by changing some other setting. Use it only with hosts you trust; leave it empty for a fully offline setup.
 
-Files next to the exe: `config.json` (all settings; manual edits apply via "Reload config.json" in the tray menu), `holdtotype.log` (rotated, never exceeds ~2 MB on disk), `models/`.
+Files next to the exe: `config.json` (all settings; manual edits apply via "Reload config.json" in the tray menu) — a key the app does not know is skipped with a line in the log instead of resetting everything, `holdtotype.log` (rotated, never exceeds ~2 MB on disk), `models/`.
 
 ## 🗑️ Uninstall
 
