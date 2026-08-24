@@ -76,6 +76,8 @@ for (const locale of Object.keys(SETTINGS_DEBT)) {
   const msgs = keysIn(msgsBlock(locale));
   const unknownMsgs = [...msgs].filter((k) => !enMsgs.has(k));
   check(`${locale} invents no message keys`, unknownMsgs, []);
+  const missingMsgs = [...enMsgs].filter((k) => !msgs.has(k));
+  check(`${locale} says everything the program can say`, missingMsgs, []);
 }
 
 if (failures.length) {

@@ -64,6 +64,8 @@ var (
 	procCreateFontW                = gdi32.NewProc("CreateFontW")
 	procFrameRgn                   = gdi32.NewProc("FrameRgn")
 	procGetDC                      = user32.NewProc("GetDC")
+	procFrameRect                  = user32.NewProc("FrameRect")
+	procMonitorFromWindow          = user32.NewProc("MonitorFromWindow")
 	procReleaseDC                  = user32.NewProc("ReleaseDC")
 )
 
@@ -133,7 +135,6 @@ func ovFlashState() bool {
 	ovMu.Unlock()
 	return st == ovFlashOK || st == ovFlashErr
 }
-
 
 var (
 	ovWidth   = int32(ovW)
@@ -507,7 +508,11 @@ func overlayRender(hwnd, hdc uintptr) {
 	text := ovText
 	ovMu.Unlock()
 	anim := ovAnim.Load()
+	left := overlayCountdown()
 	bright, _ := stateColors(st)
+	if st == ovRecording && left >= 0 {
+		bright = colAmber
+	}
 
 	fill := func(r rect, color uintptr) {
 		br, _, _ := procCreateSolidBrush.Call(color)
@@ -586,7 +591,13 @@ func overlayRender(hwnd, hdc uintptr) {
 	}
 	drawText(txtRc, bright)
 
-	if st == ovRecording && anim {
+	if st == ovRecording && left >= 0 {
+		lr := rect{Left: rc.Right - px(190), Top: 0, Right: rc.Right - px(36), Bottom: px(ovH)}
+		ls, _ := windows.UTF16FromString(trf("ov.left", left))
+		procSetTextColor.Call(hdc, colAmber)
+		procDrawTextW.Call(hdc, uintptr(unsafe.Pointer(&ls[0])), uintptr(len(ls)-1),
+			uintptr(unsafe.Pointer(&lr)), 0x0020|0x0004|0x0002)
+	} else if st == ovRecording && anim {
 		for i, v := range ovHistory {
 			h := px(int32(3 + v*36))
 			if h > px(42) {
@@ -637,4 +648,26 @@ func overlayDPI() int32 {
 		return d
 	}
 	return dpiFor(overlayHwnd())
+}
+
+var ovDeadline atomic.Int64
+
+func overlaySetDeadline(t time.Time) { ovDeadline.Store(t.UnixMilli()) }
+
+func overlayClearDeadline() { ovDeadline.Store(0) }
+
+func overlayCountdown() int {
+	ms := ovDeadline.Load()
+	if ms == 0 {
+		return -1
+	}
+	left := time.Until(time.UnixMilli(ms))
+	if left > 10*time.Second || left < 0 {
+		return -1
+	}
+	sec := int(left/time.Second) + 1
+	if sec > 10 {
+		sec = 10
+	}
+	return sec
 }

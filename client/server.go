@@ -89,7 +89,8 @@ func startWhisperServer(cfg *Config, logw io.Writer) (*whisperServer, error) {
 		CreationFlags: 0x08000000,
 	}
 	if err := cmd.Start(); err != nil {
-		return nil, fmt.Errorf("запуск %s: %w", cfg.ServerExe, err)
+		log.Printf("запуск %s: %v", cfg.ServerExe, err)
+		return nil, fmt.Errorf("%s", trf("err.server.launch", cfg.ServerExe))
 	}
 	s.cmd = cmd
 	s.attachToJob()
@@ -260,4 +261,20 @@ func (s *whisperServer) transcribe(ctx context.Context, wav []byte, language, pr
 		return "", fmt.Errorf("whisper-server: HTTP %d: %.200s", resp.StatusCode, string(raw))
 	}
 	return strings.TrimSpace(parsed.Text), nil
+}
+
+const defaultServerExe = "whisper-server.exe"
+
+func resolveServerExe(p string) string {
+	p = strings.TrimSpace(p)
+	if p == "" {
+		p = defaultServerExe
+	}
+	if filepath.IsAbs(p) {
+		return p
+	}
+	if abs, err := filepath.Abs(p); err == nil {
+		return abs
+	}
+	return p
 }

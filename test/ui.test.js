@@ -184,6 +184,13 @@ function check(name, actual, expected) {
   check("copying the last dictation is offered", d.getElementById("state_copy").disabled, false);
   check("the models badge explains itself", d.getElementById("badge_models").title, "Installed models");
   check("icon buttons carry a name for screen readers", d.getElementById("mic_refresh").getAttribute("aria-label"), d.getElementById("mic_refresh").title);
+  check("the open section is announced", d.querySelector(".nav[data-p=state]").getAttribute("aria-selected"), "true");
+  check("the closed sections are not", d.querySelector(".nav[data-p=models]").getAttribute("aria-selected"), "false");
+  check("each screen is a panel with a name", [d.getElementById("p-state").getAttribute("role"), d.getElementById("p-state").getAttribute("aria-label")], ["tabpanel", "S_NAV_STATE"]);
+  w.setHotkey("win+l", "win+l is taken by Windows: lock the computer. Dictation may never start");
+  check("a shortcut Windows already uses is called out", d.getElementById("st_saved").textContent, "win+l is taken by Windows: lock the computer. Dictation may never start");
+  check("and it is marked as a warning", d.getElementById("st_saved").className, "stsaved warn");
+  w.setHotkey("ctrl+win", "");
 
   check("nine sections in the sidebar", d.querySelectorAll(".nav").length, 9);
 

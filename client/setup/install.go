@@ -5,6 +5,7 @@ import (
 	"bytes"
 	_ "embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -50,17 +52,26 @@ func existingInstall() string {
 }
 
 type modelOpt struct {
-	ID     string
-	Name   string
-	File   string
-	SizeMB int
+	ID      string
+	Name    string
+	File    string
+	SizeMB  int
+	Dir     string
+	Files   []string
+	BaseURL string
+	Lang    string
 }
 
+const whisperBaseURL = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/"
+
 var modelOpts = []modelOpt{
-	{"base", "Base", "ggml-base.bin", 142},
-	{"small", "Small", "ggml-small.bin", 466},
-	{"medium", "Medium (q5)", "ggml-medium-q5_0.bin", 539},
-	{"turbo", "Turbo (q5)", "ggml-large-v3-turbo-q5_0.bin", 574},
+	{ID: "gigaam-v3", Name: "GigaAM v3", SizeMB: 232, Dir: "gigaam-v3", Lang: "ru",
+		Files:   []string{"encoder.int8.onnx", "decoder.onnx", "joiner.onnx", "tokens.txt"},
+		BaseURL: "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-transducer-punct-giga-am-v3-russian-2025-12-16/resolve/main/"},
+	{ID: "base", Name: "Base", File: "ggml-base.bin", SizeMB: 142, BaseURL: whisperBaseURL},
+	{ID: "small", Name: "Small", File: "ggml-small.bin", SizeMB: 466, BaseURL: whisperBaseURL},
+	{ID: "medium", Name: "Medium (q5)", File: "ggml-medium-q5_0.bin", SizeMB: 539, BaseURL: whisperBaseURL},
+	{ID: "turbo", Name: "Turbo (q5)", File: "ggml-large-v3-turbo-q5_0.bin", SizeMB: 574, BaseURL: whisperBaseURL},
 }
 
 func modelByID(id string) *modelOpt {
@@ -164,7 +175,7 @@ func setAutorun(dir string, enable bool) {
 	}
 }
 
-func patchDefaultModel(dir, modelFile string) error {
+func patchDefaultConfig(dir string, m *modelOpt, updates bool) error {
 	path := filepath.Join(dir, "config.default.json")
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -174,7 +185,18 @@ func patchDefaultModel(dir, modelFile string) error {
 	if err := json.Unmarshal(data, &cfg); err != nil {
 		return err
 	}
-	cfg["model"] = "models/" + modelFile
+	cfg["check_updates"] = updates
+	if m != nil {
+		if m.Dir != "" {
+			cfg["sherpa_model"] = "models/" + m.Dir
+			cfg["stt_engine"] = "auto"
+			if m.Lang != "" {
+				cfg["language"] = m.Lang
+			}
+		} else {
+			cfg["model"] = "models/" + m.File
+		}
+	}
 	out, err := json.MarshalIndent(cfg, "", "  ")
 	if err != nil {
 		return err
@@ -182,9 +204,39 @@ func patchDefaultModel(dir, modelFile string) error {
 	return os.WriteFile(path, out, 0o644)
 }
 
+var dlCancel atomic.Bool
+
+func cancelDownload() { dlCancel.Store(true) }
+
+var errDownloadCancelled = errors.New("cancelled")
+
 func downloadModel(dir string, m *modelOpt, progress func(pct int)) error {
+	if m.Dir != "" {
+		return downloadModelDir(dir, m, progress)
+	}
+	return downloadFile(filepath.Join(dir, "models"), m.BaseURL+m.File, m.File, progress)
+}
+
+func downloadModelDir(dir string, m *modelOpt, progress func(pct int)) error {
+	target := filepath.Join(dir, "models", m.Dir)
+	if err := os.MkdirAll(target, 0o755); err != nil {
+		return err
+	}
+	for i, f := range m.Files {
+		base, span := i*100/len(m.Files), 100/len(m.Files)
+		if err := downloadFile(target, m.BaseURL+f, f, func(pct int) {
+			progress(base + span*pct/100)
+		}); err != nil {
+			return err
+		}
+	}
+	progress(100)
+	return nil
+}
+
+func downloadFile(dir, url, name string, progress func(pct int)) error {
 	client := &http.Client{Timeout: 60 * time.Minute}
-	resp, err := client.Get("https://huggingface.co/ggerganov/whisper.cpp/resolve/main/" + m.File)
+	resp, err := client.Get(url)
 	if err != nil {
 		return err
 	}
@@ -193,7 +245,7 @@ func downloadModel(dir string, m *modelOpt, progress func(pct int)) error {
 		return fmt.Errorf("HTTP %d", resp.StatusCode)
 	}
 	total := resp.ContentLength
-	part := filepath.Join(dir, "models", m.File+".part")
+	part := filepath.Join(dir, name+".part")
 	out, err := os.Create(part)
 	if err != nil {
 		return err
@@ -201,6 +253,11 @@ func downloadModel(dir string, m *modelOpt, progress func(pct int)) error {
 	buf := make([]byte, 256*1024)
 	var done int64
 	for {
+		if dlCancel.Load() {
+			out.Close()
+			os.Remove(part)
+			return errDownloadCancelled
+		}
 		n, rerr := resp.Body.Read(buf)
 		if n > 0 {
 			if _, werr := out.Write(buf[:n]); werr != nil {
@@ -226,10 +283,11 @@ func downloadModel(dir string, m *modelOpt, progress func(pct int)) error {
 		os.Remove(part)
 		return err
 	}
-	return os.Rename(part, filepath.Join(dir, "models", m.File))
+	return os.Rename(part, filepath.Join(dir, name))
 }
 
-func install(dir string, shortcut, autorun, touchAutorun bool, modelID string, progress func(pct int, name string)) (string, error) {
+func install(dir string, shortcut, autorun, touchAutorun, updates bool, modelID string, progress func(pct int, name string)) (string, error) {
+	dlCancel.Store(false)
 	if strings.TrimSpace(dir) == "" {
 		return "", fmt.Errorf("empty path")
 	}
@@ -257,16 +315,19 @@ func install(dir string, shortcut, autorun, touchAutorun bool, modelID string, p
 		}
 	}
 	warn := ""
-	if model != nil {
-		if err := patchDefaultModel(dir, model.File); err == nil {
-			progress(filesSpan, model.File)
-			if derr := downloadModel(dir, model, func(pct int) {
-				progress(filesSpan+(100-filesSpan-4)*pct/100, model.File)
-			}); derr != nil {
+	if err := patchDefaultConfig(dir, model, updates); err != nil {
+		warn = err.Error()
+	} else if model != nil {
+		name := model.Name
+		progress(filesSpan, name)
+		if derr := downloadModel(dir, model, func(pct int) {
+			progress(filesSpan+(100-filesSpan-4)*pct/100, name)
+		}); derr != nil {
+			if errors.Is(derr, errDownloadCancelled) {
+				warn = "cancelled"
+			} else {
 				warn = derr.Error()
 			}
-		} else {
-			warn = err.Error()
 		}
 	}
 	progress(96, "")

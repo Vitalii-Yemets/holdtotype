@@ -97,9 +97,11 @@ func captureWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 		hdc, _, _ := procBeginPaint.Call(hwnd, uintptr(unsafe.Pointer(&ps)))
 		var rc rect
 		procGetClientRect.Call(hwnd, uintptr(unsafe.Pointer(&rc)))
-		rc.Top += 20
-		font, _, _ := procGetStockObject.Call(defaultGUIFont)
-		procSelectObject.Call(hdc, font)
+		border := rc
+		brush, _, _ := procCreateSolidBrush.Call(colGreenLo)
+		procFrameRect.Call(hdc, uintptr(unsafe.Pointer(&border)), brush)
+		procDeleteObject.Call(brush)
+		procSelectObject.Call(hdc, uiFont(hwnd))
 		procSetBkMode.Call(hdc, 1)
 		procSetTextColor.Call(hdc, colGreen)
 		capMu.Lock()
@@ -147,9 +149,7 @@ func captureHotkeyDialog(hook *hotkeyHook, current string) (string, bool) {
 	capResult, capOK = "", false
 	capMu.Unlock()
 
-	const w, h = 420, 160
-	sw, _, _ := procGetSystemMetrics.Call(0)
-	sh, _, _ := procGetSystemMetrics.Call(1)
+	w, h, cx, cy := captureBox(capText)
 	className, _ := windows.UTF16PtrFromString(appid.Class("CaptureWnd"))
 	title, _ := windows.UTF16PtrFromString(tr("cap.title"))
 	hwnd, _, _ := procCreateWindowExW.Call(
@@ -157,7 +157,7 @@ func captureHotkeyDialog(hook *hotkeyHook, current string) (string, bool) {
 		uintptr(unsafe.Pointer(className)),
 		uintptr(unsafe.Pointer(title)),
 		0x80000000|wsVisible,
-		(sw-w)/2, (sh-h)/2, w, h,
+		uintptr(cx), uintptr(cy), uintptr(w), uintptr(h),
 		0, 0, 0, 0,
 	)
 	if hwnd == 0 {
@@ -296,4 +296,53 @@ func comboString(vks map[uint32]bool) string {
 		out += n
 	}
 	return out
+}
+
+func captureBox(text string) (w, h, x, y int32) {
+	host := settingsHwnd.Load()
+	if host == 0 {
+		host, _, _ = procGetForegroundWindow.Call()
+	}
+	dpi := dpiFor(host)
+	if dpi < 72 {
+		dpi = 96
+	}
+	w, h = scaleDPI(420, dpi), scaleDPI(120, dpi)
+	if hdc, _, _ := procGetDC.Call(0); hdc != 0 {
+		defer procReleaseDC.Call(0, hdc)
+		old, _, _ := procSelectObject.Call(hdc, uiFontDPI(dpi))
+		if u, err := windows.UTF16FromString(text); err == nil {
+			r := rect{}
+			procDrawTextW.Call(hdc, uintptr(unsafe.Pointer(&u[0])), uintptr(len(u)-1),
+				uintptr(unsafe.Pointer(&r)), dtCenter|0x0400)
+			if r.Right > r.Left && r.Bottom > r.Top {
+				w = r.Right - r.Left + scaleDPI(64, dpi)
+				h = r.Bottom - r.Top + scaleDPI(56, dpi)
+			}
+		}
+		if old != 0 {
+			procSelectObject.Call(hdc, old)
+		}
+	}
+	if min := scaleDPI(320, dpi); w < min {
+		w = min
+	}
+	wa := captureWorkArea(host)
+	x = wa.Left + (wa.Right-wa.Left-w)/2
+	y = wa.Top + (wa.Bottom-wa.Top-h)/2
+	return w, h, x, y
+}
+
+func captureWorkArea(host uintptr) rect {
+	if host != 0 && procMonitorFromWindow.Find() == nil && procGetMonitorInfoW.Find() == nil {
+		if mon, _, _ := procMonitorFromWindow.Call(host, 2); mon != 0 {
+			mi := monitorInfo{Size: uint32(unsafe.Sizeof(monitorInfo{}))}
+			if r, _, _ := procGetMonitorInfoW.Call(mon, uintptr(unsafe.Pointer(&mi))); r != 0 {
+				return mi.Work
+			}
+		}
+	}
+	var pt point
+	procGetCursorPos.Call(uintptr(unsafe.Pointer(&pt)))
+	return workAreaForPoint(pt.X, pt.Y)
 }

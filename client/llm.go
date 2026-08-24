@@ -285,7 +285,7 @@ func (a *App) llmDelete(file string) string {
 		time.Sleep(200 * time.Millisecond)
 	}
 	if err != nil {
-		return err.Error()
+		return humanError(err)
 	}
 	if active {
 		a.mu.Lock()
@@ -324,7 +324,7 @@ func (a *App) llmSearch(q string) string {
 	u := "https://huggingface.co/api/models?search=" + url.QueryEscape(q) + "&filter=gguf&sort=downloads&direction=-1&limit=8&expand[]=lastModified&expand[]=downloads"
 	resp, err := client.Get(u)
 	if err != nil {
-		out, _ := json.Marshal(map[string]any{"error": err.Error()})
+		out, _ := json.Marshal(map[string]any{"error": humanError(err)})
 		return string(out)
 	}
 	defer resp.Body.Close()
@@ -334,7 +334,7 @@ func (a *App) llmSearch(q string) string {
 		LastModified string `json:"lastModified"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&raw); err != nil {
-		out, _ := json.Marshal(map[string]any{"error": err.Error()})
+		out, _ := json.Marshal(map[string]any{"error": humanError(err)})
 		return string(out)
 	}
 	type repoRow struct {
@@ -358,7 +358,7 @@ func (a *App) llmRepoFiles(repo string) string {
 	client := &http.Client{Timeout: 20 * time.Second}
 	resp, err := client.Get("https://huggingface.co/api/models/" + repo + "?blobs=true")
 	if err != nil {
-		out, _ := json.Marshal(map[string]any{"error": err.Error()})
+		out, _ := json.Marshal(map[string]any{"error": humanError(err)})
 		return string(out)
 	}
 	defer resp.Body.Close()
@@ -369,7 +369,7 @@ func (a *App) llmRepoFiles(repo string) string {
 		} `json:"siblings"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&raw); err != nil {
-		out, _ := json.Marshal(map[string]any{"error": err.Error()})
+		out, _ := json.Marshal(map[string]any{"error": humanError(err)})
 		return string(out)
 	}
 	type fileRow struct {

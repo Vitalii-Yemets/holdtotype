@@ -49,7 +49,7 @@ func exportLists(payload string) string {
 	}
 	if err := os.WriteFile(path, data, 0o600); err != nil {
 		log.Printf("списки: запись %s: %v", path, err)
-		return listsAnswer(listsReply{Text: err.Error()})
+		return listsAnswer(listsReply{Text: humanError(err)})
 	}
 	log.Printf("списки сохранены: %s (замен %d, команд %d)", path, len(in.Replacements), len(in.Commands))
 	return listsAnswer(listsReply{OK: true, Text: trf("lists.saved", filepath.Base(path))})
@@ -68,7 +68,7 @@ func importLists(payload string) string {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		log.Printf("списки: чтение %s: %v", path, err)
-		return listsAnswer(listsReply{Text: err.Error()})
+		return listsAnswer(listsReply{Text: humanError(err)})
 	}
 	f, err := lists.Parse(data)
 	if err != nil {
@@ -111,7 +111,7 @@ func (a *App) insertFromHistory(text string) string {
 	if wnd == 0 {
 		if err := setClipboardText(text); err != nil {
 			log.Printf("история: копирование: %v", err)
-			return listsAnswer(listsReply{Text: err.Error()})
+			return listsAnswer(listsReply{Text: humanError(err)})
 		}
 		log.Printf("история: некуда вставлять, текст скопирован")
 		return listsAnswer(listsReply{Text: tr("hist.insert.nowin")})
@@ -126,7 +126,7 @@ func (a *App) insertFromHistory(text string) string {
 	cfg := a.snapshot()
 	if err := pasteText(cfg, text, wnd); err != nil {
 		log.Printf("история: вставка: %v", err)
-		return listsAnswer(listsReply{Text: err.Error()})
+		return listsAnswer(listsReply{Text: humanError(err)})
 	}
 	title := windowTitle(wnd)
 	log.Printf("история: вставлено %d символов в «%s»", len([]rune(text)), title)
@@ -142,7 +142,7 @@ func (a *App) copyLastResult() (bool, string) {
 	}
 	if err := setClipboardText(text); err != nil {
 		log.Printf("копирование последнего результата: %v", err)
-		return false, trf("copy.fail", err.Error())
+		return false, trf("copy.fail", humanError(err))
 	}
 	log.Printf("последний результат скопирован: %d символов", len([]rune(text)))
 	return true, tr("copy.ok")

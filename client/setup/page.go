@@ -93,6 +93,7 @@ button.btn:hover{background:#123f22;box-shadow:var(--glow)}
   <select id="model">{{MODELOPTS}}</select>
   <label class="chk"><input type="checkbox" id="shortcut" checked> {{SHORTCUT}}</label>
   <label class="chk"><input type="checkbox" id="autorun" checked> {{AUTORUN}}</label>
+  <label class="chk"><input type="checkbox" id="updates" checked> {{UPDATES}}</label>
   </div>
   <label class="chk"><input type="checkbox" id="launch" checked> {{LAUNCH}}</label>
   <div class="err" id="operr"></div>
@@ -103,6 +104,7 @@ button.btn:hover{background:#123f22;box-shadow:var(--glow)}
   <div class="tagline">{{PROG}}</div>
   <div class="bar"><i id="fill"></i></div>
   <div class="plog" id="plog"></div>
+  <div class="foot" id="dlcancelrow" style="display:none"><button class="btn ghost" onclick="stopDownload()">{{DLCANCEL}}</button></div>
   <div class="err" id="perr"></div>
   <div class="foot" id="pfoot" style="display:none">
    <button class="btn" onclick="startInstall()">{{RETRY}}</button>
@@ -148,21 +150,29 @@ function startInstall(){
   document.getElementById("pfoot").style.display = "none";
   document.getElementById("fill").style.width = "0%";
   show("st-prog");
+  const model = UPDATING ? "" : document.getElementById("model").value;
+  document.getElementById("dlcancelrow").style.display = model ? "" : "none";
   appInstall(dir, document.getElementById("shortcut").checked, document.getElementById("autorun").checked,
-    UPDATING ? "" : document.getElementById("model").value, UPDATING);
+    document.getElementById("updates").checked, model, UPDATING);
+}
+function stopDownload(){
+  document.getElementById("dlcancelrow").style.display = "none";
+  document.getElementById("plog").textContent = {{DLSTOPPING_JS}};
+  appCancelDownload();
 }
 function setupProgress(pct, name){
   document.getElementById("fill").style.width = pct + "%";
   if(name) document.getElementById("plog").textContent = name;
 }
 function setupDone(err, warn, dir){
+  document.getElementById("dlcancelrow").style.display = "none";
   if(err){
     document.getElementById("perr").textContent = err;
     document.getElementById("pfoot").style.display = "";
     return;
   }
   document.getElementById("outdir").textContent = dir;
-  if(warn) document.getElementById("outwarn").textContent = {{WARNMODEL_JS}};
+  if(warn) document.getElementById("outwarn").textContent = warn === "cancelled" ? {{DLSTOPPED_JS}} : {{WARNMODEL_JS}};
   show("st-done");
 }
 setTimeout(()=>{ if(window.appReady) appReady(); }, 60);

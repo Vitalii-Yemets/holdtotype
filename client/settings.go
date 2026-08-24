@@ -1,13 +1,12 @@
 package main
 
-
 import (
-	"holdtotype/internal/commands"
-	"holdtotype/internal/replace"
-	"holdtotype/internal/apprules"
 	"context"
 	"encoding/json"
 	"fmt"
+	"holdtotype/internal/apprules"
+	"holdtotype/internal/commands"
+	"holdtotype/internal/replace"
 	"log"
 	"os"
 	"path/filepath"
@@ -125,20 +124,20 @@ type settingsForm struct {
 	ServerExe        string `json:"server_exe"`
 	ServerURL        string `json:"server_url"`
 
-	WhisperPrompt       string    `json:"whisper_prompt"`
-	TranslateHotkey     string    `json:"translate_hotkey"`
-	PauseHotkey         string    `json:"pause_hotkey"`
-	TranslateTarget     string    `json:"translate_target"`
-	TranslateAsk        string    `json:"translate_ask"`
-	TranslateAskSeconds int       `json:"translate_ask_seconds"`
-	TranslateAskLangs   []string  `json:"translate_ask_langs"`
-	TranslateDefault    bool      `json:"translate_default"`
-	ActiveProfiles      []string  `json:"active_profiles"`
-	AppRules            []apprules.Rule `json:"app_rules"`
-	Replacements        []replace.Rule  `json:"replacements"`
+	WhisperPrompt       string             `json:"whisper_prompt"`
+	TranslateHotkey     string             `json:"translate_hotkey"`
+	PauseHotkey         string             `json:"pause_hotkey"`
+	TranslateTarget     string             `json:"translate_target"`
+	TranslateAsk        string             `json:"translate_ask"`
+	TranslateAskSeconds int                `json:"translate_ask_seconds"`
+	TranslateAskLangs   []string           `json:"translate_ask_langs"`
+	TranslateDefault    bool               `json:"translate_default"`
+	ActiveProfiles      []string           `json:"active_profiles"`
+	AppRules            []apprules.Rule    `json:"app_rules"`
+	Replacements        []replace.Rule     `json:"replacements"`
 	Commands            []commands.Command `json:"commands"`
-	LLMModelFile        string    `json:"llm_model_file"`
-	Profiles            []Profile `json:"profiles"`
+	LLMModelFile        string             `json:"llm_model_file"`
+	Profiles            []Profile          `json:"profiles"`
 }
 
 func (a *App) openSettings(tab string) {
@@ -213,7 +212,7 @@ func (a *App) settingsThread(tab string, attempt int) {
 		_ = w.Bind("appSave", func(formJSON string) string {
 			var f settingsForm
 			if err := json.Unmarshal([]byte(formJSON), &f); err != nil {
-				return jsonResult(saveResult{Severity: "error", Message: err.Error()})
+				return jsonResult(saveResult{Severity: "error", Message: humanError(err)})
 			}
 			return jsonResult(a.applySettings(&f))
 		})
@@ -221,8 +220,9 @@ func (a *App) settingsThread(tab string, attempt int) {
 			go func() {
 				a.changeHotkey()
 				combo := a.snapshot().Hotkey
+				warn := hotkeyWarning(combo)
 				w.Dispatch(func() {
-					w.Eval(fmt.Sprintf("setHotkey(%q)", combo))
+					w.Eval(fmt.Sprintf("setHotkey(%q, %q)", combo, warn))
 				})
 			}()
 		})
@@ -285,7 +285,7 @@ func (a *App) settingsThread(tab string, attempt int) {
 		_ = w.Bind("appCheckUpdate", func() string {
 			tag, uurl, dig, err := fetchLatestRelease()
 			if err != nil {
-				out, _ := json.Marshal(map[string]any{"error": err.Error()})
+				out, _ := json.Marshal(map[string]any{"error": humanError(err)})
 				return string(out)
 			}
 			newer := verNewer(tag, appVersion) && uurl != ""
@@ -312,7 +312,7 @@ func (a *App) settingsThread(tab string, attempt int) {
 					err = launchUpdater(path)
 				}
 				if err != nil {
-					enc, _ := json.Marshal(err.Error())
+					enc, _ := json.Marshal(humanError(err))
 					w.Dispatch(func() { w.Eval("updError(" + string(enc) + ")") })
 					return
 				}
@@ -346,8 +346,12 @@ func (a *App) settingsThread(tab string, attempt int) {
 				if !ok {
 					combo = ""
 				}
+				warn := hotkeyWarning(combo)
+				if warn != "" {
+					log.Printf("предупреждение: %s", warn)
+				}
 				w.Dispatch(func() {
-					w.Eval(fmt.Sprintf("comboCaptured(%q)", combo))
+					w.Eval(fmt.Sprintf("comboCaptured(%q, %q)", combo, warn))
 				})
 			}()
 		})
@@ -355,7 +359,7 @@ func (a *App) settingsThread(tab string, attempt int) {
 			go func() {
 				out, err := a.llmProcess(context.Background(), prompt, sample)
 				if err != nil {
-					out = "⚠ " + err.Error()
+					out = "⚠ " + humanError(err)
 				}
 				enc, _ := json.Marshal(out)
 				w.Dispatch(func() {
@@ -392,7 +396,7 @@ func (a *App) settingsThread(tab string, attempt int) {
 			}
 			if err := rec.SetDevice(id); err != nil {
 				log.Printf("выбор микрофона: %v", err)
-				return jsonResult(saveResult{Severity: "error", Message: err.Error()})
+				return jsonResult(saveResult{Severity: "error", Message: humanError(err)})
 			}
 			return jsonResult(saveResult{OK: true, Severity: "ok"})
 		})
@@ -414,6 +418,13 @@ func (a *App) settingsThread(tab string, attempt int) {
 		_ = w.Bind("appOpenLog", func() {
 			log.Printf("настройки: открываю лог")
 			shellOpen(appid.LogFile)
+		})
+		_ = w.Bind("appReloadConfig", func() {
+			log.Printf("настройки: перечитываю config.json по кнопке")
+			a.reloadConfig()
+		})
+		_ = w.Bind("appResetSettings", func() {
+			a.resetSettings()
 		})
 		_ = w.Bind("appCheckModels", func() string {
 			return a.verifyModels()
@@ -437,7 +448,7 @@ func (a *App) settingsThread(tab string, attempt int) {
 				if it.At == int64(at) {
 					if err := setClipboardText(it.Text); err != nil {
 						log.Printf("копирование из истории: %v", err)
-						return listsAnswer(listsReply{Text: trf("copy.fail", err.Error())})
+						return listsAnswer(listsReply{Text: trf("copy.fail", humanError(err))})
 					}
 					log.Printf("из истории скопировано: %d символов", len([]rune(it.Text)))
 					return listsAnswer(listsReply{OK: true, Text: tr("copy.ok")})
@@ -735,7 +746,7 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 
 	if err := saveConfig("config.json", &c); err != nil {
 		log.Printf("сохранение конфига: %v — настройки оставлены прежними", err)
-		return saveResult{Severity: "error", Message: trf("err.save", err.Error())}
+		return saveResult{Severity: "error", Message: trf("err.save", humanError(err))}
 	}
 
 	a.mu.Lock()
@@ -787,54 +798,57 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 
 func settingsHTML(cfg *Config, tab string) string {
 	cfgMap := map[string]any{
-		"hotkey":                cfg.Hotkey,
-		"ui_language":           cfg.UILanguage,
-		"beep":                  cfg.Beep,
-		"sound_theme":           cfg.SoundTheme,
-		"auto_enter":            cfg.AutoEnter,
-		"restore_clipboard":     cfg.RestoreClipboard,
-		"overlay":               cfg.Overlay,
-		"overlay_position":      cfg.OverlayPos,
-		"overlay_text":          cfg.OverlayText,
-		"animation":             cfg.Animation,
-		"type_mode":             cfg.PasteMode == "type",
-		"language":              cfg.Language,
-		"model":                 cfg.Model,
-		"threads":               cfg.Threads,
-		"min_record_ms":         cfg.MinRecordMs,
-		"paste_delay_ms":        cfg.PasteDelayMs,
-		"history":               cfg.HistoryOn,
-		"history_days":          cfg.HistoryDays,
-		"history_max":           cfg.HistoryMax,
-		"history_skip":          cfg.HistorySkip,
-		"max_record_seconds":    cfg.MaxRecordSeconds,
-		"server_autostart":      cfg.ServerAutostart,
-		"check_updates":         cfg.CheckUpdates,
-		"mic_device":            cfg.MicDevice,
-		"punctuation":           cfg.Punctuation,
-		"hotkey_mode":           cfg.HotkeyMode,
-		"ui_level":              cfg.UILevel,
-		"server_port":           cfg.ServerPort,
-		"server_exe":            cfg.ServerExe,
-		"server_url":            cfg.ServerURL,
-		"whisper_prompt":        cfg.WhisperPrompt,
-		"translate_default":     cfg.TranslateDefault,
-		"active_profiles":       cfg.ActiveProfiles,
-		"app_rules":             cfg.AppRules,
-		"replacements":          cfg.Replacements,
-		"commands":              cfg.Commands,
-		"translate_hotkey":      cfg.TranslateHotkey,
-		"pause_hotkey":          cfg.PauseHotkey,
-		"translate_target":      cfg.TranslateTarget,
-		"translate_ask":         cfg.TranslateAsk,
-		"translate_ask_seconds": cfg.TranslateAskSeconds,
-		"translate_ask_langs":   cfg.TranslateAskLangs,
-		"llm_model":             filepath.Base(cfg.LLMModel),
-		"profiles":              cfg.Profiles,
-		"_version":              appVersion,
-		"_tab":                  tab,
-		"_cpus":                 runtime.NumCPU(),
-		"_wizard":               !cfg.WizardDone,
+		"hotkey":                  cfg.Hotkey,
+		"ui_language":             cfg.UILanguage,
+		"beep":                    cfg.Beep,
+		"sound_theme":             cfg.SoundTheme,
+		"auto_enter":              cfg.AutoEnter,
+		"restore_clipboard":       cfg.RestoreClipboard,
+		"overlay":                 cfg.Overlay,
+		"overlay_position":        cfg.OverlayPos,
+		"overlay_text":            cfg.OverlayText,
+		"animation":               cfg.Animation,
+		"type_mode":               cfg.PasteMode == "type",
+		"language":                cfg.Language,
+		"model":                   cfg.Model,
+		"threads":                 cfg.Threads,
+		"min_record_ms":           cfg.MinRecordMs,
+		"paste_delay_ms":          cfg.PasteDelayMs,
+		"history":                 cfg.HistoryOn,
+		"history_days":            cfg.HistoryDays,
+		"history_max":             cfg.HistoryMax,
+		"history_skip":            cfg.HistorySkip,
+		"max_record_seconds":      cfg.MaxRecordSeconds,
+		"server_autostart":        cfg.ServerAutostart,
+		"check_updates":           cfg.CheckUpdates,
+		"mic_device":              cfg.MicDevice,
+		"punctuation":             cfg.Punctuation,
+		"hotkey_mode":             cfg.HotkeyMode,
+		"ui_level":                cfg.UILevel,
+		"server_port":             cfg.ServerPort,
+		"server_exe":              cfg.ServerExe,
+		"server_exe_path":         resolveServerExe(cfg.ServerExe),
+		"server_exe_default":      defaultServerExe,
+		"server_exe_path_default": resolveServerExe(defaultServerExe),
+		"server_url":              cfg.ServerURL,
+		"whisper_prompt":          cfg.WhisperPrompt,
+		"translate_default":       cfg.TranslateDefault,
+		"active_profiles":         cfg.ActiveProfiles,
+		"app_rules":               cfg.AppRules,
+		"replacements":            cfg.Replacements,
+		"commands":                cfg.Commands,
+		"translate_hotkey":        cfg.TranslateHotkey,
+		"pause_hotkey":            cfg.PauseHotkey,
+		"translate_target":        cfg.TranslateTarget,
+		"translate_ask":           cfg.TranslateAsk,
+		"translate_ask_seconds":   cfg.TranslateAskSeconds,
+		"translate_ask_langs":     cfg.TranslateAskLangs,
+		"llm_model":               filepath.Base(cfg.LLMModel),
+		"profiles":                cfg.Profiles,
+		"_version":                appVersion,
+		"_tab":                    tab,
+		"_cpus":                   runtime.NumCPU(),
+		"_wizard":                 !cfg.WizardDone,
 	}
 	cfgJSON, _ := json.Marshal(cfgMap)
 
@@ -850,6 +864,8 @@ func settingsHTML(cfg *Config, tab string) string {
 		"confirmdel": "S_CONFIRM_DEL", "delactive": "S_DEL_ACTIVE", "wizneedmodel": "S_WIZ_NEED_MODEL",
 		"free": "S_FREE", "updnone": "S_UPD_NONE",
 		"badgemodels": "S_BADGE_MODELS", "badgemiss": "S_BADGE_MISS", "badgesystem": "S_BADGE_SYSTEM", "badgehist": "S_BADGE_HIST",
+		"exewarn": "S_EXE_WARN", "exeedit": "S_PROF_EDIT", "resetask": "S_RESET_ALL_ASK", "resetbtn": "S_RESET_ALL_BTN",
+		"updfound":   "S_UPD_FOUND",
 		"micdefault": "S_MIC_DEFAULT", "micquiet": "S_MIC_QUIET", "get": "S_STATE_GET", "change": "S_CHANGE_MODEL",
 		"remotewarn": "S_REMOTE_WARN", "remoteask": "S_REMOTE_ASK", "remotebadge": "S_REMOTE_BADGE",
 		"ok": "S_OK", "cancel": "S_CANCEL", "dlask": "S_DL_ASK", "dlstart": "S_DL_START", "dlcancel": "S_DL_CANCEL", "nofound": "S_NOT_FOUND",
@@ -864,7 +880,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"replempty": "S_REPL_EMPTY", "repldel": "S_REPL_DEL", "replwhole": "S_REPL_WHOLE",
 		"cmdempty": "S_CMD_EMPTY", "cmddel": "S_CMD_DEL", "cmdph": "S_CMD_PH",
 		"cmdnewline": "S_CMD_NEWLINE", "cmdparagraph": "S_CMD_PARAGRAPH", "cmdtext": "S_CMD_TEXT", "cmdcancel": "S_CMD_CANCEL",
-		"cmdtextph": "S_CMD_TEXT_PH",
+		"cmdtextph":   "S_CMD_TEXT_PH",
 		"cmdpnewline": "S_CMD_P_NEWLINE", "cmdpparagraph": "S_CMD_P_PARAGRAPH", "cmdpcancel": "S_CMD_P_CANCEL",
 		"histempty": "S_HIST_EMPTY", "histcopy": "S_HIST_COPY", "histask": "S_HIST_ASK", "histclear": "S_HIST_CLEAR",
 		"micchecking": "S_MIC_CHECKING", "mchecking": "S_MCHECK_RUN", "histinsert": "S_HIST_INSERT",
@@ -1011,6 +1027,8 @@ button.btn.ghost:hover{color:var(--green);border-color:var(--dim);background:non
 .herokey{border:1px solid var(--dim);color:var(--green);padding:5px 12px;font-size:14px;letter-spacing:1px}
 .herotext{font-size:12px;color:var(--dim)}
 .berr{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:1px solid var(--bad);background:var(--panel);padding:10px 12px;margin-bottom:10px}
+.berr.upd{border-color:var(--amber)}
+.berr.upd .berrtext{color:var(--amber)}
 .berr .berrtext{flex:1 1 220px;color:var(--bad);min-width:0}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:12px}
 .scard{border:1px solid var(--line);background:var(--panel);padding:9px 11px;display:flex;flex-direction:column;gap:5px}
@@ -1108,7 +1126,9 @@ button.ghost:hover{color:var(--green)}
 .card>.hint{font-size:11.5px;color:var(--dim);margin-bottom:6px;line-height:1.5}
 .mslot{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);padding:11px 2px 3px;border-bottom:1px solid var(--line);margin-bottom:2px}
 .mslot.hidden{display:none}
-.mrow{display:flex;align-items:center;gap:9px;padding:7px 2px;border-bottom:1px solid #12241a;flex-wrap:wrap}
+.mrow{display:flex;align-items:center;gap:9px;padding:7px 2px;border-bottom:1px solid #12241a;flex-wrap:nowrap}
+.mrow .mdesc{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:820px){.mrow .mram{display:none}}
 .mrow:last-child{border-bottom:none}
 input[type=radio]{appearance:none;-webkit-appearance:none;width:15px;height:15px;flex:none;margin:0;padding:0;border:1px solid var(--dim);border-radius:50%;background:#08100b;position:relative;cursor:pointer}
 input[type=radio]:checked{border-color:var(--green)}
@@ -1151,7 +1171,7 @@ button.mini{flex:none;padding:5px 12px;border:1px solid var(--line);background:n
 button.mini:hover{color:var(--green);border-color:var(--dim);box-shadow:var(--glow)}
 button.mini.danger:hover{color:#ff7b6b;border-color:#7a2e2e;box-shadow:0 0 7px rgba(255,110,90,.5)}
 .mpct{color:var(--amber);font-size:12px;min-width:44px;text-align:right;text-shadow:0 0 6px rgba(255,179,71,.5)}
-.sect{color:var(--dim);font-size:11px;letter-spacing:.14em;text-transform:uppercase;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+.sect{color:var(--dim);font-weight:400;font-size:11px;letter-spacing:.14em;text-transform:uppercase;margin:0 0 4px;display:flex;align-items:center;gap:8px}
 .hfhome{margin-left:auto;cursor:pointer;color:var(--dim);font-size:11px;letter-spacing:1px;border:1px solid var(--line);padding:3px 9px;text-transform:none}
 .hfhome:hover{color:var(--green);border-color:var(--dim);box-shadow:var(--glow)}
 .ramline{display:flex;align-items:center;flex-wrap:wrap;gap:6px;color:var(--dim);font-size:12px;margin:4px 0 10px}
@@ -1229,28 +1249,32 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
  </div>
 </div>
 <div class="shell">
-<nav class="snav" id="snav">
+<nav class="snav" id="snav" role="tablist">
  <span class="ngrp">{{S_GRP_WORK}}</span>
- <button class="nav" data-p="state"><span class="nlabel">{{S_NAV_STATE}}</span></button>
- <button class="nav" data-p="dictation"><span class="nlabel">{{S_NAV_DICT}}</span></button>
- <button class="nav" data-p="history"><span class="nlabel">{{S_NAV_HISTORY}}</span><span class="nbadge" id="badge_history"></span></button>
- <button class="nav" data-p="mic"><span class="nlabel">{{S_NAV_MIC}}</span><span class="nbadge" id="badge_mic"></span></button>
+ <button class="nav" role="tab" aria-selected="false" data-p="state"><span class="nlabel">{{S_NAV_STATE}}</span></button>
+ <button class="nav" role="tab" aria-selected="false" data-p="dictation"><span class="nlabel">{{S_NAV_DICT}}</span></button>
+ <button class="nav" role="tab" aria-selected="false" data-p="history"><span class="nlabel">{{S_NAV_HISTORY}}</span><span class="nbadge" id="badge_history"></span></button>
+ <button class="nav" role="tab" aria-selected="false" data-p="mic"><span class="nlabel">{{S_NAV_MIC}}</span><span class="nbadge" id="badge_mic"></span></button>
  <span class="ngrp">{{S_GRP_REC}}</span>
- <button class="nav" data-p="models"><span class="nlabel">{{S_NAV_MODELS}}</span><span class="nbadge" id="badge_models"></span></button>
- <button class="nav" data-p="text"><span class="nlabel">{{S_NAV_TEXT}}</span></button>
- <button class="nav" data-p="translate"><span class="nlabel">{{S_NAV_TR}}</span></button>
+ <button class="nav" role="tab" aria-selected="false" data-p="models"><span class="nlabel">{{S_NAV_MODELS}}</span><span class="nbadge" id="badge_models"></span></button>
+ <button class="nav" role="tab" aria-selected="false" data-p="text"><span class="nlabel">{{S_NAV_TEXT}}</span></button>
+ <button class="nav" role="tab" aria-selected="false" data-p="translate"><span class="nlabel">{{S_NAV_TR}}</span></button>
  <span class="ngrp">{{S_GRP_OTHER}}</span>
- <button class="nav" data-p="system"><span class="nlabel">{{S_NAV_SYSTEM}}</span><span class="nbadge warn" id="badge_system"></span></button>
- <button class="nav" data-p="about"><span class="nlabel">{{S_NAV_ABOUT}}</span></button>
+ <button class="nav" role="tab" aria-selected="false" data-p="system"><span class="nlabel">{{S_NAV_SYSTEM}}</span><span class="nbadge warn" id="badge_system"></span></button>
+ <button class="nav" role="tab" aria-selected="false" data-p="about"><span class="nlabel">{{S_NAV_ABOUT}}</span></button>
 </nav>
 
 <div class="content">
-<div class="page" id="p-state">
+<div class="page" role="tabpanel" aria-hidden="true" id="p-state">
  <div class="hero"><span class="herokey" id="state_hotkey"></span><span class="herotext">{{S_STATE_HINT}}</span></div>
  <div class="berr" id="state_backend" style="display:none">
   <span class="berrtext" id="state_backend_text"></span>
   <button type="button" class="mini" id="state_retry">{{S_RETRY}}</button>
   <button type="button" class="mini ghost" data-goto="system">{{S_BERR_OPEN}}</button>
+ </div>
+ <div class="berr upd" id="state_upd" style="display:none">
+  <span class="berrtext" id="state_upd_text"></span>
+  <button type="button" class="mini" data-goto="system">{{S_UPD}}</button>
  </div>
  <div class="cards">
   <div class="scard"><span class="k">{{S_NAV_MIC}}</span>
@@ -1266,14 +1290,14 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
    <span class="v"><i class="led" id="state_llm_led"></i><span id="state_llm">—</span></span>
    <button class="mini" id="state_llm_btn" data-goto="models">{{S_PICK_MODEL}}</button></div>
  </div>
- <div class="sect">{{S_STATE_LAST}}</div>
+ <h2 class="sect">{{S_STATE_LAST}}</h2>
  <div class="row"><span class="lbl"><span class="lastres" id="state_last">—</span><span class="sub" id="state_last_meta"></span></span>
   <button class="mini" id="state_copy">{{S_STATE_COPY}}</button></div>
  <div class="row"><span class="lbl">{{S_STATE_MEM}}<span class="sub">{{S_STATE_MEM_SUB}}</span></span>
   <span class="val" id="state_ram">—</span></div>
 </div>
 
-<div class="page" id="p-history">
+<div class="page" role="tabpanel" aria-hidden="true" id="p-history">
  <div class="card">
   <div class="row"><label>{{S_HIST_ON}}<span class="sub">{{S_HIST_ON_SUB}}</span></label><input type="checkbox" id="history"></div>
   <div class="row" data-adv><label>{{S_HIST_DAYS}}</label>
@@ -1283,12 +1307,12 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
   <div class="row" id="hist_skip_row"><label>{{S_HIST_SKIP}}<span class="sub">{{S_HIST_SKIP_SUB}}</span></label><input type="text" id="history_skip"></div>
  </div>
  <div class="card" id="histcard">
-  <div class="sect">{{S_HIST_LIST}}<button type="button" class="mini" id="hist_clear">{{S_HIST_CLEAR}}</button></div>
+  <h2 class="sect">{{S_HIST_LIST}}<button type="button" class="mini" id="hist_clear">{{S_HIST_CLEAR}}</button></h2>
   <label class="omni histfind"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="15.5" y1="15.5" x2="21" y2="21"/></svg><input id="hist_find" type="text" placeholder="{{S_HIST_FIND}}" autocomplete="off"></label>
   <div id="histbody"></div>
  </div>
 </div>
-<div class="page" id="p-dictation">
+<div class="page" role="tabpanel" aria-hidden="true" id="p-dictation">
  <div class="card">
   <div class="row"><label>{{S_HOTKEY}}</label>
    <div class="hotkey-box"><span class="hotkey-val" id="hotkey"></span>
@@ -1303,7 +1327,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
   <div class="row" data-adv><label>{{S_MAXSEC}}</label><select id="max_record_seconds"><option value="30">30 s</option><option value="60">60 s</option><option value="120">120 s</option><option value="180">180 s</option><option value="300">300 s</option></select></div>
  </div>
  <div class="card">
-  <div class="sect">{{S_SEC_BEHAVIOR}}</div>
+  <h2 class="sect">{{S_SEC_BEHAVIOR}}</h2>
   <div class="row"><label>{{S_AUTOENTER}}<span class="sub">{{S_SUB_ENTER}}</span></label><input type="checkbox" id="auto_enter"></div>
   <div class="row" data-adv><label>{{S_RESTORE}}<span class="sub">{{S_SUB_CLIP}}</span></label><input type="checkbox" id="restore_clipboard"></div>
   <div class="row"><label>{{S_TYPEMODE}}<span class="sub">{{S_SUB_TYPE}}</span></label><input type="checkbox" id="type_mode"></div>
@@ -1311,7 +1335,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
    <select id="paste_delay_ms"><option value="0">0 ms</option><option value="50">50 ms</option><option value="100">100 ms</option><option value="250">250 ms</option><option value="500">500 ms</option><option value="1000">1000 ms</option></select></div>
  </div>
  <div class="card">
-  <div class="sect">{{S_SEC_RULES}}</div>
+  <h2 class="sect">{{S_SEC_RULES}}</h2>
   <div class="hint">{{S_RULES_HINT}}</div>
   <div id="rulesbody"></div>
   <div class="rulefoot">
@@ -1320,7 +1344,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
   </div>
  </div>
  <div class="card">
-  <div class="sect">{{S_SEC_OVERLAY}}</div>
+  <h2 class="sect">{{S_SEC_OVERLAY}}</h2>
   <div class="row"><label>{{S_OVERLAY}}</label><input type="checkbox" id="overlay"></div>
   <div class="row"><label>{{S_OVPOS}}<span class="sub">{{S_OVPOS_SUB}}</span></label>
    <select id="overlay_position">
@@ -1333,7 +1357,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
  </div>
 </div>
 
-<div class="page" id="p-mic">
+<div class="page" role="tabpanel" aria-hidden="true" id="p-mic">
  <div class="card">
   <div class="row"><label>{{S_MIC}}</label>
    <select id="mic_device"><option value="">{{S_MIC_DEFAULT}}</option></select>
@@ -1347,7 +1371,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
   <div class="note warn" id="mic_err"></div>
  </div>
  <div class="card">
-  <div class="sect">{{S_SEC_SOUND}}</div>
+  <h2 class="sect">{{S_SEC_SOUND}}</h2>
   <div class="row"><label>{{S_BEEP}}</label><input type="checkbox" id="beep"></div>
   <div class="row" data-adv><label>{{S_SOUND}}</label>
    <button class="mini" onclick="appPreviewSound(document.getElementById('sound_theme').value)">&#9654;</button>
@@ -1362,7 +1386,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
  </div>
 </div>
 
-<div class="page" id="p-models">
+<div class="page" role="tabpanel" aria-hidden="true" id="p-models">
  <div class="card">
   <div id="routing"></div>
   <div class="advbar">
@@ -1405,13 +1429,13 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
   <div class="row" data-adv><label>{{S_THREADS}}<span class="sub">{{S_SUB_THREADS}}</span></label><select id="threads"><option value="1">1</option><option value="2">2</option><option value="4">4</option><option value="6">6</option><option value="8">8</option><option value="12">12</option><option value="16">16</option></select></div>
  </div>
  <div class="card">
-  <div class="sect">{{S_SEC_LLM}}<span class="hfhome" onclick="appHFHome()" title="huggingface.co">Hugging Face ↗</span></div>
+  <h2 class="sect">{{S_SEC_LLM}}<span class="hfhome" onclick="appHFHome()" title="huggingface.co">Hugging Face ↗</span></h2>
   <div id="proc-models" class="spage on"></div>
   <div id="proc-search" class="spage on"></div>
  </div>
 </div>
 
-<div class="page" id="p-text">
+<div class="page" role="tabpanel" aria-hidden="true" id="p-text">
  <div class="card">
   <div class="row"><label>{{S_PUNCT}}<span class="sub">{{S_SUB_PUNCT}}</span></label>
    <select id="punctuation">
@@ -1421,12 +1445,12 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
    </select></div>
  </div>
  <div class="card">
-  <div class="sect">{{S_SUB_DICT}}</div>
+  <h2 class="sect">{{S_SUB_DICT}}</h2>
   <div class="hint">{{S_DICT_HINT}}</div>
   <textarea id="whisper_prompt" rows="10" style="width:100%;min-height:150px;height:26vh;padding:8px 11px;border:1px solid var(--line);background:#08100b;color:var(--green);font:inherit;line-height:1.5;outline:none;resize:vertical"></textarea>
  </div>
  <div class="card" data-adv>
-  <div class="sect">{{S_SEC_REPLACE}}</div>
+  <h2 class="sect">{{S_SEC_REPLACE}}</h2>
   <div class="hint">{{S_REPLACE_HINT}}</div>
   <div id="replbody"></div>
   <div class="rulefoot">
@@ -1434,7 +1458,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
   </div>
  </div>
  <div class="card" data-adv>
-  <div class="sect">{{S_SEC_CMD}}</div>
+  <h2 class="sect">{{S_SEC_CMD}}</h2>
   <div class="hint">{{S_CMD_HINT}}</div>
   <div id="cmdbody"></div>
   <div class="rulefoot">
@@ -1452,13 +1476,13 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
   </div>
  </div>
  <div class="card" data-adv>
-  <div class="sect">{{S_SUB_PROMPTS}}</div>
+  <h2 class="sect">{{S_SUB_PROMPTS}}</h2>
   <div class="hint">{{S_LLM_HINT}}</div>
   <div id="profbody"></div>
  </div>
 </div>
 
-<div class="page" id="p-translate">
+<div class="page" role="tabpanel" aria-hidden="true" id="p-translate">
  <div class="card">
   <div class="hint">{{S_TR_HINT}}</div>
   <div id="tr_warn" style="display:none;color:var(--amber);font-size:12px;margin-bottom:6px">{{S_TR_TURBO}}</div>
@@ -1495,7 +1519,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
  </div>
 </div>
 
-<div class="page" id="p-system">
+<div class="page" role="tabpanel" aria-hidden="true" id="p-system">
  <div class="card">
   <div class="row"><label>{{S_UILANG}}</label>
    <select id="ui_language">
@@ -1516,18 +1540,25 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
   <div id="upd_out" style="font-size:12px;min-height:18px;color:var(--amber)"></div>
   <div class="row" data-adv><label>{{S_LOG}}<span class="sub">{{S_LOG_SUB}}</span></label>
    <button class="mini" id="log_open">{{S_LOG_OPEN}}</button></div>
+  <div class="row" data-adv><label>{{S_RELOAD_CFG}}<span class="sub">{{S_RELOAD_CFG_SUB}}</span></label>
+   <button class="mini" id="cfg_reload">{{S_RELOAD_CFG_BTN}}</button></div>
+  <div class="row" data-adv><label>{{S_RESET_ALL}}<span class="sub">{{S_RESET_ALL_SUB}}</span></label>
+   <button class="mini danger" id="cfg_reset">{{S_RESET_ALL_BTN}}</button></div>
  </div>
  <div class="card">
-  <div class="sect" data-adv>{{S_SEC_SERVICE}}</div>
+  <h2 class="sect" data-adv>{{S_SEC_SERVICE}}</h2>
   <div class="row" data-adv><label>{{S_AUTOSTART}}<span class="sub">{{S_SUB_AUTOSTART}}</span></label><input type="checkbox" id="server_autostart"></div>
   <div class="row" data-adv><label>{{S_PORT}}<span class="sub">{{S_SUB_PORT}}</span></label><input type="text" id="server_port" style="width:90px"></div>
-  <div class="row" data-adv><label>{{S_SERVEREXE}}</label><input type="text" id="server_exe"></div>
+  <div class="row" data-adv><label>{{S_SERVEREXE}}<span class="sub">{{S_SERVEREXE_SUB}}</span></label>
+   <input type="text" id="server_exe" readonly>
+   <button class="mini" id="exe_edit">{{S_PROF_EDIT}}</button>
+   <button class="mini" id="exe_reset">{{S_EXE_RESET}}</button></div>
   <div class="row" data-adv><label>{{S_SERVERURL}}<div class="hint">{{S_URLHINT}}</div></label><input type="text" id="server_url"></div>
   <div class="note warn" id="remote_warn"></div>
  </div>
 </div>
 
-<div class="page about" id="p-about">
+<div class="page about" role="tabpanel" aria-hidden="true" id="p-about">
  <div class="card">
   <p style="font-size:15px;letter-spacing:2px"><b>{{APP}}</b> <span id="ver2"></span></p>
   {{S_ABOUT_HTML}}
@@ -1636,7 +1667,9 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
 window.onerror = function(m, s, l, c){ if(window.appJSError) appJSError(String(m) + " @line " + l + ":" + c); };
 const CFG = {{CFG}};
 const bools = ["beep","auto_enter","restore_clipboard","overlay","overlay_text","animation","type_mode","server_autostart","check_updates","history"];
-const texts = ["server_exe","history_skip"];
+const texts = ["history_skip"];
+let exeStored = CFG.server_exe || "";
+let exeUnlocked = false;
 let remoteURL = (CFG.server_url || "").trim();
 const nums  = ["threads","min_record_ms","max_record_seconds","translate_ask_seconds","server_port","paste_delay_ms","history_days","history_max"];
 const sels  = ["ui_language","language","sound_theme","translate_target","translate_ask","hotkey_mode","overlay_position"];
@@ -1654,6 +1687,39 @@ let expandedID = null;
 let captureFor = null;
 
 function esc(s){ const d=document.createElement("span"); d.textContent=s||""; return d.innerHTML; }
+function initServerExe(){
+  const box = document.getElementById("server_exe");
+  const edit = document.getElementById("exe_edit");
+  const reset = document.getElementById("exe_reset");
+  if(!box || !edit || !reset) return;
+  box.value = CFG.server_exe_path || CFG.server_exe || "";
+  edit.onclick = async ()=>{
+    if(exeUnlocked) return;
+    if(!await askConfirm(L.exewarn, L.exeedit)) return;
+    exeUnlocked = true;
+    box.readOnly = false;
+    box.focus();
+    box.select();
+  };
+  reset.onclick = ()=>{
+    exeStored = CFG.server_exe_default || "whisper-server.exe";
+    exeUnlocked = false;
+    box.readOnly = true;
+    box.value = CFG.server_exe_path_default || CFG.server_exe_default || "";
+    doSave();
+    toast(L.upd, "ok");
+  };
+  box.onchange = ()=>{ if(exeUnlocked){ exeStored = box.value.trim(); doSave(); } };
+}
+function labelPages(){
+  document.querySelectorAll(".nav").forEach(b=>{
+    const page = document.getElementById("p-" + b.dataset.p);
+    const label = b.querySelector(".nlabel");
+    if(!page || !label) return;
+    page.setAttribute("aria-label", label.textContent.trim());
+    b.setAttribute("aria-controls", page.id);
+  });
+}
 function ariaFromTitle(root){
   const scope = root && root.querySelectorAll ? root : document;
   scope.querySelectorAll("button[title]:not([aria-label]),select[title]:not([aria-label])").forEach(b=>{
@@ -2027,7 +2093,8 @@ function updPauseHotkey(){
   const el = document.getElementById("pause_hotkey");
   if(el) el.textContent = pauseHotkey || L.nohot;
 }
-function comboCaptured(combo){
+function comboCaptured(combo, warn){
+  if(warn) toast(warn, "warn");
   if(!captureFor) return;
   if(captureFor === "__wt"){
     captureFor = null;
@@ -2113,6 +2180,12 @@ async function refreshState(){
   badge("badge_history", s.badges && s.badges.history, L.badgehist);
   const rem = document.getElementById("st_remote");
   if(rem) rem.textContent = s.remote ? L.remotebadge : "";
+  const upd = document.getElementById("state_upd");
+  if(upd){
+    upd.style.display = s.upd_version ? "" : "none";
+    const label = document.getElementById("state_upd_text");
+    if(label) label.textContent = s.upd_version ? L.updfound.replace("%s", s.upd_version) : "";
+  }
 }
 function initStateScreen(){
   const copy = document.getElementById("state_copy");
@@ -2370,7 +2443,7 @@ function toast(msg, severity){
   t.textContent = msg;
   t.className = "stsaved" + (severity === "error" ? " bad" : severity === "warn" ? " warn" : "");
   clearTimeout(toast._t);
-  toast._t = setTimeout(()=>{ t.textContent = ""; t.className = "stsaved"; }, severity === "error" ? 6000 : 2200);
+  toast._t = setTimeout(()=>{ t.textContent = ""; t.className = "stsaved"; }, (severity === "error" || severity === "warn") ? 6000 : 2200);
 }
 
 const numSels = ["threads","min_record_ms","max_record_seconds","translate_ask_seconds","paste_delay_ms","history_days","history_max"];
@@ -2405,6 +2478,7 @@ function load(){
   document.getElementById("threads").max = CFG._cpus || 16;
   bools.forEach(k=>document.getElementById(k).checked = !!CFG[k]);
   texts.forEach(k=>document.getElementById(k).value = CFG[k]||"");
+  initServerExe();
   document.getElementById("server_url").value = remoteURL;
   nums.forEach(k=>document.getElementById(k).value = CFG[k]);
   sels.forEach(k=>{
@@ -2458,11 +2532,12 @@ function syncTrControls(){
   document.getElementById("translate_ask_seconds").disabled = always || mode !== "timeout";
   trAll.forEach(l=>{ document.getElementById("tl_"+l).disabled = always || mode === "never"; });
 }
-function setHotkey(s){
+function setHotkey(s, warn){
   CFG.hotkey=s;
   document.getElementById("hotkey").textContent=s;
   const w = document.getElementById("wiz_hot");
   if(w) w.textContent = s;
+  if(warn) toast(warn, "warn");
 }
 async function doSave(){
   const micSel = document.getElementById("mic_device");
@@ -2485,6 +2560,7 @@ async function doSave(){
     profiles: profiles};
   bools.forEach(k=>f[k]=document.getElementById(k).checked);
   texts.forEach(k=>f[k]=document.getElementById(k).value);
+  f.server_exe = exeUnlocked ? document.getElementById("server_exe").value.trim() : exeStored;
   nums.forEach(k=>f[k]=parseInt(document.getElementById(k).value)||0);
   sels.forEach(k=>f[k]=document.getElementById(k).value);
   const langChanged = f.ui_language !== (CFG.ui_language || "auto");
@@ -2497,8 +2573,16 @@ async function doSave(){
 let curTab = "state";
 function show(p){
   curTab = p;
-  document.querySelectorAll(".nav").forEach(b=>b.classList.toggle("active", b.dataset.p===p));
-  document.querySelectorAll(".page").forEach(el=>el.classList.toggle("active", el.id==="p-"+p));
+  document.querySelectorAll(".nav").forEach(b=>{
+    const on = b.dataset.p === p;
+    b.classList.toggle("active", on);
+    b.setAttribute("aria-selected", on ? "true" : "false");
+  });
+  document.querySelectorAll(".page").forEach(el=>{
+    const on = el.id === "p-" + p;
+    el.classList.toggle("active", on);
+    el.setAttribute("aria-hidden", on ? "false" : "true");
+  });
   if(p==="state") refreshState();
   if(p==="history") refreshHistory();
   document.querySelector(".content").scrollTop = 0;
@@ -3206,6 +3290,14 @@ function wizStart(){
 document.getElementById("upd_check").onclick = updCheck;
 const logBtn = document.getElementById("log_open");
 if(logBtn) logBtn.onclick = ()=>appOpenLog();
+const cfgReloadBtn = document.getElementById("cfg_reload");
+if(cfgReloadBtn) cfgReloadBtn.onclick = async ()=>{ await appReloadConfig(); toast(L.upd, "ok"); appReload(curTab); };
+const cfgResetBtn = document.getElementById("cfg_reset");
+if(cfgResetBtn) cfgResetBtn.onclick = async ()=>{
+  if(!await askConfirm(L.resetask, L.resetbtn)) return;
+  await appResetSettings();
+  appReload(curTab);
+};
 let applyTimer = null;
 function applyNow(){
   clearTimeout(applyTimer);
@@ -3241,6 +3333,7 @@ load();
   bindLabels();
   applyLevel();
   ariaFromTitle(document);
+  labelPages();
   document.querySelectorAll(".lvlb").forEach(b=>b.onclick=()=>setLevel(b.dataset.l));
   const omni = document.getElementById("omni");
   if(omni){

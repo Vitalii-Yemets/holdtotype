@@ -93,7 +93,8 @@ func startSherpaServer(cfg *Config, logw io.Writer) (*sherpaServer, error) {
 	cmd.Stderr = quiet
 	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true, CreationFlags: 0x08000000}
 	if err := cmd.Start(); err != nil {
-		return nil, fmt.Errorf("запуск %s: %w", cfg.SherpaExe, err)
+		log.Printf("запуск %s: %v", cfg.SherpaExe, err)
+		return nil, fmt.Errorf("%s", trf("err.server.launch", cfg.SherpaExe))
 	}
 	s.cmd = cmd
 	s.job = attachProcessToJob(cmd.Process.Pid)

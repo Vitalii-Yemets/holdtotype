@@ -1,11 +1,11 @@
 package main
 
 import (
-	"holdtotype/internal/checksum"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"holdtotype/internal/checksum"
 	"io"
 	"log"
 	"net/http"
@@ -75,7 +75,7 @@ var modelCatalog = []modelInfo{
 		Engine: engineWhisper, Langs: "*", Translate: false, Speed: 4, Accuracy: 4},
 	{ID: "gigaam-v3", SizeMB: 232, NameKey: "GigaAM v3", DescKey: "S_M_GIGAAM",
 		Engine: engineSherpa, Dir: "gigaam-v3", Langs: "ru", Punct: true, Speed: 5, Accuracy: 5,
-		Files:   []string{"encoder.int8.onnx", "decoder.onnx", "joiner.onnx", "tokens.txt"},
+		Files: []string{"encoder.int8.onnx", "decoder.onnx", "joiner.onnx", "tokens.txt"},
 		Hashes: map[string]string{
 			"encoder.int8.onnx": "369f35a71bf288d3b8e0391fabd8dba5f2314088d440bca474056b7b4b6e66bf",
 			"decoder.onnx":      "38fc7475443ea2a26f63211ca350f73ac50fff824ab7a3876ee2bd610c53bbc4",
@@ -252,7 +252,7 @@ func (a *App) startMultiDownload(key string, m *modelInfo) {
 			delete(dl, key)
 		case err != nil:
 			log.Printf("скачивание %s: %v", m.ID, err)
-			dl[key] = &dlState{err: err.Error()}
+			dl[key] = &dlState{err: humanError(err)}
 		default:
 			log.Printf("модель %s скачана целиком", m.ID)
 			dl[key] = &dlState{pct: 100}
@@ -407,7 +407,7 @@ func (a *App) startDownload(key, file, url string, sizeMB int) {
 			delete(dl, key)
 		case err != nil:
 			log.Printf("скачивание %s: %v", file, err)
-			dl[key] = &dlState{err: err.Error()}
+			dl[key] = &dlState{err: humanError(err)}
 		default:
 			log.Printf("модель %s скачана", file)
 			dl[key] = &dlState{pct: 100}
@@ -550,13 +550,13 @@ func (a *App) deleteModel(id string, force bool) string {
 	if m.Engine == engineSherpa {
 		dir := filepath.Join("models", m.Dir)
 		if err := os.RemoveAll(dir); err != nil {
-			return err.Error()
+			return humanError(err)
 		}
 		log.Printf("модель %s удалена", m.ID)
 		return tr("model.del.ok")
 	}
 	if err := os.Remove(filepath.Join("models", m.File)); err != nil {
-		return err.Error()
+		return humanError(err)
 	}
 	log.Printf("модель %s удалена", m.File)
 	return tr("model.del.ok")
@@ -568,7 +568,6 @@ type advicePart struct {
 	SizeMB    int    `json:"size"`
 	Installed bool   `json:"installed"`
 }
-
 
 type adviceOut struct {
 	Primary   string       `json:"primary"`
@@ -681,14 +680,15 @@ type stateOut struct {
 	LLMOK      bool   `json:"llm_ok"`
 	MicOK      bool   `json:"mic_ok"`
 	StatusLine string `json:"status_line"`
-	Remote      bool   `json:"remote"`
-	RuState     string `json:"ru_state"`
-	BackendErr  string `json:"backend_err"`
-	OtherState  string `json:"other_state"`
+	Remote     bool   `json:"remote"`
+	RuState    string `json:"ru_state"`
+	BackendErr string `json:"backend_err"`
+	OtherState string `json:"other_state"`
+	UpdVersion string `json:"upd_version"`
 	Badges     struct {
-		Mic    string `json:"mic"`
-		Models string `json:"models"`
-		System string `json:"system"`
+		Mic     string `json:"mic"`
+		Models  string `json:"models"`
+		System  string `json:"system"`
 		History string `json:"history"`
 	} `json:"badges"`
 }
@@ -842,16 +842,23 @@ func (a *App) stateSnapshot() string {
 		LLMOK:      llmInstalled(cfg),
 		MicOK:      rec != nil,
 		StatusLine: statusLine(cfg, ready, free),
-		Remote:      strings.TrimSpace(cfg.ServerURL) != "",
-		RuState:     modelStateFor(cfg, engineSherpa),
-		BackendErr:  backendErr,
-		OtherState:  modelStateFor(cfg, engineWhisper),
+		Remote:     strings.TrimSpace(cfg.ServerURL) != "",
+		RuState:    modelStateFor(cfg, engineSherpa),
+		BackendErr: backendErr,
+		OtherState: modelStateFor(cfg, engineWhisper),
 	}
+	a.mu.Lock()
+	st.UpdVersion = a.updVer
+	a.mu.Unlock()
 	st.Badges.Mic = micBadge(mic)
 	st.Badges.Models = itoaSafe(installedModelCount())
 	st.Badges.History = histBadge()
-	if w := systemWarnings(cfg); w > 0 {
-		st.Badges.System = itoaSafe(w)
+	warn := systemWarnings(cfg)
+	if st.UpdVersion != "" {
+		warn++
+	}
+	if warn > 0 {
+		st.Badges.System = itoaSafe(warn)
 	}
 	out, _ := json.Marshal(st)
 	return string(out)

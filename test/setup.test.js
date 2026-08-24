@@ -31,6 +31,10 @@ const values = {
   DONE: "Installed",
   DONEAT: "The app is installed in:",
   WARNMODEL_JS: '"The model was not downloaded."',
+  UPDATES: "Check for updates",
+  DLCANCEL: "STOP THE DOWNLOAD",
+  DLSTOPPING_JS: '"Stopping the download…"',
+  DLSTOPPED_JS: '"The model was not downloaded — the app will offer it on first run."',
   FINISH: "FINISH",
   RETRY: "RETRY",
   BACK: "BACK",
@@ -58,7 +62,9 @@ const dom = new JSDOM(html, {
   runScripts: "dangerously",
   beforeParse(w) {
     w.installCalls = [];
+    w.cancelCalls = 0;
     w.appInstall = (...args) => w.installCalls.push(args);
+    w.appCancelDownload = () => { w.cancelCalls++; };
     w.appBrowse = async () => "";
     w.appFinish = () => {};
     w.appDrag = () => {};
@@ -92,6 +98,12 @@ const shown = (id) => d.getElementById(id).classList.contains("on");
   check("a real folder starts the install", w.installCalls.length, 1);
   check("the install shows progress", shown("st-prog"), true);
   check("the folder error is cleared", d.getElementById("operr").textContent, "");
+  check("the update check is asked for", w.installCalls[0][3], true);
+  check("a chosen model can be stopped mid-download", d.getElementById("dlcancelrow").style.display, "");
+  d.querySelector("#dlcancelrow .btn").click();
+  await sleep(20);
+  check("stopping the download is passed on", w.cancelCalls, 1);
+  check("the stop button goes away once pressed", d.getElementById("dlcancelrow").style.display, "none");
 
   w.setupProgress(40, "ggml-small.bin");
   await sleep(20);
@@ -122,7 +134,7 @@ const shown = (id) => d.getElementById(id).classList.contains("on");
   check("a good install ends on the done step", shown("st-done"), true);
   check("the done step names the folder", d.getElementById("outdir").textContent, "C:\\Programs\\HoldToType");
 
-  check("the switches are real checkboxes", d.querySelectorAll(".chk input[type=checkbox]").length, 3);
+  check("the switches are real checkboxes", d.querySelectorAll(".chk input[type=checkbox]").length, 4);
   check("every switch sits inside its label", [...d.querySelectorAll(".chk input")].every((i) => i.closest("label")), true);
 
   check("no page errors", errors, []);

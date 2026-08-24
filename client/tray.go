@@ -43,7 +43,6 @@ const (
 	cmdStatus = iota + 1
 	cmdSettings
 	cmdToggle
-	cmdReload
 	cmdOpenConfig
 	cmdOpenLog
 	cmdAbout
@@ -215,7 +214,6 @@ func trayShowMenu(hwnd uintptr) {
 		{text: toggleText, id: cmdToggle},
 		{text: tr("menu.lastcopy"), id: cmdLastCopy, grayed: last == ""},
 		{sep: true},
-		{text: tr("menu.reload"), id: cmdReload},
 		{text: tr("menu.open.config"), id: cmdOpenConfig},
 		{text: tr("menu.open.log"), id: cmdOpenLog},
 		{text: tr("menu.about"), id: cmdAbout},
@@ -238,8 +236,6 @@ func trayShowMenu(hwnd uintptr) {
 		go a.openSettings("state")
 	case cmdToggle:
 		a.toggleEnabled()
-	case cmdReload:
-		go a.reloadConfig()
 	case cmdOpenConfig:
 		shellOpen("config.json")
 	case cmdOpenLog:

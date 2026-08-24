@@ -1,11 +1,11 @@
 package main
 
 import (
-	"holdtotype/internal/profiles"
+	"holdtotype/internal/apprules"
 	"holdtotype/internal/commands"
 	"holdtotype/internal/history"
 	"holdtotype/internal/mojibake"
-	"holdtotype/internal/apprules"
+	"holdtotype/internal/profiles"
 	"holdtotype/internal/replace"
 	"holdtotype/internal/routing"
 
@@ -20,7 +20,6 @@ import (
 )
 
 type Profile = profiles.Profile
-
 
 const configVersion = 3
 
@@ -88,33 +87,33 @@ type Config struct {
 	MaxRecordSeconds int    `json:"max_record_seconds"`
 	MinRecordMs      int    `json:"min_record_ms"`
 
-	WhisperPrompt       string    `json:"whisper_prompt"`
-	TranslateHotkey     string    `json:"translate_hotkey"`
-	PauseHotkey         string    `json:"pause_hotkey"`
-	TranslateTarget     string    `json:"translate_target"`
-	TranslateAsk        string    `json:"translate_ask"`
-	TranslateAskSeconds int       `json:"translate_ask_seconds"`
-	TranslateAskLangs   []string  `json:"translate_ask_langs"`
-	DefaultProfile      string    `json:"default_profile"`
-	TranslateDefault    bool      `json:"translate_default"`
-	ActiveProfiles      []string  `json:"active_profiles"`
-	Profiles            []Profile `json:"profiles"`
-	LLMPort             int       `json:"llm_port"`
-	LLMExe              string    `json:"llm_exe"`
-	LLMModel            string    `json:"llm_model"`
-	SettingsW           int       `json:"settings_width"`
-	SettingsH           int       `json:"settings_height"`
-	CheckUpdates        bool      `json:"check_updates"`
-	MicDevice           string    `json:"mic_device"`
-	MicDeviceName       string    `json:"mic_device_name"`
-	AppRules            []apprules.Rule `json:"app_rules"`
-	Replacements        []replace.Rule  `json:"replacements"`
-	HistoryOn           bool      `json:"history"`
-	HistoryDays         int       `json:"history_days"`
-	HistoryMax          int       `json:"history_max"`
-	HistorySkip         string    `json:"history_skip"`
+	WhisperPrompt       string             `json:"whisper_prompt"`
+	TranslateHotkey     string             `json:"translate_hotkey"`
+	PauseHotkey         string             `json:"pause_hotkey"`
+	TranslateTarget     string             `json:"translate_target"`
+	TranslateAsk        string             `json:"translate_ask"`
+	TranslateAskSeconds int                `json:"translate_ask_seconds"`
+	TranslateAskLangs   []string           `json:"translate_ask_langs"`
+	DefaultProfile      string             `json:"default_profile"`
+	TranslateDefault    bool               `json:"translate_default"`
+	ActiveProfiles      []string           `json:"active_profiles"`
+	Profiles            []Profile          `json:"profiles"`
+	LLMPort             int                `json:"llm_port"`
+	LLMExe              string             `json:"llm_exe"`
+	LLMModel            string             `json:"llm_model"`
+	SettingsW           int                `json:"settings_width"`
+	SettingsH           int                `json:"settings_height"`
+	CheckUpdates        bool               `json:"check_updates"`
+	MicDevice           string             `json:"mic_device"`
+	MicDeviceName       string             `json:"mic_device_name"`
+	AppRules            []apprules.Rule    `json:"app_rules"`
+	Replacements        []replace.Rule     `json:"replacements"`
+	HistoryOn           bool               `json:"history"`
+	HistoryDays         int                `json:"history_days"`
+	HistoryMax          int                `json:"history_max"`
+	HistorySkip         string             `json:"history_skip"`
 	Commands            []commands.Command `json:"commands"`
-	WizardDone          bool      `json:"wizard_done"`
+	WizardDone          bool               `json:"wizard_done"`
 }
 
 func presetProfiles() []Profile {
@@ -268,7 +267,7 @@ func loadConfig(path string) (*Config, error) {
 			_ = d2.Decode(cfg)
 		}
 		_ = saveConfig(path, cfg)
-		go msgBox(tr("cfg.err.title"), trf("cfg.err.recovered", err.Error(), broken))
+		go msgBox(tr("cfg.err.title"), trf("cfg.err.recovered", humanError(err), broken))
 		return cfg, nil
 	}
 	migrated := fileConfigVersion(data) != configVersion
@@ -400,7 +399,6 @@ func loadConfig(path string) (*Config, error) {
 	}
 	return cfg, nil
 }
-
 
 var translateLangNames = map[string]string{
 	"en": "English", "de": "German", "fr": "French", "es": "Spanish",

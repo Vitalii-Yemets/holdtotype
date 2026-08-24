@@ -14,6 +14,7 @@ const (
 	ovBtnH   = 26
 	ovBtnGap = 8
 	ovBtnPad = 13
+	ovBtnNum = 15
 	ovBtnMin = 46
 	ovAskPad = 20
 )
@@ -114,7 +115,11 @@ func askLayoutLocked() (rows int32, width int32, pos []point) {
 			widest = x - ovBtnGap
 		}
 	}
-	return row + 1, widest + ovAskPad, pos
+	return row + 1, widest + ovAskPad + escHintDIP(), pos
+}
+
+func escHintDIP() int32 {
+	return textWidthDIP(tr("ov.esc")) + 24
 }
 
 func askRows() int32 {
@@ -211,10 +216,13 @@ func overlayAsk(prompt string, choices []ovChoice, seconds int) string {
 
 	ch := make(chan string, 1)
 	widths := make([]int32, 0, len(choices))
-	for _, c := range choices {
+	for i, c := range choices {
 		w := textWidthDIP(c.label) + 2*ovBtnPad
-		if w < ovBtnMin {
-			w = ovBtnMin
+		if i < 9 {
+			w += ovBtnNum
+		}
+		if w < ovBtnMin+ovBtnNum {
+			w = ovBtnMin + ovBtnNum
 		}
 		widths = append(widths, w)
 	}
@@ -316,6 +324,13 @@ func askRender(hwnd, hdc uintptr, rc rect, fill func(rect, uintptr), drawText fu
 		Bottom: px(ovH + ovAskH),
 	}, colGreenDm, 0x0020|0x0004)
 
+	drawText(tr("ov.esc"), rect{
+		Left:   rc.Right - px(escHintDIP()),
+		Top:    px(ovH),
+		Right:  rc.Right - px(12),
+		Bottom: px(ovH + ovAskH),
+	}, colGreenLo, 0x0020|0x0004|0x0002)
+
 	frac, live := askLeft()
 	for i, r := range askButtonRects(dpi) {
 		if i >= len(items) {
@@ -327,7 +342,13 @@ func askRender(hwnd, hdc uintptr, rc rect, fill func(rect, uintptr), drawText fu
 		}
 		fill(rect{Left: r.Left - 1, Top: r.Top - 1, Right: r.Right + 1, Bottom: r.Bottom + 1}, border)
 		fill(r, 0x0B100D)
-		drawText(items[i].label, r, txt, 0x0020|0x0004|0x0001)
+		label := r
+		if i < 9 {
+			label.Left += px(ovBtnNum)
+			num := rect{Left: r.Left + px(5), Top: r.Top, Right: r.Left + px(ovBtnNum), Bottom: r.Bottom}
+			drawText(itoa(i+1), num, colGreenLo, 0x0020|0x0004|0x0000)
+		}
+		drawText(items[i].label, label, txt, 0x0020|0x0004|0x0001)
 		if live && items[i].def {
 			w := int32(float64(r.Right-r.Left) * frac)
 			fill(rect{Left: r.Left, Top: r.Bottom + px(3), Right: r.Left + w, Bottom: r.Bottom + px(5)}, colGreen)

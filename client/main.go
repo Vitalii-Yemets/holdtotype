@@ -1,15 +1,15 @@
 package main
 
 import (
-	"holdtotype/internal/profiles"
-	"holdtotype/internal/commands"
 	"encoding/json"
-	"holdtotype/internal/audiolevel"
-	"holdtotype/internal/history"
-	"holdtotype/internal/replace"
 	"holdtotype/internal/apprules"
-	"unsafe"
+	"holdtotype/internal/audiolevel"
+	"holdtotype/internal/commands"
 	"holdtotype/internal/evqueue"
+	"holdtotype/internal/history"
+	"holdtotype/internal/profiles"
+	"holdtotype/internal/replace"
+	"unsafe"
 
 	"context"
 	"errors"
@@ -52,21 +52,21 @@ type ptEvent struct {
 }
 
 type App struct {
-	mu        sync.Mutex
-	cfg       *Config
-	rec       *Recorder
-	srv       recognizer
-	llm       *llamaServer
-	hook      *hotkeyHook
-	enabled   bool
-	ready     bool
-	capturing bool
-	paused    bool
+	mu         sync.Mutex
+	cfg        *Config
+	rec        *Recorder
+	srv        recognizer
+	llm        *llamaServer
+	hook       *hotkeyHook
+	enabled    bool
+	ready      bool
+	capturing  bool
+	paused     bool
 	backendErr string
-	quitting  bool
+	quitting   bool
 
-	evq      *evqueue.Queue[ptEvent]
-	retryCh  chan struct{}
+	evq     *evqueue.Queue[ptEvent]
+	retryCh chan struct{}
 
 	state          atomic.Int32
 	gen            int
@@ -81,9 +81,9 @@ type App struct {
 	lastWnd      uintptr
 	settingsPrev uintptr
 	lastProcess  string
-	updVer     string
-	updURL     string
-	updDigest  string
+	updVer       string
+	updURL       string
+	updDigest    string
 
 	altMu   sync.Mutex
 	alt     recognizer
@@ -459,7 +459,7 @@ func main() {
 
 	cfg, err := loadConfig("config.json")
 	if err != nil {
-		msgBox(tr("cfg.err.title"), err.Error())
+		msgBox(tr("cfg.err.title"), humanError(err))
 		return
 	}
 	initLang(cfg.UILanguage)
@@ -799,6 +799,7 @@ func (a *App) handleCancel() {
 		a.paused = false
 		a.mu.Unlock()
 		rec.Stop()
+		overlayClearDeadline()
 		a.gen++
 		a.state.Store(stIdle)
 		log.Printf("запись отменена пользователем")
@@ -899,6 +900,7 @@ func (a *App) handleDown(profileID string) {
 	}
 
 	gen := a.gen
+	overlaySetDeadline(time.Now().Add(time.Duration(cfg.MaxRecordSeconds) * time.Second))
 	time.AfterFunc(time.Duration(cfg.MaxRecordSeconds)*time.Second, func() {
 		a.post(ptEvent{kind: evTimeout, gen: gen})
 	})
@@ -917,6 +919,7 @@ func (a *App) handleStop(expectGen int) {
 	if expectGen != 0 && paused {
 		log.Printf("предел записи наступил на паузе — жду продолжения")
 		gen := a.gen
+		overlaySetDeadline(time.Now().Add(time.Duration(a.sessionCfg.MaxRecordSeconds) * time.Second))
 		time.AfterFunc(time.Duration(a.sessionCfg.MaxRecordSeconds)*time.Second, func() {
 			a.post(ptEvent{kind: evTimeout, gen: gen})
 		})
@@ -930,6 +933,7 @@ func (a *App) handleStop(expectGen int) {
 	a.paused = false
 	a.mu.Unlock()
 	pcm := rec.Stop()
+	overlayClearDeadline()
 	a.state.Store(stProcessing)
 	playCue(a.sessionCfg.Beep, a.sessionCfg.SoundTheme, cueStop)
 	traySetIcon(trayProcessing)
@@ -1306,6 +1310,10 @@ func (a *App) changeHotkey() {
 	}
 	a.refreshIdleUI()
 	log.Printf("новое сочетание: %s", combo)
+	if warn := hotkeyWarning(combo); warn != "" {
+		log.Printf("предупреждение: %s", warn)
+		overlayNote(warn)
+	}
 }
 
 func chainProfiles(cfg *Config, profileID string) []*Profile {
@@ -1453,7 +1461,7 @@ func (a *App) micCheck() string {
 	}
 	if err := rec.Start(5); err != nil {
 		log.Printf("проверка микрофона: %v", err)
-		return fail(err.Error())
+		return fail(humanError(err))
 	}
 	time.Sleep(3 * time.Second)
 	pcm := rec.Stop()
@@ -1588,3 +1596,30 @@ func (a *App) explainIgnoredPress(cfg *Config, enabled, capturing bool, backendE
 		}
 	}
 }
+
+func (a *App) resetSettings() {
+	a.mu.Lock()
+	old := *a.cfg
+	a.mu.Unlock()
+
+	fresh := defaultConfig()
+	fresh.Profiles = old.Profiles
+	fresh.ActiveProfiles = old.ActiveProfiles
+	fresh.AppRules = old.AppRules
+	fresh.Replacements = old.Replacements
+	fresh.Commands = old.Commands
+	fresh.Model = old.Model
+	fresh.SherpaModel = old.SherpaModel
+	fresh.LLMModel = old.LLMModel
+	fresh.WizardDone = true
+	fresh.UILanguage = old.UILanguage
+	syncDictionary(fresh)
+
+	if err := saveConfig("config.json", fresh); err != nil {
+		log.Printf("сброс настроек: %v", err)
+		return
+	}
+	log.Printf("настройки сброшены к заводским (модели, история и промпты сохранены)")
+	a.reloadConfig()
+}
+
