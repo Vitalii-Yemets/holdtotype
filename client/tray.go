@@ -225,12 +225,12 @@ func trayShowMenu(hwnd uintptr) {
 
 	switch cmd {
 	case cmdLastCopy:
-		a.mu.Lock()
-		text := a.lastResult
-		a.mu.Unlock()
-		if text != "" {
-			if err := setClipboardText(text); err != nil {
-				log.Printf("копирование последнего результата: %v", err)
+		ok, msg := a.copyLastResult()
+		if a.snapshot().Overlay {
+			if ok {
+				overlaySet(ovFlashOK, tr("ov.copied"))
+			} else {
+				overlaySet(ovFlashErr, msg)
 			}
 		}
 	case cmdSettings:

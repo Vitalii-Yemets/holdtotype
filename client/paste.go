@@ -253,10 +253,27 @@ func restoreClipboard(fmts []clipFormat) error {
 	return nil
 }
 
-func pasteText(cfg *Config, text string) error {
+var errFocusMoved = errors.New("окно ввода сменилось перед вставкой")
+
+func focusStillOn(expect uintptr) bool {
+	if expect == 0 {
+		return true
+	}
+	cur, _, _ := procGetForegroundWindow.Call()
+	if cur == expect {
+		return true
+	}
+	log.Printf("окно ввода сменилось: ждали «%s», сейчас «%s»", windowTitle(expect), windowTitle(cur))
+	return false
+}
+
+func pasteText(cfg *Config, text string, expect uintptr) error {
 	waitModifiersReleased(3 * time.Second)
 	if cfg.PasteDelayMs > 0 {
 		time.Sleep(time.Duration(cfg.PasteDelayMs) * time.Millisecond)
+	}
+	if !focusStillOn(expect) {
+		return errFocusMoved
 	}
 
 	if cfg.PasteMode == "type" {

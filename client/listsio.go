@@ -124,11 +124,26 @@ func (a *App) insertFromHistory(text string) string {
 		return listsAnswer(listsReply{Text: tr("hist.insert.nowin")})
 	}
 	cfg := a.snapshot()
-	if err := pasteText(cfg, text); err != nil {
+	if err := pasteText(cfg, text, wnd); err != nil {
 		log.Printf("история: вставка: %v", err)
 		return listsAnswer(listsReply{Text: err.Error()})
 	}
 	title := windowTitle(wnd)
 	log.Printf("история: вставлено %d символов в «%s»", len([]rune(text)), title)
 	return listsAnswer(listsReply{OK: true, Text: trf("hist.insert.ok", title)})
+}
+
+func (a *App) copyLastResult() (bool, string) {
+	a.mu.Lock()
+	text := a.lastResult
+	a.mu.Unlock()
+	if strings.TrimSpace(text) == "" {
+		return false, tr("copy.none")
+	}
+	if err := setClipboardText(text); err != nil {
+		log.Printf("копирование последнего результата: %v", err)
+		return false, trf("copy.fail", err.Error())
+	}
+	log.Printf("последний результат скопирован: %d символов", len([]rune(text)))
+	return true, tr("copy.ok")
 }

@@ -229,15 +229,9 @@ func (a *App) settingsThread(tab string, attempt int) {
 		_ = w.Bind("appModels", func() string {
 			return a.modelRows()
 		})
-		_ = w.Bind("appCopyLast", func() {
-			a.mu.Lock()
-			text := a.lastResult
-			a.mu.Unlock()
-			if text != "" {
-				if err := setClipboardText(text); err != nil {
-					log.Printf("копирование последнего результата: %v", err)
-				}
-			}
+		_ = w.Bind("appCopyLast", func() string {
+			ok, msg := a.copyLastResult()
+			return listsAnswer(listsReply{OK: ok, Text: msg})
 		})
 		_ = w.Bind("appState", func() string {
 			return a.stateSnapshot()
@@ -429,17 +423,18 @@ func (a *App) settingsThread(tab string, attempt int) {
 				log.Printf("история: очистка: %v", err)
 			}
 		})
-		_ = w.Bind("appHistoryCopy", func(at float64) bool {
+		_ = w.Bind("appHistoryCopy", func(at float64) string {
 			for _, it := range histStore.Items() {
 				if it.At == int64(at) {
 					if err := setClipboardText(it.Text); err != nil {
 						log.Printf("копирование из истории: %v", err)
-						return false
+						return listsAnswer(listsReply{Text: trf("copy.fail", err.Error())})
 					}
-					return true
+					log.Printf("из истории скопировано: %d символов", len([]rune(it.Text)))
+					return listsAnswer(listsReply{OK: true, Text: tr("copy.ok")})
 				}
 			}
-			return false
+			return listsAnswer(listsReply{Text: tr("hist.insert.gone")})
 		})
 		_ = w.Bind("appHistoryInsert", func(at float64) string {
 			for _, it := range histStore.Items() {
@@ -1598,7 +1593,8 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
 window.onerror = function(m, s, l, c){ if(window.appJSError) appJSError(String(m) + " @line " + l + ":" + c); };
 const CFG = {{CFG}};
 const bools = ["beep","auto_enter","restore_clipboard","overlay","overlay_text","animation","type_mode","server_autostart","check_updates","history"];
-const texts = ["server_exe","server_url","history_skip"];
+const texts = ["server_exe","history_skip"];
+let remoteURL = (CFG.server_url || "").trim();
 const nums  = ["threads","min_record_ms","max_record_seconds","translate_ask_seconds","server_port","paste_delay_ms","history_days","history_max"];
 const sels  = ["ui_language","language","sound_theme","translate_target","translate_ask","hotkey_mode","overlay_position"];
 const trAll = ["en","de","fr","es","it","pl","ru","uk"];
@@ -2045,7 +2041,7 @@ async function refreshState(){
 }
 function initStateScreen(){
   const copy = document.getElementById("state_copy");
-  if(copy) copy.onclick = ()=>{ appCopyLast(); toast(L.upd); };
+  if(copy) copy.onclick = async ()=>{ const r = JSON.parse(await appCopyLast()); toast(r.text, r.ok ? "ok" : "error"); };
   document.querySelectorAll("[data-goto]").forEach(b=>{ b.onclick = ()=>show(b.dataset.goto); });
   setInterval(refreshState, 1500);
   startMeter("state_mic_bar", "p-state", null);
@@ -2285,6 +2281,7 @@ function load(){
   document.getElementById("threads").max = CFG._cpus || 16;
   bools.forEach(k=>document.getElementById(k).checked = !!CFG[k]);
   texts.forEach(k=>document.getElementById(k).value = CFG[k]||"");
+  document.getElementById("server_url").value = remoteURL;
   nums.forEach(k=>document.getElementById(k).value = CFG[k]);
   sels.forEach(k=>{
     const el=document.getElementById(k), v=CFG[k]||"auto";
@@ -2311,16 +2308,22 @@ function initRemote(){
   if(!el) return;
   let known = el.value.trim();
   syncRemoteWarn();
-  el.addEventListener("change", async ()=>{
+  el.addEventListener("change", async e=>{
+    e.stopPropagation();
     const url = el.value.trim();
-    if(url && url !== known && !await askConfirm(L.remoteask.replace("%s", url))){
+    if(url === known){
+      syncRemoteWarn();
+      return;
+    }
+    if(url && !await askConfirm(L.remoteask.replace("%s", url))){
       el.value = known;
       syncRemoteWarn();
-      doSave();
       return;
     }
     known = url;
+    remoteURL = url;
     syncRemoteWarn();
+    doSave();
   });
 }
 function syncTrControls(){
@@ -2347,6 +2350,7 @@ async function doSave(){
     whisper_prompt: document.getElementById("whisper_prompt").value,
     translate_hotkey: translateHotkey,
     pause_hotkey: pauseHotkey,
+    server_url: remoteURL,
     translate_ask_langs: trAll.filter(l=>document.getElementById("tl_"+l).checked),
     translate_default: translateDefault,
     active_profiles: activeProfiles,
@@ -2679,7 +2683,7 @@ async function refreshHistory(){
     copy.type = "button";
     copy.className = "mini";
     copy.textContent = L.histcopy;
-    copy.onclick = async ()=>{ await appHistoryCopy(it.at); toast(L.upd, "ok"); };
+    copy.onclick = async ()=>{ const r = JSON.parse(await appHistoryCopy(it.at)); toast(r.text, r.ok ? "ok" : "error"); };
     row.appendChild(copy);
     const ins = document.createElement("button");
     ins.type = "button";

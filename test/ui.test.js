@@ -77,7 +77,7 @@ const dom = new JSDOM(html, {
       "appLLMDlFile", "appLLMTest", "appHFPage", "appHFHome", "appRepoLink",
       "appAuthorLink", "appCapture", "appCaptureCombo", "appReload",
       "appPreviewSound", "appMin", "appClose",
-      "appDoUpdate", "appReady", "appJSError", "appCopyLast",
+      "appDoUpdate", "appReady", "appJSError",
     ]) {
       window[name] = () => {};
     }
@@ -101,7 +101,13 @@ const dom = new JSDOM(html, {
     window.histCopied = [];
     window.appHistory = async (q) => { window.histQueries.push(q); return JSON.stringify(histItems.filter(i => !q || i.text.includes(q) || i.app.includes(q))); };
     window.appHistoryClear = async () => { histItems = []; };
-    window.appHistoryCopy = async (at) => { window.histCopied.push(at); return true; };
+    window.copyFails = false;
+    window.setCopyFails = (v) => { window.copyFails = v; };
+    window.appHistoryCopy = async (at) => { window.histCopied.push(at);
+      return JSON.stringify(window.copyFails ? { ok: false, text: "Could not copy: clipboard busy" } : { ok: true, text: "Copied" }); };
+    window.lastCopied = 0;
+    window.appCopyLast = async () => { window.lastCopied++;
+      return JSON.stringify(window.copyFails ? { ok: false, text: "Could not copy: clipboard busy" } : { ok: true, text: "Copied" }); };
     window.histInserted = [];
     window.appHistoryInsert = async (at) => { window.histInserted.push(at); return JSON.stringify({ ok: true, text: "pasted into “Editor”" }); };
     window.modelChecks = 0;
@@ -177,6 +183,12 @@ function check(name, actual, expected) {
   check("each entry carries the text", d.querySelector("#histbody .histtext").textContent, "выложи на GitHub");
   d.querySelector("#histbody .mini").click(); await sleep(200);
   check("an entry can be copied", w.histCopied, [1700000000000]);
+  check("copying says it copied", d.getElementById("st_saved").textContent, "Copied");
+  w.setCopyFails(true);
+  d.querySelectorAll("#histbody .histrow")[0].querySelectorAll("button")[0].click(); await sleep(250);
+  check("a failed copy says so instead of success", d.getElementById("st_saved").textContent, "Could not copy: clipboard busy");
+  check("and it is marked as an error", d.getElementById("st_saved").className.includes("bad"), true);
+  w.setCopyFails(false);
   d.querySelectorAll("#histbody .histrow")[0].querySelectorAll("button")[1].click(); await sleep(250);
   check("an entry can be pasted back", w.histInserted, [1700000000000]);
   check("the program says where it went", d.getElementById("st_saved").textContent, "pasted into “Editor”");
@@ -285,6 +297,24 @@ function check(name, actual, expected) {
 
   tab("system"); await sleep(30);
   check("service settings shown", [shown("system"), !!d.getElementById("server_url")], [true, true]);
+  const su = d.getElementById("server_url");
+  const savesBeforeURL = w.saveCalls;
+  su.value = "http://192.168.0.5:9000"; su.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(350);
+  check("the remote address asks before it is applied", !!d.querySelector(".modal-bg"), true);
+  check("and nothing is saved while the question is open", w.saveCalls, savesBeforeURL);
+  d.querySelector(".modal .btn.ghost").click(); await sleep(350);
+  check("saying no puts the field back", su.value, "");
+  check("saying no saves nothing", w.saveCalls, savesBeforeURL);
+  su.value = "http://192.168.0.5:9000"; su.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(350);
+  d.querySelector(".modal .btn.yes").click(); await sleep(400);
+  check("saying yes applies the address", w.lastSaveForm.server_url, "http://192.168.0.5:9000");
+  const beepBox = d.getElementById("beep");
+  su.value = "http://sneaky.example";
+  beepBox.checked = !beepBox.checked; beepBox.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(350);
+  check("an unconfirmed address never rides along with another setting", w.lastSaveForm.server_url, "http://192.168.0.5:9000");
+  beepBox.checked = !beepBox.checked; beepBox.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(350);
+  su.value = ""; su.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(350);
+  check("clearing the address needs no question", [!!d.querySelector(".modal-bg"), w.lastSaveForm.server_url], [false, ""]);
   const autorun = d.getElementById("autorun");
   const autorunBefore = w.autorunCalls.length;
   autorun.checked = true; autorun.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(200);

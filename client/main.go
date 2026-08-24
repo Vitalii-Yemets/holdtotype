@@ -1099,6 +1099,7 @@ func (a *App) insertResult(ctx context.Context, cfg *Config, start time.Time, te
 	a.rememberDictation(cfg, text, targetApp)
 
 	allowEnter := cfg.AutoEnter && skipped == ""
+	expect := targetWnd
 	if targetWnd != 0 {
 		cur, _, _ := procGetForegroundWindow.Call()
 		if cur != targetWnd {
@@ -1106,6 +1107,7 @@ func (a *App) insertResult(ctx context.Context, cfg *Config, start time.Time, te
 			switch askFocusMismatch() {
 			case "here":
 				allowEnter = false
+				expect, _, _ = procGetForegroundWindow.Call()
 			case "copy":
 				if err := setClipboardText(text); err != nil {
 					log.Printf("копирование: %v", err)
@@ -1129,9 +1131,17 @@ func (a *App) insertResult(ctx context.Context, cfg *Config, start time.Time, te
 		}
 	}
 
-	if err := pasteText(cfg, text); err != nil {
-		log.Printf("вставка: %v", err)
+	if err := pasteText(cfg, text, expect); err != nil {
 		playCue(cfg.Beep, cfg.SoundTheme, cueError)
+		if errors.Is(err, errFocusMoved) {
+			log.Printf("вставка отменена: окно ввода сменилось, текст сохранён")
+			_ = setClipboardText(text)
+			if cfg.Overlay {
+				overlaySet(ovFlashErr, tr("ov.moved"))
+			}
+			return
+		}
+		log.Printf("вставка: %v", err)
 		if cfg.Overlay {
 			overlaySet(ovFlashErr, tr("ov.err.paste"))
 		}
@@ -1139,7 +1149,9 @@ func (a *App) insertResult(ctx context.Context, cfg *Config, start time.Time, te
 	}
 	if allowEnter {
 		time.Sleep(150 * time.Millisecond)
-		if err := pressEnter(); err != nil {
+		if !focusStillOn(expect) {
+			log.Printf("auto-enter отменён: окно ввода сменилось после вставки")
+		} else if err := pressEnter(); err != nil {
 			log.Printf("auto-enter: %v", err)
 		}
 	}
