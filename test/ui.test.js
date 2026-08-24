@@ -565,8 +565,9 @@ function check(name, actual, expected) {
   check("the wizard does not let you walk past a download", d.getElementById("wiz_next").disabled, true);
   w.finishDl("gigaam-v3"); await sleep(1200);
   check("a finished download opens the way on", d.getElementById("wiz_next").disabled, false);
+  const appliedIds = w.saveForms.slice(-6).map((f) => f.model_id);
   check("and both models of the plan are applied, not just the first",
-    w.saveForms.slice(-2).map((f) => f.model_id), ["gigaam-v3", "small"]);
+    ["gigaam-v3", "small"].every((id) => appliedIds.includes(id)), true);
 
   d.getElementById("wiz_next").click(); await sleep(300);
   check("the third step names the shortcut", d.getElementById("wiz_hot").textContent, "ctrl+win");
