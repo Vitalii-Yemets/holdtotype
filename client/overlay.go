@@ -559,3 +559,15 @@ func overlayRender(hwnd, hdc uintptr) {
 			uintptr(unsafe.Pointer(&r)), flags)
 	})
 }
+
+func overlayNote(text string) {
+	ovMu.Lock()
+	st := ovState
+	ovMu.Unlock()
+	if st != ovProcessing && st != ovRecording {
+		overlaySet(ovFlashErr, text)
+		return
+	}
+	log.Printf("оверлей: предупреждение поверх работы — %s", text)
+	overlaySet(st, text)
+}

@@ -27,6 +27,10 @@ const dom = new JSDOM(html, {
     window.setRemote = (v) => { remote = v; };
     let lastAt = 0;
     window.setLastAt = (v) => { lastAt = v; };
+    let backendErr = "";
+    window.setBackendErr = (v) => { backendErr = v; };
+    window.retryCalls = 0;
+    window.appRetryBackend = async () => { window.retryCalls++; backendErr = ""; };
     window.autorunCalls = [];
     window.wizardDone = 0;
     window.appAutorun = async () => window.autorunCalls.length > 0 && window.autorunCalls[window.autorunCalls.length - 1];
@@ -37,7 +41,7 @@ const dom = new JSDOM(html, {
         ram: "8000 MB free", last: "hello", last_meta: "just now · 5 characters", ready: true, status: "Ready",
         status_line: "Ready · gigaam-v3 + ggml-small.bin · 7.8 GB free", ru_model: "gigaam-v3",
         other_model: "ggml-small.bin", llm_ok: true, mic_ok: true, last_at: lastAt, last_app: "chrome.exe",
-        remote: remote,
+        remote: remote, backend_err: backendErr,
         ru_state: ruState, other_state: otherState,
         badges: { mic: micBadge, models: "2", system: "" } });
     window.appRouting = async () =>
@@ -405,6 +409,16 @@ function check(name, actual, expected) {
   d.getElementById("pf_close").click(); await sleep(60);
   check("prompt editor closes via collapse button", !!d.getElementById("pf_name"), false);
 
+  const pdel = () => pb.querySelector('button[data-a="pdel"]');
+  const profsBefore = w.lastSaveForm.profiles ? w.lastSaveForm.profiles.length : 2;
+  pdel().click(); await sleep(200);
+  check("deleting a prompt asks first", !!d.querySelector(".modal-bg"), true);
+  d.querySelector(".modal .btn.ghost").click(); await sleep(250);
+  check("saying no keeps the prompt", pb.querySelectorAll("input.profcb").length, 2);
+  pdel().click(); await sleep(200);
+  d.querySelector(".modal .btn.yes").click(); await sleep(400);
+  check("saying yes removes it and saves at once", w.lastSaveForm.profiles.length, profsBefore - 1);
+
   tab("models"); await sleep(30);
   const del = d.querySelector('#proc-models button[data-a="ldel"]');
   check("active LLM model can be deleted", !!del, true);
@@ -528,6 +542,14 @@ function check(name, actual, expected) {
   check("remote recognition is announced", d.getElementById("st_remote").textContent, "REMOTE");
   w.setRemote(false); await sleep(1700);
   check("local recognition says nothing", d.getElementById("st_remote").textContent, "");
+
+  check("with everything working the failure card stays away", d.getElementById("state_backend").style.display, "none");
+  w.setBackendErr("port 8910 is busy"); await sleep(1700);
+  check("a recognizer that will not start says why", d.getElementById("state_backend_text").textContent, "port 8910 is busy");
+  check("and the card is on screen", d.getElementById("state_backend").style.display !== "none", true);
+  d.getElementById("state_retry").click(); await sleep(1800);
+  check("the card offers to try again, and it reaches the program", w.retryCalls, 1);
+  check("a recognizer that came up takes the card away", d.getElementById("state_backend").style.display, "none");
 
   tab("dictation"); await sleep(80);
   const enterRow = d.getElementById("auto_enter").closest(".row");

@@ -663,6 +663,7 @@ type stateOut struct {
 	StatusLine string `json:"status_line"`
 	Remote      bool   `json:"remote"`
 	RuState     string `json:"ru_state"`
+	BackendErr  string `json:"backend_err"`
 	OtherState  string `json:"other_state"`
 	Badges     struct {
 		Mic    string `json:"mic"`
@@ -748,6 +749,7 @@ func (a *App) stateSnapshot() string {
 	cfg := a.snapshot()
 	a.mu.Lock()
 	ready := a.ready
+	backendErr := a.backendErr
 	stamp := a.lastResultAt
 	lastApp := a.lastProcess
 	target := a.lastTarget
@@ -776,6 +778,8 @@ func (a *App) stateSnapshot() string {
 	status := tr("status.loading")
 	if ready {
 		status = trf("status.ready", cfg.Hotkey)
+	} else if backendErr != "" {
+		status = backendErr
 	}
 	if last == "" {
 		last = "—"
@@ -820,6 +824,7 @@ func (a *App) stateSnapshot() string {
 		StatusLine: statusLine(cfg, ready, free),
 		Remote:      strings.TrimSpace(cfg.ServerURL) != "",
 		RuState:     modelStateFor(cfg, engineSherpa),
+		BackendErr:  backendErr,
 		OtherState:  modelStateFor(cfg, engineWhisper),
 	}
 	st.Badges.Mic = micBadge(mic)

@@ -42,6 +42,7 @@ const (
 	evTimeout
 	evDone
 	evCancel
+	evMicLost
 )
 
 type ptEvent struct {
@@ -61,9 +62,11 @@ type App struct {
 	ready     bool
 	capturing bool
 	paused    bool
+	backendErr string
 	quitting  bool
 
-	evq *evqueue.Queue[ptEvent]
+	evq      *evqueue.Queue[ptEvent]
+	retryCh  chan struct{}
 
 	state          atomic.Int32
 	gen            int
@@ -87,7 +90,19 @@ type App struct {
 	altUsed time.Time
 }
 
-func (a *App) engineFor(cfg *Config, want string) (recognizer, error) {
+func waitReadyCtx(ctx context.Context, srv recognizer) error {
+	done := make(chan error, 1)
+	go func() { done <- srv.waitReady(engineReadyTimeout(srv)) }()
+	select {
+	case err := <-done:
+		return err
+	case <-ctx.Done():
+		log.Printf("ожидание движка прервано пользователем")
+		return ctx.Err()
+	}
+}
+
+func (a *App) engineFor(ctx context.Context, cfg *Config, want string) (recognizer, error) {
 	a.mu.Lock()
 	primary := a.srv
 	ready := a.ready
@@ -117,7 +132,7 @@ func (a *App) engineFor(cfg *Config, want string) (recognizer, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := srv.waitReady(engineReadyTimeout(srv)); err != nil {
+	if err := waitReadyCtx(ctx, srv); err != nil {
 		srv.stop()
 		return nil, err
 	}
@@ -263,7 +278,7 @@ func main() {
 			if primary == engineWhisper {
 				other = engineSherpa
 			}
-			alt, aerr := app.engineFor(cfg, other)
+			alt, aerr := app.engineFor(context.Background(), cfg, other)
 			if aerr != nil {
 				log.Printf("routecheck: второй движок %s не поднялся: %v", other, aerr)
 			} else {
@@ -447,6 +462,7 @@ func main() {
 		cfg:     cfg,
 		enabled: true,
 		evq:     evqueue.New[ptEvent](256),
+		retryCh: make(chan struct{}, 1),
 	}
 	app.startCore()
 	go cleanupWebViewProfiles()
@@ -557,6 +573,7 @@ func (a *App) initBackend() {
 	}
 	a.rec = rec
 	a.mu.Unlock()
+	rec.onLost = func() { a.post(ptEvent{kind: evMicLost}) }
 	ovMu.Lock()
 	ovRecorder = rec
 	ovMu.Unlock()
@@ -590,7 +607,10 @@ func (a *App) initBackend() {
 		}
 		srv, err := startRecognizer(cfg, logFile)
 		if err != nil {
-			a.fatal(err.Error())
+			a.backendFailed(err.Error())
+			if a.waitRetry() {
+				continue
+			}
 			return
 		}
 		a.mu.Lock()
@@ -603,12 +623,17 @@ func (a *App) initBackend() {
 		a.mu.Unlock()
 
 		if err := srv.waitReady(engineReadyTimeout(srv)); err != nil {
-			a.fatal(err.Error())
+			srv.stop()
+			a.backendFailed(err.Error())
+			if a.waitRetry() {
+				continue
+			}
 			return
 		}
 
 		a.mu.Lock()
 		a.ready = true
+		a.backendErr = ""
 		a.mu.Unlock()
 		a.refreshIdleUI()
 		log.Printf("готов: hotkey=%s движок=%s модель=%s lang=%s", cfg.Hotkey, srv.engine(), activeModelPath(cfg), cfg.Language)
@@ -630,6 +655,10 @@ func (a *App) initBackend() {
 			continue
 		}
 		if srv.external() {
+			a.backendFailed(tr("err.server.dead"))
+			if a.waitRetry() {
+				continue
+			}
 			return
 		}
 		if time.Since(started) > 5*time.Minute {
@@ -637,7 +666,11 @@ func (a *App) initBackend() {
 		}
 		attempts++
 		if attempts > 3 {
-			a.fatal(tr("err.server.repeat"))
+			a.backendFailed(tr("err.server.repeat"))
+			if a.waitRetry() {
+				attempts = 0
+				continue
+			}
 			return
 		}
 		log.Printf("распознаватель упал, перезапуск (попытка %d)", attempts)
@@ -655,6 +688,7 @@ func (a *App) requestServerRestart() {
 		srv.stop()
 	}
 	a.stopAltEngine()
+	a.signalRetry()
 }
 
 func (a *App) fatal(text string) {
@@ -743,6 +777,8 @@ func (a *App) worker() {
 				a.handleDone(ev.gen)
 			case evCancel:
 				a.handleCancel()
+			case evMicLost:
+				a.handleMicLost()
 			}
 		}
 	}
@@ -973,11 +1009,11 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 	}
 	decision := pickEngine(cfg, target != "")
 	if decision.Engine != srv.engine() {
-		alt, aerr := a.engineFor(cfg, decision.Engine)
+		alt, aerr := a.engineFor(ctx, cfg, decision.Engine)
 		if aerr != nil {
 			log.Printf("движок %s не поднялся (%v) — остаюсь на %s", decision.Engine, aerr, srv.engine())
 			if cfg.Overlay {
-				overlaySet(ovFlashErr, tr("ov.engine.fallback"))
+				overlayNote(tr("ov.engine.fallback"))
 			}
 		} else {
 			srv = alt
@@ -987,7 +1023,7 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 	if target != "" && !engineTranslates(srv.engine()) {
 		log.Printf("перевод недоступен: активен движок %s — вставляю распознанный текст как есть", srv.engine())
 		if cfg.Overlay {
-			overlaySet(ovFlashErr, tr("ov.notranslate"))
+			overlayNote(tr("ov.notranslate"))
 		}
 		target = ""
 	}
@@ -1131,6 +1167,10 @@ func (a *App) insertResult(ctx context.Context, cfg *Config, start time.Time, te
 		}
 	}
 
+	if ctx.Err() != nil {
+		log.Printf("вставка отменена пользователем до начала")
+		return
+	}
 	if err := pasteText(cfg, text, expect); err != nil {
 		playCue(cfg.Beep, cfg.SoundTheme, cueError)
 		if errors.Is(err, errFocusMoved) {
@@ -1147,9 +1187,11 @@ func (a *App) insertResult(ctx context.Context, cfg *Config, start time.Time, te
 		}
 		return
 	}
-	if allowEnter {
+	if allowEnter && ctx.Err() == nil {
 		time.Sleep(150 * time.Millisecond)
-		if !focusStillOn(expect) {
+		if ctx.Err() != nil {
+			log.Printf("auto-enter отменён пользователем")
+		} else if !focusStillOn(expect) {
 			log.Printf("auto-enter отменён: окно ввода сменилось после вставки")
 		} else if err := pressEnter(); err != nil {
 			log.Printf("auto-enter: %v", err)
@@ -1423,4 +1465,86 @@ func (a *App) micCheck() string {
 	}
 	b, _ := json.Marshal(out{Verdict: verdict, Text: text, PeakDB: peak, Voice: rep.VoiceRatio, Clip: rep.ClipRatio})
 	return string(b)
+}
+
+func (a *App) backendFailed(text string) {
+	log.Printf("распознаватель не поднялся: %s", text)
+	a.mu.Lock()
+	a.ready = false
+	a.backendErr = text
+	a.srv = nil
+	a.mu.Unlock()
+	a.setStatus(text)
+	traySetIcon(trayOff)
+}
+
+func (a *App) waitRetry() bool {
+	log.Printf("жду исправления настроек или кнопки «повторить»")
+	for {
+		select {
+		case <-a.retryCh:
+			log.Printf("пробую поднять распознаватель заново")
+			a.mu.Lock()
+			a.backendErr = ""
+			a.mu.Unlock()
+			a.setStatus(tr("status.loading"))
+			return true
+		case <-time.After(time.Second):
+			a.mu.Lock()
+			q := a.quitting
+			a.mu.Unlock()
+			if q {
+				return false
+			}
+		}
+	}
+}
+
+func (a *App) signalRetry() {
+	if a.retryCh == nil {
+		return
+	}
+	select {
+	case a.retryCh <- struct{}{}:
+	default:
+	}
+}
+
+func (a *App) handleMicLost() {
+	a.mu.Lock()
+	rec := a.rec
+	cfg := a.sessionCfg
+	a.paused = false
+	a.mu.Unlock()
+	if a.state.Load() == stRecording && rec != nil {
+		rec.Stop()
+		a.gen++
+		a.state.Store(stIdle)
+		log.Printf("микрофон отключён во время записи — запись прервана")
+		if cfg != nil {
+			playCue(cfg.Beep, cfg.SoundTheme, cueError)
+			if cfg.Overlay {
+				overlaySet(ovFlashErr, tr("ov.mic.lost"))
+			}
+		}
+	} else {
+		log.Printf("микрофон отключён")
+	}
+	if rec != nil {
+		if err := rec.SetDevice(""); err != nil {
+			log.Printf("возврат на микрофон по умолчанию: %v", err)
+		} else {
+			log.Printf("перешёл на микрофон по умолчанию")
+			a.mu.Lock()
+			if a.cfg != nil && a.cfg.MicDevice != "" {
+				c := *a.cfg
+				c.MicDevice = ""
+				c.MicDeviceName = ""
+				a.cfg = &c
+				_ = saveConfig("config.json", &c)
+			}
+			a.mu.Unlock()
+		}
+	}
+	a.refreshIdleUI()
 }

@@ -407,6 +407,10 @@ func (a *App) settingsThread(tab string, attempt int) {
 		_ = w.Bind("appModelDel", func(id string, force bool) string {
 			return a.deleteModel(id, force)
 		})
+		_ = w.Bind("appRetryBackend", func() {
+			log.Printf("настройки: запрошен повтор запуска распознавателя")
+			a.requestServerRestart()
+		})
 		_ = w.Bind("appCheckModels", func() string {
 			return a.verifyModels()
 		})
@@ -629,9 +633,10 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	}
 	c.MicDevice = f.MicDevice
 	c.MicDeviceName = f.MicDeviceName
-	if f.ServerPort > 0 {
-		c.ServerPort = f.ServerPort
+	if f.ServerPort < 1024 || f.ServerPort > 65535 {
+		return saveResult{Severity: "error", Message: trf("err.port", f.ServerPort)}
 	}
+	c.ServerPort = f.ServerPort
 	c.ServerExe = f.ServerExe
 	c.ServerURL = strings.TrimSpace(f.ServerURL)
 	c.WhisperPrompt = strings.TrimSpace(f.WhisperPrompt)
@@ -682,9 +687,10 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 				langs = append(langs, l)
 			}
 		}
-		if len(langs) > 0 {
-			c.TranslateAskLangs = langs
+		if len(langs) == 0 {
+			return saveResult{Severity: "error", Message: tr("err.nolangs")}
 		}
+		c.TranslateAskLangs = langs
 	}
 	c.TranslateDefault = f.TranslateDefault
 	c.DefaultProfile = ""
@@ -716,9 +722,18 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 			}
 		}
 	}
-	a.cfg = &c
 	hook := a.hook
 	a.mu.Unlock()
+
+	if err := saveConfig("config.json", &c); err != nil {
+		log.Printf("сохранение конфига: %v — настройки оставлены прежними", err)
+		return saveResult{Severity: "error", Message: trf("err.save", err.Error())}
+	}
+
+	a.mu.Lock()
+	a.cfg = &c
+	a.mu.Unlock()
+
 	if llmChanged {
 		a.llmShutdown()
 		log.Printf("модель редактора переключена: %s", c.LLMModel)
@@ -735,10 +750,6 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 		}()
 	}
 	initLang(c.UILanguage)
-	if err := saveConfig("config.json", &c); err != nil {
-		log.Printf("сохранение конфига: %v", err)
-		return saveResult{Severity: "error", Message: err.Error()}
-	}
 	a.refreshIdleUI()
 	if modelChanged {
 		a.requestServerRestart()
@@ -978,6 +989,8 @@ button.btn.ghost:hover{color:var(--green);border-color:var(--dim);background:non
 .hero{display:flex;align-items:center;gap:12px;border:1px solid var(--line);background:var(--panel);padding:12px 14px;margin-bottom:10px;flex-wrap:wrap}
 .herokey{border:1px solid var(--dim);color:var(--green);padding:5px 12px;font-size:14px;letter-spacing:1px}
 .herotext{font-size:12px;color:var(--dim)}
+.berr{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:1px solid var(--bad);background:var(--panel);padding:10px 12px;margin-bottom:10px}
+.berr .berrtext{flex:1 1 220px;color:var(--bad);min-width:0}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:12px}
 .scard{border:1px solid var(--line);background:var(--panel);padding:9px 11px;display:flex;flex-direction:column;gap:5px}
 .scard .k{font-size:9.5px;letter-spacing:.12em;color:var(--faint);text-transform:uppercase}
@@ -1212,6 +1225,11 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
 <div class="content">
 <div class="page" id="p-state">
  <div class="hero"><span class="herokey" id="state_hotkey"></span><span class="herotext">{{S_STATE_HINT}}</span></div>
+ <div class="berr" id="state_backend" style="display:none">
+  <span class="berrtext" id="state_backend_text"></span>
+  <button type="button" class="mini" id="state_retry">{{S_RETRY}}</button>
+  <button type="button" class="mini ghost" data-goto="system">{{S_BERR_OPEN}}</button>
+ </div>
  <div class="cards">
   <div class="scard"><span class="k">{{S_NAV_MIC}}</span>
    <span class="v"><i class="led" id="state_mic_led"></i><span id="state_mic">—</span></span>
@@ -1810,17 +1828,20 @@ function renderProfiles(body, st){
     };
   });
   body.querySelectorAll("button[data-a]").forEach(b=>{
-    b.onclick = ()=>{
+    b.onclick = async ()=>{
       const id = b.dataset.id;
       if(b.dataset.a === "edit"){
         expandedID = expandedID === id ? null : id;
         refreshLLM();
-      } else {
-        profiles = profiles.filter(x=>x.id!==id);
-        activeProfiles = activeProfiles.filter(x=>x!==id);
-        if(expandedID === id) expandedID = null;
-        refreshLLM();
+        return;
       }
+      const p = profiles.find(x=>x.id===id);
+      if(!await askConfirm(L.confirmdel.replace("%s", p ? p.name : id), L.del)) return;
+      profiles = profiles.filter(x=>x.id!==id);
+      activeProfiles = activeProfiles.filter(x=>x!==id);
+      if(expandedID === id) expandedID = null;
+      refreshLLM();
+      await doSave();
     };
   });
 }
@@ -1847,7 +1868,7 @@ function renderEditor(p){
     prompt.oninput = ()=>{ p.prompt = prompt.value; };
     document.getElementById("pf_close").onclick = ()=>{ expandedID = null; refreshLLM(); };
     document.getElementById("pf_set").onclick = ()=>{ captureFor = p.id; appCaptureCombo(); };
-    document.getElementById("pf_clear").onclick = ()=>{ p.hotkey=""; hk.textContent=L.nohot; };
+    document.getElementById("pf_clear").onclick = ()=>{ p.hotkey=""; hk.textContent=L.nohot; doSave(); };
     document.getElementById("pf_run").onclick = ()=>{
       const s = document.getElementById("pf_sample").value;
       if(!s) return;
@@ -2016,6 +2037,11 @@ async function refreshState(){
     el.classList.toggle("on", !!on);
     el.classList.toggle("warn", !!warn);
   };
+  const berr = document.getElementById("state_backend");
+  if(berr){
+    berr.style.display = s.backend_err ? "" : "none";
+    set("state_backend_text", s.backend_err || "");
+  }
   set("state_hotkey", s.hotkey);
   set("state_mic", s.mic);
   set("state_ru", s.ru_model);
@@ -2050,6 +2076,8 @@ async function refreshState(){
 function initStateScreen(){
   const copy = document.getElementById("state_copy");
   if(copy) copy.onclick = async ()=>{ const r = JSON.parse(await appCopyLast()); toast(r.text, r.ok ? "ok" : "error"); };
+  const retry = document.getElementById("state_retry");
+  if(retry) retry.onclick = async ()=>{ retry.disabled = true; await appRetryBackend(); setTimeout(()=>{ retry.disabled = false; refreshState(); }, 1200); };
   document.querySelectorAll("[data-goto]").forEach(b=>{ b.onclick = ()=>show(b.dataset.goto); });
   setInterval(refreshState, 1500);
   startMeter("state_mic_bar", "p-state", null);

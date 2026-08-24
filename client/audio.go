@@ -20,6 +20,7 @@ const sampleRate = 16000
 const defaultMaxSeconds = 600
 
 const monitorLinger = 2 * time.Second
+const micSilenceLimit = 1500 * time.Millisecond
 
 type Recorder struct {
 	ctx    *malgo.AllocatedContext
@@ -41,8 +42,11 @@ type Recorder struct {
 	done chan struct{}
 	once sync.Once
 
-	level atomic.Uint32
-	peak  atomic.Uint32
+	level    atomic.Uint32
+	peak     atomic.Uint32
+	lastData atomic.Int64
+	lost     atomic.Bool
+	onLost   func()
 }
 
 type micDevice struct {
@@ -53,8 +57,13 @@ type micDevice struct {
 }
 
 func (r *Recorder) Level() float64 {
+	if r.lost.Load() {
+		return 0
+	}
 	return float64(r.level.Load()) / 1000
 }
+
+func (r *Recorder) Lost() bool { return r.lost.Load() }
 
 func (r *Recorder) resetPeak() {
 	r.peak.Store(0)
@@ -125,6 +134,7 @@ func (r *Recorder) openDevice(deviceID string) error {
 				}
 			}
 			lvl := uint32(peak * 1000 / 32768)
+			r.lastData.Store(time.Now().UnixNano())
 			r.level.Store(lvl)
 			if lvl > r.peak.Load() {
 				r.peak.Store(lvl)
@@ -192,8 +202,11 @@ func (r *Recorder) SetDevice(deviceID string) error {
 		r.monitor = false
 	}
 	r.mu.Unlock()
-	if same || busy {
+	if same {
 		return nil
+	}
+	if busy {
+		return errRecorderBusy
 	}
 	r.stopDevice()
 	err := r.openDevice(deviceID)
@@ -278,6 +291,8 @@ func (r *Recorder) Start(maxSeconds int) error {
 	r.maxBytes = sampleRate * 2 * maxSeconds
 	r.recording = true
 	r.paused = false
+	r.lost.Store(false)
+	r.lastData.Store(time.Now().UnixNano())
 	r.mu.Unlock()
 	r.resetPeak()
 
@@ -345,9 +360,21 @@ func (r *Recorder) watchMonitor() {
 		if expired {
 			r.monitor = false
 		}
+		recording, paused := r.recording, r.paused
 		r.mu.Unlock()
 		if expired {
 			r.stopDevice()
+		}
+		if recording && !paused && !r.lost.Load() {
+			last := r.lastData.Load()
+			if last > 0 && time.Since(time.Unix(0, last)) > micSilenceLimit {
+				r.lost.Store(true)
+				r.level.Store(0)
+				log.Printf("микрофон перестал отдавать звук — считаю его отключённым")
+				if r.onLost != nil {
+					go r.onLost()
+				}
+			}
 		}
 	}
 }
@@ -374,3 +401,5 @@ func (r *Recorder) Close() {
 func pcmPeak(pcm []byte) float64 { return audiolevel.Peak(pcm) }
 
 func pcmIsSilent(pcm []byte) bool { return audiolevel.IsSilent(pcm) }
+
+var errRecorderBusy = errors.New("микрофон занят записью")
