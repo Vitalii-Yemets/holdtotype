@@ -113,3 +113,28 @@ func TestSearchLimit(t *testing.T) {
 		t.Fatalf("предел выдачи не соблюдён: %d", got)
 	}
 }
+
+func TestEnforceDropsWhatRetentionForbids(t *testing.T) {
+	dir := t.TempDir()
+	s := Open(filepath.Join(dir, "h.json"))
+	now := int64(1_700_000_000_000)
+	if err := s.Add(Item{At: now - 30*day, Text: "старое"}, now-30*day, 365, 100); err != nil {
+		t.Fatalf("не добавилось: %v", err)
+	}
+	if err := s.Add(Item{At: now, Text: "свежее"}, now, 365, 100); err != nil {
+		t.Fatalf("не добавилось: %v", err)
+	}
+	dropped, err := s.Enforce(now, 7, 100)
+	if err != nil {
+		t.Fatalf("применение срока: %v", err)
+	}
+	if dropped != 1 {
+		t.Fatalf("выброшено %d записей вместо одной", dropped)
+	}
+	if got := s.Count(); got != 1 {
+		t.Fatalf("осталось %d записей вместо одной", got)
+	}
+	if again, _ := s.Enforce(now, 7, 100); again != 0 {
+		t.Fatalf("повторное применение выбросило ещё %d", again)
+	}
+}

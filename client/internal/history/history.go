@@ -137,3 +137,15 @@ func (s *Store) save() error {
 	}
 	return os.Rename(tmp, filepath.Clean(path))
 }
+
+func (s *Store) Enforce(nowMs int64, keepDays, max int) (int, error) {
+	s.mu.Lock()
+	before := len(s.items)
+	s.items = Prune(s.items, nowMs, keepDays, max)
+	dropped := before - len(s.items)
+	s.mu.Unlock()
+	if dropped == 0 {
+		return 0, nil
+	}
+	return dropped, s.save()
+}

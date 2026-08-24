@@ -406,6 +406,8 @@ func main() {
 					state = ovProcessing
 				case "ok":
 					state = ovFlashOK
+				case "pause":
+					state = ovPaused
 				}
 			}
 			log.Printf("демонстрация плашки: %q", text)
@@ -594,7 +596,7 @@ func (a *App) initBackend() {
 					waiting = true
 					log.Printf("модель %s не найдена — жду скачивания", missing)
 					a.setStatus(tr("status.nomodel"))
-					traySetIcon(trayOff)
+					traySetIcon(trayError)
 					go a.openSettings("rec")
 				}
 				time.Sleep(2 * time.Second)
@@ -675,7 +677,7 @@ func (a *App) initBackend() {
 		}
 		log.Printf("распознаватель упал, перезапуск (попытка %d)", attempts)
 		a.setStatus(tr("status.server.restart"))
-		traySetIcon(trayOff)
+		traySetIcon(trayError)
 	}
 }
 
@@ -694,7 +696,7 @@ func (a *App) requestServerRestart() {
 func (a *App) fatal(text string) {
 	log.Printf("ОШИБКА: %s", text)
 	a.setStatus(text)
-	traySetIcon(trayOff)
+	traySetIcon(trayError)
 	msgBox(tr("err.title"), text+tr("err.details"))
 }
 
@@ -711,7 +713,7 @@ func (a *App) refreshIdleUI() {
 	a.mu.Unlock()
 	switch {
 	case !ready:
-		traySetIcon(trayOff)
+		traySetIcon(trayError)
 	case enabled:
 		traySetIcon(trayIdle)
 		a.setStatus(trf("status.ready", hotkey))
@@ -827,7 +829,7 @@ func (a *App) togglePause() {
 		traySetIcon(trayProcessing)
 		a.setStatus(tr("status.paused"))
 		if cfg != nil && cfg.Overlay {
-			overlaySet(ovRecording, tr("ov.paused"))
+			overlaySet(ovPaused, tr("ov.paused"))
 		}
 		return
 	}
@@ -1475,7 +1477,7 @@ func (a *App) backendFailed(text string) {
 	a.srv = nil
 	a.mu.Unlock()
 	a.setStatus(text)
-	traySetIcon(trayOff)
+	traySetIcon(trayError)
 }
 
 func (a *App) waitRetry() bool {

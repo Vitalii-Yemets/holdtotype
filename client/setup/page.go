@@ -6,7 +6,7 @@ const setupPage = `<!DOCTYPE html>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%}
 body{background:var(--bg);color:var(--green);font:14px Consolas,'Cascadia Mono',monospace;overflow:hidden;display:flex;flex-direction:column}
-body::after{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0 1px,transparent 1px 3px)}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.10) 0 1px,transparent 1px 3px)}
 .header{display:flex;align-items:center;gap:14px;padding:12px 12px 12px 20px;border-bottom:1px solid var(--line);box-shadow:0 1px 12px rgba(60,255,110,.12);cursor:default}
 .header h1{font-size:16px;letter-spacing:3px;text-shadow:var(--glow);font-weight:700}
 .logo svg{width:40px;height:40px;display:block;filter:drop-shadow(0 0 6px rgba(60,255,110,.6))}

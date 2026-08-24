@@ -147,3 +147,14 @@ func (a *App) copyLastResult() (bool, string) {
 	log.Printf("последний результат скопирован: %d символов", len([]rune(text)))
 	return true, tr("copy.ok")
 }
+
+func (a *App) enforceHistory(cfg *Config) {
+	dropped, err := histStore.Enforce(time.Now().UnixMilli(), cfg.HistoryDays, cfg.HistoryMax)
+	if err != nil {
+		log.Printf("история: применение срока хранения: %v", err)
+		return
+	}
+	if dropped > 0 {
+		log.Printf("история: срок хранения применён, убрано записей: %d", dropped)
+	}
+}

@@ -17,6 +17,7 @@ const (
 	tmItemH          = 30
 	tmSepH           = 9
 	tmPad            = 6
+	tmTextPad        = 18
 	wmLBtnDown       = 0x0201
 	wmRBtnDown       = 0x0204
 	wmCaptureChanged = 0x0215
@@ -50,7 +51,33 @@ func tmDPI() int32 {
 	return 96
 }
 
-func tmW() int32 { return scaleDPI(tmWidth, tmDPI()) }
+var tmWidthDIP atomic.Int32
+
+func tmMeasure(items []tmItem) int32 {
+	widest := int32(tmWidth)
+	for _, it := range items {
+		if it.sep || it.text == "" {
+			continue
+		}
+		if w := textWidthDIP(it.text) + 2*tmTextPad; w > widest {
+			widest = w
+		}
+	}
+	max := askMaxWidthDIP()
+	if widest > max {
+		widest = max
+	}
+	tmWidthDIP.Store(widest)
+	return widest
+}
+
+func tmW() int32 {
+	w := tmWidthDIP.Load()
+	if w <= 0 {
+		w = tmWidth
+	}
+	return scaleDPI(w, tmDPI())
+}
 
 func tmItemHeight() int32 { return scaleDPI(tmItemH, tmDPI()) }
 
@@ -226,6 +253,7 @@ func tmRender(hwnd, hdc uintptr) {
 
 func showTrayMenu(items []tmItem) uintptr {
 	ch := make(chan uintptr, 1)
+	tmMeasure(items)
 	tmMu.Lock()
 	if tmDone != nil {
 		tmMu.Unlock()
@@ -255,7 +283,7 @@ func showTrayMenu(items []tmItem) uintptr {
 		h := tmHeight()
 		wa := workAreaForPoint(pt.X, pt.Y)
 		x := pt.X
-		mw := scaleDPI(tmWidth, tmDPI())
+		mw := tmW()
 		if x+mw > wa.Right {
 			x = wa.Right - mw - 4
 		}

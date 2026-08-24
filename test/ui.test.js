@@ -186,6 +186,7 @@ function check(name, actual, expected) {
   tab("history"); await sleep(300);
   check("history is a screen of its own", shown("history"), true);
   check("history is off until asked for", d.getElementById("history").checked, false);
+  check("the programs to skip are never folded away", !!d.querySelector("#hist_skip_row[data-adv]"), false);
   check("the dictations are listed", d.querySelectorAll("#histbody .histrow").length, 2);
   check("each entry names the program", d.querySelector("#histbody .histmeta").textContent.includes("chrome.exe"), true);
   check("each entry carries the text", d.querySelector("#histbody .histtext").textContent, "выложи на GitHub");

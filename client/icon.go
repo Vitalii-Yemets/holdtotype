@@ -31,7 +31,7 @@ func lerpC(a, b color.NRGBA, t float64) color.NRGBA {
 	}
 }
 
-func iconPNG(glow color.NRGBA) []byte {
+func iconPNG(glow color.NRGBA, badge ...color.NRGBA) []byte {
 	const sz = 32
 	img := image.NewNRGBA(image.Rect(0, 0, sz, sz))
 	bgTop := color.NRGBA{R: 0x14, G: 0x1A, B: 0x16, A: 255}
@@ -56,6 +56,24 @@ func iconPNG(glow color.NRGBA) []byte {
 			}
 			c.A = uint8(a * 255)
 			img.SetNRGBA(x, y, c)
+		}
+	}
+
+	if len(badge) > 0 {
+		b := badge[0]
+		for y := sz - 11; y < sz - 2; y++ {
+			for x := sz - 11; x < sz - 2; x++ {
+				img.SetNRGBA(x, y, b)
+			}
+		}
+	}
+
+	if len(badge) > 0 {
+		b := badge[0]
+		for y := sz - 12; y < sz-3; y++ {
+			for x := sz - 12; x < sz-3; x++ {
+				img.SetNRGBA(x, y, b)
+			}
 		}
 	}
 
@@ -95,4 +113,5 @@ var (
 	iconRecording  = iconPNG(color.NRGBA{R: 0xFF, G: 0x6B, B: 0x6B, A: 255})
 	iconProcessing = iconPNG(color.NRGBA{R: 0xFF, G: 0xB3, B: 0x47, A: 255})
 	iconDisabled   = iconPNG(color.NRGBA{R: 0x5A, G: 0x6E, B: 0x60, A: 255})
+	iconError      = iconPNG(color.NRGBA{R: 0x5A, G: 0x6E, B: 0x60, A: 255}, color.NRGBA{R: 0xFF, G: 0x6B, B: 0x6B, A: 255})
 )

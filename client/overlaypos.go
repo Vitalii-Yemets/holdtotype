@@ -92,9 +92,9 @@ func overlayOrigin(w, h int32) (int32, int32) {
 			anchor.Left, anchor.Top, anchor.Right, anchor.Bottom, x, y)
 		return x, y
 	}
-	var wa rect
-	procSystemParametersInfoW.Call(0x30, 0, uintptr(unsafe.Pointer(&wa)), 0)
-	margin := scaleDPI(28, dpiForPoint(wa.Left+(wa.Right-wa.Left)/2, wa.Top))
+	anchor := anchorRect()
+	wa := workAreaForPoint(anchor.Left, anchor.Top)
+	margin := scaleDPI(28, dpiForPoint(anchor.Left, anchor.Top))
 	x := wa.Left + (wa.Right-wa.Left-w)/2
 	if mode == ovPosTop {
 		return x, wa.Top + margin

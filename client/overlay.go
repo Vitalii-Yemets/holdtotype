@@ -22,6 +22,7 @@ const (
 	ovProcessing
 	ovFlashOK
 	ovFlashErr
+	ovPaused
 )
 
 const (
@@ -84,6 +85,8 @@ const (
 	colRedDm   = 0x26265C
 	colAmber   = 0x47B3FF
 	colAmberDm = 0x20455C
+	colBad     = 0x6B6BFF
+	colBadDm   = 0x26265C
 )
 
 var (
@@ -101,7 +104,6 @@ var (
 
 	ovHistory [22]float64
 	ovTick    int
-	ovFont    uintptr
 
 	ovOnCancel func()
 )
@@ -117,7 +119,7 @@ func ovCancelActive() bool {
 	ovMu.Lock()
 	st := ovState
 	ovMu.Unlock()
-	return st == ovRecording || st == ovProcessing
+	return st == ovRecording || st == ovProcessing || st == ovPaused
 }
 
 
@@ -127,7 +129,6 @@ var (
 	ovX       int32
 	ovY       int32
 	ovWidthMu sync.Mutex
-	ovFontDPI int32
 )
 
 func overlayWidth() int32 {
@@ -138,20 +139,25 @@ func overlayWidth() int32 {
 
 func overlayFont() uintptr { return uiFont(overlayHwnd()) }
 
+var (
+	fontMu    sync.Mutex
+	fontCache = map[int32]uintptr{}
+)
+
 func uiFont(hwnd uintptr) uintptr {
 	dpi := dpiFor(hwnd)
-	if ovFont != 0 && ovFontDPI == dpi {
-		return ovFont
-	}
-	if ovFont != 0 {
-		procDeleteObject.Call(ovFont)
+	fontMu.Lock()
+	defer fontMu.Unlock()
+	if f, ok := fontCache[dpi]; ok {
+		return f
 	}
 	face, _ := windows.UTF16PtrFromString("Consolas")
 	h := scaleDPI(15, dpi)
-	ovFont, _, _ = procCreateFontW.Call(uintptr(^uintptr(h)+1), 0, 0, 0, 400,
+	f, _, _ := procCreateFontW.Call(uintptr(^uintptr(h)+1), 0, 0, 0, 400,
 		0, 0, 0, 1, 0, 0, 5, 0, uintptr(unsafe.Pointer(face)))
-	ovFontDPI = dpi
-	return ovFont
+	fontCache[dpi] = f
+	log.Printf("шрифт интерфейса создан для %d DPI", dpi)
+	return f
 }
 
 func overlayHwnd() uintptr {
@@ -168,8 +174,7 @@ func measureOverlayWidth(state int, text string) int32 {
 			need = w
 		}
 	}
-	var wa rect
-	procSystemParametersInfoW.Call(0x30, 0, uintptr(unsafe.Pointer(&wa)), 0)
+	wa := overlayWorkArea()
 	if max := (wa.Right - wa.Left) * 4 / 5; max > 0 && need > max {
 		need = max
 	}
@@ -205,8 +210,7 @@ func measureStatusWidth(state int, text string) int32 {
 	if need < base {
 		return base
 	}
-	var wa rect
-	procSystemParametersInfoW.Call(0x30, 0, uintptr(unsafe.Pointer(&wa)), 0)
+	wa := overlayWorkArea()
 	max := (wa.Right - wa.Left) * 4 / 5
 	if max > 0 && need > max {
 		need = max
@@ -216,7 +220,7 @@ func measureStatusWidth(state int, text string) int32 {
 
 func overlayHeightDIP() int32 {
 	if askActive() {
-		return ovH + ovAskH
+		return ovH + ovAskH*askRows()
 	}
 	return ovH
 }
@@ -358,7 +362,7 @@ func overlayWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 		}
 		askTick()
 		_, counting := askLeft()
-		if !counting && (!ovAnim.Load() || (st != ovRecording && st != ovProcessing)) {
+		if !counting && st != ovRecording && (!ovAnim.Load() || st != ovProcessing) {
 			return 0
 		}
 		overlayRenderDirect(hwnd)
@@ -411,8 +415,10 @@ func stateColors(st int) (bright, dim uintptr) {
 		return colRed, colRedDm
 	case ovProcessing:
 		return colAmber, colAmberDm
-	case ovFlashErr:
+	case ovPaused:
 		return colAmber, colAmberDm
+	case ovFlashErr:
+		return colBad, colBadDm
 	default:
 		return colGreen, colGreenDm
 	}
@@ -498,8 +504,19 @@ func overlayRender(hwnd, hdc uintptr) {
 		t := 0.10 + 0.16*float64(i)
 		drawDot(px(25), cy, r, blendCol(colBg, bright, t))
 	}
-	drawDot(px(25), cy, px(5), bright)
-	drawDot(px(25), cy, px(2), blendCol(bright, 0xFFFFFF, 0.45))
+	switch st {
+	case ovPaused:
+		w, h, gap := px(2), px(10), px(3)
+		fill(rect{Left: px(25) - gap - w, Top: cy - h/2, Right: px(25) - gap, Bottom: cy + h/2}, bright)
+		fill(rect{Left: px(25) + gap, Top: cy - h/2, Right: px(25) + gap + w, Bottom: cy + h/2}, bright)
+	case ovFlashErr:
+		s := px(5)
+		fill(rect{Left: px(25) - s, Top: cy - s, Right: px(25) + s, Bottom: cy + s}, bright)
+		fill(rect{Left: px(25) - px(2), Top: cy - px(2), Right: px(25) + px(2), Bottom: cy + px(2)}, blendCol(bright, 0xFFFFFF, 0.45))
+	default:
+		drawDot(px(25), cy, px(5), bright)
+		drawDot(px(25), cy, px(2), blendCol(bright, 0xFFFFFF, 0.45))
+	}
 
 	overlayFont()
 	if st == ovProcessing {
@@ -512,7 +529,7 @@ func overlayRender(hwnd, hdc uintptr) {
 			text += "…"
 		}
 	}
-	procSelectObject.Call(hdc, ovFont)
+	procSelectObject.Call(hdc, overlayFont())
 	procSetBkMode.Call(hdc, 1)
 	txtRc := rect{Left: px(44), Top: 0, Right: rc.Right - px(12), Bottom: px(ovH)}
 	if st == ovRecording || st == ovProcessing {
@@ -570,4 +587,9 @@ func overlayNote(text string) {
 	}
 	log.Printf("оверлей: предупреждение поверх работы — %s", text)
 	overlaySet(st, text)
+}
+
+func overlayWorkArea() rect {
+	anchor := anchorRect()
+	return workAreaForPoint(anchor.Left, anchor.Top)
 }

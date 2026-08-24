@@ -419,6 +419,7 @@ func (a *App) settingsThread(tab string, attempt int) {
 		})
 		_ = w.Bind("appHistory", func(query string) string {
 			cfg := a.snapshot()
+			a.enforceHistory(cfg)
 			out, _ := json.Marshal(histStore.Search(query, cfg.HistoryMax))
 			return string(out)
 		})
@@ -750,6 +751,9 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 		}()
 	}
 	initLang(c.UILanguage)
+	if c.HistoryDays != old.HistoryDays || c.HistoryMax != old.HistoryMax {
+		a.enforceHistory(&c)
+	}
 	a.refreshIdleUI()
 	if modelChanged {
 		a.requestServerRestart()
@@ -882,7 +886,7 @@ const settingsPage = `<!DOCTYPE html>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{font:14px Consolas,"Cascadia Mono",monospace;background:var(--bg);color:var(--green);user-select:none;display:flex;flex-direction:column;overflow:hidden}
-body::after{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(transparent 0 2px,rgba(0,0,0,.12) 2px 3px)}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(transparent 0 2px,rgba(0,0,0,.10) 2px 3px)}
 .content{flex:1;overflow-y:auto;overflow-x:hidden;min-height:0}
 ::-webkit-scrollbar{width:10px}
 ::-webkit-scrollbar-track{background:var(--bg)}
@@ -896,20 +900,25 @@ button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box
 .logo{width:40px;height:40px;flex:none}
 .logo svg{width:100%;height:100%;filter:drop-shadow(0 0 5px rgba(60,255,110,.7))}
 .header h1{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:15px;letter-spacing:2px;text-shadow:var(--glow);animation:flicker 6s infinite}
-.statusbar .ver{margin-left:auto;flex:none;color:var(--faint)}
+.statusbar .ver{margin-left:auto;flex:none;color:var(--dim)}
 @keyframes flicker{0%,93%,97%,100%{opacity:1}95%{opacity:.6}}
 @keyframes pulse{0%,100%{opacity:.35;transform:scale(.94)}50%{opacity:1;transform:scale(1)}}
 .wave{animation:pulse 1.6s infinite}
+@media (prefers-reduced-motion:reduce){
+ .header h1{animation:none}
+ .wave{animation:none;opacity:.75}
+ *{transition-duration:.01ms !important}
+}
 .tabs{display:flex;flex-wrap:wrap;gap:2px;padding:10px 16px 0;border-bottom:1px solid var(--line)}
 .shell{display:flex;flex:1;min-height:0}
-.snav{width:clamp(150px,23%,196px);flex:none;border-right:1px solid var(--line);padding:6px 0;display:flex;flex-direction:column;gap:1px;overflow-y:auto;overflow-x:hidden}
-.snav .ngrp{font-size:9px;letter-spacing:.16em;color:var(--faint);padding:12px 12px 3px;text-transform:uppercase}
+.snav{width:clamp(178px,24%,210px);flex:none;border-right:1px solid var(--line);padding:6px 0;display:flex;flex-direction:column;gap:1px;overflow-y:auto;overflow-x:hidden}
+.snav .ngrp{font-size:9px;letter-spacing:.16em;color:var(--dim);padding:12px 12px 3px;text-transform:uppercase}
 .nav{appearance:none;border:0;background:none;text-align:left;font:inherit;font-size:12.5px;color:var(--dim);padding:8px 12px;cursor:pointer;border-left:2px solid transparent}
 .nav:hover{color:var(--green)}
 .nav.active{color:var(--green);border-left-color:var(--green);background:var(--panel);text-shadow:var(--glow)}
 .nav{display:flex;align-items:center;gap:6px;min-width:0}
 .nav .nlabel{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.nbadge{flex:none;max-width:64px;font-size:9px;padding:1px 5px;border:1px solid var(--line);color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nbadge{flex:none;max-width:64px;font-size:9px;padding:1px 5px;border:1px solid var(--line);color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .nbadge:empty{display:none}
 .nbadge.warn{color:var(--amber);border-color:var(--amber)}
 .scard .led{width:6px;height:6px;border-radius:50%;background:var(--faint);display:inline-block;margin-right:6px;flex:none}
@@ -937,7 +946,7 @@ button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box
 .omni input::placeholder{color:var(--dim)}
 .omni svg{flex:none;color:var(--faint)}
 .omni:focus-within svg{color:var(--dim)}
-.omni .okey{flex:none;font-size:9px;letter-spacing:.06em;color:var(--faint);border:1px solid var(--line);padding:1px 5px}
+.omni .okey{flex:none;font-size:9px;letter-spacing:.06em;color:var(--dim);border:1px solid var(--line);padding:1px 5px}
 .omni .ocount{flex:none;font-size:10px;color:var(--dim);white-space:nowrap}
 .omni .ocount.none{color:var(--amber)}
 .wiz{position:fixed;inset:0;z-index:30;background:var(--bg);display:none;flex-direction:column}
@@ -969,13 +978,13 @@ button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box
 button.btn.ghost{border-color:var(--line);background:none;color:var(--dim)}
 button.btn.ghost:hover{color:var(--green);border-color:var(--dim);background:none}
 .lvlsw{display:flex;flex:none;border:1px solid var(--line);background:var(--panel)}
-.lvlb{appearance:none;border:0;background:none;color:var(--faint);font:inherit;font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:4px 11px;cursor:pointer}
+.lvlb{appearance:none;border:0;background:none;color:var(--dim);font:inherit;font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:4px 11px;cursor:pointer}
 .lvlb:hover{color:var(--dim)}
 .lvlb.on{background:var(--green);color:var(--bg);text-shadow:none}
 .row.hidden{display:none}
 .page.advopen .row[data-adv]{border-left:2px solid var(--line);padding-left:9px;margin-left:-11px}
 .row.hit{background:#101d14;box-shadow:inset 2px 0 0 var(--green)}
-.moreb{appearance:none;background:none;border:1px dashed var(--line);color:var(--faint);font:inherit;font-size:11px;padding:6px 10px;margin:6px 0 0;cursor:pointer}
+.moreb{appearance:none;background:none;border:1px dashed var(--line);color:var(--dim);font:inherit;font-size:11px;padding:6px 10px;margin:6px 0 0;cursor:pointer}
 .moreb:hover{color:var(--dim);border-color:var(--dim)}
 .modal-bg{position:fixed;inset:0;background:rgba(3,7,4,.78);display:flex;align-items:center;justify-content:center;z-index:20}
 .modal{background:var(--panel);border:1px solid var(--dim);box-shadow:0 0 24px rgba(60,255,110,.18);padding:20px 22px;max-width:380px;display:flex;flex-direction:column;gap:16px}
@@ -993,7 +1002,7 @@ button.btn.ghost:hover{color:var(--green);border-color:var(--dim);background:non
 .berr .berrtext{flex:1 1 220px;color:var(--bad);min-width:0}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:12px}
 .scard{border:1px solid var(--line);background:var(--panel);padding:9px 11px;display:flex;flex-direction:column;gap:5px}
-.scard .k{font-size:9.5px;letter-spacing:.12em;color:var(--faint);text-transform:uppercase}
+.scard .k{font-size:9.5px;letter-spacing:.12em;color:var(--dim);text-transform:uppercase}
 .scard .v{font-size:12.5px;color:var(--green)}
 .lastres{display:block;max-width:100%;color:var(--dim);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #state_last_meta{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1006,7 +1015,7 @@ button.btn.ghost:hover{color:var(--green);border-color:var(--dim);background:non
 .row{display:flex;align-items:center;gap:10px;padding:9px 0;flex-wrap:wrap;border-bottom:1px solid #12241a}
 .card .row:last-child{border-bottom:0}
 .row label{flex:1;min-width:100px;color:var(--green)}
-.row label .sub{display:block;font-size:10.5px;color:var(--faint);margin-top:2px;letter-spacing:0}
+.row label .sub{display:block;font-size:10.5px;color:var(--dim);margin-top:2px;letter-spacing:0}
 .row label .sub.warn{color:var(--amber)}
 .row select{flex:0 1 auto;min-width:0;max-width:100%}
 .row input[type=text]{flex:0 1 auto;min-width:0}
@@ -1037,7 +1046,7 @@ input[type=checkbox]:checked{border-color:var(--dim)}
 input[type=checkbox]:checked::after{left:17px;background:var(--green);box-shadow:var(--glow)}
 input[type=checkbox]:focus-visible{outline:1px solid var(--green);outline-offset:2px}
 .row select,.row input[type=text]{border:1px solid var(--dim);background:#08100b;color:var(--green);font:inherit;font-size:11.5px;padding:4px 8px}
-.row select{flex:0 0 auto;width:auto;min-width:118px;max-width:230px}
+.row select{flex:0 0 auto;width:auto;min-width:118px;max-width:min(320px,100%)}
 .row input[type=text]{flex:0 0 auto;width:min(230px,50%)}
 .row .val{color:var(--dim);font-size:11.5px;min-width:44px;text-align:right}
 button,select,input[type=checkbox],input[type=radio],input[type=range]{cursor:pointer}
@@ -1060,12 +1069,12 @@ button.ghost:hover{color:var(--green)}
 .rdel:hover{color:#ff7b6b;border-color:#7a2e2e}
 .histrow{display:flex;align-items:flex-start;gap:10px;padding:9px 2px;border-bottom:1px solid #12241a}
 .histrow:last-child{border-bottom:none}
-.histmeta{flex:none;width:150px;font-size:10.5px;color:var(--faint);line-height:1.5}
+.histmeta{flex:none;width:150px;font-size:10.5px;color:var(--dim);line-height:1.5}
 .histmeta b{display:block;color:var(--dim);font-weight:400}
 .histtext{flex:1;min-width:0;font-size:12.5px;line-height:1.5;color:var(--green);user-select:text;overflow-wrap:anywhere}
 .histrow .mini{flex:none}
 .histfind{margin:8px 0 4px;max-width:320px}
-.histempty{color:var(--faint);font-size:12px;padding:8px 0}
+.histempty{color:var(--dim);font-size:12px;padding:8px 0}
 .micverdict{font-size:12.5px;line-height:1.5;color:var(--dim);padding:4px 0;min-height:18px}
 .micverdict.ok{color:var(--green);text-shadow:var(--glow)}
 .micverdict.bad{color:var(--amber)}
@@ -1073,7 +1082,7 @@ button.ghost:hover{color:var(--green)}
 .replrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 0;border-bottom:1px solid #12241a}
 .replrow:last-child{border-bottom:none}
 .replrow input[type=text]{flex:1 1 160px;min-width:120px;width:auto;font-size:12px;padding:5px 9px}
-.replrow .rarrow{flex:none;color:var(--faint)}
+.replrow .rarrow{flex:none;color:var(--dim)}
 .replrow label{flex:none;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--dim);white-space:nowrap}
 .replrow label input[type=checkbox]{width:28px;height:15px}
 .replcheck{display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:10px;border-top:1px solid #12241a;flex-wrap:wrap}
@@ -1081,9 +1090,9 @@ button.ghost:hover{color:var(--green)}
 .replout{flex:1 1 200px;min-width:0;font-size:12px;color:var(--green);text-shadow:var(--glow);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .replout:empty{display:none}
 .rulefoot{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
-.rulefoot .ghost{border-color:var(--line);color:var(--faint)}
+.rulefoot .ghost{border-color:var(--line);color:var(--dim)}
 .rulefoot .ghost:empty{display:none}
-.ruleempty{color:var(--faint);font-size:12px;padding:6px 0}
+.ruleempty{color:var(--dim);font-size:12px;padding:6px 0}
 .card>.hint{font-size:11.5px;color:var(--dim);margin-bottom:6px;line-height:1.5}
 .mrow{display:flex;align-items:center;gap:9px;padding:7px 2px;border-bottom:1px solid #12241a;flex-wrap:wrap}
 .mrow:last-child{border-bottom:none}
@@ -1095,25 +1104,25 @@ input[type=radio]:focus-visible{outline:1px solid var(--green);outline-offset:2p
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:1px solid var(--green);outline-offset:2px}
 .mrow .mname{width:132px;font-weight:700;white-space:nowrap}
 .mrow .mdesc{flex:1;color:var(--dim);font-size:12px}
-.mtag{font-size:9px;border:1px solid var(--line);color:var(--faint);padding:0 4px;margin-left:6px;vertical-align:middle;letter-spacing:.06em}
+.mtag{font-size:9px;border:1px solid var(--line);color:var(--dim);padding:0 4px;margin-left:6px;vertical-align:middle;letter-spacing:.06em}
 .rrow{display:flex;align-items:center;gap:9px;padding:6px 2px;font-size:12px;color:var(--dim);flex-wrap:wrap}
 .rrow .rcond{min-width:132px;color:var(--green)}
-.rrow .rarr{color:var(--faint)}
+.rrow .rarr{color:var(--dim)}
 .rrow .reng{border:1px solid var(--line);padding:1px 7px;color:var(--green);font-size:11.5px}
-.rrow .rwhy{margin-left:auto;color:var(--faint);font-size:11px}
+.rrow .rwhy{margin-left:auto;color:var(--dim);font-size:11px}
 #routing{border-bottom:1px solid #12241a;margin-bottom:8px;padding-bottom:6px}
 .advbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
 .fchips{display:flex;gap:5px;flex-wrap:wrap;margin-left:auto}
-.fchip{appearance:none;background:none;border:1px solid var(--line);color:var(--faint);font:inherit;font-size:10.5px;padding:2px 8px;cursor:pointer}
+.fchip{appearance:none;background:none;border:1px solid var(--line);color:var(--dim);font:inherit;font-size:10.5px;padding:2px 8px;cursor:pointer}
 .fchip:hover{color:var(--dim)}
 .fchip.on{background:var(--dim);color:#08100b;border-color:var(--dim)}
 #advisor{border:1px solid var(--line);padding:10px 11px;margin-bottom:9px;display:flex;flex-direction:column;gap:9px}
 .advrow{display:flex;align-items:center;gap:9px;font-size:12px;padding:3px 0}
-.advrow .advrole{width:74px;color:var(--faint);text-transform:uppercase;font-size:10px;letter-spacing:.1em}
+.advrow .advrole{width:74px;color:var(--dim);text-transform:uppercase;font-size:10px;letter-spacing:.1em}
 .advrow .advname{flex:1;color:var(--green)}
 .advrow .advstate{color:var(--amber)}
 .advrow .advstate.ok{color:var(--dim)}
-.advq{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:11.5px;color:var(--faint)}
+.advq{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:11.5px;color:var(--dim)}
 .advq select{background:#08100b;border:1px solid var(--line);color:var(--green);font:inherit;font-size:11.5px;padding:2px 6px;margin-left:5px}
 .advchk{display:flex;align-items:center;gap:5px}
 .advout{font-size:12px;color:var(--green);line-height:1.5;min-height:1em}
@@ -1177,7 +1186,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
 .mock-radio.on{background:var(--green);box-shadow:var(--glow)}
 .mock-cb{width:13px;height:13px;border:1px solid var(--dim);flex:none;display:inline-flex;align-items:center;justify-content:center;font-size:10px;color:#0b0f0c}
 .mock-cb.on{background:var(--green)}
-.mock-note{color:var(--faint);font-size:12px}
+.mock-note{color:var(--dim);font-size:12px}
 .lnk{color:var(--green);text-decoration:underline;cursor:pointer}
 .lnk:hover{text-shadow:var(--glow)}
 </style></head><body>
@@ -1258,7 +1267,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
    <select id="history_days"><option value="1">1</option><option value="3">3</option><option value="7">7</option><option value="30">30</option></select></div>
   <div class="row" data-adv><label>{{S_HIST_MAX}}</label>
    <select id="history_max"><option value="50">50</option><option value="100">100</option><option value="200">200</option><option value="500">500</option></select></div>
-  <div class="row" data-adv><label>{{S_HIST_SKIP}}<span class="sub">{{S_HIST_SKIP_SUB}}</span></label><input type="text" id="history_skip"></div>
+  <div class="row" id="hist_skip_row"><label>{{S_HIST_SKIP}}<span class="sub">{{S_HIST_SKIP_SUB}}</span></label><input type="text" id="history_skip"></div>
  </div>
  <div class="card" id="histcard">
   <div class="sect">{{S_HIST_LIST}}<button type="button" class="mini" id="hist_clear">{{S_HIST_CLEAR}}</button></div>
@@ -1400,7 +1409,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
  </div>
  <div class="card">
   <div class="sect">{{S_SUB_DICT}}</div>
-  <div style="color:var(--faint);font-size:12px;margin-bottom:6px">{{S_DICT_HINT}}</div>
+  <div class="hint">{{S_DICT_HINT}}</div>
   <textarea id="whisper_prompt" rows="10" style="width:100%;min-height:150px;height:26vh;padding:8px 11px;border:1px solid var(--line);background:#08100b;color:var(--green);font:inherit;line-height:1.5;outline:none;resize:vertical"></textarea>
  </div>
  <div class="card">
@@ -1431,14 +1440,14 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
  </div>
  <div class="card">
   <div class="sect">{{S_SUB_PROMPTS}}</div>
-  <div style="color:var(--faint);font-size:12px;margin-bottom:8px">{{S_LLM_HINT}}</div>
+  <div class="hint">{{S_LLM_HINT}}</div>
   <div id="profbody"></div>
  </div>
 </div>
 
 <div class="page" id="p-translate">
  <div class="card">
-  <div style="color:var(--faint);font-size:12px;margin-bottom:6px">{{S_TR_HINT}}</div>
+  <div class="hint">{{S_TR_HINT}}</div>
   <div id="tr_warn" style="display:none;color:var(--amber);font-size:12px;margin-bottom:6px">{{S_TR_TURBO}}</div>
   <div class="row"><label>{{S_TR_DEFAULT}}</label><input type="checkbox" id="tr_default"></div>
   <div class="row"><label>{{S_TR_TARGET}}<span class="sub">{{S_SUB_TRTARGET}}</span><span class="sub warn">{{S_TR_EXP}}</span></label>
@@ -1656,7 +1665,7 @@ async function refreshLLM(){
   body.innerHTML = "";
   if(!installed.length && !(st.downloads||[]).length){
     const empty = document.createElement("div");
-    empty.style.cssText = "color:var(--faint);font-size:12px;padding:6px 2px";
+    empty.style.cssText = "color:var(--dim);font-size:12px;padding:6px 2px";
     empty.textContent = L.nollm;
     body.appendChild(empty);
   }
@@ -1803,7 +1812,7 @@ function renderProfiles(body, st){
   });
   if(st.state !== "installed"){
     const note = document.createElement("div");
-    note.style.cssText = "color:var(--faint);font-size:12px;padding:4px 2px";
+    note.style.cssText = "color:var(--dim);font-size:12px;padding:4px 2px";
     note.textContent = L.nollmp;
     body.appendChild(note);
   } else {

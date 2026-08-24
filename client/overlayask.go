@@ -82,36 +82,74 @@ func textWidthDIP(s string) int32 {
 	return (r.Right - r.Left) * 96 / dpi
 }
 
+func askMaxWidthDIP() int32 {
+	wa := overlayWorkArea()
+	dpi := dpiFor(overlayHwnd())
+	if dpi < 72 {
+		dpi = 96
+	}
+	max := (wa.Right - wa.Left) * 4 / 5 * 96 / dpi
+	if max < ovW {
+		max = ovW
+	}
+	return max
+}
+
+func askLayoutLocked() (rows int32, width int32, pos []point) {
+	if !askOn {
+		return 0, 0, nil
+	}
+	left := int32(ovAskPad) + askPromptW + 16
+	max := askMaxWidthDIP() - ovAskPad
+	x, row, widest := left, int32(0), left
+	pos = make([]point, 0, len(askWidths))
+	for _, bw := range askWidths {
+		if x > left && x+bw > max {
+			row++
+			x = left
+		}
+		pos = append(pos, point{X: x, Y: row})
+		x += bw + ovBtnGap
+		if x-ovBtnGap > widest {
+			widest = x - ovBtnGap
+		}
+	}
+	return row + 1, widest + ovAskPad, pos
+}
+
+func askRows() int32 {
+	askMu.Lock()
+	defer askMu.Unlock()
+	rows, _, _ := askLayoutLocked()
+	if rows < 1 {
+		rows = 1
+	}
+	return rows
+}
+
 func askWidthDIP() int32 {
 	askMu.Lock()
 	defer askMu.Unlock()
-	if !askOn {
-		return 0
-	}
-	w := int32(ovAskPad) + askPromptW + 16
-	for _, bw := range askWidths {
-		w += bw + ovBtnGap
-	}
-	return w - ovBtnGap + ovAskPad
+	_, w, _ := askLayoutLocked()
+	return w
 }
 
 func askButtonRects(dpi int32) []rect {
 	askMu.Lock()
 	defer askMu.Unlock()
-	if !askOn {
+	_, _, pos := askLayoutLocked()
+	if pos == nil {
 		return nil
 	}
-	x := int32(ovAskPad) + askPromptW + 16
-	top := int32(ovH) + (ovAskH-ovBtnH)/2
-	out := make([]rect, 0, len(askWidths))
-	for _, bw := range askWidths {
+	out := make([]rect, 0, len(pos))
+	for i, p := range pos {
+		top := int32(ovH) + p.Y*ovAskH + (ovAskH-ovBtnH)/2
 		out = append(out, rect{
-			Left:   scaleDPI(x, dpi),
+			Left:   scaleDPI(p.X, dpi),
 			Top:    scaleDPI(top, dpi),
-			Right:  scaleDPI(x+bw, dpi),
+			Right:  scaleDPI(p.X+askWidths[i], dpi),
 			Bottom: scaleDPI(top+ovBtnH, dpi),
 		})
-		x += bw + ovBtnGap
 	}
 	return out
 }
@@ -281,9 +319,9 @@ func askRender(hwnd, hdc uintptr, rc rect, fill func(rect, uintptr), drawText fu
 		if i >= len(items) {
 			break
 		}
-		border, txt := uintptr(colGreenLo), uintptr(colGreenDm)
+		border, txt := uintptr(colGreenDm), uintptr(colGreenDm)
 		if items[i].def {
-			border, txt = colGreenDm, colGreen
+			border, txt = colGreen, colGreen
 		}
 		fill(rect{Left: r.Left - 1, Top: r.Top - 1, Right: r.Right + 1, Bottom: r.Bottom + 1}, border)
 		fill(r, 0x0B100D)

@@ -101,6 +101,7 @@ const (
 	trayRecording
 	trayProcessing
 	trayOff
+	trayError
 )
 
 func hIconFromPNG(png []byte) uintptr {
@@ -263,6 +264,7 @@ func runTray(a *App) {
 		trayRecording:  hIconFromPNG(iconRecording),
 		trayProcessing: hIconFromPNG(iconProcessing),
 		trayOff:        hIconFromPNG(iconDisabled),
+		trayError:      hIconFromPNG(iconError),
 	}
 
 	if name, err := windows.UTF16PtrFromString("TaskbarCreated"); err == nil {
