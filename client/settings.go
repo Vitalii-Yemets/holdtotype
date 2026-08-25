@@ -974,6 +974,8 @@ button.cap.max{font-size:12px}
 button.cap.close:hover{background:var(--badbg);color:var(--bad);border-color:var(--badline);box-shadow:var(--badglow)}
 .logo{width:40px;height:40px;flex:none}
 .logo svg{width:100%;height:100%;filter:var(--iconglow)}
+.mk.mic{display:var(--markmic,block)}
+.mk.face{display:var(--markface,none)}
 .header h1{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:15px;font-weight:var(--wb);letter-spacing:var(--brandls);text-shadow:var(--glow);animation:var(--flicker);background:var(--brandbg);-webkit-background-clip:var(--brandclip);background-clip:var(--brandclip);-webkit-text-fill-color:var(--brandfill)}
 .statusbar .ver{margin-left:auto;flex:none;color:var(--dim)}
 @keyframes flicker{0%,93%,97%,100%{opacity:1}95%{opacity:.6}}
@@ -1299,11 +1301,18 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
 <div class="header">
  <div class="logo"><svg viewBox="0 0 64 64">
   <rect x="2" y="2" width="60" height="60" rx="12" fill="var(--panel)" stroke="var(--line)" stroke-width="2"/>
-  <g stroke="var(--hi)" stroke-width="4" fill="none" stroke-linecap="round">
+  <g class="mk mic" stroke="var(--hi)" stroke-width="4" fill="none" stroke-linecap="round">
    <rect x="26" y="12" width="12" height="20" rx="6" fill="var(--hi)"/>
    <path d="M19 27a13 13 0 0 0 26 0"/>
    <line x1="32" y1="40" x2="32" y2="46"/>
    <line x1="24" y1="49" x2="40" y2="49"/>
+  </g>
+  <g class="mk face" fill="none" stroke-linecap="round">
+   <circle cx="32" cy="35" r="19" fill="var(--on)" stroke="var(--selbg)" stroke-width="3"/>
+   <path d="M19 19l4 8M45 19l-4 8" stroke="var(--selbg)" stroke-width="3.5"/>
+   <circle cx="26" cy="33" r="2.8" fill="var(--hi)"/>
+   <circle cx="38" cy="33" r="2.8" fill="var(--hi)"/>
+   <path d="M28 41q4 3.4 8 0" stroke="var(--hi)" stroke-width="3"/>
   </g>
   <g stroke="var(--hi)" stroke-width="2.5" fill="none" stroke-linecap="round">
    <path class="wave" d="M13 20a17 17 0 0 0 0 14" style="animation-delay:.2s"/>
@@ -1474,10 +1483,10 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
    <button type="button" class="mini" id="adv_open">{{S_ADV_TITLE}}</button>
    <span class="fchips">
     <button type="button" class="fchip on" data-f="all">{{S_F_ALL}}</button>
-    <button type="button" class="fchip" data-f="ru">{{S_F_RU}}</button>
     <button type="button" class="fchip" data-f="multi">{{S_F_MULTI}}</button>
     <button type="button" class="fchip" data-f="punct">{{S_F_PUNCT}}</button>
     <button type="button" class="fchip" data-f="fit">{{S_F_FIT}}</button>
+    <button type="button" class="fchip" data-f="ru">{{S_F_RU}}</button>
    </span>
   </div>
   <div id="advisor" style="display:none">
@@ -1677,11 +1686,18 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
  <div class="wizhead" id="wizhead">
   <div class="logo"><svg viewBox="0 0 64 64">
    <rect x="2" y="2" width="60" height="60" rx="12" fill="var(--panel)" stroke="var(--line)" stroke-width="2"/>
-   <g stroke="var(--hi)" stroke-width="4" fill="none" stroke-linecap="round">
+   <g class="mk mic" stroke="var(--hi)" stroke-width="4" fill="none" stroke-linecap="round">
     <rect x="26" y="12" width="12" height="20" rx="6" fill="var(--hi)"/>
     <path d="M19 27a13 13 0 0 0 26 0"/>
     <line x1="32" y1="40" x2="32" y2="46"/>
     <line x1="24" y1="49" x2="40" y2="49"/>
+   </g>
+   <g class="mk face" fill="none" stroke-linecap="round">
+    <circle cx="32" cy="35" r="19" fill="var(--on)" stroke="var(--selbg)" stroke-width="3"/>
+    <path d="M19 19l4 8M45 19l-4 8" stroke="var(--selbg)" stroke-width="3.5"/>
+    <circle cx="26" cy="33" r="2.8" fill="var(--hi)"/>
+    <circle cx="38" cy="33" r="2.8" fill="var(--hi)"/>
+    <path d="M28 41q4 3.4 8 0" stroke="var(--hi)" stroke-width="3"/>
    </g>
    <g stroke="var(--hi)" stroke-width="2.5" fill="none" stroke-linecap="round">
     <path class="wave" d="M13 20a17 17 0 0 0 0 14" style="animation-delay:.2s"/>

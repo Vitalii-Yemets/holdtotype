@@ -10,6 +10,8 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:var(--
 .header{display:flex;align-items:center;gap:14px;padding:12px 12px 12px 20px;border-bottom:1px solid var(--line);background:var(--titlebg);box-shadow:0 1px 12px rgba(var(--rgb),.12);cursor:default}
 .header h1{font-size:16px;letter-spacing:var(--brandls);text-shadow:var(--glow);font-weight:600;background:var(--brandbg);-webkit-background-clip:var(--brandclip);background-clip:var(--brandclip);-webkit-text-fill-color:var(--brandfill)}
 .logo svg{width:40px;height:40px;display:block;filter:var(--iconglow)}
+.mk.mic{display:var(--markmic,block)}
+.mk.face{display:var(--markface,none)}
 .wave{animation:pulse 1.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
 @keyframes pulse{0%,100%{opacity:.35;transform:scale(.94)}50%{opacity:1;transform:scale(1)}}
 @media (prefers-reduced-motion:reduce){.wave{animation:none;opacity:.75}}
@@ -63,11 +65,18 @@ button.btn:hover{filter:brightness(1.12);box-shadow:var(--glow)}
 <div class="header" onmousedown="if(event.button===0&&event.target.tagName!=='BUTTON')appDrag()">
  <div class="logo"><svg viewBox="0 0 64 64">
   <rect x="2" y="2" width="60" height="60" rx="12" fill="var(--panel)" stroke="var(--line)" stroke-width="2"/>
-  <g stroke="var(--hi)" stroke-width="4" fill="none" stroke-linecap="round">
+  <g class="mk mic" stroke="var(--hi)" stroke-width="4" fill="none" stroke-linecap="round">
    <rect x="26" y="12" width="12" height="20" rx="6" fill="var(--hi)"/>
    <path d="M19 27a13 13 0 0 0 26 0"/>
    <line x1="32" y1="40" x2="32" y2="46"/>
    <line x1="24" y1="49" x2="40" y2="49"/>
+  </g>
+  <g class="mk face" fill="none" stroke-linecap="round">
+   <circle cx="32" cy="35" r="19" fill="var(--on)" stroke="var(--selbg)" stroke-width="3"/>
+   <path d="M19 19l4 8M45 19l-4 8" stroke="var(--selbg)" stroke-width="3.5"/>
+   <circle cx="26" cy="33" r="2.8" fill="var(--hi)"/>
+   <circle cx="38" cy="33" r="2.8" fill="var(--hi)"/>
+   <path d="M28 41q4 3.4 8 0" stroke="var(--hi)" stroke-width="3"/>
   </g>
   <g stroke="var(--hi)" stroke-width="2.5" fill="none" stroke-linecap="round">
    <path class="wave" d="M13 20a17 17 0 0 0 0 14" style="animation-delay:.2s"/>

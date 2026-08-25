@@ -38,6 +38,8 @@ func themeScanlines() bool { return themeLook().Scan > 0 }
 
 func themeLevelStyle() string { return themeLook().Level }
 
+func themeFlash() string { return themeLook().Flash }
+
 func themePulse() float64 { return themeLook().Pulse }
 
 func themeCSSVars() string { return themeLook().CSSVars() }
@@ -109,16 +111,20 @@ func lift(c color.NRGBA, by int) color.NRGBA {
 }
 
 func paletteTile(p theme.Palette) iconTile {
+	return markedTile(p, "mic")
+}
+
+func markedTile(p theme.Palette, mark string) iconTile {
 	bot := nrgba(p.Bg)
 	core := color.NRGBA{R: 255, G: 255, B: 255, A: 255}
 	if p.Light() {
 		core = color.NRGBA{R: 0x1a, G: 0x1a, B: 0x1a, A: 255}
 	}
-	return iconTile{top: lift(bot, 10), bot: bot, core: core}
+	return iconTile{top: lift(bot, 10), bot: bot, core: core, mark: mark}
 }
 
 func rebuildIcons(p theme.Palette) {
-	tile := paletteTile(p)
+	tile := markedTile(p, themeLook().Mark)
 	accent := nrgba(p.Accent)
 	bad := nrgba(p.Bad)
 	warn := nrgba(p.Warn)

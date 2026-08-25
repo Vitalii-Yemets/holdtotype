@@ -37,6 +37,30 @@ type iconTile struct {
 	top  color.NRGBA
 	bot  color.NRGBA
 	core color.NRGBA
+	mark string
+}
+
+func faceDist(fx, fy float64) (fill, ink float64) {
+	const cx, cy, r = 15.5, 17.0, 9.3
+	dc := math.Hypot(fx-cx, fy-cy)
+	fill = dc - r
+	ink = math.Abs(dc-r) - 1.1
+	for _, c := range [][4]float64{{9.6, 9.4, 11.8, 13.6}, {21.4, 9.4, 19.2, 13.6}} {
+		if v := capsuleDist(fx, fy, c[0], c[1], c[2], c[3]) - 1.2; v < ink {
+			ink = v
+		}
+	}
+	for _, e := range [][2]float64{{12.6, 16.2}, {18.4, 16.2}} {
+		if v := math.Hypot(fx-e[0], fy-e[1]) - 1.4; v < ink {
+			ink = v
+		}
+	}
+	for _, s := range [][4]float64{{13.4, 20.4, 15.5, 21.6}, {15.5, 21.6, 17.6, 20.4}} {
+		if v := capsuleDist(fx, fy, s[0], s[1], s[2], s[3]) - 1.0; v < ink {
+			ink = v
+		}
+	}
+	return fill, ink
 }
 
 func iconPNG(tile iconTile, glow color.NRGBA, badge ...color.NRGBA) []byte {
@@ -56,11 +80,23 @@ func iconPNG(tile iconTile, glow color.NRGBA, badge ...color.NRGBA) []byte {
 			}
 			fx, fy := float64(x), float64(y)
 			c := row
-			d := micDist(fx, fy)
-			if d <= 0 {
-				c = lerpC(glow, tile.core, 0.25)
-			} else if d < 3.0 {
-				c = lerpC(row, glow, (1-d/3.0)*0.6)
+			if tile.mark == "face" {
+				fillD, inkD := faceDist(fx, fy)
+				if fillD <= 0 {
+					c = lerpC(row, glow, 0.28)
+				}
+				if inkD <= 0 {
+					c = glow
+				} else if inkD < 1.1 {
+					c = lerpC(c, glow, 1-inkD/1.1)
+				}
+			} else {
+				d := micDist(fx, fy)
+				if d <= 0 {
+					c = lerpC(glow, tile.core, 0.25)
+				} else if d < 3.0 {
+					c = lerpC(row, glow, (1-d/3.0)*0.6)
+				}
 			}
 			c.A = uint8(a * 255)
 			img.SetNRGBA(x, y, c)

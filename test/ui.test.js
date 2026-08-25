@@ -387,6 +387,13 @@ function check(name, actual, expected) {
   check("the russian slot holds the russian engine", d.querySelectorAll('#models .mrow[data-slot="ru"]').length, 1);
   check("every other language shares the second slot", d.querySelectorAll('#models .mrow[data-slot="other"]').length, 2);
   check("model filters rendered", d.querySelectorAll(".fchip").length, 5);
+  check("the russian filter sits last, not second", [...d.querySelectorAll(".fchip")].map(b=>b.dataset.f), ["all", "multi", "punct", "fit", "ru"]);
+  check("the mark carries both shapes", [d.querySelectorAll(".mk.mic").length, d.querySelectorAll(".mk.face").length], [2, 2]);
+  w.applyThemeVars("soft");
+  check("the soft design shows the face", [d.documentElement.style.getPropertyValue("--markmic"), d.documentElement.style.getPropertyValue("--markface")], ["none", "block"]);
+  w.applyThemeVars("terminal:green");
+  check("and every other one keeps the microphone", [d.documentElement.style.getPropertyValue("--markmic"), d.documentElement.style.getPropertyValue("--markface")], ["block", "none"]);
+
   const recLangs = [...d.getElementById("language").options].map(o=>o.value);
   check("italian can be dictated too", recLangs.includes("it"), true);
   check("ram estimate shown", d.querySelectorAll("#p-models .mram").length, 3);

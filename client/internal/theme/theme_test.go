@@ -326,3 +326,30 @@ func TestTheLightSkinsKeepTheirDrawnCharacter(t *testing.T) {
 		}
 	}
 }
+
+func TestEverySkinCarriesItsOwnMarkAndFlash(t *testing.T) {
+	want := map[string][2]string{
+		"terminal": {"mic", "blink"},
+		"editor":   {"mic", "none"},
+		"neon":     {"mic", "glow"},
+		"soft":     {"face", "bounce"},
+		"paper":    {"mic", "none"},
+	}
+	for id, w := range want {
+		s := GetSkin(id)
+		if s.Mark != w[0] {
+			t.Errorf("the %s skin is marked %q, want %q", id, s.Mark, w[0])
+		}
+		if s.Flash != w[1] {
+			t.Errorf("the %s skin flashes %q, want %q", id, s.Flash, w[1])
+		}
+		css := Current(id, "").CSSVars()
+		mic, face := "--markmic:block", "--markface:none"
+		if w[0] == "face" {
+			mic, face = "--markmic:none", "--markface:block"
+		}
+		if !strings.Contains(css, mic) || !strings.Contains(css, face) {
+			t.Errorf("the %s skin does not show the right mark: %s", id, css)
+		}
+	}
+}

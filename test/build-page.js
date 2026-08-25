@@ -131,11 +131,11 @@ const PALETTES = {
   paper: { bg: "#f4f6f8", panel: "#ffffff", line: "#d5dbe1", text: "#1f2328", hi: "#0969da", dim: "#59636e", faint: "#818b98", warn: "#9a6700", bad: "#cf222e", rec: "#cf222e", field: "#ffffff", soft: "#e7ebef", navon: "#e9edf1", on: "#ddf4ff", ok: "#1a7f37" },
 };
 const SKINS = {
-  terminal: { palette: "green", font: '"IBM Plex Mono",Consolas,monospace', fs: "14px", r: "0px", bw: "1px", scan: "1", shadow: "none", glow: true, round: false, caps: true, fieldpad: "6px 10px", ctlfs: "12.5px", wb: "700", level: "bars", barr: "0" },
-  editor: { palette: "editor", font: '"Cascadia Mono",Consolas,"Segoe UI",sans-serif', fs: "13px", r: "3px", bw: "1px", scan: "0", shadow: "0 10px 30px rgba(0,0,0,.45)", glow: false, round: false, caps: false, fieldpad: "6px 11px", ctlfs: "12.5px", wb: "600", level: "flat", barr: "0" },
-  neon: { palette: "neon", font: '"IBM Plex Sans","Segoe UI",system-ui,sans-serif', fs: "15px", r: "14px", bw: "1px", scan: ".18", shadow: "0 18px 46px rgba(150,40,220,.35)", glow: true, round: true, caps: false, fieldpad: "9px 13px", ctlfs: "13.5px", wb: "600", level: "bars", barr: "99px" },
-  soft: { palette: "soft", font: '"Comic Sans MS","Segoe UI Variable Display","Segoe UI",sans-serif', fs: "15px", r: "16px", barr: "99px", bw: "1px", scan: "0", shadow: "0 14px 34px rgba(255,140,190,.28)", glow: false, round: true, caps: false, fieldpad: "9px 13px", ctlfs: "13.5px", wb: "600", level: "dots", barr: "99px" },
-  paper: { palette: "paper", font: '"Segoe UI",system-ui,sans-serif', fs: "14px", r: "10px", bw: "1px", scan: "0", shadow: "0 8px 24px rgba(31,35,40,.12)", glow: false, round: true, caps: false, fieldpad: "7px 11px", ctlfs: "12.5px", wb: "600", level: "bars", barr: "2px" },
+  terminal: { palette: "green", font: '"IBM Plex Mono",Consolas,monospace', fs: "14px", r: "0px", bw: "1px", scan: "1", shadow: "none", glow: true, round: false, caps: true, fieldpad: "6px 10px", ctlfs: "12.5px", wb: "700", level: "bars", barr: "0", mark: "mic" },
+  editor: { palette: "editor", font: '"Cascadia Mono",Consolas,"Segoe UI",sans-serif', fs: "13px", r: "3px", bw: "1px", scan: "0", shadow: "0 10px 30px rgba(0,0,0,.45)", glow: false, round: false, caps: false, fieldpad: "6px 11px", ctlfs: "12.5px", wb: "600", level: "flat", barr: "0", mark: "mic" },
+  neon: { palette: "neon", font: '"IBM Plex Sans","Segoe UI",system-ui,sans-serif', fs: "15px", r: "14px", bw: "1px", scan: ".18", shadow: "0 18px 46px rgba(150,40,220,.35)", glow: true, round: true, caps: false, fieldpad: "9px 13px", ctlfs: "13.5px", wb: "600", level: "bars", barr: "99px", mark: "mic" },
+  soft: { palette: "soft", font: '"Comic Sans MS","Segoe UI Variable Display","Segoe UI",sans-serif', fs: "15px", r: "16px", barr: "99px", bw: "1px", scan: "0", shadow: "0 14px 34px rgba(255,140,190,.28)", glow: false, round: true, caps: false, fieldpad: "9px 13px", ctlfs: "13.5px", wb: "600", level: "dots", barr: "99px", mark: "face" },
+  paper: { palette: "paper", font: '"Segoe UI",system-ui,sans-serif', fs: "14px", r: "10px", bw: "1px", scan: "0", shadow: "0 8px 24px rgba(31,35,40,.12)", glow: false, round: true, caps: false, fieldpad: "7px 11px", ctlfs: "12.5px", wb: "600", level: "bars", barr: "2px", mark: "mic" },
 };
 function rgbOf(hex) {
   return [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(",");
@@ -170,6 +170,7 @@ function varsFor(skinId, colourId) {
     "--ok:" + (p.ok || p.hi), "--scheme:" + (lumaOf(p.bg) > 140 ? "light" : "dark"),
     "--badbg:" + blend(p.bad, p.bg, 0.8), "--badline:" + blend(p.bad, p.bg, 0.52),
     "--lvlw:" + lvl.w, "--lvlr:" + lvl.r,
+    "--markmic:" + (s.mark === "face" ? "none" : "block"), "--markface:" + (s.mark === "face" ? "block" : "none"),
     "--glow:" + (s.glow ? "0 0 7px rgba(" + rgb + ",.55)" : "none"),
     "--higlow:" + (s.glow ? "0 0 8px rgba(" + rgbOf(p.hi) + ",.6)" : "none"),
     "--iconglow:" + (s.glow ? "drop-shadow(0 0 6px rgba(" + rgbOf(p.hi) + ",.7))" : "none"),

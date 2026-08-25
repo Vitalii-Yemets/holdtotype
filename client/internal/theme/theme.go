@@ -64,6 +64,9 @@ type Skin struct {
 
 	Level string
 	Pulse float64
+
+	Mark  string
+	Flash string
 }
 
 const (
@@ -146,7 +149,7 @@ var skins = []Skin{
 		FieldPad: "6px 10px", CtlFS: "12.5px", WeightB: 700,
 		Radius: 0, BarR: "0", Border: 1, Round: false,
 		Glow: true, Scan: 1, Shadow: "none",
-		Level: "bars", Pulse: 1},
+		Level: "bars", Pulse: 1, Mark: "mic", Flash: "blink"},
 
 	{ID: "editor", Palette: "editor",
 		FontCSS: `"Cascadia Mono",Consolas,"Segoe UI",sans-serif`, FontGDI: "Cascadia Mono",
@@ -154,7 +157,7 @@ var skins = []Skin{
 		FieldPad: "6px 11px", CtlFS: "12.5px", WeightB: 600,
 		Radius: 3, BarR: "0", Border: 1, Round: false,
 		Glow: false, Scan: 0, Shadow: "0 10px 30px rgba(0,0,0,.45)",
-		Level: "flat", Pulse: 1.5},
+		Level: "flat", Pulse: 1.5, Mark: "mic", Flash: "none"},
 
 	{ID: "neon", Palette: "neon",
 		FontCSS: `"IBM Plex Sans","Segoe UI",system-ui,sans-serif`, FontGDI: "IBM Plex Sans",
@@ -162,7 +165,7 @@ var skins = []Skin{
 		FieldPad: "9px 13px", CtlFS: "13.5px", WeightB: 600,
 		Radius: 14, BarR: "99px", Border: 1, Round: true,
 		Glow: true, Scan: 0.18, Shadow: "0 18px 46px rgba(150,40,220,.35)",
-		Level: "bars", Pulse: 0.8},
+		Level: "bars", Pulse: 0.8, Mark: "mic", Flash: "glow"},
 
 	{ID: "soft", Palette: "soft",
 		FontCSS: `"Comic Sans MS","Segoe UI Variable Display","Segoe UI",sans-serif`, FontGDI: "Comic Sans MS",
@@ -170,7 +173,7 @@ var skins = []Skin{
 		FieldPad: "9px 13px", CtlFS: "13.5px", WeightB: 600,
 		Radius: 16, BarR: "99px", Border: 1, Round: true,
 		Glow: false, Scan: 0, Shadow: "0 14px 34px rgba(255,140,190,.28)",
-		Level: "dots", Pulse: 1.2},
+		Level: "dots", Pulse: 1.2, Mark: "face", Flash: "bounce"},
 
 	{ID: "paper", Palette: "paper",
 		FontCSS: `"Segoe UI",system-ui,sans-serif`, FontGDI: "Segoe UI",
@@ -178,7 +181,7 @@ var skins = []Skin{
 		FieldPad: "7px 11px", CtlFS: "12.5px", WeightB: 600,
 		Radius: 10, BarR: "2px", Border: 1, Round: true,
 		Glow: false, Scan: 0, Shadow: "0 8px 24px rgba(31,35,40,.12)",
-		Level: "bars", Pulse: 1.4},
+		Level: "bars", Pulse: 1.4, Mark: "mic", Flash: "none"},
 }
 
 type Look struct {
@@ -370,6 +373,10 @@ func (l Look) CSSVars() string {
 	if barr == "" {
 		barr = "0"
 	}
+	markMic, markFace := "block", "none"
+	if l.Mark == "face" {
+		markMic, markFace = "none", "block"
+	}
 	lvlw, lvlr := "4px", barr
 	switch l.Level {
 	case "dots":
@@ -401,6 +408,7 @@ func (l Look) CSSVars() string {
 		";--ok:" + p.Ok + ";--scheme:" + scheme +
 		";--badbg:" + p.BadBg + ";--badline:" + p.BadLine +
 		";--lvlw:" + lvlw + ";--lvlr:" + lvlr +
+		";--markmic:" + markMic + ";--markface:" + markFace +
 		";--glow:" + glow + ";--higlow:" + hiGlow + ";--iconglow:" + iconGlow +
 		";--amberglow:" + warnGlow + ";--badglow:" + badGlow + ";--badfilter:" + badFilter +
 		";--font:" + l.FontCSS +
