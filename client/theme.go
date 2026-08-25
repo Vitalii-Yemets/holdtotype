@@ -119,7 +119,7 @@ func paletteTile(p theme.Palette) iconTile {
 
 func rebuildIcons(p theme.Palette) {
 	tile := paletteTile(p)
-	accent := nrgba(p.Text)
+	accent := nrgba(p.Accent)
 	bad := nrgba(p.Bad)
 	warn := nrgba(p.Warn)
 	off := nrgba(p.Off)

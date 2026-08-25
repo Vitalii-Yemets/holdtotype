@@ -1,4 +1,4 @@
-package appid
+﻿package appid
 
 const (
 	Name = "HoldToType"
@@ -26,7 +26,7 @@ const (
 	PrevSlug = "voxterminal"
 )
 
-var Version = "0.46.1"
+var Version = "0.46.2"
 
 func Class(suffix string) string { return Name + suffix }
 

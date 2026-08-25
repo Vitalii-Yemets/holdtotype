@@ -120,7 +120,7 @@ var (
 	startupPalette = theme.GetPalette(theme.DefaultPalette)
 	startupTile    = paletteTile(startupPalette)
 
-	iconIdle       = iconPNG(startupTile, nrgba(startupPalette.Text))
+	iconIdle       = iconPNG(startupTile, nrgba(startupPalette.Accent))
 	iconRecording  = iconPNG(startupTile, nrgba(startupPalette.Bad))
 	iconProcessing = iconPNG(startupTile, nrgba(startupPalette.Warn))
 	iconDisabled   = iconPNG(startupTile, nrgba(startupPalette.Off))

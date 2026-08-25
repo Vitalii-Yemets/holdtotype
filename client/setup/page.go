@@ -23,7 +23,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 label.fld{color:var(--green);font-size:13px}
 input[type=text]{width:100%;padding:var(--fieldpad);border:1px solid var(--line);border-radius:calc(var(--r) * .55);background:var(--field);color:var(--green);font:inherit;outline:none}
 input[type=text]:focus{border-color:var(--dim);box-shadow:var(--glow)}
-select{padding:var(--fieldpad);border:1px solid var(--line);border-radius:calc(var(--r) * .55);background:var(--field);color:var(--green);font:inherit;outline:none;cursor:pointer;max-width:100%;color-scheme:dark}
+select{padding:var(--fieldpad);border:1px solid var(--line);border-radius:calc(var(--r) * .55);background:var(--field);color:var(--green);font:inherit;outline:none;cursor:pointer;max-width:100%;color-scheme:var(--scheme,dark)}
 option{background:var(--bg);color:var(--green)}
 option:checked{background:linear-gradient(var(--on),var(--on));color:var(--green)}
 select,::picker(select){appearance:base-select}
@@ -63,13 +63,13 @@ button.btn:hover{filter:brightness(1.12);box-shadow:var(--glow)}
 <div class="header" onmousedown="if(event.button===0&&event.target.tagName!=='BUTTON')appDrag()">
  <div class="logo"><svg viewBox="0 0 64 64">
   <rect x="2" y="2" width="60" height="60" rx="12" fill="var(--panel)" stroke="var(--line)" stroke-width="2"/>
-  <g stroke="var(--green)" stroke-width="4" fill="none" stroke-linecap="round">
-   <rect x="26" y="12" width="12" height="20" rx="6" fill="var(--green)"/>
+  <g stroke="var(--hi)" stroke-width="4" fill="none" stroke-linecap="round">
+   <rect x="26" y="12" width="12" height="20" rx="6" fill="var(--hi)"/>
    <path d="M19 27a13 13 0 0 0 26 0"/>
    <line x1="32" y1="40" x2="32" y2="46"/>
    <line x1="24" y1="49" x2="40" y2="49"/>
   </g>
-  <g stroke="var(--green)" stroke-width="2.5" fill="none" stroke-linecap="round">
+  <g stroke="var(--hi)" stroke-width="2.5" fill="none" stroke-linecap="round">
    <path class="wave" d="M13 20a17 17 0 0 0 0 14" style="animation-delay:.2s"/>
    <path class="wave" d="M51 20a17 17 0 0 1 0 14" style="animation-delay:.6s"/>
   </g>

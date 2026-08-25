@@ -298,8 +298,17 @@ func TestTheLightSkinsKeepTheirDrawnCharacter(t *testing.T) {
 	}
 
 	paper := Current("paper", "")
-	if paper.Round || paper.Radius != 6 {
-		t.Errorf("the paper skin should be square at 6, got round=%v r=%d", paper.Round, paper.Radius)
+	if !paper.Round || paper.Radius != 10 {
+		t.Errorf("the paper skin should be rounded at 10, got round=%v r=%d", paper.Round, paper.Radius)
+	}
+	if !strings.Contains(paper.CSSVars(), "--barr:2px") {
+		t.Error("the paper skin should keep its level marks nearly square")
+	}
+	if !strings.Contains(paper.CSSVars(), "--scheme:light") || !strings.Contains(soft.CSSVars(), "--scheme:light") {
+		t.Error("a light skin must ask the system controls for a light scheme")
+	}
+	if !strings.Contains(Current("terminal", "green").CSSVars(), "--scheme:dark") {
+		t.Error("a dark skin must keep the dark scheme")
 	}
 	if paper.Level != "bars" {
 		t.Errorf("the paper skin shows the level as %q, want plain bars", paper.Level)

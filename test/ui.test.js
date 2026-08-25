@@ -270,6 +270,7 @@ function check(name, actual, expected) {
     check(`the ${light} design paints a light ground`, lum(root.getPropertyValue("--bg")) > 140, true);
     check(`and writes on it in dark ink`, lum(root.getPropertyValue("--green")) < 110, true);
     check(`and asks for no halo`, [root.getPropertyValue("--glow"), root.getPropertyValue("--higlow"), root.getPropertyValue("--amberglow"), root.getPropertyValue("--badglow")], ["none", "none", "none", "none"]);
+    check(`and tells the system controls it is light`, root.getPropertyValue("--scheme"), "light");
     check(`and no scanlines`, root.getPropertyValue("--scan"), "0");
     check(`and still fills in the warning surfaces`, /^#[0-9a-f]{6}$/.test(root.getPropertyValue("--badbg").trim()), true);
   }
@@ -844,6 +845,8 @@ function check(name, actual, expected) {
   const literals = [...new Set((css.match(/#[0-9a-f]{6}/g) || []))].sort();
   check("no colour is written into the stylesheet by hand", literals, []);
   check("no face is nailed to Consolas outside the skin", /font:[^;]*Consolas/.test(css), false);
+  check("native dropdowns follow the skin", css.includes("color-scheme:var(--scheme,dark)"), true);
+  check("and no dark scheme is nailed down", /color-scheme:s*dark/.test(css), false);
 
   check("no page errors", errors, []);
 

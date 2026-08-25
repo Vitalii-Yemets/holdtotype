@@ -128,17 +128,21 @@ const PALETTES = {
   editor: { bg: "#1e1e1e", panel: "#252526", line: "#3c3c3c", text: "#d4d4d4", hi: "#4fc1ff", dim: "#9d9d9d", faint: "#6e6e6e", warn: "#cca700", bad: "#f14c4c", rec: "#f14c4c", field: "#3c3c3c", soft: "#2d2d2d", navon: "#37373d", on: "#094771" },
   neon: { bg: "#150a22", panel: "#1d0e30", line: "#4a2472", text: "#f3b6e4", hi: "#46e0ff", dim: "#b06ee0", faint: "#7d4fae", warn: "#ffd24a", bad: "#ff4d7d", rec: "#ff4d7d", field: "#1e0f33", soft: "#2a1442", navon: "#2b1240", on: "#4a2472" },
   soft: { bg: "#fff3f8", panel: "#ffffff", line: "#ffd0e4", text: "#c04a86", hi: "#c04a86", dim: "#e07bb0", faint: "#eda3c8", warn: "#f2a33c", bad: "#d1345b", rec: "#ff6f91", field: "#ffffff", soft: "#ffe3ef", navon: "#ffe7f2", on: "#ffd9ea" },
-  paper: { bg: "#ffffff", panel: "#f6f8fa", line: "#d0d7de", text: "#1f2328", hi: "#0969da", dim: "#59636e", faint: "#818b98", warn: "#9a6700", bad: "#cf222e", rec: "#cf222e", field: "#ffffff", soft: "#e6eaef", navon: "#eef1f4", on: "#ddf4ff", ok: "#1a7f37" },
+  paper: { bg: "#f4f6f8", panel: "#ffffff", line: "#d5dbe1", text: "#1f2328", hi: "#0969da", dim: "#59636e", faint: "#818b98", warn: "#9a6700", bad: "#cf222e", rec: "#cf222e", field: "#ffffff", soft: "#e7ebef", navon: "#e9edf1", on: "#ddf4ff", ok: "#1a7f37" },
 };
 const SKINS = {
-  terminal: { palette: "green", font: '"IBM Plex Mono",Consolas,monospace', fs: "14px", r: "0px", bw: "1px", scan: "1", shadow: "none", glow: true, round: false, caps: true, fieldpad: "6px 10px", ctlfs: "12.5px", wb: "700", level: "bars" },
-  editor: { palette: "editor", font: '"Cascadia Mono",Consolas,"Segoe UI",sans-serif', fs: "13px", r: "3px", bw: "1px", scan: "0", shadow: "0 10px 30px rgba(0,0,0,.45)", glow: false, round: false, caps: false, fieldpad: "6px 11px", ctlfs: "12.5px", wb: "600", level: "flat" },
-  neon: { palette: "neon", font: '"IBM Plex Sans","Segoe UI",system-ui,sans-serif', fs: "15px", r: "14px", bw: "1px", scan: ".18", shadow: "0 18px 46px rgba(150,40,220,.35)", glow: true, round: true, caps: false, fieldpad: "9px 13px", ctlfs: "13.5px", wb: "600", level: "bars" },
-  soft: { palette: "soft", font: '"Comic Sans MS","Segoe UI Variable Display","Segoe UI",sans-serif', fs: "15px", r: "16px", bw: "1px", scan: "0", shadow: "0 14px 34px rgba(255,140,190,.28)", glow: false, round: true, caps: false, fieldpad: "9px 13px", ctlfs: "13.5px", wb: "600", level: "dots" },
-  paper: { palette: "paper", font: '"Segoe UI",system-ui,sans-serif', fs: "14px", r: "6px", bw: "1px", scan: "0", shadow: "0 8px 24px rgba(31,35,40,.12)", glow: false, round: false, caps: false, fieldpad: "7px 11px", ctlfs: "12.5px", wb: "600", level: "bars" },
+  terminal: { palette: "green", font: '"IBM Plex Mono",Consolas,monospace', fs: "14px", r: "0px", bw: "1px", scan: "1", shadow: "none", glow: true, round: false, caps: true, fieldpad: "6px 10px", ctlfs: "12.5px", wb: "700", level: "bars", barr: "0" },
+  editor: { palette: "editor", font: '"Cascadia Mono",Consolas,"Segoe UI",sans-serif', fs: "13px", r: "3px", bw: "1px", scan: "0", shadow: "0 10px 30px rgba(0,0,0,.45)", glow: false, round: false, caps: false, fieldpad: "6px 11px", ctlfs: "12.5px", wb: "600", level: "flat", barr: "0" },
+  neon: { palette: "neon", font: '"IBM Plex Sans","Segoe UI",system-ui,sans-serif', fs: "15px", r: "14px", bw: "1px", scan: ".18", shadow: "0 18px 46px rgba(150,40,220,.35)", glow: true, round: true, caps: false, fieldpad: "9px 13px", ctlfs: "13.5px", wb: "600", level: "bars", barr: "99px" },
+  soft: { palette: "soft", font: '"Comic Sans MS","Segoe UI Variable Display","Segoe UI",sans-serif', fs: "15px", r: "16px", barr: "99px", bw: "1px", scan: "0", shadow: "0 14px 34px rgba(255,140,190,.28)", glow: false, round: true, caps: false, fieldpad: "9px 13px", ctlfs: "13.5px", wb: "600", level: "dots", barr: "99px" },
+  paper: { palette: "paper", font: '"Segoe UI",system-ui,sans-serif', fs: "14px", r: "10px", bw: "1px", scan: "0", shadow: "0 8px 24px rgba(31,35,40,.12)", glow: false, round: true, caps: false, fieldpad: "7px 11px", ctlfs: "12.5px", wb: "600", level: "bars", barr: "2px" },
 };
 function rgbOf(hex) {
   return [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(",");
+}
+function lumaOf(hex) {
+  const c = rgbOf(hex).split(",").map(Number);
+  return 0.2126*c[0] + 0.7152*c[1] + 0.0722*c[2];
 }
 function blend(fg, bg, t) {
   const hex2 = (v) => v.toString(16).padStart(2, "0");
@@ -149,7 +153,7 @@ function varsFor(skinId, colourId) {
   const s = SKINS[skinId];
   const p = PALETTES[s.palette === "green" ? colourId : s.palette];
   const rgb = rgbOf(p.text);
-  const barr = parseInt(s.r, 10) >= 10 ? "99px" : "0";
+  const barr = s.barr || "0";
   const lvl = s.level === "dots" ? { w: "10px", r: "50%" } : s.level === "flat" ? { w: "3px", r: "0" } : { w: "4px", r: barr };
   return [
     "--wborder:" + (s.round ? "none" : s.bw + " solid " + p.line),
@@ -163,7 +167,7 @@ function varsFor(skinId, colourId) {
     "--selbg:" + p.text, "--selfg:" + p.bg,
     "--brandbg:none", "--brandclip:border-box", "--brandfill:currentColor",
     "--scrim:rgba(3,7,4,.78)",
-    "--ok:" + (p.ok || p.hi),
+    "--ok:" + (p.ok || p.hi), "--scheme:" + (lumaOf(p.bg) > 140 ? "light" : "dark"),
     "--badbg:" + blend(p.bad, p.bg, 0.8), "--badline:" + blend(p.bad, p.bg, 0.52),
     "--lvlw:" + lvl.w, "--lvlr:" + lvl.r,
     "--glow:" + (s.glow ? "0 0 7px rgba(" + rgb + ",.55)" : "none"),

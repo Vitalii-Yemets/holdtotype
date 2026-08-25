@@ -54,6 +54,7 @@ type Skin struct {
 	Flicker bool
 
 	Radius int32
+	BarR   string
 	Border int32
 	Round  bool
 
@@ -127,12 +128,12 @@ var palettes = []Palette{
 		BtnBg: "#ffd9ea", BtnFg: "#a83a72", BtnLine: "#ffd0e4", SelBg: "#ff8ec7", SelFg: "#ffffff",
 		Brand: "", Scrim: "rgba(192,74,134,.30)"},
 
-	{ID: "paper", Bg: "#ffffff", Panel: "#f6f8fa", Line: "#d0d7de",
+	{ID: "paper", Bg: "#f4f6f8", Panel: "#ffffff", Line: "#d5dbe1",
 		Text: "#1f2328", Accent: "#0969da", Dim: "#59636e", Faint: "#818b98",
 		Warn: "#9a6700", Bad: "#cf222e", Rec: "#cf222e",
-		Field: "#ffffff", Soft: "#e6eaef", NavOn: "#eef1f4", On: "#ddf4ff",
-		TitleBg: "#f6f8fa", SideBg: "#ffffff", KeyBg: "#eef1f4",
-		BtnBg: "#f6f8fa", BtnFg: "#1f2328", BtnLine: "#d0d7de", SelBg: "#0969da", SelFg: "#ffffff",
+		Field: "#ffffff", Soft: "#e7ebef", NavOn: "#e9edf1", On: "#ddf4ff",
+		TitleBg: "#f9fafb", SideBg: "#f9fafb", KeyBg: "#e9edf1",
+		BtnBg: "#ffffff", BtnFg: "#1f2328", BtnLine: "#d5dbe1", SelBg: "#0969da", SelFg: "#ffffff",
 		Ok: "#1a7f37", Brand: "", Scrim: "rgba(31,35,40,.35)"},
 }
 
@@ -143,7 +144,7 @@ var skins = []Skin{
 		FontCSS: `"IBM Plex Mono",Consolas,monospace`, FontGDI: "IBM Plex Mono",
 		PagePx: 14, FontPx: 15, Weight: 400, BrandLS: ".18em", Caps: true, Flicker: true,
 		FieldPad: "6px 10px", CtlFS: "12.5px", WeightB: 700,
-		Radius: 0, Border: 1, Round: false,
+		Radius: 0, BarR: "0", Border: 1, Round: false,
 		Glow: true, Scan: 1, Shadow: "none",
 		Level: "bars", Pulse: 1},
 
@@ -151,7 +152,7 @@ var skins = []Skin{
 		FontCSS: `"Cascadia Mono",Consolas,"Segoe UI",sans-serif`, FontGDI: "Cascadia Mono",
 		PagePx: 13, FontPx: 14, Weight: 400, BrandLS: ".02em",
 		FieldPad: "6px 11px", CtlFS: "12.5px", WeightB: 600,
-		Radius: 3, Border: 1, Round: false,
+		Radius: 3, BarR: "0", Border: 1, Round: false,
 		Glow: false, Scan: 0, Shadow: "0 10px 30px rgba(0,0,0,.45)",
 		Level: "flat", Pulse: 1.5},
 
@@ -159,7 +160,7 @@ var skins = []Skin{
 		FontCSS: `"IBM Plex Sans","Segoe UI",system-ui,sans-serif`, FontGDI: "IBM Plex Sans",
 		PagePx: 15, FontPx: 16, Weight: 400, BrandLS: ".04em",
 		FieldPad: "9px 13px", CtlFS: "13.5px", WeightB: 600,
-		Radius: 14, Border: 1, Round: true,
+		Radius: 14, BarR: "99px", Border: 1, Round: true,
 		Glow: true, Scan: 0.18, Shadow: "0 18px 46px rgba(150,40,220,.35)",
 		Level: "bars", Pulse: 0.8},
 
@@ -167,7 +168,7 @@ var skins = []Skin{
 		FontCSS: `"Comic Sans MS","Segoe UI Variable Display","Segoe UI",sans-serif`, FontGDI: "Comic Sans MS",
 		PagePx: 15, FontPx: 16, Weight: 400, BrandLS: ".02em",
 		FieldPad: "9px 13px", CtlFS: "13.5px", WeightB: 600,
-		Radius: 16, Border: 1, Round: true,
+		Radius: 16, BarR: "99px", Border: 1, Round: true,
 		Glow: false, Scan: 0, Shadow: "0 14px 34px rgba(255,140,190,.28)",
 		Level: "dots", Pulse: 1.2},
 
@@ -175,7 +176,7 @@ var skins = []Skin{
 		FontCSS: `"Segoe UI",system-ui,sans-serif`, FontGDI: "Segoe UI",
 		PagePx: 14, FontPx: 15, Weight: 400, BrandLS: "-.01em",
 		FieldPad: "7px 11px", CtlFS: "12.5px", WeightB: 600,
-		Radius: 6, Border: 1, Round: false,
+		Radius: 10, BarR: "2px", Border: 1, Round: true,
 		Glow: false, Scan: 0, Shadow: "0 8px 24px rgba(31,35,40,.12)",
 		Level: "bars", Pulse: 1.4},
 }
@@ -365,9 +366,9 @@ func (l Look) CSSVars() string {
 	if l.Flicker {
 		flicker = "flicker 6s infinite"
 	}
-	barr := "0"
-	if l.Radius >= 10 {
-		barr = "99px"
+	barr := l.BarR
+	if barr == "" {
+		barr = "0"
 	}
 	lvlw, lvlr := "4px", barr
 	switch l.Level {
@@ -375,6 +376,10 @@ func (l Look) CSSVars() string {
 		lvlw, lvlr = "10px", "50%"
 	case "flat":
 		lvlw, lvlr = "3px", "0"
+	}
+	scheme := "dark"
+	if p.Light() {
+		scheme = "light"
 	}
 	brandBg, brandClip, brandFill := "none", "border-box", "currentColor"
 	if p.Brand != "" {
@@ -393,7 +398,7 @@ func (l Look) CSSVars() string {
 		";--selbg:" + p.SelBg + ";--selfg:" + p.SelFg +
 		";--brandbg:" + brandBg + ";--brandclip:" + brandClip + ";--brandfill:" + brandFill +
 		";--scrim:" + p.Scrim +
-		";--ok:" + p.Ok +
+		";--ok:" + p.Ok + ";--scheme:" + scheme +
 		";--badbg:" + p.BadBg + ";--badline:" + p.BadLine +
 		";--lvlw:" + lvlw + ";--lvlr:" + lvlr +
 		";--glow:" + glow + ";--higlow:" + hiGlow + ";--iconglow:" + iconGlow +
