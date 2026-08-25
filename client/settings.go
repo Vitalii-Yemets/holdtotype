@@ -1342,18 +1342,22 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
 <div class="tip" id="tip" role="tooltip"></div>
 <div class="shell">
 <nav class="snav" id="snav" role="tablist">
- <span class="ngrp">{{S_GRP_WORK}}</span>
+ <span class="ngrp">{{S_GRP_GENERAL}}</span>
  <button class="nav" role="tab" aria-selected="false" data-p="state"><span class="nlabel">{{S_NAV_STATE}}</span></button>
- <button class="nav" role="tab" aria-selected="false" data-p="dictation"><span class="nlabel">{{S_NAV_DICT}}</span></button>
+ <button class="nav" role="tab" aria-selected="false" data-p="system"><span class="nlabel">{{S_NAV_SYSTEM}}</span><span class="nbadge warn" id="badge_system"></span></button>
  <button class="nav" role="tab" aria-selected="false" data-p="history"><span class="nlabel">{{S_NAV_HISTORY}}</span><span class="nbadge" id="badge_history"></span></button>
- <button class="nav" role="tab" aria-selected="false" data-p="mic"><span class="nlabel">{{S_NAV_MIC}}</span><span class="nbadge" id="badge_mic"></span></button>
- <span class="ngrp">{{S_GRP_REC}}</span>
  <button class="nav" role="tab" aria-selected="false" data-p="models"><span class="nlabel">{{S_NAV_MODELS}}</span><span class="nbadge" id="badge_models"></span></button>
+ <span class="ngrp">{{S_GRP_SPEECH}}</span>
+ <button class="nav" role="tab" aria-selected="false" data-p="mic"><span class="nlabel">{{S_NAV_MIC}}</span><span class="nbadge" id="badge_mic"></span></button>
+ <button class="nav" role="tab" aria-selected="false" data-p="dictation"><span class="nlabel">{{S_NAV_DICT}}</span></button>
+ <span class="ngrp">{{S_GRP_TEXT}}</span>
  <button class="nav" role="tab" aria-selected="false" data-p="text"><span class="nlabel">{{S_NAV_TEXT}}</span></button>
  <button class="nav" role="tab" aria-selected="false" data-p="translate"><span class="nlabel">{{S_NAV_TR}}</span></button>
- <span class="ngrp">{{S_GRP_OTHER}}</span>
- <button class="nav" role="tab" aria-selected="false" data-p="system"><span class="nlabel">{{S_NAV_SYSTEM}}</span><span class="nbadge warn" id="badge_system"></span></button>
+ <button class="nav" role="tab" aria-selected="false" data-p="post"><span class="nlabel">{{S_NAV_POST}}</span></button>
+ <span class="ngrp">{{S_GRP_INFO}}</span>
+ <button class="nav" role="tab" aria-selected="false" data-p="help"><span class="nlabel">{{S_NAV_HELP}}</span></button>
  <button class="nav" role="tab" aria-selected="false" data-p="about"><span class="nlabel">{{S_NAV_ABOUT}}</span></button>
+ <button class="nav" role="tab" aria-selected="false" data-p="contacts"><span class="nlabel">{{S_NAV_CONTACTS}}</span></button>
 </nav>
 
 <div class="content">
@@ -1423,15 +1427,6 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
   <div class="row"><label>{{S_TYPEMODE}}<span class="sub">{{S_SUB_TYPE}}</span></label><input type="checkbox" id="type_mode"></div>
   <div class="row" data-adv><label>{{S_PASTE_DELAY}}<span class="sub">{{S_PASTE_DELAY_SUB}}</span></label>
    <select id="paste_delay_ms"><option value="0">0 ms</option><option value="50">50 ms</option><option value="100">100 ms</option><option value="250">250 ms</option><option value="500">500 ms</option><option value="1000">1000 ms</option></select></div>
- </div>
- <div class="card">
-  <h2 class="sect">{{S_SEC_RULES}}</h2>
-  <div class="hint">{{S_RULES_HINT}}</div>
-  <div id="rulesbody"></div>
-  <div class="rulefoot">
-   <button type="button" class="mini" id="rule_add">{{S_RULE_ADD}}</button>
-   <button type="button" class="mini ghost" id="rule_last"></button>
-  </div>
  </div>
  <div class="card">
   <h2 class="sect">{{S_SEC_OVERLAY}}</h2>
@@ -1565,7 +1560,19 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
    <span class="replout" id="repl_out"></span>
   </div>
  </div>
- <div class="card" data-adv>
+ <div class="card">
+  <h2 class="sect">{{S_SEC_RULES}}</h2>
+  <div class="hint">{{S_RULES_HINT}}</div>
+  <div id="rulesbody"></div>
+  <div class="rulefoot">
+   <button type="button" class="mini" id="rule_add">{{S_RULE_ADD}}</button>
+   <button type="button" class="mini ghost" id="rule_last"></button>
+  </div>
+ </div>
+</div>
+
+<div class="page" role="tabpanel" aria-hidden="true" id="p-post">
+ <div class="card">
   <h2 class="sect">{{S_SUB_PROMPTS}}</h2>
   <div class="hint">{{S_LLM_HINT}}</div>
   <div id="profbody"></div>
@@ -1668,7 +1675,13 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
   <p style="font-size:15px;letter-spacing:2px"><b>{{APP}}</b> <span id="ver2"></span></p>
   {{S_ABOUT_HTML}}
  </div>
+</div>
+
+<div class="page about" role="tabpanel" aria-hidden="true" id="p-help">
  <div class="card">{{S_HELP_HTML}}</div>
+</div>
+
+<div class="page about" role="tabpanel" aria-hidden="true" id="p-contacts">
  <div class="card">{{S_AUTHOR_HTML}}</div>
 </div>
 </div>
@@ -1893,7 +1906,7 @@ function initServerExe(){
 }
 function buildToc(){
   let card = null, best = 0;
-  document.querySelectorAll("#p-about .card").forEach(c=>{
+  document.querySelectorAll("#p-help .card").forEach(c=>{
     const n = c.querySelectorAll(".wh").length;
     if(n > best){ best = n; card = c; }
   });
@@ -2586,8 +2599,8 @@ async function refreshModels(){
   let busy = false;
   const slotOf = m=>m.engine === "sherpa" ? "ru" : "other";
   const groups = [
-    {slot: "ru", title: L.slotru, rows: rows.filter(m=>slotOf(m) === "ru")},
     {slot: "other", title: L.slotother, rows: rows.filter(m=>slotOf(m) !== "ru")},
+    {slot: "ru", title: L.slotru, rows: rows.filter(m=>slotOf(m) === "ru")},
   ];
   groups.forEach(g=>{
     if(!g.rows.length) return;
@@ -3638,7 +3651,7 @@ load();
   await refreshLLM();
   if(window.appReady) appReady();
 })();
-const tabAlias = {general:"state", rec:"models", proc:"text", server:"system", about:"about", state:"state", dictation:"dictation", history:"history", mic:"mic", models:"models", text:"text", translate:"translate", system:"system"};
+const tabAlias = {general:"state", rec:"models", proc:"text", server:"system", about:"about", state:"state", dictation:"dictation", history:"history", mic:"mic", models:"models", text:"text", translate:"translate", system:"system", post:"post", help:"help", contacts:"contacts"};
 show(tabAlias[CFG._tab] || "state");
 if(CFG._wizard || CFG._tab === "wizard") wizStart();
 setTimeout(()=>{ if(window.appReady) appReady(); }, 400);

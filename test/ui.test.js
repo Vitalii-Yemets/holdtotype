@@ -11,7 +11,7 @@ function meterMoves(d, id) {
 }
 function searchFinds(w, d, needle) {
   const hits = w.searchMatches(needle.toLowerCase());
-  return hits.some((el) => el.closest("#p-about"));
+  return hits.some((el) => el.closest("#p-help"));
 }
 
 let llmState = {
@@ -332,10 +332,13 @@ function check(name, actual, expected) {
   check("and it is marked as a warning", d.getElementById("st_saved").className, "stsaved warn");
   w.setHotkey("ctrl+win", "");
 
-  check("nine sections in the sidebar", d.querySelectorAll(".nav").length, 9);
+  check("twelve sections in the sidebar", d.querySelectorAll(".nav").length, 12);
+  check("in four groups", d.querySelectorAll(".ngrp").length, 4);
+  check("in the agreed order", [...d.querySelectorAll(".nav")].map(b=>b.dataset.p),
+    ["state", "system", "history", "models", "mic", "dictation", "text", "translate", "post", "help", "about", "contacts"]);
 
   tab("about"); await sleep(200);
-  const toc = d.querySelector("#p-about .toc");
+  const toc = d.querySelector("#p-help .toc");
   const helpCard = toc && toc.closest(".card");
   check("the help opens with a table of contents", !!toc, true);
   check("every help heading is listed", toc ? toc.querySelectorAll("a").length : 0, helpCard ? helpCard.querySelectorAll(".wh").length : -1);
@@ -383,11 +386,12 @@ function check(name, actual, expected) {
   tab("models"); await sleep(80);
   check("models section shown", shown("models"), true);
   check("recognition models listed", d.querySelectorAll('#p-models input[name^="mdl-"]').length, 3);
-  check("the list is split into two slots", [...d.querySelectorAll("#models .mslot")].map(h=>h.dataset.slot), ["ru", "other"]);
+  check("the list is split into two slots", [...d.querySelectorAll("#models .mslot")].map(h=>h.dataset.slot), ["other", "ru"]);
   check("the russian slot holds the russian engine", d.querySelectorAll('#models .mrow[data-slot="ru"]').length, 1);
   check("every other language shares the second slot", d.querySelectorAll('#models .mrow[data-slot="other"]').length, 2);
   check("model filters rendered", d.querySelectorAll(".fchip").length, 5);
   check("the russian filter sits last, not second", [...d.querySelectorAll(".fchip")].map(b=>b.dataset.f), ["all", "multi", "punct", "fit", "ru"]);
+  check("and the russian models come after the rest, not before", [...d.querySelectorAll(".mslot")].map(h=>h.dataset.slot), ["other", "ru"]);
   check("the mark carries both shapes", [d.querySelectorAll(".mk.mic").length, d.querySelectorAll(".mk.face").length], [2, 2]);
   w.applyThemeVars("soft");
   check("the soft design shows the face", [d.documentElement.style.getPropertyValue("--markmic"), d.documentElement.style.getPropertyValue("--markface")], ["none", "block"]);
@@ -665,7 +669,14 @@ function check(name, actual, expected) {
   check("applying the plan downloads what is missing", w.dlCalls.length > dlBefore, true);
   tab("about"); await sleep(60);
   check("about section shown", shown("about"), true);
-  check("about carries version, help and author", d.querySelectorAll("#p-about .card").length, 3);
+  check("about keeps the version card to itself", d.querySelectorAll("#p-about .card").length, 1);
+  tab("help"); await sleep(60);
+  check("the guide lives on its own page", shown("help") && d.querySelectorAll("#p-help .card").length === 1, true);
+  tab("contacts"); await sleep(60);
+  check("and so does the author card", shown("contacts") && d.querySelectorAll("#p-contacts .card").length === 1, true);
+  check("the prompts stand on their own page too", !!d.querySelector("#p-post #profbody"), true);
+  check("out of the expert fold", !!d.querySelector("#p-post .card[data-adv]"), false);
+  check("the app rules moved in with the other rules", !!d.querySelector("#p-text #rulesbody"), true);
 
   const before = w.saveCalls;
   const sw = d.getElementById("auto_enter");
@@ -680,7 +691,7 @@ function check(name, actual, expected) {
   check("disclosure reveals them", d.querySelectorAll("#p-dictation .row[data-adv].hidden").length, 0);
   check("no permanent mode line in the status bar", !!d.getElementById("st_level"), false);
   check("no switching from the status bar", !!d.getElementById("st_levelbtn"), false);
-  check("simple mode folds the expert text blocks away", d.querySelectorAll("#p-text .card[data-adv].hidden").length, 3);
+  check("simple mode folds the expert text blocks away", d.querySelectorAll("#p-text .card[data-adv].hidden").length, 2);
   check("but punctuation and the dictionary stay in sight", d.querySelectorAll("#p-text .card:not([data-adv])").length >= 2, true);
 
   const omni = d.getElementById("omni");
