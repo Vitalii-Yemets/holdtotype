@@ -98,7 +98,7 @@ func captureWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 		var rc rect
 		procGetClientRect.Call(hwnd, uintptr(unsafe.Pointer(&rc)))
 		border := rc
-		brush, _, _ := procCreateSolidBrush.Call(colGreenLo)
+		brush, _, _ := procCreateSolidBrush.Call(colLine)
 		procFrameRect.Call(hdc, uintptr(unsafe.Pointer(&border)), brush)
 		procDeleteObject.Call(brush)
 		procSelectObject.Call(hdc, uiFont(hwnd))

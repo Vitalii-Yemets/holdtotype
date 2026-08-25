@@ -2,10 +2,8 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"image/color"
 	"log"
-	"strings"
 	"sync/atomic"
 
 	"holdtotype/internal/theme"
@@ -73,23 +71,26 @@ func applyTheme(skin, colour string) {
 	p := theme.Current(skin, colour).Palette
 	colBg = colorref(p.Bg)
 	colBgLine = mixHex(p.Bg, 0.75)
-	colGreen = colorref(p.Accent)
+	colGreen = colorref(p.Text)
 	colGreenDm = colorref(p.Dim)
 	colGreenLo = colorref(p.Faint)
+	colHi = colorref(p.Accent)
+	colHiLo = mixHex(p.Accent, 0.45)
 	colAmber = colorref(p.Warn)
 	colAmberDm = mixHex(p.Warn, 0.35)
 	colBad = colorref(p.Bad)
 	colBadDm = mixHex(p.Bad, 0.35)
-	colRed = colBad
-	colRedDm = colBadDm
+	colRed = colorref(p.Rec)
+	colRedDm = mixHex(p.Rec, 0.35)
 	colAskBg = mixHex(p.Panel, 1.0)
+	colLine = colorref(p.Line)
 
 	rebuildIcons(p)
 	log.Printf("оформление: %s, цвет %s", skin, p.ID)
 }
 
 func rebuildIcons(p theme.Palette) {
-	ar, ag, ab := theme.RGB(p.Accent)
+	ar, ag, ab := theme.RGB(p.Text)
 	br, bg, bb := theme.RGB(p.Bad)
 	wr, wg, wb := theme.RGB(p.Warn)
 	accent := color.NRGBA{R: ar, G: ag, B: ab, A: 255}
@@ -125,59 +126,22 @@ func liveWindows() []uintptr {
 	return out
 }
 
-// skinListJSON hands the page every skin and every colour, so it can repaint
-// itself the moment one is picked.
 func skinListJSON() string {
 	type entry struct {
-		Skin    string `json:"skin"`
-		Colour  string `json:"colour"`
-		Bg      string `json:"bg"`
-		Panel   string `json:"panel"`
-		Line    string `json:"line"`
-		Accent  string `json:"accent"`
-		Dim     string `json:"dim"`
-		Faint   string `json:"faint"`
-		Warn    string `json:"warn"`
-		Bad     string `json:"bad"`
-		Field   string `json:"field"`
-		Soft    string `json:"soft"`
-		NavOn   string `json:"navon"`
-		On      string `json:"on"`
-		RGB     string `json:"rgb"`
-		Glow    string `json:"glow"`
-		Font    string `json:"font"`
-		Radius  string `json:"r"`
-		Border  string `json:"bw"`
-		Scan    string `json:"scan"`
-		Shadow  string `json:"shadow"`
-		WBorder string `json:"wborder"`
-		BarR    string `json:"barr"`
+		Skin   string `json:"skin"`
+		Colour string `json:"colour"`
+		Accent string `json:"accent"`
+		Vars   string `json:"vars"`
 	}
 	out := map[string]entry{}
 	add := func(skin, colour string) {
 		look := theme.Current(skin, colour)
 		p := look.Palette
-		r, g, b := theme.RGB(p.Accent)
-		css := look.CSSVars()
 		key := skin
 		if look.Colours {
 			key = skin + ":" + p.ID
 		}
-		out[key] = entry{
-			Skin: skin, Colour: p.ID,
-			Bg: p.Bg, Panel: p.Panel, Line: p.Line, Accent: p.Accent,
-			Dim: p.Dim, Faint: p.Faint, Warn: p.Warn, Bad: p.Bad,
-			Field: p.Field, Soft: p.Soft, NavOn: p.NavOn, On: p.On,
-			RGB:     fmt.Sprintf("%d,%d,%d", r, g, b),
-			Glow:    cssVar(css, "--glow"),
-			Font:    cssVar(css, "--font"),
-			Radius:  cssVar(css, "--r"),
-			Border:  cssVar(css, "--bw"),
-			Scan:    cssVar(css, "--scan"),
-			Shadow:  cssVar(css, "--shadow"),
-			WBorder: cssVar(css, "--wborder"),
-			BarR:    barRadius(look),
-		}
+		out[key] = entry{Skin: skin, Colour: p.ID, Accent: p.Text, Vars: look.CSSVars()}
 	}
 	for _, skin := range theme.SkinIDs() {
 		colours := theme.ColourIDs(skin)
@@ -194,21 +158,4 @@ func skinListJSON() string {
 		return "{}"
 	}
 	return string(data)
-}
-
-// cssVar pulls one value out of the string CSSVars renders.
-func cssVar(vars, name string) string {
-	for _, part := range strings.Split(vars, ";") {
-		if strings.HasPrefix(part, name+":") {
-			return strings.TrimPrefix(part, name+":")
-		}
-	}
-	return ""
-}
-
-func barRadius(l theme.Look) string {
-	if l.Radius >= 10 {
-		return "99px"
-	}
-	return "0"
 }

@@ -5,30 +5,30 @@ const setupPage = `<!DOCTYPE html>
 :root{{{THEME_VARS}}}
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%}
-body{background:var(--bg);color:var(--green);font:14px Consolas,'Cascadia Mono',monospace;overflow:hidden;display:flex;flex-direction:column}
-body::after{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.10) 0 1px,transparent 1px 3px)}
-.header{display:flex;align-items:center;gap:14px;padding:12px 12px 12px 20px;border-bottom:1px solid var(--line);box-shadow:0 1px 12px rgba(var(--rgb),.12);cursor:default}
-.header h1{font-size:16px;letter-spacing:3px;text-shadow:var(--glow);font-weight:700}
-.logo svg{width:40px;height:40px;display:block;filter:drop-shadow(0 0 6px rgba(var(--rgb),.6))}
+body{background:var(--bg);color:var(--green);font:var(--fs)/1.45 var(--font);overflow:hidden;display:flex;flex-direction:column}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:var(--scan);background:repeating-linear-gradient(0deg,rgba(0,0,0,.10) 0 1px,transparent 1px 3px)}
+.header{display:flex;align-items:center;gap:14px;padding:12px 12px 12px 20px;border-bottom:1px solid var(--line);background:var(--titlebg);box-shadow:0 1px 12px rgba(var(--rgb),.12);cursor:default}
+.header h1{font-size:16px;letter-spacing:var(--brandls);text-shadow:var(--glow);font-weight:600;background:var(--brandbg);-webkit-background-clip:var(--brandclip);background-clip:var(--brandclip);-webkit-text-fill-color:var(--brandfill)}
+.logo svg{width:40px;height:40px;display:block;filter:var(--iconglow)}
 .wave{animation:pulse 1.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
 @keyframes pulse{0%,100%{opacity:.35;transform:scale(.94)}50%{opacity:1;transform:scale(1)}}
 @media (prefers-reduced-motion:reduce){.wave{animation:none;opacity:.75}}
 .ver{color:var(--faint);font-size:12px}
-button.cap{width:36px;height:30px;background:none;border:1px solid var(--line);color:var(--dim);font:14px Consolas,monospace;cursor:pointer;padding:0}
+button.cap{width:36px;height:30px;background:none;border:1px solid var(--line);border-radius:calc(var(--r) * .5);color:var(--dim);font:14px var(--font);cursor:pointer;padding:0}
 button.cap:hover{color:var(--green);border-color:var(--dim)}
 button.cap.close:hover{color:var(--bad);border-color:#7a2e2e}
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:1px solid var(--green);outline-offset:2px}
 .body{flex:1;padding:18px 22px;display:flex;flex-direction:column;gap:12px}
 .tagline{color:var(--dim);font-size:13px;line-height:1.5}
 label.fld{color:var(--green);font-size:13px}
-input[type=text]{width:100%;padding:8px 11px;border:1px solid var(--line);background:var(--field);color:var(--green);font:inherit;outline:none}
+input[type=text]{width:100%;padding:8px 11px;border:1px solid var(--line);border-radius:calc(var(--r) * .55);background:var(--field);color:var(--green);font:inherit;outline:none}
 input[type=text]:focus{border-color:var(--dim);box-shadow:var(--glow)}
-select{padding:8px 11px;border:1px solid var(--line);background:var(--field);color:var(--green);font:inherit;outline:none;cursor:pointer;max-width:100%;color-scheme:dark}
+select{padding:8px 11px;border:1px solid var(--line);border-radius:calc(var(--r) * .55);background:var(--field);color:var(--green);font:inherit;outline:none;cursor:pointer;max-width:100%;color-scheme:dark}
 option{background:var(--bg);color:var(--green)}
 option:checked{background:linear-gradient(var(--on),var(--on));color:var(--green)}
 select,::picker(select){appearance:base-select}
-::picker(select){background:var(--bg);border:1px solid var(--line);padding:2px;margin-top:2px;color:var(--green)}
-::picker(select) option{padding:6px 10px;background:none;color:var(--dim);border:0;font:inherit;min-height:0}
+::picker(select){background:var(--bg);border:1px solid var(--line);border-radius:calc(var(--r) * .55);padding:2px;margin-top:2px;color:var(--green);box-shadow:var(--shadow)}
+::picker(select) option{padding:6px 10px;background:none;color:var(--dim);border:0;border-radius:calc(var(--r) * .4);font:inherit;min-height:0}
 ::picker(select) option:hover,::picker(select) option:focus{background:var(--on);color:var(--green);outline:none}
 ::picker(select) option:checked{color:var(--green);text-shadow:var(--glow)}
 option::checkmark{display:none}
@@ -36,22 +36,22 @@ select::picker-icon{color:var(--faint)}
 select:open::picker-icon{transform:rotate(180deg)}
 select:open{border-color:var(--dim)}
 select:focus{border-color:var(--dim);box-shadow:var(--glow)}
-button.ibtn{border:1px solid var(--line);background:none;color:var(--dim);cursor:pointer;padding:0 13px;line-height:0}
+button.ibtn{border:1px solid var(--line);border-radius:calc(var(--r) * .5);background:none;color:var(--dim);cursor:pointer;padding:0 13px;line-height:0}
 button.ibtn:hover{color:var(--green);border-color:var(--dim);box-shadow:var(--glow)}
 .warn{color:var(--amber);font-size:12px}
 .chk{display:flex;align-items:center;gap:9px;font-size:13px;cursor:pointer}
-.chk input{appearance:none;-webkit-appearance:none;width:32px;height:17px;border:1px solid var(--line);background:none;position:relative;flex:none;margin:0;padding:0;cursor:pointer}
-.chk input::after{content:"";position:absolute;top:2px;left:2px;width:11px;height:11px;background:var(--dim);transition:.15s}
+.chk input{appearance:none;-webkit-appearance:none;width:32px;height:17px;border:1px solid var(--line);border-radius:calc(var(--r) * .8);background:none;position:relative;flex:none;margin:0;padding:0;cursor:pointer}
+.chk input::after{content:"";position:absolute;top:2px;left:2px;width:11px;height:11px;border-radius:calc(var(--r) * .6);background:var(--dim);transition:.15s}
 .chk input:checked{border-color:var(--dim)}
-.chk input:checked::after{left:17px;background:var(--green);box-shadow:0 0 7px rgba(var(--rgb),.55)}
+.chk input:checked::after{left:17px;background:var(--hi);box-shadow:var(--higlow)}
 .chk input:focus-visible{outline:1px solid var(--green);outline-offset:2px}
-button.btn{padding:11px 26px;border:1px solid var(--dim);background:var(--navon);color:var(--green);font:inherit;cursor:pointer;letter-spacing:2px;text-transform:uppercase;font-size:13px}
-button.btn.ghost{border-color:var(--line);background:none;color:var(--dim)}
+button.btn{padding:11px 26px;border:1px solid var(--btnline);border-radius:calc(var(--r) * .5);background:var(--btnbg);color:var(--btnfg);font:inherit;cursor:pointer;letter-spacing:var(--ls);text-transform:var(--caps);font-size:13px}
+button.btn.ghost{border-color:var(--line);background:none;color:var(--dim);filter:none}
 button.btn.ghost:hover{color:var(--green);border-color:var(--dim)}
 .foot{gap:8px}
-button.btn:hover{background:var(--on);box-shadow:var(--glow)}
-.bar{height:16px;border:1px solid var(--line);background:var(--field);position:relative;overflow:hidden}
-.bar i{position:absolute;inset:0;width:0;background:linear-gradient(90deg,var(--on),var(--dim));box-shadow:var(--glow);transition:width .2s}
+button.btn:hover{filter:brightness(1.12);box-shadow:var(--glow)}
+.bar{height:16px;border:1px solid var(--line);border-radius:calc(var(--r) * .6);background:var(--field);position:relative;overflow:hidden}
+.bar i{position:absolute;inset:0;width:0;background:linear-gradient(90deg,var(--on),var(--hi));box-shadow:var(--higlow);transition:width .2s}
 .plog{color:var(--dim);font-size:12px;min-height:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .err{color:var(--bad);font-size:12px;white-space:pre-wrap;user-select:text}
 .done-ic{font-size:34px;text-shadow:var(--glow)}

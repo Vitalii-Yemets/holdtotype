@@ -62,17 +62,38 @@ func TestEveryPaletteIsComplete(t *testing.T) {
 	for _, p := range palettes {
 		for name, hex := range map[string]string{
 			"Bg": p.Bg, "Panel": p.Panel, "Line": p.Line,
-			"Accent": p.Accent, "Dim": p.Dim, "Faint": p.Faint,
-			"Warn": p.Warn, "Bad": p.Bad,
+			"Text": p.Text, "Accent": p.Accent, "Dim": p.Dim, "Faint": p.Faint,
+			"Warn": p.Warn, "Bad": p.Bad, "Rec": p.Rec,
 			"Field": p.Field, "Soft": p.Soft, "NavOn": p.NavOn, "On": p.On,
+			"BtnFg": p.BtnFg,
 		} {
 			if len(hex) != 7 || !strings.HasPrefix(hex, "#") {
 				t.Errorf("%s.%s = %q, want #rrggbb", p.ID, name, hex)
 			}
 		}
-		if p.Accent == p.Warn || p.Accent == p.Bad {
-			t.Errorf("%s: the accent is not told apart from a warning or an error", p.ID)
+		for name, v := range map[string]string{
+			"TitleBg": p.TitleBg, "SideBg": p.SideBg, "KeyBg": p.KeyBg,
+			"BtnBg": p.BtnBg, "BtnLine": p.BtnLine, "Scrim": p.Scrim,
+		} {
+			if v == "" {
+				t.Errorf("%s.%s is empty", p.ID, name)
+			}
 		}
+		if p.Text == p.Warn || p.Text == p.Bad {
+			t.Errorf("%s: the text is not told apart from a warning or an error", p.ID)
+		}
+	}
+}
+
+func TestTheQuietSkinsSeparateTextFromAccent(t *testing.T) {
+	for _, id := range []string{"editor", "neon"} {
+		p := GetPalette(id)
+		if p.Text == p.Accent {
+			t.Errorf("%s: text and accent are both %q", id, p.Text)
+		}
+	}
+	if p := GetPalette("green"); p.Text != p.Accent {
+		t.Errorf("the terminal green is one colour: text %q, accent %q", p.Text, p.Accent)
 	}
 }
 
@@ -84,6 +105,9 @@ func TestEverySkinIsComplete(t *testing.T) {
 		}
 		if s.FontPx < 11 || s.FontPx > 22 {
 			t.Errorf("%s: plate text is %d px", id, s.FontPx)
+		}
+		if s.PagePx < 11 || s.PagePx > 18 {
+			t.Errorf("%s: page text is %d px", id, s.PagePx)
 		}
 		if s.Weight != 400 && s.Weight != 600 {
 			t.Errorf("%s: weight %d, want 400 or 600", id, s.Weight)
@@ -98,6 +122,18 @@ func TestEverySkinIsComplete(t *testing.T) {
 		}
 		if !ValidColour(s.Palette) && s.Palette != id {
 			t.Errorf("%s: its own palette is %q, which is neither a colour nor its namesake", id, s.Palette)
+		}
+	}
+}
+
+func TestOnlyTheTerminalShouts(t *testing.T) {
+	if !GetSkin("terminal").Caps || !GetSkin("terminal").Flicker {
+		t.Error("the terminal skin lost its capitals or its flicker")
+	}
+	for _, id := range []string{"editor", "neon"} {
+		s := GetSkin(id)
+		if s.Caps || s.Flicker {
+			t.Errorf("%s: capitals %v, flicker %v — both should be off", id, s.Caps, s.Flicker)
 		}
 	}
 }
@@ -118,6 +154,14 @@ func TestTheThreeSkinsDifferInMoreThanColour(t *testing.T) {
 	}
 }
 
+func TestNothingIsDrawnInABoldFace(t *testing.T) {
+	for _, id := range SkinIDs() {
+		if w := GetSkin(id).Weight; w > 400 {
+			t.Errorf("%s: the plate is drawn at weight %d — heavy type reads as shouting", id, w)
+		}
+	}
+}
+
 func TestRGBReadsTheChannels(t *testing.T) {
 	r, g, b := RGB("#3cff6e")
 	if r != 0x3c || g != 0xff || b != 0x6e {
@@ -131,17 +175,29 @@ func TestRGBReadsTheChannels(t *testing.T) {
 func TestCSSVarsCarryEverythingThePageNeeds(t *testing.T) {
 	css := Current("editor", "").CSSVars()
 	for _, want := range []string{
-		"--bg:#1e1e1e", "--green:#4fc1ff", "--rgb:79,193,255",
-		"--glow:none", "--font:", "--r:3px", "--bw:1px", "--scan:0", "--shadow:0 10px 30px",
+		"--bg:#1e1e1e", "--green:#d4d4d4", "--hi:#4fc1ff", "--rgb:212,212,212",
+		"--glow:none", "--font:", "--fs:13px", "--r:3px", "--bw:1px", "--scan:0",
+		"--shadow:0 10px 30px", "--titlebg:#323233", "--keybg:#3c3c3c",
+		"--btnbg:#0e639c", "--btnfg:#ffffff", "--caps:none", "--ls:0", "--flicker:none",
 	} {
 		if !strings.Contains(css, want) {
 			t.Errorf("CSSVars() misses %q: %s", want, css)
 		}
 	}
+	term := Current("terminal", "green").CSSVars()
+	for _, want := range []string{"--caps:uppercase", "--ls:1px", "--flicker:flicker 6s infinite", "--brandbg:none"} {
+		if !strings.Contains(term, want) {
+			t.Errorf("the terminal skin misses %q", want)
+		}
+	}
 	if !strings.Contains(Current("terminal", "amber").CSSVars(), "--green:#ff9e2c") {
 		t.Error("the terminal skin did not take the amber colour")
 	}
-	if !strings.Contains(Current("terminal", "green").CSSVars(), "--glow:0 0 7px rgba(60,255,110,.55)") {
+	if !strings.Contains(term, "--glow:0 0 7px rgba(60,255,110,.55)") {
 		t.Error("the terminal skin lost its halo")
+	}
+	neon := Current("neon", "").CSSVars()
+	if !strings.Contains(neon, "--brandclip:text") || !strings.Contains(neon, "--brandfill:transparent") {
+		t.Error("the neon title should be painted with its gradient")
 	}
 }

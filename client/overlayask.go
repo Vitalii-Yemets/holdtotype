@@ -316,7 +316,7 @@ func askRender(hwnd, hdc uintptr, rc rect, fill func(rect, uintptr), drawText fu
 	dpi := dpiFor(hwnd)
 	px := func(v int32) int32 { return scaleDPI(v, dpi) }
 
-	fill(rect{Left: 0, Top: px(ovH), Right: rc.Right, Bottom: px(ovH) + 1}, colGreenLo)
+	fill(rect{Left: 0, Top: px(ovH), Right: rc.Right, Bottom: px(ovH) + 1}, colLine)
 	drawText(prompt, rect{
 		Left:   px(ovAskPad),
 		Top:    px(ovH),

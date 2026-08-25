@@ -231,7 +231,7 @@ func tmRender(hwnd, hdc uintptr) {
 	for i, it := range items {
 		if it.sep {
 			mid := cur + sepH/2
-			fill(rect{Left: px(10), Top: mid, Right: rc.Right - px(10), Bottom: mid + 1}, colGreenLo)
+			fill(rect{Left: px(10), Top: mid, Right: rc.Right - px(10), Bottom: mid + 1}, colLine)
 			cur += sepH
 			continue
 		}

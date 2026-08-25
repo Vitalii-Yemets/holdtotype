@@ -92,6 +92,9 @@ var (
 	colBad     uintptr = 0x6B6BFF
 	colBadDm   uintptr = 0x26265C
 	colAskBg   uintptr = 0x0D100B
+	colHi      uintptr = 0x6EFF3C
+	colHiLo    uintptr = 0x2B4A1D
+	colLine    uintptr = 0x2B4A1D
 )
 
 var (
@@ -544,7 +547,7 @@ func overlayRender(hwnd, hdc uintptr) {
 	}
 	if !themeRoundCorners() {
 		border := rc
-		brush, _, _ := procCreateSolidBrush.Call(colGreenLo)
+		brush, _, _ := procCreateSolidBrush.Call(colLine)
 		procFrameRect.Call(hdc, uintptr(unsafe.Pointer(&border)), brush)
 		procDeleteObject.Call(brush)
 	}
@@ -552,29 +555,12 @@ func overlayRender(hwnd, hdc uintptr) {
 	if anim && !askActive() && (st == ovRecording || st == ovProcessing) {
 		pulse = math.Abs(math.Sin(float64(ovTick) * 0.18 / themePulse()))
 	}
-	drawDot := func(cx, cy, r int32, color uintptr) {
-		br, _, _ := procCreateSolidBrush.Call(color)
-		oldBr, _, _ := procSelectObject.Call(hdc, br)
-		pen, _, _ := procGetStockObject.Call(nullPen)
-		oldPen, _, _ := procSelectObject.Call(hdc, pen)
-		procEllipse.Call(hdc, uintptr(cx-r), uintptr(cy-r), uintptr(cx+r+1), uintptr(cy+r+1))
-		procSelectObject.Call(hdc, oldPen)
-		procSelectObject.Call(hdc, oldBr)
-		procDeleteObject.Call(br)
-	}
 	cy := px(ovH) / 2
 	dotX := px(25)
-	// one flat dot of 11 points with an even halo around it, the way the plate
-	// is drawn on the mock-up: the pulse breathes the whole dot at once,
-	// the fill stays a single colour
-	core := int32(float64(px(5)) * (0.85 + 0.27*pulse))
+	core := int32(float64(px(5)) * (0.88 + 0.2*pulse))
+	halo := core
 	if themeGlow() {
-		halo := core + px(8)
-		strength := 0.30 + 0.14*pulse
-		for r := halo; r > core; r-- {
-			t := float64(halo-r) / float64(halo-core)
-			drawDot(dotX, cy, r, blendCol(colBg, bright, strength*t*t))
-		}
+		halo = core + px(5)
 	}
 	switch st {
 	case ovPaused:
@@ -585,7 +571,7 @@ func overlayRender(hwnd, hdc uintptr) {
 		s := px(5)
 		fill(rect{Left: dotX - s, Top: cy - s, Right: dotX + s, Bottom: cy + s}, bright)
 	default:
-		drawDot(dotX, cy, core, bright)
+		drawSmoothDot(hdc, dotX, cy, core, halo, bright, colBg, 0.34+0.12*pulse)
 	}
 
 	overlayFont()
@@ -602,11 +588,11 @@ func overlayRender(hwnd, hdc uintptr) {
 	procSelectObject.Call(hdc, overlayFont())
 	procSetBkMode.Call(hdc, 1)
 	txtRc := rect{Left: px(44), Top: 0, Right: rc.Right - px(12), Bottom: px(ovH)}
-	if st == ovRecording || st == ovProcessing {
-		txtRc.Right = rc.Right - px(36)
+	if ovShowsClose(st) {
+		txtRc.Right = rc.Right - px(44)
 	}
 	if st == ovRecording {
-		txtRc.Right = rc.Right - px(190)
+		txtRc.Right = rc.Right - px(196)
 	}
 	u, _ := windows.UTF16FromString(text)
 	drawText := func(r rect, color uintptr) {
@@ -647,16 +633,16 @@ func overlayRender(hwnd, hdc uintptr) {
 			switch style {
 			case "dots":
 				r := px(3)
-				drawDot(x+px(2), base-r-int32(float64(px(7))*lv), r, colGreen)
+				drawSmoothDot(hdc, x+px(2), base-r-int32(float64(px(7))*lv), r, r, colHi, colBg, 0)
 			case "flat":
 				h := px(3) + int32(float64(px(13))*lv)
-				fill(rect{Left: x, Top: base - h, Right: x + px(4), Bottom: base}, colGreen)
+				fill(rect{Left: x, Top: base - h, Right: x + px(4), Bottom: base}, colHi)
 			default:
 				h := px(4) + int32(float64(px(18))*lv)
 				if themeGlow() && lv > 0 {
-					fill(rect{Left: x - px(1), Top: base - h - px(1), Right: x + px(5), Bottom: base + px(1)}, colGreenLo)
+					fill(rect{Left: x - px(1), Top: base - h - px(1), Right: x + px(5), Bottom: base + px(1)}, colHiLo)
 				}
-				fill(rect{Left: x, Top: base - h, Right: x + px(4), Bottom: base}, colGreen)
+				fill(rect{Left: x, Top: base - h, Right: x + px(4), Bottom: base}, colHi)
 			}
 		}
 	}

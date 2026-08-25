@@ -247,7 +247,9 @@ function check(name, actual, expected) {
   check("a design brings its own font", d.documentElement.style.getPropertyValue("--font").includes("Cascadia"), true);
   check("and its own corners", d.documentElement.style.getPropertyValue("--r"), "3px");
   check("and turns the halo off", d.documentElement.style.getPropertyValue("--glow"), "none");
-  check("and its own colours, not the picked one", d.documentElement.style.getPropertyValue("--green"), "#4fc1ff");
+  check("and its own colours, not the picked one", d.documentElement.style.getPropertyValue("--green"), "#d4d4d4");
+  check("with its accent kept apart from its text", d.documentElement.style.getPropertyValue("--hi"), "#4fc1ff");
+  check("and no capitals shouted at the buttons", d.documentElement.style.getPropertyValue("--caps"), "none");
   check("down to the surfaces you type into", d.documentElement.style.getPropertyValue("--field"), "#3c3c3c");
   check("so the colour row steps aside", d.getElementById("colour_row").style.display, "none");
 
@@ -744,6 +746,45 @@ function check(name, actual, expected) {
   d.getElementById("wiz_skip").click(); await sleep(250);
   check("skipping closes the wizard too", d.getElementById("wiz").classList.contains("on"), false);
   check("skipping is remembered, so it does not ask again", w.wizardDone, 2);
+
+  const styleAt = html.indexOf("<style>");
+  const css = html.slice(html.indexOf("}", html.indexOf(":root{", styleAt)), html.indexOf("</style>"));
+  const shaped = [
+    [".scard{", "border-radius:var(--r)"],
+    [".hero{", "border-radius:var(--r)"],
+    [".modal{", "border-radius:var(--r)"],
+    ["button.btn{", "border-radius:calc(var(--r) * .5)"],
+    ["button.mini{", "border-radius:calc(var(--r) * .5)"],
+    ["input[type=text],input[type=number],select{", "border-radius:calc(var(--r) * .55)"],
+    ["input[type=checkbox]{", "border-radius:calc(var(--r) * .8)"],
+  ];
+  for (const [sel, want] of shaped) {
+    const at = css.indexOf(sel);
+    const rule = at < 0 ? "" : css.slice(at, css.indexOf("}", at));
+    check(`${sel} takes its corners from the skin`, rule.includes(want), true);
+  }
+  const skinned = [
+    ["body::after{", "opacity:var(--scan)"],
+    [".header h1{", "animation:var(--flicker)"],
+    [".header{", "background:var(--titlebg)"],
+    [".snav{", "background:var(--sidebg)"],
+    ["button.btn{", "background:var(--btnbg)"],
+    ["button.btn{", "text-transform:var(--caps)"],
+    [".lvlb.on{", "background:var(--selbg)"],
+    [".modal-bg{", "background:var(--scrim)"],
+    [".hotkey-val{", "background:var(--keybg)"],
+    [".scard .led.on{", "background:var(--hi)"],
+    [".miclevel i{", "background:var(--hi)"],
+    [".mock-dot{", "background:var(--rec)"],
+  ];
+  for (const [sel, want] of skinned) {
+    const at = css.indexOf(sel);
+    const rule = at < 0 ? "" : css.slice(at, css.indexOf("}", at));
+    check(`${sel} follows the skin (${want})`, rule.includes(want), true);
+  }
+  const literals = [...new Set((css.match(/#[0-9a-f]{6}/g) || []))].sort();
+  check("no colour is written into the stylesheet by hand", literals, ["#3c1212", "#7a2e2e"]);
+  check("no face is nailed to Consolas outside the skin", /font:[^;]*Consolas/.test(css), false);
 
   check("no page errors", errors, []);
 
