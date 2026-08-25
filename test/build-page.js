@@ -127,14 +127,23 @@ const PALETTES = {
   pink: { bg: "#100b0e", panel: "#170e14", line: "#4a1d3a", text: "#ff6ec7", hi: "#ff6ec7", dim: "#b82f86", faint: "#8f2467", warn: "#ffb347", bad: "#ff6b6b", rec: "#ff5b4d", field: "#120810", soft: "#2a1222", navon: "#22101c", on: "#40183a" },
   editor: { bg: "#1e1e1e", panel: "#252526", line: "#3c3c3c", text: "#d4d4d4", hi: "#4fc1ff", dim: "#9d9d9d", faint: "#6e6e6e", warn: "#cca700", bad: "#f14c4c", rec: "#f14c4c", field: "#3c3c3c", soft: "#2d2d2d", navon: "#37373d", on: "#094771" },
   neon: { bg: "#150a22", panel: "#1d0e30", line: "#4a2472", text: "#f3b6e4", hi: "#46e0ff", dim: "#b06ee0", faint: "#7d4fae", warn: "#ffd24a", bad: "#ff4d7d", rec: "#ff4d7d", field: "#1e0f33", soft: "#2a1442", navon: "#2b1240", on: "#4a2472" },
+  soft: { bg: "#f4f1ec", panel: "#fffefb", line: "#e0d8cd", text: "#3d3833", hi: "#4a6fa5", dim: "#7c7269", faint: "#a89d92", warn: "#a86b12", bad: "#b03a2e", rec: "#c4483a", field: "#fffefb", soft: "#eae4db", navon: "#e9e2d8", on: "#dbe4f1" },
+  paper: { bg: "#eceff1", panel: "#ffffff", line: "#d2d8dd", text: "#1f2529", hi: "#1a5fb4", dim: "#5b656d", faint: "#929da5", warn: "#8a5a00", bad: "#b42318", rec: "#c8342a", field: "#ffffff", soft: "#e2e7ea", navon: "#e0e6ea", on: "#d5e3f6" },
 };
 const SKINS = {
   terminal: { palette: "green", font: '"IBM Plex Mono",Consolas,monospace', fs: "14px", r: "0px", bw: "1px", scan: "1", shadow: "none", glow: true, round: false, caps: true, fieldpad: "6px 10px", ctlfs: "12.5px", wb: "700" },
   editor: { palette: "editor", font: '"Cascadia Mono",Consolas,"Segoe UI",sans-serif', fs: "13px", r: "3px", bw: "1px", scan: "0", shadow: "0 10px 30px rgba(0,0,0,.45)", glow: false, round: false, caps: false, fieldpad: "6px 11px", ctlfs: "12.5px", wb: "600" },
   neon: { palette: "neon", font: '"IBM Plex Sans","Segoe UI",system-ui,sans-serif', fs: "15px", r: "14px", bw: "1px", scan: ".18", shadow: "0 18px 46px rgba(150,40,220,.35)", glow: true, round: true, caps: false, fieldpad: "9px 13px", ctlfs: "13.5px", wb: "600" },
+  soft: { palette: "soft", font: '"IBM Plex Sans","Segoe UI",system-ui,sans-serif', fs: "15px", r: "10px", bw: "1px", scan: "0", shadow: "0 10px 28px rgba(61,56,51,.16)", glow: false, round: true, caps: false, fieldpad: "8px 12px", ctlfs: "13px", wb: "600" },
+  paper: { palette: "paper", font: '"IBM Plex Sans","Segoe UI",system-ui,sans-serif', fs: "14px", r: "2px", bw: "1px", scan: "0", shadow: "0 6px 18px rgba(31,37,41,.14)", glow: false, round: false, caps: false, fieldpad: "7px 11px", ctlfs: "12.5px", wb: "600" },
 };
 function rgbOf(hex) {
   return [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(",");
+}
+function blend(fg, bg, t) {
+  const hex2 = (v) => v.toString(16).padStart(2, "0");
+  const mix = (i) => hex2(Math.round(parseInt(fg.slice(i, i + 2), 16) * (1 - t) + parseInt(bg.slice(i, i + 2), 16) * t));
+  return "#" + mix(1) + mix(3) + mix(5);
 }
 function varsFor(skinId, colourId) {
   const s = SKINS[skinId];
@@ -152,9 +161,13 @@ function varsFor(skinId, colourId) {
     "--selbg:" + p.text, "--selfg:" + p.bg,
     "--brandbg:none", "--brandclip:border-box", "--brandfill:currentColor",
     "--scrim:rgba(3,7,4,.78)",
+    "--badbg:" + blend(p.bad, p.bg, 0.8), "--badline:" + blend(p.bad, p.bg, 0.52),
     "--glow:" + (s.glow ? "0 0 7px rgba(" + rgb + ",.55)" : "none"),
     "--higlow:" + (s.glow ? "0 0 8px rgba(" + rgbOf(p.hi) + ",.6)" : "none"),
     "--iconglow:" + (s.glow ? "drop-shadow(0 0 6px rgba(" + rgbOf(p.hi) + ",.7))" : "none"),
+    "--amberglow:" + (s.glow ? "0 0 6px rgba(" + rgbOf(p.warn) + ",.5)" : "none"),
+    "--badglow:" + (s.glow ? "0 0 7px rgba(" + rgbOf(p.bad) + ",.5)" : "none"),
+    "--badfilter:" + (s.glow ? "drop-shadow(0 0 4px rgba(" + rgbOf(p.bad) + ",.5))" : "none"),
     "--font:" + s.font, "--fs:" + s.fs,
     "--caps:" + (s.caps ? "uppercase" : "none"), "--ls:" + (s.caps ? "1px" : "0"),
     "--fieldpad:" + s.fieldpad, "--ctlfs:" + s.ctlfs, "--wb:" + s.wb,
@@ -169,6 +182,8 @@ for (const id of ["green", "amber", "blue", "pink"]) {
 }
 THEME_LIST.editor = { skin: "editor", colour: "editor", accent: PALETTES.editor.text, vars: varsFor("editor") };
 THEME_LIST.neon = { skin: "neon", colour: "neon", accent: PALETTES.neon.text, vars: varsFor("neon") };
+THEME_LIST.soft = { skin: "soft", colour: "soft", accent: PALETTES.soft.text, vars: varsFor("soft") };
+THEME_LIST.paper = { skin: "paper", colour: "paper", accent: PALETTES.paper.text, vars: varsFor("paper") };
 
 let html = src.slice(start, end);
 html = html.split("{{S_HELP_HTML}}").join(HELP_HTML);

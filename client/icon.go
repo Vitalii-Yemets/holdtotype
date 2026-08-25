@@ -6,6 +6,8 @@ import (
 	"image/color"
 	"image/png"
 	"math"
+
+	"holdtotype/internal/theme"
 )
 
 func micDist(fx, fy float64) float64 {
@@ -31,11 +33,17 @@ func lerpC(a, b color.NRGBA, t float64) color.NRGBA {
 	}
 }
 
-func iconPNG(glow color.NRGBA, badge ...color.NRGBA) []byte {
+type iconTile struct {
+	top  color.NRGBA
+	bot  color.NRGBA
+	core color.NRGBA
+}
+
+func iconPNG(tile iconTile, glow color.NRGBA, badge ...color.NRGBA) []byte {
 	const sz = 32
 	img := image.NewNRGBA(image.Rect(0, 0, sz, sz))
-	bgTop := color.NRGBA{R: 0x14, G: 0x1A, B: 0x16, A: 255}
-	bgBot := color.NRGBA{R: 0x0A, G: 0x0F, B: 0x0C, A: 255}
+	bgTop := tile.top
+	bgBot := tile.bot
 	const radius = 7.5
 
 	for y := 0; y < sz; y++ {
@@ -50,7 +58,7 @@ func iconPNG(glow color.NRGBA, badge ...color.NRGBA) []byte {
 			c := row
 			d := micDist(fx, fy)
 			if d <= 0 {
-				c = lerpC(glow, color.NRGBA{R: 255, G: 255, B: 255, A: 255}, 0.25)
+				c = lerpC(glow, tile.core, 0.25)
 			} else if d < 3.0 {
 				c = lerpC(row, glow, (1-d/3.0)*0.6)
 			}
@@ -109,11 +117,14 @@ func capsuleDist(px, py, x1, y1, x2, y2 float64) float64 {
 }
 
 var (
-	iconIdle       = iconPNG(color.NRGBA{R: 0x3C, G: 0xFF, B: 0x6E, A: 255})
-	iconRecording  = iconPNG(color.NRGBA{R: 0xFF, G: 0x6B, B: 0x6B, A: 255})
-	iconProcessing = iconPNG(color.NRGBA{R: 0xFF, G: 0xB3, B: 0x47, A: 255})
-	iconDisabled   = iconPNG(color.NRGBA{R: 0x5A, G: 0x6E, B: 0x60, A: 255})
-	iconError      = iconPNG(color.NRGBA{R: 0x5A, G: 0x6E, B: 0x60, A: 255}, color.NRGBA{R: 0xFF, G: 0x6B, B: 0x6B, A: 255})
+	startupPalette = theme.GetPalette(theme.DefaultPalette)
+	startupTile    = paletteTile(startupPalette)
+
+	iconIdle       = iconPNG(startupTile, nrgba(startupPalette.Text))
+	iconRecording  = iconPNG(startupTile, nrgba(startupPalette.Bad))
+	iconProcessing = iconPNG(startupTile, nrgba(startupPalette.Warn))
+	iconDisabled   = iconPNG(startupTile, nrgba(startupPalette.Off))
+	iconError      = iconPNG(startupTile, nrgba(startupPalette.Off), nrgba(startupPalette.Bad))
 )
 
 func loadTrayIcons() map[int]uintptr {

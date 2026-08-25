@@ -358,6 +358,7 @@ func installedLook(dir string) (skin, colour string) {
 	if err != nil {
 		return skin, colour
 	}
+	data = bytes.TrimPrefix(data, []byte{0xEF, 0xBB, 0xBF})
 	var cfg struct {
 		Skin  string `json:"skin"`
 		Theme string `json:"theme"`

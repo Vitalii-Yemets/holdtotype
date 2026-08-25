@@ -89,19 +89,45 @@ func applyTheme(skin, colour string) {
 	log.Printf("оформление: %s, цвет %s", skin, p.ID)
 }
 
+func nrgba(hex string) color.NRGBA {
+	r, g, b := theme.RGB(hex)
+	return color.NRGBA{R: r, G: g, B: b, A: 255}
+}
+
+func lift(c color.NRGBA, by int) color.NRGBA {
+	clamp := func(v uint8) uint8 {
+		n := int(v) + by
+		if n < 0 {
+			n = 0
+		}
+		if n > 255 {
+			n = 255
+		}
+		return uint8(n)
+	}
+	return color.NRGBA{R: clamp(c.R), G: clamp(c.G), B: clamp(c.B), A: 255}
+}
+
+func paletteTile(p theme.Palette) iconTile {
+	bot := nrgba(p.Bg)
+	core := color.NRGBA{R: 255, G: 255, B: 255, A: 255}
+	if p.Light() {
+		core = color.NRGBA{R: 0x1a, G: 0x1a, B: 0x1a, A: 255}
+	}
+	return iconTile{top: lift(bot, 10), bot: bot, core: core}
+}
+
 func rebuildIcons(p theme.Palette) {
-	ar, ag, ab := theme.RGB(p.Text)
-	br, bg, bb := theme.RGB(p.Bad)
-	wr, wg, wb := theme.RGB(p.Warn)
-	accent := color.NRGBA{R: ar, G: ag, B: ab, A: 255}
-	bad := color.NRGBA{R: br, G: bg, B: bb, A: 255}
-	warn := color.NRGBA{R: wr, G: wg, B: wb, A: 255}
-	off := color.NRGBA{R: 0x5A, G: 0x6E, B: 0x60, A: 255}
-	iconIdle = iconPNG(accent)
-	iconRecording = iconPNG(bad)
-	iconProcessing = iconPNG(warn)
-	iconDisabled = iconPNG(off)
-	iconError = iconPNG(off, bad)
+	tile := paletteTile(p)
+	accent := nrgba(p.Text)
+	bad := nrgba(p.Bad)
+	warn := nrgba(p.Warn)
+	off := nrgba(p.Off)
+	iconIdle = iconPNG(tile, accent)
+	iconRecording = iconPNG(tile, bad)
+	iconProcessing = iconPNG(tile, warn)
+	iconDisabled = iconPNG(tile, off)
+	iconError = iconPNG(tile, off, bad)
 }
 
 // refreshWindowChrome repaints the frame of every window that is open right now.

@@ -64,7 +64,11 @@ func applyDarkCaption(hwnd uintptr) {
 	set := func(attr uintptr, value uint32) {
 		procDwmSetWindowAttribute.Call(hwnd, attr, uintptr(unsafe.Pointer(&value)), 4)
 	}
-	set(20, 1)
+	dark := uint32(1)
+	if themeLook().Palette.Light() {
+		dark = 0
+	}
+	set(20, dark)
 	set(35, uint32(colBg))
 	set(36, uint32(colGreen))
 	if themeRoundCorners() {

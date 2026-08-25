@@ -16,7 +16,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:var(--
 .ver{color:var(--faint);font-size:12px}
 button.cap{width:36px;height:30px;background:none;border:1px solid var(--line);border-radius:calc(var(--r) * .5);color:var(--dim);font:14px var(--font);cursor:pointer;padding:0}
 button.cap:hover{color:var(--green);border-color:var(--dim)}
-button.cap.close:hover{color:var(--bad);border-color:#7a2e2e}
+button.cap.close:hover{color:var(--bad);border-color:var(--badline)}
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:1px solid var(--green);outline-offset:2px}
 .body{flex:1;padding:18px 22px;display:flex;flex-direction:column;gap:12px}
 .tagline{color:var(--dim);font-size:13px;line-height:1.5}

@@ -5,6 +5,8 @@ import (
 	"unsafe"
 
 	"golang.org/x/sys/windows"
+
+	"holdtotype/internal/theme"
 )
 
 var (
@@ -82,21 +84,29 @@ func shellOpenURL(url string) {
 	procShellExecuteW.Call(0, uintptr(unsafe.Pointer(verb)), uintptr(unsafe.Pointer(p)), 0, 0, 1)
 }
 
-func applyDarkCaption(hwnd uintptr) {
-	one := int32(1)
-	procDwmSetWindowAttribute.Call(hwnd, 20, uintptr(unsafe.Pointer(&one)), 4)
-	capColor := int32(0x0C0F0B)
+func colorref(hex string) int32 {
+	r, g, b := theme.RGB(hex)
+	return int32(b)<<16 | int32(g)<<8 | int32(r)
+}
+
+func applyCaption(hwnd uintptr, p theme.Palette) {
+	dark := int32(1)
+	if p.Light() {
+		dark = 0
+	}
+	procDwmSetWindowAttribute.Call(hwnd, 20, uintptr(unsafe.Pointer(&dark)), 4)
+	capColor := colorref(p.Bg)
 	procDwmSetWindowAttribute.Call(hwnd, 35, uintptr(unsafe.Pointer(&capColor)), 4)
-	txtColor := int32(0x3CFF6E)
+	txtColor := colorref(p.Text)
 	procDwmSetWindowAttribute.Call(hwnd, 36, uintptr(unsafe.Pointer(&txtColor)), 4)
-	border := int32(0x2B4A1D)
+	border := colorref(p.Line)
 	procDwmSetWindowAttribute.Call(hwnd, 34, uintptr(unsafe.Pointer(&border)), 4)
 	corner := int32(2)
 	procDwmSetWindowAttribute.Call(hwnd, 33, uintptr(unsafe.Pointer(&corner)), 4)
 }
 
-func setDarkClientBackground(hwnd uintptr) {
-	br, _, _ := procCreateSolidBrush.Call(0x0C0F0B)
+func setClientBackground(hwnd uintptr, p theme.Palette) {
+	br, _, _ := procCreateSolidBrush.Call(uintptr(uint32(colorref(p.Bg))))
 	procSetClassLongPtrW.Call(hwnd, ^uintptr(9), br)
 }
 
@@ -109,7 +119,7 @@ func offscreenPos() uintptr {
 
 type winRect struct{ Left, Top, Right, Bottom int32 }
 
-func hideWebViewWindowEarly(title string) func() {
+func hideWebViewWindowEarly(title string, p theme.Palette) func() {
 	done := make(chan struct{})
 	go func() {
 		cls, _ := windows.UTF16PtrFromString("webview")
@@ -127,8 +137,8 @@ func hideWebViewWindowEarly(title string) func() {
 				if rc.Left > offscreenXY+1000 {
 					procSetWindowPos.Call(h, 0, offscreenPos(), offscreenPos(), 0, 0, 0x0001|0x0004|0x0010)
 				}
-				setDarkClientBackground(h)
-				applyDarkCaption(h)
+				setClientBackground(h, p)
+				applyCaption(h, p)
 			}
 			time.Sleep(2 * time.Millisecond)
 		}

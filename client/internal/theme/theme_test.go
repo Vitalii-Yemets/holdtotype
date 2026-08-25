@@ -7,8 +7,8 @@ import (
 
 func TestSkinsAndColoursAreSeparate(t *testing.T) {
 	skins := SkinIDs()
-	if len(skins) != 3 {
-		t.Fatalf("SkinIDs() = %v, want three skins", skins)
+	if len(skins) != 5 {
+		t.Fatalf("SkinIDs() = %v, want five skins", skins)
 	}
 	if skins[0] != DefaultSkin {
 		t.Errorf("the first skin is %q, want the default %q", skins[0], DefaultSkin)
@@ -17,7 +17,7 @@ func TestSkinsAndColoursAreSeparate(t *testing.T) {
 	if len(colours) != 4 || colours[0] != DefaultPalette {
 		t.Errorf("ColourIDs(terminal) = %v, want the four with green first", colours)
 	}
-	for _, id := range []string{"editor", "neon"} {
+	for _, id := range []string{"editor", "neon", "soft", "paper"} {
 		if got := ColourIDs(id); len(got) != 0 {
 			t.Errorf("ColourIDs(%q) = %v, want none — the skin carries its own", id, got)
 		}
@@ -86,7 +86,7 @@ func TestEveryPaletteIsComplete(t *testing.T) {
 }
 
 func TestTheQuietSkinsSeparateTextFromAccent(t *testing.T) {
-	for _, id := range []string{"editor", "neon"} {
+	for _, id := range []string{"editor", "neon", "soft", "paper"} {
 		p := GetPalette(id)
 		if p.Text == p.Accent {
 			t.Errorf("%s: text and accent are both %q", id, p.Text)
@@ -130,7 +130,7 @@ func TestOnlyTheTerminalShouts(t *testing.T) {
 	if !GetSkin("terminal").Caps || !GetSkin("terminal").Flicker {
 		t.Error("the terminal skin lost its capitals or its flicker")
 	}
-	for _, id := range []string{"editor", "neon"} {
+	for _, id := range []string{"editor", "neon", "soft", "paper"} {
 		s := GetSkin(id)
 		if s.Caps || s.Flicker {
 			t.Errorf("%s: capitals %v, flicker %v — both should be off", id, s.Caps, s.Flicker)
@@ -218,5 +218,66 @@ func TestSkinsNameTheFacesTheyShipWith(t *testing.T) {
 	ed := Current("editor", "")
 	if ed.FontGDI != "Cascadia Mono" {
 		t.Errorf("the editor skin keeps its own face, got %q", ed.FontGDI)
+	}
+}
+
+func TestTheLightSkinsAreLight(t *testing.T) {
+	for _, id := range []string{"soft", "paper"} {
+		p := Current(id, "").Palette
+		if !p.Light() {
+			t.Errorf("the %s skin stands on %q, which is not a light ground", id, p.Bg)
+		}
+		if luma(p.Text) > 110 {
+			t.Errorf("the %s skin writes in %q, too pale for its ground", id, p.Text)
+		}
+		if luma(p.Bg)-luma(p.Text) < 120 {
+			t.Errorf("the %s skin has too little between its ink and its paper", id)
+		}
+	}
+	for _, id := range []string{"terminal", "editor", "neon"} {
+		if Current(id, "").Palette.Light() {
+			t.Errorf("the %s skin should stay dark", id)
+		}
+	}
+}
+
+func TestEveryPaletteFillsInTheDerivedColours(t *testing.T) {
+	for _, id := range []string{"green", "amber", "blue", "pink", "editor", "neon", "soft", "paper"} {
+		p := GetPalette(id)
+		for name, v := range map[string]string{"Off": p.Off, "BadBg": p.BadBg, "BadLine": p.BadLine} {
+			if len(v) != 7 || v[0] != '#' {
+				t.Errorf("palette %s left %s as %q", id, name, v)
+			}
+		}
+		if luma(p.BadBg) > luma(p.Bad) && !p.Light() {
+			t.Errorf("palette %s got a hover ground brighter than the warning itself", id)
+		}
+	}
+}
+
+func TestALightSkinAsksForNoHalo(t *testing.T) {
+	for _, id := range []string{"soft", "paper"} {
+		look := Current(id, "")
+		if look.Glow {
+			t.Errorf("the %s skin should not glow", id)
+		}
+		if look.Scan != 0 {
+			t.Errorf("the %s skin should have no scanlines", id)
+		}
+		css := look.CSSVars()
+		for _, want := range []string{"--glow:none", "--higlow:none", "--amberglow:none", "--badglow:none", "--badfilter:none", "--scan:0"} {
+			if !strings.Contains(css, want) {
+				t.Errorf("the %s skin misses %q", id, want)
+			}
+		}
+		if !strings.Contains(css, "--badbg:#") || !strings.Contains(css, "--badline:#") {
+			t.Errorf("the %s skin did not fill the warning surfaces: %s", id, css)
+		}
+	}
+	term := Current("terminal", "green").CSSVars()
+	for _, want := range []string{"--amberglow:0 0 6px", "--badglow:0 0 7px", "--badfilter:drop-shadow"} {
+		if !strings.Contains(term, want) {
+			t.Errorf("the terminal skin lost %q", want)
+		}
 	}
 }

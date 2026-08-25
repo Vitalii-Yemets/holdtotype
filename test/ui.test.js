@@ -261,7 +261,19 @@ function check(name, actual, expected) {
   const themeSel = d.getElementById("theme");
   const skinSel = d.getElementById("skin");
   check("design and colour are two separate choices", [!!skinSel, !!themeSel], [true, true]);
-  check("three designs are offered", [...skinSel.options].map(o=>o.value), ["terminal", "editor", "neon"]);
+  check("five designs are offered", [...skinSel.options].map(o=>o.value), ["terminal", "editor", "neon", "soft", "paper"]);
+  check("the two light ones come last", [...skinSel.options].slice(-2).map(o=>o.value), ["soft", "paper"]);
+  for (const light of ["soft", "paper"]) {
+    w.applyThemeVars(light);
+    const root = d.documentElement.style;
+    const lum = (v) => { const h = v.trim().replace("#",""); return 0.2126*parseInt(h.slice(0,2),16) + 0.7152*parseInt(h.slice(2,4),16) + 0.0722*parseInt(h.slice(4,6),16); };
+    check(`the ${light} design paints a light ground`, lum(root.getPropertyValue("--bg")) > 140, true);
+    check(`and writes on it in dark ink`, lum(root.getPropertyValue("--green")) < 110, true);
+    check(`and asks for no halo`, [root.getPropertyValue("--glow"), root.getPropertyValue("--higlow"), root.getPropertyValue("--amberglow"), root.getPropertyValue("--badglow")], ["none", "none", "none", "none"]);
+    check(`and no scanlines`, root.getPropertyValue("--scan"), "0");
+    check(`and still fills in the warning surfaces`, /^#[0-9a-f]{6}$/.test(root.getPropertyValue("--badbg").trim()), true);
+  }
+  w.applyThemeVars("terminal:green");
   check("the colours are the terminal's four", [...themeSel.options].map(o=>o.value), ["green", "amber", "blue", "pink"]);
   check("the terminal design is the one in use", [skinSel.value, themeSel.value], ["terminal", "green"]);
   check("every colour has a swatch", d.querySelectorAll("#theme_swatches .swatch").length, 4);
@@ -816,6 +828,10 @@ function check(name, actual, expected) {
     [".wizlvl i.on{", "background:var(--hi)"],
     [".miclevel.grow{", "width:100%"],
     [".mock-dot{", "background:var(--rec)"],
+    ["button.cap.close:hover{", "background:var(--badbg)"],
+    ["button.mini.danger:hover{", "border-color:var(--badline)"],
+    [".toast{", "text-shadow:var(--amberglow)"],
+    ["button.iconbtn.danger:hover{", "filter:var(--badfilter)"],
   ];
   for (const [sel, want] of skinned) {
     const at = css.indexOf(sel);
@@ -826,7 +842,7 @@ function check(name, actual, expected) {
   const strays = fieldRules.filter(r => /(?:^|;|{)(?:padding|font-size):s*(?!var(--fieldpad)|var(--ctlfs))/.test(r));
   check("no field sets its own height", strays, []);
   const literals = [...new Set((css.match(/#[0-9a-f]{6}/g) || []))].sort();
-  check("no colour is written into the stylesheet by hand", literals, ["#3c1212", "#7a2e2e"]);
+  check("no colour is written into the stylesheet by hand", literals, []);
   check("no face is nailed to Consolas outside the skin", /font:[^;]*Consolas/.test(css), false);
 
   check("no page errors", errors, []);

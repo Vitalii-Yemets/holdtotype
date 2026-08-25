@@ -29,6 +29,10 @@ type Palette struct {
 	SelFg   string
 	Brand   string
 	Scrim   string
+
+	Off     string
+	BadBg   string
+	BadLine string
 }
 
 type Skin struct {
@@ -113,6 +117,22 @@ var palettes = []Palette{
 		TitleBg: "linear-gradient(90deg,#26103f,#1a0b2b)", SideBg: "#190c29", KeyBg: "linear-gradient(90deg,rgba(255,95,200,.18),rgba(70,224,255,.14))",
 		BtnBg: "transparent", BtnFg: "#f3b6e4", BtnLine: "#4a2472", SelBg: "linear-gradient(90deg,#ff5fc8,#46e0ff)", SelFg: "#150a22",
 		Brand: "linear-gradient(90deg,#ff5fc8,#46e0ff)", Scrim: "rgba(10,4,18,.72)"},
+
+	{ID: "soft", Bg: "#f4f1ec", Panel: "#fffefb", Line: "#e0d8cd",
+		Text: "#3d3833", Accent: "#4a6fa5", Dim: "#7c7269", Faint: "#a89d92",
+		Warn: "#a86b12", Bad: "#b03a2e", Rec: "#c4483a",
+		Field: "#fffefb", Soft: "#eae4db", NavOn: "#e9e2d8", On: "#dbe4f1",
+		TitleBg: "#efe9e1", SideBg: "#f8f5f0", KeyBg: "#e9e2d8",
+		BtnBg: "#fffefb", BtnFg: "#3d3833", BtnLine: "#d5cabd", SelBg: "#4a6fa5", SelFg: "#fffefb",
+		Brand: "", Scrim: "rgba(61,56,51,.42)"},
+
+	{ID: "paper", Bg: "#eceff1", Panel: "#ffffff", Line: "#d2d8dd",
+		Text: "#1f2529", Accent: "#1a5fb4", Dim: "#5b656d", Faint: "#929da5",
+		Warn: "#8a5a00", Bad: "#b42318", Rec: "#c8342a",
+		Field: "#ffffff", Soft: "#e2e7ea", NavOn: "#e0e6ea", On: "#d5e3f6",
+		TitleBg: "#e5e9ec", SideBg: "#f2f5f6", KeyBg: "#e2e7ea",
+		BtnBg: "#ffffff", BtnFg: "#1f2529", BtnLine: "#c2c9cf", SelBg: "#1a5fb4", SelFg: "#ffffff",
+		Brand: "", Scrim: "rgba(31,37,41,.40)"},
 }
 
 var colourChoice = []string{"green", "amber", "blue", "pink"}
@@ -141,6 +161,22 @@ var skins = []Skin{
 		Radius: 14, Border: 1, Round: true,
 		Glow: true, Scan: 0.18, Shadow: "0 18px 46px rgba(150,40,220,.35)",
 		Level: "bars", Pulse: 0.8},
+
+	{ID: "soft", Palette: "soft",
+		FontCSS: `"IBM Plex Sans","Segoe UI",system-ui,sans-serif`, FontGDI: "IBM Plex Sans",
+		PagePx: 15, FontPx: 16, Weight: 400, BrandLS: ".01em",
+		FieldPad: "8px 12px", CtlFS: "13px", WeightB: 600,
+		Radius: 10, Border: 1, Round: true,
+		Glow: false, Scan: 0, Shadow: "0 10px 28px rgba(61,56,51,.16)",
+		Level: "bars", Pulse: 1.2},
+
+	{ID: "paper", Palette: "paper",
+		FontCSS: `"IBM Plex Sans","Segoe UI",system-ui,sans-serif`, FontGDI: "IBM Plex Sans",
+		PagePx: 14, FontPx: 15, Weight: 400, BrandLS: ".07em",
+		FieldPad: "7px 11px", CtlFS: "12.5px", WeightB: 600,
+		Radius: 2, Border: 1, Round: false,
+		Glow: false, Scan: 0, Shadow: "0 6px 18px rgba(31,37,41,.14)",
+		Level: "flat", Pulse: 1.4},
 }
 
 type Look struct {
@@ -193,10 +229,53 @@ func GetSkin(id string) Skin {
 func GetPalette(id string) Palette {
 	for _, p := range palettes {
 		if p.ID == id {
-			return p
+			return p.filled()
 		}
 	}
 	return GetPalette(DefaultPalette)
+}
+
+func (p Palette) filled() Palette {
+	if p.Off == "" {
+		p.Off = grey(0.45*luma(p.Text) + 0.55*luma(p.Bg))
+	}
+	if p.BadBg == "" {
+		p.BadBg = blend(p.Bad, p.Bg, 0.80)
+	}
+	if p.BadLine == "" {
+		p.BadLine = blend(p.Bad, p.Bg, 0.52)
+	}
+	return p
+}
+
+func (p Palette) Light() bool { return luma(p.Bg) > 140 }
+
+func luma(hex string) float64 {
+	r, g, b := RGB(hex)
+	return 0.2126*float64(r) + 0.7152*float64(g) + 0.0722*float64(b)
+}
+
+func blend(fg, bg string, t float64) string {
+	fr, fg2, fb := RGB(fg)
+	br, bg2, bb := RGB(bg)
+	mix := func(a, b uint8) uint8 { return uint8(float64(a)*(1-t) + float64(b)*t + 0.5) }
+	return "#" + hex2(mix(fr, br)) + hex2(mix(fg2, bg2)) + hex2(mix(fb, bb))
+}
+
+func grey(v float64) string {
+	if v < 0 {
+		v = 0
+	}
+	if v > 255 {
+		v = 255
+	}
+	c := hex2(uint8(v + 0.5))
+	return "#" + c + c + c
+}
+
+func hex2(v uint8) string {
+	const digits = "0123456789abcdef"
+	return string([]byte{digits[v>>4], digits[v&0x0f]})
 }
 
 func Current(skinID, colourID string) Look {
@@ -245,7 +324,7 @@ func hexDigit(c byte) int {
 }
 
 func (l Look) CSSVars() string {
-	p := l.Palette
+	p := l.Palette.filled()
 	r, g, b := RGB(p.Text)
 	rgb := itoa(int(r)) + "," + itoa(int(g)) + "," + itoa(int(b))
 	hr, hg, hb := RGB(p.Accent)
@@ -256,9 +335,19 @@ func (l Look) CSSVars() string {
 	}
 	hiGlow := "none"
 	iconGlow := "none"
+	warnGlow := "none"
+	badGlow := "none"
+	badFilter := "none"
 	if l.Glow {
 		hiGlow = "0 0 8px rgba(" + hirgb + ",.6)"
 		iconGlow = "drop-shadow(0 0 6px rgba(" + hirgb + ",.7))"
+		wr, wg, wb := RGB(p.Warn)
+		warnrgb := itoa(int(wr)) + "," + itoa(int(wg)) + "," + itoa(int(wb))
+		br2, bg2, bb2 := RGB(p.Bad)
+		badrgb := itoa(int(br2)) + "," + itoa(int(bg2)) + "," + itoa(int(bb2))
+		warnGlow = "0 0 6px rgba(" + warnrgb + ",.5)"
+		badGlow = "0 0 7px rgba(" + badrgb + ",.5)"
+		badFilter = "drop-shadow(0 0 4px rgba(" + badrgb + ",.5))"
 	}
 	wborder := "none"
 	if !l.Round {
@@ -293,7 +382,9 @@ func (l Look) CSSVars() string {
 		";--selbg:" + p.SelBg + ";--selfg:" + p.SelFg +
 		";--brandbg:" + brandBg + ";--brandclip:" + brandClip + ";--brandfill:" + brandFill +
 		";--scrim:" + p.Scrim +
+		";--badbg:" + p.BadBg + ";--badline:" + p.BadLine +
 		";--glow:" + glow + ";--higlow:" + hiGlow + ";--iconglow:" + iconGlow +
+		";--amberglow:" + warnGlow + ";--badglow:" + badGlow + ";--badfilter:" + badFilter +
 		";--font:" + l.FontCSS +
 		";--fs:" + itoa(int(l.PagePx)) + "px" +
 		";--caps:" + caps + ";--ls:" + ls + ";--flicker:" + flicker +
