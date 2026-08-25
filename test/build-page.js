@@ -16,6 +16,7 @@ const cfg = {
   hotkey: "ctrl+win",
   ui_language: "en",
   ui_level: "all",
+  skin: "terminal",
   theme: "green",
   hotkey_mode: "hold",
   language: "ru",
@@ -120,22 +121,28 @@ const HELP_HTML = [
 ].join("");
 
 const THEME_LIST = {
-  green: { bg: "#0b0f0c", panel: "#0e1410", line: "#1d4a2b", accent: "#3cff6e", dim: "#20a34a", faint: "#14803a", warn: "#ffb347", bad: "#ff7b6b", rgb: "60,255,110", glow: "0 0 7px rgba(60,255,110,.55)" },
-  amber: { bg: "#100c0a", panel: "#17110d", line: "#4a3018", accent: "#ff9e2c", dim: "#b56a12", faint: "#8a4f0d", warn: "#ffd24a", bad: "#ff6b5b", rgb: "255,158,44", glow: "0 0 7px rgba(255,158,44,.55)" },
-  blue: { bg: "#0b0e10", panel: "#0e1317", line: "#1d3a4a", accent: "#4cc3ff", dim: "#1c7fb8", faint: "#14608f", warn: "#ffb347", bad: "#ff7b6b", rgb: "76,195,255", glow: "0 0 7px rgba(76,195,255,.55)" },
-  pink: { bg: "#100b0e", panel: "#170e14", line: "#4a1d3a", accent: "#ff6ec7", dim: "#b82f86", faint: "#8f2467", warn: "#ffb347", bad: "#ff6b6b", rgb: "255,110,199", glow: "0 0 7px rgba(255,110,199,.55)" },
-  editor: { bg: "#1e1e1e", panel: "#252526", line: "#3c3c3c", accent: "#4fc1ff", dim: "#9d9d9d", faint: "#6e6e6e", warn: "#cca700", bad: "#f14c4c", rgb: "79,193,255", glow: "none", font: '"Cascadia Mono",Consolas,"Segoe UI",sans-serif', r: "3px", bw: "1px", scan: "0", shadow: "0 10px 30px rgba(0,0,0,.45)", wborder: "1px solid #3c3c3c" },
-  neon: { bg: "#150a22", panel: "#1d0e30", line: "#4a2472", accent: "#ff5fc8", dim: "#b06ee0", faint: "#7d4fae", warn: "#ffd24a", bad: "#ff4d7d", rgb: "255,95,200", glow: "0 0 7px rgba(255,95,200,.55)", font: '"Segoe UI Variable Display","Segoe UI",system-ui,sans-serif', r: "14px", bw: "1px", scan: ".35", shadow: "0 18px 46px rgba(150,40,220,.35)", wborder: "none" },
+  green: { bg: "#0b0f0c", panel: "#0e1410", line: "#1d4a2b", accent: "#3cff6e", dim: "#20a34a", faint: "#14803a", warn: "#ffb347", bad: "#ff7b6b", field: "#08100b", soft: "#12241a", navon: "#101d14", on: "#123f22", rgb: "60,255,110", glow: "0 0 7px rgba(60,255,110,.55)" },
+  amber: { bg: "#100c0a", panel: "#17110d", line: "#4a3018", accent: "#ff9e2c", dim: "#b56a12", faint: "#8a4f0d", warn: "#ffd24a", bad: "#ff6b5b", field: "#120c07", soft: "#2a1a0d", navon: "#22160c", on: "#402611", rgb: "255,158,44", glow: "0 0 7px rgba(255,158,44,.55)" },
+  blue: { bg: "#0b0e10", panel: "#0e1317", line: "#1d3a4a", accent: "#4cc3ff", dim: "#1c7fb8", faint: "#14608f", warn: "#ffb347", bad: "#ff7b6b", field: "#070f14", soft: "#12222c", navon: "#101c24", on: "#123a52", rgb: "76,195,255", glow: "0 0 7px rgba(76,195,255,.55)" },
+  pink: { bg: "#100b0e", panel: "#170e14", line: "#4a1d3a", accent: "#ff6ec7", dim: "#b82f86", faint: "#8f2467", warn: "#ffb347", bad: "#ff6b6b", field: "#120810", soft: "#2a1222", navon: "#22101c", on: "#40183a", rgb: "255,110,199", glow: "0 0 7px rgba(255,110,199,.55)" },
+  editor: { bg: "#1e1e1e", panel: "#252526", line: "#3c3c3c", accent: "#4fc1ff", dim: "#9d9d9d", faint: "#6e6e6e", warn: "#cca700", bad: "#f14c4c", field: "#3c3c3c", soft: "#2d2d30", navon: "#37373d", on: "#094771", rgb: "79,193,255", glow: "none", font: '"Cascadia Mono",Consolas,"Segoe UI",sans-serif', r: "3px", bw: "1px", scan: "0", shadow: "0 10px 30px rgba(0,0,0,.45)", wborder: "1px solid #3c3c3c" },
+  neon: { bg: "#150a22", panel: "#1d0e30", line: "#4a2472", accent: "#ff5fc8", dim: "#b06ee0", faint: "#7d4fae", warn: "#ffd24a", bad: "#ff4d7d", field: "#1e0f33", soft: "#2a1349", navon: "#26123f", on: "#4a2472", rgb: "255,95,200", glow: "0 0 7px rgba(255,95,200,.55)", font: '"Segoe UI Variable Display","Segoe UI",system-ui,sans-serif', r: "14px", bw: "1px", scan: ".35", shadow: "0 18px 46px rgba(150,40,220,.35)", wborder: "none" },
 };
 const TERMINAL_EXTRAS = { font: 'Consolas,"Cascadia Mono",monospace', r: "0px", bw: "1px", scan: "1", shadow: "none" };
 for (const id of ["green", "amber", "blue", "pink"]) {
-  Object.assign(THEME_LIST[id], TERMINAL_EXTRAS, { wborder: "1px solid " + THEME_LIST[id].line });
+  Object.assign(THEME_LIST[id], TERMINAL_EXTRAS, { wborder: "1px solid " + THEME_LIST[id].line, skin: "terminal", colour: id });
+  THEME_LIST["terminal:" + id] = THEME_LIST[id];
+  delete THEME_LIST[id];
 }
+THEME_LIST.editor.skin = "editor";
+THEME_LIST.editor.colour = "editor";
+THEME_LIST.neon.skin = "neon";
+THEME_LIST.neon.colour = "neon";
 
 let html = src.slice(start, end);
 html = html.split("{{S_HELP_HTML}}").join(HELP_HTML);
 html = html.split("{{THEME_LIST}}").join(JSON.stringify(THEME_LIST));
-html = html.split("{{THEME_VARS}}").join("--bg:#0b0f0c;--panel:#0e1410;--line:#1d4a2b;--green:#3cff6e;--dim:#20a34a;--faint:#14803a;--amber:#ffb347;--bad:#ff7b6b;--rgb:60,255,110;--glow:0 0 7px rgba(60,255,110,.55)");
+html = html.split("{{THEME_VARS}}").join("--bg:#0b0f0c;--panel:#0e1410;--line:#1d4a2b;--green:#3cff6e;--dim:#20a34a;--faint:#14803a;--amber:#ffb347;--bad:#ff7b6b;--rgb:60,255,110;--field:#08100b;--soft:#12241a;--navon:#101d14;--on:#123f22;--glow:0 0 7px rgba(60,255,110,.55)");
 html = html.split("{{CFG}}").join(JSON.stringify(cfg));
 html = html.split("{{L_JSON}}").join(JSON.stringify(strings));
 html = html.replace(/{{([A-Z_0-9]+)}}/g, "$1");

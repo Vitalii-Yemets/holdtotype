@@ -603,18 +603,21 @@ var settingsStrings = map[string]map[string]string{
 		"S_AUTOSTART":       "Запускать whisper-server автоматически",
 		"S_PORT":            "Порт",
 		"S_SERVEREXE":       "Путь к whisper-server",
-		"S_THEME_PINK":      "Розовая",
-		"S_THEME_BLUE":      "Синяя",
-		"S_THEME_AMBER":     "Янтарная",
-		"S_THEME_GREEN":     "Зелёная",
+		"S_THEME_PINK":      "Розовый",
+		"S_THEME_BLUE":      "Синий",
+		"S_THEME_AMBER":     "Янтарный",
+		"S_THEME_GREEN":     "Зелёный",
 		"S_THEME_SUB":       "цвет окна, плашки и значка в трее",
+		"S_SKIN_TERMINAL": "Терминал",
+		"S_SKIN_SUB": "шрифт, форма, эффекты и анимация",
+		"S_SKIN": "Дизайн",
 		"S_WND_CLOSE":       "Закрыть окно",
 		"S_WND_MIN":         "Свернуть в трей",
 		"S_WND_RESTORE":     "Вернуть прежний размер",
 		"S_WND_MAX":         "Развернуть на весь экран",
 		"S_THEME_NEON":      "Неон",
 		"S_THEME_EDITOR":    "Редактор",
-		"S_THEME":           "Оформление",
+		"S_THEME":           "Цвет",
 		"S_UPD_FOUND":       "Есть версия %s",
 		"S_RELOAD_CFG_BTN":  "Перечитать",
 		"S_RELOAD_CFG_SUB":  "если правили файл руками",
@@ -699,7 +702,7 @@ var settingsStrings = map[string]map[string]string{
 			"<li>Пока плашка о чём-то спрашивает, верхняя строка так и говорит — «Жду ответа», и точка перестаёт мигать. У каждой кнопки свой номер: 1…9 выбирают ответ, Enter берёт подсвеченный, Esc отменяет всё; клавиши подписаны справа в той же строке. За десять секунд до предела записи на плашке идёт янтарный обратный отсчёт.</li>" +
 			"<li>В заголовке окна три кнопки: свернуть в трей, развернуть на весь экран и закрыть. Развёрнутое окно возвращается к прежнему размеру той же кнопкой, а размер, который вы задали мышью, запоминается — на весь экран он не заменяется. Меньше 760×500 окно не уменьшается: на меньшем строки и карточки перестают помещаться.</li>" +
 			"<li>Длинные имена — устройства, модели, файла — на карточках «Состояния» обрезаются многоточием, чтобы карточки стояли ровно; полное имя показывается подсказкой, если задержать на карточке указатель. Подсказки нарисованы в цветах текущего облика, а не системные.</li>" +
-			"<li>Облик всего приложения — окна, плашки, окна захвата и значка в трее — задаётся одним списком «Оформление» в разделе «Система». Обликов шесть: зелёный терминальный по умолчанию, янтарный, синий, розовый, «Редактор» (плоский серый, без свечения) и «Неон» (фиолетовый, со скруглениями). Облик меняет не только цвет: свой шрифт, скругления, толщина рамок, свечение и характер анимации. Выбор применяется сразу, перезапуск не нужен.</li>" +
+			"<li>Внешний вид задаётся двумя списками в разделе «Система». «Дизайн» — это шрифт, форма, толщина рамок, свечение и характер анимации; дизайнов три: «Терминал» (зелёный, по умолчанию), «Редактор» (плоский серый, без свечения) и «Неон» (фиолетовый, со скруглениями). «Цвет» предлагается только «Терминалу» и меняет только цвет окна, плашки и значка в трее: зелёный, янтарный, синий, розовый. У остальных дизайнов цвета свои. Выбор применяется сразу, перезапуск не нужен.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Вопрос о языке перевода</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Распознаю…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Переводить на:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Без перевода</span></div></div>" +
@@ -995,14 +998,17 @@ var settingsStrings = map[string]map[string]string{
 		"S_THEME_BLUE":      "Blue",
 		"S_THEME_AMBER":     "Amber",
 		"S_THEME_GREEN":     "Green",
-		"S_THEME_SUB":       "the window, the plate and the tray icon",
+		"S_THEME_SUB":       "the colour of the window, the plate and the tray icon",
+		"S_SKIN_TERMINAL": "Terminal",
+		"S_SKIN_SUB": "font, shape, effects and motion",
+		"S_SKIN": "Design",
 		"S_WND_CLOSE":       "Close the window",
 		"S_WND_MIN":         "Hide to the tray",
 		"S_WND_RESTORE":     "Back to the previous size",
 		"S_WND_MAX":         "Fill the screen",
 		"S_THEME_NEON":      "Neon",
 		"S_THEME_EDITOR":    "Editor",
-		"S_THEME":           "Colours",
+		"S_THEME":           "Colour",
 		"S_UPD_FOUND":       "Version %s is out",
 		"S_RELOAD_CFG_BTN":  "Re-read",
 		"S_RELOAD_CFG_SUB":  "if you edited the file by hand",
@@ -1087,7 +1093,7 @@ var settingsStrings = map[string]map[string]string{
 			"<li>While the plate is asking something its top line says so — \"Waiting for your answer\" — and the dot stops pulsing. Every answer carries a number: 1…9 pick one, Enter takes the highlighted one, Esc cancels everything; the keys are spelled out at the right of the same row. Ten seconds before the recording limit an amber countdown runs on the plate.</li>" +
 			"<li>The title bar carries three buttons: hide to the tray, fill the screen and close. The same button brings a filled window back to the size it had, and the size you set with the mouse is remembered — filling the screen does not replace it. The window never goes below 760×500, where the rows and cards stop fitting.</li>" +
 			"<li>Long names — a device, a model, a file — are cut with an ellipsis on the Status cards so the cards line up; the whole name appears as a hint if the pointer rests on the card. The hints are drawn in the colours of the current skin, not the system ones.</li>" +
-			"<li>The look of the whole program — the window, the plate, the shortcut window and the tray icon — comes from one list, Colours, in the System section. There are six: the green terminal by default, amber, blue, pink, Editor (flat grey, no halo) and Neon (violet, rounded). A skin changes more than colour: its own font, corners, border width, halo and the character of its motion. The choice applies at once, with no restart.</li>" +
+			"<li>The look comes from two lists in the System section. Design sets the font, the shape, the border width, the halo and the character of the motion; there are three — Terminal (green, the default), Editor (flat grey, no halo) and Neon (violet, rounded). Colour is offered to Terminal alone and changes nothing but the colour of the window, the plate and the tray icon: green, amber, blue, pink. The other designs bring their own colours. The choice applies at once, with no restart.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">The translation question</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Transcribing…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Translate to:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">No translation</span></div></div>" +

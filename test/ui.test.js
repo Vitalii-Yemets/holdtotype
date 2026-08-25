@@ -7,7 +7,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 function meterMoves(d, id) {
   const bars = [...d.querySelectorAll(`#${id} i`)];
   if (!bars.length) return false;
-  return bars.some((b) => b.style.height && b.style.height !== "3px");
+  return bars.some((b) => b.style.height && b.style.height !== "4px");
 }
 function searchFinds(w, d, needle) {
   const hits = w.searchMatches(needle.toLowerCase());
@@ -201,7 +201,7 @@ function check(name, actual, expected) {
   w.hideTip();
   check("it goes away when the pointer leaves", d.getElementById("tip").classList.contains("on"), false);
   for (let i = 0; i < 8; i++) w.paintMeter(d.getElementById("state_mic_bar"), 0.005);
-  check("a quiet room leaves the meter flat", [...d.querySelectorAll("#state_mic_bar i")].every(b=>b.style.height === "2px"), true);
+  check("a quiet room leaves the meter flat", [...d.querySelectorAll("#state_mic_bar i")].every(b=>b.style.height === "4px"), true);
   w.paintMeter(d.getElementById("state_mic_bar"), 0.6);
   check("a loud phrase raises it", [...d.querySelectorAll("#state_mic_bar i")].some(b=>parseInt(b.style.height) > 8), true);
   d.getElementById("resizetop").dispatchEvent(new w.MouseEvent("mousedown", { button: 0, bubbles: true }));
@@ -226,27 +226,41 @@ function check(name, actual, expected) {
 
   tab("system"); await sleep(200);
   const themeSel = d.getElementById("theme");
-  check("the six skins are offered", [...themeSel.options].map(o=>o.value), ["green", "amber", "blue", "pink", "editor", "neon"]);
-  check("green is the one in use", themeSel.value, "green");
-  check("every skin has a swatch", d.querySelectorAll("#theme_swatches .swatch").length, 6);
-  check("the swatch of the current skin is marked", d.querySelector("#theme_swatches .swatch.on").dataset.theme, "green");
+  const skinSel = d.getElementById("skin");
+  check("design and colour are two separate choices", [!!skinSel, !!themeSel], [true, true]);
+  check("three designs are offered", [...skinSel.options].map(o=>o.value), ["terminal", "editor", "neon"]);
+  check("the colours are the terminal's four", [...themeSel.options].map(o=>o.value), ["green", "amber", "blue", "pink"]);
+  check("the terminal design is the one in use", [skinSel.value, themeSel.value], ["terminal", "green"]);
+  check("every colour has a swatch", d.querySelectorAll("#theme_swatches .swatch").length, 4);
+  check("the swatch of the current colour is marked", d.querySelector("#theme_swatches .swatch.on").dataset.theme, "green");
+
   d.querySelector('#theme_swatches .swatch[data-theme="amber"]').click();
   await sleep(200);
-  check("picking a swatch picks the skin", themeSel.value, "amber");
+  check("picking a swatch picks the colour", themeSel.value, "amber");
   check("the window repaints at once", d.documentElement.style.getPropertyValue("--green"), "#ff9e2c");
   check("and the warning colour comes with it", d.documentElement.style.getPropertyValue("--amber"), "#ffd24a");
-  check("the mark moves to the new skin", d.querySelector("#theme_swatches .swatch.on").dataset.theme, "amber");
-  d.querySelector('#theme_swatches .swatch[data-theme="editor"]').click();
+  check("the design stays the terminal one", d.documentElement.style.getPropertyValue("--font").includes("Consolas"), true);
+
+  skinSel.value = "editor";
+  skinSel.dispatchEvent(new w.Event("change", { bubbles: true }));
   await sleep(200);
-  check("a skin brings its own font", d.documentElement.style.getPropertyValue("--font").includes("Cascadia"), true);
+  check("a design brings its own font", d.documentElement.style.getPropertyValue("--font").includes("Cascadia"), true);
   check("and its own corners", d.documentElement.style.getPropertyValue("--r"), "3px");
   check("and turns the halo off", d.documentElement.style.getPropertyValue("--glow"), "none");
-  d.querySelector('#theme_swatches .swatch[data-theme="green"]').click();
+  check("and its own colours, not the picked one", d.documentElement.style.getPropertyValue("--green"), "#4fc1ff");
+  check("down to the surfaces you type into", d.documentElement.style.getPropertyValue("--field"), "#3c3c3c");
+  check("so the colour row steps aside", d.getElementById("colour_row").style.display, "none");
+
+  skinSel.value = "terminal";
+  skinSel.dispatchEvent(new w.Event("change", { bubbles: true }));
   await sleep(200);
-  check("the terminal skin keeps square corners", d.documentElement.style.getPropertyValue("--r"), "0px");
-  check("and draws its own window border", d.documentElement.style.getPropertyValue("--wborder"), "1px solid #1d4a2b");
+  check("back on the terminal the colour row returns", d.getElementById("colour_row").style.display, "");
+  check("with the colour that was picked", d.documentElement.style.getPropertyValue("--green"), "#ff9e2c");
+  check("square corners", d.documentElement.style.getPropertyValue("--r"), "0px");
+  check("and its own window border", d.documentElement.style.getPropertyValue("--wborder"), "1px solid #4a3018");
+  check("the surfaces follow the colour too", d.documentElement.style.getPropertyValue("--field"), "#120c07");
   await sleep(700);
-  check("the choice is written into the settings", w.saveForms.some(f=>f.theme === "amber"), true);
+  check("both choices are written into the settings", w.saveForms.some(f=>f.theme === "amber" && f.skin === "terminal"), true);
   d.querySelector('#theme_swatches .swatch[data-theme="green"]').click();
   await sleep(700);
   check("the closed sections are not", d.querySelector(".nav[data-p=models]").getAttribute("aria-selected"), "false");

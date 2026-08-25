@@ -309,7 +309,7 @@ func main() {
 			cfg, _ := loadConfig("config.json")
 			if cfg != nil {
 				initLang(cfg.UILanguage)
-				applyTheme(cfg.Theme)
+				applyTheme(cfg.Skin, cfg.Theme)
 				setOverlayPos(cfg.OverlayPos)
 			}
 			log.Printf("демонстрация диалогов: смена фокуса")
@@ -391,7 +391,7 @@ func main() {
 			cfg, _ := loadConfig("config.json")
 			if cfg != nil {
 				initLang(cfg.UILanguage)
-				applyTheme(cfg.Theme)
+				applyTheme(cfg.Skin, cfg.Theme)
 				setOverlayPos(cfg.OverlayPos)
 			}
 			state := ovFlashErr
@@ -466,7 +466,7 @@ func main() {
 		return
 	}
 	initLang(cfg.UILanguage)
-	applyTheme(cfg.Theme)
+	applyTheme(cfg.Skin, cfg.Theme)
 	setOverlayPos(cfg.OverlayPos)
 
 	app := &App{

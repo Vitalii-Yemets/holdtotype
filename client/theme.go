@@ -11,28 +11,38 @@ import (
 	"holdtotype/internal/theme"
 )
 
-var currentTheme atomic.Value
+var (
+	currentSkin   atomic.Value
+	currentColour atomic.Value
+)
 
-func themeID() string {
-	if v, ok := currentTheme.Load().(string); ok && theme.Valid(v) {
+func skinID() string {
+	if v, ok := currentSkin.Load().(string); ok && theme.ValidSkin(v) {
 		return v
 	}
-	return theme.Default
+	return theme.DefaultSkin
 }
 
-func themeSkin() theme.Skin { return theme.Get(themeID()) }
+func colourID() string {
+	if v, ok := currentColour.Load().(string); ok && theme.ValidColour(v) {
+		return v
+	}
+	return theme.DefaultPalette
+}
 
-func themeRoundCorners() bool { return themeSkin().Round }
+func themeLook() theme.Look { return theme.Current(skinID(), colourID()) }
 
-func themeGlow() bool { return themeSkin().Glow }
+func themeRoundCorners() bool { return themeLook().Round }
 
-func themeScanlines() bool { return themeSkin().Scan > 0 }
+func themeGlow() bool { return themeLook().Glow }
 
-func themeLevelStyle() string { return themeSkin().Level }
+func themeScanlines() bool { return themeLook().Scan > 0 }
 
-func themePulse() float64 { return themeSkin().Pulse }
+func themeLevelStyle() string { return themeLook().Level }
 
-func themeCSSVars() string { return themeSkin().CSSVars() }
+func themePulse() float64 { return themeLook().Pulse }
+
+func themeCSSVars() string { return themeLook().CSSVars() }
 
 // colorref turns a #rrggbb string into the BGR value GDI wants.
 func colorref(hex string) uintptr {
@@ -46,17 +56,21 @@ func mixHex(hex string, t float64) uintptr {
 	return f(b)<<16 | f(g)<<8 | f(r)
 }
 
-func applyTheme(id string) {
-	if !theme.Valid(id) {
-		id = theme.Default
+func applyTheme(skin, colour string) {
+	if !theme.ValidSkin(skin) {
+		skin = theme.DefaultSkin
 	}
-	if themeID() == id && currentTheme.Load() != nil {
+	if !theme.ValidColour(colour) {
+		colour = theme.DefaultPalette
+	}
+	if skinID() == skin && colourID() == colour && currentSkin.Load() != nil {
 		return
 	}
-	currentTheme.Store(id)
-	p := theme.Get(id)
+	currentSkin.Store(skin)
+	currentColour.Store(colour)
 	dropFontCache()
 
+	p := theme.Current(skin, colour).Palette
 	colBg = colorref(p.Bg)
 	colBgLine = mixHex(p.Bg, 0.75)
 	colGreen = colorref(p.Accent)
@@ -71,10 +85,10 @@ func applyTheme(id string) {
 	colAskBg = mixHex(p.Panel, 1.0)
 
 	rebuildIcons(p)
-	log.Printf("оформление: %s", id)
+	log.Printf("оформление: %s, цвет %s", skin, p.ID)
 }
 
-func rebuildIcons(p theme.Skin) {
+func rebuildIcons(p theme.Palette) {
 	ar, ag, ab := theme.RGB(p.Accent)
 	br, bg, bb := theme.RGB(p.Bad)
 	wr, wg, wb := theme.RGB(p.Warn)
@@ -87,51 +101,6 @@ func rebuildIcons(p theme.Skin) {
 	iconProcessing = iconPNG(warn)
 	iconDisabled = iconPNG(off)
 	iconError = iconPNG(off, bad)
-}
-
-func themeListJSON() string {
-	type entry struct {
-		Bg      string `json:"bg"`
-		Panel   string `json:"panel"`
-		Line    string `json:"line"`
-		Accent  string `json:"accent"`
-		Dim     string `json:"dim"`
-		Faint   string `json:"faint"`
-		Warn    string `json:"warn"`
-		Bad     string `json:"bad"`
-		RGB     string `json:"rgb"`
-		Glow    string `json:"glow"`
-		Font    string `json:"font"`
-		Radius  string `json:"r"`
-		Border  string `json:"bw"`
-		Scan    string `json:"scan"`
-		Shadow  string `json:"shadow"`
-		WBorder string `json:"wborder"`
-		BarR    string `json:"barr"`
-	}
-	out := map[string]entry{}
-	for _, id := range theme.IDs() {
-		p := theme.Get(id)
-		r, g, b := theme.RGB(p.Accent)
-		out[id] = entry{
-			Bg: p.Bg, Panel: p.Panel, Line: p.Line, Accent: p.Accent,
-			Dim: p.Dim, Faint: p.Faint, Warn: p.Warn, Bad: p.Bad,
-			RGB:     fmt.Sprintf("%d,%d,%d", r, g, b),
-			Glow:    cssVar(p.CSSVars(), "--glow"),
-			Font:    cssVar(p.CSSVars(), "--font"),
-			Radius:  cssVar(p.CSSVars(), "--r"),
-			Border:  cssVar(p.CSSVars(), "--bw"),
-			Scan:    cssVar(p.CSSVars(), "--scan"),
-			Shadow:  cssVar(p.CSSVars(), "--shadow"),
-			WBorder: cssVar(p.CSSVars(), "--wborder"),
-			BarR:    barRadius(p),
-		}
-	}
-	data, err := json.Marshal(out)
-	if err != nil {
-		return "{}"
-	}
-	return string(data)
 }
 
 // refreshWindowChrome repaints the frame of every window that is open right now.
@@ -156,6 +125,77 @@ func liveWindows() []uintptr {
 	return out
 }
 
+// skinListJSON hands the page every skin and every colour, so it can repaint
+// itself the moment one is picked.
+func skinListJSON() string {
+	type entry struct {
+		Skin    string `json:"skin"`
+		Colour  string `json:"colour"`
+		Bg      string `json:"bg"`
+		Panel   string `json:"panel"`
+		Line    string `json:"line"`
+		Accent  string `json:"accent"`
+		Dim     string `json:"dim"`
+		Faint   string `json:"faint"`
+		Warn    string `json:"warn"`
+		Bad     string `json:"bad"`
+		Field   string `json:"field"`
+		Soft    string `json:"soft"`
+		NavOn   string `json:"navon"`
+		On      string `json:"on"`
+		RGB     string `json:"rgb"`
+		Glow    string `json:"glow"`
+		Font    string `json:"font"`
+		Radius  string `json:"r"`
+		Border  string `json:"bw"`
+		Scan    string `json:"scan"`
+		Shadow  string `json:"shadow"`
+		WBorder string `json:"wborder"`
+		BarR    string `json:"barr"`
+	}
+	out := map[string]entry{}
+	add := func(skin, colour string) {
+		look := theme.Current(skin, colour)
+		p := look.Palette
+		r, g, b := theme.RGB(p.Accent)
+		css := look.CSSVars()
+		key := skin
+		if look.Colours {
+			key = skin + ":" + p.ID
+		}
+		out[key] = entry{
+			Skin: skin, Colour: p.ID,
+			Bg: p.Bg, Panel: p.Panel, Line: p.Line, Accent: p.Accent,
+			Dim: p.Dim, Faint: p.Faint, Warn: p.Warn, Bad: p.Bad,
+			Field: p.Field, Soft: p.Soft, NavOn: p.NavOn, On: p.On,
+			RGB:     fmt.Sprintf("%d,%d,%d", r, g, b),
+			Glow:    cssVar(css, "--glow"),
+			Font:    cssVar(css, "--font"),
+			Radius:  cssVar(css, "--r"),
+			Border:  cssVar(css, "--bw"),
+			Scan:    cssVar(css, "--scan"),
+			Shadow:  cssVar(css, "--shadow"),
+			WBorder: cssVar(css, "--wborder"),
+			BarR:    barRadius(look),
+		}
+	}
+	for _, skin := range theme.SkinIDs() {
+		colours := theme.ColourIDs(skin)
+		if len(colours) == 0 {
+			add(skin, "")
+			continue
+		}
+		for _, c := range colours {
+			add(skin, c)
+		}
+	}
+	data, err := json.Marshal(out)
+	if err != nil {
+		return "{}"
+	}
+	return string(data)
+}
+
 // cssVar pulls one value out of the string CSSVars renders.
 func cssVar(vars, name string) string {
 	for _, part := range strings.Split(vars, ";") {
@@ -166,8 +206,8 @@ func cssVar(vars, name string) string {
 	return ""
 }
 
-func barRadius(s theme.Skin) string {
-	if s.Radius >= 10 {
+func barRadius(l theme.Look) string {
+	if l.Radius >= 10 {
 		return "99px"
 	}
 	return "0"

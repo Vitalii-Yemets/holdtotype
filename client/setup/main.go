@@ -311,7 +311,7 @@ func page(updateDir string) string {
 		"{{NODIR_JS}}":      template_jsstr(tr("nodir")),
 		"{{VERSION}}":       appVersion,
 		"{{DEFDIR}}":        template_jsstr(defDir),
-		"{{THEME_VARS}}":    theme.Get(installedTheme(updateDir)).CSSVars(),
+		"{{THEME_VARS}}":    theme.Current(installedLook(updateDir)).CSSVars(),
 	}
 	h := setupPage
 	for k, v := range repl {

@@ -347,22 +347,32 @@ func install(dir string, shortcut, autorun, touchAutorun, updates bool, modelID 
 	return warn, nil
 }
 
-func installedTheme(dir string) string {
+// installedLook reads the skin and colour of the copy being updated, so the
+// installer wears the same clothes.
+func installedLook(dir string) (skin, colour string) {
+	skin, colour = theme.DefaultSkin, theme.DefaultPalette
 	if dir == "" {
-		return theme.Default
+		return skin, colour
 	}
 	data, err := os.ReadFile(filepath.Join(dir, "config.json"))
 	if err != nil {
-		return theme.Default
+		return skin, colour
 	}
 	var cfg struct {
+		Skin  string `json:"skin"`
 		Theme string `json:"theme"`
 	}
 	if err := json.Unmarshal(data, &cfg); err != nil {
-		return theme.Default
+		return skin, colour
 	}
-	if !theme.Valid(cfg.Theme) {
-		return theme.Default
+	if cfg.Skin == "" && cfg.Theme != "" && !theme.ValidColour(cfg.Theme) {
+		return theme.Migrate(cfg.Theme)
 	}
-	return cfg.Theme
+	if theme.ValidSkin(cfg.Skin) {
+		skin = cfg.Skin
+	}
+	if theme.ValidColour(cfg.Theme) {
+		colour = cfg.Theme
+	}
+	return skin, colour
 }

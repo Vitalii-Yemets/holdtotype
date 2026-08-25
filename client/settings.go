@@ -121,6 +121,7 @@ type settingsForm struct {
 	Punctuation      string `json:"punctuation"`
 	HotkeyMode       string `json:"hotkey_mode"`
 	UILevel          string `json:"ui_level"`
+	Skin             string `json:"skin"`
 	Theme            string `json:"theme"`
 	ServerPort       int    `json:"server_port"`
 	ServerExe        string `json:"server_exe"`
@@ -660,7 +661,11 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 		c.UILevel = f.UILevel
 	}
 	themeChanged := false
-	if theme.Valid(f.Theme) && f.Theme != c.Theme {
+	if theme.ValidSkin(f.Skin) && f.Skin != c.Skin {
+		c.Skin = f.Skin
+		themeChanged = true
+	}
+	if theme.ValidColour(f.Theme) && f.Theme != c.Theme {
 		c.Theme = f.Theme
 		themeChanged = true
 	}
@@ -771,7 +776,7 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	a.mu.Unlock()
 
 	if themeChanged {
-		applyTheme(c.Theme)
+		applyTheme(c.Skin, c.Theme)
 		refreshWindowChrome()
 		trayReloadIcons(trayIdle)
 		a.refreshIdleUI()
@@ -850,6 +855,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"punctuation":             cfg.Punctuation,
 		"hotkey_mode":             cfg.HotkeyMode,
 		"ui_level":                cfg.UILevel,
+		"skin":                    cfg.Skin,
 		"theme":                   cfg.Theme,
 		"server_port":             cfg.ServerPort,
 		"server_exe":              cfg.ServerExe,
@@ -889,6 +895,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"upd": "S_UPDATED", "pedit": "S_PROF_EDIT", "pclose": "S_PROF_CLOSE",
 		"confirmdel": "S_CONFIRM_DEL", "delactive": "S_DEL_ACTIVE", "wizneedmodel": "S_WIZ_NEED_MODEL",
 		"free": "S_FREE", "updnone": "S_UPD_NONE",
+		"skinterminal": "S_SKIN_TERMINAL", "skinname": "S_SKIN",
 		"wndmax": "S_WND_MAX", "wndrestore": "S_WND_RESTORE", "wndmin": "S_WND_MIN", "wndclose": "S_WND_CLOSE",
 		"themeeditor": "S_THEME_EDITOR", "themeneon": "S_THEME_NEON",
 		"badgemodels": "S_BADGE_MODELS", "badgemiss": "S_BADGE_MISS", "badgesystem": "S_BADGE_SYSTEM", "badgehist": "S_BADGE_HIST",
@@ -922,7 +929,8 @@ func settingsHTML(cfg *Config, tab string) string {
 	}
 	lJSON, _ := json.Marshal(lMap)
 
-	pairs := []string{"{{CFG}}", string(cfgJSON), "{{L_JSON}}", string(lJSON), "{{APP}}", appid.Name, "{{THEME_VARS}}", theme.Get(cfg.Theme).CSSVars(), "{{THEME_LIST}}", themeListJSON()}
+	pairs := []string{"{{CFG}}", string(cfgJSON), "{{L_JSON}}", string(lJSON), "{{APP}}", appid.Name,
+		"{{THEME_VARS}}", theme.Current(cfg.Skin, cfg.Theme).CSSVars(), "{{THEME_LIST}}", skinListJSON()}
 	remote := strings.TrimSpace(cfg.ServerURL) != ""
 	for k := range settingsStrings["en"] {
 		v := str(k)
@@ -950,8 +958,8 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;background:rep
 .capbtns{display:flex;gap:6px;margin-left:10px;flex:none}
 .resizetop{position:fixed;top:0;left:0;right:0;height:5px;cursor:n-resize;z-index:50}
 button.cap{width:36px;height:30px;background:none;border:1px solid var(--line);color:var(--dim);font:14px Consolas,monospace;cursor:pointer;padding:0}
-button.cap:hover{background:#123f22;color:var(--green);box-shadow:var(--glow)}
-button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box-shadow:0 0 7px rgba(255,110,90,.5)}
+button.cap:hover{background:var(--on);color:var(--green);box-shadow:var(--glow)}
+button.cap.close:hover{background:#3c1212;color:var(--bad);border-color:#7a2e2e;box-shadow:0 0 7px rgba(255,110,90,.5)}
 .logo{width:40px;height:40px;flex:none}
 .logo svg{width:100%;height:100%;filter:drop-shadow(0 0 5px rgba(var(--rgb),.7))}
 .header h1{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:15px;letter-spacing:2px;text-shadow:var(--glow);animation:flicker 6s infinite}
@@ -1026,7 +1034,7 @@ button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box
 .wizdots i{width:7px;height:7px;border:1px solid var(--line);display:block}
 .wizdots i.on{background:var(--green);border-color:var(--green);box-shadow:var(--glow)}
 .wizrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.wizrow select{background:#08100b;border:1px solid var(--line);color:var(--green);font:inherit;font-size:13px;padding:6px 9px;min-width:170px}
+.wizrow select{background:var(--field);border:1px solid var(--line);color:var(--green);font:inherit;font-size:13px;padding:6px 9px;min-width:170px}
 .wizrow select:focus{border-color:var(--dim);box-shadow:var(--glow);outline:none}
 .wizkey{border:1px solid var(--dim);padding:4px 11px;letter-spacing:1px;text-shadow:var(--glow);white-space:nowrap}
 .wizplan{display:flex;flex-direction:column;gap:4px;border:1px solid var(--line);background:var(--panel);padding:10px 12px;min-height:38px}
@@ -1034,7 +1042,7 @@ button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box
 .wizbar i{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,var(--faint),var(--green));box-shadow:var(--glow);transition:width .15s linear}
 .wizlvl{display:flex;align-items:flex-end;gap:2px;height:16px}
 .wizlvl i{display:block;width:4px;height:3px;background:var(--green);box-shadow:var(--glow);border-radius:var(--barr,0);transition:height .12s linear}
-.wiztry{width:100%;min-height:76px;resize:none;background:#08100b;border:1px solid var(--line);color:var(--green);font:inherit;font-size:13px;padding:9px 11px;outline:none;user-select:text}
+.wiztry{width:100%;min-height:76px;resize:none;background:var(--field);border:1px solid var(--line);color:var(--green);font:inherit;font-size:13px;padding:9px 11px;outline:none;user-select:text}
 .wiztry:focus{border-color:var(--dim);box-shadow:var(--glow)}
 .wizout{font-size:12.5px;color:var(--dim);min-height:18px}
 .wizout.ok{color:var(--green);text-shadow:var(--glow)}
@@ -1047,15 +1055,15 @@ button.btn.ghost:hover{color:var(--green);border-color:var(--dim);background:non
 .lvlb.on{background:var(--green);color:var(--bg);text-shadow:none}
 .row.hidden{display:none}
 .page.advopen .row[data-adv]{border-left:2px solid var(--line);padding-left:9px;margin-left:-11px}
-.row.hit{background:#101d14;box-shadow:inset 2px 0 0 var(--green)}
+.row.hit{background:var(--navon);box-shadow:inset 2px 0 0 var(--green)}
 .moreb{appearance:none;background:none;border:1px dashed var(--line);color:var(--dim);font:inherit;font-size:11px;padding:6px 10px;margin:6px 0 0;cursor:pointer}
 .moreb:hover{color:var(--dim);border-color:var(--dim)}
 .modal-bg{position:fixed;inset:0;background:rgba(3,7,4,.78);display:flex;align-items:center;justify-content:center;z-index:20}
 .modal{background:var(--panel);border:1px solid var(--dim);box-shadow:0 0 24px rgba(var(--rgb),.18);padding:20px 22px;max-width:380px;display:flex;flex-direction:column;gap:16px}
 .modal p{font-size:13px;line-height:1.55;color:var(--green)}
 .modal-btns{display:flex;gap:10px;justify-content:flex-end}
-.modal .btn{padding:7px 18px;border:1px solid var(--dim);background:#0d1a11;color:var(--green);font:inherit;font-size:12px;letter-spacing:1px;text-transform:uppercase;cursor:pointer}
-.modal .btn:hover{background:#123f22;box-shadow:var(--glow)}
+.modal .btn{padding:7px 18px;border:1px solid var(--dim);background:var(--navon);color:var(--green);font:inherit;font-size:12px;letter-spacing:1px;text-transform:uppercase;cursor:pointer}
+.modal .btn:hover{background:var(--on);box-shadow:var(--glow)}
 .modal .btn.ghost{border-color:var(--line);background:none;color:var(--dim)}
 .modal .btn.ghost:hover{color:var(--green);border-color:var(--dim)}
 .modal .btn:focus-visible{outline:1px solid var(--green);outline-offset:2px}
@@ -1078,7 +1086,7 @@ button.btn.ghost:hover{color:var(--green);border-color:var(--dim);background:non
 .page{display:none;padding:14px 16px;max-width:900px}
 .page.active{display:block}
 .card{background:none;border:0;padding:0;margin:0 0 18px}
-.row{display:flex;align-items:center;gap:10px;padding:9px 0;flex-wrap:wrap;border-bottom:1px solid #12241a}
+.row{display:flex;align-items:center;gap:10px;padding:9px 0;flex-wrap:wrap;border-bottom:1px solid var(--soft)}
 .card .row:last-child{border-bottom:0}
 .row label{flex:1;min-width:100px;color:var(--green)}
 .row label .sub{display:block;font-size:10.5px;color:var(--dim);margin-top:2px;letter-spacing:0}
@@ -1087,18 +1095,18 @@ button.btn.ghost:hover{color:var(--green);border-color:var(--dim);background:non
 .row input[type=text]{flex:0 1 auto;min-width:0}
 .row .hint{font-size:11px;color:var(--dim)}
 select{color-scheme:dark}
-option{background:#0b100d;color:var(--green)}
-option:checked{background:linear-gradient(#123f22,#123f22);color:var(--green)}
+option{background:var(--bg);color:var(--green)}
+option:checked{background:linear-gradient(var(--on),var(--on));color:var(--green)}
 select,::picker(select){appearance:base-select}
-::picker(select){background:#0b100d;border:1px solid var(--line);padding:2px;margin-top:2px;color:var(--green)}
+::picker(select){background:var(--bg);border:1px solid var(--line);padding:2px;margin-top:2px;color:var(--green)}
 ::picker(select) option{padding:6px 10px;background:none;color:var(--dim);border:0;font:inherit;min-height:0}
-::picker(select) option:hover,::picker(select) option:focus{background:#123f22;color:var(--green);outline:none}
+::picker(select) option:hover,::picker(select) option:focus{background:var(--on);color:var(--green);outline:none}
 ::picker(select) option:checked{color:var(--green);text-shadow:var(--glow)}
 option::checkmark{display:none}
 select::picker-icon{color:var(--faint)}
 select:open::picker-icon{transform:rotate(180deg)}
 select:open{border-color:var(--dim)}
-input[type=text],input[type=number],select{padding:7px 10px;border:1px solid var(--dim);background:#08100b;color:var(--green);font:inherit;outline:none}
+input[type=text],input[type=number],select{padding:7px 10px;border:1px solid var(--dim);background:var(--field);color:var(--green);font:inherit;outline:none}
 input:focus,select:focus{border-color:var(--dim);box-shadow:var(--glow)}
 input::placeholder{color:var(--dim)}
 input:disabled,select:disabled{opacity:.35;cursor:default}
@@ -1111,7 +1119,7 @@ input[type=checkbox]::after{content:"";position:absolute;top:2px;left:2px;width:
 input[type=checkbox]:checked{border-color:var(--dim)}
 input[type=checkbox]:checked::after{left:17px;background:var(--green);box-shadow:var(--glow)}
 input[type=checkbox]:focus-visible{outline:1px solid var(--green);outline-offset:2px}
-.row select,.row input[type=text]{border:1px solid var(--dim);background:#08100b;color:var(--green);font:inherit;font-size:11.5px;padding:4px 8px}
+.row select,.row input[type=text]{border:1px solid var(--dim);background:var(--field);color:var(--green);font:inherit;font-size:11.5px;padding:4px 8px}
 .row select{flex:0 0 auto;width:auto;min-width:118px;max-width:min(320px,100%)}
 .row input[type=text]{flex:0 0 auto;width:min(230px,50%)}
 .row .val{color:var(--dim);font-size:11.5px;min-width:44px;text-align:right}
@@ -1119,21 +1127,21 @@ button,select,input[type=checkbox],input[type=radio],input[type=range]{cursor:po
 button:disabled{cursor:default;opacity:.35}
 .val{min-width:52px;text-align:right;color:var(--green);text-shadow:var(--glow);font-weight:700}
 .hotkey-box{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.hotkey-val{font-weight:700;font-size:15px;background:#08100b;border:1px solid var(--line);padding:8px 14px;min-width:150px;text-align:center;text-shadow:var(--glow);letter-spacing:1px}
-button.btn{padding:8px 18px;border:1px solid var(--dim);background:#0d1a11;color:var(--green);font:inherit;cursor:pointer;letter-spacing:1px;text-transform:uppercase;font-size:12px}
-button.btn:hover{background:#123f22;box-shadow:var(--glow)}
+.hotkey-val{font-weight:700;font-size:15px;background:var(--field);border:1px solid var(--line);padding:8px 14px;min-width:150px;text-align:center;text-shadow:var(--glow);letter-spacing:1px}
+button.btn{padding:8px 18px;border:1px solid var(--dim);background:var(--navon);color:var(--green);font:inherit;cursor:pointer;letter-spacing:1px;text-transform:uppercase;font-size:12px}
+button.btn:hover{background:var(--on);box-shadow:var(--glow)}
 button.ghost{border-color:var(--line);color:var(--dim)}
 button.ghost:hover{color:var(--green)}
 .footer{flex:none;display:flex;gap:12px;align-items:center;padding:10px 16px;background:var(--panel);border-top:1px solid var(--line)}
 .toast{color:var(--amber);font-size:13px;opacity:0;transition:opacity .3s;text-shadow:0 0 6px rgba(255,179,71,.5)}
 .toast.show{opacity:1}
-.rulerow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid #12241a}
+.rulerow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--soft)}
 .rulerow:last-child{border-bottom:none}
 .rulerow input[type=text]{flex:1 1 190px;min-width:150px;width:auto;font-size:12px;padding:5px 9px}
 .rulerow select{flex:0 0 auto;width:auto;min-width:118px;font-size:11.5px;padding:4px 8px}
 .rdel{flex:none;border:1px solid var(--line);background:none;color:var(--dim);font:inherit;font-size:12px;cursor:pointer;padding:4px 9px}
-.rdel:hover{color:#ff7b6b;border-color:#7a2e2e}
-.histrow{display:flex;align-items:flex-start;gap:10px;padding:9px 2px;border-bottom:1px solid #12241a}
+.rdel:hover{color:var(--bad);border-color:#7a2e2e}
+.histrow{display:flex;align-items:flex-start;gap:10px;padding:9px 2px;border-bottom:1px solid var(--soft)}
 .histrow:last-child{border-bottom:none}
 .histmeta{flex:none;width:150px;font-size:10.5px;color:var(--dim);line-height:1.5}
 .histmeta b{display:block;color:var(--dim);font-weight:400}
@@ -1145,13 +1153,13 @@ button.ghost:hover{color:var(--green)}
 .micverdict.ok{color:var(--green);text-shadow:var(--glow)}
 .micverdict.bad{color:var(--amber)}
 .sect .mini{margin-left:auto}
-.replrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 0;border-bottom:1px solid #12241a}
+.replrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 0;border-bottom:1px solid var(--soft)}
 .replrow:last-child{border-bottom:none}
 .replrow input[type=text]{flex:1 1 160px;min-width:120px;width:auto;font-size:12px;padding:5px 9px}
 .replrow .rarrow{flex:none;color:var(--dim)}
 .replrow label{flex:none;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--dim);white-space:nowrap}
 .replrow label input[type=checkbox]{width:28px;height:15px}
-.replcheck{display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:10px;border-top:1px solid #12241a;flex-wrap:wrap}
+.replcheck{display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:10px;border-top:1px solid var(--soft);flex-wrap:wrap}
 .replcheck input[type=text]{flex:1 1 220px;min-width:160px;width:auto;font-size:12px;padding:5px 9px}
 .replout{flex:1 1 200px;min-width:0;font-size:12px;color:var(--green);text-shadow:var(--glow);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .replout:empty{display:none}
@@ -1162,11 +1170,11 @@ button.ghost:hover{color:var(--green)}
 .card>.hint{font-size:11.5px;color:var(--dim);margin-bottom:6px;line-height:1.5}
 .mslot{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);padding:11px 2px 3px;border-bottom:1px solid var(--line);margin-bottom:2px}
 .mslot.hidden{display:none}
-.mrow{display:flex;align-items:center;gap:9px;padding:7px 2px;border-bottom:1px solid #12241a;flex-wrap:nowrap}
+.mrow{display:flex;align-items:center;gap:9px;padding:7px 2px;border-bottom:1px solid var(--soft);flex-wrap:nowrap}
 .mrow .mdesc{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (max-width:820px){.mrow .mram{display:none}}
 .mrow:last-child{border-bottom:none}
-input[type=radio]{appearance:none;-webkit-appearance:none;width:15px;height:15px;flex:none;margin:0;padding:0;border:1px solid var(--dim);border-radius:50%;background:#08100b;position:relative;cursor:pointer}
+input[type=radio]{appearance:none;-webkit-appearance:none;width:15px;height:15px;flex:none;margin:0;padding:0;border:1px solid var(--dim);border-radius:50%;background:var(--field);position:relative;cursor:pointer}
 input[type=radio]:checked{border-color:var(--green)}
 input[type=radio]:checked::after{content:"";position:absolute;top:3px;left:3px;width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:var(--glow)}
 input[type=radio]:disabled{opacity:.4;cursor:default}
@@ -1180,12 +1188,12 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .rrow .rarr{color:var(--dim)}
 .rrow .reng{border:1px solid var(--line);padding:1px 7px;color:var(--green);font-size:11.5px}
 .rrow .rwhy{margin-left:auto;color:var(--dim);font-size:11px}
-#routing{border-bottom:1px solid #12241a;margin-bottom:8px;padding-bottom:6px}
+#routing{border-bottom:1px solid var(--soft);margin-bottom:8px;padding-bottom:6px}
 .advbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
 .fchips{display:flex;gap:5px;flex-wrap:wrap;margin-left:auto}
 .fchip{appearance:none;background:none;border:1px solid var(--line);color:var(--dim);font:inherit;font-size:10.5px;padding:2px 8px;cursor:pointer}
 .fchip:hover{color:var(--dim)}
-.fchip.on{background:var(--dim);color:#08100b;border-color:var(--dim)}
+.fchip.on{background:var(--dim);color:var(--field);border-color:var(--dim)}
 #advisor{border:1px solid var(--line);padding:10px 11px;margin-bottom:9px;display:flex;flex-direction:column;gap:9px}
 .advrow{display:flex;align-items:center;gap:9px;font-size:12px;padding:3px 0}
 .advrow .advrole{width:74px;color:var(--dim);text-transform:uppercase;font-size:10px;letter-spacing:.1em}
@@ -1194,18 +1202,18 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .advrow .advstate{color:var(--amber)}
 .advrow .advstate.ok{color:var(--dim)}
 .advq{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:11.5px;color:var(--dim)}
-.advq select{background:#08100b;border:1px solid var(--line);color:var(--green);font:inherit;font-size:11.5px;padding:2px 6px;margin-left:5px}
+.advq select{background:var(--field);border:1px solid var(--line);color:var(--green);font:inherit;font-size:11.5px;padding:2px 6px;margin-left:5px}
 .advchk{display:flex;align-items:center;gap:5px}
 .advout{font-size:12px;color:var(--green);line-height:1.5;min-height:1em}
 .mrow.hidden{display:none}
 .mram{color:var(--dim);font-size:10.5px;width:74px;text-align:right}
 .mram.warn{color:var(--amber)}
-.mram.bad{color:#ff6b5b}
+.mram.bad{color:var(--bad)}
 .mrow .msize{color:var(--dim);font-size:12px;width:70px;text-align:right}
 .badge{font-size:11px;letter-spacing:1px;padding:4px 10px;border:1px solid var(--dim);color:var(--green);text-shadow:var(--glow);text-transform:uppercase}
 button.mini{flex:none;padding:5px 12px;border:1px solid var(--line);background:none;color:var(--dim);font:12px Consolas,monospace;cursor:pointer;text-transform:uppercase}
 button.mini:hover{color:var(--green);border-color:var(--dim);box-shadow:var(--glow)}
-button.mini.danger:hover{color:#ff7b6b;border-color:#7a2e2e;box-shadow:0 0 7px rgba(255,110,90,.5)}
+button.mini.danger:hover{color:var(--bad);border-color:#7a2e2e;box-shadow:0 0 7px rgba(255,110,90,.5)}
 .mpct{color:var(--amber);font-size:12px;min-width:44px;text-align:right;text-shadow:0 0 6px rgba(255,179,71,.5)}
 .sect{color:var(--dim);font-weight:400;font-size:11px;letter-spacing:.14em;text-transform:uppercase;margin:0 0 4px;display:flex;align-items:center;gap:8px}
 .hfhome{margin-left:auto;cursor:pointer;color:var(--dim);font-size:11px;letter-spacing:1px;border:1px solid var(--line);padding:3px 9px;text-transform:none}
@@ -1213,7 +1221,7 @@ button.mini.danger:hover{color:#ff7b6b;border-color:#7a2e2e;box-shadow:0 0 7px r
 .ramline{display:flex;align-items:center;flex-wrap:wrap;gap:6px;color:var(--dim);font-size:12px;margin:4px 0 10px}
 .ramline b{color:var(--green);font-size:14px;text-shadow:var(--glow);margin-right:4px}
 .ramline .dot{margin-left:12px;font-size:10px}
-.subhead{color:var(--dim);font-size:11px;letter-spacing:1px;text-transform:uppercase;margin:14px 0 2px;padding-top:10px;border-top:1px solid #12241a}
+.subhead{color:var(--dim);font-size:11px;letter-spacing:1px;text-transform:uppercase;margin:14px 0 2px;padding-top:10px;border-top:1px solid var(--soft)}
 #hf_results{max-height:44vh;overflow-y:auto;overscroll-behavior:contain}
 .miclevel{flex:none;display:flex;align-items:flex-end;gap:2px;height:16px;width:auto}
 .miclevel i{display:block;width:4px;height:3px;background:var(--green);box-shadow:var(--glow);border-radius:var(--barr,0);transition:height .09s linear}
@@ -1230,7 +1238,7 @@ button.mini.danger:hover{color:#ff7b6b;border-color:#7a2e2e;box-shadow:0 0 7px r
 .hflink:hover{color:var(--green)}
 button.iconbtn{border:none;background:none;padding:2px 5px;color:var(--dim);cursor:pointer;line-height:1;font:13px Consolas,monospace}
 button.iconbtn:hover{color:var(--green);filter:drop-shadow(0 0 4px rgba(var(--rgb),.6))}
-button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,110,90,.5))}
+button.iconbtn.danger:hover{color:var(--bad);filter:drop-shadow(0 0 4px rgba(255,110,90,.5))}
 .about p{margin:8px 0;line-height:1.55;user-select:text;color:var(--green);max-width:80ch}
 .about li{max-width:78ch}
 .toc{display:flex;flex-wrap:wrap;gap:6px 14px;margin:6px 0 4px;max-width:80ch}
@@ -1243,16 +1251,16 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
 .toc a:hover{color:var(--green);border-bottom-color:var(--dim)}
 .toc a:focus-visible{outline:1px solid var(--green);outline-offset:2px}
 .about .wh:target,.about .wh.hit{color:var(--green);text-shadow:var(--glow)}
-.about p.hit,.about li.hit{background:#101d14;box-shadow:inset 2px 0 0 var(--green);padding-left:7px}
+.about p.hit,.about li.hit{background:var(--navon);box-shadow:inset 2px 0 0 var(--green);padding-left:7px}
 .about p.warn{color:var(--amber);border-left:2px solid var(--amber);padding-left:9px}
 .about b{text-shadow:var(--glow)}
-.about .wh{color:var(--dim);font-size:12px;letter-spacing:1px;text-transform:uppercase;margin:16px 0 4px;border-bottom:1px solid #12241a;padding-bottom:3px}
+.about .wh{color:var(--dim);font-size:12px;letter-spacing:1px;text-transform:uppercase;margin:16px 0 4px;border-bottom:1px solid var(--soft);padding-bottom:3px}
 .about ul{margin:4px 0 10px 20px;padding:0}
 .about li{margin:4px 0;line-height:1.55;color:var(--green);user-select:text}
-.mock{background:#0a0e0b;border:1px solid var(--line);padding:10px 14px;margin:8px 0;max-width:420px}
+.mock{background:var(--bg);border:1px solid var(--line);padding:10px 14px;margin:8px 0;max-width:420px}
 .mock-pill{display:flex;align-items:center;gap:10px}
 .mock-dot{width:11px;height:11px;border-radius:50%;background:#ff5b4d;box-shadow:0 0 8px rgba(255,91,77,.8);flex:none}
-.mock-bars{display:flex;gap:2px;align-items:center}
+.mock-bars{display:flex;gap:2px;align-items:flex-end}
 .mock-bars i{display:block;width:3px;background:var(--green)}
 .mock-ask{display:flex;align-items:center;gap:8px;margin-top:9px;padding-top:9px;border-top:1px solid var(--line);flex-wrap:wrap;font-size:13px;color:var(--dim)}
 .mock-x{margin-left:auto;color:var(--dim)}
@@ -1262,12 +1270,12 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
 .mock-cd::after{content:"";position:absolute;left:0;right:38%;bottom:-4px;height:2px;background:var(--green);box-shadow:var(--glow)}
 .mock-mi{padding:4px 6px;color:var(--green);font-size:13px}
 .mock-mi.dim{color:var(--faint)}
-.mock-sep{border:none;border-top:1px solid #12241a;margin:4px 0}
-.mock-row{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px;border-bottom:1px solid #10201a}
+.mock-sep{border:none;border-top:1px solid var(--soft);margin:4px 0}
+.mock-row{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px;border-bottom:1px solid var(--soft)}
 .mock-row:last-child{border-bottom:none}
 .mock-radio{width:12px;height:12px;border-radius:50%;border:1px solid var(--dim);flex:none}
 .mock-radio.on{background:var(--green);box-shadow:var(--glow)}
-.mock-cb{width:13px;height:13px;border:1px solid var(--dim);flex:none;display:inline-flex;align-items:center;justify-content:center;font-size:10px;color:#0b0f0c}
+.mock-cb{width:13px;height:13px;border:1px solid var(--dim);flex:none;display:inline-flex;align-items:center;justify-content:center;font-size:10px;color:var(--bg)}
 .mock-cb.on{background:var(--green)}
 .mock-note{color:var(--dim);font-size:12px}
 .lnk{color:var(--green);text-decoration:underline;cursor:pointer}
@@ -1500,7 +1508,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
  <div class="card">
   <h2 class="sect">{{S_SUB_DICT}}</h2>
   <div class="hint">{{S_DICT_HINT}}</div>
-  <textarea id="whisper_prompt" rows="10" style="width:100%;min-height:150px;height:26vh;padding:8px 11px;border:1px solid var(--line);background:#08100b;color:var(--green);font:inherit;line-height:1.5;outline:none;resize:vertical"></textarea>
+  <textarea id="whisper_prompt" rows="10" style="width:100%;min-height:150px;height:26vh;padding:8px 11px;border:1px solid var(--line);background:var(--field);color:var(--green);font:inherit;line-height:1.5;outline:none;resize:vertical"></textarea>
  </div>
  <div class="card" data-adv>
   <h2 class="sect">{{S_SEC_REPLACE}}</h2>
@@ -1586,15 +1594,19 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
     <option value="it">Italiano</option>
     <option value="pl">Polski</option>
    </select></div>
-  <div class="row"><label>{{S_THEME}}<span class="sub">{{S_THEME_SUB}}</span></label>
+  <div class="row"><label>{{S_SKIN}}<span class="sub">{{S_SKIN_SUB}}</span></label>
+   <select id="skin">
+    <option value="terminal">{{S_SKIN_TERMINAL}}</option>
+    <option value="editor">{{S_THEME_EDITOR}}</option>
+    <option value="neon">{{S_THEME_NEON}}</option>
+   </select></div>
+  <div class="row" id="colour_row"><label>{{S_THEME}}<span class="sub">{{S_THEME_SUB}}</span></label>
    <span class="swatches" id="theme_swatches"></span>
    <select id="theme">
     <option value="green">{{S_THEME_GREEN}}</option>
     <option value="amber">{{S_THEME_AMBER}}</option>
     <option value="blue">{{S_THEME_BLUE}}</option>
     <option value="pink">{{S_THEME_PINK}}</option>
-    <option value="editor">{{S_THEME_EDITOR}}</option>
-    <option value="neon">{{S_THEME_NEON}}</option>
    </select></div>
   <div class="row"><label>{{S_AUTORUN}}<span class="sub">{{S_AUTORUN_SUB}}</span></label><input type="checkbox" id="autorun"></div>
   <div class="row"><label>{{S_UPD}}</label>
@@ -1735,7 +1747,7 @@ let exeStored = CFG.server_exe || "";
 let exeUnlocked = false;
 let remoteURL = (CFG.server_url || "").trim();
 const nums  = ["threads","min_record_ms","max_record_seconds","translate_ask_seconds","server_port","paste_delay_ms","history_days","history_max"];
-const sels  = ["ui_language","language","sound_theme","translate_target","translate_ask","hotkey_mode","overlay_position","theme"];
+const sels  = ["ui_language","language","sound_theme","translate_target","translate_ask","hotkey_mode","overlay_position","theme","skin"];
 const trAll = ["en","de","fr","es","it","pl","ru","uk"];
 const L = {{L_JSON}};
 const I_DL = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12"/><path d="M6 11l6 6 6-6"/><path d="M4 21h16"/></svg>';
@@ -1766,8 +1778,11 @@ function initWindowButtons(){
   if(window.appMaximized) appMaximized().then(paintMaxButton);
 }
 const THEMES = {{THEME_LIST}};
+function lookKey(skin, colour){
+  return THEMES[skin + ":" + colour] ? skin + ":" + colour : skin;
+}
 function applyThemeVars(id){
-  const p = THEMES[id] || THEMES.green;
+  const p = THEMES[id] || THEMES["terminal:green"];
   if(!p) return;
   const root = document.documentElement.style;
   root.setProperty("--bg", p.bg);
@@ -1779,6 +1794,10 @@ function applyThemeVars(id){
   root.setProperty("--amber", p.warn);
   root.setProperty("--bad", p.bad);
   root.setProperty("--rgb", p.rgb);
+  root.setProperty("--field", p.field);
+  root.setProperty("--soft", p.soft);
+  root.setProperty("--navon", p.navon);
+  root.setProperty("--on", p.on);
   root.setProperty("--glow", p.glow);
   if(p.font) root.setProperty("--font", p.font);
   if(p.r) root.setProperty("--r", p.r);
@@ -1787,32 +1806,43 @@ function applyThemeVars(id){
   if(p.shadow) root.setProperty("--shadow", p.shadow);
   if(p.wborder) root.setProperty("--wborder", p.wborder);
   if(p.barr !== undefined) root.setProperty("--barr", p.barr);
-  document.documentElement.dataset.skin = id;
+  document.documentElement.dataset.skin = p.skin || id;
+}
+function paintLook(){
+  const skin = document.getElementById("skin");
+  const colour = document.getElementById("theme");
+  const row = document.getElementById("colour_row");
+  const box = document.getElementById("theme_swatches");
+  if(!skin || !colour) return;
+  const ownColours = !THEMES[skin.value + ":" + colour.value] && !THEMES[skin.value + ":green"];
+  if(row) row.style.display = ownColours ? "none" : "";
+  applyThemeVars(lookKey(skin.value, colour.value));
+  if(box) box.querySelectorAll(".swatch").forEach(b=>b.classList.toggle("on", b.dataset.theme === colour.value));
 }
 function initTheme(){
-  const sel = document.getElementById("theme");
+  const skin = document.getElementById("skin");
+  const colour = document.getElementById("theme");
   const box = document.getElementById("theme_swatches");
-  if(!sel || !box) return;
+  if(!skin || !colour || !box) return;
   box.innerHTML = "";
-  [...sel.options].forEach(o=>{
+  [...colour.options].forEach(o=>{
     const id = o.value;
-    if(!THEMES[id]) return;
+    const look = THEMES["terminal:" + id];
+    if(!look) return;
     const b = document.createElement("button");
     b.type = "button";
-    b.className = "swatch" + (id === sel.value ? " on" : "");
+    b.className = "swatch" + (id === colour.value ? " on" : "");
     b.dataset.theme = id;
     b.title = o.textContent;
     const i = document.createElement("i");
-    i.style.background = THEMES[id].accent;
+    i.style.background = look.accent;
     b.appendChild(i);
-    b.onclick = ()=>{ sel.value = id; sel.dispatchEvent(new Event("change", {bubbles:true})); };
+    b.onclick = ()=>{ colour.value = id; colour.dispatchEvent(new Event("change", {bubbles:true})); };
     box.appendChild(b);
   });
-  sel.addEventListener("change", ()=>{
-    applyThemeVars(sel.value);
-    box.querySelectorAll(".swatch").forEach(b=>b.classList.toggle("on", b.dataset.theme === sel.value));
-  });
-  applyThemeVars(sel.value);
+  skin.addEventListener("change", paintLook);
+  colour.addEventListener("change", paintLook);
+  paintLook();
 }
 function initServerExe(){
   const box = document.getElementById("server_exe");
@@ -1928,7 +1958,7 @@ let hfFiles = [];
 let hfQuery = "";
 function fitLabel(f, need){
   const gb = (need/1024).toFixed(1);
-  const col = f==="ok" ? "var(--green)" : (f==="warn" ? "var(--amber)" : "#ff7b6b");
+  const col = f==="ok" ? "var(--green)" : (f==="warn" ? "var(--amber)" : "var(--bad)");
   const tip = f==="ok" ? L.fitok : (f==="warn" ? L.fitwarn : L.fitbad);
   return '<span title="'+esc(tip)+'" style="color:'+col+';font-size:12px;white-space:nowrap">&#9679; &#8776;'+gb+' GB</span>';
 }
@@ -2001,7 +2031,7 @@ async function refreshLLM(){
     ''+
       '<span class="dot" style="color:var(--green)">&#9679;</span>'+L.fitok+
       '<span class="dot" style="color:var(--amber)">&#9679;</span>'+L.fitwarn+
-      '<span class="dot" style="color:#ff7b6b">&#9679;</span>'+L.fitbad+'</div>'+
+      '<span class="dot" style="color:var(--bad)">&#9679;</span>'+L.fitbad+'</div>'+
     '<div id="hf_results"></div>';
   const qEl = document.getElementById("hf_q");
   const clr = document.getElementById("hf_clr");
@@ -2136,12 +2166,12 @@ function renderProfiles(body, st){
 
 function renderEditor(p){
   const ed = document.createElement("div");
-  ed.style.cssText = "border:1px solid #12241a;padding:10px;margin:2px 0 8px";
+  ed.style.cssText = "border:1px solid var(--soft);padding:10px;margin:2px 0 8px";
   ed.innerHTML =
     '<div style="display:flex;justify-content:flex-end;margin:-4px -4px 2px 0"><button class="iconbtn" id="pf_close" title="'+L.pclose+'">&#9650;</button></div>'+
     '<div class="row" style="padding-top:0"><label>'+L.pname+'</label><input type="text" id="pf_name"></div>'+
     '<div class="row" style="align-items:flex-start"><label>'+L.pprompt+'</label></div>'+
-    '<textarea id="pf_prompt" rows="4" style="width:100%;padding:7px 10px;border:1px solid var(--line);background:#08100b;color:var(--green);font:inherit;outline:none;resize:vertical"></textarea>'+
+    '<textarea id="pf_prompt" rows="4" style="width:100%;padding:7px 10px;border:1px solid var(--line);background:var(--field);color:var(--green);font:inherit;outline:none;resize:vertical"></textarea>'+
     '<div class="row"><label>'+L.phot+'</label><span class="hotkey-val" id="pf_hotkey" style="min-width:110px"></span>'+
     '<button class="mini" id="pf_set">'+L.pset+'</button><button class="mini" id="pf_clear">'+L.pclr+'</button></div>'+
     '<div class="row"><label>'+L.ptest+'</label><input type="text" id="pf_sample" style="flex:1"><button class="iconbtn" id="pf_run">&#9654;</button></div>'+
@@ -2215,7 +2245,7 @@ function paintMeter(box, level){
   const heard = level > MIC_FLOOR ? Math.min(1, (level - MIC_FLOOR) * 1.35) : 0;
   hist.push(heard);
   hist.shift();
-  bars.forEach((b, i)=>{ b.style.height = Math.round(2 + hist[i] * 14) + "px"; });
+  bars.forEach((b, i)=>{ b.style.height = Math.round(4 + hist[i] * 12) + "px"; });
 }
 function startMeter(barId, pageId, hintId){
   return setInterval(async ()=>{

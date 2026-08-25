@@ -35,6 +35,7 @@ const (
 	ovW          = 390
 	ovH          = 52
 	ovTimerID    = 1
+	micFloor     = 0.02
 
 	wsPopup          = 0x80000000
 	wsExLayered      = 0x00080000
@@ -163,7 +164,7 @@ var (
 func uiFont(hwnd uintptr) uintptr { return uiFontDPI(dpiFor(hwnd)) }
 
 func uiFontDPI(dpi int32) uintptr {
-	skin := themeSkin()
+	skin := themeLook()
 	fontMu.Lock()
 	defer fontMu.Unlock()
 	if f, ok := fontCache[dpi]; ok {
@@ -562,29 +563,29 @@ func overlayRender(hwnd, hdc uintptr) {
 		procDeleteObject.Call(br)
 	}
 	cy := px(ovH) / 2
-	// a solid core with a soft halo around it: the pulse breathes in the halo,
-	// the core stays the colour it is
-	core := px(5)
+	dotX := px(25)
+	// one flat dot of 11 points with an even halo around it, the way the plate
+	// is drawn on the mock-up: the pulse breathes the whole dot at once,
+	// the fill stays a single colour
+	core := int32(float64(px(5)) * (0.85 + 0.27*pulse))
 	if themeGlow() {
-		halo := px(9) + int32(pulse*3)
-		for i := int32(0); i < 3; i++ {
-			r := halo - i*(halo-core)/3
-			drawDot(px(25), cy, r, blendCol(colBg, bright, 0.12+0.16*float64(i)))
+		halo := core + px(8)
+		strength := 0.30 + 0.14*pulse
+		for r := halo; r > core; r-- {
+			t := float64(halo-r) / float64(halo-core)
+			drawDot(dotX, cy, r, blendCol(colBg, bright, strength*t*t))
 		}
 	}
-	drawDot(px(25), cy, core, bright)
 	switch st {
 	case ovPaused:
 		w, h, gap := px(2), px(10), px(3)
-		fill(rect{Left: px(25) - gap - w, Top: cy - h/2, Right: px(25) - gap, Bottom: cy + h/2}, bright)
-		fill(rect{Left: px(25) + gap, Top: cy - h/2, Right: px(25) + gap + w, Bottom: cy + h/2}, bright)
+		fill(rect{Left: dotX - gap - w, Top: cy - h/2, Right: dotX - gap, Bottom: cy + h/2}, bright)
+		fill(rect{Left: dotX + gap, Top: cy - h/2, Right: dotX + gap + w, Bottom: cy + h/2}, bright)
 	case ovFlashErr:
 		s := px(5)
-		fill(rect{Left: px(25) - s, Top: cy - s, Right: px(25) + s, Bottom: cy + s}, bright)
-		fill(rect{Left: px(25) - px(2), Top: cy - px(2), Right: px(25) + px(2), Bottom: cy + px(2)}, blendCol(bright, 0xFFFFFF, 0.45))
+		fill(rect{Left: dotX - s, Top: cy - s, Right: dotX + s, Bottom: cy + s}, bright)
 	default:
-		drawDot(px(25), cy, px(5), bright)
-		drawDot(px(25), cy, px(2), blendCol(bright, 0xFFFFFF, 0.45))
+		drawDot(dotX, cy, core, bright)
 	}
 
 	overlayFont()
@@ -633,25 +634,29 @@ func overlayRender(hwnd, hdc uintptr) {
 		procDrawTextW.Call(hdc, uintptr(unsafe.Pointer(&ls[0])), uintptr(len(ls)-1),
 			uintptr(unsafe.Pointer(&lr)), 0x0020|0x0004|0x0002)
 	} else if st == ovRecording && anim {
+		// the bars stand on one line and grow upwards, as they do on the
+		// mock-up; a quiet room leaves them lying flat
 		style := themeLevelStyle()
+		base := cy + px(11)
 		for i, v := range ovHistory {
 			x := rc.Right - px(186) + int32(i)*px(7)
+			lv := (v - micFloor) / (1 - micFloor)
+			if lv < 0 {
+				lv = 0
+			}
 			switch style {
 			case "dots":
-				r := px(2) + int32(float64(px(4))*v)
-				drawDot(x+px(2), cy, r, colGreen)
+				r := px(3)
+				drawDot(x+px(2), base-r-int32(float64(px(7))*lv), r, colGreen)
 			case "flat":
-				h := px(int32(4 + v*22))
-				fill(rect{Left: x, Top: cy - h/2, Right: x + px(3), Bottom: cy + h/2}, colGreen)
+				h := px(3) + int32(float64(px(13))*lv)
+				fill(rect{Left: x, Top: base - h, Right: x + px(4), Bottom: base}, colGreen)
 			default:
-				h := px(int32(3 + v*36))
-				if h > px(42) {
-					h = px(42)
+				h := px(4) + int32(float64(px(18))*lv)
+				if themeGlow() && lv > 0 {
+					fill(rect{Left: x - px(1), Top: base - h - px(1), Right: x + px(5), Bottom: base + px(1)}, colGreenLo)
 				}
-				if themeGlow() {
-					fill(rect{Left: x - px(1), Top: cy - h/2 - px(1), Right: x + px(5), Bottom: cy + h/2 + px(1)}, colGreenLo)
-				}
-				fill(rect{Left: x, Top: cy - h/2, Right: x + px(4), Bottom: cy + h/2}, colGreen)
+				fill(rect{Left: x, Top: base - h, Right: x + px(4), Bottom: base}, colGreen)
 			}
 		}
 	}

@@ -74,6 +74,7 @@ type Config struct {
 	Punctuation      string `json:"punctuation"`
 	HotkeyMode       string `json:"hotkey_mode"`
 	UILevel          string `json:"ui_level"`
+	Skin             string `json:"skin"`
 	Theme            string `json:"theme"`
 	PasteMode        string `json:"paste_mode"`
 	RestoreClipboard bool   `json:"restore_clipboard"`
@@ -177,7 +178,8 @@ func defaultConfig() *Config {
 		Punctuation:      punctFromModel,
 		HotkeyMode:       hotkeyHold,
 		UILevel:          levelSimple,
-		Theme:            theme.Default,
+		Skin:             theme.DefaultSkin,
+		Theme:            theme.DefaultPalette,
 		SherpaModel:      "models/gigaam-v3",
 		PasteMode:        "clipboard",
 		RestoreClipboard: true,
@@ -238,6 +240,18 @@ func fixConfigText(cfg *Config) bool {
 		fix(&cfg.Profiles[i].Prompt)
 	}
 	return changed
+}
+
+// fileNamesSkin says whether the file on disk already speaks of a design of
+// its own — a file written before the split names only the colour.
+func fileNamesSkin(data []byte) bool {
+	var probe struct {
+		Skin *string `json:"skin"`
+	}
+	if json.Unmarshal(data, &probe) != nil {
+		return false
+	}
+	return probe.Skin != nil
 }
 
 func loadConfig(path string) (*Config, error) {
@@ -308,8 +322,18 @@ func loadConfig(path string) (*Config, error) {
 	if !validHotkeyMode(cfg.HotkeyMode) {
 		cfg.HotkeyMode = hotkeyHold
 	}
-	if !theme.Valid(cfg.Theme) {
-		cfg.Theme = theme.Default
+	if !fileNamesSkin(data) && cfg.Theme != "" && !theme.ValidColour(cfg.Theme) {
+		// older versions kept one value for both; split it
+		skin, colour := theme.Migrate(cfg.Theme)
+		cfg.Skin, cfg.Theme = skin, colour
+		log.Printf("оформление разделено на облик %s и цвет %s", skin, colour)
+		migrated = true
+	}
+	if !theme.ValidSkin(cfg.Skin) {
+		cfg.Skin = theme.DefaultSkin
+	}
+	if !theme.ValidColour(cfg.Theme) {
+		cfg.Theme = theme.DefaultPalette
 	}
 	if !validUILevel(cfg.UILevel) {
 		cfg.UILevel = levelSimple

@@ -16,20 +16,20 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;background:rep
 .ver{color:var(--faint);font-size:12px}
 button.cap{width:36px;height:30px;background:none;border:1px solid var(--line);color:var(--dim);font:14px Consolas,monospace;cursor:pointer;padding:0}
 button.cap:hover{color:var(--green);border-color:var(--dim)}
-button.cap.close:hover{color:#ff7b6b;border-color:#7a2e2e}
+button.cap.close:hover{color:var(--bad);border-color:#7a2e2e}
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:1px solid var(--green);outline-offset:2px}
 .body{flex:1;padding:18px 22px;display:flex;flex-direction:column;gap:12px}
 .tagline{color:var(--dim);font-size:13px;line-height:1.5}
 label.fld{color:var(--green);font-size:13px}
-input[type=text]{width:100%;padding:8px 11px;border:1px solid var(--line);background:#08100b;color:var(--green);font:inherit;outline:none}
+input[type=text]{width:100%;padding:8px 11px;border:1px solid var(--line);background:var(--field);color:var(--green);font:inherit;outline:none}
 input[type=text]:focus{border-color:var(--dim);box-shadow:var(--glow)}
-select{padding:8px 11px;border:1px solid var(--line);background:#08100b;color:var(--green);font:inherit;outline:none;cursor:pointer;max-width:100%;color-scheme:dark}
-option{background:#0b100d;color:var(--green)}
-option:checked{background:linear-gradient(#123f22,#123f22);color:var(--green)}
+select{padding:8px 11px;border:1px solid var(--line);background:var(--field);color:var(--green);font:inherit;outline:none;cursor:pointer;max-width:100%;color-scheme:dark}
+option{background:var(--bg);color:var(--green)}
+option:checked{background:linear-gradient(var(--on),var(--on));color:var(--green)}
 select,::picker(select){appearance:base-select}
-::picker(select){background:#0b100d;border:1px solid var(--line);padding:2px;margin-top:2px;color:var(--green)}
+::picker(select){background:var(--bg);border:1px solid var(--line);padding:2px;margin-top:2px;color:var(--green)}
 ::picker(select) option{padding:6px 10px;background:none;color:var(--dim);border:0;font:inherit;min-height:0}
-::picker(select) option:hover,::picker(select) option:focus{background:#123f22;color:var(--green);outline:none}
+::picker(select) option:hover,::picker(select) option:focus{background:var(--on);color:var(--green);outline:none}
 ::picker(select) option:checked{color:var(--green);text-shadow:var(--glow)}
 option::checkmark{display:none}
 select::picker-icon{color:var(--faint)}
@@ -45,15 +45,15 @@ button.ibtn:hover{color:var(--green);border-color:var(--dim);box-shadow:var(--gl
 .chk input:checked{border-color:var(--dim)}
 .chk input:checked::after{left:17px;background:var(--green);box-shadow:0 0 7px rgba(var(--rgb),.55)}
 .chk input:focus-visible{outline:1px solid var(--green);outline-offset:2px}
-button.btn{padding:11px 26px;border:1px solid var(--dim);background:#0d1a11;color:var(--green);font:inherit;cursor:pointer;letter-spacing:2px;text-transform:uppercase;font-size:13px}
+button.btn{padding:11px 26px;border:1px solid var(--dim);background:var(--navon);color:var(--green);font:inherit;cursor:pointer;letter-spacing:2px;text-transform:uppercase;font-size:13px}
 button.btn.ghost{border-color:var(--line);background:none;color:var(--dim)}
 button.btn.ghost:hover{color:var(--green);border-color:var(--dim)}
 .foot{gap:8px}
-button.btn:hover{background:#123f22;box-shadow:var(--glow)}
-.bar{height:16px;border:1px solid var(--line);background:#08100b;position:relative;overflow:hidden}
-.bar i{position:absolute;inset:0;width:0;background:linear-gradient(90deg,#123f22,var(--dim));box-shadow:var(--glow);transition:width .2s}
+button.btn:hover{background:var(--on);box-shadow:var(--glow)}
+.bar{height:16px;border:1px solid var(--line);background:var(--field);position:relative;overflow:hidden}
+.bar i{position:absolute;inset:0;width:0;background:linear-gradient(90deg,var(--on),var(--dim));box-shadow:var(--glow);transition:width .2s}
 .plog{color:var(--dim);font-size:12px;min-height:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.err{color:#ff7b6b;font-size:12px;white-space:pre-wrap;user-select:text}
+.err{color:var(--bad);font-size:12px;white-space:pre-wrap;user-select:text}
 .done-ic{font-size:34px;text-shadow:var(--glow)}
 .pathout{color:var(--dim);font-size:12px;user-select:text;word-break:break-all}
 .step{display:none;flex-direction:column;gap:12px}
