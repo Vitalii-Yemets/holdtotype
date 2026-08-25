@@ -192,6 +192,14 @@ function check(name, actual, expected) {
   check("full dictation text kept on hover", d.getElementById("state_last").title, "hello");
   check("status screen meter follows the microphone", meterMoves(d, "state_mic_bar"), true);
   check("the status meter is drawn as bars", d.querySelectorAll("#state_mic_bar i").length, 7);
+  const micCard = d.getElementById("state_mic").closest(".scard");
+  check("a long device name is kept to one line", w.getComputedStyle(d.getElementById("state_mic").closest(".v")).textOverflow, "ellipsis");
+  check("and the whole name waits under the pointer", micCard.dataset.tip, "Realtek");
+  w.showTip(micCard);
+  check("the hint shows what it was given", d.getElementById("tip").textContent, "Realtek");
+  check("and it is dressed like the rest of the window", d.getElementById("tip").classList.contains("on"), true);
+  w.hideTip();
+  check("it goes away when the pointer leaves", d.getElementById("tip").classList.contains("on"), false);
   for (let i = 0; i < 8; i++) w.paintMeter(d.getElementById("state_mic_bar"), 0.005);
   check("a quiet room leaves the meter flat", [...d.querySelectorAll("#state_mic_bar i")].every(b=>b.style.height === "2px"), true);
   w.paintMeter(d.getElementById("state_mic_bar"), 0.6);
@@ -211,7 +219,9 @@ function check(name, actual, expected) {
   check("the post-processing card offers what the state calls for", d.getElementById("state_llm_btn").textContent, "Change");
   check("copying the last dictation is offered", d.getElementById("state_copy").disabled, false);
   check("the models badge explains itself", d.getElementById("badge_models").title, "Installed models");
-  check("icon buttons carry a name for screen readers", d.getElementById("mic_refresh").getAttribute("aria-label"), d.getElementById("mic_refresh").title);
+  check("icon buttons carry a name for screen readers", d.getElementById("mic_refresh").getAttribute("aria-label"), "S_MIC_REFRESH");
+  check("and the same words are the hover hint", d.getElementById("mic_refresh").dataset.tip, "S_MIC_REFRESH");
+  check("the browser's own tooltip is out of the way", d.getElementById("mic_refresh").hasAttribute("title"), false);
   check("the open section is announced", d.querySelector(".nav[data-p=state]").getAttribute("aria-selected"), "true");
 
   tab("system"); await sleep(200);

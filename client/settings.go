@@ -980,7 +980,12 @@ button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box
 .scard .led{width:6px;height:6px;border-radius:50%;background:var(--faint);display:inline-block;margin-right:6px;flex:none}
 .scard .led.on{background:var(--green);box-shadow:var(--glow)}
 .scard .led.warn{background:var(--amber)}
-.scard .mini{align-self:flex-start}
+.scard .mini{align-self:flex-start;margin-top:auto}
+.scard .v{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.scard .v .led{vertical-align:middle;margin-right:6px}
+.scard .miclevel{margin-top:auto}
+.tip{position:fixed;z-index:200;max-width:320px;padding:5px 9px;border:var(--bw) solid var(--line);background:var(--panel);color:var(--green);font:11.5px var(--font);line-height:1.45;box-shadow:var(--shadow);pointer-events:none;white-space:pre-wrap;opacity:0;transition:opacity .12s;border-radius:var(--r)}
+.tip.on{opacity:1}
 .scard .miclevel{flex:none;width:auto}
 .row .sub{display:block;font-size:10.5px;color:var(--dim);margin-top:2px;letter-spacing:0}
 .row .lbl{flex:1;min-width:0}
@@ -1295,6 +1300,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
  </div>
 </div>
 <div class="resizetop" id="resizetop"></div>
+<div class="tip" id="tip" role="tooltip"></div>
 <div class="shell">
 <nav class="snav" id="snav" role="tablist">
  <span class="ngrp">{{S_GRP_WORK}}</span>
@@ -1868,6 +1874,45 @@ function ariaFromTitle(root){
     const t = b.textContent.trim();
     if(!t || t.length <= 2 || b.classList.contains("iconbtn")) b.setAttribute("aria-label", b.getAttribute("title"));
   });
+  scope.querySelectorAll("[title]").forEach(el=>{
+    const text = el.getAttribute("title");
+    if(!text){ el.removeAttribute("title"); return; }
+    el.dataset.tip = text;
+    el.removeAttribute("title");
+  });
+}
+let tipTimer = null;
+function hideTip(){
+  clearTimeout(tipTimer);
+  const tip = document.getElementById("tip");
+  if(tip) tip.classList.remove("on");
+}
+function showTip(el){
+  const tip = document.getElementById("tip");
+  if(!tip) return;
+  tip.textContent = el.dataset.tip;
+  tip.classList.add("on");
+  const box = el.getBoundingClientRect();
+  const size = tip.getBoundingClientRect();
+  let left = box.left + box.width / 2 - size.width / 2;
+  left = Math.max(6, Math.min(left, window.innerWidth - size.width - 6));
+  let top = box.bottom + 6;
+  if(top + size.height > window.innerHeight - 6) top = box.top - size.height - 6;
+  tip.style.left = Math.round(left) + "px";
+  tip.style.top = Math.round(Math.max(6, top)) + "px";
+}
+function initTips(){
+  document.addEventListener("mouseover", e=>{
+    const el = e.target.closest ? e.target.closest("[data-tip]") : null;
+    if(!el){ hideTip(); return; }
+    clearTimeout(tipTimer);
+    tipTimer = setTimeout(()=>showTip(el), 320);
+  });
+  document.addEventListener("mouseout", e=>{
+    if(e.target.closest && e.target.closest("[data-tip]")) hideTip();
+  });
+  document.addEventListener("mousedown", hideTip);
+  document.addEventListener("scroll", hideTip, true);
 }
 if(typeof MutationObserver === "function"){
   new MutationObserver(list=>{
@@ -2281,6 +2326,13 @@ let pendingDl = null;
 async function refreshState(){
   const s = JSON.parse(await appState());
   const set = (id, v)=>{ const el = document.getElementById(id); if(el) el.textContent = v; };
+  const setWithTip = (id, v)=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.textContent = v;
+    const card = el.closest(".scard") || el;
+    if(v && v !== "—") card.dataset.tip = v; else delete card.dataset.tip;
+  };
   const capLed = (ledId, btnId, state)=>{
     led(ledId, state === "ready" || state === "remote", state === "missing" || state === "downloading");
     const b = document.getElementById(btnId);
@@ -2298,10 +2350,10 @@ async function refreshState(){
     set("state_backend_text", s.backend_err || "");
   }
   set("state_hotkey", s.hotkey);
-  set("state_mic", s.mic);
-  set("state_ru", s.ru_model);
-  set("state_other", s.other_model);
-  set("state_llm", s.llm);
+  setWithTip("state_mic", s.mic);
+  setWithTip("state_ru", s.ru_model);
+  setWithTip("state_other", s.other_model);
+  setWithTip("state_llm", s.llm);
   set("state_ram", s.ram);
   set("state_last", s.last);
   const copyBtn = document.getElementById("state_copy");
@@ -3487,6 +3539,7 @@ load();
   bindLabels();
   applyLevel();
   ariaFromTitle(document);
+  initTips();
   initWindowButtons();
   labelPages();
   buildToc();

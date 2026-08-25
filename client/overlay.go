@@ -562,13 +562,17 @@ func overlayRender(hwnd, hdc uintptr) {
 		procDeleteObject.Call(br)
 	}
 	cy := px(ovH) / 2
-	glowR := px(11) + int32(pulse*3)
-	steps := int32(5)
-	for i := int32(0); i < steps; i++ {
-		r := glowR - i*(glowR-px(5))/(steps-1)
-		t := 0.10 + 0.16*float64(i)
-		drawDot(px(25), cy, r, blendCol(colBg, bright, t))
+	// a solid core with a soft halo around it: the pulse breathes in the halo,
+	// the core stays the colour it is
+	core := px(5)
+	if themeGlow() {
+		halo := px(9) + int32(pulse*3)
+		for i := int32(0); i < 3; i++ {
+			r := halo - i*(halo-core)/3
+			drawDot(px(25), cy, r, blendCol(colBg, bright, 0.12+0.16*float64(i)))
+		}
 	}
+	drawDot(px(25), cy, core, bright)
 	switch st {
 	case ovPaused:
 		w, h, gap := px(2), px(10), px(3)
@@ -609,12 +613,18 @@ func overlayRender(hwnd, hdc uintptr) {
 		procDrawTextW.Call(hdc, uintptr(unsafe.Pointer(&u[0])), uintptr(len(u)-1),
 			uintptr(unsafe.Pointer(&r)), 0x0020|0x0004|0x8000)
 	}
+	// the words keep the skin's own colour; what state the program is in is
+	// said by the dot, not by tinting the text
+	textCol, haloCol := colGreen, colGreenLo
+	if st == ovFlashErr {
+		textCol, haloCol = colBad, colBadDm
+	}
 	if themeGlow() {
 		for _, off := range [][2]int32{{1, 0}, {-1, 0}, {0, 1}, {0, -1}} {
-			drawText(rect{Left: txtRc.Left + off[0], Top: txtRc.Top + off[1], Right: txtRc.Right + off[0], Bottom: txtRc.Bottom + off[1]}, colGreenLo)
+			drawText(rect{Left: txtRc.Left + off[0], Top: txtRc.Top + off[1], Right: txtRc.Right + off[0], Bottom: txtRc.Bottom + off[1]}, haloCol)
 		}
 	}
-	drawText(txtRc, bright)
+	drawText(txtRc, textCol)
 
 	if st == ovRecording && left >= 0 {
 		lr := rect{Left: rc.Right - px(190), Top: 0, Right: rc.Right - px(36), Bottom: px(ovH)}
@@ -629,17 +639,19 @@ func overlayRender(hwnd, hdc uintptr) {
 			switch style {
 			case "dots":
 				r := px(2) + int32(float64(px(4))*v)
-				drawDot(x+px(2), cy, r, bright)
+				drawDot(x+px(2), cy, r, colGreen)
 			case "flat":
 				h := px(int32(4 + v*22))
-				fill(rect{Left: x, Top: cy - h/2, Right: x + px(3), Bottom: cy + h/2}, bright)
+				fill(rect{Left: x, Top: cy - h/2, Right: x + px(3), Bottom: cy + h/2}, colGreen)
 			default:
 				h := px(int32(3 + v*36))
 				if h > px(42) {
 					h = px(42)
 				}
-				fill(rect{Left: x - px(1), Top: cy - h/2 - px(1), Right: x + px(5), Bottom: cy + h/2 + px(1)}, colGreenLo)
-				fill(rect{Left: x, Top: cy - h/2, Right: x + px(4), Bottom: cy + h/2}, bright)
+				if themeGlow() {
+					fill(rect{Left: x - px(1), Top: cy - h/2 - px(1), Right: x + px(5), Bottom: cy + h/2 + px(1)}, colGreenLo)
+				}
+				fill(rect{Left: x, Top: cy - h/2, Right: x + px(4), Bottom: cy + h/2}, colGreen)
 			}
 		}
 	}
