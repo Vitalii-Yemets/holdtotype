@@ -254,6 +254,7 @@ function check(name, actual, expected) {
   check("and its own colours, not the picked one", d.documentElement.style.getPropertyValue("--green"), "#d4d4d4");
   check("with its accent kept apart from its text", d.documentElement.style.getPropertyValue("--hi"), "#4fc1ff");
   check("and no capitals shouted at the buttons", d.documentElement.style.getPropertyValue("--caps"), "none");
+  check("controls take their height from the design", d.documentElement.style.getPropertyValue("--ctlpad"), "5px 9px");
   check("down to the surfaces you type into", d.documentElement.style.getPropertyValue("--field"), "#3c3c3c");
   check("so the colour row steps aside", d.getElementById("colour_row").style.display, "none");
 
@@ -760,6 +761,8 @@ function check(name, actual, expected) {
     ["button.btn{", "border-radius:calc(var(--r) * .5)"],
     ["button.mini{", "border-radius:calc(var(--r) * .5)"],
     ["input[type=text],input[type=number],select{", "border-radius:calc(var(--r) * .55)"],
+    ["input[type=text],input[type=number],select{", "padding:var(--fieldpad)"],
+    [".row select,.row input[type=text]{", "padding:var(--ctlpad)"],
     ["input[type=checkbox]{", "border-radius:calc(var(--r) * .8)"],
   ];
   for (const [sel, want] of shaped) {

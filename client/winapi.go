@@ -302,6 +302,18 @@ func minSizeProc(hwnd, msg, wp, lp uintptr) uintptr {
 		procGetWindowRect.Call(hwnd, uintptr(unsafe.Pointer(&rc)))
 		lastWndW, lastWndH = rc.Right-rc.Left, rc.Bottom-rc.Top
 	}
+	switch msg {
+	case 0x0047, 0x0005, 0x0006:
+		glowSync(hwnd)
+	case 0x0018:
+		if wp == 0 {
+			glowHide()
+		} else {
+			glowSync(hwnd)
+		}
+	case 0x0002:
+		glowDestroy()
+	}
 	return r
 }
 

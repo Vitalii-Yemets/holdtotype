@@ -21,9 +21,9 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .body{flex:1;padding:18px 22px;display:flex;flex-direction:column;gap:12px}
 .tagline{color:var(--dim);font-size:13px;line-height:1.5}
 label.fld{color:var(--green);font-size:13px}
-input[type=text]{width:100%;padding:8px 11px;border:1px solid var(--line);border-radius:calc(var(--r) * .55);background:var(--field);color:var(--green);font:inherit;outline:none}
+input[type=text]{width:100%;padding:var(--fieldpad);border:1px solid var(--line);border-radius:calc(var(--r) * .55);background:var(--field);color:var(--green);font:inherit;outline:none}
 input[type=text]:focus{border-color:var(--dim);box-shadow:var(--glow)}
-select{padding:8px 11px;border:1px solid var(--line);border-radius:calc(var(--r) * .55);background:var(--field);color:var(--green);font:inherit;outline:none;cursor:pointer;max-width:100%;color-scheme:dark}
+select{padding:var(--fieldpad);border:1px solid var(--line);border-radius:calc(var(--r) * .55);background:var(--field);color:var(--green);font:inherit;outline:none;cursor:pointer;max-width:100%;color-scheme:dark}
 option{background:var(--bg);color:var(--green)}
 option:checked{background:linear-gradient(var(--on),var(--on));color:var(--green)}
 select,::picker(select){appearance:base-select}

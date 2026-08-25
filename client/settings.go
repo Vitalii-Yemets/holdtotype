@@ -1045,7 +1045,7 @@ button.cap.close:hover{background:#3c1212;color:var(--bad);border-color:#7a2e2e;
 .wizdots i{width:7px;height:7px;border:1px solid var(--line);display:block}
 .wizdots i.on{background:var(--hi);border-color:var(--hi);box-shadow:var(--higlow)}
 .wizrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.wizrow select{background:var(--field);border:1px solid var(--line);color:var(--green);font:inherit;font-size:13px;padding:6px 9px;min-width:170px}
+.wizrow select{background:var(--field);border:1px solid var(--line);color:var(--green);font:inherit;font-size:13px;padding:var(--fieldpad);min-width:170px}
 .wizrow select:focus{border-color:var(--dim);box-shadow:var(--glow);outline:none}
 .wizkey{border:1px solid var(--line);background:var(--keybg);border-radius:calc(var(--r) * .6);padding:4px 11px;letter-spacing:1px;text-shadow:var(--glow);white-space:nowrap}
 .wizplan{display:flex;flex-direction:column;gap:4px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel);padding:10px 12px;min-height:38px}
@@ -1117,7 +1117,7 @@ option::checkmark{display:none}
 select::picker-icon{color:var(--faint)}
 select:open::picker-icon{transform:rotate(180deg)}
 select:open{border-color:var(--dim)}
-input[type=text],input[type=number],select{padding:7px 10px;border:1px solid var(--line);border-radius:calc(var(--r) * .55);background:var(--field);color:var(--green);font:inherit;outline:none}
+input[type=text],input[type=number],select{padding:var(--fieldpad);border:1px solid var(--line);border-radius:calc(var(--r) * .55);background:var(--field);color:var(--green);font:inherit;outline:none}
 input:focus,select:focus{border-color:var(--dim);box-shadow:var(--glow)}
 input::placeholder{color:var(--dim)}
 input:disabled,select:disabled{opacity:.35;cursor:default}
@@ -1130,7 +1130,7 @@ input[type=checkbox]::after{content:"";position:absolute;top:2px;left:2px;width:
 input[type=checkbox]:checked{border-color:var(--dim)}
 input[type=checkbox]:checked::after{left:17px;background:var(--hi);box-shadow:var(--higlow)}
 input[type=checkbox]:focus-visible{outline:1px solid var(--green);outline-offset:2px}
-.row select,.row input[type=text]{border:1px solid var(--line);background:var(--field);color:var(--green);font:inherit;font-size:11.5px;padding:4px 8px}
+.row select,.row input[type=text]{border:1px solid var(--line);background:var(--field);color:var(--green);font:inherit;font-size:11.5px;padding:var(--ctlpad)}
 .row select{flex:0 0 auto;width:auto;min-width:118px;max-width:min(320px,100%)}
 .row input[type=text]{flex:0 0 auto;width:min(230px,50%)}
 .row .val{color:var(--dim);font-size:11.5px;min-width:44px;text-align:right}
@@ -1213,7 +1213,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .advrow .advstate{color:var(--amber)}
 .advrow .advstate.ok{color:var(--dim)}
 .advq{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:11.5px;color:var(--dim)}
-.advq select{background:var(--field);border:1px solid var(--line);color:var(--green);font:inherit;font-size:11.5px;padding:2px 6px;margin-left:5px}
+.advq select{background:var(--field);border:1px solid var(--line);color:var(--green);font:inherit;font-size:11.5px;padding:var(--ctlpad);margin-left:5px}
 .advchk{display:flex;align-items:center;gap:5px}
 .advout{font-size:12px;color:var(--green);line-height:1.5;min-height:1em}
 .mrow.hidden{display:none}
