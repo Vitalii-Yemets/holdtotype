@@ -21,3 +21,26 @@ func Peak(pcm []byte) float64 {
 func IsSilent(pcm []byte) bool {
 	return Peak(pcm) < SilenceThreshold
 }
+
+const (
+	HeardFloor = 0.008
+	HeardTop   = 0.35
+)
+
+func Heard(level float64) float64 {
+	if level <= HeardFloor {
+		return 0
+	}
+	if level > 1 {
+		level = 1
+	}
+	span := DBFS(HeardTop) - DBFS(HeardFloor)
+	part := (DBFS(level) - DBFS(HeardFloor)) / span
+	if part < 0 {
+		return 0
+	}
+	if part > 1 {
+		return 1
+	}
+	return part
+}

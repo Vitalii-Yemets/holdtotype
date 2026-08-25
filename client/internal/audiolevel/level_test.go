@@ -45,3 +45,32 @@ func TestIsSilent(t *testing.T) {
 		}
 	}
 }
+
+func TestHeardOpensUpAQuietMicrophone(t *testing.T) {
+	if got := Heard(HeardFloor); got != 0 {
+		t.Errorf("Heard(%v) = %v, want a quiet room to read zero", HeardFloor, got)
+	}
+	if got := Heard(0.004); got != 0 {
+		t.Errorf("Heard(0.004) = %v, want zero below the floor", got)
+	}
+	if got := Heard(0.06); got < 0.5 || got > 0.7 {
+		t.Errorf("Heard(0.06) = %v, want a little over half for ordinary speech", got)
+	}
+	if got := Heard(0.15); got < 0.75 {
+		t.Errorf("Heard(0.15) = %v, want a loud phrase near the top", got)
+	}
+	if got := Heard(HeardTop); got != 1 {
+		t.Errorf("Heard(%v) = %v, want a full meter at the top", HeardTop, got)
+	}
+	if got := Heard(0.9); got != 1 {
+		t.Errorf("Heard(0.9) = %v, want the meter to stay full above the top", got)
+	}
+	prev := 0.0
+	for v := HeardFloor + 0.001; v < HeardTop; v += 0.005 {
+		got := Heard(v)
+		if got < prev {
+			t.Fatalf("Heard fell from %v to %v at %v", prev, got, v)
+		}
+		prev = got
+	}
+}

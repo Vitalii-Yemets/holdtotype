@@ -14,6 +14,7 @@ import (
 	"golang.org/x/sys/windows"
 
 	"holdtotype/internal/appid"
+	"holdtotype/internal/audiolevel"
 )
 
 const (
@@ -35,7 +36,6 @@ const (
 	ovW          = 390
 	ovH          = 52
 	ovTimerID    = 1
-	micFloor     = 0.02
 
 	wsPopup          = 0x80000000
 	wsExLayered      = 0x00080000
@@ -623,10 +623,7 @@ func overlayRender(hwnd, hdc uintptr) {
 		style := themeLevelStyle()
 		for i, v := range ovHistory {
 			x := rc.Right - px(186) + int32(i)*px(7)
-			lv := (v - micFloor) / (1 - micFloor)
-			if lv < 0 {
-				lv = 0
-			}
+			lv := audiolevel.Heard(v)
 			switch style {
 			case "dots":
 				r := px(3)
@@ -706,3 +703,4 @@ func overlayCountdown() int {
 	}
 	return sec
 }
+

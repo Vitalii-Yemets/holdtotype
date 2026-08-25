@@ -89,12 +89,15 @@ const dom = new JSDOM(html, {
     });
     for (const name of [
       "appLLMDlFile", "appLLMTest", "appHFPage", "appHFHome", "appRepoLink",
-      "appAuthorLink", "appCapture", "appCaptureCombo", "appReload",
+      "appAuthorLink", "appReload",
       "appPreviewSound", "appMin", "appClose",
       "appDoUpdate", "appReady", "appJSError",
     ]) {
       window[name] = () => {};
     }
+    window.captureCalls = 0;
+    window.appCapture = () => { window.captureCalls++; };
+    window.appCaptureCombo = () => { window.captureCalls++; };
     window.dragCalls = 0;
     window.appDrag = () => { window.dragCalls++; };
     window.resizeCalls = 0;
@@ -185,6 +188,15 @@ function check(name, actual, expected) {
 
   check("opens on the status screen", shown("state"), true);
   check("status hotkey shown", d.getElementById("state_hotkey").textContent, "ctrl+win");
+  for (const id of ["hotkey", "pause_hotkey", "tr_hotkey"]) {
+    const el = d.getElementById(id);
+    check("the " + id + " shortcut is one control, not a chip beside a button", el.tagName, "BUTTON");
+    check("and " + id + " says what pressing it does", !!el.dataset.tip, true);
+    const before = w.captureCalls;
+    el.click();
+    check("and pressing " + id + " asks for a new combination", w.captureCalls > before, true);
+  }
+  check("no separate set button is left beside them", [...d.querySelectorAll("[id60_set]")].map(e=>e.id), []);
   check("status shows russian model", d.getElementById("state_ru").textContent, "gigaam-v3");
   check("status shows other-language model", d.getElementById("state_other").textContent, "ggml-small.bin");
   check("last dictation carries details", d.getElementById("state_last_meta").textContent, "just now · 5 characters");

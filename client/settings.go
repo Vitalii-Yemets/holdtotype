@@ -1048,7 +1048,8 @@ button.cap.close:hover{background:var(--badbg);color:var(--bad);border-color:var
 .wizrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .wizrow select{min-width:170px}
 .wizrow select:focus{border-color:var(--dim);box-shadow:var(--glow);outline:none}
-.wizkey{border:1px solid var(--line);background:var(--keybg);border-radius:calc(var(--r) * .6);padding:4px 11px;letter-spacing:1px;text-shadow:var(--glow);white-space:nowrap}
+.wizkey{appearance:none;font:inherit;color:var(--green);border:1px solid var(--line);background:var(--keybg);border-radius:calc(var(--r) * .6);padding:4px 11px;letter-spacing:1px;text-shadow:var(--glow);white-space:nowrap;cursor:pointer}
+.wizkey:hover{border-color:var(--dim);box-shadow:var(--glow)}
 .wizplan{display:flex;flex-direction:column;gap:4px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel);padding:10px 12px;min-height:38px}
 .wizbar{height:14px;border:1px solid var(--line);border-radius:calc(var(--r) * .6);background:var(--panel);position:relative;overflow:hidden;flex:1;min-width:150px;max-width:430px}
 .wizbar i{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,var(--faint),var(--hi));box-shadow:var(--higlow);transition:width .15s linear}
@@ -1139,8 +1140,8 @@ input[type=checkbox]:focus-visible{outline:1px solid var(--green);outline-offset
 button,select,input[type=checkbox],input[type=radio],input[type=range]{cursor:pointer}
 button:disabled{cursor:default;opacity:.35}
 .val{min-width:52px;text-align:right;color:var(--green);text-shadow:var(--glow);font-weight:var(--wb)}
-.hotkey-box{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.hotkey-val{font-weight:var(--wb);font-size:15px;background:var(--keybg);border:1px solid var(--line);border-radius:calc(var(--r) * .6);padding:8px 14px;min-width:150px;text-align:center;text-shadow:var(--glow);letter-spacing:1px}
+.hotkey-val{appearance:none;font:inherit;font-weight:var(--wb);font-size:15px;color:var(--green);background:var(--keybg);border:1px solid var(--line);border-radius:calc(var(--r) * .6);padding:8px 14px;min-width:150px;text-align:center;text-shadow:var(--glow);letter-spacing:1px;cursor:pointer}
+.hotkey-val:hover{border-color:var(--dim);box-shadow:var(--glow)}
 button.btn{padding:8px 18px;border:1px solid var(--btnline);border-radius:calc(var(--r) * .5);background:var(--btnbg);color:var(--btnfg);font:inherit;cursor:pointer;letter-spacing:var(--ls);text-transform:var(--caps);font-size:12px}
 button.btn:hover{filter:brightness(1.12);box-shadow:var(--glow)}
 button.ghost{border-color:var(--line);background:none;color:var(--dim);filter:none}
@@ -1397,13 +1398,11 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
 <div class="page" role="tabpanel" aria-hidden="true" id="p-dictation">
  <div class="card">
   <div class="row"><label>{{S_HOTKEY}}</label>
-   <div class="hotkey-box"><span class="hotkey-val" id="hotkey"></span>
-   <button class="btn" onclick="appCapture()">{{S_CHANGE}}</button></div></div>
+   <button type="button" class="hotkey-val" id="hotkey" onclick="appCapture()" title="{{S_CHANGE}}"></button></div>
   <div class="row"><label>{{S_HOTMODE}}<span class="sub">{{S_SUB_HOTMODE}}</span></label>
    <select id="hotkey_mode"><option value="hold">{{S_HOTMODE_HOLD}}</option><option value="toggle">{{S_HOTMODE_TOGGLE}}</option></select></div>
   <div class="row" data-adv><label>{{S_PAUSE}}<span class="sub">{{S_PAUSE_SUB}}</span></label>
-   <span class="hotkey-val" id="pause_hotkey" style="min-width:110px"></span>
-   <button class="mini" id="pause_set">{{S_PROF_SET}}</button>
+   <button type="button" class="hotkey-val" id="pause_hotkey" style="min-width:110px" title="{{S_PROF_SET}}"></button>
    <button class="mini" id="pause_clear">{{S_PROF_CLEAR}}</button></div>
   <div class="row" data-adv><label>{{S_MINMS}}<span class="sub">{{S_SUB_MINMS}}</span></label><select id="min_record_ms"><option value="0">0 ms</option><option value="100">100 ms</option><option value="150">150 ms</option><option value="200">200 ms</option><option value="300">300 ms</option><option value="500">500 ms</option><option value="750">750 ms</option><option value="1000">1000 ms</option></select></div>
   <div class="row" data-adv><label>{{S_MAXSEC}}</label><select id="max_record_seconds"><option value="30">30 s</option><option value="60">60 s</option><option value="120">120 s</option><option value="180">180 s</option><option value="300">300 s</option></select></div>
@@ -1584,8 +1583,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
    </select></div>
   <div class="row" data-adv><label>{{S_TR_SECONDS}}</label><select id="translate_ask_seconds"><option value="2">2 s</option><option value="3">3 s</option><option value="4">4 s</option><option value="5">5 s</option><option value="7">7 s</option><option value="10">10 s</option></select></div>
   <div class="row" data-adv><label>{{S_PROF_HOTKEY}}</label>
-   <span class="hotkey-val" id="tr_hotkey" style="min-width:110px"></span>
-   <button class="mini" id="tr_set">{{S_PROF_SET}}</button>
+   <button type="button" class="hotkey-val" id="tr_hotkey" style="min-width:110px" title="{{S_PROF_SET}}"></button>
    <button class="mini" id="tr_clear">{{S_PROF_CLEAR}}</button></div>
   <div class="row" data-adv><label>{{S_TR_LANGS}}</label>
    <span id="trlangs" style="display:flex;gap:9px;flex-wrap:wrap">
@@ -1732,8 +1730,8 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
   <div class="wizstep" id="wz2">
    <div class="wizh">{{S_WIZ_T_INPUT}}</div>
    <div class="wiztext">{{S_WIZ_INPUT_TEXT}}</div>
-   <div class="wizrow"><label>{{S_HOTKEY}}</label><span class="wizkey" id="wiz_hot">—</span>
-    <button type="button" class="btn" id="wiz_hotb">{{S_CHANGE}}</button></div>
+   <div class="wizrow"><label>{{S_HOTKEY}}</label>
+    <button type="button" class="wizkey" id="wiz_hot" title="{{S_CHANGE}}">—</button></div>
    <div class="wizrow"><label for="wiz_mic">{{S_MIC}}</label><select id="wiz_mic"></select></div>
    <div class="wizrow"><span class="wizlvl" id="wiz_micbar"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><span class="wizout" id="wiz_michint"></span></div>
   </div>
@@ -2181,8 +2179,8 @@ function renderEditor(p){
     '<div class="row" style="padding-top:0"><label>'+L.pname+'</label><input type="text" id="pf_name"></div>'+
     '<div class="row" style="align-items:flex-start"><label>'+L.pprompt+'</label></div>'+
     '<textarea id="pf_prompt" rows="4" style="width:100%;padding:7px 10px;border:1px solid var(--line);background:var(--field);color:var(--green);font:inherit;outline:none;resize:vertical"></textarea>'+
-    '<div class="row"><label>'+L.phot+'</label><span class="hotkey-val" id="pf_hotkey" style="min-width:110px"></span>'+
-    '<button class="mini" id="pf_set">'+L.pset+'</button><button class="mini" id="pf_clear">'+L.pclr+'</button></div>'+
+    '<div class="row"><label>'+L.phot+'</label><button type="button" class="hotkey-val" id="pf_hotkey" style="min-width:110px" title="'+L.pset+'"></button>'+
+    '<button class="mini" id="pf_clear">'+L.pclr+'</button></div>'+
     '<div class="row"><label>'+L.ptest+'</label><input type="text" id="pf_sample" style="flex:1"><button class="iconbtn" id="pf_run">&#9654;</button></div>'+
     '<div id="pf_result" style="color:var(--amber);font-size:12px;min-height:16px;user-select:text"></div>';
   setTimeout(()=>{
@@ -2194,7 +2192,7 @@ function renderEditor(p){
     name.oninput = ()=>{ p.name = name.value; };
     prompt.oninput = ()=>{ p.prompt = prompt.value; };
     document.getElementById("pf_close").onclick = ()=>{ expandedID = null; refreshLLM(); };
-    document.getElementById("pf_set").onclick = ()=>{ captureFor = p.id; appCaptureCombo(); };
+    document.getElementById("pf_hotkey").onclick = ()=>{ captureFor = p.id; appCaptureCombo(); };
     document.getElementById("pf_clear").onclick = ()=>{ p.hotkey=""; hk.textContent=L.nohot; doSave(); };
     document.getElementById("pf_run").onclick = ()=>{
       const s = document.getElementById("pf_sample").value;
@@ -2736,9 +2734,9 @@ function load(){
   startMicMeter();
   if ((CFG.model || "").indexOf("turbo") >= 0) document.getElementById("tr_warn").style.display = "block";
   updTrHotkey();
-  document.getElementById("tr_set").onclick = ()=>{ captureFor = "__wt"; appCaptureCombo(); };
+  document.getElementById("tr_hotkey").onclick = ()=>{ captureFor = "__wt"; appCaptureCombo(); };
   document.getElementById("tr_clear").onclick = ()=>{ translateHotkey = ""; updTrHotkey(); doSave(); };
-  const pset = document.getElementById("pause_set");
+  const pset = document.getElementById("pause_hotkey");
   if(pset) pset.onclick = ()=>{ captureFor = "__pause"; appCaptureCombo(); };
   const pclr = document.getElementById("pause_clear");
   if(pclr) pclr.onclick = ()=>{ pauseHotkey = ""; updPauseHotkey(); doSave(); };
@@ -3114,7 +3112,7 @@ function initWizard(){
   wizEl("wiz_back").onclick = ()=>wizShow(wizStep - 1);
   wizEl("wiz_skip").onclick = wizSkip;
   wizEl("wiz_dl").onclick = wizDownload;
-  wizEl("wiz_hotb").onclick = ()=>appCapture();
+  wizEl("wiz_hot").onclick = ()=>appCapture();
   wizEl("wiz_ui").onchange = ()=>{
     wizEl("ui_language").value = wizEl("wiz_ui").value;
     doSave();

@@ -24,7 +24,12 @@ const (
 	wmClose        = 0x0010
 	wmUserRedraw   = 0x0400 + 1
 	wmUserFinish   = 0x0400 + 2
-	dtCenter       = 0x0001 | 0x0010 | 0x0004
+	dtBlock        = 0x0001 | 0x0010
+	dtCalcRect     = 0x0400
+	capPadX        = 34
+	capPadY        = 30
+	capMinW        = 320
+	capMaxW        = 560
 	colorWindow    = 5
 	defaultGUIFont = 17
 	idcArrow       = 32512
@@ -108,7 +113,16 @@ func captureWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 		text := capText
 		capMu.Unlock()
 		u, _ := windows.UTF16FromString(text)
-		procDrawTextW.Call(hdc, uintptr(unsafe.Pointer(&u[0])), uintptr(len(u)-1), uintptr(unsafe.Pointer(&rc)), dtCenter)
+		pad := scaleDPI(capPadX, dpiFor(hwnd))
+		box := rect{Left: rc.Left + pad, Top: rc.Top, Right: rc.Right - pad, Bottom: rc.Bottom}
+		measured := box
+		procDrawTextW.Call(hdc, uintptr(unsafe.Pointer(&u[0])), uintptr(len(u)-1),
+			uintptr(unsafe.Pointer(&measured)), dtBlock|dtCalcRect)
+		if th := measured.Bottom - measured.Top; th > 0 && th < rc.Bottom-rc.Top {
+			box.Top = rc.Top + (rc.Bottom-rc.Top-th)/2
+			box.Bottom = box.Top + th
+		}
+		procDrawTextW.Call(hdc, uintptr(unsafe.Pointer(&u[0])), uintptr(len(u)-1), uintptr(unsafe.Pointer(&box)), dtBlock)
 		procEndPaint.Call(hwnd, uintptr(unsafe.Pointer(&ps)))
 		return 0
 	case wmUserRedraw:
@@ -307,25 +321,32 @@ func captureBox(text string) (w, h, x, y int32) {
 	if dpi < 72 {
 		dpi = 96
 	}
+	padX, padY := scaleDPI(capPadX, dpi), scaleDPI(capPadY, dpi)
 	w, h = scaleDPI(420, dpi), scaleDPI(120, dpi)
 	if hdc, _, _ := procGetDC.Call(0); hdc != 0 {
 		defer procReleaseDC.Call(0, hdc)
 		old, _, _ := procSelectObject.Call(hdc, uiFontDPI(dpi))
 		if u, err := windows.UTF16FromString(text); err == nil {
-			r := rect{}
+			r := rect{Right: scaleDPI(capMaxW, dpi) - padX*2}
 			procDrawTextW.Call(hdc, uintptr(unsafe.Pointer(&u[0])), uintptr(len(u)-1),
-				uintptr(unsafe.Pointer(&r)), dtCenter|0x0400)
-			if r.Right > r.Left && r.Bottom > r.Top {
-				w = r.Right - r.Left + scaleDPI(64, dpi)
-				h = r.Bottom - r.Top + scaleDPI(56, dpi)
+				uintptr(unsafe.Pointer(&r)), dtBlock|dtCalcRect)
+			if r.Bottom > r.Top {
+				w = r.Right - r.Left + padX*2
+				h = r.Bottom - r.Top + padY*2
 			}
 		}
 		if old != 0 {
 			procSelectObject.Call(hdc, old)
 		}
 	}
-	if min := scaleDPI(320, dpi); w < min {
+	if min := scaleDPI(capMinW, dpi); w < min {
 		w = min
+	}
+	if max := scaleDPI(capMaxW, dpi); w > max {
+		w = max
+	}
+	if min := scaleDPI(96, dpi); h < min {
+		h = min
 	}
 	wa := captureWorkArea(host)
 	x = wa.Left + (wa.Right-wa.Left-w)/2
