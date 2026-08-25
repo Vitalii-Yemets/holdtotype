@@ -649,12 +649,10 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	if validUILevel(f.UILevel) {
 		c.UILevel = f.UILevel
 	}
+	themeChanged := false
 	if theme.Valid(f.Theme) && f.Theme != c.Theme {
 		c.Theme = f.Theme
-		applyTheme(c.Theme)
-		trayReloadIcons(trayIdle)
-		a.refreshIdleUI()
-		overlayRefresh()
+		themeChanged = true
 	}
 	c.MicDevice = f.MicDevice
 	c.MicDeviceName = f.MicDeviceName
@@ -761,6 +759,14 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	a.mu.Lock()
 	a.cfg = &c
 	a.mu.Unlock()
+
+	if themeChanged {
+		applyTheme(c.Theme)
+		refreshWindowChrome()
+		trayReloadIcons(trayIdle)
+		a.refreshIdleUI()
+		overlayRefresh()
+	}
 
 	if llmChanged {
 		a.llmShutdown()

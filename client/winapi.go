@@ -50,6 +50,7 @@ var (
 	procGetWindowLongPtrW = user32.NewProc("GetWindowLongPtrW")
 	procSetWindowLongPtrW = user32.NewProc("SetWindowLongPtrW")
 	procSetWindowPos      = user32.NewProc("SetWindowPos")
+	procRedrawWindow      = user32.NewProc("RedrawWindow")
 	procSendMessageW      = user32.NewProc("SendMessageW")
 	procReleaseCapture    = user32.NewProc("ReleaseCapture")
 )

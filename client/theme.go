@@ -107,3 +107,24 @@ func themeListJSON() string {
 	}
 	return string(data)
 }
+
+// refreshWindowChrome repaints the frame of every window that is open right now.
+func refreshWindowChrome() {
+	for _, h := range liveWindows() {
+		if h != 0 {
+			applyDarkCaption(h)
+			procRedrawWindow.Call(h, 0, 0, 0x0001|0x0004|0x0100)
+		}
+	}
+}
+
+func liveWindows() []uintptr {
+	out := []uintptr{settingsHwnd.Load(), overlayHwnd()}
+	trayMu.Lock()
+	out = append(out, trayHwnd)
+	trayMu.Unlock()
+	capMu.Lock()
+	out = append(out, capHwnd)
+	capMu.Unlock()
+	return out
+}
