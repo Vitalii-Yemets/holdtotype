@@ -212,8 +212,10 @@ func (a *App) settingsThread(tab string, attempt int) {
 		_ = w.Bind("appMaximized", func() bool {
 			return windowMaximized(hwnd)
 		})
-		_ = w.Bind("appResizeTop", func() {
-			beginWindowResize(hwnd, htTop)
+		_ = w.Bind("appResizeEdge", func(edge int) {
+			if e := uintptr(edge); validResizeEdge(e) {
+				beginWindowResize(hwnd, e)
+			}
 		})
 		_ = w.Bind("appClose", func() {
 			procPostMessageW.Call(hwnd, wmClose, 0, 0)
@@ -956,7 +958,15 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:var(--
 ::-webkit-scrollbar-thumb:hover{background:var(--dim)}
 .header{display:flex;align-items:center;gap:14px;padding:12px 12px 12px 20px;overflow:hidden;border-bottom:1px solid var(--line);background:var(--titlebg);box-shadow:0 1px 12px rgba(var(--rgb),.12);cursor:default}
 .capbtns{display:flex;gap:6px;margin-left:10px;flex:none}
-.resizetop{position:fixed;top:0;left:0;right:0;height:5px;cursor:n-resize;z-index:50}
+.rsz{position:fixed;z-index:60}
+.rsz.t{top:0;left:9px;right:9px;height:5px;cursor:n-resize}
+.rsz.b{bottom:0;left:9px;right:9px;height:5px;cursor:s-resize}
+.rsz.l{left:0;top:9px;bottom:9px;width:5px;cursor:w-resize}
+.rsz.r{right:0;top:9px;bottom:9px;width:5px;cursor:e-resize}
+.rsz.tl{left:0;top:0;width:9px;height:9px;cursor:nw-resize}
+.rsz.tr{right:0;top:0;width:9px;height:9px;cursor:ne-resize}
+.rsz.bl{left:0;bottom:0;width:9px;height:9px;cursor:sw-resize}
+.rsz.br{right:0;bottom:0;width:9px;height:9px;cursor:se-resize}
 button.cap{width:36px;height:30px;background:none;border:1px solid var(--line);color:var(--dim);font:14px var(--font);cursor:pointer;padding:0;border-radius:calc(var(--r) * .5)}
 button.cap:hover{background:var(--on);color:var(--green);box-shadow:var(--glow)}
 button.cap.max{font-size:12px}
@@ -1308,7 +1318,14 @@ button.iconbtn.danger:hover{color:var(--bad);filter:drop-shadow(0 0 4px rgba(255
   <button class="cap close" onclick="appClose()" title="{{S_WND_CLOSE}}">&#10005;</button>
  </div>
 </div>
-<div class="resizetop" id="resizetop"></div>
+<div class="rsz t" data-edge="12"></div>
+<div class="rsz b" data-edge="15"></div>
+<div class="rsz l" data-edge="10"></div>
+<div class="rsz r" data-edge="11"></div>
+<div class="rsz tl" data-edge="13"></div>
+<div class="rsz tr" data-edge="14"></div>
+<div class="rsz bl" data-edge="16"></div>
+<div class="rsz br" data-edge="17"></div>
 <div class="tip" id="tip" role="tooltip"></div>
 <div class="shell">
 <nav class="snav" id="snav" role="tablist">
@@ -1774,8 +1791,11 @@ function paintMaxButton(max){
   b.title = max ? L.wndrestore : L.wndmax;
 }
 function initWindowButtons(){
-  const strip = document.getElementById("resizetop");
-  if(strip) strip.addEventListener("mousedown", e=>{ if(e.button === 0) appResizeTop(); });
+  document.querySelectorAll(".rsz").forEach(strip=>{
+    strip.addEventListener("mousedown", e=>{
+      if(e.button === 0) appResizeEdge(Number(strip.dataset.edge));
+    });
+  });
   if(window.appMaximized) appMaximized().then(paintMaxButton);
 }
 const THEMES = {{THEME_LIST}};

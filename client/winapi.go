@@ -57,9 +57,6 @@ var (
 
 const dwmColorNone = 0xFFFFFFFE
 
-// applyDarkCaption gives a window the frame the current skin asks for: rounded
-// corners with a border drawn by Windows, or square corners with no border of
-// its own — those skins draw their own, one pixel on every side.
 func applyDarkCaption(hwnd uintptr) {
 	if hwnd == 0 {
 		return
@@ -71,7 +68,7 @@ func applyDarkCaption(hwnd uintptr) {
 	set(35, uint32(colBg))
 	set(36, uint32(colGreen))
 	if themeRoundCorners() {
-		set(34, uint32(colGreenLo))
+		set(34, uint32(colLine))
 		set(33, 2)
 	} else {
 		set(34, dwmColorNone)
@@ -171,9 +168,6 @@ func beginWindowDrag(hwnd uintptr) {
 	procSendMessageW.Call(hwnd, 0x00A1, 2, 0)
 }
 
-// beginWindowResize starts the same sizing loop Windows would start if the
-// mouse had landed on the frame — the page asks for it, because the strip at
-// the top of the window belongs to the page now.
 func beginWindowResize(hwnd uintptr, edge uintptr) {
 	procReleaseCapture.Call()
 	procSendMessageW.Call(hwnd, 0x00A1, edge, 0)
@@ -207,8 +201,19 @@ const (
 	wmNcCalcSize = 0x0083
 	wmNcHitTest  = 0x0084
 	htClient     = 1
+	htLeft       = 10
+	htRight      = 11
 	htTop        = 12
+	htTopLeft    = 13
+	htTopRight   = 14
+	htBottom     = 15
+	htBottomLeft = 16
+	htBottomRt   = 17
 )
+
+func validResizeEdge(edge uintptr) bool {
+	return edge >= htLeft && edge <= htBottomRt
+}
 
 type ncCalcSizeParams struct {
 	Rgrc  [3]rect
@@ -231,29 +236,46 @@ var (
 	lastWndW, lastWndH int32
 )
 
-// Square skins draw their own one-pixel frame on the page, so the window gives
-// its whole face to the page: the strip Windows keeps at the top for the frame
-// is handed back to the client area, and the resize grip that lived there is
-// answered by hand.
 func minSizeProc(hwnd, msg, wp, lp uintptr) uintptr {
-	if msg == wmNcCalcSize && wp != 0 && lp != 0 && !themeRoundCorners() {
+	if msg == wmNcCalcSize && wp != 0 && lp != 0 {
 		p := (*ncCalcSizeParams)(unsafe.Pointer(lp))
-		top := p.Rgrc[0].Top
+		whole := p.Rgrc[0]
 		r, _, _ := procCallWindowProcW.Call(minSizeOld, hwnd, msg, wp, lp)
 		if z, _, _ := procIsZoomed.Call(hwnd); z == 0 {
-			p.Rgrc[0].Top = top
+			p.Rgrc[0] = whole
 		}
 		return r
 	}
-	if msg == wmNcHitTest && !themeRoundCorners() {
+	if msg == wmNcHitTest {
 		r, _, _ := procCallWindowProcW.Call(minSizeOld, hwnd, msg, wp, lp)
 		if r == htClient {
 			if z, _, _ := procIsZoomed.Call(hwnd); z == 0 {
+				x := int32(int16(uint16(lp)))
 				y := int32(int16(uint16(lp >> 16)))
 				var rc rect
 				procGetWindowRect.Call(hwnd, uintptr(unsafe.Pointer(&rc)))
-				if y >= rc.Top && y < rc.Top+scaleDPI(6, dpiFor(hwnd)) {
+				grip := scaleDPI(6, dpiFor(hwnd))
+				left := x < rc.Left+grip
+				right := x >= rc.Right-grip
+				top := y < rc.Top+grip
+				bottom := y >= rc.Bottom-grip
+				switch {
+				case top && left:
+					return htTopLeft
+				case top && right:
+					return htTopRight
+				case bottom && left:
+					return htBottomLeft
+				case bottom && right:
+					return htBottomRt
+				case top:
 					return htTop
+				case bottom:
+					return htBottom
+				case left:
+					return htLeft
+				case right:
+					return htRight
 				}
 			}
 		}

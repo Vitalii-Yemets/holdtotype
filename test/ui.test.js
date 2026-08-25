@@ -99,7 +99,8 @@ const dom = new JSDOM(html, {
     window.appDrag = () => { window.dragCalls++; };
     window.resizeCalls = 0;
     window.maximized = false;
-    window.appResizeTop = () => { window.resizeCalls++; };
+    window.resizeEdges = [];
+    window.appResizeEdge = (edge) => { window.resizeCalls++; window.resizeEdges.push(edge); };
     window.appMaxRestore = async () => { window.maximized = !window.maximized; return window.maximized; };
     window.appMaximized = async () => window.maximized;
     window.saveCalls = 0;
@@ -204,8 +205,11 @@ function check(name, actual, expected) {
   check("a quiet room leaves the meter flat", [...d.querySelectorAll("#state_mic_bar i")].every(b=>b.style.height === "4px"), true);
   w.paintMeter(d.getElementById("state_mic_bar"), 0.6);
   check("a loud phrase raises it", [...d.querySelectorAll("#state_mic_bar i")].some(b=>parseInt(b.style.height) > 8), true);
-  d.getElementById("resizetop").dispatchEvent(new w.MouseEvent("mousedown", { button: 0, bubbles: true }));
-  check("the top edge asks the window to resize", w.resizeCalls, 1);
+  for (const edge of ["t", "b", "l", "r", "tl", "tr", "bl", "br"]) {
+    d.querySelector(".rsz." + edge).dispatchEvent(new w.MouseEvent("mousedown", { button: 0, bubbles: true }));
+  }
+  check("every edge and corner asks the window to resize", w.resizeCalls, 8);
+  check("and each asks for its own direction", w.resizeEdges, [12, 15, 10, 11, 13, 14, 16, 17]);
   d.getElementById("cap_max").click();
   await sleep(150);
   check("the button fills the screen", w.maximized, true);

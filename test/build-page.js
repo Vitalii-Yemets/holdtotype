@@ -131,7 +131,7 @@ const PALETTES = {
 const SKINS = {
   terminal: { palette: "green", font: 'Consolas,"Cascadia Mono",monospace', fs: "14px", r: "0px", bw: "1px", scan: "1", shadow: "none", glow: true, round: false, caps: true },
   editor: { palette: "editor", font: '"Cascadia Mono",Consolas,"Segoe UI",sans-serif', fs: "13px", r: "3px", bw: "1px", scan: "0", shadow: "0 10px 30px rgba(0,0,0,.45)", glow: false, round: false, caps: false },
-  neon: { palette: "neon", font: '"Segoe UI Variable Text","Segoe UI",system-ui,sans-serif', fs: "13px", r: "14px", bw: "1px", scan: ".18", shadow: "0 18px 46px rgba(150,40,220,.35)", glow: true, round: true, caps: false },
+  neon: { palette: "neon", font: '"Segoe UI Variable Display","Segoe UI",system-ui,sans-serif', fs: "13px", r: "14px", bw: "1px", scan: ".18", shadow: "0 18px 46px rgba(150,40,220,.35)", glow: true, round: true, caps: false },
 };
 function rgbOf(hex) {
   return [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(",");

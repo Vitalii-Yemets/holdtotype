@@ -130,7 +130,7 @@ var skins = []Skin{
 		Level: "flat", Pulse: 1.5},
 
 	{ID: "neon", Palette: "neon",
-		FontCSS: `"Segoe UI Variable Text","Segoe UI",system-ui,sans-serif`, FontGDI: "Segoe UI",
+		FontCSS: `"Segoe UI Variable Display","Segoe UI",system-ui,sans-serif`, FontGDI: "Segoe UI Variable Display",
 		PagePx: 13, FontPx: 15, Weight: 400, BrandLS: ".08em",
 		Radius: 14, Border: 1, Round: true,
 		Glow: true, Scan: 0.18, Shadow: "0 18px 46px rgba(150,40,220,.35)",
