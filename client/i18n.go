@@ -608,6 +608,10 @@ var settingsStrings = map[string]map[string]string{
 		"S_THEME_AMBER":     "Янтарная",
 		"S_THEME_GREEN":     "Зелёная",
 		"S_THEME_SUB":       "цвет окна, плашки и значка в трее",
+		"S_WND_CLOSE":       "Закрыть окно",
+		"S_WND_MIN":         "Свернуть в трей",
+		"S_WND_RESTORE":     "Вернуть прежний размер",
+		"S_WND_MAX":         "Развернуть на весь экран",
 		"S_THEME_NEON":      "Неон",
 		"S_THEME_EDITOR":    "Редактор",
 		"S_THEME":           "Оформление",
@@ -693,6 +697,7 @@ var settingsStrings = map[string]map[string]string{
 			"<li>Крестик ✕ справа отменяет операцию на любой стадии; фокус ввода оверлей не забирает. Показывать плашку и её анимацию можно отключить на «Основных».</li>" +
 			"<li>Где показывать плашку — внизу экрана, вверху или у курсора — и показывать ли в ней сам распознанный текст вместо числа символов, настраивается на «Диктовке».</li>" +
 			"<li>Пока плашка о чём-то спрашивает, верхняя строка так и говорит — «Жду ответа», и точка перестаёт мигать. У каждой кнопки свой номер: 1…9 выбирают ответ, Enter берёт подсвеченный, Esc отменяет всё; клавиши подписаны справа в той же строке. За десять секунд до предела записи на плашке идёт янтарный обратный отсчёт.</li>" +
+			"<li>В заголовке окна три кнопки: свернуть в трей, развернуть на весь экран и закрыть. Развёрнутое окно возвращается к прежнему размеру той же кнопкой, а размер, который вы задали мышью, запоминается — на весь экран он не заменяется. Меньше 760×500 окно не уменьшается: на меньшем строки и карточки перестают помещаться.</li>" +
 			"<li>Облик всего приложения — окна, плашки, окна захвата и значка в трее — задаётся одним списком «Оформление» в разделе «Система». Обликов шесть: зелёный терминальный по умолчанию, янтарный, синий, розовый, «Редактор» (плоский серый, без свечения) и «Неон» (фиолетовый, со скруглениями). Облик меняет не только цвет: свой шрифт, скругления, толщина рамок, свечение и характер анимации. Выбор применяется сразу, перезапуск не нужен.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Вопрос о языке перевода</p>" +
@@ -990,6 +995,10 @@ var settingsStrings = map[string]map[string]string{
 		"S_THEME_AMBER":     "Amber",
 		"S_THEME_GREEN":     "Green",
 		"S_THEME_SUB":       "the window, the plate and the tray icon",
+		"S_WND_CLOSE":       "Close the window",
+		"S_WND_MIN":         "Hide to the tray",
+		"S_WND_RESTORE":     "Back to the previous size",
+		"S_WND_MAX":         "Fill the screen",
 		"S_THEME_NEON":      "Neon",
 		"S_THEME_EDITOR":    "Editor",
 		"S_THEME":           "Colours",
@@ -1075,6 +1084,7 @@ var settingsStrings = map[string]map[string]string{
 			"<li>The ✕ on the right cancels at any stage; the overlay never steals input focus. The plate and its animation can be turned off in the Dictation section.</li>" +
 			"<li>Where the plate appears — bottom of the screen, top, or at the cursor — and whether it shows the recognised text itself instead of a character count, is set on the Dictation section.</li>" +
 			"<li>While the plate is asking something its top line says so — \"Waiting for your answer\" — and the dot stops pulsing. Every answer carries a number: 1…9 pick one, Enter takes the highlighted one, Esc cancels everything; the keys are spelled out at the right of the same row. Ten seconds before the recording limit an amber countdown runs on the plate.</li>" +
+			"<li>The title bar carries three buttons: hide to the tray, fill the screen and close. The same button brings a filled window back to the size it had, and the size you set with the mouse is remembered — filling the screen does not replace it. The window never goes below 760×500, where the rows and cards stop fitting.</li>" +
 			"<li>The look of the whole program — the window, the plate, the shortcut window and the tray icon — comes from one list, Colours, in the System section. There are six: the green terminal by default, amber, blue, pink, Editor (flat grey, no halo) and Neon (violet, rounded). A skin changes more than colour: its own font, corners, border width, halo and the character of its motion. The choice applies at once, with no restart.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">The translation question</p>" +

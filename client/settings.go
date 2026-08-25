@@ -205,6 +205,15 @@ func (a *App) settingsThread(tab string, attempt int) {
 		_ = w.Bind("appMin", func() {
 			procShowWindow.Call(hwnd, 6)
 		})
+		_ = w.Bind("appMaxRestore", func() bool {
+			return toggleMaximize(hwnd)
+		})
+		_ = w.Bind("appMaximized", func() bool {
+			return windowMaximized(hwnd)
+		})
+		_ = w.Bind("appResizeTop", func() {
+			beginWindowResize(hwnd, htTop)
+		})
 		_ = w.Bind("appClose", func() {
 			procPostMessageW.Call(hwnd, wmClose, 0, 0)
 		})
@@ -880,6 +889,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"upd": "S_UPDATED", "pedit": "S_PROF_EDIT", "pclose": "S_PROF_CLOSE",
 		"confirmdel": "S_CONFIRM_DEL", "delactive": "S_DEL_ACTIVE", "wizneedmodel": "S_WIZ_NEED_MODEL",
 		"free": "S_FREE", "updnone": "S_UPD_NONE",
+		"wndmax": "S_WND_MAX", "wndrestore": "S_WND_RESTORE", "wndmin": "S_WND_MIN", "wndclose": "S_WND_CLOSE",
 		"themeeditor": "S_THEME_EDITOR", "themeneon": "S_THEME_NEON",
 		"badgemodels": "S_BADGE_MODELS", "badgemiss": "S_BADGE_MISS", "badgesystem": "S_BADGE_SYSTEM", "badgehist": "S_BADGE_HIST",
 		"exewarn": "S_EXE_WARN", "exeedit": "S_PROF_EDIT", "resetask": "S_RESET_ALL_ASK", "resetbtn": "S_RESET_ALL_BTN",
@@ -938,6 +948,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;background:rep
 ::-webkit-scrollbar-thumb:hover{background:var(--dim)}
 .header{display:flex;align-items:center;gap:14px;padding:12px 12px 12px 20px;overflow:hidden;border-bottom:1px solid var(--line);box-shadow:0 1px 12px rgba(var(--rgb),.12);cursor:default}
 .capbtns{display:flex;gap:6px;margin-left:10px;flex:none}
+.resizetop{position:fixed;top:0;left:0;right:0;height:5px;cursor:n-resize;z-index:50}
 button.cap{width:36px;height:30px;background:none;border:1px solid var(--line);color:var(--dim);font:14px Consolas,monospace;cursor:pointer;padding:0}
 button.cap:hover{background:#123f22;color:var(--green);box-shadow:var(--glow)}
 button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box-shadow:0 0 7px rgba(255,110,90,.5)}
@@ -1278,10 +1289,12 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
  </span>
  <label class="omni"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="15.5" y1="15.5" x2="21" y2="21"/></svg><input id="omni" type="text" placeholder="{{S_SEARCH}}" autocomplete="off"><span class="ocount" id="ocount"></span><span class="okey">Ctrl K</span></label>
  <div class="capbtns">
-  <button class="cap" onclick="appMin()">&#9472;</button>
-  <button class="cap close" onclick="appClose()">&#10005;</button>
+  <button class="cap" onclick="appMin()" title="{{S_WND_MIN}}">&#9472;</button>
+  <button class="cap" id="cap_max" onclick="toggleMax()" title="{{S_WND_MAX}}">&#9744;</button>
+  <button class="cap close" onclick="appClose()" title="{{S_WND_CLOSE}}">&#10005;</button>
  </div>
 </div>
+<div class="resizetop" id="resizetop"></div>
 <div class="shell">
 <nav class="snav" id="snav" role="tablist">
  <span class="ngrp">{{S_GRP_WORK}}</span>
@@ -1731,6 +1744,21 @@ let expandedID = null;
 let captureFor = null;
 
 function esc(s){ const d=document.createElement("span"); d.textContent=s||""; return d.innerHTML; }
+async function toggleMax(){
+  const max = await appMaxRestore();
+  paintMaxButton(max);
+}
+function paintMaxButton(max){
+  const b = document.getElementById("cap_max");
+  if(!b) return;
+  b.innerHTML = max ? "&#10064;" : "&#9744;";
+  b.title = max ? L.wndrestore : L.wndmax;
+}
+function initWindowButtons(){
+  const strip = document.getElementById("resizetop");
+  if(strip) strip.addEventListener("mousedown", e=>{ if(e.button === 0) appResizeTop(); });
+  if(window.appMaximized) appMaximized().then(paintMaxButton);
+}
 const THEMES = {{THEME_LIST}};
 function applyThemeVars(id){
   const p = THEMES[id] || THEMES.green;
@@ -2134,13 +2162,15 @@ async function refreshMics(){
   micChosen = sel.value;
 }
 const meterHist = {};
+const MIC_FLOOR = 0.02;
 function paintMeter(box, level){
   const bars = box.querySelectorAll("i");
   if(!bars.length) return;
   const hist = meterHist[box.id] || (meterHist[box.id] = new Array(bars.length).fill(0));
-  hist.push(Math.max(0, Math.min(1, level * 1.3)));
+  const heard = level > MIC_FLOOR ? Math.min(1, (level - MIC_FLOOR) * 1.35) : 0;
+  hist.push(heard);
   hist.shift();
-  bars.forEach((b, i)=>{ b.style.height = Math.round(3 + hist[i] * 13) + "px"; });
+  bars.forEach((b, i)=>{ b.style.height = Math.round(2 + hist[i] * 14) + "px"; });
 }
 function startMeter(barId, pageId, hintId){
   return setInterval(async ()=>{
@@ -3457,6 +3487,7 @@ load();
   bindLabels();
   applyLevel();
   ariaFromTitle(document);
+  initWindowButtons();
   labelPages();
   buildToc();
   document.querySelectorAll(".lvlb").forEach(b=>b.onclick=()=>setLevel(b.dataset.l));

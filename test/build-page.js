@@ -105,6 +105,7 @@ const strings = {
   wiznext: "Next", wizfinish: "Finish", wizwait: "Waiting for the first phrase…",
   wizheard: "Heard:", wizhave: "Everything you need is already downloaded",
   wiztry: "Put the caret in the field below, hold %s, say a phrase and let go.",
+  wndmax: "S_WND_MAX", wndrestore: "S_WND_RESTORE", wndmin: "S_WND_MIN", wndclose: "S_WND_CLOSE",
 };
 
 const HELP_HTML = [

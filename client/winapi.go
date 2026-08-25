@@ -171,6 +171,28 @@ func beginWindowDrag(hwnd uintptr) {
 	procSendMessageW.Call(hwnd, 0x00A1, 2, 0)
 }
 
+// beginWindowResize starts the same sizing loop Windows would start if the
+// mouse had landed on the frame — the page asks for it, because the strip at
+// the top of the window belongs to the page now.
+func beginWindowResize(hwnd uintptr, edge uintptr) {
+	procReleaseCapture.Call()
+	procSendMessageW.Call(hwnd, 0x00A1, edge, 0)
+}
+
+func toggleMaximize(hwnd uintptr) bool {
+	if z, _, _ := procIsZoomed.Call(hwnd); z != 0 {
+		procShowWindow.Call(hwnd, 9) // SW_RESTORE
+		return false
+	}
+	procShowWindow.Call(hwnd, 3) // SW_MAXIMIZE
+	return true
+}
+
+func windowMaximized(hwnd uintptr) bool {
+	z, _, _ := procIsZoomed.Call(hwnd)
+	return z != 0
+}
+
 type pointL struct{ X, Y int32 }
 
 type minMaxInfo struct {
@@ -253,7 +275,7 @@ func minSizeProc(hwnd, msg, wp, lp uintptr) uintptr {
 		mmi.MinTrackSize.X = minSizeW
 		mmi.MinTrackSize.Y = minSizeH
 	}
-	if msg == 0x0005 && wp != 1 {
+	if msg == 0x0005 && wp == 0 {
 		var rc rect
 		procGetWindowRect.Call(hwnd, uintptr(unsafe.Pointer(&rc)))
 		lastWndW, lastWndH = rc.Right-rc.Left, rc.Bottom-rc.Top

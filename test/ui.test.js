@@ -97,6 +97,11 @@ const dom = new JSDOM(html, {
     }
     window.dragCalls = 0;
     window.appDrag = () => { window.dragCalls++; };
+    window.resizeCalls = 0;
+    window.maximized = false;
+    window.appResizeTop = () => { window.resizeCalls++; };
+    window.appMaxRestore = async () => { window.maximized = !window.maximized; return window.maximized; };
+    window.appMaximized = async () => window.maximized;
     window.saveCalls = 0;
     window.saveForms = [];
     window.lastSave = {};
@@ -187,6 +192,19 @@ function check(name, actual, expected) {
   check("full dictation text kept on hover", d.getElementById("state_last").title, "hello");
   check("status screen meter follows the microphone", meterMoves(d, "state_mic_bar"), true);
   check("the status meter is drawn as bars", d.querySelectorAll("#state_mic_bar i").length, 7);
+  for (let i = 0; i < 8; i++) w.paintMeter(d.getElementById("state_mic_bar"), 0.005);
+  check("a quiet room leaves the meter flat", [...d.querySelectorAll("#state_mic_bar i")].every(b=>b.style.height === "2px"), true);
+  w.paintMeter(d.getElementById("state_mic_bar"), 0.6);
+  check("a loud phrase raises it", [...d.querySelectorAll("#state_mic_bar i")].some(b=>parseInt(b.style.height) > 8), true);
+  d.getElementById("resizetop").dispatchEvent(new w.MouseEvent("mousedown", { button: 0, bubbles: true }));
+  check("the top edge asks the window to resize", w.resizeCalls, 1);
+  d.getElementById("cap_max").click();
+  await sleep(150);
+  check("the button fills the screen", w.maximized, true);
+  check("and turns into a restore button", d.getElementById("cap_max").title, "S_WND_RESTORE");
+  d.getElementById("cap_max").click();
+  await sleep(150);
+  check("pressing it again gives the size back", w.maximized, false);
   check("status bar names both models", d.getElementById("st_main").textContent, "Ready · gigaam-v3 + ggml-small.bin · 7.8 GB free");
   check("sidebar badges filled", [d.getElementById("badge_mic").textContent, d.getElementById("badge_models").textContent], ["Realtek", "2"]);
   check("status bar led lit", d.getElementById("st_led").classList.contains("on"), true);
