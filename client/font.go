@@ -15,19 +15,19 @@ var (
 
 func registerBundledFonts() {
 	bundledFontsOnce.Do(func() {
-		for _, data := range [][]byte{plexfont.Regular, plexfont.SemiBold} {
-			if len(data) == 0 {
+		for _, face := range plexfont.Faces() {
+			if len(face.Data) == 0 {
 				continue
 			}
 			var installed uint32
 			h, _, _ := procAddFontMemResourceEx.Call(
-				uintptr(unsafe.Pointer(&data[0])), uintptr(len(data)), 0,
+				uintptr(unsafe.Pointer(&face.Data[0])), uintptr(len(face.Data)), 0,
 				uintptr(unsafe.Pointer(&installed)))
 			if h == 0 {
-				log.Printf("шрифт %s не удалось подключить к процессу", plexfont.Family)
+				log.Printf("шрифт %s не удалось подключить к процессу", face.Family)
 				return
 			}
 		}
-		log.Printf("шрифт %s подключён к процессу", plexfont.Family)
+		log.Printf("шрифты %s и %s подключены к процессу", plexfont.Sans, plexfont.Mono)
 	})
 }

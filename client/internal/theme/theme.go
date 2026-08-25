@@ -119,7 +119,7 @@ var colourChoice = []string{"green", "amber", "blue", "pink"}
 
 var skins = []Skin{
 	{ID: "terminal", Palette: "green", Colours: true,
-		FontCSS: `Consolas,"Cascadia Mono",monospace`, FontGDI: "Consolas",
+		FontCSS: `"IBM Plex Mono",Consolas,monospace`, FontGDI: "IBM Plex Mono",
 		PagePx: 14, FontPx: 15, Weight: 400, BrandLS: ".18em", Caps: true, Flicker: true,
 		FieldPad: "6px 10px", CtlFS: "12.5px", WeightB: 700,
 		Radius: 0, Border: 1, Round: false,

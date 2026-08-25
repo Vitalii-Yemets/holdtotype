@@ -201,3 +201,22 @@ func TestCSSVarsCarryEverythingThePageNeeds(t *testing.T) {
 		t.Error("the neon title should be painted with its gradient")
 	}
 }
+
+func TestSkinsNameTheFacesTheyShipWith(t *testing.T) {
+	for _, c := range []struct{ skin, want string }{
+		{"terminal", "IBM Plex Mono"},
+		{"neon", "IBM Plex Sans"},
+	} {
+		look := Current(c.skin, "")
+		if !strings.HasPrefix(look.FontCSS, `"`+c.want+`"`) {
+			t.Errorf("the %s page asks for %q, want %q first", c.skin, look.FontCSS, c.want)
+		}
+		if look.FontGDI != c.want {
+			t.Errorf("the %s windows are drawn with %q, want %q", c.skin, look.FontGDI, c.want)
+		}
+	}
+	ed := Current("editor", "")
+	if ed.FontGDI != "Cascadia Mono" {
+		t.Errorf("the editor skin keeps its own face, got %q", ed.FontGDI)
+	}
+}
