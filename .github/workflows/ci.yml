@@ -91,7 +91,7 @@ jobs:
       - name: Package portable archive
         run: |
           cd dist
-          zip -9 ../holdtotype-portable.zip holdtotype.exe whisper-server.exe llama-server.exe config.default.json README.md
+          zip -9 ../holdtotype-portable.zip holdtotype.exe whisper-server.exe sherpa-server.exe llama-server.exe config.default.json README.md
       - uses: actions/upload-artifact@v4
         with:
           name: holdtotype-binaries

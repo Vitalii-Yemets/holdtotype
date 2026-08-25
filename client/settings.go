@@ -1242,6 +1242,7 @@ button.mini.danger:hover{color:var(--bad);border-color:#7a2e2e;box-shadow:0 0 7p
 .miclevel.dots i{width:6px;border-radius:50%}
 .miclevel.flat i{width:3px;box-shadow:none}
 .miclevel.grow{width:100%;overflow:hidden}
+.lvlrow .miclevel.grow{flex:0 0 auto;width:min(320px,100%);min-width:0}
 #hf_clr{appearance:none;background:none;border:0;font:inherit;position:absolute;right:9px;top:50%;transform:translateY(-50%);color:var(--dim);cursor:pointer;display:none;font-size:13px;padding:2px 4px}
 #hf_clr:hover{color:var(--green);text-shadow:var(--glow)}
 #hf_go{appearance:none;background:none;border:0;font:inherit;position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--dim);cursor:pointer;line-height:0;padding:3px}
@@ -1445,9 +1446,9 @@ button.iconbtn.danger:hover{color:var(--bad);filter:drop-shadow(0 0 4px rgba(255
   <div class="row"><label>{{S_MIC}}</label>
    <select id="mic_device"><option value="">{{S_MIC_DEFAULT}}</option></select>
    <button class="iconbtn" id="mic_refresh" title="{{S_MIC_REFRESH}}">&#8635;</button></div>
-  <div class="row"><label>{{S_MIC_LEVEL}}</label>
-   <span class="miclevel" id="mic_bar"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
-   <span class="mpct" id="mic_hint"></span></div>
+  <div class="row lvlrow"><label>{{S_MIC_LEVEL}}</label>
+   <span class="mpct" id="mic_hint"></span>
+   <span class="miclevel grow" id="mic_bar"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
   <div class="row"><label>{{S_MIC_CHECK}}<span class="sub">{{S_MIC_CHECK_SUB}}</span></label>
    <button type="button" class="mini" id="mic_check">{{S_PROF_TEST}}</button></div>
   <div class="micverdict" id="mic_verdict"></div>

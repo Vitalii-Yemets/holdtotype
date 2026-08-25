@@ -227,7 +227,13 @@ function check(name, actual, expected) {
   Object.defineProperty(micBar, "clientWidth", { value: 60, configurable: true });
   w.paintMeter(micBar, 0.3);
   check("a narrower card gives the bars back", micBar.querySelectorAll("i").length, 10);
-  check("the microphone meter in its own row is left alone", d.querySelectorAll("#mic_bar i").length, 7);
+  const rowBar = d.getElementById("mic_bar");
+  check("the meter on the microphone screen fills its row too", rowBar.classList.contains("grow"), true);
+  check("and its row is the one marked for it", rowBar.closest(".row").classList.contains("lvlrow"), true);
+  check("the word for a quiet room stands before the meter, not after it", [...rowBar.closest(".row").children].map(el=>el.id || el.tagName.toLowerCase()), ["label", "mic_hint", "mic_bar"]);
+  Object.defineProperty(rowBar, "clientWidth", { value: 320, configurable: true });
+  w.paintMeter(rowBar, 0.05);
+  check("so it counts its own segments as well", rowBar.querySelectorAll("i").length, 53);
   for (const edge of ["t", "b", "l", "r", "tl", "tr", "bl", "br"]) {
     d.querySelector(".rsz." + edge).dispatchEvent(new w.MouseEvent("mousedown", { button: 0, bubbles: true }));
   }
