@@ -31,6 +31,7 @@ type Palette struct {
 	Scrim   string
 
 	Off     string
+	Ok      string
 	BadBg   string
 	BadLine string
 }
@@ -118,21 +119,21 @@ var palettes = []Palette{
 		BtnBg: "transparent", BtnFg: "#f3b6e4", BtnLine: "#4a2472", SelBg: "linear-gradient(90deg,#ff5fc8,#46e0ff)", SelFg: "#150a22",
 		Brand: "linear-gradient(90deg,#ff5fc8,#46e0ff)", Scrim: "rgba(10,4,18,.72)"},
 
-	{ID: "soft", Bg: "#f4f1ec", Panel: "#fffefb", Line: "#e0d8cd",
-		Text: "#3d3833", Accent: "#4a6fa5", Dim: "#7c7269", Faint: "#a89d92",
-		Warn: "#a86b12", Bad: "#b03a2e", Rec: "#c4483a",
-		Field: "#fffefb", Soft: "#eae4db", NavOn: "#e9e2d8", On: "#dbe4f1",
-		TitleBg: "#efe9e1", SideBg: "#f8f5f0", KeyBg: "#e9e2d8",
-		BtnBg: "#fffefb", BtnFg: "#3d3833", BtnLine: "#d5cabd", SelBg: "#4a6fa5", SelFg: "#fffefb",
-		Brand: "", Scrim: "rgba(61,56,51,.42)"},
+	{ID: "soft", Bg: "#fff3f8", Panel: "#ffffff", Line: "#ffd0e4",
+		Text: "#c04a86", Accent: "#c04a86", Dim: "#e07bb0", Faint: "#eda3c8",
+		Warn: "#f2a33c", Bad: "#d1345b", Rec: "#ff6f91",
+		Field: "#ffffff", Soft: "#ffe3ef", NavOn: "#ffe7f2", On: "#ffd9ea",
+		TitleBg: "#ffe7f2", SideBg: "#fff8fb", KeyBg: "#ffe7f2",
+		BtnBg: "#ffd9ea", BtnFg: "#a83a72", BtnLine: "#ffd0e4", SelBg: "#ff8ec7", SelFg: "#ffffff",
+		Brand: "", Scrim: "rgba(192,74,134,.30)"},
 
-	{ID: "paper", Bg: "#eceff1", Panel: "#ffffff", Line: "#d2d8dd",
-		Text: "#1f2529", Accent: "#1a5fb4", Dim: "#5b656d", Faint: "#929da5",
-		Warn: "#8a5a00", Bad: "#b42318", Rec: "#c8342a",
-		Field: "#ffffff", Soft: "#e2e7ea", NavOn: "#e0e6ea", On: "#d5e3f6",
-		TitleBg: "#e5e9ec", SideBg: "#f2f5f6", KeyBg: "#e2e7ea",
-		BtnBg: "#ffffff", BtnFg: "#1f2529", BtnLine: "#c2c9cf", SelBg: "#1a5fb4", SelFg: "#ffffff",
-		Brand: "", Scrim: "rgba(31,37,41,.40)"},
+	{ID: "paper", Bg: "#ffffff", Panel: "#f6f8fa", Line: "#d0d7de",
+		Text: "#1f2328", Accent: "#0969da", Dim: "#59636e", Faint: "#818b98",
+		Warn: "#9a6700", Bad: "#cf222e", Rec: "#cf222e",
+		Field: "#ffffff", Soft: "#e6eaef", NavOn: "#eef1f4", On: "#ddf4ff",
+		TitleBg: "#f6f8fa", SideBg: "#ffffff", KeyBg: "#eef1f4",
+		BtnBg: "#f6f8fa", BtnFg: "#1f2328", BtnLine: "#d0d7de", SelBg: "#0969da", SelFg: "#ffffff",
+		Ok: "#1a7f37", Brand: "", Scrim: "rgba(31,35,40,.35)"},
 }
 
 var colourChoice = []string{"green", "amber", "blue", "pink"}
@@ -163,20 +164,20 @@ var skins = []Skin{
 		Level: "bars", Pulse: 0.8},
 
 	{ID: "soft", Palette: "soft",
-		FontCSS: `"IBM Plex Sans","Segoe UI",system-ui,sans-serif`, FontGDI: "IBM Plex Sans",
-		PagePx: 15, FontPx: 16, Weight: 400, BrandLS: ".01em",
-		FieldPad: "8px 12px", CtlFS: "13px", WeightB: 600,
-		Radius: 10, Border: 1, Round: true,
-		Glow: false, Scan: 0, Shadow: "0 10px 28px rgba(61,56,51,.16)",
-		Level: "bars", Pulse: 1.2},
+		FontCSS: `"Comic Sans MS","Segoe UI Variable Display","Segoe UI",sans-serif`, FontGDI: "Comic Sans MS",
+		PagePx: 15, FontPx: 16, Weight: 400, BrandLS: ".02em",
+		FieldPad: "9px 13px", CtlFS: "13.5px", WeightB: 600,
+		Radius: 16, Border: 1, Round: true,
+		Glow: false, Scan: 0, Shadow: "0 14px 34px rgba(255,140,190,.28)",
+		Level: "dots", Pulse: 1.2},
 
 	{ID: "paper", Palette: "paper",
-		FontCSS: `"IBM Plex Sans","Segoe UI",system-ui,sans-serif`, FontGDI: "IBM Plex Sans",
-		PagePx: 14, FontPx: 15, Weight: 400, BrandLS: ".07em",
+		FontCSS: `"Segoe UI",system-ui,sans-serif`, FontGDI: "Segoe UI",
+		PagePx: 14, FontPx: 15, Weight: 400, BrandLS: "-.01em",
 		FieldPad: "7px 11px", CtlFS: "12.5px", WeightB: 600,
-		Radius: 2, Border: 1, Round: false,
-		Glow: false, Scan: 0, Shadow: "0 6px 18px rgba(31,37,41,.14)",
-		Level: "flat", Pulse: 1.4},
+		Radius: 6, Border: 1, Round: false,
+		Glow: false, Scan: 0, Shadow: "0 8px 24px rgba(31,35,40,.12)",
+		Level: "bars", Pulse: 1.4},
 }
 
 type Look struct {
@@ -238,6 +239,9 @@ func GetPalette(id string) Palette {
 func (p Palette) filled() Palette {
 	if p.Off == "" {
 		p.Off = grey(0.45*luma(p.Text) + 0.55*luma(p.Bg))
+	}
+	if p.Ok == "" {
+		p.Ok = p.Accent
 	}
 	if p.BadBg == "" {
 		p.BadBg = blend(p.Bad, p.Bg, 0.80)
@@ -365,6 +369,13 @@ func (l Look) CSSVars() string {
 	if l.Radius >= 10 {
 		barr = "99px"
 	}
+	lvlw, lvlr := "4px", barr
+	switch l.Level {
+	case "dots":
+		lvlw, lvlr = "10px", "50%"
+	case "flat":
+		lvlw, lvlr = "3px", "0"
+	}
 	brandBg, brandClip, brandFill := "none", "border-box", "currentColor"
 	if p.Brand != "" {
 		brandBg, brandClip, brandFill = p.Brand, "text", "transparent"
@@ -382,7 +393,9 @@ func (l Look) CSSVars() string {
 		";--selbg:" + p.SelBg + ";--selfg:" + p.SelFg +
 		";--brandbg:" + brandBg + ";--brandclip:" + brandClip + ";--brandfill:" + brandFill +
 		";--scrim:" + p.Scrim +
+		";--ok:" + p.Ok +
 		";--badbg:" + p.BadBg + ";--badline:" + p.BadLine +
+		";--lvlw:" + lvlw + ";--lvlr:" + lvlr +
 		";--glow:" + glow + ";--higlow:" + hiGlow + ";--iconglow:" + iconGlow +
 		";--amberglow:" + warnGlow + ";--badglow:" + badGlow + ";--badfilter:" + badFilter +
 		";--font:" + l.FontCSS +

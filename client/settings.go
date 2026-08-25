@@ -998,7 +998,7 @@ button.cap.close:hover{background:var(--badbg);color:var(--bad);border-color:var
 .nbadge.warn{color:var(--amber);border-color:var(--amber)}
 .nbadge.miss{color:var(--amber);border-color:var(--amber);box-shadow:var(--amberglow)}
 .scard .led{width:6px;height:6px;border-radius:50%;background:var(--faint);display:inline-block;margin-right:6px;flex:none}
-.scard .led.on{background:var(--hi);box-shadow:var(--higlow)}
+.scard .led.on{background:var(--ok);box-shadow:var(--higlow)}
 .scard .led.warn{background:var(--amber)}
 .scard .mini{align-self:flex-start;margin-top:auto}
 .scard .v{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
@@ -1053,7 +1053,7 @@ button.cap.close:hover{background:var(--badbg);color:var(--bad);border-color:var
 .wizbar{height:14px;border:1px solid var(--line);border-radius:calc(var(--r) * .6);background:var(--panel);position:relative;overflow:hidden;flex:1;min-width:150px;max-width:430px}
 .wizbar i{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,var(--faint),var(--hi));box-shadow:var(--higlow);transition:width .15s linear}
 .wizlvl{display:flex;align-items:flex-end;gap:2px;height:10px}
-.wizlvl i{display:block;width:4px;height:10px;background:var(--soft);border:1px solid var(--line);box-sizing:border-box;border-radius:var(--barr,0);transition:background .12s linear}
+.wizlvl i{display:block;width:var(--lvlw,4px);height:10px;background:var(--soft);border:1px solid var(--line);box-sizing:border-box;border-radius:var(--lvlr,0);transition:background .12s linear}
 .wizlvl i.on{background:var(--hi);border-color:var(--hi);box-shadow:var(--higlow)}
 .wiztry{width:100%;min-height:76px;resize:none;background:var(--field);border:1px solid var(--line);border-radius:calc(var(--r) * .55);color:var(--green);font:inherit;font-size:var(--ctlfs);padding:var(--fieldpad);outline:none;user-select:text}
 .wiztry:focus{border-color:var(--dim);box-shadow:var(--glow)}
@@ -1237,10 +1237,8 @@ button.mini.danger:hover{color:var(--bad);border-color:var(--badline);background
 .subhead{color:var(--dim);font-size:11px;letter-spacing:1px;text-transform:uppercase;margin:14px 0 2px;padding-top:10px;border-top:1px solid var(--soft)}
 #hf_results{max-height:44vh;overflow-y:auto;overscroll-behavior:contain}
 .miclevel{flex:none;display:flex;align-items:flex-end;gap:2px;height:10px;width:auto}
-.miclevel i{display:block;width:4px;height:10px;background:var(--soft);border:1px solid var(--line);box-sizing:border-box;border-radius:var(--barr,0);transition:background .1s linear}
+.miclevel i{display:block;width:var(--lvlw,4px);height:10px;background:var(--soft);border:1px solid var(--line);box-sizing:border-box;border-radius:var(--lvlr,0);transition:background .1s linear}
 .miclevel i.on{background:var(--hi);border-color:var(--hi);box-shadow:var(--higlow)}
-.miclevel.dots i{width:6px;border-radius:50%}
-.miclevel.flat i{width:3px;box-shadow:none}
 .miclevel.grow{width:100%;overflow:hidden}
 .lvlrow .miclevel.grow{flex:0 0 auto;width:min(320px,100%);min-width:0}
 #hf_clr{appearance:none;background:none;border:0;font:inherit;position:absolute;right:9px;top:50%;transform:translateY(-50%);color:var(--dim);cursor:pointer;display:none;font-size:13px;padding:2px 4px}
@@ -2252,7 +2250,10 @@ const MIC_FLOOR = 0.008;
 const MIC_TOP = 0.35;
 const MIC_DB_FLOOR = 20 * Math.log10(MIC_FLOOR);
 const MIC_DB_TOP = 20 * Math.log10(MIC_TOP);
-const METER_PITCH = 6;
+function meterPitch(box){
+  const w = parseFloat(getComputedStyle(box).getPropertyValue("--lvlw")) || 4;
+  return w + 2;
+}
 const METER_MIN_BARS = 7;
 function micHeard(level){
   if(!(level > MIC_FLOOR)) return 0;
@@ -2270,7 +2271,8 @@ function fitMeter(box){
   if(!box.classList.contains("grow")) return;
   const room = box.clientWidth;
   if(!room) return;
-  const want = Math.max(METER_MIN_BARS, Math.floor((room + 2) / METER_PITCH));
+  const pitch = meterPitch(box);
+  const want = Math.max(METER_MIN_BARS, Math.floor((room + 2) / pitch));
   if(want === box.children.length) return;
   box.innerHTML = new Array(want).fill("<i></i>").join("");
 }

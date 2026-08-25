@@ -86,7 +86,7 @@ func TestEveryPaletteIsComplete(t *testing.T) {
 }
 
 func TestTheQuietSkinsSeparateTextFromAccent(t *testing.T) {
-	for _, id := range []string{"editor", "neon", "soft", "paper"} {
+	for _, id := range []string{"editor", "neon", "paper"} {
 		p := GetPalette(id)
 		if p.Text == p.Accent {
 			t.Errorf("%s: text and accent are both %q", id, p.Text)
@@ -278,6 +278,42 @@ func TestALightSkinAsksForNoHalo(t *testing.T) {
 	for _, want := range []string{"--amberglow:0 0 6px", "--badglow:0 0 7px", "--badfilter:drop-shadow"} {
 		if !strings.Contains(term, want) {
 			t.Errorf("the terminal skin lost %q", want)
+		}
+	}
+}
+
+func TestTheLightSkinsKeepTheirDrawnCharacter(t *testing.T) {
+	soft := Current("soft", "")
+	if !soft.Round || soft.Radius != 16 {
+		t.Errorf("the soft skin should be round at 16, got round=%v r=%d", soft.Round, soft.Radius)
+	}
+	if soft.Level != "dots" {
+		t.Errorf("the soft skin shows the level as %q, want bouncing dots", soft.Level)
+	}
+	if !strings.Contains(soft.CSSVars(), "--lvlw:10px") || !strings.Contains(soft.CSSVars(), "--lvlr:50%") {
+		t.Error("the soft skin did not ask for round level marks")
+	}
+	if p := soft.Palette; p.Text != p.Accent {
+		t.Errorf("the soft skin speaks in one voice, got text %q accent %q", p.Text, p.Accent)
+	}
+
+	paper := Current("paper", "")
+	if paper.Round || paper.Radius != 6 {
+		t.Errorf("the paper skin should be square at 6, got round=%v r=%d", paper.Round, paper.Radius)
+	}
+	if paper.Level != "bars" {
+		t.Errorf("the paper skin shows the level as %q, want plain bars", paper.Level)
+	}
+	if p := paper.Palette; p.Ok == p.Accent {
+		t.Error("the paper skin should light its lamps green, not in the link blue")
+	}
+	if !strings.Contains(paper.CSSVars(), "--ok:#1a7f37") {
+		t.Error("the paper skin lost its green lamp")
+	}
+	for _, id := range []string{"terminal", "editor", "neon", "soft"} {
+		p := GetPalette(GetSkin(id).Palette)
+		if p.Ok != p.Accent {
+			t.Errorf("the %s palette should light its lamps in its own accent, got %q", id, p.Ok)
 		}
 	}
 }

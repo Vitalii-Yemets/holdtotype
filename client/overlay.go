@@ -629,8 +629,8 @@ func overlayRender(hwnd, hdc uintptr) {
 			}
 			switch style {
 			case "dots":
-				r := px(2) + int32(float64(px(4))*lv)
-				drawSmoothDot(hdc, x+px(2), cy, r, r, colHi, colBg, 0)
+				r := px(3)
+				drawSmoothDot(hdc, x+px(2), cy-int32(float64(px(8))*lv), r, r, colHi, colBg, 0)
 			case "flat":
 				half := (px(3) + int32(float64(px(13))*lv)) / 2
 				fill(rect{Left: x, Top: cy - half, Right: x + px(4), Bottom: cy + half}, colHi)
