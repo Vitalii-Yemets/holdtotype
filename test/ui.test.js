@@ -4,6 +4,11 @@ const { JSDOM } = require("jsdom");
 
 const html = fs.readFileSync(path.join(__dirname, "page.html"), "utf8");
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+function meterMoves(d, id) {
+  const bars = [...d.querySelectorAll(`#${id} i`)];
+  if (!bars.length) return false;
+  return bars.some((b) => b.style.height && b.style.height !== "3px");
+}
 function searchFinds(w, d, needle) {
   const hits = w.searchMatches(needle.toLowerCase());
   return hits.some((el) => el.closest("#p-about"));
@@ -180,7 +185,8 @@ function check(name, actual, expected) {
   const lastCS = w.getComputedStyle(d.getElementById("state_last"));
   check("last dictation is clamped to its row", [lastCS.display, lastCS.overflow, lastCS.textOverflow, lastCS.whiteSpace], ["block", "hidden", "ellipsis", "nowrap"]);
   check("full dictation text kept on hover", d.getElementById("state_last").title, "hello");
-  check("status screen meter follows the microphone", d.getElementById("state_mic_bar").style.width !== "" && d.getElementById("state_mic_bar").style.width !== "0%", true);
+  check("status screen meter follows the microphone", meterMoves(d, "state_mic_bar"), true);
+  check("the status meter is drawn as bars", d.querySelectorAll("#state_mic_bar i").length, 7);
   check("status bar names both models", d.getElementById("st_main").textContent, "Ready · gigaam-v3 + ggml-small.bin · 7.8 GB free");
   check("sidebar badges filled", [d.getElementById("badge_mic").textContent, d.getElementById("badge_models").textContent], ["Realtek", "2"]);
   check("status bar led lit", d.getElementById("st_led").classList.contains("on"), true);
@@ -192,16 +198,25 @@ function check(name, actual, expected) {
 
   tab("system"); await sleep(200);
   const themeSel = d.getElementById("theme");
-  check("the four palettes are offered", [...themeSel.options].map(o=>o.value), ["green", "amber", "blue", "pink"]);
+  check("the six skins are offered", [...themeSel.options].map(o=>o.value), ["green", "amber", "blue", "pink", "editor", "neon"]);
   check("green is the one in use", themeSel.value, "green");
-  check("every palette has a swatch", d.querySelectorAll("#theme_swatches .swatch").length, 4);
-  check("the swatch of the current palette is marked", d.querySelector("#theme_swatches .swatch.on").dataset.theme, "green");
+  check("every skin has a swatch", d.querySelectorAll("#theme_swatches .swatch").length, 6);
+  check("the swatch of the current skin is marked", d.querySelector("#theme_swatches .swatch.on").dataset.theme, "green");
   d.querySelector('#theme_swatches .swatch[data-theme="amber"]').click();
   await sleep(200);
-  check("picking a swatch picks the palette", themeSel.value, "amber");
+  check("picking a swatch picks the skin", themeSel.value, "amber");
   check("the window repaints at once", d.documentElement.style.getPropertyValue("--green"), "#ff9e2c");
   check("and the warning colour comes with it", d.documentElement.style.getPropertyValue("--amber"), "#ffd24a");
-  check("the mark moves to the new palette", d.querySelector("#theme_swatches .swatch.on").dataset.theme, "amber");
+  check("the mark moves to the new skin", d.querySelector("#theme_swatches .swatch.on").dataset.theme, "amber");
+  d.querySelector('#theme_swatches .swatch[data-theme="editor"]').click();
+  await sleep(200);
+  check("a skin brings its own font", d.documentElement.style.getPropertyValue("--font").includes("Cascadia"), true);
+  check("and its own corners", d.documentElement.style.getPropertyValue("--r"), "3px");
+  check("and turns the halo off", d.documentElement.style.getPropertyValue("--glow"), "none");
+  d.querySelector('#theme_swatches .swatch[data-theme="green"]').click();
+  await sleep(200);
+  check("the terminal skin keeps square corners", d.documentElement.style.getPropertyValue("--r"), "0px");
+  check("and draws its own window border", d.documentElement.style.getPropertyValue("--wborder"), "1px solid #1d4a2b");
   await sleep(700);
   check("the choice is written into the settings", w.saveForms.some(f=>f.theme === "amber"), true);
   d.querySelector('#theme_swatches .swatch[data-theme="green"]').click();
@@ -288,7 +303,7 @@ function check(name, actual, expected) {
   mic.value = "dev1"; mic.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(30);
   check("microphone selection kept", mic.value, "dev1");
   await sleep(260);
-  check("input level meter moves", d.getElementById("mic_bar").style.width !== "" && d.getElementById("mic_bar").style.width !== "0%", true);
+  check("input level meter moves", meterMoves(d, "mic_bar"), true);
   check("sidebar badge follows the chosen microphone", d.getElementById("badge_mic").textContent, "Headset");
 
   const micBtn = d.getElementById("mic_check");
@@ -664,7 +679,7 @@ function check(name, actual, expected) {
   check("the third step names the shortcut", d.getElementById("wiz_hot").textContent, "ctrl+win");
   check("the third step offers the microphones", d.getElementById("wiz_mic").options.length, 3);
   await sleep(300);
-  check("the wizard meter follows the microphone", d.getElementById("wiz_micbar").style.width !== "" && d.getElementById("wiz_micbar").style.width !== "0%", true);
+  check("the wizard meter follows the microphone", meterMoves(d, "wiz_micbar"), true);
 
   d.getElementById("wiz_next").click(); await sleep(250);
   check("the fourth step waits for a phrase", d.getElementById("wiz_tryout").textContent, "Waiting for the first phrase…");

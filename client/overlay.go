@@ -163,18 +163,32 @@ var (
 func uiFont(hwnd uintptr) uintptr { return uiFontDPI(dpiFor(hwnd)) }
 
 func uiFontDPI(dpi int32) uintptr {
+	skin := themeSkin()
 	fontMu.Lock()
 	defer fontMu.Unlock()
 	if f, ok := fontCache[dpi]; ok {
 		return f
 	}
-	face, _ := windows.UTF16PtrFromString("Consolas")
-	h := scaleDPI(15, dpi)
-	f, _, _ := procCreateFontW.Call(uintptr(^uintptr(h)+1), 0, 0, 0, 400,
+	face, _ := windows.UTF16PtrFromString(skin.FontGDI)
+	h := scaleDPI(skin.FontPx, dpi)
+	f, _, _ := procCreateFontW.Call(uintptr(^uintptr(h)+1), 0, 0, 0, uintptr(skin.Weight),
 		0, 0, 0, 1, 0, 0, 5, 0, uintptr(unsafe.Pointer(face)))
 	fontCache[dpi] = f
-	log.Printf("шрифт интерфейса создан для %d DPI", dpi)
+	log.Printf("шрифт интерфейса создан: %s %d px для %d DPI", skin.FontGDI, skin.FontPx, dpi)
 	return f
+}
+
+// dropFontCache is called when the skin changes: the next paint asks for a new face.
+func dropFontCache() {
+	fontMu.Lock()
+	old := fontCache
+	fontCache = map[int32]uintptr{}
+	fontMu.Unlock()
+	for _, f := range old {
+		if f != 0 {
+			procDeleteObject.Call(f)
+		}
+	}
 }
 
 func overlayHwnd() uintptr {
@@ -522,12 +536,20 @@ func overlayRender(hwnd, hdc uintptr) {
 	}
 
 	fill(rc, colBg)
-	for y := rc.Top + 3; y < rc.Bottom; y += 3 {
-		fill(rect{Left: rc.Left, Top: y, Right: rc.Right, Bottom: y + 1}, colBgLine)
+	if themeScanlines() {
+		for y := rc.Top + 3; y < rc.Bottom; y += 3 {
+			fill(rect{Left: rc.Left, Top: y, Right: rc.Right, Bottom: y + 1}, colBgLine)
+		}
+	}
+	if !themeRoundCorners() {
+		border := rc
+		brush, _, _ := procCreateSolidBrush.Call(colGreenLo)
+		procFrameRect.Call(hdc, uintptr(unsafe.Pointer(&border)), brush)
+		procDeleteObject.Call(brush)
 	}
 	pulse := 0.0
 	if anim && !askActive() && (st == ovRecording || st == ovProcessing) {
-		pulse = math.Abs(math.Sin(float64(ovTick) * 0.18))
+		pulse = math.Abs(math.Sin(float64(ovTick) * 0.18 / themePulse()))
 	}
 	drawDot := func(cx, cy, r int32, color uintptr) {
 		br, _, _ := procCreateSolidBrush.Call(color)
@@ -587,8 +609,10 @@ func overlayRender(hwnd, hdc uintptr) {
 		procDrawTextW.Call(hdc, uintptr(unsafe.Pointer(&u[0])), uintptr(len(u)-1),
 			uintptr(unsafe.Pointer(&r)), 0x0020|0x0004|0x8000)
 	}
-	for _, off := range [][2]int32{{1, 0}, {-1, 0}, {0, 1}, {0, -1}} {
-		drawText(rect{Left: txtRc.Left + off[0], Top: txtRc.Top + off[1], Right: txtRc.Right + off[0], Bottom: txtRc.Bottom + off[1]}, colGreenLo)
+	if themeGlow() {
+		for _, off := range [][2]int32{{1, 0}, {-1, 0}, {0, 1}, {0, -1}} {
+			drawText(rect{Left: txtRc.Left + off[0], Top: txtRc.Top + off[1], Right: txtRc.Right + off[0], Bottom: txtRc.Bottom + off[1]}, colGreenLo)
+		}
 	}
 	drawText(txtRc, bright)
 
@@ -599,14 +623,24 @@ func overlayRender(hwnd, hdc uintptr) {
 		procDrawTextW.Call(hdc, uintptr(unsafe.Pointer(&ls[0])), uintptr(len(ls)-1),
 			uintptr(unsafe.Pointer(&lr)), 0x0020|0x0004|0x0002)
 	} else if st == ovRecording && anim {
+		style := themeLevelStyle()
 		for i, v := range ovHistory {
-			h := px(int32(3 + v*36))
-			if h > px(42) {
-				h = px(42)
-			}
 			x := rc.Right - px(186) + int32(i)*px(7)
-			fill(rect{Left: x - px(1), Top: cy - h/2 - px(1), Right: x + px(5), Bottom: cy + h/2 + px(1)}, colGreenLo)
-			fill(rect{Left: x, Top: cy - h/2, Right: x + px(4), Bottom: cy + h/2}, bright)
+			switch style {
+			case "dots":
+				r := px(2) + int32(float64(px(4))*v)
+				drawDot(x+px(2), cy, r, bright)
+			case "flat":
+				h := px(int32(4 + v*22))
+				fill(rect{Left: x, Top: cy - h/2, Right: x + px(3), Bottom: cy + h/2}, bright)
+			default:
+				h := px(int32(3 + v*36))
+				if h > px(42) {
+					h = px(42)
+				}
+				fill(rect{Left: x - px(1), Top: cy - h/2 - px(1), Right: x + px(5), Bottom: cy + h/2 + px(1)}, colGreenLo)
+				fill(rect{Left: x, Top: cy - h/2, Right: x + px(4), Bottom: cy + h/2}, bright)
+			}
 		}
 	}
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image/color"
 	"log"
+	"strings"
 	"sync/atomic"
 
 	"holdtotype/internal/theme"
@@ -19,9 +20,19 @@ func themeID() string {
 	return theme.Default
 }
 
-func themePalette() theme.Palette { return theme.Get(themeID()) }
+func themeSkin() theme.Skin { return theme.Get(themeID()) }
 
-func themeCSSVars() string { return themePalette().CSSVars() }
+func themeRoundCorners() bool { return themeSkin().Round }
+
+func themeGlow() bool { return themeSkin().Glow }
+
+func themeScanlines() bool { return themeSkin().Scan > 0 }
+
+func themeLevelStyle() string { return themeSkin().Level }
+
+func themePulse() float64 { return themeSkin().Pulse }
+
+func themeCSSVars() string { return themeSkin().CSSVars() }
 
 // colorref turns a #rrggbb string into the BGR value GDI wants.
 func colorref(hex string) uintptr {
@@ -44,6 +55,7 @@ func applyTheme(id string) {
 	}
 	currentTheme.Store(id)
 	p := theme.Get(id)
+	dropFontCache()
 
 	colBg = colorref(p.Bg)
 	colBgLine = mixHex(p.Bg, 0.75)
@@ -62,7 +74,7 @@ func applyTheme(id string) {
 	log.Printf("оформление: %s", id)
 }
 
-func rebuildIcons(p theme.Palette) {
+func rebuildIcons(p theme.Skin) {
 	ar, ag, ab := theme.RGB(p.Accent)
 	br, bg, bb := theme.RGB(p.Bad)
 	wr, wg, wb := theme.RGB(p.Warn)
@@ -79,16 +91,23 @@ func rebuildIcons(p theme.Palette) {
 
 func themeListJSON() string {
 	type entry struct {
-		Bg     string `json:"bg"`
-		Panel  string `json:"panel"`
-		Line   string `json:"line"`
-		Accent string `json:"accent"`
-		Dim    string `json:"dim"`
-		Faint  string `json:"faint"`
-		Warn   string `json:"warn"`
-		Bad    string `json:"bad"`
-		RGB    string `json:"rgb"`
-		Glow   string `json:"glow"`
+		Bg      string `json:"bg"`
+		Panel   string `json:"panel"`
+		Line    string `json:"line"`
+		Accent  string `json:"accent"`
+		Dim     string `json:"dim"`
+		Faint   string `json:"faint"`
+		Warn    string `json:"warn"`
+		Bad     string `json:"bad"`
+		RGB     string `json:"rgb"`
+		Glow    string `json:"glow"`
+		Font    string `json:"font"`
+		Radius  string `json:"r"`
+		Border  string `json:"bw"`
+		Scan    string `json:"scan"`
+		Shadow  string `json:"shadow"`
+		WBorder string `json:"wborder"`
+		BarR    string `json:"barr"`
 	}
 	out := map[string]entry{}
 	for _, id := range theme.IDs() {
@@ -97,8 +116,15 @@ func themeListJSON() string {
 		out[id] = entry{
 			Bg: p.Bg, Panel: p.Panel, Line: p.Line, Accent: p.Accent,
 			Dim: p.Dim, Faint: p.Faint, Warn: p.Warn, Bad: p.Bad,
-			RGB:  fmt.Sprintf("%d,%d,%d", r, g, b),
-			Glow: fmt.Sprintf("0 0 7px rgba(%d,%d,%d,.55)", r, g, b),
+			RGB:     fmt.Sprintf("%d,%d,%d", r, g, b),
+			Glow:    cssVar(p.CSSVars(), "--glow"),
+			Font:    cssVar(p.CSSVars(), "--font"),
+			Radius:  cssVar(p.CSSVars(), "--r"),
+			Border:  cssVar(p.CSSVars(), "--bw"),
+			Scan:    cssVar(p.CSSVars(), "--scan"),
+			Shadow:  cssVar(p.CSSVars(), "--shadow"),
+			WBorder: cssVar(p.CSSVars(), "--wborder"),
+			BarR:    barRadius(p),
 		}
 	}
 	data, err := json.Marshal(out)
@@ -113,6 +139,7 @@ func refreshWindowChrome() {
 	for _, h := range liveWindows() {
 		if h != 0 {
 			applyDarkCaption(h)
+			procSetWindowPos.Call(h, 0, 0, 0, 0, 0, 0x0002|0x0001|0x0004|0x0020)
 			procRedrawWindow.Call(h, 0, 0, 0x0001|0x0004|0x0100)
 		}
 	}
@@ -127,4 +154,21 @@ func liveWindows() []uintptr {
 	out = append(out, capHwnd)
 	capMu.Unlock()
 	return out
+}
+
+// cssVar pulls one value out of the string CSSVars renders.
+func cssVar(vars, name string) string {
+	for _, part := range strings.Split(vars, ";") {
+		if strings.HasPrefix(part, name+":") {
+			return strings.TrimPrefix(part, name+":")
+		}
+	}
+	return ""
+}
+
+func barRadius(s theme.Skin) string {
+	if s.Radius >= 10 {
+		return "99px"
+	}
+	return "0"
 }

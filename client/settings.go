@@ -181,8 +181,8 @@ func (a *App) settingsThread(tab string, attempt int) {
 			}
 		}()
 		log.Printf("openSettings: создаю WebView2")
-		winW, winH := 720, 600
-		if c := a.snapshot(); c.SettingsW >= 660 && c.SettingsH >= 420 {
+		winW, winH := settingsDefaultW, settingsDefaultH
+		if c := a.snapshot(); c.SettingsW >= settingsMinW && c.SettingsH >= settingsMinH {
 			winW, winH = c.SettingsW, c.SettingsH
 		}
 		lastWndW, lastWndH = 0, 0
@@ -514,7 +514,8 @@ func (a *App) settingsThread(tab string, attempt int) {
 		setDarkClientBackground(hwnd)
 		applyDarkCaption(hwnd)
 		makeBorderless(hwnd)
-		applyMinSize(hwnd, 660, 420)
+		applyMinSize(hwnd, settingsMinW, settingsMinH)
+		procSetWindowPos.Call(hwnd, 0, 0, 0, 0, 0, 0x0002|0x0001|0x0004|0x0020)
 		var shown atomic.Bool
 		reveal := func() {
 			if !shown.CompareAndSwap(false, true) {
@@ -535,7 +536,7 @@ func (a *App) settingsThread(tab string, attempt int) {
 			savedDPI = 96
 		}
 		dipW, dipH := lastWndW*96/savedDPI, lastWndH*96/savedDPI
-		if dipW >= 660 && dipH >= 420 {
+		if dipW >= settingsMinW && dipH >= settingsMinH {
 			nw, nh := int(dipW), int(dipH)
 			a.mu.Lock()
 			changed := a.cfg.SettingsW != nw || a.cfg.SettingsH != nh
@@ -879,6 +880,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"upd": "S_UPDATED", "pedit": "S_PROF_EDIT", "pclose": "S_PROF_CLOSE",
 		"confirmdel": "S_CONFIRM_DEL", "delactive": "S_DEL_ACTIVE", "wizneedmodel": "S_WIZ_NEED_MODEL",
 		"free": "S_FREE", "updnone": "S_UPD_NONE",
+		"themeeditor": "S_THEME_EDITOR", "themeneon": "S_THEME_NEON",
 		"badgemodels": "S_BADGE_MODELS", "badgemiss": "S_BADGE_MISS", "badgesystem": "S_BADGE_SYSTEM", "badgehist": "S_BADGE_HIST",
 		"exewarn": "S_EXE_WARN", "exeedit": "S_PROF_EDIT", "resetask": "S_RESET_ALL_ASK", "resetbtn": "S_RESET_ALL_BTN",
 		"updfound":   "S_UPD_FOUND",
@@ -927,7 +929,7 @@ const settingsPage = `<!DOCTYPE html>
 :root{{{THEME_VARS}}}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
-body{font:14px Consolas,"Cascadia Mono",monospace;background:var(--bg);color:var(--green);user-select:none;display:flex;flex-direction:column;overflow:hidden}
+body{font:14px var(--font);background:var(--bg);color:var(--green);user-select:none;display:flex;flex-direction:column;overflow:hidden;border:var(--wborder)}
 body::after{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(transparent 0 2px,rgba(0,0,0,.10) 2px 3px)}
 .content{flex:1;overflow-y:auto;overflow-x:hidden;min-height:0}
 ::-webkit-scrollbar{width:10px}
@@ -968,7 +970,7 @@ button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box
 .scard .led.on{background:var(--green);box-shadow:var(--glow)}
 .scard .led.warn{background:var(--amber)}
 .scard .mini{align-self:flex-start}
-.scard .miclevel{flex:none;width:100%;max-width:220px}
+.scard .miclevel{flex:none;width:auto}
 .row .sub{display:block;font-size:10.5px;color:var(--dim);margin-top:2px;letter-spacing:0}
 .row .lbl{flex:1;min-width:0}
 .statusbar{border-top:1px solid var(--line);padding:6px 14px;display:flex;gap:12px;align-items:center;font-size:11px;color:var(--dim);flex-wrap:nowrap;white-space:nowrap}
@@ -1012,8 +1014,10 @@ button.cap.close:hover{background:#3c1212;color:#ff7b6b;border-color:#7a2e2e;box
 .wizrow select:focus{border-color:var(--dim);box-shadow:var(--glow);outline:none}
 .wizkey{border:1px solid var(--dim);padding:4px 11px;letter-spacing:1px;text-shadow:var(--glow);white-space:nowrap}
 .wizplan{display:flex;flex-direction:column;gap:4px;border:1px solid var(--line);background:var(--panel);padding:10px 12px;min-height:38px}
-.wizbar{height:14px;border:1px solid var(--line);background:#08100b;position:relative;overflow:hidden;flex:1;min-width:150px;max-width:430px}
+.wizbar{height:14px;border:1px solid var(--line);background:var(--panel);position:relative;overflow:hidden;flex:1;min-width:150px;max-width:430px}
 .wizbar i{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,var(--faint),var(--green));box-shadow:var(--glow);transition:width .15s linear}
+.wizlvl{display:flex;align-items:flex-end;gap:2px;height:16px}
+.wizlvl i{display:block;width:4px;height:3px;background:var(--green);box-shadow:var(--glow);border-radius:var(--barr,0);transition:height .12s linear}
 .wiztry{width:100%;min-height:76px;resize:none;background:#08100b;border:1px solid var(--line);color:var(--green);font:inherit;font-size:13px;padding:9px 11px;outline:none;user-select:text}
 .wiztry:focus{border-color:var(--dim);box-shadow:var(--glow)}
 .wizout{font-size:12.5px;color:var(--dim);min-height:18px}
@@ -1195,8 +1199,10 @@ button.mini.danger:hover{color:#ff7b6b;border-color:#7a2e2e;box-shadow:0 0 7px r
 .ramline .dot{margin-left:12px;font-size:10px}
 .subhead{color:var(--dim);font-size:11px;letter-spacing:1px;text-transform:uppercase;margin:14px 0 2px;padding-top:10px;border-top:1px solid #12241a}
 #hf_results{max-height:44vh;overflow-y:auto;overscroll-behavior:contain}
-.miclevel{flex:0 1 220px;min-width:120px;max-width:220px;height:14px;border:1px solid var(--line);background:#08100b;position:relative;overflow:hidden}
-.miclevel i{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,var(--faint),var(--green));box-shadow:var(--glow);transition:width .08s linear}
+.miclevel{flex:none;display:flex;align-items:flex-end;gap:2px;height:16px;width:auto}
+.miclevel i{display:block;width:4px;height:3px;background:var(--green);box-shadow:var(--glow);border-radius:var(--barr,0);transition:height .09s linear}
+.miclevel.dots i{width:6px;border-radius:50%}
+.miclevel.flat i{width:3px;box-shadow:none}
 #hf_clr{appearance:none;background:none;border:0;font:inherit;position:absolute;right:9px;top:50%;transform:translateY(-50%);color:var(--dim);cursor:pointer;display:none;font-size:13px;padding:2px 4px}
 #hf_clr:hover{color:var(--green);text-shadow:var(--glow)}
 #hf_go{appearance:none;background:none;border:0;font:inherit;position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--dim);cursor:pointer;line-height:0;padding:3px}
@@ -1307,7 +1313,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
  <div class="cards">
   <div class="scard"><span class="k">{{S_NAV_MIC}}</span>
    <span class="v"><i class="led" id="state_mic_led"></i><span id="state_mic">—</span></span>
-   <span class="miclevel"><i id="state_mic_bar"></i></span></div>
+   <span class="miclevel" id="state_mic_bar"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
   <div class="scard"><span class="k">{{S_STATE_RU}}</span>
    <span class="v"><i class="led" id="state_ru_led"></i><span id="state_ru">—</span></span>
    <button class="mini" id="state_ru_btn" data-goto="models">{{S_CHANGE_MODEL}}</button></div>
@@ -1391,7 +1397,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
    <select id="mic_device"><option value="">{{S_MIC_DEFAULT}}</option></select>
    <button class="iconbtn" id="mic_refresh" title="{{S_MIC_REFRESH}}">&#8635;</button></div>
   <div class="row"><label>{{S_MIC_LEVEL}}</label>
-   <span class="miclevel"><i id="mic_bar"></i></span>
+   <span class="miclevel" id="mic_bar"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
    <span class="mpct" id="mic_hint"></span></div>
   <div class="row"><label>{{S_MIC_CHECK}}<span class="sub">{{S_MIC_CHECK_SUB}}</span></label>
    <button type="button" class="mini" id="mic_check">{{S_PROF_TEST}}</button></div>
@@ -1568,6 +1574,8 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
     <option value="amber">{{S_THEME_AMBER}}</option>
     <option value="blue">{{S_THEME_BLUE}}</option>
     <option value="pink">{{S_THEME_PINK}}</option>
+    <option value="editor">{{S_THEME_EDITOR}}</option>
+    <option value="neon">{{S_THEME_NEON}}</option>
    </select></div>
   <div class="row"><label>{{S_AUTORUN}}<span class="sub">{{S_AUTORUN_SUB}}</span></label><input type="checkbox" id="autorun"></div>
   <div class="row"><label>{{S_UPD}}</label>
@@ -1673,7 +1681,7 @@ button.iconbtn.danger:hover{color:#ff7b6b;filter:drop-shadow(0 0 4px rgba(255,11
    <div class="wizrow"><label>{{S_HOTKEY}}</label><span class="wizkey" id="wiz_hot">—</span>
     <button type="button" class="btn" id="wiz_hotb">{{S_CHANGE}}</button></div>
    <div class="wizrow"><label for="wiz_mic">{{S_MIC}}</label><select id="wiz_mic"></select></div>
-   <div class="wizrow"><span class="wizbar"><i id="wiz_micbar"></i></span><span class="wizout" id="wiz_michint"></span></div>
+   <div class="wizrow"><span class="wizlvl" id="wiz_micbar"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><span class="wizout" id="wiz_michint"></span></div>
   </div>
   <div class="wizstep" id="wz3">
    <div class="wizh">{{S_WIZ_T_TRY}}</div>
@@ -1738,6 +1746,14 @@ function applyThemeVars(id){
   root.setProperty("--bad", p.bad);
   root.setProperty("--rgb", p.rgb);
   root.setProperty("--glow", p.glow);
+  if(p.font) root.setProperty("--font", p.font);
+  if(p.r) root.setProperty("--r", p.r);
+  if(p.bw) root.setProperty("--bw", p.bw);
+  if(p.scan !== undefined) root.setProperty("--scan", p.scan);
+  if(p.shadow) root.setProperty("--shadow", p.shadow);
+  if(p.wborder) root.setProperty("--wborder", p.wborder);
+  if(p.barr !== undefined) root.setProperty("--barr", p.barr);
+  document.documentElement.dataset.skin = id;
 }
 function initTheme(){
   const sel = document.getElementById("theme");
@@ -2117,17 +2133,26 @@ async function refreshMics(){
   sel.value = [...sel.options].some(o=>o.value===chosen) ? chosen : "";
   micChosen = sel.value;
 }
+const meterHist = {};
+function paintMeter(box, level){
+  const bars = box.querySelectorAll("i");
+  if(!bars.length) return;
+  const hist = meterHist[box.id] || (meterHist[box.id] = new Array(bars.length).fill(0));
+  hist.push(Math.max(0, Math.min(1, level * 1.3)));
+  hist.shift();
+  bars.forEach((b, i)=>{ b.style.height = Math.round(3 + hist[i] * 13) + "px"; });
+}
 function startMeter(barId, pageId, hintId){
   return setInterval(async ()=>{
-    const bar = document.getElementById(barId);
-    if(!bar) return;
+    const box = document.getElementById(barId);
+    if(!box) return;
     const page = document.getElementById(pageId);
     if(!page || !page.classList.contains("active")){
-      bar.style.width = "0%";
+      paintMeter(box, 0);
       return;
     }
     const lvl = await appMicLevel();
-    bar.style.width = Math.min(100, Math.round(lvl * 130)) + "%";
+    paintMeter(box, lvl);
     if(hintId){
       const hint = document.getElementById(hintId);
       if(hint) hint.textContent = lvl > 0.02 ? "" : L.micquiet;
@@ -2964,7 +2989,7 @@ function initWizard(){
   setInterval(async ()=>{
     if(!wizOn || wizStep !== 2) return;
     const lvl = await appMicLevel();
-    wizEl("wiz_micbar").style.width = Math.min(100, Math.round(lvl * 130)) + "%";
+    paintMeter(wizEl("wiz_micbar"), lvl);
     wizEl("wiz_michint").textContent = lvl > 0.02 ? "" : L.micquiet;
   }, 120);
   setInterval(()=>{
@@ -3463,3 +3488,10 @@ func jsonResult(v any) string {
 	}
 	return string(out)
 }
+
+const (
+	settingsMinW     = 760
+	settingsMinH     = 500
+	settingsDefaultW = 860
+	settingsDefaultH = 620
+)

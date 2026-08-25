@@ -608,6 +608,8 @@ var settingsStrings = map[string]map[string]string{
 		"S_THEME_AMBER":     "Янтарная",
 		"S_THEME_GREEN":     "Зелёная",
 		"S_THEME_SUB":       "цвет окна, плашки и значка в трее",
+		"S_THEME_NEON":      "Неон",
+		"S_THEME_EDITOR":    "Редактор",
 		"S_THEME":           "Оформление",
 		"S_UPD_FOUND":       "Есть версия %s",
 		"S_RELOAD_CFG_BTN":  "Перечитать",
@@ -691,7 +693,7 @@ var settingsStrings = map[string]map[string]string{
 			"<li>Крестик ✕ справа отменяет операцию на любой стадии; фокус ввода оверлей не забирает. Показывать плашку и её анимацию можно отключить на «Основных».</li>" +
 			"<li>Где показывать плашку — внизу экрана, вверху или у курсора — и показывать ли в ней сам распознанный текст вместо числа символов, настраивается на «Диктовке».</li>" +
 			"<li>Пока плашка о чём-то спрашивает, верхняя строка так и говорит — «Жду ответа», и точка перестаёт мигать. У каждой кнопки свой номер: 1…9 выбирают ответ, Enter берёт подсвеченный, Esc отменяет всё; клавиши подписаны справа в той же строке. За десять секунд до предела записи на плашке идёт янтарный обратный отсчёт.</li>" +
-			"<li>Цвет всего приложения — окна, плашки, окна захвата и значка в трее — задаётся одним списком «Оформление» в разделе «Система»: зелёная палитра по умолчанию, янтарная, синяя и розовая. Выбор применяется сразу, перезапуск не нужен.</li>" +
+			"<li>Облик всего приложения — окна, плашки, окна захвата и значка в трее — задаётся одним списком «Оформление» в разделе «Система». Обликов шесть: зелёный терминальный по умолчанию, янтарный, синий, розовый, «Редактор» (плоский серый, без свечения) и «Неон» (фиолетовый, со скруглениями). Облик меняет не только цвет: свой шрифт, скругления, толщина рамок, свечение и характер анимации. Выбор применяется сразу, перезапуск не нужен.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Вопрос о языке перевода</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Распознаю…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Переводить на:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Без перевода</span></div></div>" +
@@ -988,6 +990,8 @@ var settingsStrings = map[string]map[string]string{
 		"S_THEME_AMBER":     "Amber",
 		"S_THEME_GREEN":     "Green",
 		"S_THEME_SUB":       "the window, the plate and the tray icon",
+		"S_THEME_NEON":      "Neon",
+		"S_THEME_EDITOR":    "Editor",
 		"S_THEME":           "Colours",
 		"S_UPD_FOUND":       "Version %s is out",
 		"S_RELOAD_CFG_BTN":  "Re-read",
@@ -1071,7 +1075,7 @@ var settingsStrings = map[string]map[string]string{
 			"<li>The ✕ on the right cancels at any stage; the overlay never steals input focus. The plate and its animation can be turned off in the Dictation section.</li>" +
 			"<li>Where the plate appears — bottom of the screen, top, or at the cursor — and whether it shows the recognised text itself instead of a character count, is set on the Dictation section.</li>" +
 			"<li>While the plate is asking something its top line says so — \"Waiting for your answer\" — and the dot stops pulsing. Every answer carries a number: 1…9 pick one, Enter takes the highlighted one, Esc cancels everything; the keys are spelled out at the right of the same row. Ten seconds before the recording limit an amber countdown runs on the plate.</li>" +
-			"<li>The colour of the whole program — the window, the plate, the shortcut window and the tray icon — comes from one list, Colours, in the System section: green by default, amber, blue and pink. The choice applies at once, with no restart.</li>" +
+			"<li>The look of the whole program — the window, the plate, the shortcut window and the tray icon — comes from one list, Colours, in the System section. There are six: the green terminal by default, amber, blue, pink, Editor (flat grey, no halo) and Neon (violet, rounded). A skin changes more than colour: its own font, corners, border width, halo and the character of its motion. The choice applies at once, with no restart.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">The translation question</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Transcribing…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Translate to:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">No translation</span></div></div>" +

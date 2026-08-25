@@ -55,6 +55,11 @@ var (
 	procReleaseCapture    = user32.NewProc("ReleaseCapture")
 )
 
+const dwmColorNone = 0xFFFFFFFE
+
+// applyDarkCaption gives a window the frame the current skin asks for: rounded
+// corners with a border drawn by Windows, or square corners with no border of
+// its own — those skins draw their own, one pixel on every side.
 func applyDarkCaption(hwnd uintptr) {
 	if hwnd == 0 {
 		return
@@ -65,8 +70,13 @@ func applyDarkCaption(hwnd uintptr) {
 	set(20, 1)
 	set(35, uint32(colBg))
 	set(36, uint32(colGreen))
-	set(34, uint32(colGreenLo))
-	set(33, 2)
+	if themeRoundCorners() {
+		set(34, uint32(colGreenLo))
+		set(33, 2)
+	} else {
+		set(34, dwmColorNone)
+		set(33, 1)
+	}
 }
 
 var (
@@ -171,8 +181,21 @@ type minMaxInfo struct {
 	MaxTrackSize pointL
 }
 
+const (
+	wmNcCalcSize = 0x0083
+	wmNcHitTest  = 0x0084
+	htClient     = 1
+	htTop        = 12
+)
+
+type ncCalcSizeParams struct {
+	Rgrc  [3]rect
+	Lppos uintptr
+}
+
 var (
 	procCallWindowProcW = user32.NewProc("CallWindowProcW")
+	procIsZoomed        = user32.NewProc("IsZoomed")
 
 	minSizeOld               uintptr
 	minSizeW, minSizeH       int32
@@ -186,7 +209,34 @@ var (
 	lastWndW, lastWndH int32
 )
 
+// Square skins draw their own one-pixel frame on the page, so the window gives
+// its whole face to the page: the strip Windows keeps at the top for the frame
+// is handed back to the client area, and the resize grip that lived there is
+// answered by hand.
 func minSizeProc(hwnd, msg, wp, lp uintptr) uintptr {
+	if msg == wmNcCalcSize && wp != 0 && lp != 0 && !themeRoundCorners() {
+		p := (*ncCalcSizeParams)(unsafe.Pointer(lp))
+		top := p.Rgrc[0].Top
+		r, _, _ := procCallWindowProcW.Call(minSizeOld, hwnd, msg, wp, lp)
+		if z, _, _ := procIsZoomed.Call(hwnd); z == 0 {
+			p.Rgrc[0].Top = top
+		}
+		return r
+	}
+	if msg == wmNcHitTest && !themeRoundCorners() {
+		r, _, _ := procCallWindowProcW.Call(minSizeOld, hwnd, msg, wp, lp)
+		if r == htClient {
+			if z, _, _ := procIsZoomed.Call(hwnd); z == 0 {
+				y := int32(int16(uint16(lp >> 16)))
+				var rc rect
+				procGetWindowRect.Call(hwnd, uintptr(unsafe.Pointer(&rc)))
+				if y >= rc.Top && y < rc.Top+scaleDPI(6, dpiFor(hwnd)) {
+					return htTop
+				}
+			}
+		}
+		return r
+	}
 	if msg == 0x02E0 && lp != 0 {
 		suggested := (*rect)(unsafe.Pointer(lp))
 		procSetWindowPos.Call(hwnd, 0, uintptr(suggested.Left), uintptr(suggested.Top),

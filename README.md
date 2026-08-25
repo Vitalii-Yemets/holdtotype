@@ -51,7 +51,7 @@ Hold a hotkey — speak. Release — the transcribed text is pasted right where 
 - 🗣️ **Voice commands** — say "new line" and get a line break, "new paragraph" and get two, "cancel" and the dictation is thrown away without inserting anything; or have a phrase drop in any text you like. One button fills the list with the usual phrases in your language. They run after the replacements, so prompts and translation get the finished text.
 - 🕘 **History of dictations** — off by default; turn it on and the last N dictations stay on this machine as text (never audio), searchable by text or by the program they went into, one click to copy, one to paste it back into the window you came from, one to wipe them all. The list of programs nothing is ever recorded from — password managers, banking apps — sits next to the switch and is never folded away. The retention you set is enforced when the history is opened and whenever you change it, not only when the next dictation arrives.
 - 📖 **Recognition dictionary** — terms and abbreviations hint rare words to Whisper. A starter set of development and internet vocabulary comes preinstalled and follows the recognition language; write your own and it is never touched again. It works for Whisper, so Russian speech going through GigaAM ignores it.
-- 🎨 **Four palettes** — green, amber, blue and pink, all dark. One choice in System repaints the whole program at once: the settings window, the plate, the shortcut window and the tray icon. The installer follows the palette of the copy it is updating.
+- 🎨 **Six skins** — the green terminal, amber, blue, pink, Editor (flat grey, no halo, quiet motion) and Neon (violet, rounded, glowing). A skin is more than colour: its own font, corner radius, border width, halo, scanlines and the way the level meter moves. One choice in System repaints the whole program at once — the settings window, the plate, the shortcut window and the tray icon — with no restart. The installer follows the skin of the copy it is updating.
 - 🗣️ **8 UI languages** — English, Ukrainian, Russian, German, French, Spanish, Italian, Polish. Everything is translated: screens, dialogs, the overlay, the tray, the uninstaller and the in-app guide. Switching is instant, "Same as system" follows Windows.
 - 🔊 **Sound themes** — several synthesized cue sets plus Windows system sounds, with preview.
 - ⚡ **Nothing to save, nothing to restart** — every change applies the moment you make it; the Save button is gone. The settings that describe the recognition server — port, threads, server path, remote URL, autostart — restart the recognizer itself, which takes about a second; the app is never asked to be restarted. A setting is written to disk before it is applied: if the file cannot be written, the old values stay in force and the window says so instead of pretending. A value the program refuses — a port outside 1024–65535, an empty list of languages for the translation question — is reported, not silently dropped.
@@ -128,7 +128,7 @@ Left-click the tray icon to open the settings window. Nine sections in the sideb
 | **System** | UI language, colours, starting with Windows and updates; folded away: opening the log, re-reading config.json, resetting the settings, whisper-server autostart, port, path, external server URL |
 | **About** | version, a detailed guide-wiki with a table of contents, about the author |
 
-Everything applies the moment you change it — there is no Save button and no dialog about unsaved changes. Questions the app asks are proper dialogs: the window behind is out of reach while one is open, Tab stays inside it, Escape means no, and the focus starts on the safe answer. Settings that describe the recognition server (port, threads, server path, remote URL, autostart) restart the recognizer in place, so nothing waits for an app restart. Errors are written in words — "no connection to huggingface.co", "the disk is full" — with the library's own text kept for the log; a shortcut Windows has already taken is called out the moment you pick it. Settings that do not apply in the current mode are greyed out automatically, and so are buttons with nothing to act on — *Copy* with no last dictation, *Clear* with an empty history. Models are called the same everywhere — "Small", "GigaAM v3" — on the Status screen, in the routing table, in the status bar and in the question before a deletion.
+The window never gets smaller than 760×500, so the rows and cards keep the shape they were drawn for; a fresh install opens at 860×620. Everything applies the moment you change it — there is no Save button and no dialog about unsaved changes. Questions the app asks are proper dialogs: the window behind is out of reach while one is open, Tab stays inside it, Escape means no, and the focus starts on the safe answer. Settings that describe the recognition server (port, threads, server path, remote URL, autostart) restart the recognizer in place, so nothing waits for an app restart. Errors are written in words — "no connection to huggingface.co", "the disk is full" — with the library's own text kept for the log; a shortcut Windows has already taken is called out the moment you pick it. Settings that do not apply in the current mode are greyed out automatically, and so are buttons with nothing to act on — *Copy* with no last dictation, *Clear* with an empty history. Models are called the same everywhere — "Small", "GigaAM v3" — on the Status screen, in the routing table, in the status bar and in the question before a deletion.
 
 ## 🌐 How translation works
 
@@ -216,7 +216,26 @@ Files next to the exe: `config.json` (all settings; manual edits apply via "Relo
 
 ## 📄 License
 
-[MIT](LICENSE) © Vitalii Yemets. Bundled engines keep their own licenses: [whisper.cpp](https://github.com/ggerganov/whisper.cpp) and [llama.cpp](https://github.com/ggml-org/llama.cpp) are MIT-licensed; downloaded models are covered by their respective licenses on Hugging Face.
+[MIT](LICENSE) © Vitalii Yemets.
+
+Everything shipped in the archive, and every model the app offers to download, is under a permissive license — none of them restricts commercial use, donations or a paid build:
+
+| Part | What it is | License |
+|---|---|---|
+| [whisper.cpp](https://github.com/ggml-org/whisper.cpp) | `whisper-server.exe` — recognition for every language but Russian | MIT |
+| [llama.cpp](https://github.com/ggml-org/llama.cpp) | `llama-server.exe` — post-processing | MIT |
+| [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) | `sherpa-server.exe` — recognition for Russian | Apache 2.0 |
+| [malgo](https://github.com/gen2brain/malgo) / miniaudio | microphone capture | Unlicense (public domain) |
+| [gorilla/websocket](https://github.com/gorilla/websocket) | talking to the Russian engine | BSD-2-Clause |
+| [go-webview2](https://github.com/jchv/go-webview2) | the settings window | MIT |
+| [golang.org/x/sys](https://pkg.go.dev/golang.org/x/sys) | Windows API bindings | BSD-3-Clause |
+| Whisper models — Base, Small, Medium, Turbo | [ggerganov/whisper.cpp](https://huggingface.co/ggerganov/whisper.cpp) on Hugging Face | MIT |
+| [GigaAM v3](https://github.com/salute-developers/GigaAM) | the Russian model, converted for sherpa-onnx | MIT |
+| Qwen2.5-1.5B-Instruct | the editing model the app suggests first | Apache 2.0 |
+
+The WebView2 Runtime is Microsoft's and is not shipped with the app — Windows 11 has it, and Windows 10 gets it from Microsoft's own installer.
+
+One thing is on you: the **editing models you find yourself** through the Hugging Face search inside the app. Those carry whatever license their author chose, and some of them do limit commercial use — the license is written on the model's page, next to the files.
 
 ## 👤 Author
 
