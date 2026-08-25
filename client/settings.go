@@ -952,7 +952,7 @@ const settingsPage = `<!DOCTYPE html>
 html,body{height:100%}
 body{font:var(--fs)/1.45 var(--font);background:var(--bg);color:var(--green);user-select:none;display:flex;flex-direction:column;overflow:hidden;border:var(--wborder)}
 body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:var(--scan);background:repeating-linear-gradient(transparent 0 2px,rgba(0,0,0,.10) 2px 3px)}
-.content{flex:1;overflow-y:auto;overflow-x:hidden;min-height:0}
+.content{flex:1;overflow-y:auto;overflow-x:hidden;min-height:0;scrollbar-gutter:stable both-edges}
 ::-webkit-scrollbar{width:10px}
 ::-webkit-scrollbar-track{background:var(--bg)}
 ::-webkit-scrollbar-thumb{background:var(--line);border:2px solid var(--bg)}
@@ -3611,7 +3611,7 @@ func jsonResult(v any) string {
 const (
 	settingsMinW     = 760
 	settingsMinH     = 500
-	settingsMaxW     = 1180
+	settingsMaxW     = 1120
 	settingsMaxH     = 940
 	settingsDefaultW = 860
 	settingsDefaultH = 620

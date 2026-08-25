@@ -778,6 +778,7 @@ function check(name, actual, expected) {
     ["button.btn{", "text-transform:var(--caps)"],
     [".lvlb.on{", "background:var(--selbg)"],
     [".modal-bg{", "background:var(--scrim)"],
+    [".content{", "scrollbar-gutter:stable both-edges"],
     [".hotkey-val{", "background:var(--keybg)"],
     [".scard .led.on{", "background:var(--hi)"],
     [".miclevel i{", "background:var(--hi)"],
