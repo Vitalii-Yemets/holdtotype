@@ -1006,7 +1006,7 @@ button.cap.close:hover{background:#3c1212;color:var(--bad);border-color:#7a2e2e;
 .scard .miclevel{margin-top:auto}
 .tip{position:fixed;z-index:200;max-width:320px;padding:5px 9px;border:var(--bw) solid var(--line);background:var(--panel);color:var(--green);font:11.5px var(--font);line-height:1.45;box-shadow:var(--shadow);pointer-events:none;white-space:pre-wrap;opacity:0;transition:opacity .12s;border-radius:calc(var(--r) * .6)}
 .tip.on{opacity:1}
-.scard .miclevel{flex:none;width:auto}
+.scard .miclevel{flex:none}
 .row .sub{display:block;font-size:10.5px;color:var(--dim);margin-top:2px;letter-spacing:0}
 .row .lbl{flex:1;min-width:0}
 .statusbar{border-top:1px solid var(--line);padding:6px 14px;display:flex;gap:12px;align-items:center;font-size:11px;color:var(--dim);flex-wrap:nowrap;white-space:nowrap}
@@ -1052,8 +1052,9 @@ button.cap.close:hover{background:#3c1212;color:var(--bad);border-color:#7a2e2e;
 .wizplan{display:flex;flex-direction:column;gap:4px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel);padding:10px 12px;min-height:38px}
 .wizbar{height:14px;border:1px solid var(--line);border-radius:calc(var(--r) * .6);background:var(--panel);position:relative;overflow:hidden;flex:1;min-width:150px;max-width:430px}
 .wizbar i{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,var(--faint),var(--hi));box-shadow:var(--higlow);transition:width .15s linear}
-.wizlvl{display:flex;align-items:flex-end;gap:2px;height:16px}
-.wizlvl i{display:block;width:4px;height:3px;background:var(--hi);box-shadow:var(--higlow);border-radius:var(--barr,0);transition:height .12s linear}
+.wizlvl{display:flex;align-items:flex-end;gap:2px;height:10px}
+.wizlvl i{display:block;width:4px;height:10px;background:var(--soft);border:1px solid var(--line);box-sizing:border-box;border-radius:var(--barr,0);transition:background .12s linear}
+.wizlvl i.on{background:var(--hi);border-color:var(--hi);box-shadow:var(--higlow)}
 .wiztry{width:100%;min-height:76px;resize:none;background:var(--field);border:1px solid var(--line);border-radius:calc(var(--r) * .55);color:var(--green);font:inherit;font-size:var(--ctlfs);padding:var(--fieldpad);outline:none;user-select:text}
 .wiztry:focus{border-color:var(--dim);box-shadow:var(--glow)}
 .wizout{font-size:12.5px;color:var(--dim);min-height:18px}
@@ -1235,10 +1236,12 @@ button.mini.danger:hover{color:var(--bad);border-color:#7a2e2e;box-shadow:0 0 7p
 .ramline .dot{margin-left:12px;font-size:10px}
 .subhead{color:var(--dim);font-size:11px;letter-spacing:1px;text-transform:uppercase;margin:14px 0 2px;padding-top:10px;border-top:1px solid var(--soft)}
 #hf_results{max-height:44vh;overflow-y:auto;overscroll-behavior:contain}
-.miclevel{flex:none;display:flex;align-items:flex-end;gap:2px;height:16px;width:auto}
-.miclevel i{display:block;width:4px;height:3px;background:var(--hi);box-shadow:var(--higlow);border-radius:var(--barr,0);transition:height .09s linear}
+.miclevel{flex:none;display:flex;align-items:flex-end;gap:2px;height:10px;width:auto}
+.miclevel i{display:block;width:4px;height:10px;background:var(--soft);border:1px solid var(--line);box-sizing:border-box;border-radius:var(--barr,0);transition:background .1s linear}
+.miclevel i.on{background:var(--hi);border-color:var(--hi);box-shadow:var(--higlow)}
 .miclevel.dots i{width:6px;border-radius:50%}
 .miclevel.flat i{width:3px;box-shadow:none}
+.miclevel.grow{width:100%;overflow:hidden}
 #hf_clr{appearance:none;background:none;border:0;font:inherit;position:absolute;right:9px;top:50%;transform:translateY(-50%);color:var(--dim);cursor:pointer;display:none;font-size:13px;padding:2px 4px}
 #hf_clr:hover{color:var(--green);text-shadow:var(--glow)}
 #hf_go{appearance:none;background:none;border:0;font:inherit;position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--dim);cursor:pointer;line-height:0;padding:3px}
@@ -1272,7 +1275,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:drop-shadow(0 0 4px rgba(255
 .mock{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px 14px;margin:8px 0;max-width:420px}
 .mock-pill{display:flex;align-items:center;gap:10px}
 .mock-dot{width:11px;height:11px;border-radius:50%;background:var(--rec);box-shadow:0 0 8px var(--rec);flex:none}
-.mock-bars{display:flex;gap:2px;align-items:flex-end}
+.mock-bars{display:flex;gap:2px;align-items:center}
 .mock-bars i{display:block;width:3px;border-radius:var(--barr,0);background:var(--hi)}
 .mock-ask{display:flex;align-items:center;gap:8px;margin-top:9px;padding-top:9px;border-top:1px solid var(--line);flex-wrap:wrap;font-size:13px;color:var(--dim)}
 .mock-x{margin-left:auto;color:var(--dim)}
@@ -1359,7 +1362,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:drop-shadow(0 0 4px rgba(255
  <div class="cards">
   <div class="scard"><span class="k">{{S_NAV_MIC}}</span>
    <span class="v"><i class="led" id="state_mic_led"></i><span id="state_mic">—</span></span>
-   <span class="miclevel" id="state_mic_bar"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
+   <span class="miclevel grow" id="state_mic_bar"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
   <div class="scard"><span class="k">{{S_STATE_RU}}</span>
    <span class="v"><i class="led" id="state_ru_led"></i><span id="state_ru">—</span></span>
    <button class="mini" id="state_ru_btn" data-goto="models">{{S_CHANGE_MODEL}}</button></div>
@@ -2241,16 +2244,39 @@ async function refreshMics(){
   sel.value = [...sel.options].some(o=>o.value===chosen) ? chosen : "";
   micChosen = sel.value;
 }
-const meterHist = {};
-const MIC_FLOOR = 0.02;
+const meterNow = {};
+const MIC_FLOOR = 0.008;
+const MIC_TOP = 0.35;
+const MIC_DB_FLOOR = 20 * Math.log10(MIC_FLOOR);
+const MIC_DB_TOP = 20 * Math.log10(MIC_TOP);
+const METER_PITCH = 6;
+const METER_MIN_BARS = 7;
+function micHeard(level){
+  if(!(level > MIC_FLOOR)) return 0;
+  const db = 20 * Math.log10(Math.min(1, level));
+  const part = (db - MIC_DB_FLOOR) / (MIC_DB_TOP - MIC_DB_FLOOR);
+  return Math.max(0, Math.min(1, part));
+}
+function meterFall(id, target){
+  const prev = meterNow[id] || 0;
+  const now = target > prev ? target : Math.max(target, prev - 0.12);
+  meterNow[id] = now;
+  return now;
+}
+function fitMeter(box){
+  if(!box.classList.contains("grow")) return;
+  const room = box.clientWidth;
+  if(!room) return;
+  const want = Math.max(METER_MIN_BARS, Math.floor((room + 2) / METER_PITCH));
+  if(want === box.children.length) return;
+  box.innerHTML = new Array(want).fill("<i></i>").join("");
+}
 function paintMeter(box, level){
+  fitMeter(box);
   const bars = box.querySelectorAll("i");
   if(!bars.length) return;
-  const hist = meterHist[box.id] || (meterHist[box.id] = new Array(bars.length).fill(0));
-  const heard = level > MIC_FLOOR ? Math.min(1, (level - MIC_FLOOR) * 1.35) : 0;
-  hist.push(heard);
-  hist.shift();
-  bars.forEach((b, i)=>{ b.style.height = Math.round(4 + hist[i] * 12) + "px"; });
+  const lit = Math.round(meterFall(box.id, micHeard(level)) * bars.length);
+  bars.forEach((b, i)=>{ b.classList.toggle("on", i < lit); });
 }
 function startMeter(barId, pageId, hintId){
   return setInterval(async ()=>{

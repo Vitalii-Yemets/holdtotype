@@ -7,7 +7,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 function meterMoves(d, id) {
   const bars = [...d.querySelectorAll(`#${id} i`)];
   if (!bars.length) return false;
-  return bars.some((b) => b.style.height && b.style.height !== "4px");
+  return bars.some((b) => b.classList.contains("on"));
 }
 function searchFinds(w, d, needle) {
   const hits = w.searchMatches(needle.toLowerCase());
@@ -201,10 +201,33 @@ function check(name, actual, expected) {
   check("and it is dressed like the rest of the window", d.getElementById("tip").classList.contains("on"), true);
   w.hideTip();
   check("it goes away when the pointer leaves", d.getElementById("tip").classList.contains("on"), false);
-  for (let i = 0; i < 8; i++) w.paintMeter(d.getElementById("state_mic_bar"), 0.005);
-  check("a quiet room leaves the meter flat", [...d.querySelectorAll("#state_mic_bar i")].every(b=>b.style.height === "4px"), true);
-  w.paintMeter(d.getElementById("state_mic_bar"), 0.6);
-  check("a loud phrase raises it", [...d.querySelectorAll("#state_mic_bar i")].some(b=>parseInt(b.style.height) > 8), true);
+  const micBar = d.getElementById("state_mic_bar");
+  const lit = (el) => [...el.querySelectorAll("i")].filter(b=>b.classList.contains("on")).length;
+  const settle = (el, lvl) => { for (let i = 0; i < 14; i++) w.paintMeter(el, lvl); };
+  settle(micBar, 0.005);
+  check("a quiet room leaves the meter dark", lit(micBar), 0);
+  w.paintMeter(micBar, 0.6);
+  check("a loud phrase lights it up", lit(micBar), micBar.querySelectorAll("i").length);
+  check("silence never leaves the floor", w.micHeard(0.004), 0);
+  check("room noise barely stirs it", w.micHeard(0.012) < 0.2, true);
+  check("a quiet voice already shows", w.micHeard(0.05) > 0.35, true);
+  check("an ordinary one reaches the middle", w.micHeard(0.15) > 0.7, true);
+  check("a loud one nearly fills the meter", w.micHeard(0.5) > 0.85, true);
+  check("the status meter is told to fill its card", micBar.classList.contains("grow"), true);
+  Object.defineProperty(micBar, "clientWidth", { value: 200, configurable: true });
+  settle(micBar, 0.05);
+  check("a wider card gets more bars, not wider ones", micBar.querySelectorAll("i").length, 33);
+  check("the meter fills to the loudness instead of drawing a wave", lit(micBar), Math.round(w.micHeard(0.05) * 33));
+  check("and what is lit is one run from the left", [...micBar.querySelectorAll("i")].findIndex(b=>!b.classList.contains("on")), lit(micBar));
+  const held = lit(micBar);
+  w.paintMeter(micBar, 0);
+  check("it lets go slowly rather than blinking out", lit(micBar) > 0 && lit(micBar) < held, true);
+  settle(micBar, 0);
+  check("and goes dark when the room falls quiet", lit(micBar), 0);
+  Object.defineProperty(micBar, "clientWidth", { value: 60, configurable: true });
+  w.paintMeter(micBar, 0.3);
+  check("a narrower card gives the bars back", micBar.querySelectorAll("i").length, 10);
+  check("the microphone meter in its own row is left alone", d.querySelectorAll("#mic_bar i").length, 7);
   for (const edge of ["t", "b", "l", "r", "tl", "tr", "bl", "br"]) {
     d.querySelector(".rsz." + edge).dispatchEvent(new w.MouseEvent("mousedown", { button: 0, bubbles: true }));
   }
@@ -781,7 +804,11 @@ function check(name, actual, expected) {
     [".content{", "scrollbar-gutter:stable both-edges"],
     [".hotkey-val{", "background:var(--keybg)"],
     [".scard .led.on{", "background:var(--hi)"],
-    [".miclevel i{", "background:var(--hi)"],
+    [".miclevel i{", "background:var(--soft)"],
+    [".miclevel i{", "width:4px"],
+    [".miclevel i.on{", "background:var(--hi)"],
+    [".wizlvl i.on{", "background:var(--hi)"],
+    [".miclevel.grow{", "width:100%"],
     [".mock-dot{", "background:var(--rec)"],
   ];
   for (const [sel, want] of skinned) {

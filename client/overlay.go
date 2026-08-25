@@ -620,10 +620,7 @@ func overlayRender(hwnd, hdc uintptr) {
 		procDrawTextW.Call(hdc, uintptr(unsafe.Pointer(&ls[0])), uintptr(len(ls)-1),
 			uintptr(unsafe.Pointer(&lr)), 0x0020|0x0004|0x0002)
 	} else if st == ovRecording && anim {
-		// the bars stand on one line and grow upwards, as they do on the
-		// mock-up; a quiet room leaves them lying flat
 		style := themeLevelStyle()
-		base := cy + px(11)
 		for i, v := range ovHistory {
 			x := rc.Right - px(186) + int32(i)*px(7)
 			lv := (v - micFloor) / (1 - micFloor)
@@ -632,17 +629,17 @@ func overlayRender(hwnd, hdc uintptr) {
 			}
 			switch style {
 			case "dots":
-				r := px(3)
-				drawSmoothDot(hdc, x+px(2), base-r-int32(float64(px(7))*lv), r, r, colHi, colBg, 0)
+				r := px(2) + int32(float64(px(4))*lv)
+				drawSmoothDot(hdc, x+px(2), cy, r, r, colHi, colBg, 0)
 			case "flat":
-				h := px(3) + int32(float64(px(13))*lv)
-				fill(rect{Left: x, Top: base - h, Right: x + px(4), Bottom: base}, colHi)
+				half := (px(3) + int32(float64(px(13))*lv)) / 2
+				fill(rect{Left: x, Top: cy - half, Right: x + px(4), Bottom: cy + half}, colHi)
 			default:
-				h := px(4) + int32(float64(px(18))*lv)
+				half := (px(4) + int32(float64(px(18))*lv)) / 2
 				if themeGlow() && lv > 0 {
-					fill(rect{Left: x - px(1), Top: base - h - px(1), Right: x + px(5), Bottom: base + px(1)}, colHiLo)
+					fill(rect{Left: x - px(1), Top: cy - half - px(1), Right: x + px(5), Bottom: cy + half + px(1)}, colHiLo)
 				}
-				fill(rect{Left: x, Top: base - h, Right: x + px(4), Bottom: base}, colHi)
+				fill(rect{Left: x, Top: cy - half, Right: x + px(4), Bottom: cy + half}, colHi)
 			}
 		}
 	}
