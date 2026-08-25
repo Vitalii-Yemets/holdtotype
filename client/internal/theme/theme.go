@@ -29,7 +29,6 @@ type Palette struct {
 	SelFg   string
 	Brand   string
 	Scrim   string
-	Halo    string
 }
 
 type Skin struct {
@@ -43,8 +42,9 @@ type Skin struct {
 	FontPx  int32
 	Weight  int32
 	BrandLS string
-	CtlPad  string
 	FieldPad string
+	CtlFS    string
+	WeightB  int32
 	Caps    bool
 	Flicker bool
 
@@ -112,7 +112,7 @@ var palettes = []Palette{
 		Field: "#1e0f33", Soft: "#2a1442", NavOn: "#2b1240", On: "#4a2472",
 		TitleBg: "linear-gradient(90deg,#26103f,#1a0b2b)", SideBg: "#190c29", KeyBg: "linear-gradient(90deg,rgba(255,95,200,.18),rgba(70,224,255,.14))",
 		BtnBg: "transparent", BtnFg: "#f3b6e4", BtnLine: "#4a2472", SelBg: "linear-gradient(90deg,#ff5fc8,#46e0ff)", SelFg: "#150a22",
-		Brand: "linear-gradient(90deg,#ff5fc8,#46e0ff)", Scrim: "rgba(10,4,18,.72)", Halo: "#a03ce0"},
+		Brand: "linear-gradient(90deg,#ff5fc8,#46e0ff)", Scrim: "rgba(10,4,18,.72)"},
 }
 
 var colourChoice = []string{"green", "amber", "blue", "pink"}
@@ -121,7 +121,7 @@ var skins = []Skin{
 	{ID: "terminal", Palette: "green", Colours: true,
 		FontCSS: `Consolas,"Cascadia Mono",monospace`, FontGDI: "Consolas",
 		PagePx: 14, FontPx: 15, Weight: 400, BrandLS: ".18em", Caps: true, Flicker: true,
-		CtlPad: "4px 8px", FieldPad: "7px 10px",
+		FieldPad: "6px 10px", CtlFS: "12.5px", WeightB: 700,
 		Radius: 0, Border: 1, Round: false,
 		Glow: true, Scan: 1, Shadow: "none",
 		Level: "bars", Pulse: 1},
@@ -129,15 +129,15 @@ var skins = []Skin{
 	{ID: "editor", Palette: "editor",
 		FontCSS: `"Cascadia Mono",Consolas,"Segoe UI",sans-serif`, FontGDI: "Cascadia Mono",
 		PagePx: 13, FontPx: 14, Weight: 400, BrandLS: ".02em",
-		CtlPad: "5px 9px", FieldPad: "7px 11px",
+		FieldPad: "6px 11px", CtlFS: "12.5px", WeightB: 600,
 		Radius: 3, Border: 1, Round: false,
 		Glow: false, Scan: 0, Shadow: "0 10px 30px rgba(0,0,0,.45)",
 		Level: "flat", Pulse: 1.5},
 
 	{ID: "neon", Palette: "neon",
-		FontCSS: `"Segoe UI Variable Display","Segoe UI",system-ui,sans-serif`, FontGDI: "Segoe UI Variable Display",
-		PagePx: 13, FontPx: 15, Weight: 400, BrandLS: ".08em",
-		CtlPad: "7px 13px", FieldPad: "10px 14px",
+		FontCSS: `"IBM Plex Sans","Segoe UI",system-ui,sans-serif`, FontGDI: "IBM Plex Sans",
+		PagePx: 15, FontPx: 16, Weight: 400, BrandLS: ".04em",
+		FieldPad: "9px 13px", CtlFS: "13.5px", WeightB: 600,
 		Radius: 14, Border: 1, Round: true,
 		Glow: true, Scan: 0.18, Shadow: "0 18px 46px rgba(150,40,220,.35)",
 		Level: "bars", Pulse: 0.8},
@@ -297,7 +297,8 @@ func (l Look) CSSVars() string {
 		";--font:" + l.FontCSS +
 		";--fs:" + itoa(int(l.PagePx)) + "px" +
 		";--caps:" + caps + ";--ls:" + ls + ";--flicker:" + flicker +
-		";--ctlpad:" + l.CtlPad + ";--fieldpad:" + l.FieldPad +
+		";--fieldpad:" + l.FieldPad + ";--ctlfs:" + l.CtlFS +
+		";--wb:" + itoa(int(l.WeightB)) +
 		";--r:" + itoa(int(l.Radius)) + "px" +
 		";--barr:" + barr +
 		";--bw:" + itoa(int(l.Border)) + "px" +

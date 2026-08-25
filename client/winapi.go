@@ -227,6 +227,8 @@ var (
 	minSizeOld               uintptr
 	minSizeW, minSizeH       int32
 	minSizeDIPW, minSizeDIPH int32
+	maxSizeW, maxSizeH       int32
+	maxSizeDIPW, maxSizeDIPH int32
 	minSizeOnce              sync.Once
 	minSizeCB                uintptr
 )
@@ -289,6 +291,8 @@ func minSizeProc(hwnd, msg, wp, lp uintptr) uintptr {
 		if dpi >= 72 {
 			minSizeW = scaleDPI(minSizeDIPW, dpi)
 			minSizeH = scaleDPI(minSizeDIPH, dpi)
+			maxSizeW = scaleDPI(maxSizeDIPW, dpi)
+			maxSizeH = scaleDPI(maxSizeDIPH, dpi)
 		}
 	}
 	r, _, _ := procCallWindowProcW.Call(minSizeOld, hwnd, msg, wp, lp)
@@ -296,32 +300,38 @@ func minSizeProc(hwnd, msg, wp, lp uintptr) uintptr {
 		mmi := (*minMaxInfo)(unsafe.Pointer(lp))
 		mmi.MinTrackSize.X = minSizeW
 		mmi.MinTrackSize.Y = minSizeH
+		if maxSizeW > 0 && maxSizeH > 0 {
+			work, screen := monitorRectsFor(hwnd)
+			capW, capH := maxSizeW, maxSizeH
+			if w := work.Right - work.Left; capW > w {
+				capW = w
+			}
+			if h := work.Bottom - work.Top; capH > h {
+				capH = h
+			}
+			mmi.MaxTrackSize.X = capW
+			mmi.MaxTrackSize.Y = capH
+			mmi.MaxSize.X = capW
+			mmi.MaxSize.Y = capH
+			mmi.MaxPosition.X = work.Left - screen.Left + (work.Right-work.Left-capW)/2
+			mmi.MaxPosition.Y = work.Top - screen.Top + (work.Bottom-work.Top-capH)/2
+		}
 	}
 	if msg == 0x0005 && wp == 0 {
 		var rc rect
 		procGetWindowRect.Call(hwnd, uintptr(unsafe.Pointer(&rc)))
 		lastWndW, lastWndH = rc.Right-rc.Left, rc.Bottom-rc.Top
 	}
-	switch msg {
-	case 0x0047, 0x0005, 0x0006:
-		glowSync(hwnd)
-	case 0x0018:
-		if wp == 0 {
-			glowHide()
-		} else {
-			glowSync(hwnd)
-		}
-	case 0x0002:
-		glowDestroy()
-	}
 	return r
 }
 
-func applyMinSize(hwnd uintptr, w, h int32) {
+func applyWindowLimits(hwnd uintptr, minW, minH, maxW, maxH int32) {
 	minSizeOnce.Do(func() { minSizeCB = syscall.NewCallback(minSizeProc) })
-	minSizeDIPW, minSizeDIPH = w, h
+	minSizeDIPW, minSizeDIPH = minW, minH
+	maxSizeDIPW, maxSizeDIPH = maxW, maxH
 	dpi := dpiFor(hwnd)
-	minSizeW, minSizeH = scaleDPI(w, dpi), scaleDPI(h, dpi)
+	minSizeW, minSizeH = scaleDPI(minW, dpi), scaleDPI(minH, dpi)
+	maxSizeW, maxSizeH = scaleDPI(maxW, dpi), scaleDPI(maxH, dpi)
 	const gwlpWndproc = ^uintptr(3)
 	old, _, _ := procSetWindowLongPtrW.Call(hwnd, gwlpWndproc, minSizeCB)
 	minSizeOld = old
@@ -455,6 +465,19 @@ type monitorInfo struct {
 }
 
 var procGetMonitorInfoW = user32.NewProc("GetMonitorInfoW")
+
+func monitorRectsFor(hwnd uintptr) (work, screen rect) {
+	if procMonitorFromWindow.Find() == nil && procGetMonitorInfoW.Find() == nil {
+		if mon, _, _ := procMonitorFromWindow.Call(hwnd, 2); mon != 0 {
+			mi := monitorInfo{Size: uint32(unsafe.Sizeof(monitorInfo{}))}
+			if r, _, _ := procGetMonitorInfoW.Call(mon, uintptr(unsafe.Pointer(&mi))); r != 0 {
+				return mi.Work, mi.Monitor
+			}
+		}
+	}
+	procSystemParametersInfoW.Call(0x30, 0, uintptr(unsafe.Pointer(&work)), 0)
+	return work, work
+}
 
 func workAreaForPoint(x, y int32) rect {
 	var wa rect

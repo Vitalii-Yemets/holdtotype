@@ -22,6 +22,7 @@ import (
 	"holdtotype/internal/hotkeys"
 
 	"holdtotype/internal/appid"
+	"holdtotype/internal/plexfont"
 	"holdtotype/internal/theme"
 )
 
@@ -183,7 +184,7 @@ func (a *App) settingsThread(tab string, attempt int) {
 		}()
 		log.Printf("openSettings: создаю WebView2")
 		winW, winH := settingsDefaultW, settingsDefaultH
-		if c := a.snapshot(); c.SettingsW >= settingsMinW && c.SettingsH >= settingsMinH {
+		if c := a.snapshot(); c.SettingsW >= settingsMinW && c.SettingsH >= settingsMinH && c.SettingsW <= settingsMaxW && c.SettingsH <= settingsMaxH {
 			winW, winH = c.SettingsW, c.SettingsH
 		}
 		lastWndW, lastWndH = 0, 0
@@ -526,7 +527,7 @@ func (a *App) settingsThread(tab string, attempt int) {
 		setDarkClientBackground(hwnd)
 		applyDarkCaption(hwnd)
 		makeBorderless(hwnd)
-		applyMinSize(hwnd, settingsMinW, settingsMinH)
+		applyWindowLimits(hwnd, settingsMinW, settingsMinH, settingsMaxW, settingsMaxH)
 		procSetWindowPos.Call(hwnd, 0, 0, 0, 0, 0, 0x0002|0x0001|0x0004|0x0020)
 		var shown atomic.Bool
 		reveal := func() {
@@ -548,7 +549,7 @@ func (a *App) settingsThread(tab string, attempt int) {
 			savedDPI = 96
 		}
 		dipW, dipH := lastWndW*96/savedDPI, lastWndH*96/savedDPI
-		if dipW >= settingsMinW && dipH >= settingsMinH {
+		if dipW >= settingsMinW && dipH >= settingsMinH && dipW <= settingsMaxW && dipH <= settingsMaxH {
 			nw, nh := int(dipW), int(dipH)
 			a.mu.Lock()
 			changed := a.cfg.SettingsW != nw || a.cfg.SettingsH != nh
@@ -932,7 +933,7 @@ func settingsHTML(cfg *Config, tab string) string {
 	lJSON, _ := json.Marshal(lMap)
 
 	pairs := []string{"{{CFG}}", string(cfgJSON), "{{L_JSON}}", string(lJSON), "{{APP}}", appid.Name,
-		"{{THEME_VARS}}", theme.Current(cfg.Skin, cfg.Theme).CSSVars(), "{{THEME_LIST}}", skinListJSON()}
+		"{{THEME_VARS}}", theme.Current(cfg.Skin, cfg.Theme).CSSVars(), "{{THEME_LIST}}", skinListJSON(), "{{FONT_FACE}}", plexfont.FaceCSS()}
 	remote := strings.TrimSpace(cfg.ServerURL) != ""
 	for k := range settingsStrings["en"] {
 		v := str(k)
@@ -945,7 +946,7 @@ func settingsHTML(cfg *Config, tab string) string {
 }
 
 const settingsPage = `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>{{S_TITLE}}</title><style>
+<html><head><meta charset="utf-8"><title>{{S_TITLE}}</title><style>{{FONT_FACE}}
 :root{{{THEME_VARS}}}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
@@ -973,7 +974,7 @@ button.cap.max{font-size:12px}
 button.cap.close:hover{background:#3c1212;color:var(--bad);border-color:#7a2e2e;box-shadow:0 0 7px rgba(255,110,90,.5)}
 .logo{width:40px;height:40px;flex:none}
 .logo svg{width:100%;height:100%;filter:var(--iconglow)}
-.header h1{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:15px;font-weight:600;letter-spacing:var(--brandls);text-shadow:var(--glow);animation:var(--flicker);background:var(--brandbg);-webkit-background-clip:var(--brandclip);background-clip:var(--brandclip);-webkit-text-fill-color:var(--brandfill)}
+.header h1{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:15px;font-weight:var(--wb);letter-spacing:var(--brandls);text-shadow:var(--glow);animation:var(--flicker);background:var(--brandbg);-webkit-background-clip:var(--brandclip);background-clip:var(--brandclip);-webkit-text-fill-color:var(--brandfill)}
 .statusbar .ver{margin-left:auto;flex:none;color:var(--dim)}
 @keyframes flicker{0%,93%,97%,100%{opacity:1}95%{opacity:.6}}
 @keyframes pulse{0%,100%{opacity:.35;transform:scale(.94)}50%{opacity:1;transform:scale(1)}}
@@ -1033,11 +1034,11 @@ button.cap.close:hover{background:#3c1212;color:var(--bad);border-color:#7a2e2e;
 .wiz{position:fixed;inset:0;z-index:30;background:var(--bg);display:none;flex-direction:column}
 .wiz.on{display:flex}
 .wizhead{display:flex;align-items:center;gap:14px;padding:12px 12px 12px 20px;border-bottom:1px solid var(--line);box-shadow:0 1px 12px rgba(var(--rgb),.12)}
-.wizhead h2{font-size:14px;letter-spacing:2px;text-shadow:var(--glow);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wizhead h2{font-size:14px;font-weight:var(--wb);letter-spacing:2px;text-shadow:var(--glow);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .wizbody{flex:1;min-height:0;overflow-y:auto;padding:22px 26px}
 .wizstep{display:none;flex-direction:column;gap:14px}
 .wizstep.on{display:flex}
-.wizh{font-size:15px;letter-spacing:2px;text-shadow:var(--glow)}
+.wizh{font-size:15px;font-weight:var(--wb);letter-spacing:2px;text-shadow:var(--glow)}
 .wiztext{color:var(--dim);font-size:13px;line-height:1.6;max-width:62ch}
 .wizfoot{display:flex;align-items:center;gap:10px;padding:11px 20px;border-top:1px solid var(--line)}
 .wizdots{display:flex;gap:6px;align-items:center}
@@ -1045,7 +1046,7 @@ button.cap.close:hover{background:#3c1212;color:var(--bad);border-color:#7a2e2e;
 .wizdots i{width:7px;height:7px;border:1px solid var(--line);display:block}
 .wizdots i.on{background:var(--hi);border-color:var(--hi);box-shadow:var(--higlow)}
 .wizrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.wizrow select{background:var(--field);border:1px solid var(--line);color:var(--green);font:inherit;font-size:13px;padding:var(--fieldpad);min-width:170px}
+.wizrow select{min-width:170px}
 .wizrow select:focus{border-color:var(--dim);box-shadow:var(--glow);outline:none}
 .wizkey{border:1px solid var(--line);background:var(--keybg);border-radius:calc(var(--r) * .6);padding:4px 11px;letter-spacing:1px;text-shadow:var(--glow);white-space:nowrap}
 .wizplan{display:flex;flex-direction:column;gap:4px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel);padding:10px 12px;min-height:38px}
@@ -1053,7 +1054,7 @@ button.cap.close:hover{background:#3c1212;color:var(--bad);border-color:#7a2e2e;
 .wizbar i{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,var(--faint),var(--hi));box-shadow:var(--higlow);transition:width .15s linear}
 .wizlvl{display:flex;align-items:flex-end;gap:2px;height:16px}
 .wizlvl i{display:block;width:4px;height:3px;background:var(--hi);box-shadow:var(--higlow);border-radius:var(--barr,0);transition:height .12s linear}
-.wiztry{width:100%;min-height:76px;resize:none;background:var(--field);border:1px solid var(--line);border-radius:calc(var(--r) * .55);color:var(--green);font:inherit;font-size:13px;padding:9px 11px;outline:none;user-select:text}
+.wiztry{width:100%;min-height:76px;resize:none;background:var(--field);border:1px solid var(--line);border-radius:calc(var(--r) * .55);color:var(--green);font:inherit;font-size:var(--ctlfs);padding:var(--fieldpad);outline:none;user-select:text}
 .wiztry:focus{border-color:var(--dim);box-shadow:var(--glow)}
 .wizout{font-size:12.5px;color:var(--dim);min-height:18px}
 .wizout.ok{color:var(--green);text-shadow:var(--glow)}
@@ -1079,7 +1080,7 @@ button.btn.ghost:hover{color:var(--green);border-color:var(--dim);background:non
 .modal .btn.ghost:hover{color:var(--green);border-color:var(--dim)}
 .modal .btn:focus-visible{outline:1px solid var(--green);outline-offset:2px}
 .hero{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel);padding:12px 14px;margin-bottom:10px;flex-wrap:wrap}
-.herokey{border:1px solid var(--line);background:var(--keybg);border-radius:calc(var(--r) * .6);color:var(--green);padding:5px 12px;font-size:14px;font-weight:600;letter-spacing:1px;text-shadow:var(--glow)}
+.herokey{border:1px solid var(--line);background:var(--keybg);border-radius:calc(var(--r) * .6);color:var(--green);padding:5px 12px;font-size:14px;font-weight:var(--wb);letter-spacing:1px;text-shadow:var(--glow)}
 .herotext{font-size:12px;color:var(--dim)}
 .berr{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:1px solid var(--bad);border-radius:var(--r);background:var(--panel);padding:10px 12px;margin-bottom:10px}
 .berr.upd{border-color:var(--amber)}
@@ -1117,7 +1118,7 @@ option::checkmark{display:none}
 select::picker-icon{color:var(--faint)}
 select:open::picker-icon{transform:rotate(180deg)}
 select:open{border-color:var(--dim)}
-input[type=text],input[type=number],select{padding:var(--fieldpad);border:1px solid var(--line);border-radius:calc(var(--r) * .55);background:var(--field);color:var(--green);font:inherit;outline:none}
+input[type=text],input[type=number],select{padding:var(--fieldpad);border:1px solid var(--line);border-radius:calc(var(--r) * .55);background:var(--field);color:var(--green);font:inherit;font-size:var(--ctlfs);line-height:1.2;outline:none}
 input:focus,select:focus{border-color:var(--dim);box-shadow:var(--glow)}
 input::placeholder{color:var(--dim)}
 input:disabled,select:disabled{opacity:.35;cursor:default}
@@ -1130,15 +1131,15 @@ input[type=checkbox]::after{content:"";position:absolute;top:2px;left:2px;width:
 input[type=checkbox]:checked{border-color:var(--dim)}
 input[type=checkbox]:checked::after{left:17px;background:var(--hi);box-shadow:var(--higlow)}
 input[type=checkbox]:focus-visible{outline:1px solid var(--green);outline-offset:2px}
-.row select,.row input[type=text]{border:1px solid var(--line);background:var(--field);color:var(--green);font:inherit;font-size:11.5px;padding:var(--ctlpad)}
+.row select,.row input[type=text]{border:1px solid var(--line);background:var(--field);color:var(--green)}
 .row select{flex:0 0 auto;width:auto;min-width:118px;max-width:min(320px,100%)}
 .row input[type=text]{flex:0 0 auto;width:min(230px,50%)}
 .row .val{color:var(--dim);font-size:11.5px;min-width:44px;text-align:right}
 button,select,input[type=checkbox],input[type=radio],input[type=range]{cursor:pointer}
 button:disabled{cursor:default;opacity:.35}
-.val{min-width:52px;text-align:right;color:var(--green);text-shadow:var(--glow);font-weight:600}
+.val{min-width:52px;text-align:right;color:var(--green);text-shadow:var(--glow);font-weight:var(--wb)}
 .hotkey-box{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.hotkey-val{font-weight:600;font-size:15px;background:var(--keybg);border:1px solid var(--line);border-radius:calc(var(--r) * .6);padding:8px 14px;min-width:150px;text-align:center;text-shadow:var(--glow);letter-spacing:1px}
+.hotkey-val{font-weight:var(--wb);font-size:15px;background:var(--keybg);border:1px solid var(--line);border-radius:calc(var(--r) * .6);padding:8px 14px;min-width:150px;text-align:center;text-shadow:var(--glow);letter-spacing:1px}
 button.btn{padding:8px 18px;border:1px solid var(--btnline);border-radius:calc(var(--r) * .5);background:var(--btnbg);color:var(--btnfg);font:inherit;cursor:pointer;letter-spacing:var(--ls);text-transform:var(--caps);font-size:12px}
 button.btn:hover{filter:brightness(1.12);box-shadow:var(--glow)}
 button.ghost{border-color:var(--line);background:none;color:var(--dim);filter:none}
@@ -1148,8 +1149,8 @@ button.ghost:hover{color:var(--green)}
 .toast.show{opacity:1}
 .rulerow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--soft)}
 .rulerow:last-child{border-bottom:none}
-.rulerow input[type=text]{flex:1 1 190px;min-width:150px;width:auto;font-size:12px;padding:5px 9px}
-.rulerow select{flex:0 0 auto;width:auto;min-width:118px;font-size:11.5px;padding:4px 8px}
+.rulerow input[type=text]{flex:1 1 190px;min-width:150px;width:auto}
+.rulerow select{flex:0 0 auto;width:auto;min-width:118px}
 .rdel{flex:none;border:1px solid var(--line);border-radius:calc(var(--r) * .5);background:none;color:var(--dim);font:inherit;font-size:12px;cursor:pointer;padding:4px 9px}
 .rdel:hover{color:var(--bad);border-color:#7a2e2e}
 .histrow{display:flex;align-items:flex-start;gap:10px;padding:9px 2px;border-bottom:1px solid var(--soft)}
@@ -1166,12 +1167,12 @@ button.ghost:hover{color:var(--green)}
 .sect .mini{margin-left:auto}
 .replrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 0;border-bottom:1px solid var(--soft)}
 .replrow:last-child{border-bottom:none}
-.replrow input[type=text]{flex:1 1 160px;min-width:120px;width:auto;font-size:12px;padding:5px 9px}
+.replrow input[type=text]{flex:1 1 160px;min-width:120px;width:auto}
 .replrow .rarrow{flex:none;color:var(--dim)}
 .replrow label{flex:none;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--dim);white-space:nowrap}
 .replrow label input[type=checkbox]{width:28px;height:15px}
 .replcheck{display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:10px;border-top:1px solid var(--soft);flex-wrap:wrap}
-.replcheck input[type=text]{flex:1 1 220px;min-width:160px;width:auto;font-size:12px;padding:5px 9px}
+.replcheck input[type=text]{flex:1 1 220px;min-width:160px;width:auto}
 .replout{flex:1 1 200px;min-width:0;font-size:12px;color:var(--green);text-shadow:var(--glow);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .replout:empty{display:none}
 .rulefoot{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
@@ -1191,7 +1192,7 @@ input[type=radio]:checked::after{content:"";position:absolute;top:3px;left:3px;w
 input[type=radio]:disabled{opacity:.4;cursor:default}
 input[type=radio]:focus-visible{outline:1px solid var(--green);outline-offset:2px}
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:1px solid var(--green);outline-offset:2px}
-.mrow .mname{width:132px;font-weight:600;white-space:nowrap}
+.mrow .mname{width:132px;font-weight:var(--wb);white-space:nowrap}
 .mrow .mdesc{flex:1;color:var(--dim);font-size:12px}
 .mtag{font-size:9px;border:1px solid var(--line);border-radius:calc(var(--r) * .35);color:var(--dim);padding:0 4px;margin-left:6px;vertical-align:middle;letter-spacing:.06em}
 .rrow{display:flex;align-items:center;gap:9px;padding:6px 2px;font-size:12px;color:var(--dim);flex-wrap:wrap}
@@ -1213,7 +1214,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .advrow .advstate{color:var(--amber)}
 .advrow .advstate.ok{color:var(--dim)}
 .advq{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:11.5px;color:var(--dim)}
-.advq select{background:var(--field);border:1px solid var(--line);color:var(--green);font:inherit;font-size:11.5px;padding:var(--ctlpad);margin-left:5px}
+.advq select{margin-left:5px}
 .advchk{display:flex;align-items:center;gap:5px}
 .advout{font-size:12px;color:var(--green);line-height:1.5;min-height:1em}
 .mrow.hidden{display:none}
@@ -1230,7 +1231,7 @@ button.mini.danger:hover{color:var(--bad);border-color:#7a2e2e;box-shadow:0 0 7p
 .hfhome{margin-left:auto;cursor:pointer;color:var(--dim);font-size:11px;letter-spacing:1px;border:1px solid var(--line);border-radius:calc(var(--r) * .5);padding:3px 9px;text-transform:none}
 .hfhome:hover{color:var(--green);border-color:var(--dim);box-shadow:var(--glow)}
 .ramline{display:flex;align-items:center;flex-wrap:wrap;gap:6px;color:var(--dim);font-size:12px;margin:4px 0 10px}
-.ramline b{color:var(--green);font-size:14px;font-weight:600;text-shadow:var(--glow);margin-right:4px}
+.ramline b{color:var(--green);font-size:14px;font-weight:var(--wb);text-shadow:var(--glow);margin-right:4px}
 .ramline .dot{margin-left:12px;font-size:10px}
 .subhead{color:var(--dim);font-size:11px;letter-spacing:1px;text-transform:uppercase;margin:14px 0 2px;padding-top:10px;border-top:1px solid var(--soft)}
 #hf_results{max-height:44vh;overflow-y:auto;overscroll-behavior:contain}
@@ -1264,7 +1265,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:drop-shadow(0 0 4px rgba(255
 .about .wh:target,.about .wh.hit{color:var(--green);text-shadow:var(--glow)}
 .about p.hit,.about li.hit{background:var(--navon);box-shadow:inset 2px 0 0 var(--hi);padding-left:7px}
 .about p.warn{color:var(--amber);border-left:2px solid var(--amber);padding-left:9px}
-.about b{text-shadow:var(--glow)}
+.about b{font-weight:var(--wb);text-shadow:var(--glow)}
 .about .wh{color:var(--dim);font-size:12px;letter-spacing:1px;text-transform:uppercase;margin:16px 0 4px;border-bottom:1px solid var(--soft);padding-bottom:3px}
 .about ul{margin:4px 0 10px 20px;padding:0}
 .about li{margin:4px 0;line-height:1.55;color:var(--green);user-select:text}
@@ -3610,6 +3611,8 @@ func jsonResult(v any) string {
 const (
 	settingsMinW     = 760
 	settingsMinH     = 500
+	settingsMaxW     = 1180
+	settingsMaxH     = 940
 	settingsDefaultW = 860
 	settingsDefaultH = 620
 )

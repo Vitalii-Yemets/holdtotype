@@ -15,6 +15,7 @@ import (
 	"golang.org/x/sys/windows"
 
 	"holdtotype/internal/appid"
+	"holdtotype/internal/plexfont"
 	"holdtotype/internal/theme"
 )
 
@@ -312,6 +313,7 @@ func page(updateDir string) string {
 		"{{VERSION}}":       appVersion,
 		"{{DEFDIR}}":        template_jsstr(defDir),
 		"{{THEME_VARS}}":    theme.Current(installedLook(updateDir)).CSSVars(),
+		"{{FONT_FACE}}":     plexfont.FaceCSS(),
 	}
 	h := setupPage
 	for k, v := range repl {

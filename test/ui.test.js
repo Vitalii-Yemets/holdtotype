@@ -254,7 +254,8 @@ function check(name, actual, expected) {
   check("and its own colours, not the picked one", d.documentElement.style.getPropertyValue("--green"), "#d4d4d4");
   check("with its accent kept apart from its text", d.documentElement.style.getPropertyValue("--hi"), "#4fc1ff");
   check("and no capitals shouted at the buttons", d.documentElement.style.getPropertyValue("--caps"), "none");
-  check("controls take their height from the design", d.documentElement.style.getPropertyValue("--ctlpad"), "5px 9px");
+  check("controls take their height from the design", d.documentElement.style.getPropertyValue("--fieldpad"), "6px 11px");
+  check("and one type size for every field", d.documentElement.style.getPropertyValue("--ctlfs"), "12.5px");
   check("down to the surfaces you type into", d.documentElement.style.getPropertyValue("--field"), "#3c3c3c");
   check("so the colour row steps aside", d.getElementById("colour_row").style.display, "none");
 
@@ -761,8 +762,6 @@ function check(name, actual, expected) {
     ["button.btn{", "border-radius:calc(var(--r) * .5)"],
     ["button.mini{", "border-radius:calc(var(--r) * .5)"],
     ["input[type=text],input[type=number],select{", "border-radius:calc(var(--r) * .55)"],
-    ["input[type=text],input[type=number],select{", "padding:var(--fieldpad)"],
-    [".row select,.row input[type=text]{", "padding:var(--ctlpad)"],
     ["input[type=checkbox]{", "border-radius:calc(var(--r) * .8)"],
   ];
   for (const [sel, want] of shaped) {
@@ -789,6 +788,9 @@ function check(name, actual, expected) {
     const rule = at < 0 ? "" : css.slice(at, css.indexOf("}", at));
     check(`${sel} follows the skin (${want})`, rule.includes(want), true);
   }
+  const fieldRules = css.match(/(?:input[type=text]|.row select|.rulerow input|.replrow input|.replcheck input|.advq select|.wizrow select)[^}]*{[^}]*}/g) || [];
+  const strays = fieldRules.filter(r => /(?:^|;|{)(?:padding|font-size):s*(?!var(--fieldpad)|var(--ctlfs))/.test(r));
+  check("no field sets its own height", strays, []);
   const literals = [...new Set((css.match(/#[0-9a-f]{6}/g) || []))].sort();
   check("no colour is written into the stylesheet by hand", literals, ["#3c1212", "#7a2e2e"]);
   check("no face is nailed to Consolas outside the skin", /font:[^;]*Consolas/.test(css), false);

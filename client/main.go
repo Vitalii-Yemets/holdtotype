@@ -308,6 +308,7 @@ func main() {
 		if arg == "-dialogs" {
 			cfg, _ := loadConfig("config.json")
 			if cfg != nil {
+				registerBundledFonts()
 				initLang(cfg.UILanguage)
 				applyTheme(cfg.Skin, cfg.Theme)
 				setOverlayPos(cfg.OverlayPos)
@@ -390,6 +391,7 @@ func main() {
 		if arg == "-overlay" {
 			cfg, _ := loadConfig("config.json")
 			if cfg != nil {
+				registerBundledFonts()
 				initLang(cfg.UILanguage)
 				applyTheme(cfg.Skin, cfg.Theme)
 				setOverlayPos(cfg.OverlayPos)
@@ -465,6 +467,7 @@ func main() {
 		msgBox(tr("cfg.err.title"), humanError(err))
 		return
 	}
+	registerBundledFonts()
 	initLang(cfg.UILanguage)
 	applyTheme(cfg.Skin, cfg.Theme)
 	setOverlayPos(cfg.OverlayPos)

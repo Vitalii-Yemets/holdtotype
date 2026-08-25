@@ -113,7 +113,6 @@ func refreshWindowChrome() {
 			procRedrawWindow.Call(h, 0, 0, 0x0001|0x0004|0x0100)
 		}
 	}
-	glowSync(settingsHwnd.Load())
 }
 
 func liveWindows() []uintptr {

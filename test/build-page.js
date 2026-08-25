@@ -129,9 +129,9 @@ const PALETTES = {
   neon: { bg: "#150a22", panel: "#1d0e30", line: "#4a2472", text: "#f3b6e4", hi: "#46e0ff", dim: "#b06ee0", faint: "#7d4fae", warn: "#ffd24a", bad: "#ff4d7d", rec: "#ff4d7d", field: "#1e0f33", soft: "#2a1442", navon: "#2b1240", on: "#4a2472" },
 };
 const SKINS = {
-  terminal: { palette: "green", font: 'Consolas,"Cascadia Mono",monospace', fs: "14px", r: "0px", bw: "1px", scan: "1", shadow: "none", glow: true, round: false, caps: true, ctlpad: "4px 8px", fieldpad: "7px 10px" },
-  editor: { palette: "editor", font: '"Cascadia Mono",Consolas,"Segoe UI",sans-serif', fs: "13px", r: "3px", bw: "1px", scan: "0", shadow: "0 10px 30px rgba(0,0,0,.45)", glow: false, round: false, caps: false, ctlpad: "5px 9px", fieldpad: "7px 11px" },
-  neon: { palette: "neon", font: '"Segoe UI Variable Display","Segoe UI",system-ui,sans-serif', fs: "13px", r: "14px", bw: "1px", scan: ".18", shadow: "0 18px 46px rgba(150,40,220,.35)", glow: true, round: true, caps: false, ctlpad: "7px 13px", fieldpad: "10px 14px" },
+  terminal: { palette: "green", font: 'Consolas,"Cascadia Mono",monospace', fs: "14px", r: "0px", bw: "1px", scan: "1", shadow: "none", glow: true, round: false, caps: true, fieldpad: "6px 10px", ctlfs: "12.5px", wb: "700" },
+  editor: { palette: "editor", font: '"Cascadia Mono",Consolas,"Segoe UI",sans-serif', fs: "13px", r: "3px", bw: "1px", scan: "0", shadow: "0 10px 30px rgba(0,0,0,.45)", glow: false, round: false, caps: false, fieldpad: "6px 11px", ctlfs: "12.5px", wb: "600" },
+  neon: { palette: "neon", font: '"IBM Plex Sans","Segoe UI",system-ui,sans-serif', fs: "15px", r: "14px", bw: "1px", scan: ".18", shadow: "0 18px 46px rgba(150,40,220,.35)", glow: true, round: true, caps: false, fieldpad: "9px 13px", ctlfs: "13.5px", wb: "600" },
 };
 function rgbOf(hex) {
   return [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(",");
@@ -157,7 +157,7 @@ function varsFor(skinId, colourId) {
     "--iconglow:" + (s.glow ? "drop-shadow(0 0 6px rgba(" + rgbOf(p.hi) + ",.7))" : "none"),
     "--font:" + s.font, "--fs:" + s.fs,
     "--caps:" + (s.caps ? "uppercase" : "none"), "--ls:" + (s.caps ? "1px" : "0"),
-    "--ctlpad:" + s.ctlpad, "--fieldpad:" + s.fieldpad,
+    "--fieldpad:" + s.fieldpad, "--ctlfs:" + s.ctlfs, "--wb:" + s.wb,
     "--flicker:" + (s.caps ? "flicker 6s infinite" : "none"),
     "--r:" + s.r, "--barr:" + (parseInt(s.r, 10) >= 10 ? "99px" : "0"),
     "--bw:" + s.bw, "--scan:" + s.scan, "--shadow:" + s.shadow, "--brandls:.18em",

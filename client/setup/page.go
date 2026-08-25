@@ -1,7 +1,7 @@
 package main
 
 const setupPage = `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>{{TITLE}}</title><style>
+<html><head><meta charset="utf-8"><title>{{TITLE}}</title><style>{{FONT_FACE}}
 :root{{{THEME_VARS}}}
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%}
