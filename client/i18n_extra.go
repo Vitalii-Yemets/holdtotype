@@ -529,13 +529,8 @@ func init() {
 		"S_PRESETS_HINT": "Klicken Sie eine Sprache an — darunter öffnet sich die Modellwahl für sie. Sprachen ohne eigenes Modell nutzen das der automatischen Erkennung.",
 		"S_CPU_LINE": "Alle Modelle laufen auf dem Prozessor (CPU) — die Grafikkarte wird nicht genutzt.",
 		"S_MFOLDER": "Eigenes Modell",
+		"S_MFOLDER_SUB": "Legen Sie ein Modell in den Ordner models und starten Sie die Anwendung neu — es erscheint von selbst in der Auswahl. Welche Formate passen — siehe Hilfe.",
 		"S_MAINT": "Modellpflege",
-		"S_OWN_FMT_L": "format",
-		"S_OWN_FMT": "Whisper — eine <span class=\"code\">ggml-*.bin</span>-Datei · sherpa-onnx — ein Ordner mit <span class=\"code\">encoder.onnx</span>, <span class=\"code\">decoder.onnx</span>, <span class=\"code\">tokens.txt</span>",
-		"S_OWN_DIR_L": "ordner",
-		"S_OWN_DIR": "In <span class=\"code\">models\\</span> neben der Anwendung ablegen — die Schaltfläche öffnet ihn",
-		"S_OWN_NEXT_L": "danach",
-		"S_OWN_NEXT": "Anwendung neu starten — das Modell erscheint in der Auswahl passender Sprachen",
 		"S_AS_AUTO": "wie automatische Erkennung",
 		"S_PICK_HINT": "Klicken Sie ein Modell an, um es für diese Sprache zu wählen. Ein fehlendes lädt sich selbst herunter.",
 		"S_ASSIGNED_CHIP": "zugewiesen",
@@ -722,6 +717,7 @@ func init() {
 			"<ul>" +
 			"<li><b>Welches Modell für welche Sprache</b> — die Registerkarte „Sprachen & Modelle“ ist eine Liste der Sprachen. Klicken Sie eine an — darunter öffnen sich die Modelle, die sie beherrschen: das zugewiesene und das empfohlene zuerst, fehlende mit Größe und Download-Pfeil. Ein Klick auf die Karte ist die Wahl; ein fehlendes Modell lädt sich selbst und übernimmt, sobald es bereit ist. Sprachen ohne eigenes Modell erben das der automatischen Erkennung und stehen gedimmt da.</li>" +
 			"<li><b>Der Katalog</b> — Whisper: Base (schnell, für schwache PCs), Small (die Balance), Medium und Turbo (genauer und langsamer; „q5“ ist die quantisierte Fassung: etwas kleiner und schneller, fast ohne Qualitätsverlust), sie übersetzen auch ins Englische; GigaAM v3 ist auf Russisch genauer und setzt selbst Satzzeichen; Parakeet v3 deckt 25 europäische Sprachen ab; Nemotron 3.5 tippt, während Sie sprechen. Geladen wird aus den offiziellen Hugging-Face-Repositorien, jede Datei gegen ihren Referenz-Hash geprüft.</li>" +
+			"<li><b>Eigenes Modell</b> — geeignet ist Whisper als einzelne ggml-*.bin-Datei oder ein sherpa-onnx-Modellordner (encoder.onnx, decoder.onnx, tokens.txt). Legen Sie es in den Ordner models neben der Anwendung und starten Sie sie neu — das Modell erscheint in der Auswahl passender Sprachen; seine Werte sind unbekannt, darum ehrlich ohne Balken.</li>" +
 			"<li>Der Erkennungsserver hält das Modell zwischen den Sätzen im Speicher — das erste Diktat nach dem Start dauert länger (Laden), danach braucht die Erkennung ein bis drei Sekunden.</li>" +
 			"<li><b>Wörterbuch</b> — Begriffe, Namen und Abkürzungen, durch Kommas getrennt. Ein Hinweis für Whispers „Gehör“, damit seltene Wörter richtig ankommen; keine Befehle.</li>" +
 			"<li><b>Mikrofon</b> — Gerätewahl mit Pegelanzeige (sprechen Sie, und der Balken bewegt sich, dann wird das Gerät gehört). Wird das gewählte Gerät abgezogen, greift das Systemgerät; eine Aufnahme ohne Sprache wird gar nicht erst zur Erkennung geschickt — stattdessen meldet die Leiste „Stille“.</li>" +
@@ -851,13 +847,8 @@ func init() {
 		"S_PRESETS_HINT": "Cliquez sur une langue — le choix des modèles s’ouvre dessous. Les langues sans modèle propre utilisent celui de la détection automatique.",
 		"S_CPU_LINE": "Tous les modèles tournent sur le processeur (CPU) — la carte graphique n’est pas utilisée.",
 		"S_MFOLDER": "Votre propre modèle",
+		"S_MFOLDER_SUB": "Placez un modèle dans le dossier models et redémarrez l’application — il apparaît tout seul dans le choix. Les formats acceptés — voir l’Aide.",
 		"S_MAINT": "Entretien des modèles",
-		"S_OWN_FMT_L": "format",
-		"S_OWN_FMT": "Whisper — un fichier <span class=\"code\">ggml-*.bin</span> · sherpa-onnx — un dossier avec <span class=\"code\">encoder.onnx</span>, <span class=\"code\">decoder.onnx</span>, <span class=\"code\">tokens.txt</span>",
-		"S_OWN_DIR_L": "dossier",
-		"S_OWN_DIR": "À placer dans <span class=\"code\">models\\</span> à côté de l’application — le bouton l’ouvre",
-		"S_OWN_NEXT_L": "ensuite",
-		"S_OWN_NEXT": "Redémarrez l’application — le modèle apparaît dans le choix des langues compatibles",
 		"S_AS_AUTO": "comme la détection automatique",
 		"S_PICK_HINT": "Cliquez sur un modèle pour le choisir pour cette langue. Un modèle absent se télécharge tout seul.",
 		"S_ASSIGNED_CHIP": "attribué",
@@ -1044,6 +1035,7 @@ func init() {
 			"<ul>" +
 			"<li><b>Quel modèle pour quelle langue</b> — l’onglet « Langues et modèles » est une liste de langues. Cliquez-en une — les modèles qui la maîtrisent se déploient dessous : l’attribué et le recommandé d’abord, les absents avec leur taille et une flèche de téléchargement. Un clic sur la carte est le choix ; un modèle absent se télécharge tout seul et prend le relais une fois prêt. Les langues sans modèle propre héritent de celui de la détection automatique et s’affichent estompées.</li>" +
 			"<li><b>Le catalogue</b> — Whisper : Base (rapide, pour PC modestes), Small (l’équilibre), Medium et Turbo (plus précis et plus lents ; « q5 » est la version quantifiée : un peu plus petite et rapide, presque sans perte), qui traduisent aussi vers l’anglais ; GigaAM v3 est plus précis en russe et ponctue tout seul ; Parakeet v3 couvre 25 langues européennes ; Nemotron 3.5 tape pendant que vous parlez. Les téléchargements viennent des dépôts officiels Hugging Face, chaque fichier vérifié contre son hachage de référence.</li>" +
+			"<li><b>Votre propre modèle</b> — un fichier Whisper unique ggml-*.bin ou un dossier de modèle sherpa-onnx (encoder.onnx, decoder.onnx, tokens.txt) conviennent. Placez-le dans le dossier models à côté de l’application et redémarrez-la — le modèle apparaît dans le choix des langues compatibles ; ses capacités étant inconnues, il s’affiche honnêtement, sans barres.</li>" +
 			"<li>Le serveur de reconnaissance garde le modèle en mémoire entre les phrases — la première dictée après le démarrage est plus lente (chargement), ensuite la reconnaissance prend une à trois secondes.</li>" +
 			"<li><b>Dictionnaire</b> — termes, noms et abréviations séparés par des virgules. Une indication pour « l'oreille » de Whisper afin que les mots rares passent correctement ; ce ne sont pas des commandes.</li>" +
 			"<li><b>Microphone</b> — choix de l'appareil avec un niveau en direct (parlez et la barre bouge : l'appareil est bien entendu). Si l'appareil choisi est débranché, celui du système prend le relais ; un enregistrement sans parole n'est jamais envoyé à la reconnaissance — le bandeau annonce « Silence ».</li>" +
@@ -1173,13 +1165,8 @@ func init() {
 		"S_PRESETS_HINT": "Haga clic en un idioma — debajo se abre la elección de modelos para él. Los idiomas sin modelo propio usan el de la detección automática.",
 		"S_CPU_LINE": "Todos los modelos funcionan en el procesador (CPU) — la tarjeta gráfica no se usa.",
 		"S_MFOLDER": "Modelo propio",
+		"S_MFOLDER_SUB": "Ponga un modelo en la carpeta models y reinicie la aplicación — aparecerá solo en la elección. Qué formatos sirven — vea la Ayuda.",
 		"S_MAINT": "Mantenimiento de modelos",
-		"S_OWN_FMT_L": "formato",
-		"S_OWN_FMT": "Whisper — un archivo <span class=\"code\">ggml-*.bin</span> · sherpa-onnx — una carpeta con <span class=\"code\">encoder.onnx</span>, <span class=\"code\">decoder.onnx</span>, <span class=\"code\">tokens.txt</span>",
-		"S_OWN_DIR_L": "carpeta",
-		"S_OWN_DIR": "Colóquelo en <span class=\"code\">models\\</span> junto a la aplicación — el botón la abre",
-		"S_OWN_NEXT_L": "después",
-		"S_OWN_NEXT": "Reinicie la aplicación — el modelo aparecerá en la elección de los idiomas compatibles",
 		"S_AS_AUTO": "como la detección automática",
 		"S_PICK_HINT": "Haga clic en un modelo para elegirlo para este idioma. Uno ausente se descarga solo.",
 		"S_ASSIGNED_CHIP": "asignado",
@@ -1366,6 +1353,7 @@ func init() {
 			"<ul>" +
 			"<li><b>Qué modelo para qué idioma</b> — la pestaña «Idiomas y modelos» es una lista de idiomas. Haga clic en uno — debajo se despliegan los modelos que lo dominan: el asignado y el recomendado primero, los ausentes con su tamaño y una flecha de descarga. Un clic en la tarjeta es la elección; un modelo ausente se descarga solo y entra en cuanto está listo. Los idiomas sin modelo propio heredan el de la detección automática y se muestran atenuados.</li>" +
 			"<li><b>El catálogo</b> — Whisper: Base (rápida, para PC modestos), Small (el equilibrio), Medium y Turbo (más precisas y lentas; «q5» es la versión cuantizada: algo más pequeña y rápida casi sin pérdida), que además traducen al inglés; GigaAM v3 es más precisa en ruso y puntúa sola; Parakeet v3 cubre 25 idiomas europeos; Nemotron 3.5 escribe mientras usted habla. Las descargas vienen de los repositorios oficiales de Hugging Face, cada archivo cotejado con su hash de referencia.</li>" +
+			"<li><b>Modelo propio</b> — sirve un archivo único Whisper ggml-*.bin o una carpeta de modelo sherpa-onnx (encoder.onnx, decoder.onnx, tokens.txt). Póngalo en la carpeta models junto a la aplicación y reiníciela — el modelo aparecerá en la elección de los idiomas compatibles; sus capacidades son desconocidas, así que se muestra honestamente, sin barras.</li>" +
 			"<li>El servidor de reconocimiento mantiene el modelo en memoria entre frases — el primer dictado tras arrancar tarda más (carga) y luego el reconocimiento lleva de uno a tres segundos.</li>" +
 			"<li><b>Diccionario</b> — términos, nombres y abreviaturas separados por comas. Una pista para el «oído» de Whisper, para que las palabras raras salgan bien; no son órdenes.</li>" +
 			"<li><b>Micrófono</b> — elección del dispositivo con medidor de nivel (habla y la barra se mueve: el dispositivo se oye). Si desconectas el elegido, se usa el del sistema; una grabación sin voz no se manda a reconocer — la barra dice «Silencio».</li>" +
@@ -1495,13 +1483,8 @@ func init() {
 		"S_PRESETS_HINT": "Fate clic su una lingua — sotto si apre la scelta dei modelli per essa. Le lingue senza modello proprio usano quello del rilevamento automatico.",
 		"S_CPU_LINE": "Tutti i modelli girano sul processore (CPU) — la scheda video non viene usata.",
 		"S_MFOLDER": "Modello proprio",
+		"S_MFOLDER_SUB": "Mettete un modello nella cartella models e riavviate l’applicazione — apparirà da solo nella scelta. Quali formati vanno bene — vedi la Guida.",
 		"S_MAINT": "Manutenzione dei modelli",
-		"S_OWN_FMT_L": "formato",
-		"S_OWN_FMT": "Whisper — un file <span class=\"code\">ggml-*.bin</span> · sherpa-onnx — una cartella con <span class=\"code\">encoder.onnx</span>, <span class=\"code\">decoder.onnx</span>, <span class=\"code\">tokens.txt</span>",
-		"S_OWN_DIR_L": "cartella",
-		"S_OWN_DIR": "Mettetelo in <span class=\"code\">models\\</span> accanto all’applicazione — il pulsante la apre",
-		"S_OWN_NEXT_L": "poi",
-		"S_OWN_NEXT": "Riavviate l’applicazione — il modello apparirà nella scelta delle lingue adatte",
 		"S_AS_AUTO": "come il rilevamento automatico",
 		"S_PICK_HINT": "Fate clic su un modello per sceglierlo per questa lingua. Uno assente si scarica da solo.",
 		"S_ASSIGNED_CHIP": "assegnato",
@@ -1688,6 +1671,7 @@ func init() {
 			"<ul>" +
 			"<li><b>Quale modello per quale lingua</b> — la scheda «Lingue e modelli» è un elenco di lingue. Fatevi clic — sotto si aprono i modelli che la sanno servire: l’assegnato e il consigliato per primi, gli assenti con dimensione e freccia di download. Un clic sulla scheda è la scelta; un modello assente si scarica da solo e subentra appena pronto. Le lingue senza modello proprio ereditano quello del rilevamento automatico e appaiono attenuate.</li>" +
 			"<li><b>Il catalogo</b> — Whisper: Base (veloce, per PC deboli), Small (l’equilibrio), Medium e Turbo (più precisi e lenti; «q5» è la versione quantizzata: un po’ più piccola e veloce quasi senza perdita), che traducono anche in inglese; GigaAM v3 è più preciso in russo e mette da sé la punteggiatura; Parakeet v3 copre 25 lingue europee; Nemotron 3.5 scrive mentre parlate. I download vengono dai repository ufficiali Hugging Face, ogni file verificato contro il suo hash di riferimento.</li>" +
+			"<li><b>Modello proprio</b> — va bene Whisper come singolo file ggml-*.bin o una cartella di modello sherpa-onnx (encoder.onnx, decoder.onnx, tokens.txt). Mettetela nella cartella models accanto all’applicazione e riavviatela — il modello apparirà nella scelta delle lingue adatte; le sue capacità sono ignote, quindi è mostrato onestamente, senza barre.</li>" +
 			"<li>Il server di riconoscimento tiene il modello in memoria tra una frase e l'altra — la prima dettatura dopo l'avvio è più lenta (caricamento), poi il riconoscimento richiede uno-tre secondi.</li>" +
 			"<li><b>Dizionario</b> — termini, nomi e abbreviazioni separati da virgole. Un suggerimento per «l'orecchio» di Whisper, perché le parole rare arrivino giuste; non sono comandi.</li>" +
 			"<li><b>Microfono</b> — scelta del dispositivo con il livello dal vivo (parla e la barra si muove: il dispositivo si sente). Se scolleghi quello scelto, subentra quello di sistema; una registrazione senza voce non viene nemmeno mandata al riconoscimento — la barra dice «Silenzio».</li>" +
@@ -1817,13 +1801,8 @@ func init() {
 		"S_PRESETS_HINT": "Kliknij język — pod nim otworzy się wybór modeli dla niego. Języki bez własnego modelu używają modelu automatycznego wykrywania.",
 		"S_CPU_LINE": "Wszystkie modele działają na procesorze (CPU) — karta graficzna nie jest używana.",
 		"S_MFOLDER": "Własny model",
+		"S_MFOLDER_SUB": "Umieść model w folderze models i uruchom aplikację ponownie — pojawi się w wyborze sam. Jakie formaty pasują — zobacz Pomoc.",
 		"S_MAINT": "Obsługa modeli",
-		"S_OWN_FMT_L": "format",
-		"S_OWN_FMT": "Whisper — plik <span class=\"code\">ggml-*.bin</span> · sherpa-onnx — folder z <span class=\"code\">encoder.onnx</span>, <span class=\"code\">decoder.onnx</span>, <span class=\"code\">tokens.txt</span>",
-		"S_OWN_DIR_L": "folder",
-		"S_OWN_DIR": "Umieść w <span class=\"code\">models\\</span> obok aplikacji — przycisk go otworzy",
-		"S_OWN_NEXT_L": "potem",
-		"S_OWN_NEXT": "Uruchom aplikację ponownie — model pojawi się w wyborze pasujących języków",
 		"S_AS_AUTO": "jak automatyczne wykrywanie",
 		"S_PICK_HINT": "Kliknij model, aby wybrać go dla tego języka. Brakujący pobierze się sam.",
 		"S_ASSIGNED_CHIP": "przypisany",
@@ -2010,6 +1989,7 @@ func init() {
 			"<ul>" +
 			"<li><b>Który model dla którego języka</b> — karta „Języki i modele” to lista języków. Kliknij język — pod nim rozwiną się modele, które go potrafią: przypisany i polecany najpierw, brakujące z rozmiarem i strzałką pobierania. Kliknięcie karty to wybór; brakujący model pobierze się sam i przejmie pracę, gdy będzie gotowy. Języki bez własnego modelu dziedziczą model automatycznego wykrywania i są przygaszone.</li>" +
 			"<li><b>Katalog</b> — Whisper: Base (szybki, dla słabszych PC), Small (równowaga), Medium i Turbo (dokładniejsze i wolniejsze; „q5” to wersja skwantyzowana: nieco mniejsza i szybsza niemal bez straty), tłumaczą też na angielski; GigaAM v3 jest dokładniejszy po rosyjsku i sam stawia interpunkcję; Parakeet v3 obejmuje 25 języków europejskich; Nemotron 3.5 pisze, gdy mówisz. Pobierane z oficjalnych repozytoriów Hugging Face, każdy plik sprawdzany z hashem wzorcowym.</li>" +
+			"<li><b>Własny model</b> — pasuje Whisper jako pojedynczy plik ggml-*.bin lub folder modelu sherpa-onnx (encoder.onnx, decoder.onnx, tokens.txt). Umieść go w folderze models obok aplikacji i uruchom ją ponownie — model pojawi się w wyborze pasujących języków; jego możliwości są nieznane, więc pokazywany jest uczciwie, bez pasków.</li>" +
 			"<li>Serwer rozpoznawania trzyma model w pamięci między zdaniami — pierwsze dyktowanie po starcie trwa dłużej (ładowanie), potem rozpoznanie zajmuje jedną–trzy sekundy.</li>" +
 			"<li><b>Słownik</b> — terminy, nazwy i skróty po przecinku. Podpowiedź dla „ucha” Whispera, żeby rzadkie słowa trafiały poprawnie; to nie są polecenia.</li>" +
 			"<li><b>Mikrofon</b> — wybór urządzenia z miernikiem poziomu (mów, a słupek się rusza — czyli urządzenie jest słyszane). Gdy wybrane urządzenie zniknie, wraca systemowe; nagranie bez mowy w ogóle nie trafia do rozpoznawania — pasek mówi „Cisza”.</li>" +
@@ -2261,13 +2241,8 @@ func init() {
 		"S_PRESETS_HINT": "Клацніть мову — під нею розгорнеться вибір моделей для неї. Мови без власної моделі використовують модель автовизначення.",
 		"S_CPU_LINE": "Усі моделі працюють на процесорі (CPU) — відеокарта не використовується.",
 		"S_MFOLDER": "Своя модель",
+		"S_MFOLDER_SUB": "Покладіть модель у теку models і перезапустіть застосунок — вона з’явиться у виборі сама. Які формати підходять — у Довідці.",
 		"S_MAINT": "Обслуговування моделей",
-		"S_OWN_FMT_L": "формат",
-		"S_OWN_FMT": "Whisper — файл <span class=\"code\">ggml-*.bin</span> · sherpa-onnx — тека з <span class=\"code\">encoder.onnx</span>, <span class=\"code\">decoder.onnx</span>, <span class=\"code\">tokens.txt</span>",
-		"S_OWN_DIR_L": "тека",
-		"S_OWN_DIR": "Покладіть у <span class=\"code\">models\\</span> поруч із застосунком — кнопка її відкриє",
-		"S_OWN_NEXT_L": "далі",
-		"S_OWN_NEXT": "Перезапустіть застосунок — модель з’явиться у виборі відповідних мов",
 		"S_AS_AUTO": "як автовизначення",
 		"S_PICK_HINT": "Клацніть модель, щоб вибрати її для цієї мови. Відсутня завантажиться сама.",
 		"S_ASSIGNED_CHIP": "призначена",
@@ -2427,6 +2402,7 @@ func init() {
 			"<ul>" +
 			"<li><b>Яка модель якій мові</b> — вкладка «Мови і моделі» — це список мов. Клацніть мову — під нею розгорнуться моделі, що її вміють: призначена й рекомендована першими, відсутні — з розміром і стрілкою завантаження. Клац по картці — це вибір; відсутня модель завантажиться сама й підхопить роботу, щойно буде готова. Мови без власної моделі успадковують модель автовизначення й показані тьмяно.</li>" +
 			"<li><b>Каталог</b> — Whisper: Base (швидка, для слабких ПК), Small (баланс), Medium і Turbo (точніші й повільніші; «q5» — квантована версія: трохи менша й швидша майже без втрат), вони ж перекладають англійською; GigaAM v3 точніша російською й сама ставить розділові знаки; Parakeet v3 — 25 європейських мов; Nemotron 3.5 друкує, поки ви говорите. Завантаження — з офіційних репозиторіїв Hugging Face, кожен файл звіряється з еталонним хешем.</li>" +
+			"<li><b>Своя модель</b> — підійде Whisper одним файлом ggml-*.bin або тека моделі sherpa-onnx (encoder.onnx, decoder.onnx, tokens.txt). Покладіть її в теку models поруч із застосунком і перезапустіть його — модель з’явиться у виборі відповідних мов; характеристики невідомі, тому показується чесно, без смужок.</li>" +
 			"<li>Сервер розпізнавання тримає модель у пам'яті між фразами — перше диктування після запуску повільніше (завантаження), далі розпізнавання займає одну-три секунди.</li>" +
 			"<li><b>Словник</b> — терміни, назви та скорочення через кому. Підказка для «вуха» Whisper, щоб рідкісні слова виходили правильно; це не команди.</li>" +
 			"<li><b>Мікрофон</b> — вибір пристрою зі шкалою рівня (говоріть — і смужка рухається, отже пристрій чути). Якщо обраний пристрій зник, береться системний; запис без мовлення взагалі не йде на розпізнавання — смужка каже «Тиша».</li>" +

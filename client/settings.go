@@ -1336,9 +1336,6 @@ button.mini.danger:hover{color:var(--bad);border-color:var(--badline);background
 .pchip{font-size:9px;letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--line);border-radius:calc(var(--r) * .4);padding:1px 6px;margin-left:8px;color:var(--dim);vertical-align:middle;font-weight:400}
 .pchip.on{color:var(--hi);border-color:var(--hi)}
 .dlline{color:var(--amber);font-size:11.5px;margin:2px 0 8px;text-shadow:var(--amberglow)}
-.fl{display:block;font-size:11px;color:var(--dim);margin-top:3px;font-weight:400}
-.fl i{font-style:normal;color:var(--faint);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;display:inline-block;width:52px}
-.code{background:var(--field);border:1px solid var(--line);border-radius:calc(var(--r) * .35);padding:0 5px;font-size:10.5px;color:var(--green);white-space:nowrap}
 input[type=text],input[type=number],input[type=password],select,button.mini{height:var(--ctlh,30px)}
 button.mini{display:inline-flex;align-items:center;justify-content:center}
 .srccard{border:1px solid var(--line);border-radius:var(--r);background:var(--field);padding:11px 14px;margin:9px 0}
@@ -1664,10 +1661,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
  </div>
  <div class="card">
   <h2 class="sect">{{S_MAINT}}</h2>
-  <div class="row"><label>{{S_MFOLDER}}
-    <span class="fl"><i>{{S_OWN_FMT_L}}</i><span>{{S_OWN_FMT}}</span></span>
-    <span class="fl"><i>{{S_OWN_DIR_L}}</i><span>{{S_OWN_DIR}}</span></span>
-    <span class="fl"><i>{{S_OWN_NEXT_L}}</i><span>{{S_OWN_NEXT}}</span></span></label>
+  <div class="row"><label>{{S_MFOLDER}}<span class="sub">{{S_MFOLDER_SUB}}</span></label>
    <button type="button" class="mini" onclick="appOpenModelsFolder()">{{S_OPEN_FOLDER}}</button></div>
   <div class="row"><label>{{S_UNLOAD}}<span class="sub">{{S_UNLOAD_SUB}}</span></label>
    <button type="button" class="mini" id="munload">{{S_UNLOAD_GO}}</button></div>

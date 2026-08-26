@@ -560,13 +560,8 @@ var settingsStrings = map[string]map[string]string{
 		"S_PRESETS_HINT": "Щёлкните язык — под ним раскроется выбор моделей для него. Языки без своей модели используют модель Автоопределения.",
 		"S_CPU_LINE": "Все модели работают на процессоре (CPU) — видеокарта не используется.",
 		"S_MFOLDER": "Своя модель",
+		"S_MFOLDER_SUB": "Положите модель в папку models и перезапустите приложение — она появится в выборе сама. Какие форматы подойдут — в Справке.",
 		"S_MAINT": "Обслуживание моделей",
-		"S_OWN_FMT_L": "формат",
-		"S_OWN_FMT": "Whisper — файл <span class=\"code\">ggml-*.bin</span> · sherpa-onnx — папка с <span class=\"code\">encoder.onnx</span>, <span class=\"code\">decoder.onnx</span>, <span class=\"code\">tokens.txt</span>",
-		"S_OWN_DIR_L": "папка",
-		"S_OWN_DIR": "Положить в <span class=\"code\">models\\</span> рядом с приложением — её откроет кнопка",
-		"S_OWN_NEXT_L": "затем",
-		"S_OWN_NEXT": "Перезапустить приложение — модель появится в выборе у подходящих языков",
 		"S_AS_AUTO": "как Автоопределение",
 		"S_PICK_HINT": "Щёлкните модель, чтобы выбрать её для этого языка. Нескачанная скачается сама.",
 		"S_ASSIGNED_CHIP": "назначена",
@@ -825,6 +820,7 @@ var settingsStrings = map[string]map[string]string{
 			"<ul>" +
 			"<li><b>Какая модель какому языку</b> — вкладка «Языки и модели» — это список языков. Щёлкните язык — под ним раскроются модели, которые его умеют: назначенная и рекомендуемая первыми, у нескачанных — размер и стрелка загрузки. Щелчок по карточке выбирает модель; нескачанная скачается сама и включится по готовности. Языки без своей модели наследуют модель Автоопределения и написаны тускло.</li>" +
 			"<li><b>Каталог</b> — Whisper: Base (быстрая, для слабых ПК), Small (баланс), Medium и Turbo (точнее и медленнее; «q5» — квантованная версия: чуть меньше и быстрее почти без потери качества), они же переводят на английский; GigaAM v3 точнее на русском и сама ставит знаки; Parakeet v3 — 25 европейских языков; Nemotron 3.5 печатает текст по ходу речи. Скачивание — с официальных репозиториев Hugging Face, каждый файл сверяется с эталонным хешем.</li>" +
+			"<li><b>Своя модель</b> — подойдёт Whisper одним файлом ggml-*.bin или папка модели sherpa-onnx (encoder.onnx, decoder.onnx, tokens.txt). Положите её в папку models рядом с приложением и перезапустите его — модель появится в выборе у подходящих языков; характеристики неизвестны, поэтому показывается честно, без полосок.</li>" +
 			"<li>Модель держится в памяти сервером whisper-server между фразами — поэтому первая диктовка после запуска чуть дольше (загрузка), дальше распознавание занимает 1–3 секунды.</li>" +
 			"<li><b>Словарь</b> — термины, имена и аббревиатуры через запятую. Это подсказка «слуху» Whisper, чтобы редкие слова распознавались правильно; это не команды.</li>" +
 			"<li><b>Микрофон и скорость</b> — выбор микрофона со шкалой уровня (говорите — полоса двигается, значит устройство слышит), потоки CPU (больше — быстрее распознавание), минимальная длительность записи (отсекает случайные нажатия), максимальная (автостоп записи). Если выбранное устройство отключить, приложение само переключится на системное; запись без речи не отправляется на распознавание — покажет «Тишина».</li>" +
@@ -1010,13 +1006,8 @@ var settingsStrings = map[string]map[string]string{
 		"S_PRESETS_HINT": "Click a language — the model choice for it unfolds below. Languages without their own model use the Auto-detect one.",
 		"S_CPU_LINE": "All models run on the processor (CPU) — the graphics card is not used.",
 		"S_MFOLDER": "Your own model",
+		"S_MFOLDER_SUB": "Put a model into the models folder and restart the app — it appears in the choice by itself. Which formats fit — see Help.",
 		"S_MAINT": "Model upkeep",
-		"S_OWN_FMT_L": "format",
-		"S_OWN_FMT": "Whisper — a <span class=\"code\">ggml-*.bin</span> file · sherpa-onnx — a folder with <span class=\"code\">encoder.onnx</span>, <span class=\"code\">decoder.onnx</span>, <span class=\"code\">tokens.txt</span>",
-		"S_OWN_DIR_L": "folder",
-		"S_OWN_DIR": "Put it into <span class=\"code\">models\\</span> next to the app — the button opens it",
-		"S_OWN_NEXT_L": "then",
-		"S_OWN_NEXT": "Restart the app — the model appears in the choice for matching languages",
 		"S_AS_AUTO": "as Auto-detect",
 		"S_PICK_HINT": "Click a model to pick it for this language. A missing one downloads itself.",
 		"S_ASSIGNED_CHIP": "assigned",
@@ -1275,6 +1266,7 @@ var settingsStrings = map[string]map[string]string{
 			"<ul>" +
 			"<li><b>Which model serves which language</b> — the Languages & models tab is a list of languages. Click one — the models that can serve it unfold below: the assigned and the recommended first, the missing ones with a size and a download arrow. A click on a card is the choice; a missing model downloads itself and takes over once ready. Languages without a model of their own inherit the Auto-detect one and are drawn dim.</li>" +
 			"<li><b>The catalogue</b> — Whisper: Base (fast, for weak PCs), Small (the balance), Medium and Turbo (more accurate and slower; “q5” is the quantized cut: a bit smaller and faster with almost no quality loss), and they also translate to English; GigaAM v3 is sharper on Russian and punctuates itself; Parakeet v3 covers 25 European languages; Nemotron 3.5 types as you speak. Downloads come from the official Hugging Face repositories, every file checked against its reference hash.</li>" +
+			"<li><b>Your own model</b> — a Whisper single ggml-*.bin file or a sherpa-onnx model folder (encoder.onnx, decoder.onnx, tokens.txt) will do. Put it into the models folder next to the app and restart it — the model appears in the choice for matching languages; its powers are unknown, so it is shown honestly, without bars.</li>" +
 			"<li>whisper-server keeps the model in memory between phrases — the first dictation after startup is slower (loading), afterwards recognition takes 1–3 seconds.</li>" +
 			"<li><b>Dictionary</b> — comma-separated terms, names and abbreviations. A hint for Whisper's \"ear\" so rare words are recognized correctly; not commands.</li>" +
 			"<li><b>Microphone and speed</b> — microphone selection with a live level meter (speak and the bar moves, so you know the device is heard), CPU threads (more = faster transcription), minimum recording length (filters accidental presses), maximum length (auto-stop). If the chosen device is unplugged the app falls back to the system default; a recording with no speech is never sent for recognition — it reports \"Silence\" instead.</li>" +
