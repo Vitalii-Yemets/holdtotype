@@ -11,6 +11,21 @@ type Rule struct {
 	To        string `json:"to"`
 	Whole     bool   `json:"whole"`
 	MatchCase bool   `json:"match_case"`
+	Lang      string `json:"lang,omitempty"`
+}
+
+// ForLang keeps the rules that apply to the given recognition language: the
+// ones written for every language, and the ones pinned to this one.
+func ForLang(rules []Rule, lang string) []Rule {
+	lang = strings.ToLower(strings.TrimSpace(lang))
+	out := make([]Rule, 0, len(rules))
+	for _, r := range rules {
+		rl := strings.ToLower(strings.TrimSpace(r.Lang))
+		if rl == "" || (rl == lang && lang != "" && lang != "auto") {
+			out = append(out, r)
+		}
+	}
+	return out
 }
 
 func isWordRune(r rune) bool {

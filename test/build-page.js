@@ -103,6 +103,7 @@ const strings = {
   ruleprompts: "Prompts", ruleph: "chrome.exe, msedge.exe",
   replempty: "No replacements yet", repldel: "Delete the replacement", replwhole: "whole words",
   replcase: "case", replfromph: "git hub", repltoph: "GitHub",
+  repllang: "Rule language", repllangall: "all languages",
   histempty: "No history yet", histcopy: "Copy", histask: "Delete the whole dictation history?", histclear: "Clear",
   micchecking: "Checking…", mchecking: "Checking models…", histinsert: "Paste",
   retry: "Try again",

@@ -614,6 +614,13 @@ function check(name, actual, expected) {
   check("a replacement row has both sides", [!!rep.querySelector(".rfrom"), !!rep.querySelector(".rto")], [true, true]);
   check("whole words is on by default", rep.querySelector(".rwhole").checked, true);
   check("case is off by default", rep.querySelector(".rcase").checked, false);
+  const rlang = rep.querySelector(".rlang");
+  check("a rule can be pinned to a language", !!rlang, true);
+  check("but serves every language by default", rlang.value, "");
+  rlang.value = "ru"; rlang.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(250);
+  check("the pinned language is saved with the rule", w.lastSaveForm.replacements[0].lang, "ru");
+  rlang.value = ""; rlang.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(250);
+  check("the dictionary card says only Whisper reads it", d.getElementById("dict_whisper_note").textContent.includes("S_DICT_WHISPER_ONLY"), true);
   const rfrom = rep.querySelector(".rfrom"), rto = rep.querySelector(".rto");
   rfrom.value = "гит хаб"; rfrom.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(250);
   rto.value = "GitHub"; rto.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(250);

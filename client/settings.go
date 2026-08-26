@@ -531,7 +531,7 @@ func (a *App) settingsThread(tab string, attempt int) {
 		})
 		_ = w.Bind("appTestText", func(text string) string {
 			cfg := a.snapshot()
-			out := replace.Apply(cfg.Replacements, text)
+			out := replace.Apply(replace.ForLang(cfg.Replacements, cfg.Language), text)
 			res := commands.Apply(cfg.Commands, out)
 			shown := res.Text
 			if res.Cancelled {
@@ -999,6 +999,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"histempty": "S_HIST_EMPTY", "histcopy": "S_HIST_COPY", "histask": "S_HIST_ASK", "histclear": "S_HIST_CLEAR",
 		"micchecking": "S_MIC_CHECKING", "mchecking": "S_MCHECK_RUN", "histinsert": "S_HIST_INSERT",
 		"replcase": "S_REPL_CASE", "replfromph": "S_REPL_FROM_PH", "repltoph": "S_REPL_TO_PH",
+		"repllang": "S_REPL_LANG", "repllangall": "S_REPL_LANG_ALL",
 		"wiznext": "S_WIZ_NEXT", "wizfinish": "S_WIZ_FINISH", "wizwait": "S_WIZ_WAIT",
 		"wizheard": "S_WIZ_HEARD", "wizhave": "S_WIZ_HAVE", "wiztry": "S_WIZ_TRY_TEXT",
 		"updavail": "S_UPD_AVAIL", "updgo": "S_UPD_GO", "upderr": "S_UPD_ERR", "upddl": "S_UPD_DL",
@@ -1238,6 +1239,7 @@ button.ghost:hover{color:var(--green)}
 .micverdict.bad{color:var(--amber)}
 .sect .mini{margin-left:auto}
 .replrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 0;border-bottom:1px solid var(--soft)}
+.replrow .rlang{flex:none;width:auto;min-width:72px}
 .replrow:last-child{border-bottom:none}
 .replrow input[type=text]{flex:1 1 160px;min-width:120px;width:auto}
 .replrow .rarrow{flex:none;color:var(--dim)}
@@ -1686,6 +1688,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
  <div class="card">
   <h2 class="sect">{{S_SUB_DICT}}</h2>
   <div class="hint">{{S_DICT_HINT}}</div>
+  <div class="hint" id="dict_whisper_note">{{S_DICT_WHISPER_ONLY}}</div>
   <textarea id="whisper_prompt" rows="10" style="width:100%;min-height:150px;height:26vh;padding:8px 11px;border:1px solid var(--line);background:var(--field);color:var(--green);font:inherit;line-height:1.5;outline:none;resize:vertical"></textarea>
  </div>
  <div class="card" data-adv>
@@ -3645,6 +3648,18 @@ function renderRepls(){
     to.onchange = ()=>{ repls[i].to = to.value; applyNow(); replTest(); };
     row.appendChild(to);
 
+    const langSel = document.createElement("select");
+    langSel.className = "rlang";
+    langSel.title = L.repllang;
+    [["", L.repllangall], ["ru", "RU"], ["en", "EN"], ["uk", "UK"], ["de", "DE"], ["fr", "FR"], ["es", "ES"], ["it", "IT"], ["pl", "PL"]].forEach(([v, t])=>{
+      const o = document.createElement("option");
+      o.value = v; o.textContent = t;
+      langSel.appendChild(o);
+    });
+    langSel.value = [...langSel.options].some(o=>o.value===(r.lang||"")) ? (r.lang||"") : "";
+    langSel.onchange = ()=>{ repls[i].lang = langSel.value; applyNow(); replTest(); };
+    row.appendChild(langSel);
+
     const wholeLbl = document.createElement("label");
     const whole = document.createElement("input");
     whole.type = "checkbox";
@@ -3691,7 +3706,7 @@ function initRepls(){
   const add = document.getElementById("repl_add");
   if(!add) return;
   add.onclick = ()=>{
-    repls.push({id: "x" + Date.now(), from: "", to: "", whole: true, match_case: false});
+    repls.push({id: "x" + Date.now(), from: "", to: "", whole: true, match_case: false, lang: ""});
     renderRepls();
     const rows = document.querySelectorAll("#replbody .rfrom");
     if(rows.length) rows[rows.length - 1].focus();

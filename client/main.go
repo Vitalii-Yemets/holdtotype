@@ -536,7 +536,7 @@ func main() {
 			}
 			in := os.Args[1:][i+1]
 			log.Printf("replcheck: замен в конфиге — %d", len(cfg.Replacements))
-			after := replace.Apply(cfg.Replacements, in)
+			after := replace.Apply(replace.ForLang(cfg.Replacements, cfg.Language), in)
 			log.Printf("replcheck: замены: %q → %q", in, after)
 			cmd := commands.Apply(cfg.Commands, after)
 			log.Printf("replcheck: команд в конфиге — %d, сработали %v, отмена=%v", len(cfg.Commands), cmd.Applied, cmd.Cancelled)
@@ -1383,7 +1383,12 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 		}
 	}
 	if liveSess == nil && err == nil {
-		text, err = srv.transcribe(ctx, wavFromPCM16(pcm, sampleRate), recLang, cfg.WhisperPrompt, fastTranslate)
+		prompt := cfg.WhisperPrompt
+		if target != "" && !viaModel && isBuiltinDictionary(prompt) {
+			prompt = builtinDictionary(target)
+			log.Printf("словарь: при переводе подсказываю набор языка %s", target)
+		}
+		text, err = srv.transcribe(ctx, wavFromPCM16(pcm, sampleRate), recLang, prompt, fastTranslate)
 	}
 	if err != nil {
 		if errors.Is(err, context.Canceled) {
@@ -1408,7 +1413,11 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 		return
 	}
 	text = strings.TrimSpace(text)
-	if fixed := replace.Apply(cfg.Replacements, text); fixed != text {
+	outLang := cfg.Language
+	if target != "" {
+		outLang = target
+	}
+	if fixed := replace.Apply(replace.ForLang(cfg.Replacements, outLang), text); fixed != text {
 		log.Printf("замены: %q → %q", text, fixed)
 		text = fixed
 	}
