@@ -968,7 +968,9 @@ func (a *App) stateSnapshot() string {
 		}
 	}
 	llm := strS("S_NO_LLM")
-	if llmInstalled(cfg) {
+	if postAPIOn(cfg) {
+		llm = strS("S_POSTAPI_BADGE")
+	} else if llmInstalled(cfg) {
 		llm = filepath.Base(cfg.LLMModel)
 	}
 	_, free := ramMB()
@@ -1020,7 +1022,7 @@ func (a *App) stateSnapshot() string {
 		ActiveLang:  activeLang,
 		Assigned:    assignedModelRows(cfg),
 		InstalledMs: installedModelNames(),
-		LLMOK:       llmInstalled(cfg),
+		LLMOK:       postReady(cfg),
 		MicOK:       rec != nil,
 		StatusLine:  statusLine(cfg, ready, free),
 		Remote:      strings.TrimSpace(cfg.ServerURL) != "",

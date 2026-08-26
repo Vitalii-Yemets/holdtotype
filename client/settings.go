@@ -118,6 +118,9 @@ type settingsForm struct {
 	HistoryDays      int    `json:"history_days"`
 	HistoryMax       int    `json:"history_max"`
 	HistorySkip      string `json:"history_skip"`
+	PostAPIURL       string `json:"post_api_url"`
+	PostAPIModel     string `json:"post_api_model"`
+	PostAPITimeout   int    `json:"post_api_timeout_s"`
 	MaxRecordSeconds int    `json:"max_record_seconds"`
 	ServerAutostart  bool   `json:"server_autostart"`
 	CheckUpdates     bool   `json:"check_updates"`
@@ -260,6 +263,30 @@ func (a *App) settingsThread(tab string, attempt int) {
 		})
 		_ = w.Bind("appUnloadEngines", func() {
 			a.parkEngines()
+		})
+		_ = w.Bind("appSetPostKey", func(key string) string {
+			enc, err := protectKey(strings.TrimSpace(key))
+			if err != nil {
+				log.Printf("шифрование ключа API: %v", err)
+				return jsonResult(saveResult{Severity: "error", Message: humanError(err)})
+			}
+			a.mu.Lock()
+			c := *a.cfg
+			c.PostAPIKey = enc
+			a.cfg = &c
+			a.mu.Unlock()
+			if err := saveConfig("config.json", &c); err != nil {
+				return jsonResult(saveResult{Severity: "error", Message: humanError(err)})
+			}
+			if enc == "" {
+				log.Printf("ключ API постобработки удалён")
+			} else {
+				log.Printf("ключ API постобработки сохранён (зашифрован DPAPI)")
+			}
+			return jsonResult(saveResult{OK: true, Severity: "ok", Message: strS("S_SAVED")})
+		})
+		_ = w.Bind("appPostKeySet", func() bool {
+			return strings.TrimSpace(a.snapshot().PostAPIKey) != ""
 		})
 		_ = w.Bind("appOpenModelsFolder", func() {
 			if err := os.MkdirAll("models", 0o755); err != nil {
@@ -670,6 +697,13 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 		c.HistoryMax = f.HistoryMax
 	}
 	c.HistorySkip = strings.TrimSpace(f.HistorySkip)
+	if validPostAPIURL(f.PostAPIURL) {
+		c.PostAPIURL = strings.TrimSpace(f.PostAPIURL)
+	}
+	c.PostAPIModel = strings.TrimSpace(f.PostAPIModel)
+	if f.PostAPITimeout >= 5 && f.PostAPITimeout <= 120 {
+		c.PostAPITimeout = f.PostAPITimeout
+	}
 	if f.MaxRecordSeconds > 0 {
 		c.MaxRecordSeconds = f.MaxRecordSeconds
 	}
@@ -815,7 +849,7 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	if hook != nil {
 		hook.SetCombos(buildCombos(&c))
 	}
-	if len(c.ActiveProfiles) > 0 && llmInstalled(&c) {
+	if len(c.ActiveProfiles) > 0 && !postAPIOn(&c) && llmInstalled(&c) {
 		go func() {
 			if _, err := a.ensureLLM(); err != nil {
 				log.Printf("прогрев LLM: %v", err)
@@ -876,6 +910,9 @@ func settingsHTML(cfg *Config, tab string) string {
 		"history_days":            cfg.HistoryDays,
 		"history_max":             cfg.HistoryMax,
 		"history_skip":            cfg.HistorySkip,
+		"post_api_url":            cfg.PostAPIURL,
+		"post_api_model":          cfg.PostAPIModel,
+		"post_api_timeout_s":      cfg.PostAPITimeout,
 		"max_record_seconds":      cfg.MaxRecordSeconds,
 		"server_autostart":        cfg.ServerAutostart,
 		"check_updates":           cfg.CheckUpdates,
@@ -938,6 +975,8 @@ func settingsHTML(cfg *Config, tab string) string {
 		"unload": "S_UNLOAD_GO", "unloaded": "S_UNLOADED",
 		"hffit": "S_HF_FIT", "hfhidden": "S_HF_HIDDEN",
 		"ovmoncursor": "S_OVMON_CURSOR",
+		"postwarn": "S_POSTAPI_WARN", "postask": "S_POSTAPI_ASK",
+		"postkeyset": "S_POSTAPI_KEY_SET", "postkeynone": "S_POSTAPI_KEY_NONE",
 		"remotewarn": "S_REMOTE_WARN", "remoteask": "S_REMOTE_ASK", "remotebadge": "S_REMOTE_BADGE",
 		"ok": "S_OK", "cancel": "S_CANCEL", "dlask": "S_DL_ASK", "dlstart": "S_DL_START", "dlcancel": "S_DL_CANCEL", "nofound": "S_NOT_FOUND",
 		"advrolemain": "S_ADV_ROLE_MAIN", "advrolesecond": "S_ADV_ROLE_SECOND",
@@ -1687,6 +1726,20 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
   <div class="hint">{{S_LLM_HINT}}</div>
   <div id="profbody"></div>
  </div>
+ <div class="card">
+  <h2 class="sect">{{S_POSTAPI}}</h2>
+  <div class="hint">{{S_POSTAPI_HINT}}</div>
+  <div class="row"><label>{{S_POSTAPI_URL}}<span class="sub">{{S_POSTAPI_URL_SUB}}</span></label>
+   <input type="text" id="post_api_url" placeholder="https://api.openai.com/v1"></div>
+  <div class="note warn" id="postapi_warn"></div>
+  <div class="row"><label>{{S_POSTAPI_MODEL}}</label>
+   <input type="text" id="post_api_model" placeholder="gpt-4.1-mini"></div>
+  <div class="row"><label>{{S_POSTAPI_KEY}}<span class="sub" id="postapi_keystate"></span></label>
+   <input type="password" id="post_api_key_new" autocomplete="off">
+   <button type="button" class="mini" id="postapi_keysave">{{S_POSTAPI_SAVE}}</button></div>
+  <div class="row"><label>{{S_POSTAPI_TIMEOUT}}</label>
+   <select id="post_api_timeout_s"><option value="10">10 s</option><option value="20">20 s</option><option value="30">30 s</option><option value="60">60 s</option><option value="120">120 s</option></select></div>
+ </div>
 </div>
 
 
@@ -1873,11 +1926,12 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
 window.onerror = function(m, s, l, c){ if(window.appJSError) appJSError(String(m) + " @line " + l + ":" + c); };
 const CFG = {{CFG}};
 const bools = ["beep","auto_enter","restore_clipboard","overlay","overlay_text","animation","type_mode","server_autostart","check_updates","history"];
-const texts = ["history_skip"];
+const texts = ["history_skip","post_api_model"];
 let exeStored = CFG.server_exe || "";
 let exeUnlocked = false;
 let remoteURL = (CFG.server_url || "").trim();
-const nums  = ["threads","min_record_ms","max_record_seconds","translate_ask_seconds","server_port","paste_delay_ms","history_days","history_max"];
+let postURL = (CFG.post_api_url || "").trim();
+const nums  = ["threads","min_record_ms","max_record_seconds","translate_ask_seconds","server_port","paste_delay_ms","history_days","history_max","post_api_timeout_s"];
 const sels  = ["ui_language","language","sound_theme","translate_target","translate_ask","hotkey_mode","theme","skin"];
 const trAll = ["en","de","fr","es","it","pl","ru","uk"];
 const L = {{L_JSON}};
@@ -2146,7 +2200,7 @@ async function refreshLLM(){
     '<span class="dot" style="color:var(--amber)">&#9679;</span>'+L.fitwarn+
     '<span class="dot" style="color:var(--bad)">&#9679;</span>'+L.fitbad;
 
-  renderProfiles(document.getElementById("profbody"), {state: installed.length ? "installed" : "absent"});
+  renderProfiles(document.getElementById("profbody"), {state: (installed.length || st.external) ? "installed" : "absent"});
   if(sc) sc.scrollTop = keepScroll;
   if(busy) setTimeout(refreshLLM, 900);
 }
@@ -2937,7 +2991,7 @@ function toast(msg, severity){
   toast._t = setTimeout(()=>{ t.textContent = ""; t.className = "stsaved"; }, (severity === "error" || severity === "warn") ? 6000 : 2200);
 }
 
-const numSels = ["threads","min_record_ms","max_record_seconds","translate_ask_seconds","paste_delay_ms","history_days","history_max"];
+const numSels = ["threads","min_record_ms","max_record_seconds","translate_ask_seconds","paste_delay_ms","history_days","history_max","post_api_timeout_s"];
 function load(){
   document.getElementById("punctuation").value = CFG.punctuation || "model";
   document.getElementById("whisper_prompt").value = CFG.whisper_prompt || "";
@@ -3017,6 +3071,45 @@ function initRemote(){
     doSave();
   });
 }
+function syncPostWarn(){
+  const note = document.getElementById("postapi_warn");
+  if(note) note.textContent = postURL ? L.postwarn : "";
+}
+async function updPostKeyState(){
+  const el = document.getElementById("postapi_keystate");
+  if(!el || !window.appPostKeySet) return;
+  el.textContent = (await appPostKeySet()) ? L.postkeyset : L.postkeynone;
+}
+function initPostAPI(){
+  const el = document.getElementById("post_api_url");
+  if(!el) return;
+  el.value = postURL;
+  let known = postURL;
+  syncPostWarn();
+  updPostKeyState();
+  el.addEventListener("change", async e=>{
+    e.stopPropagation();
+    const url = el.value.trim();
+    if(url === known){ syncPostWarn(); return; }
+    if(url && !await askConfirm(L.postask.replace("%s", url))){
+      el.value = known;
+      syncPostWarn();
+      return;
+    }
+    known = url;
+    postURL = url;
+    syncPostWarn();
+    doSave();
+  });
+  const save = document.getElementById("postapi_keysave");
+  const inp = document.getElementById("post_api_key_new");
+  if(save && inp) save.onclick = async ()=>{
+    const r = JSON.parse(await appSetPostKey(inp.value));
+    inp.value = "";
+    toast(r.message, r.severity);
+    updPostKeyState();
+  };
+}
 function syncTrControls(){
   const always = document.getElementById("tr_default").checked;
   const mode = document.getElementById("translate_ask").value;
@@ -3038,6 +3131,7 @@ async function doSave(){
     overlay_position: ovPos,
     overlay_monitor: (document.getElementById("overlay_monitor")||{}).value || "",
     overlay_custom: ovCustom,
+    post_api_url: postURL,
     mic_device: micSel.value,
     punctuation: document.getElementById("punctuation").value,
     ui_level: "all",
@@ -3906,6 +4000,7 @@ load();
   initModelFilters();
   initStateScreen();
   initRemote();
+  initPostAPI();
   initWizard();
   initAutorun();
   initRules();

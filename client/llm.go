@@ -249,11 +249,13 @@ func (a *App) llmStatus() string {
 	}
 	dlMu.Unlock()
 	total, avail := ramMB()
+	cfg := a.snapshot()
 	out, _ := json.Marshal(map[string]any{
 		"installed": installed,
 		"downloads": downloads,
 		"ram":       total,
 		"ram_free":  avail,
+		"external":  postAPIOn(cfg),
 	})
 	return string(out)
 }

@@ -136,6 +136,10 @@ type Config struct {
 	HistoryDays         int                `json:"history_days"`
 	HistoryMax          int                `json:"history_max"`
 	HistorySkip         string             `json:"history_skip"`
+	PostAPIURL          string             `json:"post_api_url"`
+	PostAPIModel        string             `json:"post_api_model"`
+	PostAPIKey          string             `json:"post_api_key"`
+	PostAPITimeout      int                `json:"post_api_timeout_s"`
 	Commands            []commands.Command `json:"commands"`
 	WizardDone          bool               `json:"wizard_done"`
 }
@@ -424,6 +428,13 @@ func loadConfig(path string) (*Config, error) {
 	}
 	if cfg.LLMModel == "" {
 		cfg.LLMModel = "models/" + llmFile
+	}
+	if !validPostAPIURL(cfg.PostAPIURL) {
+		log.Printf("адрес сервера постобработки %q не разобран — сброшен", cfg.PostAPIURL)
+		cfg.PostAPIURL = ""
+	}
+	if cfg.PostAPITimeout < 5 || cfg.PostAPITimeout > 120 {
+		cfg.PostAPITimeout = 30
 	}
 	if cfg.Profiles == nil {
 		cfg.Profiles = presetProfiles()

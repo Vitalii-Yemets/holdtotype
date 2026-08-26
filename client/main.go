@@ -363,6 +363,34 @@ func main() {
 			log.Printf("движок=%s время=%.2f c текст=%q", srv.engine(), time.Since(started).Seconds(), text)
 			return
 		}
+		if arg == "-postcheck" && i+1 < len(os.Args[1:]) {
+			sample := os.Args[1:][i+1]
+			cfg, cerr := loadConfig("config.json")
+			if cerr != nil {
+				log.Printf("конфигурация: %v", cerr)
+				return
+			}
+			if rest := os.Args[1:][i+2:]; len(rest) > 0 && rest[0] != "" {
+				enc, kerr := protectKey(rest[0])
+				if kerr != nil {
+					log.Printf("postcheck: шифрование ключа: %v", kerr)
+					return
+				}
+				cfg.PostAPIKey = enc
+				if serr := saveConfig("config.json", cfg); serr != nil {
+					log.Printf("postcheck: сохранение: %v", serr)
+					return
+				}
+				log.Printf("postcheck: ключ зашифрован DPAPI и сохранён (%d байт)", len(enc))
+			}
+			if !postAPIOn(cfg) {
+				log.Printf("postcheck: post_api_url пуст")
+				return
+			}
+			out, perr := externalChat(context.Background(), cfg, "You repeat the user's text in upper case. Return only the text.", sample)
+			log.Printf("postcheck: ошибка=%v ответ=%q", perr, out)
+			return
+		}
 		if arg == "-streamcheck" && i+1 < len(os.Args[1:]) {
 			path := os.Args[1:][i+1]
 			cfg, cerr := loadConfig("config.json")
@@ -1390,7 +1418,7 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 	}
 
 	skipped := ""
-	if chain := punctChain(cfg, chainProfiles(cfg, profileID)); len(chain) > 0 && llmInstalled(cfg) {
+	if chain := punctChain(cfg, chainProfiles(cfg, profileID)); len(chain) > 0 && postReady(cfg) {
 		for i, prof := range chain {
 			label := prof.Name
 			if len(chain) > 1 {
@@ -1614,6 +1642,17 @@ func chainProfiles(cfg *Config, profileID string) []*Profile {
 }
 
 func (a *App) llmProcess(ctx context.Context, prompt, text string) (string, error) {
+	if cfg := a.snapshot(); postAPIOn(cfg) {
+		out, err := externalChat(ctx, cfg, prompt, text)
+		if err != nil {
+			return "", err
+		}
+		out = strings.TrimSpace(out)
+		if out == "" {
+			return "", errors.New("пустой ответ сервера постобработки")
+		}
+		return out, nil
+	}
 	llm, err := a.ensureLLM()
 	if err != nil {
 		return "", err
