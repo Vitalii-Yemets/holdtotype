@@ -7,6 +7,7 @@ import (
 	"holdtotype/internal/commands"
 	"holdtotype/internal/evqueue"
 	"holdtotype/internal/history"
+	"holdtotype/internal/livetail"
 	"holdtotype/internal/profiles"
 	"holdtotype/internal/replace"
 	"unsafe"
@@ -89,6 +90,106 @@ type App struct {
 	altMu   sync.Mutex
 	alt     recognizer
 	altUsed time.Time
+
+	liveMu  sync.Mutex
+	live    *streamSession
+	liveGen int
+	liveFed int
+}
+
+// liveStream feeds the microphone to the streaming recognizer while the
+// recording is still running, and paints what it hears on the plate.
+func (a *App) liveStream(gen int, cfg *Config) {
+	a.mu.Lock()
+	srv := a.srv
+	ready := a.ready
+	rec := a.rec
+	a.mu.Unlock()
+	ss, ok := srv.(*streamServer)
+	if !ok || !ready || rec == nil {
+		return
+	}
+	sess, err := ss.openSession(context.Background(), func(text string) {
+		if a.state.Load() != stRecording {
+			return
+		}
+		a.liveMu.Lock()
+		mine := a.liveGen == gen
+		a.liveMu.Unlock()
+		if mine && cfg.Overlay {
+			overlaySet(ovRecording, livetail.Tail(text, 90))
+		}
+	})
+	if err != nil {
+		log.Printf("живой текст не запустился (%v) — распознаю по окончании", err)
+		return
+	}
+	a.liveMu.Lock()
+	if a.live != nil {
+		a.live.close()
+	}
+	a.live = sess
+	a.liveGen = gen
+	a.liveFed = 0
+	a.liveMu.Unlock()
+	log.Printf("живой текст: поток открыт")
+	offset := 0
+	for {
+		time.Sleep(180 * time.Millisecond)
+		a.liveMu.Lock()
+		mine := a.live == sess && a.liveGen == gen
+		a.liveMu.Unlock()
+		if !mine || a.state.Load() != stRecording {
+			return
+		}
+		chunk, next := rec.TakeFrom(offset)
+		if len(chunk) > 0 {
+			if err := sess.push(chunk); err != nil {
+				log.Printf("живой текст: передача звука оборвалась (%v)", err)
+				return
+			}
+			offset = next
+			a.liveMu.Lock()
+			if a.live == sess {
+				a.liveFed = offset
+			}
+			a.liveMu.Unlock()
+		}
+	}
+}
+
+func (a *App) takeLiveSession(gen int) (*streamSession, int) {
+	a.liveMu.Lock()
+	defer a.liveMu.Unlock()
+	if a.live == nil || a.liveGen != gen {
+		return nil, 0
+	}
+	sess, fed := a.live, a.liveFed
+	a.live = nil
+	return sess, fed
+}
+
+func (a *App) dropLiveSession() {
+	a.liveMu.Lock()
+	sess := a.live
+	a.live = nil
+	a.liveMu.Unlock()
+	if sess != nil {
+		sess.close()
+	}
+}
+
+func (a *App) dropLiveIf(gen int) {
+	a.liveMu.Lock()
+	var sess *streamSession
+	if a.live != nil && a.liveGen == gen {
+		sess = a.live
+		a.live = nil
+	}
+	a.liveMu.Unlock()
+	if sess != nil {
+		sess.close()
+	}
 }
 
 func waitReadyCtx(ctx context.Context, srv recognizer) error {
@@ -260,6 +361,60 @@ func main() {
 				return
 			}
 			log.Printf("движок=%s время=%.2f c текст=%q", srv.engine(), time.Since(started).Seconds(), text)
+			return
+		}
+		if arg == "-streamcheck" && i+1 < len(os.Args[1:]) {
+			path := os.Args[1:][i+1]
+			cfg, cerr := loadConfig("config.json")
+			if cerr != nil {
+				log.Printf("конфигурация: %v", cerr)
+				return
+			}
+			wav, rerr := os.ReadFile(path)
+			if rerr != nil {
+				log.Printf("файл %s: %v", path, rerr)
+				return
+			}
+			pcm := wav
+			if len(wav) > 44 && string(wav[0:4]) == "RIFF" {
+				pcm = wav[44:]
+			}
+			srv, serr := startEngine(cfg, engineStream, logFile)
+			if serr != nil {
+				log.Printf("потоковый распознаватель: %v", serr)
+				return
+			}
+			defer srv.stop()
+			if werr := srv.waitReady(engineReadyTimeout(srv)); werr != nil {
+				log.Printf("потоковый распознаватель не поднялся: %v", werr)
+				return
+			}
+			partials := 0
+			ss := srv.(*streamServer)
+			sess, oerr := ss.openSession(context.Background(), func(text string) {
+				partials++
+				log.Printf("живой текст: %q", livetail.Tail(text, 90))
+			})
+			if oerr != nil {
+				log.Printf("поток не открылся: %v", oerr)
+				return
+			}
+			chunk := sampleRate / 5 * 2
+			started := time.Now()
+			for off := 0; off < len(pcm); off += chunk {
+				end := off + chunk
+				if end > len(pcm) {
+					end = len(pcm)
+				}
+				if perr := sess.push(pcm[off:end]); perr != nil {
+					log.Printf("передача звука: %v", perr)
+					return
+				}
+				time.Sleep(120 * time.Millisecond)
+			}
+			final, ferr := sess.finish(context.Background())
+			log.Printf("streamcheck: партиалов=%d за %.1f c, ошибка=%v, финал=%q",
+				partials, time.Since(started).Seconds(), ferr, final)
 			return
 		}
 		if arg == "-routecheck" {
@@ -869,6 +1024,7 @@ func (a *App) handleCancel() {
 		a.paused = false
 		a.mu.Unlock()
 		rec.Stop()
+		a.dropLiveSession()
 		overlayClearDeadline()
 		a.gen++
 		a.state.Store(stIdle)
@@ -976,6 +1132,9 @@ func (a *App) handleDown(profileID string) {
 		setOverlayPlacement(cfg)
 		overlaySet(ovRecording, tr("ov.speak"))
 	}
+	if m := activeModel(cfg); m != nil && m.Engine == engineStream {
+		go a.liveStream(a.gen, cfg)
+	}
 
 	gen := a.gen
 	overlaySetDeadline(time.Now().Add(time.Duration(cfg.MaxRecordSeconds) * time.Second))
@@ -1040,6 +1199,7 @@ var onlyNoise = regexp.MustCompile(`^[\s.,!?\*\[\]\(\)«»"'…·♪♫~-]*$|^\[
 
 func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, profileID string, targetWnd uintptr) {
 	defer a.post(ptEvent{kind: evDone, gen: gen})
+	defer a.dropLiveIf(gen)
 
 	minBytes := sampleRate * 2 * cfg.MinRecordMs / 1000
 	if len(pcm) < minBytes {
@@ -1155,7 +1315,28 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 	if target != "" && !fastTranslate {
 		recLang = target
 	}
-	text, err := srv.transcribe(ctx, wavFromPCM16(pcm, sampleRate), recLang, cfg.WhisperPrompt, fastTranslate)
+	var text string
+	var err error
+	liveSess, liveFed := a.takeLiveSession(gen)
+	if liveSess != nil && (srv.engine() != engineStream || target != "") {
+		liveSess.close()
+		liveSess = nil
+	}
+	if liveSess != nil {
+		if liveFed < len(pcm) {
+			_ = liveSess.push(pcm[liveFed:])
+		}
+		text, err = liveSess.finish(ctx)
+		if err != nil && ctx.Err() == nil {
+			log.Printf("живой текст не добрался до конца (%v) — распознаю пакетно", err)
+			liveSess, err = nil, nil
+		} else {
+			log.Printf("живой текст: финал получен")
+		}
+	}
+	if liveSess == nil && err == nil {
+		text, err = srv.transcribe(ctx, wavFromPCM16(pcm, sampleRate), recLang, cfg.WhisperPrompt, fastTranslate)
+	}
 	if err != nil {
 		if errors.Is(err, context.Canceled) {
 			log.Printf("распознавание отменено пользователем")
@@ -1649,6 +1830,7 @@ func (a *App) handleMicLost() {
 	a.mu.Unlock()
 	if a.state.Load() == stRecording && rec != nil {
 		rec.Stop()
+		a.dropLiveSession()
 		a.gen++
 		a.state.Store(stIdle)
 		log.Printf("микрофон отключён во время записи — запись прервана")

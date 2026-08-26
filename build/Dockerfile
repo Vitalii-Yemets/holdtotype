@@ -79,6 +79,7 @@ RUN curl -fL --retry 3 -o /s.tar.bz2 \
     && echo "${SHERPA_ONNX_SHA256}  /s.tar.bz2" | sha256sum -c - \
     && mkdir /x && tar -xjf /s.tar.bz2 -C /x --strip-components=1 \
     && cp /x/bin/sherpa-onnx-offline-websocket-server.exe /sherpa-server.exe \
+    && cp /x/bin/sherpa-onnx-online-websocket-server.exe /sherpa-online-server.exe \
     && rm -rf /x /s.tar.bz2
 
 FROM debian:bookworm-slim AS assets
@@ -99,10 +100,10 @@ WORKDIR /p
 COPY --from=client-build /out/holdtotype.exe ./
 COPY --from=whisper-build /bld/bin/whisper-server.exe ./
 COPY --from=llama-build /bld/bin/llama-server.exe ./
-COPY --from=sherpa-fetch /sherpa-server.exe ./
+COPY --from=sherpa-fetch /sherpa-server.exe /sherpa-online-server.exe ./
 COPY --from=assets /config.json ./config.default.json
 COPY README.md ./
-RUN zip -9 -X payload.zip holdtotype.exe whisper-server.exe llama-server.exe sherpa-server.exe config.default.json README.md
+RUN zip -9 -X payload.zip holdtotype.exe whisper-server.exe llama-server.exe sherpa-server.exe sherpa-online-server.exe config.default.json README.md
 
 FROM golang:1.23-bookworm AS setup-build
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -144,6 +145,7 @@ FROM scratch AS dist-slim
 COPY --from=whisper-build /bld/bin/whisper-server.exe /whisper-server.exe
 COPY --from=llama-build /bld/bin/llama-server.exe /llama-server.exe
 COPY --from=sherpa-fetch /sherpa-server.exe /sherpa-server.exe
+COPY --from=sherpa-fetch /sherpa-online-server.exe /sherpa-online-server.exe
 COPY --from=client-build /out/holdtotype.exe /holdtotype.exe
 COPY --from=setup-build /out/holdtotype-setup.exe /holdtotype-setup.exe
 COPY --from=assets /config.json /config.default.json
@@ -154,6 +156,7 @@ ARG WHISPER_MODEL
 COPY --from=whisper-build /bld/bin/whisper-server.exe /whisper-server.exe
 COPY --from=llama-build /bld/bin/llama-server.exe /llama-server.exe
 COPY --from=sherpa-fetch /sherpa-server.exe /sherpa-server.exe
+COPY --from=sherpa-fetch /sherpa-online-server.exe /sherpa-online-server.exe
 COPY --from=client-build /out/holdtotype.exe /holdtotype.exe
 COPY --from=assets /ggml.bin /models/ggml-${WHISPER_MODEL}.bin
 COPY --from=assets /config.json /config.default.json

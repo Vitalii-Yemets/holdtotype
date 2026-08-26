@@ -44,7 +44,7 @@ func runUninstall(silent bool) {
 
 	_ = hiddenCmd("taskkill", "/F", "/IM", appid.Exe, "/FI", fmt.Sprintf("PID ne %d", os.Getpid())).Run()
 	ps := fmt.Sprintf(
-		`Get-Process whisper-server,llama-server,sherpa-server -ErrorAction SilentlyContinue | Where-Object { $_.Path -like '%s*' } | Stop-Process -Force`,
+		`Get-Process whisper-server,llama-server,sherpa-server,sherpa-online-server -ErrorAction SilentlyContinue | Where-Object { $_.Path -like '%s*' } | Stop-Process -Force`,
 		strings.ReplaceAll(dir, "'", "''"))
 	_ = hiddenCmd("powershell", "-NoProfile", "-NonInteractive", "-Command", ps).Run()
 	time.Sleep(500 * time.Millisecond)
@@ -53,7 +53,7 @@ func runUninstall(silent bool) {
 	if !silent {
 		delData = msgBoxYesNo(tr("un.title"), tr("un.data"))
 	}
-	files := []string{"whisper-server.exe", "llama-server.exe", "sherpa-server.exe", "config.default.json", "README.md"}
+	files := []string{"whisper-server.exe", "llama-server.exe", "sherpa-server.exe", "sherpa-online-server.exe", "config.default.json", "README.md"}
 	if delData {
 		files = append(files, "config.json", appid.LogFile, appid.LogFile+".old", appid.HistoryFile)
 		_ = os.RemoveAll(filepath.Join(dir, "models"))

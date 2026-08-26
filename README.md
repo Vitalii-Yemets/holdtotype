@@ -41,6 +41,7 @@ Hold a hotkey — speak. Release — the transcribed text is pasted right where 
 - 🌍 **Translation powered by Whisper** — to English via the native translate mode, to Ukrainian / German / French / Spanish / Italian / Polish / Russian by forcing the output language. Three modes: always translate to the target language, ask on the plate before every dictation, or ask with a countdown.
 - 🤖 **Local LLM post-processing** (llama.cpp) — a chain of prompts removes filler words, changes style, formats text; each prompt can have its own hotkey; a test field runs a sample through the live model right from Settings.
 - 🇷🇺 **Every language picks its own model** — a preset row per language: out of the box Whisper Medium serves them all, and any row can be changed — Russian to GigaAM v3 through sherpa-onnx (punctuates by itself; measured on the same 11-second file against Whisper: 0.47 s against 11.6 s, 277 MB of RAM against 814 MB, no mistakes against three), Ukrainian to Moonshine, all of Europe to Parakeet. Nothing is forced: the app proposes, you assign. The engine a dictation needs starts in about a second and a second engine unloads itself after ten idle minutes, so two models never sit in memory for nothing — and a button unloads them right now, giving the memory back until the next dictation. A model that cannot translate says so in its preset row, in the library and in the Translation block — and when you ask it to translate anyway, the overlay asks whether Whisper should step in.
+- ⚡ **Live text while you speak** — assign Nemotron 3.5 (40 languages, punctuates and capitalizes by itself) to a language, and the words appear on the plate as you say them, refreshed a few times a second; the plate keeps to one quiet line by folding the beginning into an ellipsis. Release the key and the finished phrase goes through the same replacements, prompts and insertion as any other dictation. Pauses do not lose text: the phrase is stitched together across them. When the stream cannot start, the dictation falls back to ordinary recognition on the same model — nothing is lost.
 - 🧭 **Model picker and honest numbers** — three questions (language, priority, translation) and the catalog answers with a model and the reason. Every entry shows the memory it will actually take, measured against what is free right now, and filters narrow the list to Russian, multilingual, punctuating or simply "fits in memory".
 - ✏️ **Punctuation your way** — take it from the recognition model, have the editor model add it, or strip it and get plain lowercase text.
 - 🔐 **Files that are what they claim** — every model in the catalog carries a reference SHA-256; a freshly downloaded file that does not match is deleted instead of used, one button re-checks the models already installed, and the same check runs on the installer an update downloads.
@@ -167,10 +168,12 @@ The result lands in `dist/`:
 | `holdtotype.exe` | tray client (Go + WinAPI, WebView2) |
 | `whisper-server.exe` | recognition (whisper.cpp), static build |
 | `sherpa-server.exe` | recognition (sherpa-onnx), official static build, pinned and checksum-verified |
+| `sherpa-online-server.exe` | streaming recognition (sherpa-onnx), from the same pinned archive |
 | `llama-server.exe` | post-processing (llama.cpp), static build |
 | `holdtotype-setup.exe` | installer (Go + WebView2, payload embedded) |
 | `models/ggml-*.bin` | the Whisper model |
 | `models/gigaam-v3/` | the GigaAM v3 model: encoder, decoder, joiner, tokens |
+| `models/nemotron-3.5/` | the Nemotron streaming model, when downloaded |
 | `config.default.json` | default settings |
 
 The pipeline: MinGW-w64 cross-compilation of whisper.cpp and llama.cpp inside a Linux container, the Go client with cgo (microphone capture), icon generation, installer packaging — all in `build/Dockerfile`. Both engines are pinned to specific upstream versions (`WHISPER_CPP_VERSION`, `LLAMA_CPP_VERSION` build args), so builds stay reproducible.
@@ -226,7 +229,7 @@ Everything shipped in the archive, and every model the app offers to download, i
 |---|---|---|
 | [whisper.cpp](https://github.com/ggml-org/whisper.cpp) | `whisper-server.exe` — recognition for every language but Russian | MIT |
 | [llama.cpp](https://github.com/ggml-org/llama.cpp) | `llama-server.exe` — post-processing | MIT |
-| [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) | `sherpa-server.exe` — recognition for Russian | Apache 2.0 |
+| [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) | `sherpa-server.exe` and `sherpa-online-server.exe` — recognition beyond Whisper, batch and streaming | Apache 2.0 |
 | [malgo](https://github.com/gen2brain/malgo) / miniaudio | microphone capture | Unlicense (public domain) |
 | [gorilla/websocket](https://github.com/gorilla/websocket) | talking to the Russian engine | BSD-2-Clause |
 | [go-webview2](https://github.com/jchv/go-webview2) | the settings window | MIT |
@@ -236,6 +239,7 @@ Everything shipped in the archive, and every model the app offers to download, i
 | [GigaAM v3](https://github.com/salute-developers/GigaAM) | the Russian model, converted for sherpa-onnx | MIT |
 | [Parakeet TDT 0.6B v3](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3) | 25 European languages in one narrow model, converted for sherpa-onnx | CC-BY-4.0 |
 | [GigaAM v2](https://github.com/salute-developers/GigaAM) | the previous generation of the Russian model, converted for sherpa-onnx | MIT |
+| [Nemotron 3.5 ASR Streaming](https://huggingface.co/Masterx/sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-560ms-2026-06-11) | 40 languages with live partial text, converted for sherpa-onnx | OpenMDW-1.1 |
 | [Moonshine Base uk](https://github.com/moonshine-ai/moonshine) | the Ukrainian model, converted for sherpa-onnx; its licence forbids redistribution, so the app links to the archive instead of downloading it | Moonshine Community License (non-commercial) |
 | Qwen2.5-1.5B-Instruct | the editing model the app suggests first | Apache 2.0 |
 

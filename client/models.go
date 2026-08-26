@@ -44,7 +44,7 @@ type modelInfo struct {
 }
 
 func (m *modelInfo) ramEstimateMB() int {
-	if m.Engine == engineSherpa {
+	if m.Engine == engineSherpa || m.Engine == engineStream {
 		return m.SizeMB * 12 / 10
 	}
 	return m.SizeMB*15/10 + 60
@@ -112,6 +112,17 @@ var modelCatalog = []modelInfo{
 			"tokens.txt":        "d58544679ea4bc6ac563d1f545eb7d474bd6cfa467f0a6e2c1dc1c7d37e3c35d",
 		},
 		BaseURL: "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8/resolve/main/"},
+	{ID: "nemotron-3.5", SizeMB: 651, NameKey: "Nemotron 3.5", DescKey: "S_M_NEMOTRON",
+		Engine: engineStream, Dir: "nemotron-3.5", Langs: "*", Auto: true, Punct: true,
+		Speed: 3, Accuracy: 5,
+		Files: []string{"encoder.int8.onnx", "decoder.int8.onnx", "joiner.int8.onnx", "tokens.txt"},
+		Hashes: map[string]string{
+			"encoder.int8.onnx": "874275f509c86e331eb1c1f1e2f7fa48c39144de94f98ccbe6ae3fcdc18df38a",
+			"decoder.int8.onnx": "19f9c98fc6d0a2c33a65a43b36fdb2e914c26c0aa9764be3aebc502a1e982fb0",
+			"joiner.int8.onnx":  "4101c7c679a0bc30483794b27a059e34e79232aa2068d78d51231a22c8b0d7ce",
+			"tokens.txt":        "32be3ebfabfff475d64d7829b435f1c7856a1c497907def5c41d54ca9f1eccfd",
+		},
+		BaseURL: "https://huggingface.co/Masterx/sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-560ms-2026-06-11/resolve/main/"},
 	{ID: "moonshine-uk", SizeMB: 135, NameKey: "Moonshine Base uk", DescKey: "S_M_MOONUK",
 		Engine: engineSherpa, Dir: "moonshine-uk", Langs: "uk", Speed: 5, Accuracy: 3,
 		Manual:  true,
@@ -183,7 +194,7 @@ func scanLocalModels() {
 }
 
 func (m *modelInfo) paths() []string {
-	if m.Engine == engineSherpa {
+	if m.Dir != "" {
 		out := make([]string, 0, len(m.Files))
 		for _, f := range m.Files {
 			out = append(out, filepath.Join("models", m.Dir, f))
@@ -194,7 +205,7 @@ func (m *modelInfo) paths() []string {
 }
 
 func (m *modelInfo) installed() bool {
-	if m.Engine == engineSherpa && len(m.Files) == 0 {
+	if m.Dir != "" && len(m.Files) == 0 {
 		_, err := sherpaModelArgs(filepath.Join("models", m.Dir))
 		return err == nil
 	}
@@ -326,7 +337,7 @@ func (a *App) modelRows() string {
 }
 
 func (m *modelInfo) modelPath() string {
-	if m.Engine == engineSherpa {
+	if m.Dir != "" {
 		return "models/" + m.Dir
 	}
 	return "models/" + m.File
@@ -354,7 +365,7 @@ func (a *App) downloadModel(id string) {
 	if m == nil {
 		return
 	}
-	if m.Engine == engineSherpa {
+	if m.Dir != "" {
 		a.startMultiDownload(id, m)
 		return
 	}
@@ -676,7 +687,7 @@ func (a *App) deleteModel(id string, force bool) string {
 		return ""
 	}
 	dlMu.Unlock()
-	if m.Engine == engineSherpa {
+	if m.Dir != "" {
 		dir := filepath.Join("models", m.Dir)
 		if err := os.RemoveAll(dir); err != nil {
 			return humanError(err)
@@ -866,7 +877,7 @@ func stateForModel(cfg *Config, m *modelInfo) string {
 	if m == nil {
 		return "missing"
 	}
-	if m.Engine != engineSherpa && strings.TrimSpace(cfg.ServerURL) != "" {
+	if m.Engine == engineWhisper && strings.TrimSpace(cfg.ServerURL) != "" {
 		return "remote"
 	}
 	if m.installed() {

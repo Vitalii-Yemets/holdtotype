@@ -312,6 +312,18 @@ func (r *Recorder) SetPaused(v bool) {
 	r.mu.Unlock()
 }
 
+// TakeFrom hands out the sound recorded since the given offset, so a live
+// recognizer can eat the phrase while it is still being spoken.
+func (r *Recorder) TakeFrom(offset int) ([]byte, int) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if !r.recording || offset < 0 || offset >= len(r.buf) {
+		return nil, offset
+	}
+	chunk := append([]byte(nil), r.buf[offset:]...)
+	return chunk, len(r.buf)
+}
+
 func (r *Recorder) Stop() []byte {
 	r.mu.Lock()
 	r.recording = false

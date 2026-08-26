@@ -14,6 +14,7 @@ import (
 const (
 	engineWhisper = "whisper"
 	engineSherpa  = "sherpa"
+	engineStream  = "stream"
 )
 
 type recognizer interface {
@@ -37,8 +38,11 @@ func dialOK(addr string) bool {
 }
 
 func startEngine(cfg *Config, engine string, logw io.Writer) (recognizer, error) {
-	if engine == engineSherpa {
+	switch engine {
+	case engineSherpa:
 		return startSherpaServer(cfg, logw)
+	case engineStream:
+		return startStreamServer(cfg, logw)
 	}
 	return startWhisperServer(cfg, logw)
 }
@@ -105,21 +109,29 @@ func applyPreset(cfg *Config) bool {
 		return false
 	}
 	changed := false
-	if m.Engine == engineSherpa {
+	switch m.Engine {
+	case engineSherpa:
 		if nd := m.modelPath(); cfg.SherpaModel != nd {
 			cfg.SherpaModel = nd
 			changed = true
 		}
+	case engineStream:
+		if nd := m.modelPath(); cfg.StreamModel != nd {
+			cfg.StreamModel = nd
+			changed = true
+		}
+	default:
+		if nm := m.modelPath(); cfg.Model != nm {
+			cfg.Model = nm
+			changed = true
+		}
+	}
+	if m.Engine != engineWhisper {
 		if w := bestInstalledWhisper(); w != nil {
 			if nm := w.modelPath(); cfg.Model != nm {
 				cfg.Model = nm
 				changed = true
 			}
-		}
-	} else {
-		if nm := m.modelPath(); cfg.Model != nm {
-			cfg.Model = nm
-			changed = true
 		}
 	}
 	return changed
@@ -128,16 +140,25 @@ func applyPreset(cfg *Config) bool {
 func engineTranslates(name string) bool { return name == engineWhisper }
 
 func activeModelPath(cfg *Config) string {
-	if primaryEngine(cfg) == engineSherpa {
+	switch primaryEngine(cfg) {
+	case engineSherpa:
 		return cfg.SherpaModel
+	case engineStream:
+		return cfg.StreamModel
 	}
 	return cfg.Model
 }
 
 func missingModelPath(cfg *Config) string {
-	if primaryEngine(cfg) == engineSherpa {
+	switch primaryEngine(cfg) {
+	case engineSherpa:
 		if _, err := sherpaModelArgs(cfg.SherpaModel); err != nil {
 			return cfg.SherpaModel
+		}
+		return ""
+	case engineStream:
+		if _, err := streamModelArgs(cfg.StreamModel); err != nil {
+			return cfg.StreamModel
 		}
 		return ""
 	}

@@ -84,6 +84,9 @@ type Config struct {
 	SherpaExe        string            `json:"sherpa_exe"`
 	SherpaPort       int    `json:"sherpa_port"`
 	SherpaModel      string `json:"sherpa_model"`
+	StreamExe        string `json:"stream_exe"`
+	StreamPort       int    `json:"stream_port"`
+	StreamModel      string `json:"stream_model"`
 	ConfigVersion    int    `json:"config_version"`
 	SherpaThreads    int    `json:"sherpa_threads"`
 	EngineIdleMin    int    `json:"engine_idle_minutes"`
@@ -190,6 +193,9 @@ func defaultConfig() *Config {
 		ServerExe:        "whisper-server.exe",
 		SherpaExe:        "sherpa-server.exe",
 		SherpaPort:       8912,
+		StreamExe:        "sherpa-online-server.exe",
+		StreamPort:       8913,
+		StreamModel:      "models/nemotron-3.5",
 		ConfigVersion:    configVersion,
 		SherpaThreads:    4,
 		EngineIdleMin:    10,
@@ -387,6 +393,15 @@ func loadConfig(path string) (*Config, error) {
 	}
 	if cfg.SherpaModel == "" {
 		cfg.SherpaModel = "models/gigaam-v3"
+	}
+	if cfg.StreamExe == "" {
+		cfg.StreamExe = "sherpa-online-server.exe"
+	}
+	if cfg.StreamPort <= 0 {
+		cfg.StreamPort = 8913
+	}
+	if cfg.StreamModel == "" {
+		cfg.StreamModel = "models/nemotron-3.5"
 	}
 	if !validOverlayPos(cfg.OverlayPos) {
 		cfg.OverlayPos = ovPosBottom
