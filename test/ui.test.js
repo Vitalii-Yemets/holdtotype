@@ -402,7 +402,7 @@ function check(name, actual, expected) {
     "langlist", "munload", "language", "threads", "punctuation", "whisper_prompt", "profbody", "dict_model", "tr_engine",
     "tr_default", "translate_target", "translate_ask", "translate_ask_seconds", "tr_hotkey",
     "tl_en", "ui_language", "upd_check", "check_updates", "server_autostart", "server_port",
-    "server_exe", "server_url", "proc-models", "proc-search", "ver2", "autorun", "pause_hotkey",
+    "server_exe", "server_url", "proc-models", "proc-search", "ver2", "autorun", "pause_hotkey", "post_enabled",
   ];
   const missing = everySetting.filter((id) => !d.getElementById(id));
   check("every setting is present in the new window", missing, []);
@@ -712,7 +712,7 @@ function check(name, actual, expected) {
   del.click(); await sleep(150);
   d.querySelector(".modal .btn.yes").click(); await sleep(250);
   check("the question closes with the answer", !!d.querySelector(".modal-bg"), false);
-  check("model list empty after delete", d.querySelectorAll('#proc-models input[name="llmmdl"]').length, 0);
+  check("model list empty after delete", d.querySelectorAll('#proc-models .pcard').length, 0);
 
   d.getElementById("hf_q").value = "qwen";
   d.getElementById("hf_go").click(); await sleep(300);
@@ -775,6 +775,21 @@ function check(name, actual, expected) {
   check("the prompts stand on their own page too", !!d.querySelector("#p-post #profbody"), true);
   check("out of the expert fold", !!d.querySelector("#p-post .card[data-adv]"), false);
   tab("post"); await sleep(60);
+  const master = d.getElementById("post_enabled");
+  check("post-processing has one master switch, on by default", master.checked, true);
+  master.checked = false; master.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(200);
+  check("turning it off is saved", w.lastSaveForm.post_enabled, false);
+  check("and the cards below dim out", d.getElementById("post_model_card").className.includes("offdim") && d.getElementById("post_prompts_card").className.includes("offdim"), true);
+  check("the heading says plainly it is off", d.getElementById("post_off_note").textContent, "off");
+  master.checked = true; master.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(200);
+  check("turning it back lights them up", d.getElementById("post_model_card").className.includes("offdim"), false);
+  check("the local model is the source out of the box", d.getElementById("src_local").className.includes("on"), true);
+  check("the external card says it is not in use", d.getElementById("src_api").className.includes("idle"), true);
+  d.getElementById("src_api").click(); await sleep(200);
+  check("a click on the idle card switches the source", w.lastSaveForm.post_source, "api");
+  check("and the marks trade places", d.getElementById("src_api").className.includes("on") && d.getElementById("src_local").className.includes("idle"), true);
+  d.getElementById("src_local").click(); await sleep(200);
+  check("switching back is one click too", w.lastSaveForm.post_source, "local");
   const pu = d.getElementById("post_api_url");
   check("an external post-processing server can be set", !!pu, true);
   check("but nothing is filled in by default", pu.value, "");

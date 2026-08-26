@@ -118,6 +118,8 @@ type settingsForm struct {
 	HistoryDays      int    `json:"history_days"`
 	HistoryMax       int    `json:"history_max"`
 	HistorySkip      string `json:"history_skip"`
+	PostEnabled      *bool  `json:"post_enabled"`
+	PostSource       string `json:"post_source"`
 	PostAPIURL       string `json:"post_api_url"`
 	PostAPIModel     string `json:"post_api_model"`
 	PostAPITimeout   int    `json:"post_api_timeout_s"`
@@ -699,6 +701,12 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 		c.HistoryMax = f.HistoryMax
 	}
 	c.HistorySkip = strings.TrimSpace(f.HistorySkip)
+	if f.PostEnabled != nil {
+		c.PostEnabled = *f.PostEnabled
+	}
+	if f.PostSource == "local" || f.PostSource == "api" {
+		c.PostSource = f.PostSource
+	}
 	if validPostAPIURL(f.PostAPIURL) {
 		c.PostAPIURL = strings.TrimSpace(f.PostAPIURL)
 	}
@@ -912,6 +920,8 @@ func settingsHTML(cfg *Config, tab string) string {
 		"history_days":            cfg.HistoryDays,
 		"history_max":             cfg.HistoryMax,
 		"history_skip":            cfg.HistorySkip,
+		"post_enabled":            cfg.PostEnabled,
+		"post_source":              cfg.PostSource,
 		"post_api_url":            cfg.PostAPIURL,
 		"post_api_model":          cfg.PostAPIModel,
 		"post_api_timeout_s":      cfg.PostAPITimeout,
@@ -975,6 +985,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"asauto": "S_AS_AUTO", "pickhint": "S_PICK_HINT", "assigned": "S_ASSIGNED_CHIP", "recchip": "S_REC_CHIP",
 		"backauto": "S_BACK_AUTO", "langsc": "S_LANGS_COUNT", "langsq": "S_LANGS_UNKNOWN",
 		"tren": "S_TR_EN", "translist": "S_TR_LIST", "dlgoing": "S_DL_GOING",
+		"srcused": "S_SRC_USED", "srcidle": "S_SRC_IDLE", "postoff": "S_POST_OFF", "hfgo": "S_HF_GO",
 		"notforlang": "S_NOT_FOR_LANG", "notinstalled": "S_NOT_INSTALLED",
 		"manualnote": "S_MANUAL_NOTE", "manuallink": "S_MANUAL_LINK",
 		"unload": "S_UNLOAD_GO", "unloaded": "S_UNLOADED",
@@ -1330,6 +1341,25 @@ button.mini.danger:hover{color:var(--bad);border-color:var(--badline);background
 .code{background:var(--field);border:1px solid var(--line);border-radius:calc(var(--r) * .35);padding:0 5px;font-size:10.5px;color:var(--green);white-space:nowrap}
 input[type=text],input[type=number],input[type=password],select,button.mini{height:var(--ctlh,30px)}
 button.mini{display:inline-flex;align-items:center;justify-content:center}
+.srccard{border:1px solid var(--line);border-radius:var(--r);background:var(--field);padding:11px 14px;margin:9px 0}
+.srccard .srchead{display:flex;align-items:center;gap:10px;font-size:12.5px;font-weight:var(--wb);color:var(--green);margin:0 0 7px}
+.srccard.on{border-color:var(--hi);box-shadow:var(--higlow)}
+.srccard.idle{cursor:pointer}
+.srccard.idle>*{opacity:.38;pointer-events:none}
+.srccard.idle:hover{border-color:var(--dim)}
+.srcstate{font-size:9px;letter-spacing:.1em;text-transform:uppercase;font-weight:400;color:var(--dim)}
+.srccard.on .srcstate{border:1px solid var(--hi);color:var(--hi);padding:1px 7px;border-radius:calc(var(--r) * .4)}
+.card.offdim>:not(h2){opacity:.38;pointer-events:none}
+.postoff{font-size:11px;color:var(--dim);font-weight:400;letter-spacing:0;text-transform:none}
+.postoff:empty{display:none}
+.srchbox{display:flex;align-items:center;gap:8px;flex:1;min-width:0;border:1px solid var(--line);border-radius:calc(var(--r) * .55);background:var(--field);height:var(--ctlh,30px);padding:0 5px 0 10px}
+.srchbox:focus-within{border-color:var(--dim)}
+.srchbox svg{color:var(--faint);flex:none}
+.srchbox input[type=text]{flex:1;min-width:0;width:auto;height:auto;border:0;background:none;box-shadow:none;outline:none;padding:0}
+.srchbox input[type=text]:focus{border:0;box-shadow:none;outline:none}
+.srchbox .iconbtn{flex:none}
+.srchbox button.mini{height:22px;font-size:10.5px;padding:0 8px;flex:none}
+input::placeholder{color:var(--faint)}
 .ovscheme{position:relative;flex:none;width:176px;height:99px;border:1px solid var(--line);border-radius:calc(var(--r) * .4);background:var(--field);touch-action:none}
 .ovscheme.off{opacity:.35;pointer-events:none}
 .ovdot{position:absolute;width:16px;height:16px;margin:-8px 0 0 -8px;padding:0;appearance:none;border:1px solid var(--dim);border-radius:50%;background:var(--panel);cursor:pointer}
@@ -1344,10 +1374,6 @@ button.mini{display:inline-flex;align-items:center;justify-content:center}
 .miclevel i.on{background:var(--hi);border-color:var(--hi);box-shadow:var(--higlow)}
 .miclevel.grow{width:100%;overflow:hidden}
 .lvlrow .miclevel.grow{flex:0 0 auto;width:min(320px,100%);min-width:0}
-#hf_clr{appearance:none;background:none;border:0;font:inherit;position:absolute;right:9px;top:50%;transform:translateY(-50%);color:var(--dim);cursor:pointer;display:none;font-size:13px;padding:2px 4px}
-#hf_clr:hover{color:var(--green);text-shadow:var(--glow)}
-#hf_go{appearance:none;background:none;border:0;font:inherit;position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--dim);cursor:pointer;line-height:0;padding:3px}
-#hf_go:hover{color:var(--green);filter:drop-shadow(0 0 4px rgba(var(--rgb),.6))}
 .hfrepo{appearance:none;background:none;border:0;font:inherit;color:inherit;display:flex;align-items:center;gap:9px;flex:1;min-width:0;text-align:left;cursor:pointer;padding:2px 0}
 .hfrepo .mdesc{flex:1;color:var(--dim);min-width:0;overflow:hidden;text-overflow:ellipsis}
 .hfupd{color:var(--dim);font-size:12px;flex:none}
@@ -1475,7 +1501,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
    <button class="mini" id="state_active_btn" data-goto="models">{{S_CHANGE_MODEL}}</button></div>
   <div class="scard"><span class="k">{{S_STATE_PROC}}</span>
    <span class="v"><i class="led" id="state_llm_led"></i><span id="state_llm">—</span></span>
-   <button class="mini" id="state_llm_btn" data-goto="models">{{S_PICK_MODEL}}</button></div>
+   <button class="mini" id="state_llm_btn" data-goto="post">{{S_PICK_MODEL}}</button></div>
  </div>
  <h2 class="sect">{{S_STATE_USED}}</h2>
  <div id="state_assigned"></div>
@@ -1706,28 +1732,35 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
 
 <div class="page" role="tabpanel" aria-hidden="true" id="p-post">
  <div class="card">
-  <h2 class="sect">{{S_SEC_LLM}}<span class="hfhome" onclick="appHFHome()" title="huggingface.co">Hugging Face ↗</span></h2>
-  <div id="proc-models" class="spage on"></div>
-  <div id="proc-search" class="spage on"></div>
+  <h2 class="sect">{{S_NAV_POST}}<input type="checkbox" id="post_enabled"><span class="postoff" id="post_off_note"></span></h2>
+  <div class="hint">{{S_POST_HINT}}</div>
  </div>
- <div class="card">
+ <div class="card" id="post_model_card">
+  <h2 class="sect">{{S_POST_MODEL}}</h2>
+  <div class="srccard" id="src_local">
+   <h3 class="srchead">{{S_SRC_LOCAL}}<span class="srcstate" id="src_local_state"></span><span class="hfhome" onclick="appHFHome()" title="huggingface.co">Hugging Face ↗</span></h3>
+   <div id="proc-search" class="spage on"></div>
+   <div id="proc-models" class="spage on"></div>
+  </div>
+  <div class="srccard" id="src_api">
+   <h3 class="srchead">{{S_POSTAPI}}<span class="srcstate" id="src_api_state"></span></h3>
+   <div class="hint">{{S_POSTAPI_HINT}}</div>
+   <div class="row"><label>{{S_POSTAPI_URL}}<span class="sub">{{S_POSTAPI_URL_SUB}}</span></label>
+    <input type="text" id="post_api_url" placeholder="https://api.openai.com/v1"></div>
+   <div class="note warn" id="postapi_warn"></div>
+   <div class="row"><label>{{S_POSTAPI_MODEL}}</label>
+    <input type="text" id="post_api_model" placeholder="gpt-4.1-mini"></div>
+   <div class="row"><label>{{S_POSTAPI_KEY}}<span class="sub" id="postapi_keystate"></span></label>
+    <input type="password" id="post_api_key_new" autocomplete="off">
+    <button type="button" class="mini" id="postapi_keysave">{{S_POSTAPI_SAVE}}</button></div>
+   <div class="row"><label>{{S_POSTAPI_TIMEOUT}}</label>
+    <select id="post_api_timeout_s"><option value="10">10 s</option><option value="20">20 s</option><option value="30">30 s</option><option value="60">60 s</option><option value="120">120 s</option></select></div>
+  </div>
+ </div>
+ <div class="card" id="post_prompts_card">
   <h2 class="sect">{{S_SUB_PROMPTS}}</h2>
   <div class="hint">{{S_LLM_HINT}}</div>
   <div id="profbody"></div>
- </div>
- <div class="card">
-  <h2 class="sect">{{S_POSTAPI}}</h2>
-  <div class="hint">{{S_POSTAPI_HINT}}</div>
-  <div class="row"><label>{{S_POSTAPI_URL}}<span class="sub">{{S_POSTAPI_URL_SUB}}</span></label>
-   <input type="text" id="post_api_url" placeholder="https://api.openai.com/v1"></div>
-  <div class="note warn" id="postapi_warn"></div>
-  <div class="row"><label>{{S_POSTAPI_MODEL}}</label>
-   <input type="text" id="post_api_model" placeholder="gpt-4.1-mini"></div>
-  <div class="row"><label>{{S_POSTAPI_KEY}}<span class="sub" id="postapi_keystate"></span></label>
-   <input type="password" id="post_api_key_new" autocomplete="off">
-   <button type="button" class="mini" id="postapi_keysave">{{S_POSTAPI_SAVE}}</button></div>
-  <div class="row"><label>{{S_POSTAPI_TIMEOUT}}</label>
-   <select id="post_api_timeout_s"><option value="10">10 s</option><option value="20">20 s</option><option value="30">30 s</option><option value="60">60 s</option><option value="120">120 s</option></select></div>
  </div>
 </div>
 
@@ -1920,6 +1953,8 @@ let exeStored = CFG.server_exe || "";
 let exeUnlocked = false;
 let remoteURL = (CFG.server_url || "").trim();
 let postURL = (CFG.post_api_url || "").trim();
+let postEnabled = CFG.post_enabled !== false;
+let postSource = CFG.post_source === "api" ? "api" : "local";
 const nums  = ["threads","min_record_ms","max_record_seconds","translate_ask_seconds","server_port","paste_delay_ms","history_days","history_max","post_api_timeout_s"];
 const sels  = ["ui_language","language","sound_theme","translate_target","translate_ask","hotkey_mode","theme","skin"];
 const trAll = ["en","de","fr","es","it","pl","ru","uk"];
@@ -2142,12 +2177,14 @@ async function refreshLLM(){
   }
   installed.forEach(m=>{
     const div = document.createElement("div");
-    div.className = "mrow";
-    const checked = selLLM === m.file ? " checked" : "";
-    const right = '<button class="iconbtn danger" title="'+L.del+'" data-a="ldel" data-f="'+esc(m.file)+'">&#10005;</button>';
-    div.innerHTML = '<input type="radio" name="llmmdl" value="'+esc(m.file)+'"'+checked+'>'+
-      '<span class="mdesc" style="flex:1;color:var(--green)">'+esc(m.file)+'</span>'+
-      '<span class="msize">'+m.size+' MB</span><span>'+right+'</span>';
+    const cur = selLLM === m.file;
+    div.className = "pcard" + (cur ? " cur" : " pickable");
+    div.dataset.f = m.file;
+    div.innerHTML = '<span class="pmain"><span class="pname">'+esc(m.file)+(cur?' <span class="pchip on">'+L.srcused+'</span>':"")+'</span>'+
+      '<span class="pmeta">'+m.size+' MB</span></span>'+
+      '<span class="pact">'+(cur?'<span class="pcur">&#10003;</span>':"")+
+      '<button class="iconbtn danger" title="'+L.del+'" data-a="ldel" data-f="'+esc(m.file)+'">&#10005;</button></span>';
+    if(!cur) div.onclick = async (e)=>{ if(e.target.closest("button")) return; selLLM = m.file; await doSave(); refreshLLM(); };
     body.appendChild(div);
   });
   let busy = false;
@@ -2161,9 +2198,6 @@ async function refreshLLM(){
       div.innerHTML = '<span class="mdesc" style="flex:1">'+esc(d.file)+'</span><span class="mpct">! '+esc(d.err)+'</span>';
     }
     body.appendChild(div);
-  });
-  body.querySelectorAll('input[name="llmmdl"]').forEach(r=>{
-    r.onchange = async ()=>{ selLLM = r.value; await doSave(); refreshLLM(); };
   });
   body.querySelectorAll("button[data-a='lcancel']").forEach(b=>{
     b.onclick = async ()=>{
@@ -2197,10 +2231,10 @@ function initHFBox(){
   const sbody = document.getElementById("proc-search");
   if(!sbody) return;
   sbody.innerHTML = '<div class="row" style="padding-top:0">'+
-    '<span style="position:relative;flex:1;display:flex;min-width:0">'+
-    '<input type="text" id="hf_q" placeholder="'+L.hfph+'" style="flex:1;min-width:0;padding-left:34px;padding-right:30px">'+
-    '<button type="button" id="hf_clr" title="'+L.cancel+'">&#10005;</button>'+
-    '<button type="button" id="hf_go" title="'+L.hfph+'">'+I_FIND+'</button></span></div>'+
+    '<span class="srchbox">'+I_FIND+
+    '<input type="text" id="hf_q" placeholder="'+L.hfph+'">'+
+    '<button type="button" class="iconbtn" id="hf_clr" title="'+L.cancel+'" style="display:none">&#10005;</button>'+
+    '<button type="button" class="mini" id="hf_go">'+L.hfgo+'</button></span></div>'+
     '<div class="ramline" id="hf_ramline"></div>'+
     '<div class="row" style="padding-top:2px"><label style="flex:none"><input type="checkbox" id="hf_fit" checked> '+L.hffit+'</label></div>'+
     '<div id="hf_results"></div>';
@@ -3035,6 +3069,37 @@ function initPostAPI(){
     toast(r.message, r.severity);
     updPostKeyState();
   };
+  const master = document.getElementById("post_enabled");
+  master.checked = CFG.post_enabled !== false;
+  master.addEventListener("change", e=>{ e.stopPropagation(); postEnabled = master.checked; applyPostState(); doSave(); });
+  document.querySelectorAll(".srccard").forEach(c=>{
+    c.addEventListener("click", ()=>{
+      if(!postEnabled || !c.classList.contains("idle")) return;
+      postSource = c.id === "src_api" ? "api" : "local";
+      applyPostState();
+      doSave();
+      refreshLLM();
+    });
+  });
+  applyPostState();
+}
+function applyPostState(){
+  const offNote = document.getElementById("post_off_note");
+  if(offNote) offNote.textContent = postEnabled ? "" : L.postoff;
+  ["post_model_card", "post_prompts_card"].forEach(id=>{
+    const c = document.getElementById(id);
+    if(c) c.classList.toggle("offdim", !postEnabled);
+  });
+  const mark = (id, on)=>{
+    const c = document.getElementById(id);
+    if(!c) return;
+    c.classList.toggle("on", on);
+    c.classList.toggle("idle", !on);
+    const st = c.querySelector(".srcstate");
+    if(st) st.textContent = on ? L.srcused : L.srcidle;
+  };
+  mark("src_local", postSource !== "api");
+  mark("src_api", postSource === "api");
 }
 function syncTrControls(){
   const always = document.getElementById("tr_default").checked;
@@ -3058,6 +3123,8 @@ async function doSave(){
     overlay_monitor: (document.getElementById("overlay_monitor")||{}).value || "",
     overlay_custom: ovCustom,
     post_api_url: postURL,
+    post_enabled: postEnabled,
+    post_source: postSource,
     mic_device: micSel.value,
     punctuation: document.getElementById("punctuation").value,
     ui_level: "all",

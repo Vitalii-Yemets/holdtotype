@@ -137,6 +137,8 @@ type Config struct {
 	HistoryDays         int                `json:"history_days"`
 	HistoryMax          int                `json:"history_max"`
 	HistorySkip         string             `json:"history_skip"`
+	PostEnabled         bool               `json:"post_enabled"`
+	PostSource          string             `json:"post_source"`
 	PostAPIURL          string             `json:"post_api_url"`
 	PostAPIModel        string             `json:"post_api_model"`
 	PostAPIKey          string             `json:"post_api_key"`
@@ -227,6 +229,8 @@ func defaultConfig() *Config {
 		LLMPort:          8911,
 		LLMExe:           "llama-server.exe",
 		LLMModel:         "models/" + llmFile,
+		PostEnabled:      true,
+		PostSource:       "local",
 		WizardDone:       true,
 		HistoryDays:      history.DefaultKeepDays,
 		HistoryMax:       history.DefaultMax,
@@ -305,6 +309,7 @@ func loadConfig(path string) (*Config, error) {
 		return nil, err
 	}
 	cfg.LangModels = nil
+	cfg.PostSource = ""
 	data = bytes.TrimPrefix(data, []byte{0xEF, 0xBB, 0xBF})
 	logUnknownConfigKeys(data, cfg)
 	dec := json.NewDecoder(bytes.NewReader(data))
@@ -445,6 +450,14 @@ func loadConfig(path string) (*Config, error) {
 	}
 	if cfg.PostAPITimeout < 5 || cfg.PostAPITimeout > 120 {
 		cfg.PostAPITimeout = 30
+	}
+	if cfg.PostSource != "local" && cfg.PostSource != "api" {
+		if strings.TrimSpace(cfg.PostAPIURL) != "" {
+			cfg.PostSource = "api"
+		} else {
+			cfg.PostSource = "local"
+		}
+		migrated = true
 	}
 	if cfg.Profiles == nil {
 		cfg.Profiles = presetProfiles()

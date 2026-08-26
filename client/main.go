@@ -403,7 +403,7 @@ func main() {
 				}
 				log.Printf("postcheck: ключ зашифрован DPAPI и сохранён (%d байт)", len(enc))
 			}
-			if !postAPIOn(cfg) {
+			if strings.TrimSpace(cfg.PostAPIURL) == "" {
 				log.Printf("postcheck: post_api_url пуст")
 				return
 			}

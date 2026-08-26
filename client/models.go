@@ -913,9 +913,11 @@ func (a *App) stateSnapshot() string {
 		}
 	}
 	llm := strS("S_NO_LLM")
-	if postAPIOn(cfg) {
+	if !cfg.PostEnabled {
+		llm = strS("S_POST_OFF")
+	} else if postAPIOn(cfg) {
 		llm = strS("S_POSTAPI_BADGE")
-	} else if llmInstalled(cfg) {
+	} else if cfg.PostSource == "local" && llmInstalled(cfg) {
 		llm = filepath.Base(cfg.LLMModel)
 	}
 	_, free := ramMB()
