@@ -5,6 +5,7 @@ import (
 	"holdtotype/internal/commands"
 	"holdtotype/internal/history"
 	"holdtotype/internal/mojibake"
+	"holdtotype/internal/ovplace"
 	"holdtotype/internal/preset"
 	"holdtotype/internal/profiles"
 	"holdtotype/internal/replace"
@@ -37,13 +38,27 @@ func validHotkeyMode(v string) bool { return v == hotkeyHold || v == hotkeyToggl
 func validUILevel(v string) bool { return v == levelSimple || v == levelAll }
 
 const (
-	ovPosBottom = "bottom"
-	ovPosTop    = "top"
-	ovPosCaret  = "caret"
+	ovPosBottom = ovplace.PosBottom
+	ovPosTop    = ovplace.PosTop
+	ovPosCaret  = ovplace.PosCaret
+	ovPosCustom = ovplace.PosCustom
 )
 
-func validOverlayPos(v string) bool {
-	return v == ovPosBottom || v == ovPosTop || v == ovPosCaret
+func validOverlayPos(v string) bool { return ovplace.Valid(v) }
+
+func validOverlayMonitor(v string) bool {
+	if v == "" || v == "cursor" {
+		return true
+	}
+	if len(v) > 2 {
+		return false
+	}
+	for _, r := range v {
+		if r < '0' || r > '9' {
+			return false
+		}
+	}
+	return true
 }
 
 const (
@@ -84,6 +99,8 @@ type Config struct {
 	AutoEnter        bool   `json:"auto_enter"`
 	Overlay          bool   `json:"overlay"`
 	OverlayPos       string `json:"overlay_position"`
+	OverlayMonitor   string `json:"overlay_monitor"`
+	OverlayXY        map[string]ovplace.Frac `json:"overlay_custom"`
 	OverlayText      bool   `json:"overlay_text"`
 	PasteDelayMs     int    `json:"paste_delay_ms"`
 	Animation        bool   `json:"animation"`
@@ -371,6 +388,13 @@ func loadConfig(path string) (*Config, error) {
 	if cfg.SherpaModel == "" {
 		cfg.SherpaModel = "models/gigaam-v3"
 	}
+	if !validOverlayPos(cfg.OverlayPos) {
+		cfg.OverlayPos = ovPosBottom
+	}
+	if !validOverlayMonitor(cfg.OverlayMonitor) {
+		cfg.OverlayMonitor = ""
+	}
+	cfg.OverlayXY = ovplace.CleanCustom(cfg.OverlayXY)
 	if !validUILang(cfg.UILanguage) {
 		cfg.UILanguage = "auto"
 	}

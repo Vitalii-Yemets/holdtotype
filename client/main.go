@@ -323,7 +323,7 @@ func main() {
 				registerBundledFonts()
 				initLang(cfg.UILanguage)
 				applyTheme(cfg.Skin, cfg.Theme)
-				setOverlayPos(cfg.OverlayPos)
+				setOverlayPlacement(cfg)
 			}
 			log.Printf("демонстрация диалогов: смена фокуса")
 			log.Printf("ответ: %q", askFocusMismatch())
@@ -406,7 +406,7 @@ func main() {
 				registerBundledFonts()
 				initLang(cfg.UILanguage)
 				applyTheme(cfg.Skin, cfg.Theme)
-				setOverlayPos(cfg.OverlayPos)
+				setOverlayPlacement(cfg)
 			}
 			state := ovFlashErr
 			text := tr("ov.err.mic")
@@ -482,7 +482,7 @@ func main() {
 	registerBundledFonts()
 	initLang(cfg.UILanguage)
 	applyTheme(cfg.Skin, cfg.Theme)
-	setOverlayPos(cfg.OverlayPos)
+	setOverlayPlacement(cfg)
 
 	app := &App{
 		cfg:     cfg,
@@ -973,7 +973,7 @@ func (a *App) handleDown(profileID string) {
 	playCue(cfg.Beep, cfg.SoundTheme, cueStart)
 	if cfg.Overlay {
 		ovAnim.Store(cfg.Animation)
-		setOverlayPos(cfg.OverlayPos)
+		setOverlayPlacement(cfg)
 		overlaySet(ovRecording, tr("ov.speak"))
 	}
 

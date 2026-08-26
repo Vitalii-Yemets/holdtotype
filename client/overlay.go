@@ -773,13 +773,13 @@ func overlayNote(text string) {
 }
 
 func overlayWorkArea() rect {
-	anchor := anchorRect()
-	return workAreaForPoint(anchor.Left, anchor.Top)
+	wa, _ := overlayArea()
+	return wa
 }
 
 func overlayDPI() int32 {
-	anchor := anchorRect()
-	if d := dpiForPoint(anchor.Left, anchor.Top); d >= 72 {
+	wa, _ := overlayArea()
+	if d := dpiForPoint(wa.Left+(wa.Right-wa.Left)/2, wa.Top+(wa.Bottom-wa.Top)/2); d >= 72 {
 		return d
 	}
 	return dpiFor(overlayHwnd())

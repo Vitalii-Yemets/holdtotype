@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"holdtotype/internal/apprules"
 	"holdtotype/internal/commands"
+	"holdtotype/internal/ovplace"
 	"holdtotype/internal/preset"
 	"holdtotype/internal/replace"
 	"log"
@@ -103,6 +104,8 @@ type settingsForm struct {
 	RestoreClipboard bool   `json:"restore_clipboard"`
 	Overlay          bool   `json:"overlay"`
 	OverlayPos       string `json:"overlay_position"`
+	OverlayMonitor   string `json:"overlay_monitor"`
+	OverlayXY        map[string]ovplace.Frac `json:"overlay_custom"`
 	OverlayText      bool   `json:"overlay_text"`
 	Animation        bool   `json:"animation"`
 	TypeMode         bool              `json:"type_mode"`
@@ -616,7 +619,13 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 		c.OverlayPos = f.OverlayPos
 	}
 	c.OverlayText = f.OverlayText
-	setOverlayPos(c.OverlayPos)
+	if validOverlayMonitor(f.OverlayMonitor) {
+		c.OverlayMonitor = f.OverlayMonitor
+	}
+	if f.OverlayXY != nil {
+		c.OverlayXY = ovplace.CleanCustom(f.OverlayXY)
+	}
+	setOverlayPlacement(&c)
 	c.Animation = f.Animation
 	if f.TypeMode {
 		c.PasteMode = "type"
@@ -851,6 +860,9 @@ func settingsHTML(cfg *Config, tab string) string {
 		"restore_clipboard":       cfg.RestoreClipboard,
 		"overlay":                 cfg.Overlay,
 		"overlay_position":        cfg.OverlayPos,
+		"overlay_monitor":         cfg.OverlayMonitor,
+		"overlay_custom":          cfg.OverlayXY,
+		"_monitors":               listMonitors(),
 		"overlay_text":            cfg.OverlayText,
 		"animation":               cfg.Animation,
 		"type_mode":               cfg.PasteMode == "type",
@@ -925,6 +937,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"manualnote": "S_MANUAL_NOTE", "manuallink": "S_MANUAL_LINK",
 		"unload": "S_UNLOAD_GO", "unloaded": "S_UNLOADED",
 		"hffit": "S_HF_FIT", "hfhidden": "S_HF_HIDDEN",
+		"ovmoncursor": "S_OVMON_CURSOR",
 		"remotewarn": "S_REMOTE_WARN", "remoteask": "S_REMOTE_ASK", "remotebadge": "S_REMOTE_BADGE",
 		"ok": "S_OK", "cancel": "S_CANCEL", "dlask": "S_DL_ASK", "dlstart": "S_DL_START", "dlcancel": "S_DL_CANCEL", "nofound": "S_NOT_FOUND",
 		"advrolemain": "S_ADV_ROLE_MAIN", "advrolesecond": "S_ADV_ROLE_SECOND",
@@ -1269,6 +1282,13 @@ button.mini.danger:hover{color:var(--bad);border-color:var(--badline);background
 .prow .plang .sub{display:block;font-size:11px;color:var(--dim)}
 .prow select{flex:1;min-width:0}
 .prow.cur .plang{color:var(--green)}
+.ovscheme{position:relative;flex:none;width:176px;height:99px;border:1px solid var(--line);border-radius:calc(var(--r) * .4);background:var(--field);touch-action:none}
+.ovscheme.off{opacity:.35;pointer-events:none}
+.ovdot{position:absolute;width:16px;height:16px;margin:-8px 0 0 -8px;padding:0;appearance:none;border:1px solid var(--dim);border-radius:50%;background:var(--panel);cursor:pointer}
+.ovdot:hover{border-color:var(--green)}
+.ovdot.on{background:var(--selbg);border-color:var(--selbg)}
+.ovmini{position:absolute;width:38px;height:11px;margin:-6px 0 0 -19px;border-radius:99px;background:var(--hi);box-shadow:var(--higlow);cursor:grab}
+.ovmini:active{cursor:grabbing}
 .skipchip .chipx:hover{color:var(--bad)}
 #mfind{flex:0 1 170px;min-width:110px}
 #hf_results{max-height:44vh;overflow-y:auto;overscroll-behavior:contain}
@@ -1475,12 +1495,22 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
  <div class="card">
   <h2 class="sect">{{S_SEC_OVERLAY}}</h2>
   <div class="row"><label>{{S_OVERLAY}}</label><input type="checkbox" id="overlay"></div>
-  <div class="row"><label>{{S_OVPOS}}<span class="sub">{{S_OVPOS_SUB}}</span></label>
-   <select id="overlay_position">
-    <option value="bottom">{{S_OVPOS_BOTTOM}}</option>
-    <option value="top">{{S_OVPOS_TOP}}</option>
-    <option value="caret">{{S_OVPOS_CARET}}</option>
-   </select></div>
+  <div class="row"><label>{{S_OVPOS}}<span class="sub">{{S_OVPOS_SCHEME_SUB}}</span></label>
+   <input type="hidden" id="overlay_position">
+   <div class="ovscheme" id="ovscheme">
+    <button type="button" class="ovdot" data-pos="top-left"></button>
+    <button type="button" class="ovdot" data-pos="top"></button>
+    <button type="button" class="ovdot" data-pos="top-right"></button>
+    <button type="button" class="ovdot" data-pos="left"></button>
+    <button type="button" class="ovdot" data-pos="right"></button>
+    <button type="button" class="ovdot" data-pos="bottom-left"></button>
+    <button type="button" class="ovdot" data-pos="bottom"></button>
+    <button type="button" class="ovdot" data-pos="bottom-right"></button>
+    <span class="ovmini" id="ovmini" title="{{S_OVDRAG}}"></span>
+   </div></div>
+  <div class="row"><label>{{S_OVPOS_CARET}}<span class="sub">{{S_OVPOS_SUB}}</span></label><input type="checkbox" id="ov_caret"></div>
+  <div class="row" id="ovmon_row" style="display:none"><label>{{S_OVMON}}<span class="sub">{{S_OVMON_SUB}}</span></label>
+   <select id="overlay_monitor"></select></div>
   <div class="row"><label>{{S_OVTEXT}}<span class="sub">{{S_OVTEXT_SUB}}</span></label><input type="checkbox" id="overlay_text"></div>
   <div class="row" data-adv><label>{{S_ANIM}}</label><input type="checkbox" id="animation"></div>
  </div>
@@ -1848,7 +1878,7 @@ let exeStored = CFG.server_exe || "";
 let exeUnlocked = false;
 let remoteURL = (CFG.server_url || "").trim();
 const nums  = ["threads","min_record_ms","max_record_seconds","translate_ask_seconds","server_port","paste_delay_ms","history_days","history_max"];
-const sels  = ["ui_language","language","sound_theme","translate_target","translate_ask","hotkey_mode","overlay_position","theme","skin"];
+const sels  = ["ui_language","language","sound_theme","translate_target","translate_ask","hotkey_mode","theme","skin"];
 const trAll = ["en","de","fr","es","it","pl","ru","uk"];
 const L = {{L_JSON}};
 const I_DL = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12"/><path d="M6 11l6 6 6-6"/><path d="M4 21h16"/></svg>';
@@ -3005,6 +3035,9 @@ function setHotkey(s, warn){
 async function doSave(){
   const micSel = document.getElementById("mic_device");
   const f={hotkey:CFG.hotkey, lang_models: langModels,
+    overlay_position: ovPos,
+    overlay_monitor: (document.getElementById("overlay_monitor")||{}).value || "",
+    overlay_custom: ovCustom,
     mic_device: micSel.value,
     punctuation: document.getElementById("punctuation").value,
     ui_level: "all",
@@ -3672,6 +3705,92 @@ function renderRules(){
     body.appendChild(row);
   });
 }
+let ovPos = CFG.overlay_position || "bottom";
+let ovCustom = Object.assign({}, CFG.overlay_custom || {});
+const OV_ANCHORS = {"top-left":[.12,.15],"top":[.5,.15],"top-right":[.88,.15],"left":[.12,.5],"right":[.88,.5],"bottom-left":[.12,.85],"bottom":[.5,.85],"bottom-right":[.88,.85]};
+function ovMonKey(){
+  const mons = CFG._monitors || [];
+  const sel = document.getElementById("overlay_monitor");
+  const v = sel ? sel.value : "";
+  if(v !== "" && v !== "cursor"){
+    const m = mons[parseInt(v)];
+    if(m) return m.w + "x" + m.h;
+  }
+  const prim = mons.find(m=>m.primary) || mons[0];
+  return prim ? prim.w + "x" + prim.h : "1920x1080";
+}
+function paintOvScheme(){
+  const box = document.getElementById("ovscheme");
+  const mini = document.getElementById("ovmini");
+  if(!box || !mini) return;
+  const store = document.getElementById("overlay_position");
+  if(store) store.value = ovPos;
+  const caret = document.getElementById("ov_caret");
+  if(caret) caret.checked = ovPos === "caret";
+  box.classList.toggle("off", ovPos === "caret");
+  box.querySelectorAll(".ovdot").forEach(dt=>{
+    const a = OV_ANCHORS[dt.dataset.pos];
+    dt.style.left = (a[0]*100) + "%";
+    dt.style.top = (a[1]*100) + "%";
+    dt.classList.toggle("on", dt.dataset.pos === ovPos);
+  });
+  let f = OV_ANCHORS[ovPos] || [.5,.85];
+  if(ovPos === "custom"){
+    const c = ovCustom[ovMonKey()];
+    if(c) f = [c.x, c.y];
+  }
+  mini.style.left = (f[0]*100) + "%";
+  mini.style.top = (f[1]*100) + "%";
+  mini.style.display = ovPos === "caret" ? "none" : "";
+}
+function initOverlayScheme(){
+  const box = document.getElementById("ovscheme");
+  const mini = document.getElementById("ovmini");
+  const caret = document.getElementById("ov_caret");
+  const monRow = document.getElementById("ovmon_row");
+  const monSel = document.getElementById("overlay_monitor");
+  if(!box || !mini || !caret || !monSel) return;
+  const mons = CFG._monitors || [];
+  const o = document.createElement("option");
+  o.value = ""; o.textContent = L.ovmoncursor;
+  monSel.appendChild(o);
+  mons.forEach((m, i)=>{
+    const op = document.createElement("option");
+    op.value = String(i);
+    op.textContent = (i + 1) + " — " + m.w + "×" + m.h + (m.primary ? " ★" : "");
+    monSel.appendChild(op);
+  });
+  monSel.value = [...monSel.options].some(x=>x.value===(CFG.overlay_monitor||"")) ? (CFG.overlay_monitor||"") : "";
+  if(monRow && mons.length > 1) monRow.style.display = "";
+  monSel.addEventListener("change", paintOvScheme);
+  box.querySelectorAll(".ovdot").forEach(dt=>{
+    dt.onclick = ()=>{ ovPos = dt.dataset.pos; paintOvScheme(); doSave(); };
+  });
+  caret.onchange = e=>{ e.stopPropagation(); ovPos = caret.checked ? "caret" : "bottom"; paintOvScheme(); doSave(); };
+  let dragging = false;
+  mini.addEventListener("pointerdown", e=>{
+    if(ovPos === "caret") return;
+    dragging = true;
+    if(mini.setPointerCapture && e.pointerId !== undefined) mini.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  });
+  mini.addEventListener("pointermove", e=>{
+    if(!dragging) return;
+    const r = box.getBoundingClientRect();
+    if(!r.width || !r.height) return;
+    const fx = Math.max(.03, Math.min(.97, (e.clientX - r.left) / r.width));
+    const fy = Math.max(.06, Math.min(.94, (e.clientY - r.top) / r.height));
+    ovPos = "custom";
+    ovCustom[ovMonKey()] = {x: +fx.toFixed(3), y: +fy.toFixed(3)};
+    paintOvScheme();
+  });
+  mini.addEventListener("pointerup", e=>{
+    if(!dragging) return;
+    dragging = false;
+    if(ovPos === "custom") doSave();
+  });
+  paintOvScheme();
+}
 function renderSkip(){
   const box = document.getElementById("hist_skip_list");
   const store = document.getElementById("history_skip");
@@ -3791,6 +3910,7 @@ load();
   initAutorun();
   initRules();
   initHistSkip();
+  initOverlayScheme();
   initRepls();
   initCmds();
   initHistory();
