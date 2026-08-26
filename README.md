@@ -82,7 +82,7 @@ Silent install: `holdtotype-setup.exe -silent -dir "C:\path" -model small` (mode
 ### Updates
 
 - **About** has a "Check for updates" button; optionally the app can check on startup (off by default — this is the only network request besides model downloads).
-- One click downloads the new installer and updates in place: **settings and downloaded models are always preserved**, the app restarts itself. GitHub publishes a SHA-256 for every release file, and the downloaded installer is compared against it — a file that does not match is deleted instead of started.
+- One click downloads the new installer and updates in place: **settings and downloaded models are always preserved** — the whole cycle is exercised on a real install before every claim here, down to comparing the model files byte for byte. The app restarts itself. Automatic checking stays off by default: an offline tool does not phone home unless you ask it to. GitHub publishes a SHA-256 for every release file, and the downloaded installer is compared against it — a file that does not match is deleted instead of started.
 - Running a newer `holdtotype-setup.exe` manually also detects the existing installation and switches to update mode.
 
 ### Option B — portable
