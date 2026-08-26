@@ -79,7 +79,7 @@ const dom = new JSDOM(html, {
     window.appModels = async () =>
       JSON.stringify([
         { id: "base", name: "Base", desc: "fast", size: 142, state: modelStates.base, pct: 12, engine: "whisper", langs: "*", auto: true, translate: true, speed: 5, accuracy: 2 },
-        { id: "small", name: "Small", desc: "balanced", size: 466, state: modelStates.small, engine: "whisper", langs: "*", auto: true, translate: true, serves: ["auto"], loaded: true, speed: 3, accuracy: 3 },
+        { id: "small", name: "Small", desc: "balanced", size: 466, ram: 921, state: modelStates.small, engine: "whisper", langs: "*", auto: true, translate: true, serves: ["auto"], loaded: true, speed: 3, accuracy: 3 },
         { id: "medium-q5_0", name: "Medium (q5)", desc: "recommended", size: 539, state: modelStates["medium-q5_0"], pct: 5, engine: "whisper", langs: "*", auto: true, translate: true, speed: 2, accuracy: 4 },
         { id: "gigaam-v3", name: "GigaAM v3", desc: "russian", size: 232, state: modelStates["gigaam-v3"], pct: 5, engine: "sherpa", langs: "ru", punct: true, serves: ["ru"], speed: 5, accuracy: 5 },
         { id: "moonshine-uk", name: "Moonshine Base uk", desc: "ukrainian", size: 135, state: modelStates["moonshine-uk"], engine: "sherpa", langs: "uk", manual: true, link: "https://example.com/moonshine", speed: 5, accuracy: 3 },
@@ -399,7 +399,7 @@ function check(name, actual, expected) {
   const everySetting = [
     "hotkey", "min_record_ms", "max_record_seconds", "auto_enter", "restore_clipboard",
     "type_mode", "overlay", "overlay_position", "overlay_text", "animation", "mic_device", "mic_bar", "beep", "sound_theme",
-    "models", "presets", "munload", "language", "threads", "punctuation", "whisper_prompt", "profbody", "dict_model", "tr_engine", "mlang", "mfind",
+    "langlist", "munload", "language", "threads", "punctuation", "whisper_prompt", "profbody", "dict_model", "tr_engine",
     "tr_default", "translate_target", "translate_ask", "translate_ask_seconds", "tr_hotkey",
     "tl_en", "ui_language", "upd_check", "check_updates", "server_autostart", "server_port",
     "server_exe", "server_url", "proc-models", "proc-search", "ver2", "autorun", "pause_hotkey",
@@ -409,47 +409,56 @@ function check(name, actual, expected) {
 
   tab("models"); await sleep(80);
   check("models section shown", shown("models"), true);
-  check("recognition models listed", d.querySelectorAll("#models .mcard").length, 6);
-  check("no radio buttons left in the library", d.querySelectorAll('#models input[type="radio"]').length, 0);
-  check("the list is split by state, not by language", [...d.querySelectorAll("#models .mslot")].map(h=>h.dataset.slot), ["inst", "avail"]);
-  check("the installed shelf holds what is on disk", [...d.querySelectorAll('#models .mcard[data-slot="inst"]')].map(r=>r.dataset.id), ["small", "local:my-model"]);
-  check("the rest wait under available", [...d.querySelectorAll('#models .mcard[data-slot="avail"]')].map(r=>r.dataset.id), ["base", "medium-q5_0", "gigaam-v3", "moonshine-uk"]);
-  check("the active model wears its pill", [...d.querySelectorAll("#models .mpill.on")].length, 1);
-  check("and its whole card is lit", [...d.querySelectorAll("#models .mcard.on")].map(r=>r.dataset.id), ["small"]);
-  check("a card assigned to a language says which", d.querySelector('#models .mcard[data-id="gigaam-v3"] .mpill').textContent, "RU");
-  check("every card measures itself in two bars", d.querySelectorAll("#models .mcard .mbar").length, 10);
-  check("the bars are filled to the model, not all alike", [...d.querySelectorAll(String.raw`#models .mcard[data-id="base"] .mtrack i`)].map(i=>i.style.width), ["40%", "100%"]);
-  check("a hand-copied model shows no bars — its powers are unknown", d.querySelectorAll('#models .mcard[data-id="local:my-model"] .mbar').length, 0);
-  check("and wears a question mark instead of languages", d.querySelector('#models .mcard[data-id="local:my-model"] .mtag').textContent, "?");
-  check("the licensed model offers no download button", !!d.querySelector('#models .mcard[data-id="moonshine-uk"] button[data-a="dl"]'), false);
-  check("it explains the licence instead", d.querySelector('#models .mcard[data-id="moonshine-uk"]').textContent.includes("licence forbids"), true);
-  const linkBtn = d.querySelector('#models .mcard[data-id="moonshine-uk"] button[data-a="link"]');
-  check("and offers the source link", !!linkBtn, true);
-  linkBtn.click(); await sleep(60);
-  check("the link opens the model page", w.linkOpens, ["moonshine-uk"]);
+  const rowFor = (lang) => d.querySelector('#langlist .lrow[data-lang="'+lang+'"]');
+  check("every language owns a row", d.querySelectorAll("#langlist .lrow").length, 9);
+  check("no old library, filters or advisor are left", [d.getElementById("models"), d.getElementById("presets"), d.getElementById("mlang"), d.getElementById("mfind"), d.getElementById("advisor")].filter(Boolean).length, 0);
+  check("a language with its own model is bright and names it", !rowFor("ru").className.includes("dim") && rowFor("ru").querySelector(".lmodel").textContent === "GigaAM v3", true);
+  check("a language without its own model is dim", rowFor("de").className.includes("dim"), true);
+  check("and says honestly whom it follows", rowFor("de").querySelector(".lmodel").textContent, "as Auto-detect · Medium (q5)");
+  check("no picker is open before a click", d.querySelectorAll("#langlist .lpick").length, 0);
+  rowFor("ru").click(); await sleep(120);
+  check("clicking a language unfolds the choice under it", d.querySelectorAll("#langlist .lpick").length, 1);
+  const cards = () => [...d.querySelectorAll("#langlist .lpick .pcard")];
+  check("only models that serve this language are offered", cards().map(c=>c.dataset.id).sort().join("+"), "base+gigaam-v3+local:my-model+medium-q5_0+small");
+  check("no radio buttons anywhere in the choice", d.querySelectorAll('#langlist input[type="radio"]').length, 0);
+  check("the assigned model comes first", cards()[0].dataset.id === "gigaam-v3" && cards()[0].className.includes("cur"), true);
+  check("its chip says assigned", cards()[0].querySelector(".pchip").textContent, "assigned");
+  check("every known model measures itself in two bars", d.querySelectorAll("#langlist .mbar").length, 8);
+  check("the bars are filled to the model, not all alike", [...d.querySelector('#langlist .pcard[data-id="base"]').querySelectorAll(".mtrack i")].map(i=>i.style.width), ["40%", "100%"]);
+  check("a hand-copied model shows no bars — its powers are unknown", d.querySelector('#langlist .pcard[data-id="local:my-model"]').querySelectorAll(".mbar").length, 0);
+  check("and admits its languages are unknown", d.querySelector('#langlist .pcard[data-id="local:my-model"] .pmeta').textContent.includes("languages: unknown"), true);
+  check("a multilingual model counts its languages in words", d.querySelector('#langlist .pcard[data-id="small"] .pmeta').textContent.includes("languages: 99"), true);
+  check("a model that translates says so in words", d.querySelector('#langlist .pcard[data-id="small"] .pmeta').textContent.includes("translates to English"), true);
+  check("the words recognition-only are gone from the page", d.getElementById("p-models").textContent.includes("recognition only"), false);
+  check("ram is estimated where it is known", d.querySelector('#langlist .pcard[data-id="small"] .pmeta').textContent.includes("≈921 MB RAM"), true);
   check("the models folder can be opened for hand-copied files", !!d.querySelector('#p-models button[onclick="appOpenModelsFolder()"]'), true);
-  const eject = d.querySelector('#models .mcard[data-id="small"] button[data-a="unload"]');
+  const eject = d.querySelector('#langlist .pcard[data-id="small"] button[data-a="unload"]');
   check("the loaded model offers to leave the memory", !!eject, true);
   eject.click(); await sleep(150);
   check("and the program is asked to unload it", w.unloadCalls, 1);
   check("there is a plain unload row as well", !!d.getElementById("munload"), true);
-  check("the language filter is one control", [...d.getElementById("mlang").options].map(o=>o.value), ["all", "multi", "punct", "fit", "ru"]);
-  check("the library head stays put while the shelf scrolls", w.getComputedStyle(d.querySelector("#p-models .libhead")).position, "sticky");
-  check("every language owns a preset row", d.querySelectorAll("#presets .prow").length, 9);
-  const autoSel = d.querySelector("#presets .prow select");
-  check("the auto row offers only models that detect the language", [...autoSel.options].map(o=>o.value), ["base", "small", "medium-q5_0"]);
-  const ruRow = d.querySelectorAll("#presets .prow")[1];
-  check("the russian row is marked as the current language", ruRow.className.includes("cur"), true);
-  check("the russian row holds its assigned model", ruRow.querySelector("select").value, "gigaam-v3");
-  check("a model that only recognizes says so in the list", [...ruRow.querySelectorAll("option")].find(o=>o.value==="gigaam-v3").textContent.includes("recognition only"), true);
-  const mfind = d.getElementById("mfind");
-  mfind.value = "giga"; mfind.dispatchEvent(new w.Event("input", { bubbles: true })); await sleep(150);
-  check("the name search narrows the list", [...d.querySelectorAll("#models .mcard:not(.hidden)")].map(r=>r.dataset.id), ["gigaam-v3"]);
-  mfind.value = ""; mfind.dispatchEvent(new w.Event("input", { bubbles: true })); await sleep(150);
   const saveBefore = w.saveCalls;
-  d.querySelector('#models .mcard[data-id="small"]').click(); await sleep(200);
-  check("a click on an installed row is the choice", w.saveCalls > saveBefore, true);
-  check("and it pins the model to the current language", w.lastSaveForm.lang_models.ru, "small");
+  d.querySelector('#langlist .pcard[data-id="small"]').click(); await sleep(200);
+  check("a click on an installed card is the choice", w.saveCalls > saveBefore, true);
+  check("and it pins the model to this language", w.lastSaveForm.lang_models.ru, "small");
+  check("the picker stays open and the mark moves", cards()[0].dataset.id === "small" && cards()[0].className.includes("cur"), true);
+  const backBtn = d.querySelector("#langlist .lpick button.mini:last-child");
+  check("the way back to Auto-detect is offered", backBtn.textContent, "Back to Auto-detect");
+  backBtn.click(); await sleep(200);
+  check("taking it clears the language's own model", "ru" in (w.lastSaveForm.lang_models || {}), false);
+  check("and the row dims to the inherited truth", rowFor("ru").className.includes("dim"), true);
+  d.querySelector('#langlist .pcard[data-id="small"]').click(); await sleep(200);
+  check("choosing again is one click", w.lastSaveForm.lang_models.ru, "small");
+  rowFor("uk").click(); await sleep(120);
+  check("switching languages swaps the picker", cards().map(c=>c.dataset.id).includes("moonshine-uk"), true);
+  check("the licensed model offers no download button", !!d.querySelector('#langlist .pcard[data-id="moonshine-uk"] button[data-a="dl"]'), false);
+  check("it explains the licence instead", d.querySelector('#langlist .pcard[data-id="moonshine-uk"]').textContent.includes("licence forbids"), true);
+  check("and cannot be picked by a click", d.querySelector('#langlist .pcard[data-id="moonshine-uk"]').className.includes("pickable"), false);
+  const linkBtn = d.querySelector('#langlist .pcard[data-id="moonshine-uk"] button[data-a="link"]');
+  check("and offers the source link", !!linkBtn, true);
+  linkBtn.click(); await sleep(60);
+  check("the link opens the model page", w.linkOpens, ["moonshine-uk"]);
+  rowFor("ru").click(); await sleep(120);
   check("the mark carries both shapes", [d.querySelectorAll(".mk.mic").length, d.querySelectorAll(".mk.face").length], [2, 2]);
   w.applyThemeVars("soft");
   check("the soft design shows the face", [d.documentElement.style.getPropertyValue("--markmic"), d.documentElement.style.getPropertyValue("--markface")], ["none", "block"]);
@@ -458,10 +467,7 @@ function check(name, actual, expected) {
 
   const recLangs = [...d.getElementById("language").options].map(o=>o.value);
   check("italian can be dictated too", recLangs.includes("it"), true);
-  check("ram estimate shown", d.querySelectorAll("#p-models .mram").length, 6);
   check("the routing table is gone", !!d.getElementById("routing"), false);
-  check("engine tags rendered", d.querySelectorAll("#p-models .mtag").length >= 3, true);
-  check("russian engine tagged RU", d.querySelector('#models .mcard[data-id="gigaam-v3"] .mtag').textContent, "RU");
   check("the language moved in with the dictation", !!d.querySelector("#p-dictation #language"), true);
   check("the threads moved in with the server", !!d.querySelector("#p-system #threads"), true);
   check("dictation names the model it uses", d.getElementById("dict_model").textContent, "Small");
@@ -685,7 +691,9 @@ function check(name, actual, expected) {
   d.querySelector(".modal .btn.yes").click(); await sleep(400);
   check("saying yes removes it and saves at once", w.lastSaveForm.profiles.length, profsBefore - 1);
 
-  tab("models"); await sleep(30);
+  tab("post"); await sleep(30);
+  check("the editor model moved in with the post-processing", !!d.querySelector("#p-post #proc-models"), true);
+  check("and left the languages page", !!d.querySelector("#p-models #proc-models"), false);
   const del = d.querySelector('#proc-models button[data-a="ldel"]');
   check("active LLM model can be deleted", !!del, true);
   del.click(); await sleep(60);
@@ -724,46 +732,39 @@ function check(name, actual, expected) {
 
 
   tab("models"); await sleep(120);
-  const pickAbsent = () => d.querySelector('#models .mcard[data-id="base"]');
+  const pickAbsent = () => d.querySelector('#langlist .pcard[data-id="base"]');
+  check("the list remembers which language was open", !!pickAbsent(), true);
   pickAbsent().click(); await sleep(80);
   check("picking a model that is not here asks first", !!d.querySelector(".modal-bg"), true);
   check("the question names the model and its size", d.querySelector(".modal p").textContent.includes("Base") && d.querySelector(".modal p").textContent.includes("142 MB"), true);
   d.querySelector(".modal .btn.ghost").click(); await sleep(250);
   check("saying no downloads nothing", w.dlCalls.length, 0);
-  check("saying no puts the choice back", !!d.querySelector('#models .mcard[data-id="small"] .mpill.on'), true);
+  check("saying no keeps the old choice", w.lastSaveForm.lang_models.ru, "small");
 
   pickAbsent().click(); await sleep(80);
   d.querySelector(".modal .btn.yes").click(); await sleep(250);
   check("saying yes starts the download", w.dlCalls, ["base"]);
-  check("a download can be stopped", !!d.querySelector('#models button[data-a="cancel"][data-id="base"]'), true);
-  d.querySelector('#models button[data-a="cancel"][data-id="base"]').click(); await sleep(250);
-  check("stopping asks the program to stop", w.cancelCalls, ["base"]);
-  check("a stopped download offers to start again", !!d.querySelector('#models button[data-a="dl"][data-id="base"]'), true);
-
-  pickAbsent().click(); await sleep(80);
-  d.querySelector(".modal .btn.yes").click(); await sleep(250);
-  check("the row shows the download running", !!d.querySelector('#models button[data-a="cancel"][data-id="base"]'), true);
   check("agreeing pins the language to the model at once", w.lastSaveForm.lang_models.ru, "base");
+  check("the running download is announced above the languages", d.querySelector("#langlist .dlline").textContent.includes("Base"), true);
+  check("a download can be stopped", !!d.querySelector('#langlist button[data-a="cancel"][data-id="base"]'), true);
+  d.querySelector('#langlist button[data-a="cancel"][data-id="base"]').click(); await sleep(250);
+  check("stopping asks the program to stop", w.cancelCalls, ["base"]);
+  const dlIcon = () => d.querySelector('#langlist button[data-a="dl"][data-id="base"]');
+  check("a stopped download offers the arrow again", !!dlIcon(), true);
+  const dlBefore = w.dlCalls.length;
+  const ruBefore = w.lastSaveForm.lang_models.ru;
+  dlIcon().click(); await sleep(250);
+  check("the arrow downloads without choosing", w.dlCalls.length, dlBefore + 1);
+  check("and the language keeps its model", w.lastSaveForm.lang_models.ru, ruBefore);
   w.finishDl("base"); await sleep(1400);
   check("and the program says the model is ready", d.getElementById("st_saved").textContent, "Model downloaded");
 
-  const activeDel = () => d.querySelector('#models .mcard[data-id="small"] button[data-a="del"]');
+  const activeDel = () => d.querySelector('#langlist .pcard[data-id="small"] button[data-a="del"]');
   check("the model in use can be removed too — that is the way out of a full disk", !!activeDel(), true);
   activeDel().click(); await sleep(150);
   check("removing the model in use warns what it costs", d.querySelector(".modal p").textContent.includes("Recognition stops"), true);
   d.querySelector(".modal .btn.yes").click(); await sleep(300);
   check("and the program is told this was meant", w.delCalls[w.delCalls.length - 1], ["small", true]);
-
-  tab("models"); await sleep(60);
-  d.getElementById("adv_open").click(); await sleep(30);
-  d.getElementById("adv_go").click(); await sleep(150);
-  check("the recommendation is a plan, not a sentence", d.querySelectorAll("#adv_out .advrow").length, 2);
-  check("the plan says which one is already here", [...d.querySelectorAll("#adv_out .advstate")].map(s=>s.className.includes("ok")), [false, true]);
-  const dlBefore = w.dlCalls.length;
-  d.querySelector("#adv_out button.mini").click(); await sleep(80);
-  check("applying the plan asks about the download", !!d.querySelector(".modal-bg"), true);
-  d.querySelector(".modal .btn.yes").click(); await sleep(300);
-  check("applying the plan downloads what is missing", w.dlCalls.length > dlBefore, true);
   tab("about"); await sleep(60);
   check("about section shown", shown("about"), true);
   check("about keeps the version card to itself", d.querySelectorAll("#p-about .card").length, 1);
@@ -963,7 +964,7 @@ function check(name, actual, expected) {
     [".modal{", "border-radius:var(--r)"],
     ["button.btn{", "border-radius:calc(var(--r) * .5)"],
     ["button.mini{", "border-radius:calc(var(--r) * .5)"],
-    ["input[type=text],input[type=number],select{", "border-radius:calc(var(--r) * .55)"],
+    ["input[type=text],input[type=number],input[type=password],select{", "border-radius:calc(var(--r) * .55)"],
     ["input[type=checkbox]{", "border-radius:calc(var(--r) * .8)"],
   ];
   for (const [sel, want] of shaped) {

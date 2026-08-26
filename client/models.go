@@ -19,7 +19,6 @@ import (
 
 	"golang.org/x/sys/windows"
 
-	"holdtotype/internal/advisor"
 )
 
 type modelInfo struct {
@@ -50,23 +49,6 @@ func (m *modelInfo) ramEstimateMB() int {
 		return m.SizeMB * 12 / 10
 	}
 	return m.SizeMB*15/10 + 60
-}
-
-func advisorCatalog() []advisor.Model {
-	out := make([]advisor.Model, 0, len(modelCatalog))
-	for i := range modelCatalog {
-		m := &modelCatalog[i]
-		if m.Custom || (m.Manual && !m.installed()) {
-			continue
-		}
-		langs := strings.Split(m.Langs, ",")
-		out = append(out, advisor.Model{
-			ID: m.ID, Engine: m.Engine, Langs: langs, SizeMB: m.SizeMB,
-			RAMMB: m.ramEstimateMB(), Punct: m.Punct, Translate: m.Translate,
-			Speed: m.Speed, Accuracy: m.Accuracy,
-		})
-	}
-	return out
 }
 
 var modelCatalog = []modelInfo{
@@ -284,6 +266,31 @@ func findModel(id string) *modelInfo {
 		}
 	}
 	return nil
+}
+
+func modelDisplayName(id string) string {
+	if m := findModel(id); m != nil {
+		return m.NameKey
+	}
+	return id
+}
+
+func modelNameForPath(p string) string {
+	p = strings.TrimSpace(p)
+	if p == "" {
+		return ""
+	}
+	base := filepath.Base(filepath.Clean(p))
+	for i := range modelCatalog {
+		m := &modelCatalog[i]
+		if m.File != "" && filepath.Base(m.File) == base {
+			return m.NameKey
+		}
+		if m.Dir != "" && filepath.Base(filepath.Clean(m.Dir)) == base {
+			return m.NameKey
+		}
+	}
+	return base
 }
 
 type modelRow struct {
@@ -735,106 +742,6 @@ func (a *App) deleteModel(id string, force bool) string {
 	}
 	log.Printf("модель %s удалена", m.File)
 	return tr("model.del.ok")
-}
-
-type advicePart struct {
-	ID        string `json:"id"`
-	Name      string `json:"name"`
-	SizeMB    int    `json:"size"`
-	Installed bool   `json:"installed"`
-}
-
-type adviceOut struct {
-	Primary   string       `json:"primary"`
-	Companion string       `json:"companion"`
-	Text      string       `json:"text"`
-	RAM       string       `json:"ram"`
-	Plan      []advicePart `json:"plan"`
-	NeedMB    int          `json:"need"`
-}
-
-func advicePartOf(id string) (advicePart, bool) {
-	m := findModel(id)
-	if m == nil {
-		return advicePart{}, false
-	}
-	return advicePart{ID: m.ID, Name: m.NameKey, SizeMB: m.SizeMB, Installed: m.installed()}, true
-}
-
-func modelDisplayName(id string) string {
-	if m := findModel(id); m != nil {
-		return m.NameKey
-	}
-	return id
-}
-
-func modelNameForPath(p string) string {
-	p = strings.TrimSpace(p)
-	if p == "" {
-		return ""
-	}
-	base := filepath.Base(filepath.Clean(p))
-	for i := range modelCatalog {
-		m := &modelCatalog[i]
-		if m.File != "" && filepath.Base(m.File) == base {
-			return m.NameKey
-		}
-		if m.Dir != "" && filepath.Base(filepath.Clean(m.Dir)) == base {
-			return m.NameKey
-		}
-	}
-	return base
-}
-
-func adviseModel(lang, priority string, needTranslate bool) string {
-	_, free := ramMB()
-	res := advisor.Recommend(advisor.Input{
-		Lang: lang, Priority: priority, RAMFreeMB: free, Translate: needTranslate,
-	}, advisorCatalog())
-
-	var parts []string
-	if res.Primary == "" {
-		parts = append(parts, strS("S_ADV_NONE"))
-	} else {
-		parts = append(parts, trf("adv.pick", modelDisplayName(res.Primary)))
-		for _, why := range res.Why {
-			switch why {
-			case advisor.WhyLanguage:
-				parts = append(parts, strS("S_ADV_LANG"))
-			case advisor.WhyAccuracy:
-				parts = append(parts, strS("S_ADV_ACC"))
-			case advisor.WhySpeed:
-				parts = append(parts, strS("S_ADV_SPEED"))
-			case advisor.WhyRAM:
-				parts = append(parts, strS("S_ADV_RAM"))
-			}
-		}
-		if res.Companion != "" {
-			parts = append(parts, trf("adv.companion", modelDisplayName(res.Companion)))
-		}
-	}
-	var plan []advicePart
-	need := 0
-	for _, id := range []string{res.Primary, res.Companion} {
-		if id == "" {
-			continue
-		}
-		if p, ok := advicePartOf(id); ok {
-			plan = append(plan, p)
-			if !p.Installed {
-				need += p.SizeMB
-			}
-		}
-	}
-	out, _ := json.Marshal(adviceOut{
-		Primary:   res.Primary,
-		Companion: res.Companion,
-		Text:      strings.Join(parts, " "),
-		RAM:       trf("adv.ram", free),
-		Plan:      plan,
-		NeedMB:    need,
-	})
-	return string(out)
 }
 
 type stateModelRow struct {

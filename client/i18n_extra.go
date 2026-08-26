@@ -62,8 +62,7 @@ func init() {
 		"route.why.language": "hier genauer, mit Satzzeichen", "route.why.otherlang": "99 Sprachen",
 		"route.why.translate": "nur Whisper übersetzt", "route.why.notinstalled": "das russische Modell ist nicht installiert",
 		"route.why.unknownlang": "keine Sprache gesetzt — nur Whisper erkennt sie", "route.why.forced": "in config.json erzwungen",
-		"adv.pick": "Ich empfehle %s.", "adv.companion": "%s passt gut dazu — für andere Sprachen und Übersetzung.",
-		"adv.ram": "%d MB frei", "status.line": "Bereit · %s · %.1f GB frei",
+		"status.line": "Bereit · %s · %.1f GB frei",
 		"ago.now": "gerade eben", "ago.min": "vor %d Min.", "ago.hour": "vor %d Std.",
 		"chars": "%d Zeichen", "inserted.into": "eingefügt in %s",
 		"punct.prompt":         "Setze Satzzeichen und Großschreibung. Ändere die Wörter nicht, übersetze nicht, füge nichts hinzu. Gib nur den korrigierten Text zurück.",
@@ -157,8 +156,7 @@ func init() {
 		"route.why.language": "plus précis ici, avec la ponctuation", "route.why.otherlang": "99 langues",
 		"route.why.translate": "seul Whisper traduit", "route.why.notinstalled": "le modèle russe n'est pas installé",
 		"route.why.unknownlang": "aucune langue définie — seul Whisper la détecte", "route.why.forced": "forcé dans config.json",
-		"adv.pick": "Je recommande %s.", "adv.companion": "%s fait un bon complément — pour les autres langues et la traduction.",
-		"adv.ram": "%d Mo libres", "status.line": "Prêt · %s · %.1f Go libres",
+		"status.line": "Prêt · %s · %.1f Go libres",
 		"ago.now": "à l'instant", "ago.min": "il y a %d min", "ago.hour": "il y a %d h",
 		"chars": "%d caractères", "inserted.into": "inséré dans %s",
 		"punct.prompt":         "Ajoute la ponctuation et les majuscules. Ne change pas les mots, ne traduis pas, n'ajoute rien. Renvoie uniquement le texte corrigé.",
@@ -252,8 +250,7 @@ func init() {
 		"route.why.language": "más preciso aquí, con puntuación", "route.why.otherlang": "99 idiomas",
 		"route.why.translate": "solo Whisper traduce", "route.why.notinstalled": "el modelo ruso no está instalado",
 		"route.why.unknownlang": "sin idioma definido — solo Whisper lo detecta", "route.why.forced": "forzado en config.json",
-		"adv.pick": "Recomiendo %s.", "adv.companion": "%s es un buen acompañante — para otros idiomas y la traducción.",
-		"adv.ram": "%d MB libres", "status.line": "Listo · %s · %.1f GB libres",
+		"status.line": "Listo · %s · %.1f GB libres",
 		"ago.now": "ahora mismo", "ago.min": "hace %d min", "ago.hour": "hace %d h",
 		"chars": "%d caracteres", "inserted.into": "insertado en %s",
 		"punct.prompt":         "Añade puntuación y mayúsculas. No cambies las palabras, no traduzcas, no añadas nada. Devuelve solo el texto corregido.",
@@ -347,8 +344,7 @@ func init() {
 		"route.why.language": "qui è più preciso, con la punteggiatura", "route.why.otherlang": "99 lingue",
 		"route.why.translate": "solo Whisper traduce", "route.why.notinstalled": "il modello russo non è installato",
 		"route.why.unknownlang": "nessuna lingua impostata — solo Whisper la riconosce", "route.why.forced": "forzato in config.json",
-		"adv.pick": "Consiglio %s.", "adv.companion": "%s è un buon compagno — per le altre lingue e la traduzione.",
-		"adv.ram": "%d MB liberi", "status.line": "Pronto · %s · %.1f GB liberi",
+		"status.line": "Pronto · %s · %.1f GB liberi",
 		"ago.now": "proprio ora", "ago.min": "%d min fa", "ago.hour": "%d h fa",
 		"chars": "%d caratteri", "inserted.into": "inserito in %s",
 		"punct.prompt":         "Aggiungi punteggiatura e maiuscole. Non cambiare le parole, non tradurre, non aggiungere nulla. Restituisci solo il testo corretto.",
@@ -442,8 +438,7 @@ func init() {
 		"route.why.language": "tu dokładniej, ze znakami", "route.why.otherlang": "99 języków",
 		"route.why.translate": "tylko Whisper tłumaczy", "route.why.notinstalled": "model rosyjski nie jest zainstalowany",
 		"route.why.unknownlang": "nie ustawiono języka — rozpozna go tylko Whisper", "route.why.forced": "wymuszone w config.json",
-		"adv.pick": "Polecam %s.", "adv.companion": "%s dobrze uzupełni — dla innych języków i tłumaczenia.",
-		"adv.ram": "%d MB wolnych", "status.line": "Gotowe · %s · %.1f GB wolnych",
+		"status.line": "Gotowe · %s · %.1f GB wolnych",
 		"ago.now": "przed chwilą", "ago.min": "%d min temu", "ago.hour": "%d godz. temu",
 		"chars": "%d znaków", "inserted.into": "wstawiono do %s",
 		"punct.prompt":         "Dodaj znaki interpunkcyjne i wielkie litery. Nie zmieniaj słów, nie tłumacz, nic nie dopisuj. Zwróć tylko poprawiony tekst.",
@@ -525,22 +520,37 @@ func init() {
 		"S_SAVED":      "Gespeichert",
 		"S_ABOUT_HTML": "<p><b>Stimme → Text an der Cursorposition.</b></p><p>Cursor in ein Eingabefeld setzen, Shortcut halten, sprechen, loslassen — der Text wird eingefügt.</p><p>Vollständig lokal und offline. Technik: <b>Go + WinAPI</b>, <b>WebView2</b>, <b>whisper.cpp</b>, <b>llama.cpp</b>, <b>miniaudio</b>; Modelle von Hugging Face.</p><p>Logs überschreiten nie ~2 MB.</p>",
 		  "S_SEARCH": "Einstellung finden…",
-		"S_GRP_GENERAL": "Allgemein", "S_GRP_SPEECH": "Sprachverarbeitung", "S_GRP_INFO": "Infos", "S_NAV_POST": "Nachbearbeitung", "S_NAV_HELP": "Hilfe", "S_NAV_CONTACTS": "Kontakte", "S_HIST_ADD": "Hinzufügen", "S_CONTACT_MAIL": "E-Mail", "S_LIB_REC": "Spracherkennung", "S_LIB_INST": "Installiert", "S_LIB_AVAIL": "Zum Herunterladen verfügbar", "S_LIB_ACTIVE": "im Einsatz", "S_LIB_FIND": "Modell suchen…", "S_DICT_MODEL": "Erkennungsmodell", "S_TR_BY": "Übersetzt wird mit %s", "S_LIB_ACC": "Genauigkeit", "S_LIB_SPD": "Tempo",
+		"S_GRP_GENERAL": "Allgemein", "S_GRP_SPEECH": "Sprachverarbeitung", "S_GRP_INFO": "Infos", "S_NAV_POST": "Nachbearbeitung", "S_NAV_HELP": "Hilfe", "S_NAV_CONTACTS": "Kontakte", "S_HIST_ADD": "Hinzufügen", "S_CONTACT_MAIL": "E-Mail", "S_DICT_MODEL": "Erkennungsmodell", "S_TR_BY": "Übersetzt wird mit %s", "S_LIB_ACC": "Genauigkeit", "S_LIB_SPD": "Tempo",
 		"S_STATE_ACTIVE": "Erkennt",
 		"S_STATE_USED": "Eingesetzte Modelle",
 		"S_STATE_INST": "Lokal installiert",
 		"S_STATE_INST_SUB": "Modelle auf der Festplatte, bereit zur Zuweisung",
 		"S_PRESETS": "Welches Modell für welche Sprache",
-		"S_PRESETS_HINT": "Jede Sprache bekommt ihr eigenes Modell. Ab Werk erkennt Whisper Medium alle; nichts wird aufgezwungen — ändern Sie jede Zeile.",
+		"S_PRESETS_HINT": "Klicken Sie eine Sprache an — darunter öffnet sich die Modellwahl für sie. Sprachen ohne eigenes Modell nutzen das der automatischen Erkennung.",
 		"S_CPU_LINE": "Alle Modelle laufen auf dem Prozessor (CPU) — die Grafikkarte wird nicht genutzt.",
 		"S_MFOLDER": "Eigenes Modell",
-		"S_MFOLDER_SUB": "legen Sie ein Modell in den Ordner models — es erscheint nach dem Neustart",
+		"S_MAINT": "Modellpflege",
+		"S_OWN_FMT_L": "format",
+		"S_OWN_FMT": "Whisper — eine <span class=\"code\">ggml-*.bin</span>-Datei · sherpa-onnx — ein Ordner mit <span class=\"code\">encoder.onnx</span>, <span class=\"code\">decoder.onnx</span>, <span class=\"code\">tokens.txt</span>",
+		"S_OWN_DIR_L": "ordner",
+		"S_OWN_DIR": "In <span class=\"code\">models\\</span> neben der Anwendung ablegen — die Schaltfläche öffnet ihn",
+		"S_OWN_NEXT_L": "danach",
+		"S_OWN_NEXT": "Anwendung neu starten — das Modell erscheint in der Auswahl passender Sprachen",
+		"S_AS_AUTO": "wie automatische Erkennung",
+		"S_PICK_HINT": "Klicken Sie ein Modell an, um es für diese Sprache zu wählen. Ein fehlendes lädt sich selbst herunter.",
+		"S_ASSIGNED_CHIP": "zugewiesen",
+		"S_REC_CHIP": "empfohlen",
+		"S_BACK_AUTO": "Zurück zur automatischen Erkennung",
+		"S_LANGS_COUNT": "Sprachen: %d",
+		"S_LANGS_UNKNOWN": "Sprachen: unbekannt",
+		"S_TR_EN": "übersetzt ins Englische",
+		"S_TR_LIST": "übersetzt: %s",
+		"S_DL_GOING": "wird geladen:",
 		"S_OPEN_FOLDER": "Ordner öffnen",
 		"S_UNLOAD": "Aus dem Speicher entladen",
 		"S_UNLOAD_SUB": "gibt den Speicher frei; das nächste Diktat lädt das Modell erneut",
 		"S_UNLOAD_GO": "Entladen",
 		"S_UNLOADED": "Entladen",
-		"S_ONLY_REC": "nur Erkennung",
 		"S_TR_FALLBACK": "%s übersetzt nicht — zum Übersetzen bietet die App Whisper an",
 		"S_NOT_FOR_LANG": "%s erkennt diese Sprache nicht",
 		"S_MANUAL_NOTE": "Kann nicht aus der App geladen werden — die Lizenz verbietet die Weitergabe. Laden Sie das Archiv selbst und entpacken Sie es nach models/moonshine-uk.",
@@ -604,13 +614,6 @@ func init() {
 		"S_LISTS_HINT":  "Ersetzungen und Befehle in einer Datei — zum Mitnehmen auf einen anderen Rechner", "S_LISTS_EXPORT": "In Datei speichern", "S_LISTS_IMPORT": "Aus Datei laden",
 		"S_MIC": "Mikrofon", "S_MIC_DEFAULT": "Systemstandard", "S_MIC_REFRESH": "Liste aktualisieren",
 		"S_MIC_LEVEL": "Eingangspegel", "S_MIC_QUIET": "still",
-		"S_ADV_TITLE": "Modell auswählen", "S_F_ALL": "alle", "S_F_RU": "Russisch",
-		"S_F_MULTI": "viele Sprachen", "S_F_PUNCT": "setzt Satzzeichen", "S_F_FIT": "passt in den Speicher",
-		"S_ADV_LANGQ": "In welcher Sprache diktieren Sie", "S_ADV_PRIOQ": "Was ist wichtiger",
-		"S_ADV_ACC": "Wegen der Genauigkeit gewählt.", "S_ADV_SPEED": "Wegen der Geschwindigkeit gewählt.",
-		"S_ADV_TRQ": "Übersetzung nötig", "S_ADV_GO": "Empfehlen",
-		"S_ADV_PRIMARY": "Haupt", "S_ADV_COMPANION": "zweites", "S_ADV_HAVE": "schon da", "S_ADV_APPLY": "Übernehmen",
-		"S_ADV_ASK":     "Geladen werden: %s — insgesamt %s. Starten?",
 		"S_SUB_THREADS": "mehr Threads sind nicht immer schneller — messen Sie es auf Ihrem Rechner",
 		"S_SEC_LLM":     "Bearbeitungsmodell",
 		"S_PUNCT":       "Satzzeichen und Großschreibung", "S_SUB_PUNCT": "woher Satzzeichen und Großschreibung kommen",
@@ -621,7 +624,7 @@ func init() {
 		"S_REMOTE_ABOUT": "Ein entfernter Server ist eingestellt: Audio wird dorthin gesendet, und das Versprechen oben gilt so lange nicht.",
 		"S_UPD":          "Aktualisierungen", "S_UPD_CHECK": "Nach Updates suchen", "S_UPD_AUTO": "Beim Start prüfen",
 		"S_SUB_UPD":  "die einzige Netzwerkanfrage außer Modell-Downloads",
-		"S_UPD_NONE": "Sie haben die neueste Version", "S_BADGE_MODELS": "Installierte Modelle", "S_BADGE_MISS": "Ein Modell ist nicht geladen", "S_BADGE_SYSTEM": "Warnungen brauchen Aufmerksamkeit", "S_BADGE_HIST": "Einträge im Verlauf", "S_LOG_OPEN": "Protokoll öffnen", "S_LOG": "Protokoll", "S_LOG_SUB": "alles, was die App über sich schreibt", "S_ADV_ROLE_MAIN": "für die gewählte Sprache", "S_ADV_ROLE_SECOND": "für andere Sprachen und Übersetzung", "S_UPD_AVAIL": "Version %s ist verfügbar.",
+		"S_UPD_NONE": "Sie haben die neueste Version", "S_BADGE_MODELS": "Installierte Modelle", "S_BADGE_MISS": "Ein Modell ist nicht geladen", "S_BADGE_SYSTEM": "Warnungen brauchen Aufmerksamkeit", "S_BADGE_HIST": "Einträge im Verlauf", "S_LOG_OPEN": "Protokoll öffnen", "S_LOG": "Protokoll", "S_LOG_SUB": "alles, was die App über sich schreibt", "S_UPD_AVAIL": "Version %s ist verfügbar.",
 		"S_UPD_GO": "Aktualisieren", "S_UPD_ERR": "Update-Prüfung fehlgeschlagen", "S_UPD_DL": "Update wird geladen…",
 		"S_SEC_SERVICE": "Dienst", "S_SUB_AUTOSTART": "ausschalten, wenn Sie den Server selbst starten",
 		"S_SUB_PORT":    "die Erkennung startet sich selbst neu",
@@ -629,7 +632,7 @@ func init() {
 		"S_FIT_OK":      "passt", "S_FIT_WARN": "knapp", "S_FIT_BAD": "zu wenig RAM", "S_RAM": "Arbeitsspeicher:",
 		"S_HF_PH":       "Modellname — z. B. qwen2.5 instruct",
 		"S_NO_LLM":      "Noch keine Modelle installiert — im Suchfeld unten eines finden und laden.",
-		"S_NO_LLM_PROF": "Prompts stehen zur Verfügung, sobald ein Modell installiert ist — Bereich „Modelle“, die Liste des Bearbeitungsmodells unten.",
+		"S_NO_LLM_PROF": "Prompts stehen zur Verfügung, sobald ein Modell installiert ist — die Liste „Editor-Modell“ oben auf dieser Registerkarte.",
 		"S_UPDATED":     "Modell zuletzt aktualisiert", "S_PROF_EDIT": "Bearbeiten", "S_PROF_CLOSE": "Einklappen",
 		"S_CONFIRM_DEL": "Modell „%s“ löschen? Es kann erneut geladen werden.", "S_FREE": "frei",
 		"S_DEL_ACTIVE":     "Das aktive Modell „%s“ löschen? Die Erkennung hält an, bis Sie ein anderes wählen — herunterladen können Sie es gleich hier.",
@@ -706,12 +709,12 @@ func init() {
 			"<li><b>Zeichenweise einfügen</b> — statt Strg+V werden Tastendrücke simuliert, für Felder, die das Einfügen verweigern.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Erkennung</p>" +
-			"<div class=\"mock\"><div class=\"mock-row\"><span class=\"mock-radio on\"></span><b>Small</b><span class=\"mock-note\">Gleichgewicht aus Tempo und Genauigkeit</span><span style=\"margin-left:auto\">466 MB</span></div>" +
-			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Medium (q5)</b><span class=\"mock-note\">genauer, empfohlen</span><span style=\"margin-left:auto\">539 MB ⭳</span></div>" +
-			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Turbo (q5)</b><span class=\"mock-note\">beste Genauigkeit auf der CPU</span><span style=\"margin-left:auto\">574 MB ⭳</span></div></div>" +
+			"<div class=\"mock\"><div class=\"mock-row\"><b>Automatische Erkennung</b><span style=\"margin-left:auto\">Turbo (q5)</span></div>" +
+			"<div class=\"mock-row\"><b>Russisch</b><span style=\"margin-left:auto\">GigaAM v3</span></div>" +
+			"<div class=\"mock-row\"><span class=\"mock-note\">English · wie automatische Erkennung — Turbo (q5)</span><span style=\"margin-left:auto\">▼</span></div></div>" +
 			"<ul>" +
-			"<li><b>Modelle</b> — der Katalog: Base (schnell, für schwache Rechner), Small (ausgewogen), Medium und Turbo (genauer, langsamer; „q5“ ist eine quantisierte Fassung — etwas kleiner und schneller, fast ohne Qualitätsverlust) sowie GigaAM v3 für Russisch. Der Radioknopf wählt das aktive Modell (gilt sofort, die Erkennung startet neu); bei einem fehlenden Modell fragt das Programm, ob es geladen werden soll.</li>" +
-			"<li><b>Zwei Plätze</b> — ein Modell für russische Sprache (GigaAM v3: genauer auf Russisch und setzt die Satzzeichen selbst) und eines für alle anderen Sprachen und für die Übersetzung. Der Status-Bildschirm und die Routing-Tabelle über dem Katalog zeigen, welches Modell welchen Fall übernimmt; der Ratgeber antwortet mit einem Modell und dem Grund dafür.</li>" +
+			"<li><b>Welches Modell für welche Sprache</b> — die Registerkarte „Sprachen & Modelle“ ist eine Liste der Sprachen. Klicken Sie eine an — darunter öffnen sich die Modelle, die sie beherrschen: das zugewiesene und das empfohlene zuerst, fehlende mit Größe und Download-Pfeil. Ein Klick auf die Karte ist die Wahl; ein fehlendes Modell lädt sich selbst und übernimmt, sobald es bereit ist. Sprachen ohne eigenes Modell erben das der automatischen Erkennung und stehen gedimmt da.</li>" +
+			"<li><b>Der Katalog</b> — Whisper: Base (schnell, für schwache PCs), Small (die Balance), Medium und Turbo (genauer und langsamer; „q5“ ist die quantisierte Fassung: etwas kleiner und schneller, fast ohne Qualitätsverlust), sie übersetzen auch ins Englische; GigaAM v3 ist auf Russisch genauer und setzt selbst Satzzeichen; Parakeet v3 deckt 25 europäische Sprachen ab; Nemotron 3.5 tippt, während Sie sprechen. Geladen wird aus den offiziellen Hugging-Face-Repositorien, jede Datei gegen ihren Referenz-Hash geprüft.</li>" +
 			"<li>Der Erkennungsserver hält das Modell zwischen den Sätzen im Speicher — das erste Diktat nach dem Start dauert länger (Laden), danach braucht die Erkennung ein bis drei Sekunden.</li>" +
 			"<li><b>Wörterbuch</b> — Begriffe, Namen und Abkürzungen, durch Kommas getrennt. Ein Hinweis für Whispers „Gehör“, damit seltene Wörter richtig ankommen; keine Befehle.</li>" +
 			"<li><b>Mikrofon</b> — Gerätewahl mit Pegelanzeige (sprechen Sie, und der Balken bewegt sich, dann wird das Gerät gehört). Wird das gewählte Gerät abgezogen, greift das Systemgerät; eine Aufnahme ohne Sprache wird gar nicht erst zur Erkennung geschickt — stattdessen meldet die Leiste „Stille“.</li>" +
@@ -832,22 +835,37 @@ func init() {
 		"S_SAVED":      "Enregistré",
 		"S_ABOUT_HTML": "<p><b>Voix → texte à la position du curseur.</b></p><p>Placez le curseur, maintenez le raccourci, parlez, relâchez — le texte s'insère.</p><p>Entièrement local et hors ligne. Technologies : <b>Go + WinAPI</b>, <b>WebView2</b>, <b>whisper.cpp</b>, <b>llama.cpp</b>, <b>miniaudio</b> ; modèles depuis Hugging Face.</p><p>Les logs ne dépassent jamais ~2 Mo.</p>",
 		  "S_SEARCH": "Trouver un réglage…",
-		"S_GRP_GENERAL": "Général", "S_GRP_SPEECH": "Traitement de la parole", "S_GRP_INFO": "Infos", "S_NAV_POST": "Post-traitement", "S_NAV_HELP": "Aide", "S_NAV_CONTACTS": "Contacts", "S_HIST_ADD": "Ajouter", "S_CONTACT_MAIL": "E-mail", "S_LIB_REC": "Reconnaissance vocale", "S_LIB_INST": "Installés", "S_LIB_AVAIL": "Disponibles au téléchargement", "S_LIB_ACTIVE": "en service", "S_LIB_FIND": "Chercher un modèle…", "S_DICT_MODEL": "Modèle de reconnaissance", "S_TR_BY": "La traduction sera faite par %s", "S_LIB_ACC": "précision", "S_LIB_SPD": "vitesse",
+		"S_GRP_GENERAL": "Général", "S_GRP_SPEECH": "Traitement de la parole", "S_GRP_INFO": "Infos", "S_NAV_POST": "Post-traitement", "S_NAV_HELP": "Aide", "S_NAV_CONTACTS": "Contacts", "S_HIST_ADD": "Ajouter", "S_CONTACT_MAIL": "E-mail", "S_DICT_MODEL": "Modèle de reconnaissance", "S_TR_BY": "La traduction sera faite par %s", "S_LIB_ACC": "précision", "S_LIB_SPD": "vitesse",
 		"S_STATE_ACTIVE": "Reconnaît",
 		"S_STATE_USED": "Modèles en service",
 		"S_STATE_INST": "Installés localement",
 		"S_STATE_INST_SUB": "modèles sur le disque, prêts à être affectés",
 		"S_PRESETS": "Quel modèle pour quelle langue",
-		"S_PRESETS_HINT": "Chaque langue a son propre modèle. Par défaut, Whisper Medium les reconnaît toutes ; rien n’est imposé — changez n’importe quelle ligne.",
+		"S_PRESETS_HINT": "Cliquez sur une langue — le choix des modèles s’ouvre dessous. Les langues sans modèle propre utilisent celui de la détection automatique.",
 		"S_CPU_LINE": "Tous les modèles tournent sur le processeur (CPU) — la carte graphique n’est pas utilisée.",
 		"S_MFOLDER": "Votre propre modèle",
-		"S_MFOLDER_SUB": "placez un modèle dans le dossier models — il apparaît après un redémarrage",
+		"S_MAINT": "Entretien des modèles",
+		"S_OWN_FMT_L": "format",
+		"S_OWN_FMT": "Whisper — un fichier <span class=\"code\">ggml-*.bin</span> · sherpa-onnx — un dossier avec <span class=\"code\">encoder.onnx</span>, <span class=\"code\">decoder.onnx</span>, <span class=\"code\">tokens.txt</span>",
+		"S_OWN_DIR_L": "dossier",
+		"S_OWN_DIR": "À placer dans <span class=\"code\">models\\</span> à côté de l’application — le bouton l’ouvre",
+		"S_OWN_NEXT_L": "ensuite",
+		"S_OWN_NEXT": "Redémarrez l’application — le modèle apparaît dans le choix des langues compatibles",
+		"S_AS_AUTO": "comme la détection automatique",
+		"S_PICK_HINT": "Cliquez sur un modèle pour le choisir pour cette langue. Un modèle absent se télécharge tout seul.",
+		"S_ASSIGNED_CHIP": "attribué",
+		"S_REC_CHIP": "recommandé",
+		"S_BACK_AUTO": "Revenir à la détection automatique",
+		"S_LANGS_COUNT": "langues : %d",
+		"S_LANGS_UNKNOWN": "langues : inconnues",
+		"S_TR_EN": "traduit vers l’anglais",
+		"S_TR_LIST": "traduit : %s",
+		"S_DL_GOING": "téléchargement :",
 		"S_OPEN_FOLDER": "Ouvrir le dossier",
 		"S_UNLOAD": "Décharger de la mémoire",
 		"S_UNLOAD_SUB": "libère la mémoire ; la prochaine dictée recharge le modèle",
 		"S_UNLOAD_GO": "Décharger",
 		"S_UNLOADED": "Déchargé",
-		"S_ONLY_REC": "reconnaissance seule",
 		"S_TR_FALLBACK": "%s ne traduit pas — pour traduire, l’application proposera Whisper",
 		"S_NOT_FOR_LANG": "%s ne reconnaît pas cette langue",
 		"S_MANUAL_NOTE": "Téléchargement impossible depuis l’application — la licence interdit la redistribution. Téléchargez l’archive vous-même et décompressez-la dans models/moonshine-uk.",
@@ -911,13 +929,6 @@ func init() {
 		"S_LISTS_HINT":  "Remplacements et commandes dans un seul fichier — pour passer à un autre ordinateur", "S_LISTS_EXPORT": "Enregistrer dans un fichier", "S_LISTS_IMPORT": "Charger depuis un fichier",
 		"S_MIC": "Microphone", "S_MIC_DEFAULT": "Par défaut du système", "S_MIC_REFRESH": "Actualiser la liste",
 		"S_MIC_LEVEL": "Niveau d'entrée", "S_MIC_QUIET": "silence",
-		"S_ADV_TITLE": "Choisir un modèle", "S_F_ALL": "tous", "S_F_RU": "russe",
-		"S_F_MULTI": "plusieurs langues", "S_F_PUNCT": "ponctue", "S_F_FIT": "tient en mémoire",
-		"S_ADV_LANGQ": "Dans quelle langue dictez-vous", "S_ADV_PRIOQ": "Qu'est-ce qui compte le plus",
-		"S_ADV_ACC": "Choisi pour la précision.", "S_ADV_SPEED": "Choisi pour la vitesse.",
-		"S_ADV_TRQ": "Traduction nécessaire", "S_ADV_GO": "Recommander",
-		"S_ADV_PRIMARY": "principal", "S_ADV_COMPANION": "second", "S_ADV_HAVE": "déjà là", "S_ADV_APPLY": "Appliquer",
-		"S_ADV_ASK":     "Seront téléchargés : %s — %s au total. Commencer ?",
 		"S_SUB_THREADS": "plus de threads n'est pas toujours plus rapide — mesurez sur votre machine",
 		"S_SEC_LLM":     "Modèle d'édition",
 		"S_PUNCT":       "Ponctuation et majuscules", "S_SUB_PUNCT": "d'où viennent la ponctuation et les majuscules",
@@ -928,7 +939,7 @@ func init() {
 		"S_REMOTE_ABOUT": "Un serveur distant est configuré : l'audio y est envoyé, et la promesse ci-dessus ne tient pas tant qu'il est actif.",
 		"S_UPD":          "Mises à jour", "S_UPD_CHECK": "Rechercher des mises à jour", "S_UPD_AUTO": "Vérifier au démarrage",
 		"S_SUB_UPD":  "la seule requête réseau en dehors du téléchargement des modèles",
-		"S_UPD_NONE": "Vous avez la dernière version", "S_BADGE_MODELS": "Modèles installés", "S_BADGE_MISS": "Un modèle n'est pas téléchargé", "S_BADGE_SYSTEM": "Avertissements à examiner", "S_BADGE_HIST": "Entrées dans l'historique", "S_LOG_OPEN": "Ouvrir le journal", "S_LOG": "Journal", "S_LOG_SUB": "tout ce que l'application écrit sur elle-même", "S_ADV_ROLE_MAIN": "pour la langue choisie", "S_ADV_ROLE_SECOND": "pour les autres langues et la traduction", "S_UPD_AVAIL": "La version %s est disponible.",
+		"S_UPD_NONE": "Vous avez la dernière version", "S_BADGE_MODELS": "Modèles installés", "S_BADGE_MISS": "Un modèle n'est pas téléchargé", "S_BADGE_SYSTEM": "Avertissements à examiner", "S_BADGE_HIST": "Entrées dans l'historique", "S_LOG_OPEN": "Ouvrir le journal", "S_LOG": "Journal", "S_LOG_SUB": "tout ce que l'application écrit sur elle-même", "S_UPD_AVAIL": "La version %s est disponible.",
 		"S_UPD_GO": "Mettre à jour", "S_UPD_ERR": "Échec de la vérification", "S_UPD_DL": "Téléchargement de la mise à jour…",
 		"S_SEC_SERVICE": "Service", "S_SUB_AUTOSTART": "désactivez si vous lancez le serveur vous-même",
 		"S_SUB_PORT":    "la reconnaissance redémarre toute seule",
@@ -936,7 +947,7 @@ func init() {
 		"S_FIT_OK":      "tient", "S_FIT_WARN": "juste", "S_FIT_BAD": "mémoire insuffisante", "S_RAM": "Mémoire de l'ordinateur :",
 		"S_HF_PH":       "Nom du modèle — par ex. qwen2.5 instruct",
 		"S_NO_LLM":      "Aucun modèle installé pour l'instant — trouvez-en un dans le champ de recherche ci-dessous.",
-		"S_NO_LLM_PROF": "Les prompts deviennent disponibles dès qu'un modèle est installé — section « Modèles », la liste du modèle d'édition en bas.",
+		"S_NO_LLM_PROF": "Les prompts deviennent disponibles dès qu’un modèle est installé — la liste « Modèle éditeur » en haut de cet onglet.",
 		"S_UPDATED":     "Dernière mise à jour du modèle", "S_PROF_EDIT": "Modifier", "S_PROF_CLOSE": "Replier",
 		"S_CONFIRM_DEL": "Supprimer le modèle « %s » ? Il pourra être téléchargé à nouveau.", "S_FREE": "libre",
 		"S_DEL_ACTIVE":     "Supprimer le modèle actif « %s » ? La reconnaissance s'arrête jusqu'à ce que vous en choisissiez un autre — vous pouvez le télécharger ici même.",
@@ -1013,12 +1024,12 @@ func init() {
 			"<li><b>Insertion caractère par caractère</b> — au lieu de Ctrl+V, les frappes sont simulées, pour les champs qui refusent le collage.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Reconnaissance</p>" +
-			"<div class=\"mock\"><div class=\"mock-row\"><span class=\"mock-radio on\"></span><b>Small</b><span class=\"mock-note\">équilibre vitesse / précision</span><span style=\"margin-left:auto\">466 MB</span></div>" +
-			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Medium (q5)</b><span class=\"mock-note\">plus précis, recommandé</span><span style=\"margin-left:auto\">539 MB ⭳</span></div>" +
-			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Turbo (q5)</b><span class=\"mock-note\">meilleure précision sur CPU</span><span style=\"margin-left:auto\">574 MB ⭳</span></div></div>" +
+			"<div class=\"mock\"><div class=\"mock-row\"><b>Détection automatique</b><span style=\"margin-left:auto\">Turbo (q5)</span></div>" +
+			"<div class=\"mock-row\"><b>Russe</b><span style=\"margin-left:auto\">GigaAM v3</span></div>" +
+			"<div class=\"mock-row\"><span class=\"mock-note\">English · comme la détection automatique — Turbo (q5)</span><span style=\"margin-left:auto\">▼</span></div></div>" +
 			"<ul>" +
-			"<li><b>Modèles</b> — le catalogue : Base (rapide, pour machines modestes), Small (équilibré), Medium et Turbo (plus précis, plus lents ; « q5 » est une version quantifiée — un peu plus petite et plus rapide, presque sans perte) ainsi que GigaAM v3 pour le russe. Le bouton radio choisit le modèle actif (appliqué aussitôt, la reconnaissance redémarre) ; pour un modèle absent, le programme demande s'il faut le télécharger.</li>" +
-			"<li><b>Deux places</b> — un modèle pour le russe (GigaAM v3 : plus précis en russe et il met la ponctuation lui-même) et un pour toutes les autres langues et pour la traduction. L'écran État et le tableau d'acheminement au-dessus du catalogue montrent quel modèle prend quel cas ; le conseiller répond par un modèle et la raison de ce choix.</li>" +
+			"<li><b>Quel modèle pour quelle langue</b> — l’onglet « Langues et modèles » est une liste de langues. Cliquez-en une — les modèles qui la maîtrisent se déploient dessous : l’attribué et le recommandé d’abord, les absents avec leur taille et une flèche de téléchargement. Un clic sur la carte est le choix ; un modèle absent se télécharge tout seul et prend le relais une fois prêt. Les langues sans modèle propre héritent de celui de la détection automatique et s’affichent estompées.</li>" +
+			"<li><b>Le catalogue</b> — Whisper : Base (rapide, pour PC modestes), Small (l’équilibre), Medium et Turbo (plus précis et plus lents ; « q5 » est la version quantifiée : un peu plus petite et rapide, presque sans perte), qui traduisent aussi vers l’anglais ; GigaAM v3 est plus précis en russe et ponctue tout seul ; Parakeet v3 couvre 25 langues européennes ; Nemotron 3.5 tape pendant que vous parlez. Les téléchargements viennent des dépôts officiels Hugging Face, chaque fichier vérifié contre son hachage de référence.</li>" +
 			"<li>Le serveur de reconnaissance garde le modèle en mémoire entre les phrases — la première dictée après le démarrage est plus lente (chargement), ensuite la reconnaissance prend une à trois secondes.</li>" +
 			"<li><b>Dictionnaire</b> — termes, noms et abréviations séparés par des virgules. Une indication pour « l'oreille » de Whisper afin que les mots rares passent correctement ; ce ne sont pas des commandes.</li>" +
 			"<li><b>Microphone</b> — choix de l'appareil avec un niveau en direct (parlez et la barre bouge : l'appareil est bien entendu). Si l'appareil choisi est débranché, celui du système prend le relais ; un enregistrement sans parole n'est jamais envoyé à la reconnaissance — le bandeau annonce « Silence ».</li>" +
@@ -1139,22 +1150,37 @@ func init() {
 		"S_SAVED":      "Guardado",
 		"S_ABOUT_HTML": "<p><b>Voz → texto en la posición del cursor.</b></p><p>Coloque el cursor, mantenga el atajo, hable, suelte — el texto se inserta.</p><p>Totalmente local y sin conexión. Tecnologías: <b>Go + WinAPI</b>, <b>WebView2</b>, <b>whisper.cpp</b>, <b>llama.cpp</b>, <b>miniaudio</b>; modelos de Hugging Face.</p><p>Los logs nunca superan ~2 MB.</p>",
 		  "S_SEARCH": "Buscar un ajuste…",
-		"S_GRP_GENERAL": "General", "S_GRP_SPEECH": "Procesamiento de voz", "S_GRP_INFO": "Información", "S_NAV_POST": "Posprocesado", "S_NAV_HELP": "Ayuda", "S_NAV_CONTACTS": "Contactos", "S_HIST_ADD": "Añadir", "S_CONTACT_MAIL": "Correo", "S_LIB_REC": "Reconocimiento de voz", "S_LIB_INST": "Instalados", "S_LIB_AVAIL": "Disponibles para descargar", "S_LIB_ACTIVE": "en uso", "S_LIB_FIND": "Buscar modelo…", "S_DICT_MODEL": "Modelo de reconocimiento", "S_TR_BY": "La traducción la hará %s", "S_LIB_ACC": "precisión", "S_LIB_SPD": "velocidad",
+		"S_GRP_GENERAL": "General", "S_GRP_SPEECH": "Procesamiento de voz", "S_GRP_INFO": "Información", "S_NAV_POST": "Posprocesado", "S_NAV_HELP": "Ayuda", "S_NAV_CONTACTS": "Contactos", "S_HIST_ADD": "Añadir", "S_CONTACT_MAIL": "Correo", "S_DICT_MODEL": "Modelo de reconocimiento", "S_TR_BY": "La traducción la hará %s", "S_LIB_ACC": "precisión", "S_LIB_SPD": "velocidad",
 		"S_STATE_ACTIVE": "Reconoce",
 		"S_STATE_USED": "Modelos en uso",
 		"S_STATE_INST": "Instalados localmente",
 		"S_STATE_INST_SUB": "modelos en disco, listos para asignar",
 		"S_PRESETS": "Qué modelo para qué idioma",
-		"S_PRESETS_HINT": "Cada idioma tiene su propio modelo. De fábrica, Whisper Medium los reconoce todos; nada es obligatorio — cambie cualquier fila.",
+		"S_PRESETS_HINT": "Haga clic en un idioma — debajo se abre la elección de modelos para él. Los idiomas sin modelo propio usan el de la detección automática.",
 		"S_CPU_LINE": "Todos los modelos funcionan en el procesador (CPU) — la tarjeta gráfica no se usa.",
 		"S_MFOLDER": "Modelo propio",
-		"S_MFOLDER_SUB": "ponga un modelo en la carpeta models — aparece tras reiniciar",
+		"S_MAINT": "Mantenimiento de modelos",
+		"S_OWN_FMT_L": "formato",
+		"S_OWN_FMT": "Whisper — un archivo <span class=\"code\">ggml-*.bin</span> · sherpa-onnx — una carpeta con <span class=\"code\">encoder.onnx</span>, <span class=\"code\">decoder.onnx</span>, <span class=\"code\">tokens.txt</span>",
+		"S_OWN_DIR_L": "carpeta",
+		"S_OWN_DIR": "Colóquelo en <span class=\"code\">models\\</span> junto a la aplicación — el botón la abre",
+		"S_OWN_NEXT_L": "después",
+		"S_OWN_NEXT": "Reinicie la aplicación — el modelo aparecerá en la elección de los idiomas compatibles",
+		"S_AS_AUTO": "como la detección automática",
+		"S_PICK_HINT": "Haga clic en un modelo para elegirlo para este idioma. Uno ausente se descarga solo.",
+		"S_ASSIGNED_CHIP": "asignado",
+		"S_REC_CHIP": "recomendado",
+		"S_BACK_AUTO": "Volver a la detección automática",
+		"S_LANGS_COUNT": "idiomas: %d",
+		"S_LANGS_UNKNOWN": "idiomas: desconocidos",
+		"S_TR_EN": "traduce al inglés",
+		"S_TR_LIST": "traduce: %s",
+		"S_DL_GOING": "descargando:",
 		"S_OPEN_FOLDER": "Abrir carpeta",
 		"S_UNLOAD": "Descargar de la memoria",
 		"S_UNLOAD_SUB": "libera la memoria; el siguiente dictado vuelve a cargar el modelo",
 		"S_UNLOAD_GO": "Liberar",
 		"S_UNLOADED": "Liberado",
-		"S_ONLY_REC": "solo reconocimiento",
 		"S_TR_FALLBACK": "%s no traduce — para traducir, la aplicación ofrecerá Whisper",
 		"S_NOT_FOR_LANG": "%s no reconoce este idioma",
 		"S_MANUAL_NOTE": "No se puede descargar desde la aplicación — la licencia prohíbe la redistribución. Descargue el archivo usted mismo y descomprímalo en models/moonshine-uk.",
@@ -1218,13 +1244,6 @@ func init() {
 		"S_LISTS_HINT":  "Sustituciones y órdenes en un archivo, para llevarlas a otro ordenador", "S_LISTS_EXPORT": "Guardar en un archivo", "S_LISTS_IMPORT": "Cargar desde un archivo",
 		"S_MIC": "Micrófono", "S_MIC_DEFAULT": "Predeterminado del sistema", "S_MIC_REFRESH": "Actualizar la lista",
 		"S_MIC_LEVEL": "Nivel de entrada", "S_MIC_QUIET": "silencio",
-		"S_ADV_TITLE": "Elegir un modelo", "S_F_ALL": "todos", "S_F_RU": "ruso",
-		"S_F_MULTI": "varios idiomas", "S_F_PUNCT": "puntúa", "S_F_FIT": "cabe en memoria",
-		"S_ADV_LANGQ": "¿En qué idioma dictas?", "S_ADV_PRIOQ": "¿Qué importa más?",
-		"S_ADV_ACC": "Elegido por precisión.", "S_ADV_SPEED": "Elegido por velocidad.",
-		"S_ADV_TRQ": "Hace falta traducción", "S_ADV_GO": "Recomendar",
-		"S_ADV_PRIMARY": "principal", "S_ADV_COMPANION": "segundo", "S_ADV_HAVE": "ya está", "S_ADV_APPLY": "Aplicar",
-		"S_ADV_ASK":     "Se descargarán: %s — %s en total. ¿Empezar?",
 		"S_SUB_THREADS": "más hilos no siempre es más rápido — mídelo en tu equipo",
 		"S_SEC_LLM":     "Modelo editor",
 		"S_PUNCT":       "Puntuación y mayúsculas", "S_SUB_PUNCT": "de dónde salen la puntuación y las mayúsculas",
@@ -1235,7 +1254,7 @@ func init() {
 		"S_REMOTE_ABOUT": "Hay un servidor remoto configurado: el audio se envía allí y la promesa anterior no se cumple mientras esté activo.",
 		"S_UPD":          "Actualizaciones", "S_UPD_CHECK": "Buscar actualizaciones", "S_UPD_AUTO": "Comprobar al iniciar",
 		"S_SUB_UPD":  "la única petición de red aparte de la descarga de modelos",
-		"S_UPD_NONE": "Tienes la última versión", "S_BADGE_MODELS": "Modelos instalados", "S_BADGE_MISS": "Falta descargar un modelo", "S_BADGE_SYSTEM": "Avisos que requieren atención", "S_BADGE_HIST": "Entradas en el historial", "S_LOG_OPEN": "Abrir el registro", "S_LOG": "Registro", "S_LOG_SUB": "todo lo que la aplicación escribe sobre sí misma", "S_ADV_ROLE_MAIN": "para el idioma elegido", "S_ADV_ROLE_SECOND": "para otros idiomas y la traducción", "S_UPD_AVAIL": "La versión %s está disponible.",
+		"S_UPD_NONE": "Tienes la última versión", "S_BADGE_MODELS": "Modelos instalados", "S_BADGE_MISS": "Falta descargar un modelo", "S_BADGE_SYSTEM": "Avisos que requieren atención", "S_BADGE_HIST": "Entradas en el historial", "S_LOG_OPEN": "Abrir el registro", "S_LOG": "Registro", "S_LOG_SUB": "todo lo que la aplicación escribe sobre sí misma", "S_UPD_AVAIL": "La versión %s está disponible.",
 		"S_UPD_GO": "Actualizar", "S_UPD_ERR": "Fallo al comprobar", "S_UPD_DL": "Descargando la actualización…",
 		"S_SEC_SERVICE": "Servicio", "S_SUB_AUTOSTART": "desactívalo si arrancas el servidor tú mismo",
 		"S_SUB_PORT":    "el reconocedor se reinicia solo",
@@ -1243,7 +1262,7 @@ func init() {
 		"S_FIT_OK":      "cabe", "S_FIT_WARN": "justo", "S_FIT_BAD": "falta memoria", "S_RAM": "Memoria del equipo:",
 		"S_HF_PH":       "Nombre del modelo — p. ej. qwen2.5 instruct",
 		"S_NO_LLM":      "Todavía no hay modelos instalados — busca uno en el campo de búsqueda de abajo.",
-		"S_NO_LLM_PROF": "Los prompts estarán disponibles en cuanto haya un modelo instalado — sección «Modelos», la lista del modelo editor abajo.",
+		"S_NO_LLM_PROF": "Los prompts estarán disponibles en cuanto haya un modelo instalado — la lista «Modelo editor» arriba en esta pestaña.",
 		"S_UPDATED":     "Última actualización del modelo", "S_PROF_EDIT": "Editar", "S_PROF_CLOSE": "Plegar",
 		"S_CONFIRM_DEL": "¿Eliminar el modelo «%s»? Se puede descargar de nuevo.", "S_FREE": "libre",
 		"S_DEL_ACTIVE":     "¿Eliminar el modelo activo «%s»? El reconocimiento se detiene hasta que elijas otro, y puedes descargarlo aquí mismo.",
@@ -1320,12 +1339,12 @@ func init() {
 			"<li><b>Insertar carácter a carácter</b> — en lugar de Ctrl+V se simulan pulsaciones, para los campos que no admiten pegar.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Reconocimiento</p>" +
-			"<div class=\"mock\"><div class=\"mock-row\"><span class=\"mock-radio on\"></span><b>Small</b><span class=\"mock-note\">equilibrio entre velocidad y precisión</span><span style=\"margin-left:auto\">466 MB</span></div>" +
-			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Medium (q5)</b><span class=\"mock-note\">más preciso, recomendado</span><span style=\"margin-left:auto\">539 MB ⭳</span></div>" +
-			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Turbo (q5)</b><span class=\"mock-note\">la mejor precisión en CPU</span><span style=\"margin-left:auto\">574 MB ⭳</span></div></div>" +
+			"<div class=\"mock\"><div class=\"mock-row\"><b>Detección automática</b><span style=\"margin-left:auto\">Turbo (q5)</span></div>" +
+			"<div class=\"mock-row\"><b>Ruso</b><span style=\"margin-left:auto\">GigaAM v3</span></div>" +
+			"<div class=\"mock-row\"><span class=\"mock-note\">English · como la detección automática — Turbo (q5)</span><span style=\"margin-left:auto\">▼</span></div></div>" +
 			"<ul>" +
-			"<li><b>Modelos</b> — el catálogo: Base (rápido, para equipos modestos), Small (equilibrado), Medium y Turbo (más precisos y más lentos; «q5» es una versión cuantizada — algo más pequeña y rápida, casi sin pérdida) y GigaAM v3 para el ruso. El botón de opción elige el modelo activo (se aplica al momento y el reconocedor se reinicia); si falta el modelo, el programa pregunta si lo descarga.</li>" +
-			"<li><b>Dos plazas</b> — un modelo para el ruso (GigaAM v3: más preciso en ruso y pone la puntuación por su cuenta) y otro para los demás idiomas y para la traducción. La pantalla Estado y la tabla de rutas encima del catálogo enseñan qué modelo se lleva cada caso; el asesor responde con un modelo y el motivo.</li>" +
+			"<li><b>Qué modelo para qué idioma</b> — la pestaña «Idiomas y modelos» es una lista de idiomas. Haga clic en uno — debajo se despliegan los modelos que lo dominan: el asignado y el recomendado primero, los ausentes con su tamaño y una flecha de descarga. Un clic en la tarjeta es la elección; un modelo ausente se descarga solo y entra en cuanto está listo. Los idiomas sin modelo propio heredan el de la detección automática y se muestran atenuados.</li>" +
+			"<li><b>El catálogo</b> — Whisper: Base (rápida, para PC modestos), Small (el equilibrio), Medium y Turbo (más precisas y lentas; «q5» es la versión cuantizada: algo más pequeña y rápida casi sin pérdida), que además traducen al inglés; GigaAM v3 es más precisa en ruso y puntúa sola; Parakeet v3 cubre 25 idiomas europeos; Nemotron 3.5 escribe mientras usted habla. Las descargas vienen de los repositorios oficiales de Hugging Face, cada archivo cotejado con su hash de referencia.</li>" +
 			"<li>El servidor de reconocimiento mantiene el modelo en memoria entre frases — el primer dictado tras arrancar tarda más (carga) y luego el reconocimiento lleva de uno a tres segundos.</li>" +
 			"<li><b>Diccionario</b> — términos, nombres y abreviaturas separados por comas. Una pista para el «oído» de Whisper, para que las palabras raras salgan bien; no son órdenes.</li>" +
 			"<li><b>Micrófono</b> — elección del dispositivo con medidor de nivel (habla y la barra se mueve: el dispositivo se oye). Si desconectas el elegido, se usa el del sistema; una grabación sin voz no se manda a reconocer — la barra dice «Silencio».</li>" +
@@ -1446,22 +1465,37 @@ func init() {
 		"S_SAVED":      "Salvato",
 		"S_ABOUT_HTML": "<p><b>Voce → testo alla posizione del cursore.</b></p><p>Posiziona il cursore, tieni la scorciatoia, parla, rilascia — il testo viene inserito.</p><p>Completamente locale e offline. Tecnologie: <b>Go + WinAPI</b>, <b>WebView2</b>, <b>whisper.cpp</b>, <b>llama.cpp</b>, <b>miniaudio</b>; modelli da Hugging Face.</p><p>I log non superano mai ~2 MB.</p>",
 		  "S_SEARCH": "Trova un'impostazione…",
-		"S_GRP_GENERAL": "Generale", "S_GRP_SPEECH": "Elaborazione vocale", "S_GRP_INFO": "Info", "S_NAV_POST": "Post-elaborazione", "S_NAV_HELP": "Guida", "S_NAV_CONTACTS": "Contatti", "S_HIST_ADD": "Aggiungi", "S_CONTACT_MAIL": "E-mail", "S_LIB_REC": "Riconoscimento vocale", "S_LIB_INST": "Installati", "S_LIB_AVAIL": "Disponibili da scaricare", "S_LIB_ACTIVE": "in uso", "S_LIB_FIND": "Cerca modello…", "S_DICT_MODEL": "Modello di riconoscimento", "S_TR_BY": "La traduzione sarà eseguita da %s", "S_LIB_ACC": "precisione", "S_LIB_SPD": "velocità",
+		"S_GRP_GENERAL": "Generale", "S_GRP_SPEECH": "Elaborazione vocale", "S_GRP_INFO": "Info", "S_NAV_POST": "Post-elaborazione", "S_NAV_HELP": "Guida", "S_NAV_CONTACTS": "Contatti", "S_HIST_ADD": "Aggiungi", "S_CONTACT_MAIL": "E-mail", "S_DICT_MODEL": "Modello di riconoscimento", "S_TR_BY": "La traduzione sarà eseguita da %s", "S_LIB_ACC": "precisione", "S_LIB_SPD": "velocità",
 		"S_STATE_ACTIVE": "Riconosce",
 		"S_STATE_USED": "Modelli in uso",
 		"S_STATE_INST": "Installati localmente",
 		"S_STATE_INST_SUB": "modelli su disco, pronti da assegnare",
 		"S_PRESETS": "Quale modello per quale lingua",
-		"S_PRESETS_HINT": "Ogni lingua ha il suo modello. Di fabbrica Whisper Medium le riconosce tutte; niente è imposto — cambiate qualsiasi riga.",
+		"S_PRESETS_HINT": "Fate clic su una lingua — sotto si apre la scelta dei modelli per essa. Le lingue senza modello proprio usano quello del rilevamento automatico.",
 		"S_CPU_LINE": "Tutti i modelli girano sul processore (CPU) — la scheda video non viene usata.",
 		"S_MFOLDER": "Modello proprio",
-		"S_MFOLDER_SUB": "mettete un modello nella cartella models — appare dopo il riavvio",
+		"S_MAINT": "Manutenzione dei modelli",
+		"S_OWN_FMT_L": "formato",
+		"S_OWN_FMT": "Whisper — un file <span class=\"code\">ggml-*.bin</span> · sherpa-onnx — una cartella con <span class=\"code\">encoder.onnx</span>, <span class=\"code\">decoder.onnx</span>, <span class=\"code\">tokens.txt</span>",
+		"S_OWN_DIR_L": "cartella",
+		"S_OWN_DIR": "Mettetelo in <span class=\"code\">models\\</span> accanto all’applicazione — il pulsante la apre",
+		"S_OWN_NEXT_L": "poi",
+		"S_OWN_NEXT": "Riavviate l’applicazione — il modello apparirà nella scelta delle lingue adatte",
+		"S_AS_AUTO": "come il rilevamento automatico",
+		"S_PICK_HINT": "Fate clic su un modello per sceglierlo per questa lingua. Uno assente si scarica da solo.",
+		"S_ASSIGNED_CHIP": "assegnato",
+		"S_REC_CHIP": "consigliato",
+		"S_BACK_AUTO": "Tornare al rilevamento automatico",
+		"S_LANGS_COUNT": "lingue: %d",
+		"S_LANGS_UNKNOWN": "lingue: sconosciute",
+		"S_TR_EN": "traduce in inglese",
+		"S_TR_LIST": "traduce: %s",
+		"S_DL_GOING": "scaricamento:",
 		"S_OPEN_FOLDER": "Apri cartella",
 		"S_UNLOAD": "Scarica dalla memoria",
 		"S_UNLOAD_SUB": "libera la memoria; la prossima dettatura ricarica il modello",
 		"S_UNLOAD_GO": "Libera",
 		"S_UNLOADED": "Liberato",
-		"S_ONLY_REC": "solo riconoscimento",
 		"S_TR_FALLBACK": "%s non traduce — per tradurre l’app proporrà Whisper",
 		"S_NOT_FOR_LANG": "%s non riconosce questa lingua",
 		"S_MANUAL_NOTE": "Non scaricabile dall’app — la licenza vieta la ridistribuzione. Scaricate l’archivio da soli e scompattatelo in models/moonshine-uk.",
@@ -1525,13 +1559,6 @@ func init() {
 		"S_LISTS_HINT":  "Sostituzioni e comandi in un solo file, da portare su un altro computer", "S_LISTS_EXPORT": "Salva su file", "S_LISTS_IMPORT": "Carica da file",
 		"S_MIC": "Microfono", "S_MIC_DEFAULT": "Predefinito di sistema", "S_MIC_REFRESH": "Aggiorna l'elenco",
 		"S_MIC_LEVEL": "Livello d'ingresso", "S_MIC_QUIET": "silenzio",
-		"S_ADV_TITLE": "Scegli un modello", "S_F_ALL": "tutti", "S_F_RU": "russo",
-		"S_F_MULTI": "più lingue", "S_F_PUNCT": "mette la punteggiatura", "S_F_FIT": "sta in memoria",
-		"S_ADV_LANGQ": "In che lingua detti", "S_ADV_PRIOQ": "Cosa conta di più",
-		"S_ADV_ACC": "Scelto per la precisione.", "S_ADV_SPEED": "Scelto per la velocità.",
-		"S_ADV_TRQ": "Serve la traduzione", "S_ADV_GO": "Consiglia",
-		"S_ADV_PRIMARY": "principale", "S_ADV_COMPANION": "secondo", "S_ADV_HAVE": "già presente", "S_ADV_APPLY": "Applica",
-		"S_ADV_ASK":     "Verranno scaricati: %s — %s in tutto. Iniziare?",
 		"S_SUB_THREADS": "più thread non è sempre più veloce — misura sulla tua macchina",
 		"S_SEC_LLM":     "Modello editor",
 		"S_PUNCT":       "Punteggiatura e maiuscole", "S_SUB_PUNCT": "da dove arrivano punteggiatura e maiuscole",
@@ -1542,7 +1569,7 @@ func init() {
 		"S_REMOTE_ABOUT": "È impostato un server remoto: l'audio viene inviato lì e la promessa qui sopra non vale finché è attivo.",
 		"S_UPD":          "Aggiornamenti", "S_UPD_CHECK": "Cerca aggiornamenti", "S_UPD_AUTO": "Controlla all'avvio",
 		"S_SUB_UPD":  "l'unica richiesta di rete oltre allo scaricamento dei modelli",
-		"S_UPD_NONE": "Hai l'ultima versione", "S_BADGE_MODELS": "Modelli installati", "S_BADGE_MISS": "Un modello non è scaricato", "S_BADGE_SYSTEM": "Avvisi da controllare", "S_BADGE_HIST": "Voci nella cronologia", "S_LOG_OPEN": "Apri il registro", "S_LOG": "Registro", "S_LOG_SUB": "tutto ciò che l'app scrive su di sé", "S_ADV_ROLE_MAIN": "per la lingua scelta", "S_ADV_ROLE_SECOND": "per le altre lingue e la traduzione", "S_UPD_AVAIL": "È disponibile la versione %s.",
+		"S_UPD_NONE": "Hai l'ultima versione", "S_BADGE_MODELS": "Modelli installati", "S_BADGE_MISS": "Un modello non è scaricato", "S_BADGE_SYSTEM": "Avvisi da controllare", "S_BADGE_HIST": "Voci nella cronologia", "S_LOG_OPEN": "Apri il registro", "S_LOG": "Registro", "S_LOG_SUB": "tutto ciò che l'app scrive su di sé", "S_UPD_AVAIL": "È disponibile la versione %s.",
 		"S_UPD_GO": "Aggiorna", "S_UPD_ERR": "Controllo non riuscito", "S_UPD_DL": "Scaricamento dell'aggiornamento…",
 		"S_SEC_SERVICE": "Servizio", "S_SUB_AUTOSTART": "disattiva se avvii il server da solo",
 		"S_SUB_PORT":    "il riconoscitore si riavvia da sé",
@@ -1550,7 +1577,7 @@ func init() {
 		"S_FIT_OK":      "ci sta", "S_FIT_WARN": "al limite", "S_FIT_BAD": "memoria insufficiente", "S_RAM": "Memoria del computer:",
 		"S_HF_PH":       "Nome del modello — per es. qwen2.5 instruct",
 		"S_NO_LLM":      "Ancora nessun modello installato — cercane uno nel campo di ricerca qui sotto.",
-		"S_NO_LLM_PROF": "I prompt diventano disponibili appena è installato un modello — sezione «Modelli», l'elenco del modello editor in basso.",
+		"S_NO_LLM_PROF": "I prompt diventano disponibili appena è installato un modello — l’elenco «Modello editor» in alto in questa scheda.",
 		"S_UPDATED":     "Ultimo aggiornamento del modello", "S_PROF_EDIT": "Modifica", "S_PROF_CLOSE": "Riduci",
 		"S_CONFIRM_DEL": "Eliminare il modello «%s»? Si potrà scaricare di nuovo.", "S_FREE": "liberi",
 		"S_DEL_ACTIVE":     "Eliminare il modello attivo «%s»? Il riconoscimento si ferma finché non ne scegli un altro, che puoi scaricare qui stesso.",
@@ -1627,12 +1654,12 @@ func init() {
 			"<li><b>Inserimento carattere per carattere</b> — invece di Ctrl+V vengono simulati i tasti, per i campi che rifiutano di incollare.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Riconoscimento</p>" +
-			"<div class=\"mock\"><div class=\"mock-row\"><span class=\"mock-radio on\"></span><b>Small</b><span class=\"mock-note\">equilibrio tra velocità e precisione</span><span style=\"margin-left:auto\">466 MB</span></div>" +
-			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Medium (q5)</b><span class=\"mock-note\">più preciso, consigliato</span><span style=\"margin-left:auto\">539 MB ⭳</span></div>" +
-			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Turbo (q5)</b><span class=\"mock-note\">la migliore precisione su CPU</span><span style=\"margin-left:auto\">574 MB ⭳</span></div></div>" +
+			"<div class=\"mock\"><div class=\"mock-row\"><b>Rilevamento automatico</b><span style=\"margin-left:auto\">Turbo (q5)</span></div>" +
+			"<div class=\"mock-row\"><b>Russo</b><span style=\"margin-left:auto\">GigaAM v3</span></div>" +
+			"<div class=\"mock-row\"><span class=\"mock-note\">English · come il rilevamento automatico — Turbo (q5)</span><span style=\"margin-left:auto\">▼</span></div></div>" +
 			"<ul>" +
-			"<li><b>Modelli</b> — il catalogo: Base (veloce, per macchine modeste), Small (equilibrato), Medium e Turbo (più precisi e più lenti; «q5» è una versione quantizzata — un po' più piccola e rapida, quasi senza perdite) e GigaAM v3 per il russo. Il pulsante scelto indica il modello attivo (vale subito, il riconoscitore si riavvia); se il modello manca, il programma chiede se scaricarlo.</li>" +
-			"<li><b>Due posti</b> — un modello per il russo (GigaAM v3: più preciso in russo e mette la punteggiatura da sé) e uno per tutte le altre lingue e per la traduzione. La schermata Stato e la tabella di instradamento sopra il catalogo mostrano quale modello prende quale caso; il consigliere risponde con un modello e il motivo.</li>" +
+			"<li><b>Quale modello per quale lingua</b> — la scheda «Lingue e modelli» è un elenco di lingue. Fatevi clic — sotto si aprono i modelli che la sanno servire: l’assegnato e il consigliato per primi, gli assenti con dimensione e freccia di download. Un clic sulla scheda è la scelta; un modello assente si scarica da solo e subentra appena pronto. Le lingue senza modello proprio ereditano quello del rilevamento automatico e appaiono attenuate.</li>" +
+			"<li><b>Il catalogo</b> — Whisper: Base (veloce, per PC deboli), Small (l’equilibrio), Medium e Turbo (più precisi e lenti; «q5» è la versione quantizzata: un po’ più piccola e veloce quasi senza perdita), che traducono anche in inglese; GigaAM v3 è più preciso in russo e mette da sé la punteggiatura; Parakeet v3 copre 25 lingue europee; Nemotron 3.5 scrive mentre parlate. I download vengono dai repository ufficiali Hugging Face, ogni file verificato contro il suo hash di riferimento.</li>" +
 			"<li>Il server di riconoscimento tiene il modello in memoria tra una frase e l'altra — la prima dettatura dopo l'avvio è più lenta (caricamento), poi il riconoscimento richiede uno-tre secondi.</li>" +
 			"<li><b>Dizionario</b> — termini, nomi e abbreviazioni separati da virgole. Un suggerimento per «l'orecchio» di Whisper, perché le parole rare arrivino giuste; non sono comandi.</li>" +
 			"<li><b>Microfono</b> — scelta del dispositivo con il livello dal vivo (parla e la barra si muove: il dispositivo si sente). Se scolleghi quello scelto, subentra quello di sistema; una registrazione senza voce non viene nemmeno mandata al riconoscimento — la barra dice «Silenzio».</li>" +
@@ -1753,22 +1780,37 @@ func init() {
 		"S_SAVED":      "Zapisano",
 		"S_ABOUT_HTML": "<p><b>Głos → tekst w pozycji kursora.</b></p><p>Ustaw kursor, przytrzymaj skrót, mów, puść — tekst zostanie wstawiony.</p><p>W pełni lokalnie i offline. Technologie: <b>Go + WinAPI</b>, <b>WebView2</b>, <b>whisper.cpp</b>, <b>llama.cpp</b>, <b>miniaudio</b>; modele z Hugging Face.</p><p>Logi nigdy nie przekraczają ~2 MB.</p>",
 		  "S_SEARCH": "Znajdź ustawienie…",
-		"S_GRP_GENERAL": "Ogólne", "S_GRP_SPEECH": "Przetwarzanie mowy", "S_GRP_INFO": "Informacje", "S_NAV_POST": "Obróbka końcowa", "S_NAV_HELP": "Pomoc", "S_NAV_CONTACTS": "Kontakty", "S_HIST_ADD": "Dodaj", "S_CONTACT_MAIL": "E-mail", "S_LIB_REC": "Rozpoznawanie mowy", "S_LIB_INST": "Zainstalowane", "S_LIB_AVAIL": "Dostępne do pobrania", "S_LIB_ACTIVE": "w użyciu", "S_LIB_FIND": "Znajdź model…", "S_DICT_MODEL": "Model rozpoznawania", "S_TR_BY": "Tłumaczenie wykona %s", "S_LIB_ACC": "dokładność", "S_LIB_SPD": "szybkość",
+		"S_GRP_GENERAL": "Ogólne", "S_GRP_SPEECH": "Przetwarzanie mowy", "S_GRP_INFO": "Informacje", "S_NAV_POST": "Obróbka końcowa", "S_NAV_HELP": "Pomoc", "S_NAV_CONTACTS": "Kontakty", "S_HIST_ADD": "Dodaj", "S_CONTACT_MAIL": "E-mail", "S_DICT_MODEL": "Model rozpoznawania", "S_TR_BY": "Tłumaczenie wykona %s", "S_LIB_ACC": "dokładność", "S_LIB_SPD": "szybkość",
 		"S_STATE_ACTIVE": "Rozpoznaje",
 		"S_STATE_USED": "Modele w użyciu",
 		"S_STATE_INST": "Zainstalowane lokalnie",
 		"S_STATE_INST_SUB": "modele na dysku, gotowe do przypisania",
 		"S_PRESETS": "Który model dla którego języka",
-		"S_PRESETS_HINT": "Każdy język ma własny model. Domyślnie wszystkie rozpoznaje Whisper Medium; nic nie jest narzucone — zmień dowolny wiersz.",
+		"S_PRESETS_HINT": "Kliknij język — pod nim otworzy się wybór modeli dla niego. Języki bez własnego modelu używają modelu automatycznego wykrywania.",
 		"S_CPU_LINE": "Wszystkie modele działają na procesorze (CPU) — karta graficzna nie jest używana.",
 		"S_MFOLDER": "Własny model",
-		"S_MFOLDER_SUB": "umieść model w folderze models — pojawi się po ponownym uruchomieniu",
+		"S_MAINT": "Obsługa modeli",
+		"S_OWN_FMT_L": "format",
+		"S_OWN_FMT": "Whisper — plik <span class=\"code\">ggml-*.bin</span> · sherpa-onnx — folder z <span class=\"code\">encoder.onnx</span>, <span class=\"code\">decoder.onnx</span>, <span class=\"code\">tokens.txt</span>",
+		"S_OWN_DIR_L": "folder",
+		"S_OWN_DIR": "Umieść w <span class=\"code\">models\\</span> obok aplikacji — przycisk go otworzy",
+		"S_OWN_NEXT_L": "potem",
+		"S_OWN_NEXT": "Uruchom aplikację ponownie — model pojawi się w wyborze pasujących języków",
+		"S_AS_AUTO": "jak automatyczne wykrywanie",
+		"S_PICK_HINT": "Kliknij model, aby wybrać go dla tego języka. Brakujący pobierze się sam.",
+		"S_ASSIGNED_CHIP": "przypisany",
+		"S_REC_CHIP": "polecany",
+		"S_BACK_AUTO": "Wróć do automatycznego wykrywania",
+		"S_LANGS_COUNT": "języków: %d",
+		"S_LANGS_UNKNOWN": "języki: nieznane",
+		"S_TR_EN": "tłumaczy na angielski",
+		"S_TR_LIST": "tłumaczy: %s",
+		"S_DL_GOING": "pobieranie:",
 		"S_OPEN_FOLDER": "Otwórz folder",
 		"S_UNLOAD": "Wyładuj z pamięci",
 		"S_UNLOAD_SUB": "zwalnia pamięć; następne dyktowanie ponownie wczyta model",
 		"S_UNLOAD_GO": "Wyładuj",
 		"S_UNLOADED": "Wyładowano",
-		"S_ONLY_REC": "tylko rozpoznawanie",
 		"S_TR_FALLBACK": "%s nie tłumaczy — do tłumaczenia aplikacja zaproponuje Whisper",
 		"S_NOT_FOR_LANG": "%s nie rozpoznaje tego języka",
 		"S_MANUAL_NOTE": "Nie można pobrać z aplikacji — licencja zabrania rozpowszechniania. Pobierz archiwum samodzielnie i rozpakuj do models/moonshine-uk.",
@@ -1832,13 +1874,6 @@ func init() {
 		"S_LISTS_HINT":  "Zamiany i polecenia w jednym pliku — do przeniesienia na inny komputer", "S_LISTS_EXPORT": "Zapisz do pliku", "S_LISTS_IMPORT": "Wczytaj z pliku",
 		"S_MIC": "Mikrofon", "S_MIC_DEFAULT": "Domyślny systemowy", "S_MIC_REFRESH": "Odśwież listę",
 		"S_MIC_LEVEL": "Poziom wejścia", "S_MIC_QUIET": "cisza",
-		"S_ADV_TITLE": "Dobierz model", "S_F_ALL": "wszystkie", "S_F_RU": "rosyjski",
-		"S_F_MULTI": "wiele języków", "S_F_PUNCT": "stawia znaki", "S_F_FIT": "mieści się w pamięci",
-		"S_ADV_LANGQ": "W jakim języku dyktujesz", "S_ADV_PRIOQ": "Co jest ważniejsze",
-		"S_ADV_ACC": "Wybrany dla dokładności.", "S_ADV_SPEED": "Wybrany dla szybkości.",
-		"S_ADV_TRQ": "Potrzebne tłumaczenie", "S_ADV_GO": "Poleć",
-		"S_ADV_PRIMARY": "główny", "S_ADV_COMPANION": "drugi", "S_ADV_HAVE": "już jest", "S_ADV_APPLY": "Zastosuj",
-		"S_ADV_ASK":     "Zostaną pobrane: %s — razem %s. Zacząć?",
 		"S_SUB_THREADS": "więcej wątków nie zawsze znaczy szybciej — zmierz na swoim komputerze",
 		"S_SEC_LLM":     "Model redaktora",
 		"S_PUNCT":       "Znaki i wielkie litery", "S_SUB_PUNCT": "skąd biorą się znaki interpunkcyjne i wielkie litery",
@@ -1849,7 +1884,7 @@ func init() {
 		"S_REMOTE_ABOUT": "Ustawiony jest serwer zdalny: dźwięk trafia do niego, a obietnica powyżej wtedy nie obowiązuje.",
 		"S_UPD":          "Aktualizacje", "S_UPD_CHECK": "Sprawdź aktualizacje", "S_UPD_AUTO": "Sprawdzaj przy starcie",
 		"S_SUB_UPD":  "jedyne zapytanie sieciowe poza pobieraniem modeli",
-		"S_UPD_NONE": "Masz najnowszą wersję", "S_BADGE_MODELS": "Zainstalowane modele", "S_BADGE_MISS": "Model nie został pobrany", "S_BADGE_SYSTEM": "Ostrzeżenia wymagają uwagi", "S_BADGE_HIST": "Wpisy w historii", "S_LOG_OPEN": "Otwórz dziennik", "S_LOG": "Dziennik", "S_LOG_SUB": "wszystko, co aplikacja o sobie zapisuje", "S_ADV_ROLE_MAIN": "dla wybranego języka", "S_ADV_ROLE_SECOND": "dla pozostałych języków i tłumaczenia", "S_UPD_AVAIL": "Dostępna jest wersja %s.",
+		"S_UPD_NONE": "Masz najnowszą wersję", "S_BADGE_MODELS": "Zainstalowane modele", "S_BADGE_MISS": "Model nie został pobrany", "S_BADGE_SYSTEM": "Ostrzeżenia wymagają uwagi", "S_BADGE_HIST": "Wpisy w historii", "S_LOG_OPEN": "Otwórz dziennik", "S_LOG": "Dziennik", "S_LOG_SUB": "wszystko, co aplikacja o sobie zapisuje", "S_UPD_AVAIL": "Dostępna jest wersja %s.",
 		"S_UPD_GO": "Aktualizuj", "S_UPD_ERR": "Sprawdzenie nie powiodło się", "S_UPD_DL": "Pobieranie aktualizacji…",
 		"S_SEC_SERVICE": "Usługa", "S_SUB_AUTOSTART": "wyłącz, jeśli sam uruchamiasz serwer",
 		"S_SUB_PORT":    "rozpoznawanie samo się przeładuje",
@@ -1857,7 +1892,7 @@ func init() {
 		"S_FIT_OK":      "mieści się", "S_FIT_WARN": "na styk", "S_FIT_BAD": "za mało pamięci", "S_RAM": "Pamięć komputera:",
 		"S_HF_PH":       "Nazwa modelu — np. qwen2.5 instruct",
 		"S_NO_LLM":      "Nie ma jeszcze żadnego modelu — znajdź go w polu wyszukiwania poniżej.",
-		"S_NO_LLM_PROF": "Prompty staną się dostępne, gdy będzie zainstalowany model — sekcja „Modele”, lista modelu-redaktora na dole.",
+		"S_NO_LLM_PROF": "Prompty staną się dostępne, gdy będzie zainstalowany model — lista „Model-redaktor” u góry tej karty.",
 		"S_UPDATED":     "Ostatnia aktualizacja modelu", "S_PROF_EDIT": "Edytuj", "S_PROF_CLOSE": "Zwiń",
 		"S_CONFIRM_DEL": "Usunąć model „%s”? Będzie można pobrać go ponownie.", "S_FREE": "wolne",
 		"S_DEL_ACTIVE":     "Usunąć aktywny model „%s”? Rozpoznawanie zatrzyma się, dopóki nie wybierzesz innego — pobrać go można tutaj.",
@@ -1934,12 +1969,12 @@ func init() {
 			"<li><b>Wstawianie znak po znaku</b> — zamiast Ctrl+V symulowane są naciśnięcia klawiszy, dla pól, które nie przyjmują wklejania.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Rozpoznawanie</p>" +
-			"<div class=\"mock\"><div class=\"mock-row\"><span class=\"mock-radio on\"></span><b>Small</b><span class=\"mock-note\">równowaga szybkości i dokładności</span><span style=\"margin-left:auto\">466 MB</span></div>" +
-			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Medium (q5)</b><span class=\"mock-note\">dokładniejszy, polecany</span><span style=\"margin-left:auto\">539 MB ⭳</span></div>" +
-			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Turbo (q5)</b><span class=\"mock-note\">najlepsza dokładność na CPU</span><span style=\"margin-left:auto\">574 MB ⭳</span></div></div>" +
+			"<div class=\"mock\"><div class=\"mock-row\"><b>Automatyczne wykrywanie</b><span style=\"margin-left:auto\">Turbo (q5)</span></div>" +
+			"<div class=\"mock-row\"><b>Rosyjski</b><span style=\"margin-left:auto\">GigaAM v3</span></div>" +
+			"<div class=\"mock-row\"><span class=\"mock-note\">English · jak wykrywanie automatyczne — Turbo (q5)</span><span style=\"margin-left:auto\">▼</span></div></div>" +
 			"<ul>" +
-			"<li><b>Modele</b> — katalog: Base (szybki, na słabe komputery), Small (zrównoważony), Medium i Turbo (dokładniejsze, wolniejsze; „q5” to wersja skwantyzowana — nieco mniejsza i szybsza, prawie bez straty jakości) oraz GigaAM v3 dla rosyjskiego. Przycisk wyboru wskazuje aktywny model (działa od razu, rozpoznawanie startuje na nowo); przy brakującym modelu program pyta, czy go pobrać.</li>" +
-			"<li><b>Dwa miejsca</b> — jeden model dla rosyjskiego (GigaAM v3: dokładniejszy po rosyjsku i sam stawia znaki przestankowe) i jeden dla pozostałych języków oraz dla tłumaczenia. Ekran „Stan” i tabela tras nad katalogiem pokazują, który model bierze który przypadek; doradca odpowiada modelem i powodem wyboru.</li>" +
+			"<li><b>Który model dla którego języka</b> — karta „Języki i modele” to lista języków. Kliknij język — pod nim rozwiną się modele, które go potrafią: przypisany i polecany najpierw, brakujące z rozmiarem i strzałką pobierania. Kliknięcie karty to wybór; brakujący model pobierze się sam i przejmie pracę, gdy będzie gotowy. Języki bez własnego modelu dziedziczą model automatycznego wykrywania i są przygaszone.</li>" +
+			"<li><b>Katalog</b> — Whisper: Base (szybki, dla słabszych PC), Small (równowaga), Medium i Turbo (dokładniejsze i wolniejsze; „q5” to wersja skwantyzowana: nieco mniejsza i szybsza niemal bez straty), tłumaczą też na angielski; GigaAM v3 jest dokładniejszy po rosyjsku i sam stawia interpunkcję; Parakeet v3 obejmuje 25 języków europejskich; Nemotron 3.5 pisze, gdy mówisz. Pobierane z oficjalnych repozytoriów Hugging Face, każdy plik sprawdzany z hashem wzorcowym.</li>" +
 			"<li>Serwer rozpoznawania trzyma model w pamięci między zdaniami — pierwsze dyktowanie po starcie trwa dłużej (ładowanie), potem rozpoznanie zajmuje jedną–trzy sekundy.</li>" +
 			"<li><b>Słownik</b> — terminy, nazwy i skróty po przecinku. Podpowiedź dla „ucha” Whispera, żeby rzadkie słowa trafiały poprawnie; to nie są polecenia.</li>" +
 			"<li><b>Mikrofon</b> — wybór urządzenia z miernikiem poziomu (mów, a słupek się rusza — czyli urządzenie jest słyszane). Gdy wybrane urządzenie zniknie, wraca systemowe; nagranie bez mowy w ogóle nie trafia do rozpoznawania — pasek mówi „Cisza”.</li>" +
@@ -2096,8 +2131,7 @@ func init() {
 		"route.why.language": "тут точніше, з розділовими", "route.why.otherlang": "99 мов",
 		"route.why.translate": "перекладає лише Whisper", "route.why.notinstalled": "російську модель не встановлено",
 		"route.why.unknownlang": "мову не задано — розпізнає лише Whisper", "route.why.forced": "примусово в config.json",
-		"adv.pick": "Раджу %s.", "adv.companion": "%s добре доповнить — для інших мов і перекладу.",
-		"adv.ram": "%d МБ вільно", "status.line": "Готово · %s · %.1f ГБ вільно",
+		"status.line": "Готово · %s · %.1f ГБ вільно",
 		"ago.now": "щойно", "ago.min": "%d хв тому", "ago.hour": "%d год тому",
 		"chars": "%d символів", "inserted.into": "вставлено в %s",
 		"punct.prompt":         "Додай розділові знаки та великі літери. Не змінюй слова, не перекладай, нічого не додавай. Поверни лише виправлений текст.",
@@ -2122,7 +2156,7 @@ func init() {
 		"S_WIZ_NEED_MODEL": "Спочатку завантажте модель — без неї немає чим розпізнавати",
 		"S_SUB_PROMPTS":    "Промпти",
 		"S_SUB_DICT":       "Словник", "S_UPD": "Оновлення", "S_UPD_CHECK": "Перевірити оновлення", "S_UPD_AUTO": "Перевіряти під час запуску",
-		"S_UPD_NONE": "Встановлено останню версію", "S_BADGE_MODELS": "Встановлені моделі", "S_BADGE_MISS": "Модель не завантажена", "S_BADGE_SYSTEM": "Попередження — потрібна увага", "S_BADGE_HIST": "Записів в історії", "S_LOG_OPEN": "Відкрити лог", "S_LOG": "Журнал роботи", "S_LOG_SUB": "усе, що застосунок пише про себе", "S_ADV_ROLE_MAIN": "для обраної мови", "S_ADV_ROLE_SECOND": "для інших мов і перекладу", "S_UPD_AVAIL": "Доступна версія %s.",
+		"S_UPD_NONE": "Встановлено останню версію", "S_BADGE_MODELS": "Встановлені моделі", "S_BADGE_MISS": "Модель не завантажена", "S_BADGE_SYSTEM": "Попередження — потрібна увага", "S_BADGE_HIST": "Записів в історії", "S_LOG_OPEN": "Відкрити лог", "S_LOG": "Журнал роботи", "S_LOG_SUB": "усе, що застосунок пише про себе", "S_UPD_AVAIL": "Доступна версія %s.",
 		"S_UPD_GO": "Оновити", "S_UPD_ERR": "Не вдалося перевірити оновлення", "S_UPD_DL": "Завантажую оновлення…",
 		"S_AUTHOR_HTML": "<p style=\"font-size:15px;letter-spacing:2px\"><b>Vitalii Yemets</b></p>" +
 			"<p>Автор і розробник {app} — локального диктувальника для Windows: голос перетворюється на текст просто в позиції курсора, без хмар і підписок.</p>" +
@@ -2135,7 +2169,7 @@ func init() {
 		"S_RAM": "Пам'ять комп'ютера:", "S_HF_PH": "Назва моделі — наприклад, qwen2.5 instruct",
 		"S_FIT_OK": "поміститься", "S_FIT_WARN": "впритул", "S_FIT_BAD": "не вистачить пам'яті",
 		"S_NO_LLM":      "Ще не встановлено жодної моделі — знайдіть і завантажте в полі пошуку нижче.",
-		"S_NO_LLM_PROF": "Промпти стануть доступні після встановлення моделі — розділ «Моделі», список моделі-редактора внизу.",
+		"S_NO_LLM_PROF": "Промпти стануть доступні після встановлення моделі — список «Модель-редактор» вище на цій вкладці.",
 		"S_UPDATED":     "Дата останнього оновлення моделі",
 		"S_HOTKEY":      "Сполучення клавіш", "S_CHANGE": "Змінити…", "S_UILANG": "Мова інтерфейсу", "S_AUTO": "Як у системі",
 		"S_SEC_SOUND": "Звук", "S_SEC_BEHAVIOR": "Поведінка", "S_BEEP": "Звукові сигнали запису", "S_SOUND": "Сигнал",
@@ -2183,22 +2217,37 @@ func init() {
 		"S_SAVED":      "Збережено",
 		"S_ABOUT_HTML": "<p><b>Голос → текст у позицію курсора.</b></p><p>Поставте курсор у поле введення, утримуйте сполучення клавіш, скажіть фразу, відпустіть — текст вставиться сам.</p><p>Повністю локально й офлайн. Технології: <b>Go + WinAPI</b>, <b>WebView2</b>, <b>whisper.cpp</b>, <b>llama.cpp</b>, <b>miniaudio</b>; моделі з Hugging Face.</p><p>Логи не перевищують ~2 МБ.</p>",
 		  "S_SEARCH": "Знайти налаштування…",
-		"S_GRP_GENERAL": "Загальне", "S_GRP_SPEECH": "Обробка мовлення", "S_GRP_INFO": "Відомості", "S_NAV_POST": "Постобробка", "S_NAV_HELP": "Довідка", "S_NAV_CONTACTS": "Контакти", "S_HIST_ADD": "Додати", "S_CONTACT_MAIL": "Пошта", "S_LIB_REC": "Розпізнавання мовлення", "S_LIB_INST": "Встановлені", "S_LIB_AVAIL": "Доступні для завантаження", "S_LIB_ACTIVE": "розпізнає", "S_LIB_FIND": "Знайти модель…", "S_DICT_MODEL": "Модель розпізнавання", "S_TR_BY": "Переклад виконає %s", "S_LIB_ACC": "точність", "S_LIB_SPD": "швидкість",
+		"S_GRP_GENERAL": "Загальне", "S_GRP_SPEECH": "Обробка мовлення", "S_GRP_INFO": "Відомості", "S_NAV_POST": "Постобробка", "S_NAV_HELP": "Довідка", "S_NAV_CONTACTS": "Контакти", "S_HIST_ADD": "Додати", "S_CONTACT_MAIL": "Пошта", "S_DICT_MODEL": "Модель розпізнавання", "S_TR_BY": "Переклад виконає %s", "S_LIB_ACC": "точність", "S_LIB_SPD": "швидкість",
 		"S_STATE_ACTIVE": "Розпізнає",
 		"S_STATE_USED": "Задіяні моделі",
 		"S_STATE_INST": "Встановлені локально",
 		"S_STATE_INST_SUB": "моделі на диску, готові до призначення",
 		"S_PRESETS": "Яка модель якій мові",
-		"S_PRESETS_HINT": "Кожній мові — своя модель. Типово всі мови розпізнає Whisper Medium; нічого не нав’язується — змінюйте будь-який рядок.",
+		"S_PRESETS_HINT": "Клацніть мову — під нею розгорнеться вибір моделей для неї. Мови без власної моделі використовують модель автовизначення.",
 		"S_CPU_LINE": "Усі моделі працюють на процесорі (CPU) — відеокарта не використовується.",
 		"S_MFOLDER": "Своя модель",
-		"S_MFOLDER_SUB": "покладіть модель у теку models — вона з’явиться після перезапуску",
+		"S_MAINT": "Обслуговування моделей",
+		"S_OWN_FMT_L": "формат",
+		"S_OWN_FMT": "Whisper — файл <span class=\"code\">ggml-*.bin</span> · sherpa-onnx — тека з <span class=\"code\">encoder.onnx</span>, <span class=\"code\">decoder.onnx</span>, <span class=\"code\">tokens.txt</span>",
+		"S_OWN_DIR_L": "тека",
+		"S_OWN_DIR": "Покладіть у <span class=\"code\">models\\</span> поруч із застосунком — кнопка її відкриє",
+		"S_OWN_NEXT_L": "далі",
+		"S_OWN_NEXT": "Перезапустіть застосунок — модель з’явиться у виборі відповідних мов",
+		"S_AS_AUTO": "як автовизначення",
+		"S_PICK_HINT": "Клацніть модель, щоб вибрати її для цієї мови. Відсутня завантажиться сама.",
+		"S_ASSIGNED_CHIP": "призначена",
+		"S_REC_CHIP": "радимо",
+		"S_BACK_AUTO": "Повернути як автовизначення",
+		"S_LANGS_COUNT": "мов: %d",
+		"S_LANGS_UNKNOWN": "мови: невідомі",
+		"S_TR_EN": "перекладає англійською",
+		"S_TR_LIST": "перекладає: %s",
+		"S_DL_GOING": "завантажується:",
 		"S_OPEN_FOLDER": "Відкрити теку",
 		"S_UNLOAD": "Вивантажити з пам’яті",
 		"S_UNLOAD_SUB": "пам’ять звільниться; наступне диктування завантажить модель знову",
 		"S_UNLOAD_GO": "Вивантажити",
 		"S_UNLOADED": "Вивантажено",
-		"S_ONLY_REC": "лише розпізнавання",
 		"S_TR_FALLBACK": "%s не перекладає — для перекладу програма запропонує Whisper",
 		"S_NOT_FOR_LANG": "%s не розпізнає цю мову",
 		"S_MANUAL_NOTE": "Завантажити з програми не можна — ліцензія забороняє поширення. Скачайте архів за посиланням і розпакуйте в models/moonshine-uk.",
@@ -2255,13 +2304,6 @@ func init() {
 		"S_SUB_CLIP":    "зображення й файли повертаються як були",
 		"S_SUB_TYPE":    "допомагає там, де поле не приймає вставку",
 		"S_SEC_OVERLAY": "Смужка на екрані",
-		"S_ADV_TITLE":   "Підібрати модель", "S_F_ALL": "усі", "S_F_RU": "російська",
-		"S_F_MULTI": "багато мов", "S_F_PUNCT": "ставить розділові", "S_F_FIT": "вміщується в пам'ять",
-		"S_ADV_LANGQ": "Якою мовою ви диктуєте", "S_ADV_PRIOQ": "Що важливіше",
-		"S_ADV_ACC": "Обрано за точністю.", "S_ADV_SPEED": "Обрано за швидкістю.",
-		"S_ADV_TRQ": "Потрібен переклад", "S_ADV_GO": "Порадити",
-		"S_ADV_PRIMARY": "основна", "S_ADV_COMPANION": "друга", "S_ADV_HAVE": "уже є", "S_ADV_APPLY": "Застосувати",
-		"S_ADV_ASK":     "Буде завантажено: %s — разом %s. Почати?",
 		"S_SUB_THREADS": "більше потоків не завжди швидше — виміряйте на своїй машині",
 		"S_SEC_LLM":     "Модель-редактор",
 		"S_PUNCT":       "Розділові знаки й великі літери", "S_SUB_PUNCT": "звідки беруться розділові знаки й великі літери",
@@ -2337,12 +2379,12 @@ func init() {
 			"<li><b>Вставка посимвольно</b> — замість Ctrl+V імітуються натискання клавіш, для полів, які не приймають вставку.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Розпізнавання</p>" +
-			"<div class=\"mock\"><div class=\"mock-row\"><span class=\"mock-radio on\"></span><b>Small</b><span class=\"mock-note\">рівновага швидкості й точності</span><span style=\"margin-left:auto\">466 MB</span></div>" +
-			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Medium (q5)</b><span class=\"mock-note\">точніша, рекомендована</span><span style=\"margin-left:auto\">539 MB ⭳</span></div>" +
-			"<div class=\"mock-row\"><span class=\"mock-radio\"></span><b>Turbo (q5)</b><span class=\"mock-note\">найкраща точність на CPU</span><span style=\"margin-left:auto\">574 MB ⭳</span></div></div>" +
+			"<div class=\"mock\"><div class=\"mock-row\"><b>Автовизначення</b><span style=\"margin-left:auto\">Turbo (q5)</span></div>" +
+			"<div class=\"mock-row\"><b>Російська</b><span style=\"margin-left:auto\">GigaAM v3</span></div>" +
+			"<div class=\"mock-row\"><span class=\"mock-note\">English · як автовизначення — Turbo (q5)</span><span style=\"margin-left:auto\">▼</span></div></div>" +
 			"<ul>" +
-			"<li><b>Моделі</b> — каталог: Base (швидка, для слабких ПК), Small (збалансована), Medium і Turbo (точніші, повільніші; «q5» — квантована збірка: трохи менша й швидша майже без утрати якості), а також GigaAM v3 для російської. Радіокнопка обирає активну модель (діє одразу, розпізнавач перезапускається); якщо моделі немає, програма запитує, чи завантажити її.</li>" +
-			"<li><b>Два слоти</b> — одна модель для російського мовлення (GigaAM v3: точніша російською й сама ставить розділові знаки) і одна для решти мов та для перекладу. Екран «Стан» і таблиця маршрутизації над каталогом показують, куди йде кожен випадок; порадник відповідає моделлю та причиною вибору.</li>" +
+			"<li><b>Яка модель якій мові</b> — вкладка «Мови і моделі» — це список мов. Клацніть мову — під нею розгорнуться моделі, що її вміють: призначена й рекомендована першими, відсутні — з розміром і стрілкою завантаження. Клац по картці — це вибір; відсутня модель завантажиться сама й підхопить роботу, щойно буде готова. Мови без власної моделі успадковують модель автовизначення й показані тьмяно.</li>" +
+			"<li><b>Каталог</b> — Whisper: Base (швидка, для слабких ПК), Small (баланс), Medium і Turbo (точніші й повільніші; «q5» — квантована версія: трохи менша й швидша майже без втрат), вони ж перекладають англійською; GigaAM v3 точніша російською й сама ставить розділові знаки; Parakeet v3 — 25 європейських мов; Nemotron 3.5 друкує, поки ви говорите. Завантаження — з офіційних репозиторіїв Hugging Face, кожен файл звіряється з еталонним хешем.</li>" +
 			"<li>Сервер розпізнавання тримає модель у пам'яті між фразами — перше диктування після запуску повільніше (завантаження), далі розпізнавання займає одну-три секунди.</li>" +
 			"<li><b>Словник</b> — терміни, назви та скорочення через кому. Підказка для «вуха» Whisper, щоб рідкісні слова виходили правильно; це не команди.</li>" +
 			"<li><b>Мікрофон</b> — вибір пристрою зі шкалою рівня (говоріть — і смужка рухається, отже пристрій чути). Якщо обраний пристрій зник, береться системний; запис без мовлення взагалі не йде на розпізнавання — смужка каже «Тиша».</li>" +

@@ -258,9 +258,6 @@ func (a *App) settingsThread(tab string, attempt int) {
 		_ = w.Bind("appState", func() string {
 			return a.stateSnapshot()
 		})
-		_ = w.Bind("appAdvise", func(lang, priority string, needTranslate bool) string {
-			return adviseModel(lang, priority, needTranslate)
-		})
 		_ = w.Bind("appUnloadEngines", func() {
 			a.parkEngines()
 		})
@@ -972,9 +969,12 @@ func settingsHTML(cfg *Config, tab string) string {
 		"exewarn": "S_EXE_WARN", "exeedit": "S_PROF_EDIT", "resetask": "S_RESET_ALL_ASK", "resetbtn": "S_RESET_ALL_BTN",
 		"updfound":   "S_UPD_FOUND",
 		"micdefault": "S_MIC_DEFAULT", "micquiet": "S_MIC_QUIET", "get": "S_STATE_GET", "change": "S_CHANGE_MODEL",
-		"libinst": "S_LIB_INST", "libavail": "S_LIB_AVAIL", "libactive": "S_LIB_ACTIVE", "trby": "S_TR_BY",
+		"trby": "S_TR_BY",
 		"acc": "S_LIB_ACC", "spd": "S_LIB_SPD",
-		"recauto": "S_RECAUTO", "onlyrec": "S_ONLY_REC", "trfallback": "S_TR_FALLBACK",
+		"recauto": "S_RECAUTO", "trfallback": "S_TR_FALLBACK",
+		"asauto": "S_AS_AUTO", "pickhint": "S_PICK_HINT", "assigned": "S_ASSIGNED_CHIP", "recchip": "S_REC_CHIP",
+		"backauto": "S_BACK_AUTO", "langsc": "S_LANGS_COUNT", "langsq": "S_LANGS_UNKNOWN",
+		"tren": "S_TR_EN", "translist": "S_TR_LIST", "dlgoing": "S_DL_GOING",
 		"notforlang": "S_NOT_FOR_LANG", "notinstalled": "S_NOT_INSTALLED",
 		"manualnote": "S_MANUAL_NOTE", "manuallink": "S_MANUAL_LINK",
 		"unload": "S_UNLOAD_GO", "unloaded": "S_UNLOADED",
@@ -984,8 +984,6 @@ func settingsHTML(cfg *Config, tab string) string {
 		"postkeyset": "S_POSTAPI_KEY_SET", "postkeynone": "S_POSTAPI_KEY_NONE",
 		"remotewarn": "S_REMOTE_WARN", "remoteask": "S_REMOTE_ASK", "remotebadge": "S_REMOTE_BADGE",
 		"ok": "S_OK", "cancel": "S_CANCEL", "dlask": "S_DL_ASK", "dlstart": "S_DL_START", "dlcancel": "S_DL_CANCEL", "nofound": "S_NOT_FOUND",
-		"advrolemain": "S_ADV_ROLE_MAIN", "advrolesecond": "S_ADV_ROLE_SECOND",
-		"advprimary": "S_ADV_PRIMARY", "advcompanion": "S_ADV_COMPANION", "advhave": "S_ADV_HAVE", "advapply": "S_ADV_APPLY", "advask": "S_ADV_ASK",
 		"pasteinh": "S_RULE_PASTE_INH", "enterinh": "S_RULE_ENTER_INH", "delaynone": "S_RULE_DELAY_NONE", "promptinh": "S_RULE_PROMPT_INH",
 		"ruleclip": "S_RULE_CLIP", "ruletype": "S_RULE_TYPE",
 		"ruleenteron": "S_RULE_ENTER_ON", "ruleenteroff": "S_RULE_ENTER_OFF", "rulenoprompt": "S_RULE_NOPROMPT",
@@ -1191,12 +1189,12 @@ option::checkmark{display:none}
 select::picker-icon{color:var(--faint)}
 select:open::picker-icon{transform:rotate(180deg)}
 select:open{border-color:var(--dim)}
-input[type=text],input[type=number],select{padding:var(--fieldpad);border:1px solid var(--line);border-radius:calc(var(--r) * .55);background:var(--field);color:var(--green);font:inherit;font-size:var(--ctlfs);line-height:1.2;outline:none}
+input[type=text],input[type=number],input[type=password],select{padding:var(--fieldpad);border:1px solid var(--line);border-radius:calc(var(--r) * .55);background:var(--field);color:var(--green);font:inherit;font-size:var(--ctlfs);line-height:1.2;outline:none}
 input:focus,select:focus{border-color:var(--dim);box-shadow:var(--glow)}
 input::placeholder{color:var(--dim)}
 input:disabled,select:disabled{opacity:.35;cursor:default}
 #trlangs label:has(input:disabled){opacity:.45}
-input[type=text]{width:220px;max-width:100%}select{width:210px;max-width:100%}
+input[type=text],input[type=password]{width:220px;max-width:100%}select{width:210px;max-width:100%}
 input[type=range]{width:150px;accent-color:var(--dim);background:transparent}
 input[type=checkbox]{appearance:none;-webkit-appearance:none;width:32px;height:17px;border:1px solid var(--dim);border-radius:calc(var(--r) * .8);position:relative;cursor:pointer;background:none;flex:none;padding:0;margin:0}
 input[type=checkbox]::before,input[type=radio]::before{content:"";position:absolute;top:-11px;bottom:-11px;left:-9px;right:-9px}
@@ -1257,8 +1255,6 @@ button.ghost:hover{color:var(--green)}
 .mslot{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);padding:11px 2px 3px;border-bottom:1px solid var(--line);margin-bottom:2px}
 .mslot.hidden{display:none}
 .mrow{display:flex;align-items:center;gap:9px;padding:7px 2px;border-bottom:1px solid var(--soft);flex-wrap:nowrap}
-.mcard{display:flex;flex-direction:column;gap:7px;padding:10px 12px;margin:8px 0;border:1px solid var(--line);border-radius:var(--r);background:var(--field);cursor:pointer}
-.mcard.on{border-color:var(--hi);box-shadow:var(--higlow)}
 .mrow .mdesc{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (max-width:820px){.mrow .mram{display:none}}
 .mrow:last-child{border-bottom:none}
@@ -1271,20 +1267,6 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .mrow .mname{width:132px;font-weight:var(--wb);white-space:nowrap}
 .mrow .mdesc{flex:1;color:var(--dim);font-size:12px}
 .mtag{font-size:9px;border:1px solid var(--line);border-radius:calc(var(--r) * .35);color:var(--dim);padding:0 4px;margin-left:6px;vertical-align:middle;letter-spacing:.06em}
-.advbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
-.libhead{position:sticky;top:-14px;z-index:6;background:var(--bg);margin:0 -6px;padding:14px 6px 6px;border-bottom:1px solid var(--soft)}
-.libhead .advbar{margin-bottom:0}
-#advisor{border:1px solid var(--line);border-radius:var(--r);padding:10px 11px;margin-bottom:9px;display:flex;flex-direction:column;gap:9px}
-.advrow{display:flex;align-items:center;gap:9px;font-size:12px;padding:3px 0}
-.advrow .advrole{width:74px;color:var(--dim);text-transform:uppercase;font-size:10px;letter-spacing:.1em}
-.advrow .advname{flex:1;color:var(--green)}
-.advrow .advwhy{display:block;color:var(--dim);font-size:11px;letter-spacing:0;text-transform:none}
-.advrow .advstate{color:var(--amber)}
-.advrow .advstate.ok{color:var(--dim)}
-.advq{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:11.5px;color:var(--dim)}
-.advq select{margin-left:5px}
-.advchk{display:flex;align-items:center;gap:5px}
-.advout{font-size:12px;color:var(--green);line-height:1.5;min-height:1em}
 .mrow.hidden{display:none}
 .mram{color:var(--dim);font-size:10.5px;width:74px;text-align:right}
 .mram.warn{color:var(--amber)}
@@ -1306,18 +1288,11 @@ button.mini.danger:hover{color:var(--bad);border-color:var(--badline);background
 .ramline b{color:var(--green);font-size:14px;font-weight:var(--wb);text-shadow:var(--glow);margin-right:4px}
 .ramline .dot{margin-left:12px;font-size:10px}
 .subhead{color:var(--dim);font-size:11px;letter-spacing:1px;text-transform:uppercase;margin:14px 0 2px;padding-top:10px;border-top:1px solid var(--soft)}
-.mcard .mtop{display:flex;gap:12px;align-items:flex-start;width:100%}
-.mcard .mhead{flex:1;min-width:0;display:flex;align-items:center;gap:8px;font-weight:var(--wb);font-size:13.5px}
-.mcard .mbars{flex:none;display:flex;flex-direction:column;gap:5px;min-width:150px;padding-top:2px}
+.pcard .mbars{flex:none;display:flex;flex-direction:column;gap:5px;min-width:150px}
 .mbar{display:flex;align-items:center;gap:7px;font-size:9.5px;letter-spacing:.06em;color:var(--dim)}
 .mbar .mbl{width:64px;text-align:right;text-transform:uppercase}
 .mtrack{flex:1;height:4px;background:var(--soft);border-radius:var(--barr,0);overflow:hidden}
 .mtrack i{display:block;height:100%;background:var(--hi);border-radius:var(--barr,0)}
-.mcard .mfoot{display:flex;align-items:center;gap:12px;border-top:1px solid var(--soft);padding-top:7px;width:100%;font-size:11.5px;color:var(--dim);flex-wrap:wrap}
-.mcard .mfoot .msize{margin-left:auto}
-.mcard .mfoot .mram{margin-left:0}
-.mpill{font-size:9px;letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--line);border-radius:calc(var(--r) * .4);padding:1px 6px;margin-left:8px;color:var(--dim);vertical-align:middle}
-.mpill.on{color:var(--hi);border-color:var(--hi)}
 .skiplist{display:flex;gap:6px;flex-wrap:wrap;padding:4px 0 8px}
 .skipchip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:calc(var(--r) * .5);padding:3px 8px;font-size:12px;color:var(--green);background:var(--field)}
 .skipchip .chipx{appearance:none;background:none;border:0;color:var(--dim);cursor:pointer;font:inherit;font-size:11px;padding:0}
@@ -1327,11 +1302,34 @@ button.mini.danger:hover{color:var(--bad);border-color:var(--badline);background
 .arow.on .aname{color:var(--green)}
 .arow .alangs{flex:1;color:var(--dim);font-size:12px}
 .arow .amiss{color:var(--bad);font-size:12px}
-.prow{display:flex;align-items:center;gap:10px;padding:5px 4px}
-.prow .plang{flex:none;width:170px}
-.prow .plang .sub{display:block;font-size:11px;color:var(--dim)}
-.prow select{flex:1;min-width:0}
-.prow.cur .plang{color:var(--green)}
+.lrow{display:flex;align-items:center;gap:12px;padding:8px 12px;margin:7px 0;border:1px solid var(--line);border-radius:var(--r);background:var(--field);cursor:pointer}
+.lrow:hover{border-color:var(--dim)}
+.lrow .plang{flex:none;width:170px;font-weight:var(--wb)}
+.lrow .lmodel{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lrow .larr{flex:none;color:var(--faint);font-size:10px}
+.lrow.dim .plang,.lrow.dim .lmodel{color:var(--dim);font-weight:400}
+.lrow.open{border-color:var(--dim);border-bottom-left-radius:0;border-bottom-right-radius:0;margin-bottom:0}
+.lpick{border:1px solid var(--dim);border-top:1px solid var(--soft);border-radius:0 0 var(--r) var(--r);background:var(--bg);padding:9px 11px;margin:0 0 7px}
+.lpick>.hint{margin-bottom:5px}
+.pcard{display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:var(--r);background:var(--field);padding:8px 11px;margin:6px 0}
+.pcard.cur{border-color:var(--hi);box-shadow:var(--higlow)}
+.pcard.pickable{cursor:pointer}
+.pcard.pickable:hover{border-color:var(--dim)}
+.pcard .pmain{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.pcard .pname{font-weight:var(--wb);font-size:13px}
+.pcard .pdesc{color:var(--dim);font-size:12px}
+.pcard .pmeta{color:var(--dim);font-size:10.5px}
+.pcard .pact{flex:none;display:flex;align-items:center;gap:6px}
+.pcard .psize{color:var(--dim);font-size:12px}
+.pcard .pcur{color:var(--hi);text-shadow:var(--higlow);font-size:14px;padding:0 5px}
+.pchip{font-size:9px;letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--line);border-radius:calc(var(--r) * .4);padding:1px 6px;margin-left:8px;color:var(--dim);vertical-align:middle;font-weight:400}
+.pchip.on{color:var(--hi);border-color:var(--hi)}
+.dlline{color:var(--amber);font-size:11.5px;margin:2px 0 8px;text-shadow:var(--amberglow)}
+.fl{display:block;font-size:11px;color:var(--dim);margin-top:3px;font-weight:400}
+.fl i{font-style:normal;color:var(--faint);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;display:inline-block;width:52px}
+.code{background:var(--field);border:1px solid var(--line);border-radius:calc(var(--r) * .35);padding:0 5px;font-size:10.5px;color:var(--green);white-space:nowrap}
+input[type=text],input[type=number],input[type=password],select,button.mini{height:var(--ctlh,30px)}
+button.mini{display:inline-flex;align-items:center;justify-content:center}
 .ovscheme{position:relative;flex:none;width:176px;height:99px;border:1px solid var(--line);border-radius:calc(var(--r) * .4);background:var(--field);touch-action:none}
 .ovscheme.off{opacity:.35;pointer-events:none}
 .ovdot{position:absolute;width:16px;height:16px;margin:-8px 0 0 -8px;padding:0;appearance:none;border:1px solid var(--dim);border-radius:50%;background:var(--panel);cursor:pointer}
@@ -1340,7 +1338,6 @@ button.mini.danger:hover{color:var(--bad);border-color:var(--badline);background
 .ovmini{position:absolute;width:38px;height:11px;margin:-6px 0 0 -19px;border-radius:99px;background:var(--hi);box-shadow:var(--higlow);cursor:grab}
 .ovmini:active{cursor:grabbing}
 .skipchip .chipx:hover{color:var(--bad)}
-#mfind{flex:0 1 170px;min-width:110px}
 #hf_results{max-height:44vh;overflow-y:auto;overscroll-behavior:contain}
 .miclevel{flex:none;display:flex;align-items:flex-end;gap:2px;height:10px;width:auto}
 .miclevel i{display:block;width:var(--lvlw,4px);height:10px;background:var(--soft);border:1px solid var(--line);box-sizing:border-box;border-radius:var(--lvlr,0);transition:background .1s linear}
@@ -1637,50 +1634,21 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
  <div class="card">
   <h2 class="sect">{{S_PRESETS}}</h2>
   <div class="hint">{{S_PRESETS_HINT}}</div>
-  <div id="presets"></div>
+  <div id="langlist"></div>
  </div>
  <div class="card">
-  <div class="libhead">
-   <h2 class="sect">{{S_LIB_REC}}</h2>
-   <div class="advbar">
-    <button type="button" class="mini" id="adv_open">{{S_ADV_TITLE}}</button>
-    <input type="text" id="mfind" placeholder="{{S_LIB_FIND}}">
-    <select id="mlang">
-     <option value="all">{{S_F_ALL}}</option>
-     <option value="multi">{{S_F_MULTI}}</option>
-     <option value="punct">{{S_F_PUNCT}}</option>
-     <option value="fit">{{S_F_FIT}}</option>
-     <option value="ru">{{S_F_RU}}</option>
-    </select>
-   </div>
-  </div>
-  <div id="advisor" style="display:none">
-   <div class="advq">
-    <label>{{S_ADV_LANGQ}}
-     <select id="adv_lang"><option value="ru">RU</option><option value="en">EN</option><option value="multi">{{S_F_MULTI}}</option></select>
-    </label>
-    <label>{{S_ADV_PRIOQ}}
-     <select id="adv_prio"><option value="balance">·</option><option value="accuracy">{{S_ADV_ACC}}</option><option value="speed">{{S_ADV_SPEED}}</option></select>
-    </label>
-    <label class="advchk"><input type="checkbox" id="adv_tr"> {{S_ADV_TRQ}}</label>
-    <button type="button" class="mini" id="adv_go">{{S_ADV_GO}}</button>
-   </div>
-   <div id="adv_out" class="advout"></div>
-  </div>
-  <div id="models"></div>
-  <div class="hint" style="margin-top:8px">{{S_CPU_LINE}}</div>
-  <div class="row"><label>{{S_MFOLDER}}<span class="sub">{{S_MFOLDER_SUB}}</span></label>
+  <h2 class="sect">{{S_MAINT}}</h2>
+  <div class="row"><label>{{S_MFOLDER}}
+    <span class="fl"><i>{{S_OWN_FMT_L}}</i><span>{{S_OWN_FMT}}</span></span>
+    <span class="fl"><i>{{S_OWN_DIR_L}}</i><span>{{S_OWN_DIR}}</span></span>
+    <span class="fl"><i>{{S_OWN_NEXT_L}}</i><span>{{S_OWN_NEXT}}</span></span></label>
    <button type="button" class="mini" onclick="appOpenModelsFolder()">{{S_OPEN_FOLDER}}</button></div>
   <div class="row"><label>{{S_UNLOAD}}<span class="sub">{{S_UNLOAD_SUB}}</span></label>
    <button type="button" class="mini" id="munload">{{S_UNLOAD_GO}}</button></div>
   <div class="row"><label>{{S_MCHECK}}<span class="sub">{{S_MCHECK_SUB}}</span></label>
    <button type="button" class="mini" id="mcheck">{{S_MCHECK_GO}}</button></div>
   <div class="micverdict" id="mcheck_out"></div>
- </div>
- <div class="card">
-  <h2 class="sect">{{S_SEC_LLM}}<span class="hfhome" onclick="appHFHome()" title="huggingface.co">Hugging Face ↗</span></h2>
-  <div id="proc-models" class="spage on"></div>
-  <div id="proc-search" class="spage on"></div>
+  <div class="hint" style="margin-top:8px">{{S_CPU_LINE}}</div>
  </div>
 </div>
 
@@ -1737,6 +1705,11 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
 </div>
 
 <div class="page" role="tabpanel" aria-hidden="true" id="p-post">
+ <div class="card">
+  <h2 class="sect">{{S_SEC_LLM}}<span class="hfhome" onclick="appHFHome()" title="huggingface.co">Hugging Face ↗</span></h2>
+  <div id="proc-models" class="spage on"></div>
+  <div id="proc-search" class="spage on"></div>
+ </div>
  <div class="card">
   <h2 class="sect">{{S_SUB_PROMPTS}}</h2>
   <div class="hint">{{S_LLM_HINT}}</div>
@@ -2687,80 +2660,6 @@ function initStateScreen(){
   startMeter("state_mic_bar", "p-state", null);
   refreshState();
 }
-let modelFilter = "all";
-let modelFind = "";
-function modelPassesFilter(m){
-  if(modelFind && !(m.name || "").toLowerCase().includes(modelFind)) return false;
-  switch(modelFilter){
-    case "ru":    return m.langs === "ru" || m.langs === "*";
-    case "multi": return m.langs === "*";
-    case "punct": return !!m.punct;
-    case "fit":   return m.fit !== "bad";
-    default:      return true;
-  }
-}
-function initModelFilters(){
-  const ml = document.getElementById("mlang");
-  if(ml) ml.onchange = ()=>{ modelFilter = ml.value; refreshModels(); };
-  const mf = document.getElementById("mfind");
-  if(mf) mf.oninput = ()=>{ modelFind = mf.value.trim().toLowerCase(); refreshModels(); };
-  const open = document.getElementById("adv_open");
-  const box = document.getElementById("advisor");
-  if(open && box){
-    open.onclick = ()=>{ box.style.display = box.style.display === "none" ? "flex" : "none"; };
-  }
-  const go = document.getElementById("adv_go");
-  if(go){
-    go.onclick = async ()=>{
-      const r = JSON.parse(await appAdvise(
-        document.getElementById("adv_lang").value,
-        document.getElementById("adv_prio").value,
-        document.getElementById("adv_tr").checked));
-      renderAdvice(r);
-    };
-  }
-}
-function renderAdvice(r){
-  const out = document.getElementById("adv_out");
-  if(!out) return;
-  out.innerHTML = "";
-  const head = document.createElement("div");
-  head.textContent = r.text + " (" + r.ram + ")";
-  out.appendChild(head);
-  const plan = r.plan || [];
-  plan.forEach((p, i)=>{
-    const row = document.createElement("div");
-    row.className = "advrow";
-    row.innerHTML = '<span class="advrole">'+(i === 0 ? L.advprimary : L.advcompanion)+'</span>'+
-      '<span class="advname">'+esc(p.name)+'</span>'+
-      '<span class="advstate'+(p.installed ? " ok" : "")+'">'+(p.installed ? L.advhave : (p.size ? p.size+" MB" : L.dlstart))+'</span>';
-    out.appendChild(row);
-  });
-  const missing = plan.filter(p=>!p.installed);
-  if(!plan.length) return;
-  const apply = document.createElement("button");
-  apply.type = "button";
-  apply.className = "mini";
-  apply.textContent = L.advapply;
-  apply.onclick = async ()=>{
-    if(missing.length && !await askConfirm(L.advask.replace("%s", missing.map(p=>p.name).join(", ")).replace("%s", r.need + " MB"), L.dlstart)) return;
-    modelFilter = "all";
-    modelFind = "";
-    const ml = document.getElementById("mlang");
-    if(ml) ml.value = "all";
-    const mf = document.getElementById("mfind");
-    if(mf) mf.value = "";
-    for(const p of missing) await appModelDl(p.id);
-    if(missing.length) pendingDl = missing[missing.length-1].id;
-    const first = plan[0];
-    const bucket = document.getElementById("adv_lang").value;
-    const lang = bucket === "multi" ? "auto" : bucket;
-    langModels[lang] = first.id;
-    await doSave();
-    refreshModels();
-  };
-  out.appendChild(apply);
-}
 let langModels = Object.assign({}, CFG.lang_models || {});
 let modelRowsCache = [];
 const presetLangs = [["auto", ""], ["ru", "Русский"], ["en", "English"], ["uk", "Українська"], ["de", "Deutsch"], ["fr", "Français"], ["es", "Español"], ["it", "Italiano"], ["pl", "Polski"]];
@@ -2787,13 +2686,11 @@ async function assignModel(lang, id){
   if(!row) return;
   if(!eligibleFor(row, lang)){
     toast(L.notforlang.replace("%s", row.name), "warn");
-    renderPresets();
     return;
   }
   if(row.state === "absent" && !row.manual){
     const size = row.size ? row.size + " MB" : "";
     if(!await askConfirm(L.dlask.replace("%s", row.name).replace("%s", size), L.dlstart)){
-      renderPresets();
       refreshModels();
       return;
     }
@@ -2804,91 +2701,99 @@ async function assignModel(lang, id){
   await doSave();
   refreshModels();
 }
-function optionLabel(m){
-  let label = m.name;
-  if(!m.translate) label += " · " + L.onlyrec;
-  if(m.state === "absent" && !m.manual && m.size) label += " · " + m.size + " MB";
-  if(m.state === "absent" && m.manual) label += " · " + L.notinstalled;
-  return label;
+let openLang = null;
+const REC_MODEL = {auto: "large-v3-turbo-q5_0", ru: "gigaam-v3", en: "medium-q5_0", uk: "parakeet-v3", de: "parakeet-v3", fr: "parakeet-v3", es: "parakeet-v3", it: "parakeet-v3", pl: "parakeet-v3"};
+function langWord(m){
+  if(m.custom) return L.langsq;
+  if(m.langs === "*") return L.langsc.replace("%d", "99");
+  const parts = (m.langs || "").split(",").filter(Boolean);
+  if(parts.length > 1) return L.langsc.replace("%d", String(parts.length));
+  const native = (presetLangs.find(p=>p[0]===m.langs) || [])[1];
+  return native || (m.langs || "").toUpperCase();
 }
-function renderPresets(){
-  const box = document.getElementById("presets");
+function trWord(m){
+  if(!m.translate) return "";
+  return m.trlangs ? L.translist.replace("%s", m.trlangs.toUpperCase().split(",").join(", ")) : L.tren;
+}
+function renderLangs(){
+  const box = document.getElementById("langlist");
   if(!box) return;
-  box.innerHTML = "";
-  const cur = curLang();
-  presetLangs.forEach(([lang, native])=>{
-    const row = document.createElement("div");
-    row.className = "prow" + (lang === cur ? " cur" : "");
-    const label = document.createElement("span");
-    label.className = "plang";
-    label.textContent = lang === "auto" ? L.recauto : native;
-    row.appendChild(label);
-    const sel = document.createElement("select");
-    modelRowsCache.filter(m=>eligibleFor(m, lang)).forEach(m=>{
-      const o = document.createElement("option");
-      o.value = m.id;
-      o.textContent = optionLabel(m);
-      sel.appendChild(o);
-    });
-    const eff = effectiveFor(lang);
-    if([...sel.options].some(o=>o.value===eff)) sel.value = eff;
-    sel.onchange = e=>{ e.stopPropagation(); assignModel(lang, sel.value); };
-    row.appendChild(sel);
-    box.appendChild(row);
-  });
-}
-function paintModelCards(rows){
-  const el = document.getElementById("models");
   const sc = document.querySelector(".content");
   const keepScroll = sc ? sc.scrollTop : 0;
-  el.innerHTML = "";
-  const pickModel = async (row)=>{ assignModel(curLang(), row.id); };
-  const groups = [
-    {slot: "inst", title: L.libinst, rows: rows.filter(m=>m.state !== "absent")},
-    {slot: "avail", title: L.libavail, rows: rows.filter(m=>m.state === "absent")},
-  ];
-  groups.forEach(g=>{
-    if(!g.rows.length) return;
-    const head = document.createElement("div");
-    head.className = "mslot";
-    head.dataset.slot = g.slot;
-    head.textContent = g.title;
-    el.appendChild(head);
-  g.rows.forEach(m=>{
-    const div = document.createElement("div");
-    div.className = "mcard";
-    div.dataset.slot = g.slot;
-    div.dataset.id = m.id;
-    const serves = (m.serves || []).map(l=>l === "auto" ? L.recauto : l.toUpperCase()).join(", ");
-    const pill = m.state === "active" ? '<span class="mpill on">'+L.libactive+'</span>'
-      : (serves ? '<span class="mpill">'+esc(serves)+'</span>' : "");
-    const trtag = m.translate ? (m.trlangs ? '<span class="mtag">&#8594;'+m.trlangs.toUpperCase()+'</span>' : '<span class="mtag">&#8594;EN</span>') : '<span class="mtag">'+L.onlyrec+'</span>';
-    let right = "";
-    if(m.state === "downloading"){ right = '<span class="mpct">'+(m.pct>0?m.pct+"%":"…")+'</span><button class="iconbtn danger" title="'+L.dlcancel+'" data-a="cancel" data-id="'+m.id+'">&#10005;</button>'; }
-    else if(m.state === "absent" && m.manual) right = '<button class="mini" data-a="link" data-id="'+m.id+'">'+L.manuallink+' &#8599;</button>';
-    else if(m.state === "absent") right = '<button class="iconbtn" title="'+L.dl+'" data-a="dl" data-id="'+m.id+'">'+I_DL+'</button>';
-    else right = (m.loaded ? '<button class="iconbtn" title="'+L.unload+'" data-a="unload" data-id="'+m.id+'">&#9167;</button>' : "")+
-      '<button class="iconbtn danger" title="'+L.del+'" data-a="del" data-id="'+m.id+'" data-name="'+esc(m.name)+'">&#10005;</button>';
-    const langsN = m.custom ? "?" : (m.langs === "*" ? "99" : (m.langs && m.langs.includes(",") ? String(m.langs.split(",").length) : (m.langs || "").toUpperCase()));
-    const tag = langsN ? '<span class="mtag">'+langsN+'</span>' : "";
-    const ram = m.ram ? '<span class="mram '+(m.fit||"")+'">≈'+m.ram+' MB RAM</span>' : '<span class="mram"></span>';
-    if(m.state === "active") div.classList.add("on");
+  box.innerHTML = "";
+  const dls = modelRowsCache.filter(m=>m.state === "downloading");
+  if(dls.length){
+    const d = document.createElement("div");
+    d.className = "dlline";
+    d.textContent = "⇩ " + L.dlgoing + " " + dls.map(m=>m.name + " · " + (m.pct > 0 ? m.pct + "%" : "…")).join(" · ");
+    box.appendChild(d);
+  }
+  presetLangs.forEach(([lang, native])=>{
+    const inherit = lang !== "auto" && !(langModels[lang] && rowById(langModels[lang]));
+    const m = rowById(effectiveFor(lang));
+    const row = document.createElement("div");
+    row.className = "lrow" + (inherit ? " dim" : "") + (openLang === lang ? " open" : "");
+    row.dataset.lang = lang;
+    const pct = m && m.state === "downloading" ? ' <span class="mpct" data-id="' + m.id + '">' + (m.pct > 0 ? m.pct + "%" : "…") + '</span>' : "";
+    row.innerHTML = '<span class="plang">' + (lang === "auto" ? L.recauto : native) + '</span>' +
+      '<span class="lmodel">' + (inherit ? L.asauto + ' · ' : '') + esc(m ? m.name : "—") + pct + '</span>' +
+      '<span class="larr">' + (openLang === lang ? "▲" : "▼") + '</span>';
+    row.onclick = ()=>{ openLang = openLang === lang ? null : lang; renderLangs(); };
+    box.appendChild(row);
+    if(openLang === lang) box.appendChild(buildPicker(lang));
+  });
+  if(sc) sc.scrollTop = keepScroll;
+}
+function buildPicker(lang){
+  const pick = document.createElement("div");
+  pick.className = "lpick";
+  const hint = document.createElement("div");
+  hint.className = "hint";
+  hint.textContent = L.pickhint;
+  pick.appendChild(hint);
+  const eff = effectiveFor(lang);
+  const explicit = lang === "auto" || !!(langModels[lang] && rowById(langModels[lang]));
+  const rec = REC_MODEL[lang];
+  const list = modelRowsCache.filter(m=>eligibleFor(m, lang))
+    .sort((a,b)=>((b.id===eff && explicit)-(a.id===eff && explicit)) || ((b.id===rec)-(a.id===rec)));
+  list.forEach(m=>{
+    const cur = m.id === eff && explicit;
+    const card = document.createElement("div");
+    card.className = "pcard" + (cur ? " cur" : "");
+    card.dataset.id = m.id;
+    const chip = cur ? '<span class="pchip on">'+L.assigned+'</span>' : (m.id === rec ? '<span class="pchip">'+L.recchip+'</span>' : "");
     const bar = (label, v)=>'<span class="mbar"><span class="mbl">'+label+'</span><span class="mtrack"><i style="width:'+(v*20)+'%"></i></span></span>';
     const bars = (m.accuracy || m.speed) ? '<span class="mbars">'+bar(L.acc, m.accuracy||0)+bar(L.spd, m.speed||0)+'</span>' : "";
-    const note = m.state === "absent" && m.manual ? '<span class="mdesc" style="color:var(--amber)">'+L.manualnote+'</span>' : "";
-    div.innerHTML = '<span class="mtop"><span class="mhead"><span class="mname">'+m.name+'</span>'+pill+'</span>'+bars+'</span>'+
-      '<span class="mdesc">'+m.desc+'</span>'+note+
-      '<span class="mfoot">'+tag+trtag+ram+'<span class="msize">'+(m.size?m.size+" MB":"")+'</span><span class="mact">'+right+'</span></span>';
-    if(!(m.state === "absent" && m.manual)) div.onclick = (e)=>{ if(e.target.closest("button")) return; pickModel(m); };
-    if(!modelPassesFilter(m)) div.classList.add("hidden");
-    el.appendChild(div);
+    let act = "";
+    if(m.state === "downloading") act = '<span class="mpct" data-id="'+m.id+'">'+(m.pct>0?m.pct+"%":"…")+'</span><button class="iconbtn danger" title="'+L.dlcancel+'" data-a="cancel" data-id="'+m.id+'">&#10005;</button>';
+    else if(m.state === "absent" && m.manual) act = '<button class="mini" data-a="link" data-id="'+m.id+'">'+L.manuallink+' &#8599;</button>';
+    else if(m.state === "absent") act = '<span class="psize">'+(m.size?m.size+" MB":"")+'</span><button class="iconbtn" title="'+L.dl+'" data-a="dl" data-id="'+m.id+'">'+I_DL+'</button>';
+    else if(cur) act = '<span class="pcur">&#10003;</span>';
+    else act = (m.loaded ? '<button class="iconbtn" title="'+L.unload+'" data-a="unload" data-id="'+m.id+'">&#9167;</button>' : "")+
+      '<button class="iconbtn danger" title="'+L.del+'" data-a="del" data-id="'+m.id+'" data-name="'+esc(m.name)+'">&#10005;</button>';
+    const note = m.state === "absent" && m.manual ? '<span class="pdesc" style="color:var(--amber)">'+L.manualnote+'</span>' : "";
+    const meta = '<span class="pmeta">'+esc(langWord(m))+(m.translate ? ' · '+esc(trWord(m)) : '')+(m.ram ? ' · ≈'+m.ram+' MB RAM' : '')+'</span>';
+    card.innerHTML = '<span class="pmain"><span class="pname">'+esc(m.name)+chip+'</span>'+
+      '<span class="pdesc">'+m.desc+'</span>'+note+meta+'</span>'+bars+'<span class="pact">'+act+'</span>';
+    if(!cur && !(m.state === "absent" && m.manual)){
+      card.classList.add("pickable");
+      card.onclick = (e)=>{ if(e.target.closest("button")) return; assignModel(lang, m.id); };
+    }
+    pick.appendChild(card);
   });
-  });
-  el.querySelectorAll(".mslot").forEach(h=>{
-    const shown = [...el.querySelectorAll('.mcard[data-slot="'+h.dataset.slot+'"]')].some(r=>!r.classList.contains("hidden"));
-    h.classList.toggle("hidden", !shown);
-  });
-  el.querySelectorAll("button[data-a]").forEach(b=>{
+  if(lang !== "auto" && langModels[lang]){
+    const back = document.createElement("button");
+    back.type = "button";
+    back.className = "mini";
+    back.textContent = L.backauto;
+    back.onclick = async ()=>{ delete langModels[lang]; await doSave(); refreshModels(); };
+    pick.appendChild(back);
+  }
+  wireModelActions(pick);
+  return pick;
+}
+function wireModelActions(root){
+  root.querySelectorAll("button[data-a]").forEach(b=>{
     b.onclick = async (e)=>{
       e.stopPropagation();
       if(b.dataset.a === "dl"){ await appModelDl(b.dataset.id); pendingDl = b.dataset.id; }
@@ -2908,11 +2813,10 @@ function paintModelCards(rows){
       refreshModels();
     };
   });
-  if(sc) sc.scrollTop = keepScroll;
 }
 function modelsSignature(rows){
   return rows.map(m=>[m.id, m.state, (m.serves||[]).join("+"), m.loaded?1:0, m.err||""].join(":")).join("|")
-    + "@" + modelFilter + "@" + modelFind + "@" + curLang();
+    + "@" + openLang + "@" + JSON.stringify(langModels) + "@" + curLang();
 }
 async function refreshModels(){
   const rows = JSON.parse(await appModels());
@@ -2925,18 +2829,18 @@ async function refreshModels(){
     else if(row.state === "installed" || row.state === "active"){ pendingDl = null; toast(L.mdlready, "ok"); refreshState(); }
     else if(row.state === "absent" && row.err){ pendingDl = null; toast(row.err, "error"); }
   }
-  const el = document.getElementById("models");
+  const el = document.getElementById("langlist");
   const sig = modelsSignature(rows);
   let busy = rows.some(m=>m.state === "downloading");
   if(el.dataset.sig === sig && busy){
     rows.filter(m=>m.state === "downloading").forEach(m=>{
-      const pct = el.querySelector('.mcard[data-id="'+m.id+'"] .mpct');
-      if(pct) pct.textContent = m.pct > 0 ? m.pct + "%" : "…";
+      el.querySelectorAll('.mpct[data-id="'+m.id+'"]').forEach(p=>{ p.textContent = m.pct > 0 ? m.pct + "%" : "…"; });
     });
+    const dl = el.querySelector(".dlline");
+    if(dl) dl.textContent = "⇩ " + L.dlgoing + " " + rows.filter(m=>m.state === "downloading").map(m=>m.name + " · " + (m.pct > 0 ? m.pct + "%" : "…")).join(" · ");
   } else {
     el.dataset.sig = sig;
-    paintModelCards(rows);
-    renderPresets();
+    renderLangs();
   }
   const act = rows.find(m=>m.state === "active");
   const dm = document.getElementById("dict_model");
@@ -4015,7 +3919,6 @@ function applyNow(){
   applyTimer = setTimeout(()=>{ doSave(); }, 120);
 }
 document.querySelector(".content").addEventListener("change", e=>{
-  if(e.target.closest("#advisor")) return;
   if(e.target.name === "mdl" || e.target.name === "llmmdl") return;
   if(e.target.id === "mic_device" || e.target.id === "autorun") return;
   applyNow();
@@ -4031,7 +3934,6 @@ document.querySelector(".header").addEventListener("mousedown", e=>{
 });
 load();
 (async ()=>{
-  initModelFilters();
   initStateScreen();
   initRemote();
   initPostAPI();
