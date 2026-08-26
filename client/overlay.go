@@ -131,19 +131,7 @@ func ovInCloseZone(x, y int32) bool {
 	w := overlayWidth()
 	dpi := dpiFor(overlayHwnd())
 	h := scaleDPI(ovH, dpi)
-	top := int32(0)
-	ovMu.Lock()
-	st := ovState
-	ovMu.Unlock()
-	if ovLiveOn(st) {
-		ovWidthMu.Lock()
-		top = ovHeight - h
-		ovWidthMu.Unlock()
-		if top < 0 {
-			top = 0
-		}
-	}
-	return x >= w-scaleDPI(40, dpi) && x <= w-scaleDPI(4, dpi) && y >= top && y <= top+h
+	return x >= w-scaleDPI(40, dpi) && x <= w-scaleDPI(4, dpi) && y >= 0 && y <= h
 }
 
 func ovCancelActive() bool {
@@ -297,9 +285,14 @@ func overlayHeightPx(dpi int32) int32 {
 	st := ovState
 	ovMu.Unlock()
 	if ovLiveOn(st) {
-		if lineH := ovLineH.Load(); lineH > 0 {
-			return base + ovLiveLines*lineH + scaleDPI(10, dpi)
+		lineH, rows := ovLineH.Load(), ovLiveRows.Load()
+		if lineH > 0 && rows > 0 {
+			if rows > ovLiveLines {
+				rows = ovLiveLines
+			}
+			return base + rows*lineH + scaleDPI(10, dpi)
 		}
+		return base
 	}
 	rows, lineH := ovRows.Load(), ovLineH.Load()
 	if rows > 1 && lineH > 0 {
@@ -730,12 +723,7 @@ func overlayRender(hwnd, hdc uintptr) {
 	if anim && !askActive() && (st == ovRecording || st == ovProcessing) {
 		pulse = math.Abs(math.Sin(float64(ovTick) * 0.18 / themePulse()))
 	}
-	// in the live layout the control row lives at the bottom, Handy-style:
-	// the text above it slides up under the top edge of the plate
 	ctlTop := int32(0)
-	if ovLiveOn(st) && !askActive() {
-		ctlTop = rc.Bottom - px(ovH)
-	}
 	cy := ctlTop + px(ovH)/2
 	dotX := px(25)
 	core := int32(float64(px(5)) * (0.88 + 0.2*pulse))
@@ -807,22 +795,23 @@ func overlayRender(hwnd, hdc uintptr) {
 		textCol, haloCol = colBad, colBadDm
 	}
 	if live {
-		// the Handy layout: the text lives above the control row, fills the
-		// window downward, and once it is full the older lines slide up out
-		// of view under the top edge of the plate
+		// the live text hangs under the control row, behind a divider: it
+		// appears with the first words, grows a line at a time up to three,
+		// and after that the older lines slide up out of view
 		lineH := ovLineH.Load()
 		liveRows := ovLiveRows.Load()
-		if lineH > 0 {
-			area := rect{Left: px(16), Top: px(4), Right: rc.Right - px(16), Bottom: ctlTop - px(4)}
-			drawRows := liveRows
-			if drawRows < 1 {
-				drawRows = 1
+		if lineH > 0 && liveRows > 0 && strings.TrimSpace(text) != "" {
+			fill(rect{Left: px(10), Top: px(ovH), Right: rc.Right - px(10), Bottom: px(ovH) + 1}, colLine)
+			vis := liveRows
+			if vis > ovLiveLines {
+				vis = ovLiveLines
 			}
+			area := rect{Left: px(16), Top: px(ovH) + px(5), Right: rc.Right - px(16), Bottom: px(ovH) + px(5) + vis*lineH}
 			draw := area
-			if drawRows*lineH > area.Bottom-area.Top {
-				draw.Top = area.Bottom - drawRows*lineH
+			if liveRows > vis {
+				draw.Top = area.Bottom - liveRows*lineH
 			}
-			draw.Bottom = draw.Top + drawRows*lineH
+			draw.Bottom = draw.Top + liveRows*lineH
 			saved, _, _ := procSaveDC.Call(hdc)
 			procIntersectClipRect.Call(hdc, uintptr(area.Left), uintptr(area.Top), uintptr(area.Right), uintptr(area.Bottom))
 			lu, _ := windows.UTF16FromString(text)
