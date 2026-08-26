@@ -100,7 +100,7 @@ const strings = {
   micchecking: "Checking…", mchecking: "Checking models…", histinsert: "Paste",
   retry: "Try again", slotru: "Russian speech", slotother: "Other languages",
   libinst: "Installed", libavail: "Available to download", libactive: "active", libstandby: "standby",
-  trby: "Translation is done by %s",
+  trby: "Translation is done by %s", acc: "accuracy", spd: "speed",
   cmdempty: "No commands yet", cmddel: "Delete the command", cmdph: "new line",
   cmdnewline: "line break", cmdparagraph: "new paragraph", cmdtext: "insert text", cmdcancel: "cancel the dictation",
   cmdtextph: "what to insert",

@@ -67,9 +67,9 @@ const dom = new JSDOM(html, {
     window.appModelCancel = async (id) => { window.cancelCalls.push(id); modelStates[id] = "absent"; return true; };
     window.appModels = async () =>
       JSON.stringify([
-        { id: "base", name: "Base", desc: "fast", size: 142, state: modelStates.base, pct: 12, engine: "whisper", langs: "*" },
-        { id: "small", name: "Small", desc: "balanced", size: 466, state: modelStates.small, engine: "whisper", langs: "*", slot: true },
-        { id: "gigaam-v3", name: "GigaAM v3", desc: "russian", size: 232, state: modelStates["gigaam-v3"], pct: 5, engine: "sherpa", langs: "ru", punct: true },
+        { id: "base", name: "Base", desc: "fast", size: 142, state: modelStates.base, pct: 12, engine: "whisper", langs: "*", speed: 5, accuracy: 2 },
+        { id: "small", name: "Small", desc: "balanced", size: 466, state: modelStates.small, engine: "whisper", langs: "*", slot: true, speed: 3, accuracy: 3 },
+        { id: "gigaam-v3", name: "GigaAM v3", desc: "russian", size: 232, state: modelStates["gigaam-v3"], pct: 5, engine: "sherpa", langs: "ru", punct: true, speed: 5, accuracy: 5 },
       ]);
     window.appLLMSearch = async () =>
       JSON.stringify({ repos: [{ id: "org/Repo-GGUF", downloads: 1234, updated: "2026-01-01" }] });
@@ -391,6 +391,9 @@ function check(name, actual, expected) {
   check("the installed shelf holds what is on disk", [...d.querySelectorAll('#models .mrow[data-slot="inst"]')].map(r=>r.dataset.id), ["small"]);
   check("the rest wait under available", [...d.querySelectorAll('#models .mrow[data-slot="avail"]')].map(r=>r.dataset.id), ["base", "gigaam-v3"]);
   check("the active model wears its pill", [...d.querySelectorAll("#models .mpill.on")].length, 1);
+  check("and its whole card is lit", [...d.querySelectorAll("#models .mrow.on")].map(r=>r.dataset.id), ["small"]);
+  check("every card measures itself in two bars", d.querySelectorAll("#models .mrow .mbar").length, 6);
+  check("the bars are filled to the model, not all alike", [...d.querySelectorAll(String.raw`#models .mrow[data-id="base"] .mtrack i`)].map(i=>i.style.width), ["40%", "100%"]);
   check("the language filter is one control", [...d.getElementById("mlang").options].map(o=>o.value), ["all", "multi", "punct", "fit", "ru"]);
   const mfind = d.getElementById("mfind");
   mfind.value = "giga"; mfind.dispatchEvent(new w.Event("input", { bubbles: true })); await sleep(150);

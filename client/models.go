@@ -168,6 +168,8 @@ type modelRow struct {
 	RAM    int    `json:"ram"`
 	Fit    string `json:"fit"`
 	Slot   bool   `json:"slot"`
+	Speed  int    `json:"speed"`
+	Acc    int    `json:"accuracy"`
 }
 
 func ramFit(needMB, freeMB int) string {
@@ -195,6 +197,7 @@ func (a *App) modelRows() string {
 			ID: m.ID, Name: m.NameKey, Desc: strS(m.DescKey), Size: m.SizeMB,
 			Engine: m.Engine, Langs: m.Langs, Punct: m.Punct,
 			Trans: m.Translate, RAM: m.ramEstimateMB(), Fit: ramFit(m.ramEstimateMB(), freeRAM),
+			Speed: m.Speed, Acc: m.Accuracy,
 		}
 		have := m.installed()
 		active := m.isActive(cfg)

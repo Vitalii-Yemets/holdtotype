@@ -906,6 +906,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"updfound":   "S_UPD_FOUND",
 		"micdefault": "S_MIC_DEFAULT", "micquiet": "S_MIC_QUIET", "get": "S_STATE_GET", "change": "S_CHANGE_MODEL",
 		"libinst": "S_LIB_INST", "libavail": "S_LIB_AVAIL", "libactive": "S_LIB_ACTIVE", "libstandby": "S_LIB_STANDBY", "trby": "S_TR_BY",
+		"acc": "S_LIB_ACC", "spd": "S_LIB_SPD",
 		"remotewarn": "S_REMOTE_WARN", "remoteask": "S_REMOTE_ASK", "remotebadge": "S_REMOTE_BADGE",
 		"ok": "S_OK", "cancel": "S_CANCEL", "dlask": "S_DL_ASK", "dlstart": "S_DL_START", "dlcancel": "S_DL_CANCEL", "nofound": "S_NOT_FOUND",
 		"advrolemain": "S_ADV_ROLE_MAIN", "advrolesecond": "S_ADV_ROLE_SECOND",
@@ -1187,7 +1188,8 @@ button.ghost:hover{color:var(--green)}
 .card>.hint{font-size:11.5px;color:var(--dim);margin-bottom:6px;line-height:1.5}
 .mslot{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);padding:11px 2px 3px;border-bottom:1px solid var(--line);margin-bottom:2px}
 .mslot.hidden{display:none}
-.mrow{display:flex;align-items:center;gap:9px;padding:7px 2px;border-bottom:1px solid var(--soft);flex-wrap:nowrap}
+.mrow{display:flex;flex-direction:column;gap:7px;padding:10px 12px;margin:8px 0;border:1px solid var(--line);border-radius:var(--r);background:var(--field)}
+.mrow.on{border-color:var(--hi);box-shadow:var(--higlow)}
 .mrow .mdesc{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (max-width:820px){.mrow .mram{display:none}}
 .mrow:last-child{border-bottom:none}
@@ -1230,6 +1232,16 @@ button.mini.danger:hover{color:var(--bad);border-color:var(--badline);background
 .ramline .dot{margin-left:12px;font-size:10px}
 .subhead{color:var(--dim);font-size:11px;letter-spacing:1px;text-transform:uppercase;margin:14px 0 2px;padding-top:10px;border-top:1px solid var(--soft)}
 .mrow{cursor:pointer}
+.mrow .mtop{display:flex;gap:12px;align-items:flex-start;width:100%}
+.mrow .mhead{flex:1;min-width:0;display:flex;align-items:center;gap:8px;font-weight:var(--wb);font-size:13.5px}
+.mrow .mbars{flex:none;display:flex;flex-direction:column;gap:5px;min-width:150px;padding-top:2px}
+.mbar{display:flex;align-items:center;gap:7px;font-size:9.5px;letter-spacing:.06em;color:var(--dim)}
+.mbar .mbl{width:64px;text-align:right;text-transform:uppercase}
+.mtrack{flex:1;height:4px;background:var(--soft);border-radius:var(--barr,0);overflow:hidden}
+.mtrack i{display:block;height:100%;background:var(--hi);border-radius:var(--barr,0)}
+.mrow .mfoot{display:flex;align-items:center;gap:12px;border-top:1px solid var(--soft);padding-top:7px;width:100%;font-size:11.5px;color:var(--dim);flex-wrap:wrap}
+.mrow .mfoot .msize{margin-left:auto}
+.mrow .mfoot .mram{margin-left:0}
 .mpill{font-size:9px;letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--line);border-radius:calc(var(--r) * .4);padding:1px 6px;margin-left:8px;color:var(--dim);vertical-align:middle}
 .mpill.on{color:var(--hi);border-color:var(--hi)}
 #mfind{flex:0 1 170px;min-width:110px}
@@ -2627,7 +2639,12 @@ async function refreshModels(){
     const langsN = m.langs === "*" ? "99" : (m.langs && m.langs.includes(",") ? String(m.langs.split(",").length) : (m.langs || "").toUpperCase());
     const tag = langsN ? '<span class="mtag">'+langsN+'</span>' : "";
     const ram = m.ram ? '<span class="mram '+(m.fit||"")+'">≈'+m.ram+' MB RAM</span>' : '<span class="mram"></span>';
-    div.innerHTML = '<span class="mname">'+m.name+tag+trtag+pill+'</span><span class="mdesc">'+m.desc+'</span>'+ram+'<span class="msize">'+(m.size?m.size+" MB":"")+'</span><span>'+right+'</span>';
+    if(m.state === "active") div.classList.add("on");
+    const bar = (label, v)=>'<span class="mbar"><span class="mbl">'+label+'</span><span class="mtrack"><i style="width:'+(v*20)+'%"></i></span></span>';
+    const bars = (m.accuracy || m.speed) ? '<span class="mbars">'+bar(L.acc, m.accuracy||0)+bar(L.spd, m.speed||0)+'</span>' : "";
+    div.innerHTML = '<span class="mtop"><span class="mhead"><span class="mname">'+m.name+'</span>'+pill+'</span>'+bars+'</span>'+
+      '<span class="mdesc">'+m.desc+'</span>'+
+      '<span class="mfoot">'+tag+trtag+ram+'<span class="msize">'+(m.size?m.size+" MB":"")+'</span><span class="mact">'+right+'</span></span>';
     if(m.id !== "custom") div.onclick = (e)=>{ if(e.target.closest("button")) return; pickModel(m); };
     if(!modelPassesFilter(m)) div.classList.add("hidden");
     el.appendChild(div);
