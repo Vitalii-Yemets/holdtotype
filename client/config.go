@@ -13,6 +13,7 @@ import (
 
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -319,7 +320,14 @@ func loadConfig(path string) (*Config, error) {
 		go msgBox(tr("cfg.err.title"), trf("cfg.err.recovered", humanError(err), broken))
 		return cfg, nil
 	}
-	migrated := fileConfigVersion(data) != configVersion
+	fileVer := fileConfigVersion(data)
+	migrated := fileVer != configVersion
+	if !firstRun && fileVer != configVersion {
+		backupConfig(path, data, fileVer)
+	}
+	if fileVer > configVersion {
+		log.Printf("конфигурация из более новой версии программы (v%d, я понимаю v%d) — незнакомые поля будут потеряны при первом сохранении", fileVer, configVersion)
+	}
 	if syncDictionary(cfg) {
 		migrated = true
 	}
@@ -491,9 +499,27 @@ func loadConfig(path string) (*Config, error) {
 		}
 	}
 	if migrated {
-		_ = saveConfig(path, cfg)
+		if err := saveConfig(path, cfg); err != nil {
+			log.Printf("сохранение обновлённой конфигурации: %v", err)
+		} else if fileVer != configVersion {
+			log.Printf("конфигурация обновлена: v%d → v%d", fileVer, configVersion)
+		}
 	}
 	return cfg, nil
+}
+
+// backupConfig keeps the untouched file of the old version next to the
+// config, once per version — so any migration can be undone by hand.
+func backupConfig(path string, data []byte, ver int) {
+	bak := fmt.Sprintf("%s.v%d.bak", path, ver)
+	if _, err := os.Stat(bak); err == nil {
+		return
+	}
+	if err := os.WriteFile(bak, data, 0o644); err != nil {
+		log.Printf("копия прежней конфигурации не записалась: %v", err)
+		return
+	}
+	log.Printf("копия прежней конфигурации (v%d) сохранена: %s", ver, bak)
 }
 
 var translateLangNames = map[string]string{

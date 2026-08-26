@@ -215,7 +215,7 @@ The servers are hidden child processes tied to a Job Object: they die together w
 
 **Data boundary:** everything is processed locally. The only exception is the optional *External server URL* setting (System section) — when set, recorded audio is sent to that server instead of the local one. The app asks before it applies such an address and applies nothing until you answer yes; an address typed but not confirmed is never saved, not even by changing some other setting. Use it only with hosts you trust; leave it empty for a fully offline setup.
 
-Files next to the exe: `config.json` (all settings; manual edits apply via "Reload config.json" in the tray menu) — a key the app does not know is skipped with a line in the log instead of resetting everything, `holdtotype.log` (rotated, never exceeds ~2 MB on disk), `models/`.
+Files next to the exe: `config.json` (all settings; manual edits apply via "Reload config.json" in the tray menu) — a key the app does not know is skipped with a line in the log instead of resetting everything; when an update migrates the config to a new shape, the untouched old file is kept once as `config.json.vN.bak`, so any migration can be undone by hand, `holdtotype.log` (rotated, never exceeds ~2 MB on disk), `models/`.
 
 ## 🗑️ Uninstall
 
