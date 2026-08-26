@@ -5,15 +5,16 @@ import (
 	"holdtotype/internal/commands"
 	"holdtotype/internal/history"
 	"holdtotype/internal/mojibake"
+	"holdtotype/internal/preset"
 	"holdtotype/internal/profiles"
 	"holdtotype/internal/replace"
-	"holdtotype/internal/routing"
 	"holdtotype/internal/theme"
 
 	"bytes"
 	"encoding/json"
 	"log"
 	"os"
+	"path/filepath"
 	"reflect"
 	"sort"
 	"strings"
@@ -22,7 +23,7 @@ import (
 
 type Profile = profiles.Profile
 
-const configVersion = 3
+const configVersion = 4
 
 const (
 	hotkeyHold   = "hold"
@@ -56,16 +57,16 @@ func validPunctuation(v string) bool {
 }
 
 type Config struct {
-	Hotkey           string `json:"hotkey"`
-	Language         string `json:"language"`
-	Model            string `json:"model"`
-	Threads          int    `json:"threads"`
-	ServerPort       int    `json:"server_port"`
-	ServerAutostart  bool   `json:"server_autostart"`
-	ServerExe        string `json:"server_exe"`
-	ServerURL        string `json:"server_url"`
-	STTEngine        string `json:"stt_engine"`
-	SherpaExe        string `json:"sherpa_exe"`
+	Hotkey           string            `json:"hotkey"`
+	Language         string            `json:"language"`
+	Model            string            `json:"model"`
+	LangModels       map[string]string `json:"lang_models"`
+	Threads          int               `json:"threads"`
+	ServerPort       int               `json:"server_port"`
+	ServerAutostart  bool              `json:"server_autostart"`
+	ServerExe        string            `json:"server_exe"`
+	ServerURL        string            `json:"server_url"`
+	SherpaExe        string            `json:"sherpa_exe"`
 	SherpaPort       int    `json:"sherpa_port"`
 	SherpaModel      string `json:"sherpa_model"`
 	ConfigVersion    int    `json:"config_version"`
@@ -164,12 +165,12 @@ func defaultConfig() *Config {
 	return &Config{
 		Hotkey:           "ctrl+win",
 		Language:         "ru",
-		Model:            "models/ggml-small.bin",
+		Model:            "models/ggml-medium-q5_0.bin",
+		LangModels:       map[string]string{"auto": defaultPresetModel},
 		Threads:          4,
 		ServerPort:       8910,
 		ServerAutostart:  true,
 		ServerExe:        "whisper-server.exe",
-		STTEngine:        routing.ModeAuto,
 		SherpaExe:        "sherpa-server.exe",
 		SherpaPort:       8912,
 		ConfigVersion:    configVersion,
@@ -177,7 +178,7 @@ func defaultConfig() *Config {
 		EngineIdleMin:    10,
 		Punctuation:      punctFromModel,
 		HotkeyMode:       hotkeyHold,
-		UILevel:          levelSimple,
+		UILevel:          levelAll,
 		Skin:             theme.DefaultSkin,
 		Theme:            theme.DefaultPalette,
 		SherpaModel:      "models/gigaam-v3",
@@ -255,6 +256,7 @@ func fileNamesSkin(data []byte) bool {
 }
 
 func loadConfig(path string) (*Config, error) {
+	scanLocalModels()
 	cfg := defaultConfig()
 	data, err := os.ReadFile(path)
 	firstRun := os.IsNotExist(err)
@@ -272,6 +274,7 @@ func loadConfig(path string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
+	cfg.LangModels = nil
 	data = bytes.TrimPrefix(data, []byte{0xEF, 0xBB, 0xBF})
 	logUnknownConfigKeys(data, cfg)
 	dec := json.NewDecoder(bytes.NewReader(data))
@@ -307,12 +310,23 @@ func loadConfig(path string) (*Config, error) {
 	if cfg.ServerPort <= 0 {
 		cfg.ServerPort = 8910
 	}
-	if !validEngine(cfg.STTEngine) {
-		cfg.STTEngine = routing.ModeAuto
+	if fileConfigVersion(data) < 4 {
+		migrateToPresets(cfg, data)
+		migrated = true
 	}
-	if fileConfigVersion(data) < 2 && cfg.STTEngine != routing.ModeAuto {
-		log.Printf("конфигурация из прошлой версии: движок %q превращён в автоматический выбор по языку", cfg.STTEngine)
-		cfg.STTEngine = routing.ModeAuto
+	if cleaned, dropped := preset.Clean(cfg.LangModels, func(id string) *preset.Model {
+		return presetView(findModel(id))
+	}); len(dropped) > 0 {
+		log.Printf("пресеты: отброшены назначения %s", strings.Join(dropped, ", "))
+		cfg.LangModels = cleaned
+		migrated = true
+	} else {
+		cfg.LangModels = cleaned
+	}
+	if cfg.LangModels == nil {
+		cfg.LangModels = map[string]string{}
+	}
+	if applyPreset(cfg) {
 		migrated = true
 	}
 	cfg.ConfigVersion = configVersion
@@ -336,7 +350,7 @@ func loadConfig(path string) (*Config, error) {
 		cfg.Theme = theme.DefaultPalette
 	}
 	if !validUILevel(cfg.UILevel) {
-		cfg.UILevel = levelSimple
+		cfg.UILevel = levelAll
 	}
 	if fileConfigVersion(data) < 3 {
 		cfg.UILevel = levelAll
@@ -433,6 +447,61 @@ func loadConfig(path string) (*Config, error) {
 var translateLangNames = map[string]string{
 	"en": "English", "de": "German", "fr": "French", "es": "Spanish",
 	"it": "Italian", "pl": "Polish", "ru": "Russian", "uk": "Ukrainian",
+}
+
+var translateLangOrder = []string{"ru", "en", "uk", "de", "fr", "es", "it", "pl"}
+
+func translateLangCodes() []string { return translateLangOrder }
+
+// migrateToPresets rebuilds the two-slot world as language presets: the old
+// whisper slot becomes the universal model, and if a sherpa model stood in
+// its slot and was installed, its languages keep going to it — exactly what
+// the old routing did.
+func migrateToPresets(cfg *Config, data []byte) {
+	if cfg.LangModels == nil {
+		cfg.LangModels = map[string]string{}
+	}
+	wID := ""
+	file := filepath.Base(cfg.Model)
+	for i := range modelCatalog {
+		if modelCatalog[i].Engine != engineSherpa && modelCatalog[i].File == file {
+			wID = modelCatalog[i].ID
+		}
+	}
+	if wID == "" {
+		wID = defaultPresetModel
+	}
+	if cfg.LangModels["auto"] == "" {
+		cfg.LangModels["auto"] = wID
+	}
+	if fileSTTEngine(data) == "whisper" {
+		log.Printf("конфигурация из прошлой версии: язык → модель, всё на %s", wID)
+		return
+	}
+	dir := filepath.Base(filepath.Clean(cfg.SherpaModel))
+	for i := range modelCatalog {
+		m := &modelCatalog[i]
+		if m.Engine != engineSherpa || m.Dir != dir || !m.installed() {
+			continue
+		}
+		for _, l := range strings.Split(m.Langs, ",") {
+			l = strings.TrimSpace(l)
+			if validTranslateLang(l) && cfg.LangModels[l] == "" {
+				cfg.LangModels[l] = m.ID
+			}
+		}
+	}
+	log.Printf("конфигурация из прошлой версии: язык → модель, универсальная %s", wID)
+}
+
+func fileSTTEngine(data []byte) string {
+	var probe struct {
+		STTEngine string `json:"stt_engine"`
+	}
+	if json.Unmarshal(data, &probe) != nil {
+		return ""
+	}
+	return probe.STTEngine
 }
 
 func validTranslateLang(l string) bool {

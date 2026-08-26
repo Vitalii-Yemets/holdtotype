@@ -57,22 +57,23 @@ type modelOpt struct {
 	Name    string
 	File    string
 	SizeMB  int
-	Dir     string
-	Files   []string
-	BaseURL string
-	Lang    string
+	Dir      string
+	Files    []string
+	BaseURL  string
+	Lang     string
+	PresetID string
 }
 
 const whisperBaseURL = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/"
 
 var modelOpts = []modelOpt{
-	{ID: "gigaam-v3", Name: "GigaAM v3", SizeMB: 232, Dir: "gigaam-v3", Lang: "ru",
+	{ID: "gigaam-v3", Name: "GigaAM v3", SizeMB: 232, Dir: "gigaam-v3", Lang: "ru", PresetID: "gigaam-v3",
 		Files:   []string{"encoder.int8.onnx", "decoder.onnx", "joiner.onnx", "tokens.txt"},
 		BaseURL: "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-transducer-punct-giga-am-v3-russian-2025-12-16/resolve/main/"},
-	{ID: "base", Name: "Base", File: "ggml-base.bin", SizeMB: 142, BaseURL: whisperBaseURL},
-	{ID: "small", Name: "Small", File: "ggml-small.bin", SizeMB: 466, BaseURL: whisperBaseURL},
-	{ID: "medium", Name: "Medium (q5)", File: "ggml-medium-q5_0.bin", SizeMB: 539, BaseURL: whisperBaseURL},
-	{ID: "turbo", Name: "Turbo (q5)", File: "ggml-large-v3-turbo-q5_0.bin", SizeMB: 574, BaseURL: whisperBaseURL},
+	{ID: "base", Name: "Base", File: "ggml-base.bin", SizeMB: 142, BaseURL: whisperBaseURL, PresetID: "base"},
+	{ID: "small", Name: "Small", File: "ggml-small.bin", SizeMB: 466, BaseURL: whisperBaseURL, PresetID: "small"},
+	{ID: "medium", Name: "Medium (q5)", File: "ggml-medium-q5_0.bin", SizeMB: 539, BaseURL: whisperBaseURL, PresetID: "medium-q5_0"},
+	{ID: "turbo", Name: "Turbo (q5)", File: "ggml-large-v3-turbo-q5_0.bin", SizeMB: 574, BaseURL: whisperBaseURL, PresetID: "large-v3-turbo-q5_0"},
 }
 
 func modelByID(id string) *modelOpt {
@@ -188,15 +189,21 @@ func patchDefaultConfig(dir string, m *modelOpt, updates bool) error {
 	}
 	cfg["check_updates"] = updates
 	if m != nil {
+		presets := map[string]any{}
+		if prev, ok := cfg["lang_models"].(map[string]any); ok {
+			presets = prev
+		}
 		if m.Dir != "" {
 			cfg["sherpa_model"] = "models/" + m.Dir
-			cfg["stt_engine"] = "auto"
 			if m.Lang != "" {
 				cfg["language"] = m.Lang
+				presets[m.Lang] = m.PresetID
 			}
 		} else {
 			cfg["model"] = "models/" + m.File
+			presets["auto"] = m.PresetID
 		}
+		cfg["lang_models"] = presets
 	}
 	out, err := json.MarshalIndent(cfg, "", "  ")
 	if err != nil {

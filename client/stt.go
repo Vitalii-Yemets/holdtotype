@@ -5,11 +5,10 @@ import (
 	"io"
 	"net"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
-	"holdtotype/internal/routing"
+	"holdtotype/internal/preset"
 )
 
 const (
@@ -25,6 +24,7 @@ type recognizer interface {
 	external() bool
 	wasStopped() bool
 	engine() string
+	model() string
 }
 
 func dialOK(addr string) bool {
@@ -35,8 +35,6 @@ func dialOK(addr string) bool {
 	conn.Close()
 	return true
 }
-
-func validEngine(name string) bool { return routing.ValidMode(name) }
 
 func startEngine(cfg *Config, engine string, logw io.Writer) (recognizer, error) {
 	if engine == engineSherpa {
@@ -50,80 +48,81 @@ func startRecognizer(cfg *Config, logw io.Writer) (recognizer, error) {
 }
 
 func sherpaInstalled(cfg *Config) bool {
-	_, _, _, _, err := sherpaModelFiles(cfg.SherpaModel)
+	_, err := sherpaModelArgs(cfg.SherpaModel)
 	return err == nil
 }
 
-func sherpaLangs(cfg *Config) []string {
-	dir := filepath.Base(filepath.Clean(cfg.SherpaModel))
-	for i := range modelCatalog {
-		m := &modelCatalog[i]
-		if m.Engine == engineSherpa && m.Dir == dir && m.Langs != "" {
-			return strings.Split(m.Langs, ",")
-		}
+func presetView(m *modelInfo) *preset.Model {
+	if m == nil {
+		return nil
 	}
-	return []string{"ru"}
-}
-
-func routingInput(cfg *Config, translate bool) routing.Input {
-	return routing.Input{
-		Mode:        cfg.STTEngine,
-		Language:    cfg.Language,
-		Translate:   translate,
-		SherpaReady: sherpaInstalled(cfg),
-		SherpaLangs: sherpaLangs(cfg),
+	return &preset.Model{
+		ID: m.ID, Engine: m.Engine, Langs: strings.Split(m.Langs, ","),
+		Auto: m.Auto, Translate: m.Translate,
 	}
 }
 
-func pickEngine(cfg *Config, translate bool) routing.Decision {
-	return routing.Pick(routingInput(cfg, translate))
+func presetModelID(cfg *Config, lang string) string {
+	return preset.Resolve(cfg.LangModels, lang, defaultPresetModel,
+		func(id string) bool { return findModel(id) != nil })
+}
+
+func modelForLang(cfg *Config, lang string) *modelInfo {
+	return findModel(presetModelID(cfg, lang))
+}
+
+func activeModel(cfg *Config) *modelInfo {
+	return modelForLang(cfg, cfg.Language)
 }
 
 func primaryEngine(cfg *Config) string {
-	return pickEngine(cfg, false).Engine
-}
-
-func engineModelName(cfg *Config, engine string) string {
-	if engine == engineSherpa {
-		return modelNameForPath(cfg.SherpaModel)
+	if m := activeModel(cfg); m != nil {
+		return m.Engine
 	}
-	return modelNameForPath(cfg.Model)
+	return engineWhisper
 }
 
-type routeRow struct {
-	Cond   string `json:"cond"`
-	Engine string `json:"engine"`
-	Why    string `json:"why"`
-}
-
-func routeRows(cfg *Config) []routeRow {
-	d := pickEngine(cfg, false)
-	rows := []routeRow{{
-		Cond:   trf("route.speech", routeLangLabel(cfg.Language)),
-		Engine: engineModelName(cfg, d.Engine),
-		Why:    tr("route.why." + d.Reason),
-	}}
-	if d.Engine == engineSherpa {
-		rows = append(rows, routeRow{
-			Cond:   tr("route.other"),
-			Engine: engineModelName(cfg, engineWhisper),
-			Why:    tr("route.why.otherlang"),
-		})
+func bestInstalledWhisper() *modelInfo {
+	var best *modelInfo
+	for i := range modelCatalog {
+		m := &modelCatalog[i]
+		if m.Engine != engineWhisper || !m.Translate || m.Custom || !m.installed() {
+			continue
+		}
+		if best == nil || m.Accuracy > best.Accuracy {
+			best = m
+		}
 	}
-	rows = append(rows, routeRow{
-		Cond:   tr("route.translate"),
-		Engine: engineModelName(cfg, engineWhisper),
-		Why:    tr("route.why.translate"),
-	})
-	return rows
+	return best
 }
 
-func routeLangLabel(code string) string {
-	code = strings.ToLower(strings.TrimSpace(code))
-	if code == "" || code == "auto" {
-		return tr("route.lang.auto")
+// applyPreset writes the paths the engines actually load, derived from the
+// language presets: the active model's own slot, and — when the active model
+// is not a whisper — the best installed whisper standing by for translation.
+func applyPreset(cfg *Config) bool {
+	m := activeModel(cfg)
+	if m == nil {
+		return false
 	}
-	return langLabel(code)
+	changed := false
+	if m.Engine == engineSherpa {
+		if nd := m.modelPath(); cfg.SherpaModel != nd {
+			cfg.SherpaModel = nd
+			changed = true
+		}
+		if w := bestInstalledWhisper(); w != nil {
+			if nm := w.modelPath(); cfg.Model != nm {
+				cfg.Model = nm
+				changed = true
+			}
+		}
+	} else {
+		if nm := m.modelPath(); cfg.Model != nm {
+			cfg.Model = nm
+			changed = true
+		}
+	}
+	return changed
 }
 
 func engineTranslates(name string) bool { return name == engineWhisper }
@@ -137,9 +136,12 @@ func activeModelPath(cfg *Config) string {
 
 func missingModelPath(cfg *Config) string {
 	if primaryEngine(cfg) == engineSherpa {
-		if _, _, _, _, err := sherpaModelFiles(cfg.SherpaModel); err != nil {
+		if _, err := sherpaModelArgs(cfg.SherpaModel); err != nil {
 			return cfg.SherpaModel
 		}
+		return ""
+	}
+	if strings.TrimSpace(cfg.ServerURL) != "" {
 		return ""
 	}
 	if _, err := os.Stat(cfg.Model); err != nil {

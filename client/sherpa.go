@@ -35,7 +35,35 @@ type sherpaServer struct {
 	stopping bool
 }
 
-func sherpaModelFiles(dir string) (encoder, decoder, joiner, tokens string, err error) {
+func firstExisting(dir string, names ...string) string {
+	for _, n := range names {
+		p := filepath.Join(dir, n)
+		if _, err := os.Stat(p); err == nil {
+			return p
+		}
+	}
+	return ""
+}
+
+// sherpaModelArgs reads the folder layout and builds the model flags for
+// sherpa-server: a nemo transducer (encoder/decoder/joiner) or a moonshine
+// model (encoder_model + merged decoder).
+func sherpaModelArgs(dir string) ([]string, error) {
+	tokens := filepath.Join(dir, "tokens.txt")
+	if _, err := os.Stat(tokens); err != nil {
+		return nil, fmt.Errorf("%s", trf("err.sherpa.model", tokens))
+	}
+	if enc := firstExisting(dir, "encoder_model.int8.ort", "encoder_model.ort", "encoder_model.onnx"); enc != "" {
+		dec := firstExisting(dir, "decoder_model_merged.int8.ort", "decoder_model_merged.ort", "decoder_model_merged.onnx")
+		if dec == "" {
+			return nil, fmt.Errorf("%s", trf("err.sherpa.model", filepath.Join(dir, "decoder_model_merged.ort")))
+		}
+		return []string{
+			"--moonshine-encoder=" + enc,
+			"--moonshine-merged-decoder=" + dec,
+			"--tokens=" + tokens,
+		}, nil
+	}
 	pick := func(name string) string {
 		p := filepath.Join(dir, name+".int8.onnx")
 		if _, statErr := os.Stat(p); statErr != nil {
@@ -43,16 +71,19 @@ func sherpaModelFiles(dir string) (encoder, decoder, joiner, tokens string, err 
 		}
 		return p
 	}
-	encoder = pick("encoder")
-	decoder = pick("decoder")
-	joiner = pick("joiner")
-	tokens = filepath.Join(dir, "tokens.txt")
-	for _, p := range []string{encoder, decoder, joiner, tokens} {
+	encoder, decoder, joiner := pick("encoder"), pick("decoder"), pick("joiner")
+	for _, p := range []string{encoder, decoder, joiner} {
 		if _, statErr := os.Stat(p); statErr != nil {
-			return "", "", "", "", fmt.Errorf("%s", trf("err.sherpa.model", p))
+			return nil, fmt.Errorf("%s", trf("err.sherpa.model", p))
 		}
 	}
-	return encoder, decoder, joiner, tokens, nil
+	return []string{
+		"--encoder=" + encoder,
+		"--decoder=" + decoder,
+		"--joiner=" + joiner,
+		"--tokens=" + tokens,
+		"--model-type=nemo_transducer",
+	}, nil
 }
 
 func startSherpaServer(cfg *Config, logw io.Writer) (*sherpaServer, error) {
@@ -62,7 +93,7 @@ func startSherpaServer(cfg *Config, logw io.Writer) (*sherpaServer, error) {
 		doneCh:  make(chan struct{}),
 		threads: cfg.SherpaThreads,
 	}
-	encoder, decoder, joiner, tokens, err := sherpaModelFiles(cfg.SherpaModel)
+	modelArgs, err := sherpaModelArgs(cfg.SherpaModel)
 	if err != nil {
 		return nil, err
 	}
@@ -75,17 +106,12 @@ func startSherpaServer(cfg *Config, logw io.Writer) (*sherpaServer, error) {
 	if _, serr := os.Stat(exePath); serr != nil {
 		return nil, fmt.Errorf("%s", trf("err.sherpa.notfound", exePath))
 	}
-	args := []string{
+	args := append([]string{
 		"--port=" + strconv.Itoa(cfg.SherpaPort),
 		"--num-work-threads=2",
 		"--num-io-threads=1",
-		"--encoder=" + encoder,
-		"--decoder=" + decoder,
-		"--joiner=" + joiner,
-		"--tokens=" + tokens,
-		"--model-type=nemo_transducer",
 		"--num-threads=" + strconv.Itoa(cfg.SherpaThreads),
-	}
+	}, modelArgs...)
 	quiet := logfilter.New(logw,
 		"handle_read_frame error",
 		"handle_read_handshake error",
@@ -118,6 +144,8 @@ func startSherpaServer(cfg *Config, logw io.Writer) (*sherpaServer, error) {
 }
 
 func (s *sherpaServer) engine() string { return engineSherpa }
+
+func (s *sherpaServer) model() string { return filepath.ToSlash(s.dir) }
 
 func (s *sherpaServer) external() bool { return false }
 

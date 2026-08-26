@@ -48,33 +48,42 @@ const dom = new JSDOM(html, {
     window.appState = async () =>
       JSON.stringify({ hotkey: "ctrl+win", mic: "Realtek", engine: "sherpa · gigaam-v3", llm: "model.gguf",
         ram: "8000 MB free", last: "hello", last_meta: "just now · 5 characters", ready: true, status: "Ready",
-        status_line: "Ready · gigaam-v3 + ggml-small.bin · 7.8 GB free", ru_model: "gigaam-v3",
-        other_model: "ggml-small.bin", llm_ok: true, mic_ok: true, last_at: lastAt, last_app: "chrome.exe",
+        status_line: "Ready · gigaam-v3 + ggml-small.bin · 7.8 GB free",
+        active_model: "GigaAM v3", active_state: ruState, active_lang: "RU",
+        assigned: [
+          { model: "GigaAM v3", langs: "RU", state: ruState, current: true },
+          { model: "Small", langs: "Detect itself, EN", state: otherState, current: false },
+        ],
+        installed_models: ["Small", "my-model"],
+        llm_ok: true, mic_ok: true, last_at: lastAt, last_app: "chrome.exe",
         remote: remote, backend_err: backendErr,
-        ru_state: ruState, other_state: otherState,
         badges: { mic: micBadge, models: "2", system: "" } });
-    window.appRouting = async () =>
-      JSON.stringify([
-        { cond: "Speech in RU", engine: "gigaam-v3", why: "more accurate here" },
-        { cond: "Other languages", engine: "ggml-small.bin", why: "99 languages" },
-        { cond: "Translation", engine: "ggml-small.bin", why: "only Whisper translates" },
-      ]);
-    let modelStates = { base: "absent", small: "active", "gigaam-v3": "absent" };
+    let modelStates = { base: "absent", small: "active", "medium-q5_0": "absent", "gigaam-v3": "absent", "moonshine-uk": "absent" };
     window.dlCalls = [];
     window.cancelCalls = [];
     window.appModelDl = async (id) => { window.dlCalls.push(id); modelStates[id] = "downloading"; };
     window.finishDl = (id) => { modelStates[id] = "installed"; };
+    window.setModelState = (id, st) => { modelStates[id] = st; };
     window.appModelCancel = async (id) => { window.cancelCalls.push(id); modelStates[id] = "absent"; return true; };
+    window.unloadCalls = 0;
+    window.appUnloadEngines = async () => { window.unloadCalls++; };
+    window.folderOpens = 0;
+    window.appOpenModelsFolder = () => { window.folderOpens++; };
+    window.linkOpens = [];
+    window.appModelLink = (id) => { window.linkOpens.push(id); };
     window.appModels = async () =>
       JSON.stringify([
-        { id: "base", name: "Base", desc: "fast", size: 142, state: modelStates.base, pct: 12, engine: "whisper", langs: "*", speed: 5, accuracy: 2 },
-        { id: "small", name: "Small", desc: "balanced", size: 466, state: modelStates.small, engine: "whisper", langs: "*", slot: true, speed: 3, accuracy: 3 },
-        { id: "gigaam-v3", name: "GigaAM v3", desc: "russian", size: 232, state: modelStates["gigaam-v3"], pct: 5, engine: "sherpa", langs: "ru", punct: true, speed: 5, accuracy: 5 },
+        { id: "base", name: "Base", desc: "fast", size: 142, state: modelStates.base, pct: 12, engine: "whisper", langs: "*", auto: true, translate: true, speed: 5, accuracy: 2 },
+        { id: "small", name: "Small", desc: "balanced", size: 466, state: modelStates.small, engine: "whisper", langs: "*", auto: true, translate: true, serves: ["auto"], loaded: true, speed: 3, accuracy: 3 },
+        { id: "medium-q5_0", name: "Medium (q5)", desc: "recommended", size: 539, state: modelStates["medium-q5_0"], pct: 5, engine: "whisper", langs: "*", auto: true, translate: true, speed: 2, accuracy: 4 },
+        { id: "gigaam-v3", name: "GigaAM v3", desc: "russian", size: 232, state: modelStates["gigaam-v3"], pct: 5, engine: "sherpa", langs: "ru", punct: true, serves: ["ru"], speed: 5, accuracy: 5 },
+        { id: "moonshine-uk", name: "Moonshine Base uk", desc: "ukrainian", size: 135, state: modelStates["moonshine-uk"], engine: "sherpa", langs: "uk", manual: true, link: "https://example.com/moonshine", speed: 5, accuracy: 3 },
+        { id: "local:my-model", name: "my-model", desc: "found in the models folder", size: 900, state: "installed", engine: "whisper", langs: "*", custom: true },
       ]);
     window.appLLMSearch = async () =>
       JSON.stringify({ repos: [{ id: "org/Repo-GGUF", downloads: 1234, updated: "2026-01-01" }] });
     window.appLLMFiles = async () =>
-      JSON.stringify({ files: [{ file: "q4.gguf", size: 4000, fit: "ok", need: 6166 }] });
+      JSON.stringify({ files: [{ file: "q4.gguf", size: 4000, fit: "ok", need: 6166 }, { file: "q8.gguf", size: 9000, fit: "bad", need: 13000 }] });
     window.appLLMDel = async () => {
       llmState = { installed: [], downloads: [], ram: 16384, ram_free: 9000 };
       return "deleted";
@@ -197,8 +206,12 @@ function check(name, actual, expected) {
     check("and pressing " + id + " asks for a new combination", w.captureCalls > before, true);
   }
   check("no separate set button is left beside them", [...d.querySelectorAll("[id60_set]")].map(e=>e.id), []);
-  check("status shows russian model", d.getElementById("state_ru").textContent, "gigaam-v3");
-  check("status shows other-language model", d.getElementById("state_other").textContent, "ggml-small.bin");
+  check("status names the model behind the current language", d.getElementById("state_active").textContent, "GigaAM v3");
+  check("and the language stands beside it", d.getElementById("state_active_lang").textContent, "RU");
+  check("the models in use are listed", d.querySelectorAll("#state_assigned .arow").length, 2);
+  check("each with the languages it serves", d.querySelector("#state_assigned .arow .alangs").textContent, "RU");
+  check("the current one is marked", d.querySelector("#state_assigned .arow").className.includes("on"), true);
+  check("installed models are listed in one line", d.getElementById("state_installed").textContent, "Small, my-model");
   check("last dictation carries details", d.getElementById("state_last_meta").textContent, "just now · 5 characters");
   const lastCS = w.getComputedStyle(d.getElementById("state_last"));
   check("last dictation is clamped to its row", [lastCS.display, lastCS.overflow, lastCS.textOverflow, lastCS.whiteSpace], ["block", "hidden", "ellipsis", "nowrap"]);
@@ -378,7 +391,7 @@ function check(name, actual, expected) {
   const everySetting = [
     "hotkey", "min_record_ms", "max_record_seconds", "auto_enter", "restore_clipboard",
     "type_mode", "overlay", "overlay_position", "overlay_text", "animation", "mic_device", "mic_bar", "beep", "sound_theme",
-    "models", "language", "threads", "punctuation", "whisper_prompt", "profbody", "dict_model", "tr_engine", "mlang", "mfind",
+    "models", "presets", "munload", "language", "threads", "punctuation", "whisper_prompt", "profbody", "dict_model", "tr_engine", "mlang", "mfind",
     "tr_default", "translate_target", "translate_ask", "translate_ask_seconds", "tr_hotkey",
     "tl_en", "ui_language", "upd_check", "check_updates", "server_autostart", "server_port",
     "server_exe", "server_url", "proc-models", "proc-search", "ver2", "autorun", "pause_hotkey",
@@ -388,17 +401,39 @@ function check(name, actual, expected) {
 
   tab("models"); await sleep(80);
   check("models section shown", shown("models"), true);
-  check("recognition models listed", d.querySelectorAll("#models .mcard").length, 3);
+  check("recognition models listed", d.querySelectorAll("#models .mcard").length, 6);
   check("no radio buttons left in the library", d.querySelectorAll('#models input[type="radio"]').length, 0);
   check("the list is split by state, not by language", [...d.querySelectorAll("#models .mslot")].map(h=>h.dataset.slot), ["inst", "avail"]);
-  check("the installed shelf holds what is on disk", [...d.querySelectorAll('#models .mcard[data-slot="inst"]')].map(r=>r.dataset.id), ["small"]);
-  check("the rest wait under available", [...d.querySelectorAll('#models .mcard[data-slot="avail"]')].map(r=>r.dataset.id), ["base", "gigaam-v3"]);
+  check("the installed shelf holds what is on disk", [...d.querySelectorAll('#models .mcard[data-slot="inst"]')].map(r=>r.dataset.id), ["small", "local:my-model"]);
+  check("the rest wait under available", [...d.querySelectorAll('#models .mcard[data-slot="avail"]')].map(r=>r.dataset.id), ["base", "medium-q5_0", "gigaam-v3", "moonshine-uk"]);
   check("the active model wears its pill", [...d.querySelectorAll("#models .mpill.on")].length, 1);
   check("and its whole card is lit", [...d.querySelectorAll("#models .mcard.on")].map(r=>r.dataset.id), ["small"]);
-  check("every card measures itself in two bars", d.querySelectorAll("#models .mcard .mbar").length, 6);
+  check("a card assigned to a language says which", d.querySelector('#models .mcard[data-id="gigaam-v3"] .mpill').textContent, "RU");
+  check("every card measures itself in two bars", d.querySelectorAll("#models .mcard .mbar").length, 10);
   check("the bars are filled to the model, not all alike", [...d.querySelectorAll(String.raw`#models .mcard[data-id="base"] .mtrack i`)].map(i=>i.style.width), ["40%", "100%"]);
+  check("a hand-copied model shows no bars — its powers are unknown", d.querySelectorAll('#models .mcard[data-id="local:my-model"] .mbar').length, 0);
+  check("and wears a question mark instead of languages", d.querySelector('#models .mcard[data-id="local:my-model"] .mtag').textContent, "?");
+  check("the licensed model offers no download button", !!d.querySelector('#models .mcard[data-id="moonshine-uk"] button[data-a="dl"]'), false);
+  check("it explains the licence instead", d.querySelector('#models .mcard[data-id="moonshine-uk"]').textContent.includes("licence forbids"), true);
+  const linkBtn = d.querySelector('#models .mcard[data-id="moonshine-uk"] button[data-a="link"]');
+  check("and offers the source link", !!linkBtn, true);
+  linkBtn.click(); await sleep(60);
+  check("the link opens the model page", w.linkOpens, ["moonshine-uk"]);
+  check("the models folder can be opened for hand-copied files", !!d.querySelector('#p-models button[onclick="appOpenModelsFolder()"]'), true);
+  const eject = d.querySelector('#models .mcard[data-id="small"] button[data-a="unload"]');
+  check("the loaded model offers to leave the memory", !!eject, true);
+  eject.click(); await sleep(150);
+  check("and the program is asked to unload it", w.unloadCalls, 1);
+  check("there is a plain unload row as well", !!d.getElementById("munload"), true);
   check("the language filter is one control", [...d.getElementById("mlang").options].map(o=>o.value), ["all", "multi", "punct", "fit", "ru"]);
   check("the library head stays put while the shelf scrolls", w.getComputedStyle(d.querySelector("#p-models .libhead")).position, "sticky");
+  check("every language owns a preset row", d.querySelectorAll("#presets .prow").length, 9);
+  const autoSel = d.querySelector("#presets .prow select");
+  check("the auto row offers only models that detect the language", [...autoSel.options].map(o=>o.value), ["base", "small", "medium-q5_0"]);
+  const ruRow = d.querySelectorAll("#presets .prow")[1];
+  check("the russian row is marked as the current language", ruRow.className.includes("cur"), true);
+  check("the russian row holds its assigned model", ruRow.querySelector("select").value, "gigaam-v3");
+  check("a model that only recognizes says so in the list", [...ruRow.querySelectorAll("option")].find(o=>o.value==="gigaam-v3").textContent.includes("recognition only"), true);
   const mfind = d.getElementById("mfind");
   mfind.value = "giga"; mfind.dispatchEvent(new w.Event("input", { bubbles: true })); await sleep(150);
   check("the name search narrows the list", [...d.querySelectorAll("#models .mcard:not(.hidden)")].map(r=>r.dataset.id), ["gigaam-v3"]);
@@ -406,6 +441,7 @@ function check(name, actual, expected) {
   const saveBefore = w.saveCalls;
   d.querySelector('#models .mcard[data-id="small"]').click(); await sleep(200);
   check("a click on an installed row is the choice", w.saveCalls > saveBefore, true);
+  check("and it pins the model to the current language", w.lastSaveForm.lang_models.ru, "small");
   check("the mark carries both shapes", [d.querySelectorAll(".mk.mic").length, d.querySelectorAll(".mk.face").length], [2, 2]);
   w.applyThemeVars("soft");
   check("the soft design shows the face", [d.documentElement.style.getPropertyValue("--markmic"), d.documentElement.style.getPropertyValue("--markface")], ["none", "block"]);
@@ -414,7 +450,7 @@ function check(name, actual, expected) {
 
   const recLangs = [...d.getElementById("language").options].map(o=>o.value);
   check("italian can be dictated too", recLangs.includes("it"), true);
-  check("ram estimate shown", d.querySelectorAll("#p-models .mram").length, 3);
+  check("ram estimate shown", d.querySelectorAll("#p-models .mram").length, 6);
   check("the routing table is gone", !!d.getElementById("routing"), false);
   check("engine tags rendered", d.querySelectorAll("#p-models .mtag").length >= 3, true);
   check("russian engine tagged RU", d.querySelector('#models .mcard[data-id="gigaam-v3"] .mtag').textContent, "RU");
@@ -422,6 +458,12 @@ function check(name, actual, expected) {
   check("the threads moved in with the server", !!d.querySelector("#p-system #threads"), true);
   check("dictation names the model it uses", d.getElementById("dict_model").textContent, "Small");
   check("translation names its engine too", d.getElementById("tr_engine").textContent, "Translation is done by Small");
+  check("the honest CPU line is on the page", d.getElementById("p-models").textContent.includes("S_CPU_LINE"), true);
+  w.setModelState("small", "installed"); w.setModelState("gigaam-v3", "active");
+  await w.refreshModels(); await sleep(60);
+  check("a model that cannot translate says Whisper will step in", d.getElementById("tr_engine").textContent.includes("does not translate"), true);
+  w.setModelState("small", "active"); w.setModelState("gigaam-v3", "absent");
+  await w.refreshModels(); await sleep(60);
   d.getElementById("mcheck").click(); await sleep(250);
   check("installed models can be checked", w.modelChecks, 1);
   check("the check says what it found", d.getElementById("mcheck_out").textContent, "Damaged files: Small (ggml-small.bin)");
@@ -523,7 +565,7 @@ function check(name, actual, expected) {
   check("and it can be turned back off", w.autorunCalls[w.autorunCalls.length - 1], false);
 
   tab("dictation"); await sleep(30);
-  check("the turbo warning is shown for a turbo model", d.getElementById("tr_warn").style.display, "block");
+  check("the old turbo warning is gone — honesty lives in the engine line", !!d.getElementById("tr_warn"), false);
   check("the target language carries the honest note", !!d.querySelector("#p-dictation .row label .sub.warn"), true);
   check("translation lives with the other controls now", !!d.querySelector("#p-dictation #translate_target"), true);
   const trd = d.getElementById("tr_default");
@@ -639,8 +681,14 @@ function check(name, actual, expected) {
   check("a found repository is a button too", !!repo, true);
   check("and it says whether it is open", repo.getAttribute("aria-expanded"), "false");
   repo.click(); await sleep(300);
-  check("opening it lists the files", d.querySelectorAll('#hf_results button[data-repo]').length, 1);
+  check("opening it lists the files that fit this computer", d.querySelectorAll('#hf_results button[data-repo]').length, 1);
   check("and the button now says it is open", d.querySelector(".hfrepo").getAttribute("aria-expanded"), "true");
+  check("the too-big files are counted, not silently dropped", d.getElementById("hf_results").textContent.includes("hidden: 1"), true);
+  const fitBox = d.getElementById("hf_fit");
+  check("the fit filter is a visible choice", !!fitBox && fitBox.checked, true);
+  fitBox.checked = false; fitBox.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(100);
+  check("turning it off shows everything", d.querySelectorAll('#hf_results button[data-repo]').length, 2);
+  fitBox.checked = true; fitBox.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(100);
 
 
   tab("models"); await sleep(120);
@@ -663,9 +711,8 @@ function check(name, actual, expected) {
   pickAbsent().click(); await sleep(80);
   d.querySelector(".modal .btn.yes").click(); await sleep(250);
   check("the row shows the download running", !!d.querySelector('#models button[data-a="cancel"][data-id="base"]'), true);
-  const savesBeforeDl = w.saveForms.length;
+  check("agreeing pins the language to the model at once", w.lastSaveForm.lang_models.ru, "base");
   w.finishDl("base"); await sleep(1400);
-  check("a finished download is applied by itself", w.saveForms.slice(savesBeforeDl).map((f) => f.model_id), ["base"]);
   check("and the program says the model is ready", d.getElementById("st_saved").textContent, "Model downloaded");
 
   const activeDel = () => d.querySelector('#models .mcard[data-id="small"] button[data-a="del"]');
@@ -760,12 +807,12 @@ function check(name, actual, expected) {
   w.setMicFails(false);
 
   w.setModelStates("missing", "downloading"); await sleep(1700);
-  check("a missing model is not green", d.getElementById("state_ru_led").className.includes("on"), false);
-  check("a missing model warns", d.getElementById("state_ru_led").className.includes("warn"), true);
-  check("a missing model offers to download it", d.getElementById("state_ru_btn").textContent, "Download");
-  check("a model being downloaded is not green", d.getElementById("state_other_led").className.includes("on"), false);
+  check("a missing model is not green", d.getElementById("state_active_led").className.includes("on"), false);
+  check("a missing model warns", d.getElementById("state_active_led").className.includes("warn"), true);
+  check("a missing model offers to download it", d.getElementById("state_active_btn").textContent, "Download");
+  check("a missing model is named in the list of models in use", d.querySelector("#state_assigned .arow .amiss").textContent, "not installed");
   w.setModelStates("ready", "ready"); await sleep(1700);
-  check("an installed model is green", d.getElementById("state_ru_led").className.includes("on"), true);
+  check("an installed model is green", d.getElementById("state_active_led").className.includes("on"), true);
 
   w.setRemote(true); await sleep(1700);
   check("remote recognition is announced", d.getElementById("st_remote").textContent, "REMOTE");
@@ -806,19 +853,17 @@ function check(name, actual, expected) {
 
   d.getElementById("wiz_next").click(); await sleep(250);
   check("the second step is the model", d.getElementById("wz1").classList.contains("on"), true);
-  check("the wizard proposes a plan, not a list", d.querySelectorAll("#wiz_plan .advrow").length, 2);
-  check("the plan says what is already here", [...d.querySelectorAll("#wiz_plan .advstate")].map((s) => s.className.includes("ok")), [false, true]);
-  check("the download button carries the size", d.getElementById("wiz_dl").textContent.includes("232 MB"), true);
+  check("the wizard proposes the default model, Whisper Medium", d.querySelectorAll("#wiz_plan .advrow").length, 1);
+  check("and names it", d.querySelector("#wiz_plan .advname").textContent.includes("Medium"), true);
+  check("the download button carries the size", d.getElementById("wiz_dl").textContent.includes("539 MB"), true);
+  check("the download can be put off", d.getElementById("wiz_dl_skip").style.display, "");
   const wizDlBefore = w.dlCalls.length;
   d.getElementById("wiz_dl").click(); await sleep(200);
   check("the wizard downloads what the plan is missing", w.dlCalls.length > wizDlBefore, true);
   check("the wizard shows the download running", d.getElementById("wiz_dlrow").style.display, "");
   check("the wizard does not let you walk past a download", d.getElementById("wiz_next").disabled, true);
-  w.finishDl("gigaam-v3"); await sleep(1200);
+  w.finishDl("medium-q5_0"); await sleep(1200);
   check("a finished download opens the way on", d.getElementById("wiz_next").disabled, false);
-  const appliedIds = w.saveForms.slice(-6).map((f) => f.model_id);
-  check("and both models of the plan are applied, not just the first",
-    ["gigaam-v3", "small"].every((id) => appliedIds.includes(id)), true);
 
   d.getElementById("wiz_next").click(); await sleep(300);
   check("the third step names the shortcut", d.getElementById("wiz_hot").textContent, "ctrl+win");
@@ -843,7 +888,13 @@ function check(name, actual, expected) {
   check("the autostart answer is passed on", w.autorunCalls[w.autorunCalls.length - 1], true);
   check("finishing lands on the status screen", shown("state"), true);
 
+  w.setModelState("medium-q5_0", "absent");
   w.wizStart(); await sleep(150);
+  d.getElementById("wiz_next").click(); await sleep(250);
+  check("the model step blocks again while nothing is installed", d.getElementById("wiz_next").disabled, true);
+  d.getElementById("wiz_dl_skip").click(); await sleep(100);
+  check("skipping the download opens the way on", d.getElementById("wiz_next").disabled, false);
+  check("and warns that dictation needs a model", d.getElementById("wiz_skipnote").style.display, "");
   d.getElementById("wiz_skip").click(); await sleep(250);
   check("skipping closes the wizard too", d.getElementById("wiz").classList.contains("on"), false);
   check("skipping is remembered, so it does not ask again", w.wizardDone, 2);

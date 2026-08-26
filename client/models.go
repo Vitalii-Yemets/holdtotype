@@ -37,6 +37,10 @@ type modelInfo struct {
 	Speed     int
 	Hashes    map[string]string
 	Accuracy  int
+	Auto      bool
+	Manual    bool
+	LinkURL   string
+	Custom    bool
 }
 
 func (m *modelInfo) ramEstimateMB() int {
@@ -50,6 +54,9 @@ func advisorCatalog() []advisor.Model {
 	out := make([]advisor.Model, 0, len(modelCatalog))
 	for i := range modelCatalog {
 		m := &modelCatalog[i]
+		if m.Custom || (m.Manual && !m.installed()) {
+			continue
+		}
 		langs := strings.Split(m.Langs, ",")
 		out = append(out, advisor.Model{
 			ID: m.ID, Engine: m.Engine, Langs: langs, SizeMB: m.SizeMB,
@@ -63,16 +70,16 @@ func advisorCatalog() []advisor.Model {
 var modelCatalog = []modelInfo{
 	{ID: "base", File: "ggml-base.bin", SizeMB: 142, NameKey: "Base", DescKey: "S_M_BASE",
 		Hashes: map[string]string{"ggml-base.bin": "60ed5bc3dd14eea856493d334349b405782ddcaf0028d4b5df4088345fba2efe"},
-		Engine: engineWhisper, Langs: "*", Translate: true, Speed: 5, Accuracy: 2},
+		Engine: engineWhisper, Langs: "*", Auto: true, Translate: true, Speed: 5, Accuracy: 2},
 	{ID: "small", File: "ggml-small.bin", SizeMB: 466, NameKey: "Small", DescKey: "S_M_SMALL",
 		Hashes: map[string]string{"ggml-small.bin": "1be3a9b2063867b937e64e2ec7483364a79917e157fa98c5d94b5c1fffea987b"},
-		Engine: engineWhisper, Langs: "*", Translate: true, Speed: 3, Accuracy: 3},
+		Engine: engineWhisper, Langs: "*", Auto: true, Translate: true, Speed: 3, Accuracy: 3},
 	{ID: "medium-q5_0", File: "ggml-medium-q5_0.bin", SizeMB: 539, NameKey: "Medium (q5)", DescKey: "S_M_MED",
 		Hashes: map[string]string{"ggml-medium-q5_0.bin": "19fea4b380c3a618ec4723c3eef2eb785ffba0d0538cf43f8f235e7b3b34220f"},
-		Engine: engineWhisper, Langs: "*", Translate: true, Speed: 2, Accuracy: 4},
+		Engine: engineWhisper, Langs: "*", Auto: true, Translate: true, Speed: 2, Accuracy: 4},
 	{ID: "large-v3-turbo-q5_0", File: "ggml-large-v3-turbo-q5_0.bin", SizeMB: 574, NameKey: "Turbo (q5)", DescKey: "S_M_TURBO",
 		Hashes: map[string]string{"ggml-large-v3-turbo-q5_0.bin": "394221709cd5ad1f40c46e6031ca61bce88931e6e088c188294c6d5a55ffa7e2"},
-		Engine: engineWhisper, Langs: "*", Translate: false, Speed: 4, Accuracy: 4},
+		Engine: engineWhisper, Langs: "*", Auto: true, Translate: false, Speed: 4, Accuracy: 4},
 	{ID: "gigaam-v3", SizeMB: 232, NameKey: "GigaAM v3", DescKey: "S_M_GIGAAM",
 		Engine: engineSherpa, Dir: "gigaam-v3", Langs: "ru", Punct: true, Speed: 5, Accuracy: 5,
 		Files: []string{"encoder.int8.onnx", "decoder.onnx", "joiner.onnx", "tokens.txt"},
@@ -83,8 +90,18 @@ var modelCatalog = []modelInfo{
 			"tokens.txt":        "39abae20e692998290c574e606f11a9edef2902a1995463fcff63d1490cf22b7",
 		},
 		BaseURL: "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-transducer-punct-giga-am-v3-russian-2025-12-16/resolve/main/"},
+	{ID: "gigaam-v2", SizeMB: 231, NameKey: "GigaAM v2", DescKey: "S_M_GIGAAM2",
+		Engine: engineSherpa, Dir: "gigaam-v2", Langs: "ru", Speed: 5, Accuracy: 4,
+		Files: []string{"encoder.int8.onnx", "decoder.onnx", "joiner.onnx", "tokens.txt"},
+		Hashes: map[string]string{
+			"encoder.int8.onnx": "b51efc61e3c0037ad1cb804079975468de3d175324fe8323aef5be4f5c6a38a1",
+			"decoder.onnx":      "208e24cc150fb0ebca3fab169502796daa12e0255dcf7b4acf65015c436e9f76",
+			"joiner.onnx":       "4b02eced18e033fc5173e6c47b6ab166b5efea8d35c3f33a6755ff0d622fb5b0",
+			"tokens.txt":        "17cc514451bcceac9c280068c71502f8448f99e9fb1456b8d0761651fd0392f2",
+		},
+		BaseURL: "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19/resolve/main/"},
 	{ID: "parakeet-v3", SizeMB: 670, NameKey: "Parakeet v3", DescKey: "S_M_PARAKEET",
-		Engine: engineSherpa, Dir: "parakeet-v3",
+		Engine: engineSherpa, Dir: "parakeet-v3", Auto: true,
 		Langs: "en,es,fr,de,bg,hr,cs,da,nl,et,fi,el,hu,it,lv,lt,mt,pl,pt,ro,sk,sl,sv,ru,uk",
 		Punct: true, Speed: 5, Accuracy: 4,
 		Files: []string{"encoder.int8.onnx", "decoder.int8.onnx", "joiner.int8.onnx", "tokens.txt"},
@@ -95,9 +112,75 @@ var modelCatalog = []modelInfo{
 			"tokens.txt":        "d58544679ea4bc6ac563d1f545eb7d474bd6cfa467f0a6e2c1dc1c7d37e3c35d",
 		},
 		BaseURL: "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8/resolve/main/"},
+	{ID: "moonshine-uk", SizeMB: 135, NameKey: "Moonshine Base uk", DescKey: "S_M_MOONUK",
+		Engine: engineSherpa, Dir: "moonshine-uk", Langs: "uk", Speed: 5, Accuracy: 3,
+		Manual:  true,
+		LinkURL: "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-base-uk-quantized-2026-02-27.tar.bz2"},
 }
 
+const defaultPresetModel = "medium-q5_0"
+
 const modelBaseURL = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/"
+
+var localScanOnce sync.Once
+
+func scanLocalModels() {
+	localScanOnce.Do(func() {
+		entries, err := os.ReadDir("models")
+		if err != nil {
+			return
+		}
+		knownFile := map[string]bool{}
+		knownDir := map[string]bool{}
+		for i := range modelCatalog {
+			if modelCatalog[i].File != "" {
+				knownFile[modelCatalog[i].File] = true
+			}
+			if modelCatalog[i].Dir != "" {
+				knownDir[modelCatalog[i].Dir] = true
+			}
+		}
+		for _, e := range entries {
+			name := e.Name()
+			if !e.IsDir() {
+				if !strings.HasSuffix(name, ".bin") || knownFile[name] {
+					continue
+				}
+				info, ierr := e.Info()
+				if ierr != nil {
+					continue
+				}
+				modelCatalog = append(modelCatalog, modelInfo{
+					ID: "local:" + name, File: name, SizeMB: int(info.Size() / (1024 * 1024)),
+					NameKey: strings.TrimSuffix(strings.TrimPrefix(name, "ggml-"), ".bin"),
+					DescKey: "S_M_LOCAL", Engine: engineWhisper, Langs: "*", Custom: true,
+				})
+				log.Printf("папка models: найдена своя модель %s (%d МБ)", name, info.Size()/(1024*1024))
+				continue
+			}
+			if knownDir[name] {
+				continue
+			}
+			dir := filepath.Join("models", name)
+			if _, aerr := sherpaModelArgs(dir); aerr != nil {
+				continue
+			}
+			size := 0
+			if items, derr := os.ReadDir(dir); derr == nil {
+				for _, it := range items {
+					if fi, ferr := it.Info(); ferr == nil {
+						size += int(fi.Size() / (1024 * 1024))
+					}
+				}
+			}
+			modelCatalog = append(modelCatalog, modelInfo{
+				ID: "local:" + name, Dir: name, SizeMB: size, NameKey: name,
+				DescKey: "S_M_LOCAL", Engine: engineSherpa, Langs: "*", Custom: true,
+			})
+			log.Printf("папка models: найдена своя модель %s (%d МБ)", name, size)
+		}
+	})
+}
 
 func (m *modelInfo) paths() []string {
 	if m.Engine == engineSherpa {
@@ -111,6 +194,10 @@ func (m *modelInfo) paths() []string {
 }
 
 func (m *modelInfo) installed() bool {
+	if m.Engine == engineSherpa && len(m.Files) == 0 {
+		_, err := sherpaModelArgs(filepath.Join("models", m.Dir))
+		return err == nil
+	}
 	for _, p := range m.paths() {
 		if _, err := os.Stat(p); err != nil {
 			return false
@@ -119,15 +206,21 @@ func (m *modelInfo) installed() bool {
 	return true
 }
 
-func (m *modelInfo) slotMatches(cfg *Config) bool {
-	if m.Engine == engineSherpa {
-		return filepath.Base(filepath.Clean(cfg.SherpaModel)) == m.Dir
-	}
-	return filepath.Base(cfg.Model) == m.File
+func (m *modelInfo) isActive(cfg *Config) bool {
+	return m.ID == presetModelID(cfg, cfg.Language)
 }
 
-func (m *modelInfo) isActive(cfg *Config) bool {
-	return m.slotMatches(cfg) && m.Engine == primaryEngine(cfg)
+func servesLangs(cfg *Config, id string) []string {
+	var out []string
+	if cfg.LangModels["auto"] == id {
+		out = append(out, "auto")
+	}
+	for _, l := range translateLangCodes() {
+		if cfg.LangModels[l] == id {
+			out = append(out, l)
+		}
+	}
+	return out
 }
 
 type dlState struct {
@@ -154,22 +247,27 @@ func findModel(id string) *modelInfo {
 }
 
 type modelRow struct {
-	ID     string `json:"id"`
-	Name   string `json:"name"`
-	Desc   string `json:"desc"`
-	Size   int    `json:"size"`
-	State  string `json:"state"`
-	Pct    int    `json:"pct"`
-	Err    string `json:"err"`
-	Engine string `json:"engine"`
-	Langs  string `json:"langs"`
-	Punct  bool   `json:"punct"`
-	Trans  bool   `json:"translate"`
-	RAM    int    `json:"ram"`
-	Fit    string `json:"fit"`
-	Slot   bool   `json:"slot"`
-	Speed  int    `json:"speed"`
-	Acc    int    `json:"accuracy"`
+	ID     string   `json:"id"`
+	Name   string   `json:"name"`
+	Desc   string   `json:"desc"`
+	Size   int      `json:"size"`
+	State  string   `json:"state"`
+	Pct    int      `json:"pct"`
+	Err    string   `json:"err"`
+	Engine string   `json:"engine"`
+	Langs  string   `json:"langs"`
+	Punct  bool     `json:"punct"`
+	Trans  bool     `json:"translate"`
+	RAM    int      `json:"ram"`
+	Fit    string   `json:"fit"`
+	Serves []string `json:"serves"`
+	Speed  int      `json:"speed"`
+	Acc    int      `json:"accuracy"`
+	Auto   bool     `json:"auto"`
+	Manual bool     `json:"manual"`
+	Custom bool     `json:"custom"`
+	Loaded bool     `json:"loaded"`
+	Link   string   `json:"link"`
 }
 
 func ramFit(needMB, freeMB int) string {
@@ -189,19 +287,21 @@ func ramFit(needMB, freeMB int) string {
 func (a *App) modelRows() string {
 	cfg := a.snapshot()
 	_, freeRAM := ramMB()
+	loaded := a.loadedModelPaths()
 	var rows []modelRow
-	known := false
 	for i := range modelCatalog {
 		m := &modelCatalog[i]
 		row := modelRow{
 			ID: m.ID, Name: m.NameKey, Desc: strS(m.DescKey), Size: m.SizeMB,
 			Engine: m.Engine, Langs: m.Langs, Punct: m.Punct,
 			Trans: m.Translate, RAM: m.ramEstimateMB(), Fit: ramFit(m.ramEstimateMB(), freeRAM),
-			Speed: m.Speed, Acc: m.Accuracy,
+			Speed: m.Speed, Acc: m.Accuracy, Auto: m.Auto, Manual: m.Manual,
+			Custom: m.Custom, Link: m.LinkURL,
+			Serves: servesLangs(cfg, m.ID),
 		}
 		have := m.installed()
 		active := m.isActive(cfg)
-		row.Slot = m.slotMatches(cfg) && have
+		row.Loaded = have && loaded[m.modelPath()]
 		dlMu.Lock()
 		st := dl[m.ID]
 		dlMu.Unlock()
@@ -211,13 +311,9 @@ func (a *App) modelRows() string {
 			row.Pct = st.pct
 		case active && have:
 			row.State = "active"
-			known = true
 		case have:
 			row.State = "installed"
 		default:
-			if active {
-				known = true
-			}
 			row.State = "absent"
 			if st != nil && st.err != "" {
 				row.Err = st.err
@@ -225,14 +321,32 @@ func (a *App) modelRows() string {
 		}
 		rows = append(rows, row)
 	}
-	if !known {
-		rows = append(rows, modelRow{
-			ID: "custom", Name: filepath.Base(activeModelPath(cfg)),
-			Desc: strS("S_M_CUSTOM"), State: "active", Engine: cfg.STTEngine, Langs: "*",
-		})
-	}
 	out, _ := json.Marshal(rows)
 	return string(out)
+}
+
+func (m *modelInfo) modelPath() string {
+	if m.Engine == engineSherpa {
+		return "models/" + m.Dir
+	}
+	return "models/" + m.File
+}
+
+func (a *App) loadedModelPaths() map[string]bool {
+	out := map[string]bool{}
+	a.mu.Lock()
+	srv := a.srv
+	ready := a.ready
+	a.mu.Unlock()
+	if srv != nil && ready && !srv.external() {
+		out[filepath.ToSlash(srv.model())] = true
+	}
+	a.altMu.Lock()
+	if a.alt != nil {
+		out[filepath.ToSlash(a.alt.model())] = true
+	}
+	a.altMu.Unlock()
+	return out
 }
 
 func (a *App) downloadModel(id string) {
@@ -677,6 +791,13 @@ func adviseModel(lang, priority string, needTranslate bool) string {
 	return string(out)
 }
 
+type stateModelRow struct {
+	Model   string `json:"model"`
+	Langs   string `json:"langs"`
+	State   string `json:"state"`
+	Current bool   `json:"current"`
+}
+
 type stateOut struct {
 	Hotkey   string `json:"hotkey"`
 	Mic      string `json:"mic"`
@@ -690,17 +811,18 @@ type stateOut struct {
 	Ready    bool   `json:"ready"`
 	Status   string `json:"status"`
 
-	RuModel    string `json:"ru_model"`
-	OtherModel string `json:"other_model"`
-	LLMOK      bool   `json:"llm_ok"`
-	MicOK      bool   `json:"mic_ok"`
-	StatusLine string `json:"status_line"`
-	Remote     bool   `json:"remote"`
-	RuState    string `json:"ru_state"`
-	BackendErr string `json:"backend_err"`
-	OtherState string `json:"other_state"`
-	UpdVersion string `json:"upd_version"`
-	Badges     struct {
+	ActiveModel string          `json:"active_model"`
+	ActiveState string          `json:"active_state"`
+	ActiveLang  string          `json:"active_lang"`
+	Assigned    []stateModelRow `json:"assigned"`
+	InstalledMs []string        `json:"installed_models"`
+	LLMOK       bool            `json:"llm_ok"`
+	MicOK       bool            `json:"mic_ok"`
+	StatusLine  string          `json:"status_line"`
+	Remote      bool            `json:"remote"`
+	BackendErr  string          `json:"backend_err"`
+	UpdVersion  string          `json:"upd_version"`
+	Badges      struct {
 		Mic     string `json:"mic"`
 		Models  string `json:"models"`
 		System  string `json:"system"`
@@ -740,44 +862,73 @@ func systemWarnings(cfg *Config) int {
 	return n
 }
 
-func modelStateFor(cfg *Config, engine string) string {
-	var id string
-	installed := false
-	switch engine {
-	case engineSherpa:
-		installed = sherpaInstalled(cfg)
-		dir := filepath.Base(filepath.Clean(cfg.SherpaModel))
-		for i := range modelCatalog {
-			if modelCatalog[i].Engine == engineSherpa && modelCatalog[i].Dir == dir {
-				id = modelCatalog[i].ID
-			}
-		}
-	default:
-		if strings.TrimSpace(cfg.ServerURL) != "" {
-			return "remote"
-		}
-		if _, err := os.Stat(cfg.Model); err == nil {
-			installed = true
-		}
-		file := filepath.Base(cfg.Model)
-		for i := range modelCatalog {
-			if modelCatalog[i].Engine != engineSherpa && modelCatalog[i].File == file {
-				id = modelCatalog[i].ID
-			}
-		}
+func stateForModel(cfg *Config, m *modelInfo) string {
+	if m == nil {
+		return "missing"
 	}
-	if installed {
+	if m.Engine != engineSherpa && strings.TrimSpace(cfg.ServerURL) != "" {
+		return "remote"
+	}
+	if m.installed() {
 		return "ready"
 	}
-	if id != "" {
-		dlMu.Lock()
-		st := dl[id]
-		dlMu.Unlock()
-		if st != nil && st.active {
-			return "downloading"
-		}
+	dlMu.Lock()
+	st := dl[m.ID]
+	dlMu.Unlock()
+	if st != nil && st.active {
+		return "downloading"
 	}
 	return "missing"
+}
+
+func assignedModelRows(cfg *Config) []stateModelRow {
+	langs := append([]string{"auto"}, translateLangCodes()...)
+	byModel := map[string][]string{}
+	var order []string
+	for _, l := range langs {
+		id := presetModelID(cfg, l)
+		if _, ok := byModel[id]; !ok {
+			order = append(order, id)
+		}
+		byModel[id] = append(byModel[id], l)
+	}
+	currentID := presetModelID(cfg, cfg.Language)
+	rows := make([]stateModelRow, 0, len(order))
+	for _, id := range order {
+		m := findModel(id)
+		if m == nil {
+			continue
+		}
+		label := ""
+		if len(byModel[id]) == len(langs) {
+			label = strS("S_ALL_LANGS")
+		} else {
+			var parts []string
+			for _, l := range byModel[id] {
+				if l == "auto" {
+					parts = append(parts, strS("S_RECAUTO"))
+				} else {
+					parts = append(parts, langLabel(l))
+				}
+			}
+			label = strings.Join(parts, ", ")
+		}
+		rows = append(rows, stateModelRow{
+			Model: m.NameKey, Langs: label,
+			State: stateForModel(cfg, m), Current: id == currentID,
+		})
+	}
+	return rows
+}
+
+func installedModelNames() []string {
+	var out []string
+	for i := range modelCatalog {
+		if modelCatalog[i].installed() {
+			out = append(out, modelCatalog[i].NameKey)
+		}
+	}
+	return out
 }
 
 func (a *App) stateSnapshot() string {
@@ -832,35 +983,37 @@ func (a *App) stateSnapshot() string {
 		lastMeta = strings.Join(parts, " · ")
 	}
 
-	ruModel := modelNameForPath(cfg.SherpaModel)
-	if !sherpaInstalled(cfg) {
-		ruModel = strS("S_NOT_INSTALLED")
+	active := activeModel(cfg)
+	activeName := strS("S_NOT_INSTALLED")
+	if active != nil {
+		activeName = active.NameKey
 	}
-	otherModel := modelNameForPath(cfg.Model)
-	if modelStateFor(cfg, engineWhisper) == "missing" {
-		otherModel = strS("S_NOT_INSTALLED")
+	activeLang := strS("S_RECAUTO")
+	if l := strings.ToLower(strings.TrimSpace(cfg.Language)); l != "" && l != "auto" {
+		activeLang = langLabel(l)
 	}
 	st := stateOut{
-		Hotkey:     cfg.Hotkey,
-		Mic:        mic,
-		Engine:     primaryEngine(cfg) + " · " + modelNameForPath(activeModelPath(cfg)),
-		LLM:        llm,
-		RAM:        trf("adv.ram", free),
-		Last:       last,
-		LastMeta:   lastMeta,
-		LastAt:     lastAt,
-		LastApp:    lastApp,
-		Ready:      ready,
-		Status:     status,
-		RuModel:    ruModel,
-		OtherModel: otherModel,
-		LLMOK:      llmInstalled(cfg),
-		MicOK:      rec != nil,
-		StatusLine: statusLine(cfg, ready, free),
-		Remote:     strings.TrimSpace(cfg.ServerURL) != "",
-		RuState:    modelStateFor(cfg, engineSherpa),
-		BackendErr: backendErr,
-		OtherState: modelStateFor(cfg, engineWhisper),
+		Hotkey:      cfg.Hotkey,
+		Mic:         mic,
+		Engine:      primaryEngine(cfg) + " · " + modelNameForPath(activeModelPath(cfg)),
+		LLM:         llm,
+		RAM:         trf("adv.ram", free),
+		Last:        last,
+		LastMeta:    lastMeta,
+		LastAt:      lastAt,
+		LastApp:     lastApp,
+		Ready:       ready,
+		Status:      status,
+		ActiveModel: activeName,
+		ActiveState: stateForModel(cfg, active),
+		ActiveLang:  activeLang,
+		Assigned:    assignedModelRows(cfg),
+		InstalledMs: installedModelNames(),
+		LLMOK:       llmInstalled(cfg),
+		MicOK:       rec != nil,
+		StatusLine:  statusLine(cfg, ready, free),
+		Remote:      strings.TrimSpace(cfg.ServerURL) != "",
+		BackendErr:  backendErr,
 	}
 	a.mu.Lock()
 	st.UpdVersion = a.updVer

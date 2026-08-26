@@ -62,6 +62,7 @@ type App struct {
 	ready      bool
 	capturing  bool
 	paused     bool
+	parked     bool
 	backendErr string
 	quitting   bool
 
@@ -102,18 +103,24 @@ func waitReadyCtx(ctx context.Context, srv recognizer) error {
 	}
 }
 
-func (a *App) engineFor(ctx context.Context, cfg *Config, want string) (recognizer, error) {
+func (a *App) engineFor(ctx context.Context, cfg *Config, want, wantModel string) (recognizer, error) {
+	matches := func(r recognizer) bool {
+		if r.engine() != want {
+			return false
+		}
+		return wantModel == "" || r.external() || r.model() == wantModel
+	}
 	a.mu.Lock()
 	primary := a.srv
 	ready := a.ready
 	a.mu.Unlock()
-	if primary != nil && ready && primary.engine() == want {
+	if primary != nil && ready && matches(primary) {
 		return primary, nil
 	}
 
 	a.altMu.Lock()
 	defer a.altMu.Unlock()
-	if a.alt != nil && a.alt.engine() == want && a.alt.wasStopped() == false {
+	if a.alt != nil && matches(a.alt) && a.alt.wasStopped() == false {
 		select {
 		case <-a.alt.done():
 			a.alt = nil
@@ -126,6 +133,11 @@ func (a *App) engineFor(ctx context.Context, cfg *Config, want string) (recogniz
 		a.alt.stop()
 		a.alt = nil
 	}
+	c := *cfg
+	if wantModel != "" && want == engineWhisper {
+		c.Model = wantModel
+	}
+	cfg = &c
 	log.Printf("поднимаю второй движок %s под эту диктовку", want)
 	started := time.Now()
 	srv, err := startEngine(cfg, want, logFile)
@@ -278,7 +290,7 @@ func main() {
 			if primary == engineWhisper {
 				other = engineSherpa
 			}
-			alt, aerr := app.engineFor(context.Background(), cfg, other)
+			alt, aerr := app.engineFor(context.Background(), cfg, other, "")
 			if aerr != nil {
 				log.Printf("routecheck: второй движок %s не поднялся: %v", other, aerr)
 			} else {
@@ -596,6 +608,17 @@ func (a *App) initBackend() {
 	waiting := false
 	for {
 		cfg := a.snapshot()
+		a.mu.Lock()
+		parked := a.parked
+		a.mu.Unlock()
+		if parked {
+			log.Printf("движок выгружен вручную — жду следующей диктовки")
+			a.setStatus(tr("status.parked"))
+			if !a.waitRetry() {
+				return
+			}
+			continue
+		}
 		if cfg.ServerAutostart && cfg.ServerURL == "" {
 			if missing := missingModelPath(cfg); missing != "" {
 				a.mu.Lock()
@@ -606,8 +629,16 @@ func (a *App) initBackend() {
 				}
 				if !waiting {
 					waiting = true
-					log.Printf("модель %s не найдена — жду скачивания", missing)
-					a.setStatus(tr("status.nomodel"))
+					langName := langLabel(strings.ToLower(strings.TrimSpace(cfg.Language)))
+					if langName == "" || strings.EqualFold(langName, "auto") {
+						langName = tr("route.lang.auto")
+					}
+					msg := trf("status.nomodel.lang", langName, modelDisplayName(presetModelID(cfg, cfg.Language)))
+					log.Printf("модель %s не найдена — жду скачивания (%s)", missing, msg)
+					a.mu.Lock()
+					a.backendErr = msg
+					a.mu.Unlock()
+					a.setStatus(msg)
 					traySetIcon(trayError)
 					go a.openSettings("rec")
 				}
@@ -616,6 +647,9 @@ func (a *App) initBackend() {
 			}
 			if waiting {
 				waiting = false
+				a.mu.Lock()
+				a.backendErr = ""
+				a.mu.Unlock()
 				a.setStatus(tr("status.loading"))
 			}
 		}
@@ -696,6 +730,7 @@ func (a *App) initBackend() {
 func (a *App) requestServerRestart() {
 	a.mu.Lock()
 	a.ready = false
+	a.parked = false
 	srv := a.srv
 	a.mu.Unlock()
 	if srv != nil {
@@ -703,6 +738,34 @@ func (a *App) requestServerRestart() {
 	}
 	a.stopAltEngine()
 	a.signalRetry()
+}
+
+// parkEngines unloads every running recognizer to give the memory back; the
+// next dictation press brings the engine up again.
+func (a *App) parkEngines() {
+	a.mu.Lock()
+	a.ready = false
+	a.parked = true
+	srv := a.srv
+	a.mu.Unlock()
+	if srv != nil {
+		srv.stop()
+	}
+	a.stopAltEngine()
+	log.Printf("движки выгружены вручную — память возвращена, следующая диктовка поднимет их заново")
+	a.setStatus(tr("status.parked"))
+	traySetIcon(trayOff)
+}
+
+func (a *App) unparkEngines() bool {
+	a.mu.Lock()
+	parked := a.parked
+	a.parked = false
+	a.mu.Unlock()
+	if parked {
+		a.signalRetry()
+	}
+	return parked
 }
 
 func (a *App) fatal(text string) {
@@ -877,6 +940,14 @@ func (a *App) handleDown(profileID string) {
 	ok := enabled && ready && !capturing && rec != nil
 	a.mu.Unlock()
 	if !ok {
+		if enabled && !ready && a.unparkEngines() {
+			log.Printf("нажатие будит выгруженный движок")
+			a.setStatus(tr("status.loading"))
+			if cfg.Overlay {
+				overlaySet(ovFlashErr, tr("status.loading"))
+			}
+			return
+		}
 		a.explainIgnoredPress(cfg, enabled, capturing, backendErr, rec != nil)
 		return
 	}
@@ -1027,11 +1098,43 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 			log.Printf("перевод: цель=%s силами Whisper (режим %s)", target, cfg.TranslateAsk)
 		}
 	}
-	decision := pickEngine(cfg, target != "")
-	if decision.Engine != srv.engine() {
-		alt, aerr := a.engineFor(ctx, cfg, decision.Engine)
+	active := activeModel(cfg)
+	wantEngine, wantModel := primaryEngine(cfg), ""
+	if active != nil {
+		wantModel = active.modelPath()
+	}
+	if target != "" && (active == nil || !active.Translate) {
+		name := ""
+		if active != nil {
+			name = active.NameKey
+		}
+		fallback := bestInstalledWhisper()
+		switch {
+		case fallback == nil:
+			log.Printf("перевод недоступен: %s не переводит, а Whisper не установлен — вставляю как есть", name)
+			if cfg.Overlay {
+				overlayNote(tr("ov.notranslate"))
+			}
+			target = ""
+		case askTranslateFallback(name, fallback.NameKey):
+			log.Printf("перевод: %s не переводит, пользователь выбрал %s", name, fallback.NameKey)
+			wantEngine, wantModel = engineWhisper, fallback.modelPath()
+		default:
+			log.Printf("перевод: %s не переводит, пользователь отказался от Whisper — вставляю как есть", name)
+			target = ""
+		}
+		if ctx.Err() != nil {
+			log.Printf("распознавание отменено пользователем")
+			if cfg.Overlay {
+				overlaySet(ovFlashErr, tr("ov.cancelled"))
+			}
+			return
+		}
+	}
+	if wantEngine != srv.engine() || (wantModel != "" && !srv.external() && srv.model() != wantModel) {
+		alt, aerr := a.engineFor(ctx, cfg, wantEngine, wantModel)
 		if aerr != nil {
-			log.Printf("движок %s не поднялся (%v) — остаюсь на %s", decision.Engine, aerr, srv.engine())
+			log.Printf("движок %s не поднялся (%v) — остаюсь на %s", wantEngine, aerr, srv.engine())
 			if cfg.Overlay {
 				overlayNote(tr("ov.engine.fallback"))
 			}
@@ -1039,7 +1142,7 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 			srv = alt
 		}
 	}
-	log.Printf("маршрутизация: движок=%s причина=%s язык=%s перевод=%v", srv.engine(), decision.Reason, cfg.Language, target != "")
+	log.Printf("пресет: движок=%s модель=%s язык=%s перевод=%v", srv.engine(), srv.model(), cfg.Language, target != "")
 	if target != "" && !engineTranslates(srv.engine()) {
 		log.Printf("перевод недоступен: активен движок %s — вставляю распознанный текст как есть", srv.engine())
 		if cfg.Overlay {
@@ -1048,9 +1151,6 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 		target = ""
 	}
 	fastTranslate := target == "en"
-	if fastTranslate && strings.Contains(cfg.Model, "turbo") {
-		log.Printf("предупреждение: модель turbo не обучена переводу — результат может оказаться транскрипцией")
-	}
 	recLang := cfg.Language
 	if target != "" && !fastTranslate {
 		recLang = target
@@ -1371,8 +1471,11 @@ func (a *App) reloadConfig() {
 	initLang(fresh.UILanguage)
 
 	serverChanged := fresh.Model != old.Model ||
+		fresh.SherpaModel != old.SherpaModel ||
+		primaryEngine(fresh) != primaryEngine(old) ||
 		fresh.ServerPort != old.ServerPort ||
 		fresh.Threads != old.Threads ||
+		fresh.SherpaThreads != old.SherpaThreads ||
 		fresh.ServerURL != old.ServerURL ||
 		fresh.ServerExe != old.ServerExe ||
 		fresh.ServerAutostart != old.ServerAutostart
@@ -1617,6 +1720,7 @@ func (a *App) resetSettings() {
 	fresh.Commands = old.Commands
 	fresh.Model = old.Model
 	fresh.SherpaModel = old.SherpaModel
+	fresh.LangModels = old.LangModels
 	fresh.LLMModel = old.LLMModel
 	fresh.WizardDone = true
 	fresh.UILanguage = old.UILanguage

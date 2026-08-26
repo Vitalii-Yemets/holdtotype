@@ -25,11 +25,12 @@ import (
 )
 
 type whisperServer struct {
-	baseURL string
-	cmd     *exec.Cmd
-	client  *http.Client
-	doneCh  chan struct{}
-	job     windows.Handle
+	baseURL   string
+	cmd       *exec.Cmd
+	client    *http.Client
+	doneCh    chan struct{}
+	job       windows.Handle
+	modelPath string
 
 	noProcDone sync.Once
 
@@ -37,6 +38,8 @@ type whisperServer struct {
 	exited   bool
 	stopping bool
 }
+
+func (s *whisperServer) model() string { return filepath.ToSlash(s.modelPath) }
 
 func (s *whisperServer) wasStopped() bool {
 	s.mu.Lock()
@@ -67,6 +70,7 @@ func startWhisperServer(cfg *Config, logw io.Writer) (*whisperServer, error) {
 	if _, err := os.Stat(cfg.Model); err != nil {
 		return nil, fmt.Errorf("%s", trf("err.model.notfound", cfg.Model))
 	}
+	s.modelPath = cfg.Model
 
 	args := []string{
 		"-m", cfg.Model,

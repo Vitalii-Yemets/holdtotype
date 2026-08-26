@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 ARG WHISPER_CPP_VERSION=v1.7.4
-ARG WHISPER_MODEL=small
+ARG WHISPER_MODEL=medium-q5_0
 
 FROM debian:bookworm-slim AS whisper-build
 RUN apt-get update && apt-get install -y --no-install-recommends \
