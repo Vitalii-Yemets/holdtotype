@@ -375,7 +375,7 @@ function check(name, actual, expected) {
   const everySetting = [
     "hotkey", "min_record_ms", "max_record_seconds", "auto_enter", "restore_clipboard",
     "type_mode", "overlay", "overlay_position", "overlay_text", "animation", "mic_device", "mic_bar", "beep", "sound_theme",
-    "routing", "models", "language", "threads", "punctuation", "whisper_prompt", "profbody",
+    "models", "language", "threads", "punctuation", "whisper_prompt", "profbody", "dict_model", "tr_engine", "mlang", "mfind",
     "tr_default", "translate_target", "translate_ask", "translate_ask_seconds", "tr_hotkey",
     "tl_en", "ui_language", "upd_check", "check_updates", "server_autostart", "server_port",
     "server_exe", "server_url", "proc-models", "proc-search", "ver2", "autorun", "pause_hotkey",
@@ -385,13 +385,20 @@ function check(name, actual, expected) {
 
   tab("models"); await sleep(80);
   check("models section shown", shown("models"), true);
-  check("recognition models listed", d.querySelectorAll('#p-models input[name^="mdl-"]').length, 3);
-  check("the list is split into two slots", [...d.querySelectorAll("#models .mslot")].map(h=>h.dataset.slot), ["other", "ru"]);
-  check("the russian slot holds the russian engine", d.querySelectorAll('#models .mrow[data-slot="ru"]').length, 1);
-  check("every other language shares the second slot", d.querySelectorAll('#models .mrow[data-slot="other"]').length, 2);
-  check("model filters rendered", d.querySelectorAll(".fchip").length, 5);
-  check("the russian filter sits last, not second", [...d.querySelectorAll(".fchip")].map(b=>b.dataset.f), ["all", "multi", "punct", "fit", "ru"]);
-  check("and the russian models come after the rest, not before", [...d.querySelectorAll(".mslot")].map(h=>h.dataset.slot), ["other", "ru"]);
+  check("recognition models listed", d.querySelectorAll("#models .mrow").length, 3);
+  check("no radio buttons left in the library", d.querySelectorAll('#models input[type="radio"]').length, 0);
+  check("the list is split by state, not by language", [...d.querySelectorAll("#models .mslot")].map(h=>h.dataset.slot), ["inst", "avail"]);
+  check("the installed shelf holds what is on disk", [...d.querySelectorAll('#models .mrow[data-slot="inst"]')].map(r=>r.dataset.id), ["small"]);
+  check("the rest wait under available", [...d.querySelectorAll('#models .mrow[data-slot="avail"]')].map(r=>r.dataset.id), ["base", "gigaam-v3"]);
+  check("the active model wears its pill", [...d.querySelectorAll("#models .mpill.on")].length, 1);
+  check("the language filter is one control", [...d.getElementById("mlang").options].map(o=>o.value), ["all", "multi", "punct", "fit", "ru"]);
+  const mfind = d.getElementById("mfind");
+  mfind.value = "giga"; mfind.dispatchEvent(new w.Event("input", { bubbles: true })); await sleep(150);
+  check("the name search narrows the list", [...d.querySelectorAll("#models .mrow:not(.hidden)")].map(r=>r.dataset.id), ["gigaam-v3"]);
+  mfind.value = ""; mfind.dispatchEvent(new w.Event("input", { bubbles: true })); await sleep(150);
+  const saveBefore = w.saveCalls;
+  d.querySelector('#models .mrow[data-id="small"]').click(); await sleep(200);
+  check("a click on an installed row is the choice", w.saveCalls > saveBefore, true);
   check("the mark carries both shapes", [d.querySelectorAll(".mk.mic").length, d.querySelectorAll(".mk.face").length], [2, 2]);
   w.applyThemeVars("soft");
   check("the soft design shows the face", [d.documentElement.style.getPropertyValue("--markmic"), d.documentElement.style.getPropertyValue("--markface")], ["none", "block"]);
@@ -401,10 +408,13 @@ function check(name, actual, expected) {
   const recLangs = [...d.getElementById("language").options].map(o=>o.value);
   check("italian can be dictated too", recLangs.includes("it"), true);
   check("ram estimate shown", d.querySelectorAll("#p-models .mram").length, 3);
-  check("routing panel rows", d.querySelectorAll("#routing .rrow").length, 3);
-  check("routing shows engine", d.querySelectorAll("#routing .reng")[0].textContent, "gigaam-v3");
-  check("engine tags rendered", d.querySelectorAll("#p-models .mtag").length, 3);
-  check("russian engine tagged RU", d.querySelector('#models .mrow[data-slot="ru"] .mtag').textContent, "RU");
+  check("the routing table is gone", !!d.getElementById("routing"), false);
+  check("engine tags rendered", d.querySelectorAll("#p-models .mtag").length >= 3, true);
+  check("russian engine tagged RU", d.querySelector('#models .mrow[data-id="gigaam-v3"] .mtag').textContent, "RU");
+  check("the language moved in with the dictation", !!d.querySelector("#p-dictation #language"), true);
+  check("the threads moved in with the server", !!d.querySelector("#p-system #threads"), true);
+  check("dictation names the model it uses", d.getElementById("dict_model").textContent, "Small");
+  check("translation names its engine too", d.getElementById("tr_engine").textContent, "Translation is done by Small");
   d.getElementById("mcheck").click(); await sleep(250);
   check("installed models can be checked", w.modelChecks, 1);
   check("the check says what it found", d.getElementById("mcheck_out").textContent, "Damaged files: Small (ggml-small.bin)");
@@ -626,13 +636,13 @@ function check(name, actual, expected) {
 
 
   tab("models"); await sleep(120);
-  const pickAbsent = () => d.querySelector('#models input[value="base"]');
+  const pickAbsent = () => d.querySelector('#models .mrow[data-id="base"]');
   pickAbsent().click(); await sleep(80);
   check("picking a model that is not here asks first", !!d.querySelector(".modal-bg"), true);
   check("the question names the model and its size", d.querySelector(".modal p").textContent.includes("Base") && d.querySelector(".modal p").textContent.includes("142 MB"), true);
   d.querySelector(".modal .btn.ghost").click(); await sleep(250);
   check("saying no downloads nothing", w.dlCalls.length, 0);
-  check("saying no puts the choice back", d.querySelector('#models input[value="small"]').checked, true);
+  check("saying no puts the choice back", !!d.querySelector('#models .mrow[data-id="small"] .mpill.on'), true);
 
   pickAbsent().click(); await sleep(80);
   d.querySelector(".modal .btn.yes").click(); await sleep(250);
@@ -650,7 +660,7 @@ function check(name, actual, expected) {
   check("a finished download is applied by itself", w.saveForms.slice(savesBeforeDl).map((f) => f.model_id), ["base"]);
   check("and the program says the model is ready", d.getElementById("st_saved").textContent, "Model downloaded");
 
-  const activeDel = () => d.querySelector('#models .mrow input[value="small"]').parentElement.querySelector('button[data-a="del"]');
+  const activeDel = () => d.querySelector('#models .mrow[data-id="small"] button[data-a="del"]');
   check("the model in use can be removed too — that is the way out of a full disk", !!activeDel(), true);
   activeDel().click(); await sleep(150);
   check("removing the model in use warns what it costs", d.querySelector(".modal p").textContent.includes("Recognition stops"), true);

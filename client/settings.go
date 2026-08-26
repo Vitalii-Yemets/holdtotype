@@ -905,6 +905,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"exewarn": "S_EXE_WARN", "exeedit": "S_PROF_EDIT", "resetask": "S_RESET_ALL_ASK", "resetbtn": "S_RESET_ALL_BTN",
 		"updfound":   "S_UPD_FOUND",
 		"micdefault": "S_MIC_DEFAULT", "micquiet": "S_MIC_QUIET", "get": "S_STATE_GET", "change": "S_CHANGE_MODEL",
+		"libinst": "S_LIB_INST", "libavail": "S_LIB_AVAIL", "libactive": "S_LIB_ACTIVE", "libstandby": "S_LIB_STANDBY", "trby": "S_TR_BY",
 		"remotewarn": "S_REMOTE_WARN", "remoteask": "S_REMOTE_ASK", "remotebadge": "S_REMOTE_BADGE",
 		"ok": "S_OK", "cancel": "S_CANCEL", "dlask": "S_DL_ASK", "dlstart": "S_DL_START", "dlcancel": "S_DL_CANCEL", "nofound": "S_NOT_FOUND",
 		"advrolemain": "S_ADV_ROLE_MAIN", "advrolesecond": "S_ADV_ROLE_SECOND",
@@ -1199,17 +1200,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .mrow .mname{width:132px;font-weight:var(--wb);white-space:nowrap}
 .mrow .mdesc{flex:1;color:var(--dim);font-size:12px}
 .mtag{font-size:9px;border:1px solid var(--line);border-radius:calc(var(--r) * .35);color:var(--dim);padding:0 4px;margin-left:6px;vertical-align:middle;letter-spacing:.06em}
-.rrow{display:flex;align-items:center;gap:9px;padding:6px 2px;font-size:12px;color:var(--dim);flex-wrap:wrap}
-.rrow .rcond{min-width:132px;color:var(--green)}
-.rrow .rarr{color:var(--dim)}
-.rrow .reng{border:1px solid var(--line);border-radius:calc(var(--r) * .4);padding:1px 7px;color:var(--green);font-size:11.5px}
-.rrow .rwhy{margin-left:auto;color:var(--dim);font-size:11px}
-#routing{border-bottom:1px solid var(--soft);margin-bottom:8px;padding-bottom:6px}
 .advbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
-.fchips{display:flex;gap:5px;flex-wrap:wrap;margin-left:auto}
-.fchip{appearance:none;background:none;border:1px solid var(--line);border-radius:calc(var(--r) * .5);color:var(--dim);font:inherit;font-size:10.5px;padding:2px 8px;cursor:pointer}
-.fchip:hover{color:var(--dim)}
-.fchip.on{background:var(--selbg);color:var(--selfg);border-color:transparent}
 #advisor{border:1px solid var(--line);border-radius:var(--r);padding:10px 11px;margin-bottom:9px;display:flex;flex-direction:column;gap:9px}
 .advrow{display:flex;align-items:center;gap:9px;font-size:12px;padding:3px 0}
 .advrow .advrole{width:74px;color:var(--dim);text-transform:uppercase;font-size:10px;letter-spacing:.1em}
@@ -1238,6 +1229,10 @@ button.mini.danger:hover{color:var(--bad);border-color:var(--badline);background
 .ramline b{color:var(--green);font-size:14px;font-weight:var(--wb);text-shadow:var(--glow);margin-right:4px}
 .ramline .dot{margin-left:12px;font-size:10px}
 .subhead{color:var(--dim);font-size:11px;letter-spacing:1px;text-transform:uppercase;margin:14px 0 2px;padding-top:10px;border-top:1px solid var(--soft)}
+.mrow{cursor:pointer}
+.mpill{font-size:9px;letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--line);border-radius:calc(var(--r) * .4);padding:1px 6px;margin-left:8px;color:var(--dim);vertical-align:middle}
+.mpill.on{color:var(--hi);border-color:var(--hi)}
+#mfind{flex:0 1 170px;min-width:110px}
 #hf_results{max-height:44vh;overflow-y:auto;overscroll-behavior:contain}
 .miclevel{flex:none;display:flex;align-items:flex-end;gap:2px;height:10px;width:auto}
 .miclevel i{display:block;width:var(--lvlw,4px);height:10px;background:var(--soft);border:1px solid var(--line);box-sizing:border-box;border-radius:var(--lvlr,0);transition:background .1s linear}
@@ -1414,6 +1409,17 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
    <button type="button" class="hotkey-val" id="hotkey" onclick="appCapture()" title="{{S_CHANGE}}"></button></div>
   <div class="row"><label>{{S_HOTMODE}}<span class="sub">{{S_SUB_HOTMODE}}</span></label>
    <select id="hotkey_mode"><option value="hold">{{S_HOTMODE_HOLD}}</option><option value="toggle">{{S_HOTMODE_TOGGLE}}</option></select></div>
+  <div class="row"><label>{{S_DICT_MODEL}}</label>
+   <span class="val" id="dict_model">—</span>
+   <button class="mini" data-goto="models">{{S_CHANGE_MODEL}}</button></div>
+  <div class="row"><label>{{S_RECLANG}}</label>
+   <select id="language">
+    <option value="auto">{{S_RECAUTO}}</option>
+    <option value="ru">Русский</option><option value="en">English</option>
+    <option value="uk">Українська</option><option value="de">Deutsch</option>
+    <option value="fr">Français</option><option value="es">Español</option>
+    <option value="it">Italiano</option><option value="pl">Polski</option>
+   </select></div>
   <div class="row" data-adv><label>{{S_PAUSE}}<span class="sub">{{S_PAUSE_SUB}}</span></label>
    <button type="button" class="hotkey-val" id="pause_hotkey" style="min-width:110px" title="{{S_PROF_SET}}"></button>
    <button class="mini" id="pause_clear">{{S_PROF_CLEAR}}</button></div>
@@ -1473,16 +1479,17 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
 
 <div class="page" role="tabpanel" aria-hidden="true" id="p-models">
  <div class="card">
-  <div id="routing"></div>
+  <h2 class="sect">{{S_LIB_REC}}</h2>
   <div class="advbar">
    <button type="button" class="mini" id="adv_open">{{S_ADV_TITLE}}</button>
-   <span class="fchips">
-    <button type="button" class="fchip on" data-f="all">{{S_F_ALL}}</button>
-    <button type="button" class="fchip" data-f="multi">{{S_F_MULTI}}</button>
-    <button type="button" class="fchip" data-f="punct">{{S_F_PUNCT}}</button>
-    <button type="button" class="fchip" data-f="fit">{{S_F_FIT}}</button>
-    <button type="button" class="fchip" data-f="ru">{{S_F_RU}}</button>
-   </span>
+   <input type="text" id="mfind" placeholder="{{S_LIB_FIND}}">
+   <select id="mlang">
+    <option value="all">{{S_F_ALL}}</option>
+    <option value="multi">{{S_F_MULTI}}</option>
+    <option value="punct">{{S_F_PUNCT}}</option>
+    <option value="fit">{{S_F_FIT}}</option>
+    <option value="ru">{{S_F_RU}}</option>
+   </select>
   </div>
   <div id="advisor" style="display:none">
    <div class="advq">
@@ -1501,17 +1508,6 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
   <div class="row"><label>{{S_MCHECK}}<span class="sub">{{S_MCHECK_SUB}}</span></label>
    <button type="button" class="mini" id="mcheck">{{S_MCHECK_GO}}</button></div>
   <div class="micverdict" id="mcheck_out"></div>
- </div>
- <div class="card">
-  <div class="row"><label>{{S_RECLANG}}</label>
-   <select id="language">
-    <option value="auto">{{S_RECAUTO}}</option>
-    <option value="ru">Русский</option><option value="en">English</option>
-    <option value="uk">Українська</option><option value="de">Deutsch</option>
-    <option value="fr">Français</option><option value="es">Español</option>
-    <option value="it">Italiano</option><option value="pl">Polski</option>
-   </select></div>
-  <div class="row" data-adv><label>{{S_THREADS}}<span class="sub">{{S_SUB_THREADS}}</span></label><select id="threads"><option value="1">1</option><option value="2">2</option><option value="4">4</option><option value="6">6</option><option value="8">8</option><option value="12">12</option><option value="16">16</option></select></div>
  </div>
  <div class="card">
   <h2 class="sect">{{S_SEC_LLM}}<span class="hfhome" onclick="appHFHome()" title="huggingface.co">Hugging Face ↗</span></h2>
@@ -1581,6 +1577,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
 
 <div class="page" role="tabpanel" aria-hidden="true" id="p-translate">
  <div class="card">
+  <div class="hint" id="tr_engine"></div>
   <div class="hint">{{S_TR_HINT}}</div>
   <div id="tr_warn" style="display:none;color:var(--amber);font-size:12px;margin-bottom:6px">{{S_TR_TURBO}}</div>
   <div class="row"><label>{{S_TR_DEFAULT}}</label><input type="checkbox" id="tr_default"></div>
@@ -1659,6 +1656,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
  </div>
  <div class="card">
   <h2 class="sect" data-adv>{{S_SEC_SERVICE}}</h2>
+  <div class="row" data-adv><label>{{S_THREADS}}<span class="sub">{{S_SUB_THREADS}}</span></label><select id="threads"><option value="1">1</option><option value="2">2</option><option value="4">4</option><option value="6">6</option><option value="8">8</option><option value="12">12</option><option value="16">16</option></select></div>
   <div class="row" data-adv><label>{{S_AUTOSTART}}<span class="sub">{{S_SUB_AUTOSTART}}</span></label><input type="checkbox" id="server_autostart"></div>
   <div class="row" data-adv><label>{{S_PORT}}<span class="sub">{{S_SUB_PORT}}</span></label><input type="text" id="server_port" style="width:90px"></div>
   <div class="row" data-adv><label>{{S_SERVEREXE}}<span class="sub">{{S_SERVEREXE_SUB}}</span></label>
@@ -2496,7 +2494,9 @@ function initStateScreen(){
   refreshState();
 }
 let modelFilter = "all";
+let modelFind = "";
 function modelPassesFilter(m){
+  if(modelFind && !(m.name || "").toLowerCase().includes(modelFind)) return false;
   switch(modelFilter){
     case "ru":    return m.langs === "ru" || m.langs === "*";
     case "multi": return m.langs === "*";
@@ -2506,13 +2506,10 @@ function modelPassesFilter(m){
   }
 }
 function initModelFilters(){
-  document.querySelectorAll(".fchip").forEach(b=>{
-    b.onclick = ()=>{
-      document.querySelectorAll(".fchip").forEach(o=>o.classList.toggle("on", o === b));
-      modelFilter = b.dataset.f;
-      refreshModels();
-    };
-  });
+  const ml = document.getElementById("mlang");
+  if(ml) ml.onchange = ()=>{ modelFilter = ml.value; refreshModels(); };
+  const mf = document.getElementById("mfind");
+  if(mf) mf.oninput = ()=>{ modelFind = mf.value.trim().toLowerCase(); refreshModels(); };
   const open = document.getElementById("adv_open");
   const box = document.getElementById("advisor");
   if(open && box){
@@ -2554,7 +2551,11 @@ function renderAdvice(r){
   apply.onclick = async ()=>{
     if(missing.length && !await askConfirm(L.advask.replace("%s", missing.map(p=>p.name).join(", ")).replace("%s", r.need + " MB"), L.dlstart)) return;
     modelFilter = "all";
-    document.querySelectorAll(".fchip").forEach(o=>o.classList.toggle("on", o.dataset.f === "all"));
+    modelFind = "";
+    const ml = document.getElementById("mlang");
+    if(ml) ml.value = "all";
+    const mf = document.getElementById("mfind");
+    if(mf) mf.value = "";
     for(const p of missing) await appModelDl(p.id);
     if(missing.length) pendingDl = missing[missing.length-1].id;
     const first = plan[0];
@@ -2568,22 +2569,8 @@ function renderAdvice(r){
   };
   out.appendChild(apply);
 }
-async function refreshRouting(){
-  const host = document.getElementById("routing");
-  if(!host) return;
-  const rows = JSON.parse(await appRouting());
-  host.innerHTML = "";
-  rows.forEach(r=>{
-    const div = document.createElement("div");
-    div.className = "rrow";
-    div.innerHTML = '<span class="rcond">'+r.cond+'</span><span class="rarr">&#8594;</span>'+
-      '<span class="reng">'+r.engine+'</span><span class="rwhy">'+r.why+'</span>';
-    host.appendChild(div);
-  });
-}
 async function refreshModels(){
   const rows = JSON.parse(await appModels());
-  refreshRouting();
   const activeRow = rows.find(m=>m.state==="active");
   activeModelId = activeRow ? activeRow.id : null;
   let applyDone = null;
@@ -2597,10 +2584,26 @@ async function refreshModels(){
   const el = document.getElementById("models");
   el.innerHTML = "";
   let busy = false;
-  const slotOf = m=>m.engine === "sherpa" ? "ru" : "other";
+  const pickModel = async (row)=>{
+    if(row.state === "absent"){
+      const size = row.size ? row.size + " MB" : "";
+      if(!await askConfirm(L.dlask.replace("%s", row.name).replace("%s", size), L.dlstart)){
+        refreshModels();
+        return;
+      }
+      selModel = row.id;
+      pendingDl = row.id;
+      await appModelDl(row.id);
+    } else {
+      selModel = row.id;
+      await doSave();
+      selModel = null;
+    }
+    refreshModels();
+  };
   const groups = [
-    {slot: "other", title: L.slotother, rows: rows.filter(m=>slotOf(m) !== "ru")},
-    {slot: "ru", title: L.slotru, rows: rows.filter(m=>slotOf(m) === "ru")},
+    {slot: "inst", title: L.libinst, rows: rows.filter(m=>m.state !== "absent")},
+    {slot: "avail", title: L.libavail, rows: rows.filter(m=>m.state === "absent")},
   ];
   groups.forEach(g=>{
     if(!g.rows.length) return;
@@ -2613,15 +2616,18 @@ async function refreshModels(){
     const div = document.createElement("div");
     div.className = "mrow";
     div.dataset.slot = g.slot;
-    const checked = (selModel === m.id || (!selModel && m.slot)) ? " checked" : "";
-    const radio = '<input type="radio" name="mdl-'+g.slot+'" value="'+m.id+'"'+checked+(m.id==="custom"?" disabled":"")+'>';
+    div.dataset.id = m.id;
+    const pill = m.state === "active" ? '<span class="mpill on">'+L.libactive+'</span>'
+      : (m.slot && m.state !== "absent" ? '<span class="mpill">'+L.libstandby+'</span>' : "");
+    const trtag = m.translate ? '<span class="mtag">&#8594;EN</span>' : "";
     let right = "";
     if(m.state === "downloading"){ busy = true; right = '<span class="mpct">'+(m.pct>0?m.pct+"%":"…")+'</span><button class="iconbtn danger" title="'+L.dlcancel+'" data-a="cancel" data-id="'+m.id+'">&#10005;</button>'; }
     else if(m.state === "absent") right = '<button class="iconbtn" title="'+L.dl+'" data-a="dl" data-id="'+m.id+'">'+I_DL+'</button>';
     else if(m.state === "installed" || (m.state === "active" && m.id !== "custom")) right = '<button class="iconbtn danger" title="'+L.del+'" data-a="del" data-id="'+m.id+'" data-name="'+esc(m.name)+'">&#10005;</button>';
     const tag = m.engine === "sherpa" ? '<span class="mtag">RU</span>' : (m.langs === "*" ? '<span class="mtag">99</span>' : "");
     const ram = m.ram ? '<span class="mram '+(m.fit||"")+'">≈'+m.ram+' MB RAM</span>' : '<span class="mram"></span>';
-    div.innerHTML = radio+'<span class="mname">'+m.name+tag+'</span><span class="mdesc">'+m.desc+'</span>'+ram+'<span class="msize">'+(m.size?m.size+" MB":"")+'</span><span>'+right+'</span>';
+    div.innerHTML = '<span class="mname">'+m.name+tag+trtag+pill+'</span><span class="mdesc">'+m.desc+'</span>'+ram+'<span class="msize">'+(m.size?m.size+" MB":"")+'</span><span>'+right+'</span>';
+    if(m.id !== "custom") div.onclick = (e)=>{ if(e.target.closest("button")) return; pickModel(m); };
     if(!modelPassesFilter(m)) div.classList.add("hidden");
     el.appendChild(div);
   });
@@ -2630,28 +2636,12 @@ async function refreshModels(){
     const shown = [...el.querySelectorAll('.mrow[data-slot="'+h.dataset.slot+'"]')].some(r=>!r.classList.contains("hidden"));
     h.classList.toggle("hidden", !shown);
   });
-  el.querySelectorAll('input[name^="mdl-"]').forEach(r=>{
-    r.onchange = async ()=>{
-      const id = r.value;
-      const row = rows.find(m=>m.id===id);
-      if(!row) return;
-      if(row.state === "absent"){
-        const size = row.size ? row.size + " MB" : "";
-        if(!await askConfirm(L.dlask.replace("%s", row.name).replace("%s", size), L.dlstart)){
-          refreshModels();
-          return;
-        }
-        selModel = id;
-        pendingDl = id;
-        await appModelDl(id);
-      } else {
-        selModel = id;
-        await doSave();
-        selModel = null;
-      }
-      refreshModels();
-    };
-  });
+  const act = rows.find(m=>m.state === "active");
+  const dm = document.getElementById("dict_model");
+  if(dm) dm.textContent = act ? act.name : "—";
+  const wh = rows.find(m=>m.engine !== "sherpa" && m.slot && m.state !== "absent") || act;
+  const te = document.getElementById("tr_engine");
+  if(te) te.textContent = wh && wh.engine !== "sherpa" ? L.trby.replace("%s", wh.name) : "";
   el.querySelectorAll("button[data-a]").forEach(b=>{
     b.onclick = async ()=>{
       if(b.dataset.a === "dl"){ await appModelDl(b.dataset.id); }

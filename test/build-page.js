@@ -99,6 +99,8 @@ const strings = {
   histempty: "No history yet", histcopy: "Copy", histask: "Delete the whole dictation history?", histclear: "Clear",
   micchecking: "Checking…", mchecking: "Checking models…", histinsert: "Paste",
   retry: "Try again", slotru: "Russian speech", slotother: "Other languages",
+  libinst: "Installed", libavail: "Available to download", libactive: "active", libstandby: "standby",
+  trby: "Translation is done by %s",
   cmdempty: "No commands yet", cmddel: "Delete the command", cmdph: "new line",
   cmdnewline: "line break", cmdparagraph: "new paragraph", cmdtext: "insert text", cmdcancel: "cancel the dictation",
   cmdtextph: "what to insert",
