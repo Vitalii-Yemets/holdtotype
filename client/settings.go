@@ -1203,6 +1203,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .mrow .mdesc{flex:1;color:var(--dim);font-size:12px}
 .mtag{font-size:9px;border:1px solid var(--line);border-radius:calc(var(--r) * .35);color:var(--dim);padding:0 4px;margin-left:6px;vertical-align:middle;letter-spacing:.06em}
 .advbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.libhead{position:sticky;top:-14px;z-index:6;background:var(--bg);margin:0 -6px;padding:14px 6px 6px;border-bottom:1px solid var(--soft)}
+.libhead .advbar{margin-bottom:0}
 #advisor{border:1px solid var(--line);border-radius:var(--r);padding:10px 11px;margin-bottom:9px;display:flex;flex-direction:column;gap:9px}
 .advrow{display:flex;align-items:center;gap:9px;font-size:12px;padding:3px 0}
 .advrow .advrole{width:74px;color:var(--dim);text-transform:uppercase;font-size:10px;letter-spacing:.1em}
@@ -1491,17 +1493,19 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
 
 <div class="page" role="tabpanel" aria-hidden="true" id="p-models">
  <div class="card">
-  <h2 class="sect">{{S_LIB_REC}}</h2>
-  <div class="advbar">
-   <button type="button" class="mini" id="adv_open">{{S_ADV_TITLE}}</button>
-   <input type="text" id="mfind" placeholder="{{S_LIB_FIND}}">
-   <select id="mlang">
-    <option value="all">{{S_F_ALL}}</option>
-    <option value="multi">{{S_F_MULTI}}</option>
-    <option value="punct">{{S_F_PUNCT}}</option>
-    <option value="fit">{{S_F_FIT}}</option>
-    <option value="ru">{{S_F_RU}}</option>
-   </select>
+  <div class="libhead">
+   <h2 class="sect">{{S_LIB_REC}}</h2>
+   <div class="advbar">
+    <button type="button" class="mini" id="adv_open">{{S_ADV_TITLE}}</button>
+    <input type="text" id="mfind" placeholder="{{S_LIB_FIND}}">
+    <select id="mlang">
+     <option value="all">{{S_F_ALL}}</option>
+     <option value="multi">{{S_F_MULTI}}</option>
+     <option value="punct">{{S_F_PUNCT}}</option>
+     <option value="fit">{{S_F_FIT}}</option>
+     <option value="ru">{{S_F_RU}}</option>
+    </select>
+   </div>
   </div>
   <div id="advisor" style="display:none">
    <div class="advq">

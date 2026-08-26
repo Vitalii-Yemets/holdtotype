@@ -395,6 +395,7 @@ function check(name, actual, expected) {
   check("every card measures itself in two bars", d.querySelectorAll("#models .mrow .mbar").length, 6);
   check("the bars are filled to the model, not all alike", [...d.querySelectorAll(String.raw`#models .mrow[data-id="base"] .mtrack i`)].map(i=>i.style.width), ["40%", "100%"]);
   check("the language filter is one control", [...d.getElementById("mlang").options].map(o=>o.value), ["all", "multi", "punct", "fit", "ru"]);
+  check("the library head stays put while the shelf scrolls", w.getComputedStyle(d.querySelector("#p-models .libhead")).position, "sticky");
   const mfind = d.getElementById("mfind");
   mfind.value = "giga"; mfind.dispatchEvent(new w.Event("input", { bubbles: true })); await sleep(150);
   check("the name search narrows the list", [...d.querySelectorAll("#models .mrow:not(.hidden)")].map(r=>r.dataset.id), ["gigaam-v3"]);
