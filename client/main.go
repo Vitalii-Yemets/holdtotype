@@ -79,6 +79,7 @@ type App struct {
 
 	lastResult   string
 	lastResultAt time.Time
+	lastVerdict  string
 	lastTarget   string
 	lastWnd      uintptr
 	settingsPrev uintptr
@@ -1251,6 +1252,9 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 	}
 	sound := audiolevel.Analyze(pcm)
 	verdict := audiolevel.Verdict(sound)
+	a.mu.Lock()
+	a.lastVerdict = verdict
+	a.mu.Unlock()
 	log.Printf("звук: пик %.0f дБ, речь %.0f%%, обрезано %.1f%% — %s",
 		audiolevel.DBFS(sound.Peak), sound.VoiceRatio*100, sound.ClipRatio*100, verdict)
 	if verdict == audiolevel.VerdictSilent {

@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -861,6 +862,8 @@ type stateOut struct {
 	ActiveLang  string          `json:"active_lang"`
 	Assigned    []stateModelRow `json:"assigned"`
 	InstalledMs []string        `json:"installed_models"`
+	Loaded      string          `json:"loaded_now"`
+	WeekLine    string          `json:"week_line"`
 	LLMOK       bool            `json:"llm_ok"`
 	MicOK       bool            `json:"mic_ok"`
 	StatusLine  string          `json:"status_line"`
@@ -986,6 +989,7 @@ func (a *App) stateSnapshot() string {
 	target := a.lastTarget
 	rec := a.rec
 	last := a.lastResult
+	verdict := a.lastVerdict
 	a.mu.Unlock()
 
 	mic := strS("S_MIC_DEFAULT")
@@ -1027,6 +1031,9 @@ func (a *App) stateSnapshot() string {
 		if target != "" {
 			parts = append(parts, trf("inserted.into", target))
 		}
+		if verdict != "" {
+			parts = append(parts, tr("snd."+verdict))
+		}
 		lastMeta = strings.Join(parts, " · ")
 	}
 
@@ -1056,6 +1063,8 @@ func (a *App) stateSnapshot() string {
 		ActiveLang:  activeLang,
 		Assigned:    assignedModelRows(cfg),
 		InstalledMs: installedModelNames(),
+		Loaded:      a.loadedModelsLine(),
+		WeekLine:    weekLine(),
 		LLMOK:       postReady(cfg),
 		MicOK:       rec != nil,
 		StatusLine:  statusLine(cfg, ready, free),
@@ -1081,6 +1090,29 @@ func (a *App) stateSnapshot() string {
 
 func itoaSafe(n int) string {
 	return fmt.Sprintf("%d", n)
+}
+
+// loadedModelsLine names what actually sits in memory right now, so the
+// free-memory number next to it means something.
+func (a *App) loadedModelsLine() string {
+	var names []string
+	for p := range a.loadedModelPaths() {
+		names = append(names, modelNameForPath(p))
+	}
+	sort.Strings(names)
+	if len(names) == 0 {
+		return tr("state.loaded.none")
+	}
+	return strings.Join(names, " + ")
+}
+
+func weekLine() string {
+	since := time.Now().Add(-7 * 24 * time.Hour).UnixMilli()
+	n, chars := histStore.Stats(since)
+	if n == 0 {
+		return ""
+	}
+	return trf("state.week", n, chars)
 }
 
 func shortLabel(s string, max int) string {

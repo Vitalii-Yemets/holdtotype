@@ -55,6 +55,7 @@ const dom = new JSDOM(html, {
           { model: "Small", langs: "Detect itself, EN", state: otherState, current: false },
         ],
         installed_models: ["Small", "my-model"],
+        loaded_now: "GigaAM v3", week_line: "12 dictations · 3400 characters",
         llm_ok: true, mic_ok: true, last_at: lastAt, last_app: "chrome.exe",
         remote: remote, backend_err: backendErr,
         badges: { mic: micBadge, models: "2", system: "" } });
@@ -216,6 +217,9 @@ function check(name, actual, expected) {
   check("each with the languages it serves", d.querySelector("#state_assigned .arow .alangs").textContent, "RU");
   check("the current one is marked", d.querySelector("#state_assigned .arow").className.includes("on"), true);
   check("installed models are listed in one line", d.getElementById("state_installed").textContent, "Small, my-model");
+  check("the memory row says what is loaded right now", d.getElementById("state_loaded").textContent, "GigaAM v3");
+  check("a week of dictations is summed up", d.getElementById("state_week").textContent, "12 dictations · 3400 characters");
+  check("and the row is shown when there is something to sum", d.getElementById("state_week_row").style.display, "");
   check("last dictation carries details", d.getElementById("state_last_meta").textContent, "just now · 5 characters");
   const lastCS = w.getComputedStyle(d.getElementById("state_last"));
   check("last dictation is clamped to its row", [lastCS.display, lastCS.overflow, lastCS.textOverflow, lastCS.whiteSpace], ["block", "hidden", "ellipsis", "nowrap"]);

@@ -1486,6 +1486,10 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
   <button class="mini" id="state_copy">{{S_STATE_COPY}}</button></div>
  <div class="row"><span class="lbl">{{S_STATE_MEM}}<span class="sub">{{S_STATE_MEM_SUB}}</span></span>
   <span class="val" id="state_ram">—</span></div>
+ <div class="row"><span class="lbl">{{S_STATE_LOADED}}<span class="sub">{{S_STATE_LOADED_SUB}}</span></span>
+  <span class="val" id="state_loaded">—</span></div>
+ <div class="row" id="state_week_row" style="display:none"><span class="lbl">{{S_STATE_WEEK}}</span>
+  <span class="val" id="state_week">—</span></div>
 </div>
 
 <div class="page" role="tabpanel" aria-hidden="true" id="p-history">
@@ -2609,6 +2613,10 @@ async function refreshState(){
   set("state_active_lang", s.active_lang || "");
   setWithTip("state_llm", s.llm);
   set("state_ram", s.ram);
+  set("state_loaded", s.loaded_now || "—");
+  const wk = document.getElementById("state_week_row");
+  if(wk){ wk.style.display = s.week_line ? "" : "none"; }
+  set("state_week", s.week_line || "—");
   const abox = document.getElementById("state_assigned");
   if(abox){
     const sig = JSON.stringify(s.assigned || []);
