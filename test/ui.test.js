@@ -332,10 +332,13 @@ function check(name, actual, expected) {
   check("and it is marked as a warning", d.getElementById("st_saved").className, "stsaved warn");
   w.setHotkey("ctrl+win", "");
 
-  check("twelve sections in the sidebar", d.querySelectorAll(".nav").length, 12);
-  check("in four groups", d.querySelectorAll(".ngrp").length, 4);
+  check("eleven sections in the sidebar", d.querySelectorAll(".nav").length, 11);
+  check("in three groups", d.querySelectorAll(".ngrp").length, 3);
   check("in the agreed order", [...d.querySelectorAll(".nav")].map(b=>b.dataset.p),
-    ["state", "system", "history", "models", "mic", "dictation", "text", "translate", "post", "help", "about", "contacts"]);
+    ["state", "system", "mic", "history", "models", "text", "dictation", "post", "about", "help", "contacts"]);
+  check("no mode switch in the header", !!d.querySelector(".lvlsw"), false);
+  check("no disclosure buttons anywhere", d.querySelectorAll(".moreb").length, 0);
+  check("nothing is folded away", d.querySelectorAll("[data-adv].hidden").length, 0);
 
   tab("about"); await sleep(200);
   const toc = d.querySelector("#p-help .toc");
@@ -385,23 +388,23 @@ function check(name, actual, expected) {
 
   tab("models"); await sleep(80);
   check("models section shown", shown("models"), true);
-  check("recognition models listed", d.querySelectorAll("#models .mrow").length, 3);
+  check("recognition models listed", d.querySelectorAll("#models .mcard").length, 3);
   check("no radio buttons left in the library", d.querySelectorAll('#models input[type="radio"]').length, 0);
   check("the list is split by state, not by language", [...d.querySelectorAll("#models .mslot")].map(h=>h.dataset.slot), ["inst", "avail"]);
-  check("the installed shelf holds what is on disk", [...d.querySelectorAll('#models .mrow[data-slot="inst"]')].map(r=>r.dataset.id), ["small"]);
-  check("the rest wait under available", [...d.querySelectorAll('#models .mrow[data-slot="avail"]')].map(r=>r.dataset.id), ["base", "gigaam-v3"]);
+  check("the installed shelf holds what is on disk", [...d.querySelectorAll('#models .mcard[data-slot="inst"]')].map(r=>r.dataset.id), ["small"]);
+  check("the rest wait under available", [...d.querySelectorAll('#models .mcard[data-slot="avail"]')].map(r=>r.dataset.id), ["base", "gigaam-v3"]);
   check("the active model wears its pill", [...d.querySelectorAll("#models .mpill.on")].length, 1);
-  check("and its whole card is lit", [...d.querySelectorAll("#models .mrow.on")].map(r=>r.dataset.id), ["small"]);
-  check("every card measures itself in two bars", d.querySelectorAll("#models .mrow .mbar").length, 6);
-  check("the bars are filled to the model, not all alike", [...d.querySelectorAll(String.raw`#models .mrow[data-id="base"] .mtrack i`)].map(i=>i.style.width), ["40%", "100%"]);
+  check("and its whole card is lit", [...d.querySelectorAll("#models .mcard.on")].map(r=>r.dataset.id), ["small"]);
+  check("every card measures itself in two bars", d.querySelectorAll("#models .mcard .mbar").length, 6);
+  check("the bars are filled to the model, not all alike", [...d.querySelectorAll(String.raw`#models .mcard[data-id="base"] .mtrack i`)].map(i=>i.style.width), ["40%", "100%"]);
   check("the language filter is one control", [...d.getElementById("mlang").options].map(o=>o.value), ["all", "multi", "punct", "fit", "ru"]);
   check("the library head stays put while the shelf scrolls", w.getComputedStyle(d.querySelector("#p-models .libhead")).position, "sticky");
   const mfind = d.getElementById("mfind");
   mfind.value = "giga"; mfind.dispatchEvent(new w.Event("input", { bubbles: true })); await sleep(150);
-  check("the name search narrows the list", [...d.querySelectorAll("#models .mrow:not(.hidden)")].map(r=>r.dataset.id), ["gigaam-v3"]);
+  check("the name search narrows the list", [...d.querySelectorAll("#models .mcard:not(.hidden)")].map(r=>r.dataset.id), ["gigaam-v3"]);
   mfind.value = ""; mfind.dispatchEvent(new w.Event("input", { bubbles: true })); await sleep(150);
   const saveBefore = w.saveCalls;
-  d.querySelector('#models .mrow[data-id="small"]').click(); await sleep(200);
+  d.querySelector('#models .mcard[data-id="small"]').click(); await sleep(200);
   check("a click on an installed row is the choice", w.saveCalls > saveBefore, true);
   check("the mark carries both shapes", [d.querySelectorAll(".mk.mic").length, d.querySelectorAll(".mk.face").length], [2, 2]);
   w.applyThemeVars("soft");
@@ -414,7 +417,7 @@ function check(name, actual, expected) {
   check("ram estimate shown", d.querySelectorAll("#p-models .mram").length, 3);
   check("the routing table is gone", !!d.getElementById("routing"), false);
   check("engine tags rendered", d.querySelectorAll("#p-models .mtag").length >= 3, true);
-  check("russian engine tagged RU", d.querySelector('#models .mrow[data-id="gigaam-v3"] .mtag').textContent, "RU");
+  check("russian engine tagged RU", d.querySelector('#models .mcard[data-id="gigaam-v3"] .mtag').textContent, "RU");
   check("the language moved in with the dictation", !!d.querySelector("#p-dictation #language"), true);
   check("the threads moved in with the server", !!d.querySelector("#p-system #threads"), true);
   check("dictation names the model it uses", d.getElementById("dict_model").textContent, "Small");
@@ -519,9 +522,10 @@ function check(name, actual, expected) {
   autorun.checked = false; autorun.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(200);
   check("and it can be turned back off", w.autorunCalls[w.autorunCalls.length - 1], false);
 
-  tab("translate"); await sleep(30);
+  tab("dictation"); await sleep(30);
   check("the turbo warning is shown for a turbo model", d.getElementById("tr_warn").style.display, "block");
-  check("the target language carries the honest note", !!d.querySelector("#p-translate .row label .sub.warn"), true);
+  check("the target language carries the honest note", !!d.querySelector("#p-dictation .row label .sub.warn"), true);
+  check("translation lives with the other controls now", !!d.querySelector("#p-dictation #translate_target"), true);
   const trd = d.getElementById("tr_default");
   const ask = d.getElementById("translate_ask");
   const state = () => [
@@ -640,13 +644,13 @@ function check(name, actual, expected) {
 
 
   tab("models"); await sleep(120);
-  const pickAbsent = () => d.querySelector('#models .mrow[data-id="base"]');
+  const pickAbsent = () => d.querySelector('#models .mcard[data-id="base"]');
   pickAbsent().click(); await sleep(80);
   check("picking a model that is not here asks first", !!d.querySelector(".modal-bg"), true);
   check("the question names the model and its size", d.querySelector(".modal p").textContent.includes("Base") && d.querySelector(".modal p").textContent.includes("142 MB"), true);
   d.querySelector(".modal .btn.ghost").click(); await sleep(250);
   check("saying no downloads nothing", w.dlCalls.length, 0);
-  check("saying no puts the choice back", !!d.querySelector('#models .mrow[data-id="small"] .mpill.on'), true);
+  check("saying no puts the choice back", !!d.querySelector('#models .mcard[data-id="small"] .mpill.on'), true);
 
   pickAbsent().click(); await sleep(80);
   d.querySelector(".modal .btn.yes").click(); await sleep(250);
@@ -664,7 +668,7 @@ function check(name, actual, expected) {
   check("a finished download is applied by itself", w.saveForms.slice(savesBeforeDl).map((f) => f.model_id), ["base"]);
   check("and the program says the model is ready", d.getElementById("st_saved").textContent, "Model downloaded");
 
-  const activeDel = () => d.querySelector('#models .mrow[data-id="small"] button[data-a="del"]');
+  const activeDel = () => d.querySelector('#models .mcard[data-id="small"] button[data-a="del"]');
   check("the model in use can be removed too — that is the way out of a full disk", !!activeDel(), true);
   activeDel().click(); await sleep(150);
   check("removing the model in use warns what it costs", d.querySelector(".modal p").textContent.includes("Recognition stops"), true);
@@ -687,7 +691,7 @@ function check(name, actual, expected) {
   tab("help"); await sleep(60);
   check("the guide lives on its own page", shown("help") && d.querySelectorAll("#p-help .card").length === 1, true);
   tab("contacts"); await sleep(60);
-  check("and so does the author card", shown("contacts") && d.querySelectorAll("#p-contacts .card").length === 1, true);
+  check("and so does the author card", shown("contacts") && d.querySelectorAll("#p-contacts .card").length === 2, true);
   check("the prompts stand on their own page too", !!d.querySelector("#p-post #profbody"), true);
   check("out of the expert fold", !!d.querySelector("#p-post .card[data-adv]"), false);
   check("the app rules moved in with the other rules", !!d.querySelector("#p-text #rulesbody"), true);
@@ -697,16 +701,22 @@ function check(name, actual, expected) {
   sw.checked = !sw.checked; sw.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(220);
   check("a toggle applies itself, no Save needed", w.saveCalls > before, true);
 
-  d.querySelector('.lvlb[data-l="simple"]').click(); await sleep(320);
-  check("switching the mode reports a plain save", d.getElementById("st_saved").textContent, "Saved");
-  check("simple mode hides advanced rows", d.querySelectorAll("#p-dictation .row[data-adv].hidden").length > 0, true);
-  check("disclosure button offered", !!d.querySelector("#p-dictation .moreb"), true);
-  d.querySelector("#p-dictation .moreb").click(); await sleep(60);
-  check("disclosure reveals them", d.querySelectorAll("#p-dictation .row[data-adv].hidden").length, 0);
   check("no permanent mode line in the status bar", !!d.getElementById("st_level"), false);
   check("no switching from the status bar", !!d.getElementById("st_levelbtn"), false);
-  check("simple mode folds the expert text blocks away", d.querySelectorAll("#p-text .card[data-adv].hidden").length, 2);
-  check("but punctuation and the dictionary stay in sight", d.querySelectorAll("#p-text .card:not([data-adv])").length >= 2, true);
+  tab("contacts"); await sleep(30);
+  check("the contacts page carries the mail address", d.querySelector("#p-contacts .val").textContent, "holdtotype@outlook.com");
+  check("about carries the repository button", !!d.querySelector('#p-about button[onclick="appRepoLink()"]'), true);
+  tab("history"); await sleep(30);
+  const skipNew = d.getElementById("hist_skip_new");
+  const skipStore = d.getElementById("history_skip");
+  const savesBeforeSkip = w.saveCalls;
+  skipNew.value = "game.exe";
+  d.getElementById("hist_skip_add").click(); await sleep(220);
+  check("a skipped program is added with a button, not a comma", skipStore.value, "game.exe");
+  check("and it appears as a chip", [...d.querySelectorAll("#hist_skip_list .skipchip")].length, 1);
+  check("and the change saves itself", w.saveCalls > savesBeforeSkip, true);
+  d.querySelector("#hist_skip_list .chipx").click(); await sleep(220);
+  check("the chip's cross takes it away", skipStore.value, "");
 
   const omni = d.getElementById("omni");
   omni.value = "S_PORT"; omni.dispatchEvent(new w.Event("input")); await sleep(120);
@@ -725,13 +735,12 @@ function check(name, actual, expected) {
   check("and the heading itself is what is highlighted", !!d.querySelector("#p-text .sect.hit"), true);
   omni.value = ""; omni.dispatchEvent(new w.Event("input")); await sleep(60);
 
-  d.querySelector('.lvlb[data-l="all"]').click(); await sleep(80);
   check("no save button left", !!d.querySelector(".footer"), false);
 
   const drag0 = w.dragCalls;
   const down = (el) => el.dispatchEvent(new w.MouseEvent("mousedown", { bubbles: true, button: 0 }));
   down(d.getElementById("omni"));
-  down(d.querySelector('.lvlb[data-l="simple"]'));
+  down(d.querySelector(".cap"));
   check("title bar controls are not swallowed by the window drag", w.dragCalls, drag0);
   down(d.querySelector(".header h1"));
   check("empty title bar still drags the window", w.dragCalls, drag0 + 1);
@@ -862,7 +871,6 @@ function check(name, actual, expected) {
     [".snav{", "background:var(--sidebg)"],
     ["button.btn{", "background:var(--btnbg)"],
     ["button.btn{", "text-transform:var(--caps)"],
-    [".lvlb.on{", "background:var(--selbg)"],
     [".modal-bg{", "background:var(--scrim)"],
     [".content{", "scrollbar-gutter:stable both-edges"],
     [".hotkey-val{", "background:var(--keybg)"],

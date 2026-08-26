@@ -911,7 +911,6 @@ func settingsHTML(cfg *Config, tab string) string {
 		"ok": "S_OK", "cancel": "S_CANCEL", "dlask": "S_DL_ASK", "dlstart": "S_DL_START", "dlcancel": "S_DL_CANCEL", "nofound": "S_NOT_FOUND",
 		"advrolemain": "S_ADV_ROLE_MAIN", "advrolesecond": "S_ADV_ROLE_SECOND",
 		"advprimary": "S_ADV_PRIMARY", "advcompanion": "S_ADV_COMPANION", "advhave": "S_ADV_HAVE", "advapply": "S_ADV_APPLY", "advask": "S_ADV_ASK",
-		"more": "S_MORE", "less": "S_LESS",
 		"pasteinh": "S_RULE_PASTE_INH", "enterinh": "S_RULE_ENTER_INH", "delaynone": "S_RULE_DELAY_NONE", "promptinh": "S_RULE_PROMPT_INH",
 		"ruleclip": "S_RULE_CLIP", "ruletype": "S_RULE_TYPE",
 		"ruleenteron": "S_RULE_ENTER_ON", "ruleenteroff": "S_RULE_ENTER_OFF", "rulenoprompt": "S_RULE_NOPROMPT",
@@ -1067,15 +1066,8 @@ button.cap.close:hover{background:var(--badbg);color:var(--bad);border-color:var
 .wizbig{font-size:30px;text-shadow:var(--glow);line-height:1}
 button.btn.ghost{border-color:var(--line);background:none;color:var(--dim);filter:none}
 button.btn.ghost:hover{color:var(--green);border-color:var(--dim);background:none}
-.lvlsw{display:flex;flex:none;gap:2px;border:1px solid var(--line);border-radius:calc(var(--r) * .55);background:var(--panel);padding:1px}
-.lvlb{appearance:none;border:0;background:none;color:var(--dim);font:inherit;font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:4px 11px;cursor:pointer;border-radius:calc(var(--r) * .45)}
-.lvlb:hover{color:var(--dim)}
-.lvlb.on{background:var(--selbg);color:var(--selfg);text-shadow:none}
 .row.hidden{display:none}
-.page.advopen .row[data-adv]{border-left:2px solid var(--line);padding-left:9px;margin-left:-11px}
 .row.hit{background:var(--navon);box-shadow:inset 2px 0 0 var(--hi)}
-.moreb{appearance:none;background:none;border:1px dashed var(--line);border-radius:calc(var(--r) * .5);color:var(--dim);font:inherit;font-size:11px;padding:6px 10px;margin:6px 0 0;cursor:pointer}
-.moreb:hover{color:var(--dim);border-color:var(--dim)}
 .modal-bg{position:fixed;inset:0;background:var(--scrim);display:flex;align-items:center;justify-content:center;z-index:20}
 .modal{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 0 24px rgba(var(--rgb),.18),var(--shadow);padding:20px 22px;max-width:380px;display:flex;flex-direction:column;gap:16px}
 .modal p{font-size:13px;line-height:1.55;color:var(--green)}
@@ -1188,8 +1180,9 @@ button.ghost:hover{color:var(--green)}
 .card>.hint{font-size:11.5px;color:var(--dim);margin-bottom:6px;line-height:1.5}
 .mslot{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);padding:11px 2px 3px;border-bottom:1px solid var(--line);margin-bottom:2px}
 .mslot.hidden{display:none}
-.mrow{display:flex;flex-direction:column;gap:7px;padding:10px 12px;margin:8px 0;border:1px solid var(--line);border-radius:var(--r);background:var(--field)}
-.mrow.on{border-color:var(--hi);box-shadow:var(--higlow)}
+.mrow{display:flex;align-items:center;gap:9px;padding:7px 2px;border-bottom:1px solid var(--soft);flex-wrap:nowrap}
+.mcard{display:flex;flex-direction:column;gap:7px;padding:10px 12px;margin:8px 0;border:1px solid var(--line);border-radius:var(--r);background:var(--field);cursor:pointer}
+.mcard.on{border-color:var(--hi);box-shadow:var(--higlow)}
 .mrow .mdesc{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (max-width:820px){.mrow .mram{display:none}}
 .mrow:last-child{border-bottom:none}
@@ -1233,19 +1226,22 @@ button.mini.danger:hover{color:var(--bad);border-color:var(--badline);background
 .ramline b{color:var(--green);font-size:14px;font-weight:var(--wb);text-shadow:var(--glow);margin-right:4px}
 .ramline .dot{margin-left:12px;font-size:10px}
 .subhead{color:var(--dim);font-size:11px;letter-spacing:1px;text-transform:uppercase;margin:14px 0 2px;padding-top:10px;border-top:1px solid var(--soft)}
-.mrow{cursor:pointer}
-.mrow .mtop{display:flex;gap:12px;align-items:flex-start;width:100%}
-.mrow .mhead{flex:1;min-width:0;display:flex;align-items:center;gap:8px;font-weight:var(--wb);font-size:13.5px}
-.mrow .mbars{flex:none;display:flex;flex-direction:column;gap:5px;min-width:150px;padding-top:2px}
+.mcard .mtop{display:flex;gap:12px;align-items:flex-start;width:100%}
+.mcard .mhead{flex:1;min-width:0;display:flex;align-items:center;gap:8px;font-weight:var(--wb);font-size:13.5px}
+.mcard .mbars{flex:none;display:flex;flex-direction:column;gap:5px;min-width:150px;padding-top:2px}
 .mbar{display:flex;align-items:center;gap:7px;font-size:9.5px;letter-spacing:.06em;color:var(--dim)}
 .mbar .mbl{width:64px;text-align:right;text-transform:uppercase}
 .mtrack{flex:1;height:4px;background:var(--soft);border-radius:var(--barr,0);overflow:hidden}
 .mtrack i{display:block;height:100%;background:var(--hi);border-radius:var(--barr,0)}
-.mrow .mfoot{display:flex;align-items:center;gap:12px;border-top:1px solid var(--soft);padding-top:7px;width:100%;font-size:11.5px;color:var(--dim);flex-wrap:wrap}
-.mrow .mfoot .msize{margin-left:auto}
-.mrow .mfoot .mram{margin-left:0}
+.mcard .mfoot{display:flex;align-items:center;gap:12px;border-top:1px solid var(--soft);padding-top:7px;width:100%;font-size:11.5px;color:var(--dim);flex-wrap:wrap}
+.mcard .mfoot .msize{margin-left:auto}
+.mcard .mfoot .mram{margin-left:0}
 .mpill{font-size:9px;letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--line);border-radius:calc(var(--r) * .4);padding:1px 6px;margin-left:8px;color:var(--dim);vertical-align:middle}
 .mpill.on{color:var(--hi);border-color:var(--hi)}
+.skiplist{display:flex;gap:6px;flex-wrap:wrap;padding:4px 0 8px}
+.skipchip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:calc(var(--r) * .5);padding:3px 8px;font-size:12px;color:var(--green);background:var(--field)}
+.skipchip .chipx{appearance:none;background:none;border:0;color:var(--dim);cursor:pointer;font:inherit;font-size:11px;padding:0}
+.skipchip .chipx:hover{color:var(--bad)}
 #mfind{flex:0 1 170px;min-width:110px}
 #hf_results{max-height:44vh;overflow-y:auto;overscroll-behavior:contain}
 .miclevel{flex:none;display:flex;align-items:flex-end;gap:2px;height:10px;width:auto}
@@ -1329,10 +1325,6 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
   </g>
  </svg></div>
  <h1>{{APP}}</h1>
- <span class="lvlsw">
-  <button type="button" class="lvlb" data-l="simple">{{S_LVL_SIMPLE}}</button>
-  <button type="button" class="lvlb" data-l="all">{{S_LVL_ALL}}</button>
- </span>
  <label class="omni"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="15.5" y1="15.5" x2="21" y2="21"/></svg><input id="omni" type="text" placeholder="{{S_SEARCH}}" autocomplete="off"><span class="ocount" id="ocount"></span><span class="okey">Ctrl K</span></label>
  <div class="capbtns">
   <button class="cap" onclick="appMin()" title="{{S_WND_MIN}}">&#9472;</button>
@@ -1354,18 +1346,16 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
  <span class="ngrp">{{S_GRP_GENERAL}}</span>
  <button class="nav" role="tab" aria-selected="false" data-p="state"><span class="nlabel">{{S_NAV_STATE}}</span></button>
  <button class="nav" role="tab" aria-selected="false" data-p="system"><span class="nlabel">{{S_NAV_SYSTEM}}</span><span class="nbadge warn" id="badge_system"></span></button>
- <button class="nav" role="tab" aria-selected="false" data-p="history"><span class="nlabel">{{S_NAV_HISTORY}}</span><span class="nbadge" id="badge_history"></span></button>
- <button class="nav" role="tab" aria-selected="false" data-p="models"><span class="nlabel">{{S_NAV_MODELS}}</span><span class="nbadge" id="badge_models"></span></button>
- <span class="ngrp">{{S_GRP_SPEECH}}</span>
  <button class="nav" role="tab" aria-selected="false" data-p="mic"><span class="nlabel">{{S_NAV_MIC}}</span><span class="nbadge" id="badge_mic"></span></button>
- <button class="nav" role="tab" aria-selected="false" data-p="dictation"><span class="nlabel">{{S_NAV_DICT}}</span></button>
- <span class="ngrp">{{S_GRP_TEXT}}</span>
+ <button class="nav" role="tab" aria-selected="false" data-p="history"><span class="nlabel">{{S_NAV_HISTORY}}</span><span class="nbadge" id="badge_history"></span></button>
+ <span class="ngrp">{{S_GRP_SPEECH}}</span>
+ <button class="nav" role="tab" aria-selected="false" data-p="models"><span class="nlabel">{{S_NAV_MODELS}}</span><span class="nbadge" id="badge_models"></span></button>
  <button class="nav" role="tab" aria-selected="false" data-p="text"><span class="nlabel">{{S_NAV_TEXT}}</span></button>
- <button class="nav" role="tab" aria-selected="false" data-p="translate"><span class="nlabel">{{S_NAV_TR}}</span></button>
+ <button class="nav" role="tab" aria-selected="false" data-p="dictation"><span class="nlabel">{{S_NAV_DICT}}</span></button>
  <button class="nav" role="tab" aria-selected="false" data-p="post"><span class="nlabel">{{S_NAV_POST}}</span></button>
  <span class="ngrp">{{S_GRP_INFO}}</span>
- <button class="nav" role="tab" aria-selected="false" data-p="help"><span class="nlabel">{{S_NAV_HELP}}</span></button>
  <button class="nav" role="tab" aria-selected="false" data-p="about"><span class="nlabel">{{S_NAV_ABOUT}}</span></button>
+ <button class="nav" role="tab" aria-selected="false" data-p="help"><span class="nlabel">{{S_NAV_HELP}}</span></button>
  <button class="nav" role="tab" aria-selected="false" data-p="contacts"><span class="nlabel">{{S_NAV_CONTACTS}}</span></button>
 </nav>
 
@@ -1409,7 +1399,11 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
    <select id="history_days"><option value="1">1</option><option value="3">3</option><option value="7">7</option><option value="30">30</option></select></div>
   <div class="row" data-adv><label>{{S_HIST_MAX}}</label>
    <select id="history_max"><option value="50">50</option><option value="100">100</option><option value="200">200</option><option value="500">500</option></select></div>
-  <div class="row" id="hist_skip_row"><label>{{S_HIST_SKIP}}<span class="sub">{{S_HIST_SKIP_SUB}}</span></label><input type="text" id="history_skip"></div>
+  <div class="row" id="hist_skip_row"><label>{{S_HIST_SKIP}}<span class="sub">{{S_HIST_SKIP_SUB}}</span></label>
+   <input type="hidden" id="history_skip">
+   <input type="text" id="hist_skip_new">
+   <button type="button" class="mini" id="hist_skip_add">{{S_HIST_ADD}}</button></div>
+  <div class="skiplist" id="hist_skip_list"></div>
  </div>
  <div class="card" id="histcard">
   <h2 class="sect">{{S_HIST_LIST}}<button type="button" class="mini" id="hist_clear">{{S_HIST_CLEAR}}</button></h2>
@@ -1459,6 +1453,41 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
    </select></div>
   <div class="row"><label>{{S_OVTEXT}}<span class="sub">{{S_OVTEXT_SUB}}</span></label><input type="checkbox" id="overlay_text"></div>
   <div class="row" data-adv><label>{{S_ANIM}}</label><input type="checkbox" id="animation"></div>
+ </div>
+ <div class="card">
+  <h2 class="sect">{{S_NAV_TR}}</h2>
+  <div class="hint" id="tr_engine"></div>
+  <div class="hint">{{S_TR_HINT}}</div>
+  <div id="tr_warn" style="display:none;color:var(--amber);font-size:12px;margin-bottom:6px">{{S_TR_TURBO}}</div>
+  <div class="row"><label>{{S_TR_DEFAULT}}</label><input type="checkbox" id="tr_default"></div>
+  <div class="row"><label>{{S_TR_TARGET}}<span class="sub">{{S_SUB_TRTARGET}}</span><span class="sub warn">{{S_TR_EXP}}</span></label>
+   <select id="translate_target">
+    <option value="en">English</option><option value="uk">Українська</option>
+    <option value="de">Deutsch</option><option value="fr">Français</option>
+    <option value="es">Español</option><option value="it">Italiano</option>
+    <option value="pl">Polski</option><option value="ru">Русский</option>
+   </select></div>
+  <div class="row"><label>{{S_TR_ASK}}</label>
+   <select id="translate_ask">
+    <option value="never">{{S_TR_ASK_NEVER}}</option>
+    <option value="always">{{S_TR_ASK_ALWAYS}}</option>
+    <option value="timeout">{{S_TR_ASK_TIMEOUT}}</option>
+   </select></div>
+  <div class="row" data-adv><label>{{S_TR_SECONDS}}</label><select id="translate_ask_seconds"><option value="2">2 s</option><option value="3">3 s</option><option value="4">4 s</option><option value="5">5 s</option><option value="7">7 s</option><option value="10">10 s</option></select></div>
+  <div class="row" data-adv><label>{{S_PROF_HOTKEY}}</label>
+   <button type="button" class="hotkey-val" id="tr_hotkey" style="min-width:110px" title="{{S_PROF_SET}}"></button>
+   <button class="mini" id="tr_clear">{{S_PROF_CLEAR}}</button></div>
+  <div class="row" data-adv><label>{{S_TR_LANGS}}</label>
+   <span id="trlangs" style="display:flex;gap:9px;flex-wrap:wrap">
+    <label style="flex:none"><input type="checkbox" id="tl_en"> EN</label>
+    <label style="flex:none"><input type="checkbox" id="tl_de"> DE</label>
+    <label style="flex:none"><input type="checkbox" id="tl_fr"> FR</label>
+    <label style="flex:none"><input type="checkbox" id="tl_es"> ES</label>
+    <label style="flex:none"><input type="checkbox" id="tl_it"> IT</label>
+    <label style="flex:none"><input type="checkbox" id="tl_pl"> PL</label>
+    <label style="flex:none"><input type="checkbox" id="tl_ru"> RU</label>
+    <label style="flex:none"><input type="checkbox" id="tl_uk"> UK</label>
+   </span></div>
  </div>
 </div>
 
@@ -1591,42 +1620,6 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
  </div>
 </div>
 
-<div class="page" role="tabpanel" aria-hidden="true" id="p-translate">
- <div class="card">
-  <div class="hint" id="tr_engine"></div>
-  <div class="hint">{{S_TR_HINT}}</div>
-  <div id="tr_warn" style="display:none;color:var(--amber);font-size:12px;margin-bottom:6px">{{S_TR_TURBO}}</div>
-  <div class="row"><label>{{S_TR_DEFAULT}}</label><input type="checkbox" id="tr_default"></div>
-  <div class="row"><label>{{S_TR_TARGET}}<span class="sub">{{S_SUB_TRTARGET}}</span><span class="sub warn">{{S_TR_EXP}}</span></label>
-   <select id="translate_target">
-    <option value="en">English</option><option value="uk">Українська</option>
-    <option value="de">Deutsch</option><option value="fr">Français</option>
-    <option value="es">Español</option><option value="it">Italiano</option>
-    <option value="pl">Polski</option><option value="ru">Русский</option>
-   </select></div>
-  <div class="row"><label>{{S_TR_ASK}}</label>
-   <select id="translate_ask">
-    <option value="never">{{S_TR_ASK_NEVER}}</option>
-    <option value="always">{{S_TR_ASK_ALWAYS}}</option>
-    <option value="timeout">{{S_TR_ASK_TIMEOUT}}</option>
-   </select></div>
-  <div class="row" data-adv><label>{{S_TR_SECONDS}}</label><select id="translate_ask_seconds"><option value="2">2 s</option><option value="3">3 s</option><option value="4">4 s</option><option value="5">5 s</option><option value="7">7 s</option><option value="10">10 s</option></select></div>
-  <div class="row" data-adv><label>{{S_PROF_HOTKEY}}</label>
-   <button type="button" class="hotkey-val" id="tr_hotkey" style="min-width:110px" title="{{S_PROF_SET}}"></button>
-   <button class="mini" id="tr_clear">{{S_PROF_CLEAR}}</button></div>
-  <div class="row" data-adv><label>{{S_TR_LANGS}}</label>
-   <span id="trlangs" style="display:flex;gap:9px;flex-wrap:wrap">
-    <label style="flex:none"><input type="checkbox" id="tl_en"> EN</label>
-    <label style="flex:none"><input type="checkbox" id="tl_de"> DE</label>
-    <label style="flex:none"><input type="checkbox" id="tl_fr"> FR</label>
-    <label style="flex:none"><input type="checkbox" id="tl_es"> ES</label>
-    <label style="flex:none"><input type="checkbox" id="tl_it"> IT</label>
-    <label style="flex:none"><input type="checkbox" id="tl_pl"> PL</label>
-    <label style="flex:none"><input type="checkbox" id="tl_ru"> RU</label>
-    <label style="flex:none"><input type="checkbox" id="tl_uk"> UK</label>
-   </span></div>
- </div>
-</div>
 
 <div class="page" role="tabpanel" aria-hidden="true" id="p-system">
  <div class="card">
@@ -1688,6 +1681,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
  <div class="card">
   <p style="font-size:15px;letter-spacing:2px"><b>{{APP}}</b> <span id="ver2"></span></p>
   {{S_ABOUT_HTML}}
+  <div class="row"><label>GitHub</label><button type="button" class="mini" onclick="appRepoLink()">github.com &#8599;</button></div>
  </div>
 </div>
 
@@ -1697,6 +1691,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
 
 <div class="page about" role="tabpanel" aria-hidden="true" id="p-contacts">
  <div class="card">{{S_AUTHOR_HTML}}</div>
+ <div class="card"><div class="row"><label>{{S_CONTACT_MAIL}}</label><span class="val" style="user-select:text">holdtotype@outlook.com</span></div></div>
 </div>
 </div>
 </div>
@@ -2630,7 +2625,7 @@ async function refreshModels(){
     el.appendChild(head);
   g.rows.forEach(m=>{
     const div = document.createElement("div");
-    div.className = "mrow";
+    div.className = "mcard";
     div.dataset.slot = g.slot;
     div.dataset.id = m.id;
     const pill = m.state === "active" ? '<span class="mpill on">'+L.libactive+'</span>'
@@ -2655,7 +2650,7 @@ async function refreshModels(){
   });
   });
   el.querySelectorAll(".mslot").forEach(h=>{
-    const shown = [...el.querySelectorAll('.mrow[data-slot="'+h.dataset.slot+'"]')].some(r=>!r.classList.contains("hidden"));
+    const shown = [...el.querySelectorAll('.mcard[data-slot="'+h.dataset.slot+'"]')].some(r=>!r.classList.contains("hidden"));
     h.classList.toggle("hidden", !shown);
   });
   const act = rows.find(m=>m.state === "active");
@@ -2855,7 +2850,7 @@ async function doSave(){
   const f={hotkey:CFG.hotkey, model_id:selModel||"",
     mic_device: micSel.value,
     punctuation: document.getElementById("punctuation").value,
-    ui_level: uiLevel,
+    ui_level: "all",
     mic_device_name: micSel.value ? micSel.options[micSel.selectedIndex].textContent : "",
     whisper_prompt: document.getElementById("whisper_prompt").value,
     translate_hotkey: translateHotkey,
@@ -2898,9 +2893,6 @@ function show(p){
   if(p==="history") refreshHistory();
   document.querySelector(".content").scrollTop = 0;
 }
-let uiLevel = CFG.ui_level || "simple";
-const opened = {};
-function advCount(page){ return page.querySelectorAll(".row[data-adv], .card[data-adv]").length; }
 function bindLabels(){
   document.querySelectorAll(".row").forEach(row=>{
     const label = row.querySelector("label");
@@ -2908,34 +2900,6 @@ function bindLabels(){
     const field = row.querySelector('input[type=checkbox], input[type=text], input[type=number], select');
     if(field && field.id) label.htmlFor = field.id;
   });
-}
-function applyLevel(){
-  document.querySelectorAll(".lvlb").forEach(b=>b.classList.toggle("on", b.dataset.l === uiLevel));
-  document.querySelectorAll(".page").forEach(page=>{
-    const show = uiLevel === "all" || opened[page.id];
-    page.classList.toggle("advopen", uiLevel === "simple" && !!opened[page.id]);
-    page.querySelectorAll("[data-adv]").forEach(el=>el.classList.toggle("hidden", !show));
-    let btn = page.querySelector(".moreb");
-    const n = advCount(page);
-    if(uiLevel === "all" || n === 0){
-      if(btn) btn.style.display = "none";
-      return;
-    }
-    if(!btn){
-      btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "moreb";
-      btn.onclick = ()=>{ opened[page.id] = !opened[page.id]; applyLevel(); };
-      page.appendChild(btn);
-    }
-    btn.style.display = "";
-    btn.textContent = (opened[page.id] ? L.less : L.more).replace("%d", n);
-  });
-}
-function setLevel(l){
-  uiLevel = l;
-  applyLevel();
-  applyNow();
 }
 let hits = [];
 let hitAt = -1;
@@ -2957,10 +2921,6 @@ function showHit(i){
   const hit = hits[hitAt];
   const page = hit.closest(".page");
   show(page.id.slice(2));
-  if(hit.hasAttribute("data-adv") && uiLevel === "simple"){
-    opened[page.id] = true;
-    applyLevel();
-  }
   hit.classList.add("hit");
   if(hit.scrollIntoView) hit.scrollIntoView({block:"center"});
   updSearchCount();
@@ -3555,6 +3515,42 @@ function renderRules(){
     body.appendChild(row);
   });
 }
+function renderSkip(){
+  const box = document.getElementById("hist_skip_list");
+  const store = document.getElementById("history_skip");
+  if(!box || !store) return;
+  const items = store.value.split(",").map(s=>s.trim()).filter(Boolean);
+  box.innerHTML = "";
+  items.forEach((p, i)=>{
+    const chip = document.createElement("span");
+    chip.className = "skipchip";
+    chip.textContent = p;
+    const x = document.createElement("button");
+    x.type = "button"; x.className = "chipx"; x.textContent = "✕";
+    x.onclick = ()=>{ items.splice(i, 1); store.value = items.join(", "); renderSkip(); doSave(); };
+    chip.appendChild(x);
+    box.appendChild(chip);
+  });
+}
+function initHistSkip(){
+  const add = document.getElementById("hist_skip_add");
+  const inp = document.getElementById("hist_skip_new");
+  const store = document.getElementById("history_skip");
+  if(!add || !inp || !store) return;
+  const commit = ()=>{
+    const v = inp.value.trim();
+    if(!v) return;
+    const items = store.value.split(",").map(s=>s.trim()).filter(Boolean);
+    if(!items.includes(v)) items.push(v);
+    store.value = items.join(", ");
+    inp.value = "";
+    renderSkip();
+    doSave();
+  };
+  add.onclick = commit;
+  inp.addEventListener("keydown", e=>{ if(e.key === "Enter"){ e.preventDefault(); commit(); } });
+  renderSkip();
+}
 function initRules(){
   const add = document.getElementById("rule_add");
   if(!add) return;
@@ -3626,7 +3622,7 @@ document.querySelectorAll(".nav").forEach(b=>b.onclick=()=>{
   if(p !== curTab) show(p);
 });
 document.querySelector(".header").addEventListener("mousedown", e=>{
-  if(e.target.closest("button, input, select, textarea, a, .omni, .lvlsw")) return;
+  if(e.target.closest("button, input, select, textarea, a, .omni")) return;
   if(e.button===0) appDrag();
 });
 load();
@@ -3637,18 +3633,17 @@ load();
   initWizard();
   initAutorun();
   initRules();
+  initHistSkip();
   initRepls();
   initCmds();
   initHistory();
   refreshLastApp();
   bindLabels();
-  applyLevel();
   ariaFromTitle(document);
   initTips();
   initWindowButtons();
   labelPages();
   buildToc();
-  document.querySelectorAll(".lvlb").forEach(b=>b.onclick=()=>setLevel(b.dataset.l));
   const omni = document.getElementById("omni");
   if(omni){
     omni.addEventListener("input", ()=>searchSettings(omni.value));
@@ -3663,7 +3658,7 @@ load();
   await refreshLLM();
   if(window.appReady) appReady();
 })();
-const tabAlias = {general:"state", rec:"models", proc:"text", server:"system", about:"about", state:"state", dictation:"dictation", history:"history", mic:"mic", models:"models", text:"text", translate:"translate", system:"system", post:"post", help:"help", contacts:"contacts"};
+const tabAlias = {general:"state", rec:"models", proc:"text", server:"system", about:"about", state:"state", dictation:"dictation", history:"history", mic:"mic", models:"models", text:"text", translate:"dictation", system:"system", post:"post", help:"help", contacts:"contacts"};
 show(tabAlias[CFG._tab] || "state");
 if(CFG._wizard || CFG._tab === "wizard") wizStart();
 setTimeout(()=>{ if(window.appReady) appReady(); }, 400);

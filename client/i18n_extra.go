@@ -470,9 +470,9 @@ func init() {
 		"S_SERVERURL": "Externer Server (URL)", "S_URLHINT": "Falls gesetzt, wird kein lokaler Server gestartet",
 		"S_SAVED":      "Gespeichert",
 		"S_ABOUT_HTML": "<p><b>Stimme → Text an der Cursorposition.</b></p><p>Cursor in ein Eingabefeld setzen, Shortcut halten, sprechen, loslassen — der Text wird eingefügt.</p><p>Vollständig lokal und offline. Technik: <b>Go + WinAPI</b>, <b>WebView2</b>, <b>whisper.cpp</b>, <b>llama.cpp</b>, <b>miniaudio</b>; Modelle von Hugging Face.</p><p>Logs überschreiten nie ~2 MB.</p>",
-		"S_LVL_SIMPLE": "einfach", "S_LVL_ALL": "alles", "S_SEARCH": "Einstellung finden…",
-		"S_GRP_GENERAL": "Allgemein", "S_GRP_SPEECH": "Sprache", "S_GRP_TEXT": "Text", "S_GRP_INFO": "Infos", "S_NAV_POST": "Nachbearbeitung", "S_NAV_HELP": "Hilfe", "S_NAV_CONTACTS": "Kontakte", "S_LIB_REC": "Spracherkennung", "S_LIB_INST": "Installiert", "S_LIB_AVAIL": "Zum Herunterladen verfügbar", "S_LIB_ACTIVE": "aktiv", "S_LIB_STANDBY": "Reserve", "S_LIB_FIND": "Modell suchen…", "S_DICT_MODEL": "Erkennungsmodell", "S_TR_BY": "Übersetzt wird mit %s", "S_LIB_ACC": "Genauigkeit", "S_LIB_SPD": "Tempo",
-		"S_NAV_STATE": "Übersicht", "S_NAV_DICT": "Diktat", "S_NAV_MIC": "Mikrofon", "S_NAV_MODELS": "Modelle",
+		  "S_SEARCH": "Einstellung finden…",
+		"S_GRP_GENERAL": "Allgemein", "S_GRP_SPEECH": "Sprachverarbeitung", "S_GRP_INFO": "Infos", "S_NAV_POST": "Nachbearbeitung", "S_NAV_HELP": "Hilfe", "S_NAV_CONTACTS": "Kontakte", "S_HIST_ADD": "Hinzufügen", "S_CONTACT_MAIL": "E-Mail", "S_LIB_REC": "Spracherkennung", "S_LIB_INST": "Installiert", "S_LIB_AVAIL": "Zum Herunterladen verfügbar", "S_LIB_ACTIVE": "im Einsatz", "S_LIB_STANDBY": "springt ein", "S_LIB_FIND": "Modell suchen…", "S_DICT_MODEL": "Erkennungsmodell", "S_TR_BY": "Übersetzt wird mit %s", "S_LIB_ACC": "Genauigkeit", "S_LIB_SPD": "Tempo",
+		"S_NAV_STATE": "Status", "S_NAV_DICT": "Steuerung & Verhalten", "S_NAV_MIC": "Mikrofon", "S_NAV_MODELS": "Sprachen & Modelle",
 		"S_NAV_TEXT": "Regeln", "S_NAV_TR": "Übersetzung", "S_NAV_SYSTEM": "System", "S_NAV_ABOUT": "Über",
 		"S_STATE_HINT": "halten und sprechen — der Text landet dort, wo der Cursor steht",
 		"S_STATE_RU":   "Russische Sprache", "S_STATE_OTHER": "Andere Sprachen", "S_STATE_PROC": "Nachbearbeitung",
@@ -530,8 +530,7 @@ func init() {
 		"S_REMOTE_BADGE":   "EXTERN",
 		"S_OK":             "Ja", "S_CANCEL": "Abbrechen", "S_DL_START": "Laden", "S_DL_CANCEL": "Download abbrechen",
 		"S_DL_ASK":    "Das Modell „%s“ ist nicht geladen (%s). Jetzt laden?",
-		"S_NOT_FOUND": "nichts", "S_MORE": "%d weitere Einstellungen", "S_LESS": "%d Einstellungen einklappen",
-		"S_AUTHOR_HTML": "<p style=\"font-size:15px;letter-spacing:2px\"><b>Vitalii Yemets</b></p>" +
+		"S_NOT_FOUND": "nichts",   "S_AUTHOR_HTML": "<p style=\"font-size:15px;letter-spacing:2px\"><b>Vitalii Yemets</b></p>" +
 			"<p>Autor und Entwickler von {app} — einem lokalen Diktierwerkzeug für Windows: Stimme wird direkt am Cursor zu Text, ohne Cloud, ohne Abo.</p>" +
 			"<p>Das Projekt ist offen: Quellcode, Build-Pipeline und aktuelle Releases liegen auf GitHub.</p>" +
 			"<ul>" +
@@ -724,9 +723,9 @@ func init() {
 		"S_SERVERURL": "Serveur externe (URL)", "S_URLHINT": "Si défini, le serveur local ne démarre pas",
 		"S_SAVED":      "Enregistré",
 		"S_ABOUT_HTML": "<p><b>Voix → texte à la position du curseur.</b></p><p>Placez le curseur, maintenez le raccourci, parlez, relâchez — le texte s'insère.</p><p>Entièrement local et hors ligne. Technologies : <b>Go + WinAPI</b>, <b>WebView2</b>, <b>whisper.cpp</b>, <b>llama.cpp</b>, <b>miniaudio</b> ; modèles depuis Hugging Face.</p><p>Les logs ne dépassent jamais ~2 Mo.</p>",
-		"S_LVL_SIMPLE": "simple", "S_LVL_ALL": "tout", "S_SEARCH": "Trouver un réglage…",
-		"S_GRP_GENERAL": "Général", "S_GRP_SPEECH": "Parole", "S_GRP_TEXT": "Texte", "S_GRP_INFO": "Infos", "S_NAV_POST": "Post-traitement", "S_NAV_HELP": "Aide", "S_NAV_CONTACTS": "Contacts", "S_LIB_REC": "Reconnaissance vocale", "S_LIB_INST": "Installés", "S_LIB_AVAIL": "Disponibles au téléchargement", "S_LIB_ACTIVE": "active", "S_LIB_STANDBY": "réserve", "S_LIB_FIND": "Chercher un modèle…", "S_DICT_MODEL": "Modèle de reconnaissance", "S_TR_BY": "La traduction sera faite par %s", "S_LIB_ACC": "précision", "S_LIB_SPD": "vitesse",
-		"S_NAV_STATE": "Aperçu", "S_NAV_DICT": "Dictée", "S_NAV_MIC": "Microphone", "S_NAV_MODELS": "Modèles",
+		  "S_SEARCH": "Trouver un réglage…",
+		"S_GRP_GENERAL": "Général", "S_GRP_SPEECH": "Traitement de la parole", "S_GRP_INFO": "Infos", "S_NAV_POST": "Post-traitement", "S_NAV_HELP": "Aide", "S_NAV_CONTACTS": "Contacts", "S_HIST_ADD": "Ajouter", "S_CONTACT_MAIL": "E-mail", "S_LIB_REC": "Reconnaissance vocale", "S_LIB_INST": "Installés", "S_LIB_AVAIL": "Disponibles au téléchargement", "S_LIB_ACTIVE": "en service", "S_LIB_STANDBY": "en relève", "S_LIB_FIND": "Chercher un modèle…", "S_DICT_MODEL": "Modèle de reconnaissance", "S_TR_BY": "La traduction sera faite par %s", "S_LIB_ACC": "précision", "S_LIB_SPD": "vitesse",
+		"S_NAV_STATE": "État", "S_NAV_DICT": "Commandes et comportement", "S_NAV_MIC": "Microphone", "S_NAV_MODELS": "Langues et modèles",
 		"S_NAV_TEXT": "Règles", "S_NAV_TR": "Traduction", "S_NAV_SYSTEM": "Système", "S_NAV_ABOUT": "À propos",
 		"S_STATE_HINT": "maintenez et parlez — le texte arrive là où se trouve le curseur",
 		"S_STATE_RU":   "Parole russe", "S_STATE_OTHER": "Autres langues", "S_STATE_PROC": "Post-traitement",
@@ -784,8 +783,7 @@ func init() {
 		"S_REMOTE_BADGE":   "DISTANT",
 		"S_OK":             "Oui", "S_CANCEL": "Annuler", "S_DL_START": "Télécharger", "S_DL_CANCEL": "Annuler le téléchargement",
 		"S_DL_ASK":    "Le modèle « %s » n'est pas téléchargé (%s). Commencer le téléchargement ?",
-		"S_NOT_FOUND": "rien", "S_MORE": "%d réglages de plus", "S_LESS": "Replier %d réglages",
-		"S_AUTHOR_HTML": "<p style=\"font-size:15px;letter-spacing:2px\"><b>Vitalii Yemets</b></p>" +
+		"S_NOT_FOUND": "rien",   "S_AUTHOR_HTML": "<p style=\"font-size:15px;letter-spacing:2px\"><b>Vitalii Yemets</b></p>" +
 			"<p>Auteur et développeur de {app} — un outil de dictée local pour Windows : la voix devient du texte à l'endroit du curseur, sans nuage ni abonnement.</p>" +
 			"<p>Le projet est ouvert : code source, chaîne de compilation et versions récentes sont sur GitHub.</p>" +
 			"<ul>" +
@@ -978,9 +976,9 @@ func init() {
 		"S_SERVERURL": "Servidor externo (URL)", "S_URLHINT": "Si se define, no se inicia el servidor local",
 		"S_SAVED":      "Guardado",
 		"S_ABOUT_HTML": "<p><b>Voz → texto en la posición del cursor.</b></p><p>Coloque el cursor, mantenga el atajo, hable, suelte — el texto se inserta.</p><p>Totalmente local y sin conexión. Tecnologías: <b>Go + WinAPI</b>, <b>WebView2</b>, <b>whisper.cpp</b>, <b>llama.cpp</b>, <b>miniaudio</b>; modelos de Hugging Face.</p><p>Los logs nunca superan ~2 MB.</p>",
-		"S_LVL_SIMPLE": "simple", "S_LVL_ALL": "todo", "S_SEARCH": "Buscar un ajuste…",
-		"S_GRP_GENERAL": "General", "S_GRP_SPEECH": "Voz", "S_GRP_TEXT": "Texto", "S_GRP_INFO": "Información", "S_NAV_POST": "Posprocesado", "S_NAV_HELP": "Ayuda", "S_NAV_CONTACTS": "Contactos", "S_LIB_REC": "Reconocimiento de voz", "S_LIB_INST": "Instalados", "S_LIB_AVAIL": "Disponibles para descargar", "S_LIB_ACTIVE": "activa", "S_LIB_STANDBY": "reserva", "S_LIB_FIND": "Buscar modelo…", "S_DICT_MODEL": "Modelo de reconocimiento", "S_TR_BY": "La traducción la hará %s", "S_LIB_ACC": "precisión", "S_LIB_SPD": "velocidad",
-		"S_NAV_STATE": "Resumen", "S_NAV_DICT": "Dictado", "S_NAV_MIC": "Micrófono", "S_NAV_MODELS": "Modelos",
+		  "S_SEARCH": "Buscar un ajuste…",
+		"S_GRP_GENERAL": "General", "S_GRP_SPEECH": "Procesamiento de voz", "S_GRP_INFO": "Información", "S_NAV_POST": "Posprocesado", "S_NAV_HELP": "Ayuda", "S_NAV_CONTACTS": "Contactos", "S_HIST_ADD": "Añadir", "S_CONTACT_MAIL": "Correo", "S_LIB_REC": "Reconocimiento de voz", "S_LIB_INST": "Instalados", "S_LIB_AVAIL": "Disponibles para descargar", "S_LIB_ACTIVE": "en uso", "S_LIB_STANDBY": "de respaldo", "S_LIB_FIND": "Buscar modelo…", "S_DICT_MODEL": "Modelo de reconocimiento", "S_TR_BY": "La traducción la hará %s", "S_LIB_ACC": "precisión", "S_LIB_SPD": "velocidad",
+		"S_NAV_STATE": "Estado", "S_NAV_DICT": "Control y comportamiento", "S_NAV_MIC": "Micrófono", "S_NAV_MODELS": "Idiomas y modelos",
 		"S_NAV_TEXT": "Reglas", "S_NAV_TR": "Traducción", "S_NAV_SYSTEM": "Sistema", "S_NAV_ABOUT": "Acerca de",
 		"S_STATE_HINT": "mantén y habla — el texto aparece donde está el cursor",
 		"S_STATE_RU":   "Habla en ruso", "S_STATE_OTHER": "Otros idiomas", "S_STATE_PROC": "Posprocesado",
@@ -1038,8 +1036,7 @@ func init() {
 		"S_REMOTE_BADGE":   "REMOTO",
 		"S_OK":             "Sí", "S_CANCEL": "Cancelar", "S_DL_START": "Descargar", "S_DL_CANCEL": "Cancelar la descarga",
 		"S_DL_ASK":    "El modelo «%s» no está descargado (%s). ¿Empezar la descarga?",
-		"S_NOT_FOUND": "nada", "S_MORE": "%d ajustes más", "S_LESS": "Plegar %d ajustes",
-		"S_AUTHOR_HTML": "<p style=\"font-size:15px;letter-spacing:2px\"><b>Vitalii Yemets</b></p>" +
+		"S_NOT_FOUND": "nada",   "S_AUTHOR_HTML": "<p style=\"font-size:15px;letter-spacing:2px\"><b>Vitalii Yemets</b></p>" +
 			"<p>Autor y desarrollador de {app} — una herramienta de dictado local para Windows: la voz se convierte en texto justo en el cursor, sin nubes ni suscripciones.</p>" +
 			"<p>El proyecto es abierto: el código, la compilación y las versiones están en GitHub.</p>" +
 			"<ul>" +
@@ -1232,9 +1229,9 @@ func init() {
 		"S_SERVERURL": "Server esterno (URL)", "S_URLHINT": "Se impostato, il server locale non parte",
 		"S_SAVED":      "Salvato",
 		"S_ABOUT_HTML": "<p><b>Voce → testo alla posizione del cursore.</b></p><p>Posiziona il cursore, tieni la scorciatoia, parla, rilascia — il testo viene inserito.</p><p>Completamente locale e offline. Tecnologie: <b>Go + WinAPI</b>, <b>WebView2</b>, <b>whisper.cpp</b>, <b>llama.cpp</b>, <b>miniaudio</b>; modelli da Hugging Face.</p><p>I log non superano mai ~2 MB.</p>",
-		"S_LVL_SIMPLE": "semplice", "S_LVL_ALL": "tutto", "S_SEARCH": "Trova un'impostazione…",
-		"S_GRP_GENERAL": "Generale", "S_GRP_SPEECH": "Voce", "S_GRP_TEXT": "Testo", "S_GRP_INFO": "Info", "S_NAV_POST": "Post-elaborazione", "S_NAV_HELP": "Guida", "S_NAV_CONTACTS": "Contatti", "S_LIB_REC": "Riconoscimento vocale", "S_LIB_INST": "Installati", "S_LIB_AVAIL": "Disponibili da scaricare", "S_LIB_ACTIVE": "attiva", "S_LIB_STANDBY": "riserva", "S_LIB_FIND": "Cerca modello…", "S_DICT_MODEL": "Modello di riconoscimento", "S_TR_BY": "La traduzione sarà eseguita da %s", "S_LIB_ACC": "precisione", "S_LIB_SPD": "velocità",
-		"S_NAV_STATE": "Panoramica", "S_NAV_DICT": "Dettatura", "S_NAV_MIC": "Microfono", "S_NAV_MODELS": "Modelli",
+		  "S_SEARCH": "Trova un'impostazione…",
+		"S_GRP_GENERAL": "Generale", "S_GRP_SPEECH": "Elaborazione vocale", "S_GRP_INFO": "Info", "S_NAV_POST": "Post-elaborazione", "S_NAV_HELP": "Guida", "S_NAV_CONTACTS": "Contatti", "S_HIST_ADD": "Aggiungi", "S_CONTACT_MAIL": "E-mail", "S_LIB_REC": "Riconoscimento vocale", "S_LIB_INST": "Installati", "S_LIB_AVAIL": "Disponibili da scaricare", "S_LIB_ACTIVE": "in uso", "S_LIB_STANDBY": "di riserva", "S_LIB_FIND": "Cerca modello…", "S_DICT_MODEL": "Modello di riconoscimento", "S_TR_BY": "La traduzione sarà eseguita da %s", "S_LIB_ACC": "precisione", "S_LIB_SPD": "velocità",
+		"S_NAV_STATE": "Stato", "S_NAV_DICT": "Controlli e comportamento", "S_NAV_MIC": "Microfono", "S_NAV_MODELS": "Lingue e modelli",
 		"S_NAV_TEXT": "Regole", "S_NAV_TR": "Traduzione", "S_NAV_SYSTEM": "Sistema", "S_NAV_ABOUT": "Informazioni",
 		"S_STATE_HINT": "tieni premuto e parla — il testo arriva dov'è il cursore",
 		"S_STATE_RU":   "Parlato russo", "S_STATE_OTHER": "Altre lingue", "S_STATE_PROC": "Post-elaborazione",
@@ -1292,8 +1289,7 @@ func init() {
 		"S_REMOTE_BADGE":   "REMOTO",
 		"S_OK":             "Sì", "S_CANCEL": "Annulla", "S_DL_START": "Scarica", "S_DL_CANCEL": "Annulla lo scaricamento",
 		"S_DL_ASK":    "Il modello «%s» non è scaricato (%s). Iniziare lo scaricamento?",
-		"S_NOT_FOUND": "niente", "S_MORE": "altre %d impostazioni", "S_LESS": "Riduci %d impostazioni",
-		"S_AUTHOR_HTML": "<p style=\"font-size:15px;letter-spacing:2px\"><b>Vitalii Yemets</b></p>" +
+		"S_NOT_FOUND": "niente",   "S_AUTHOR_HTML": "<p style=\"font-size:15px;letter-spacing:2px\"><b>Vitalii Yemets</b></p>" +
 			"<p>Autore e sviluppatore di {app} — uno strumento di dettatura locale per Windows: la voce diventa testo proprio dov'è il cursore, senza cloud e senza abbonamenti.</p>" +
 			"<p>Il progetto è aperto: codice sorgente, build e ultime release stanno su GitHub.</p>" +
 			"<ul>" +
@@ -1486,9 +1482,9 @@ func init() {
 		"S_SERVERURL": "Serwer zewnętrzny (URL)", "S_URLHINT": "Jeśli ustawiony, lokalny serwer nie startuje",
 		"S_SAVED":      "Zapisano",
 		"S_ABOUT_HTML": "<p><b>Głos → tekst w pozycji kursora.</b></p><p>Ustaw kursor, przytrzymaj skrót, mów, puść — tekst zostanie wstawiony.</p><p>W pełni lokalnie i offline. Technologie: <b>Go + WinAPI</b>, <b>WebView2</b>, <b>whisper.cpp</b>, <b>llama.cpp</b>, <b>miniaudio</b>; modele z Hugging Face.</p><p>Logi nigdy nie przekraczają ~2 MB.</p>",
-		"S_LVL_SIMPLE": "proste", "S_LVL_ALL": "wszystko", "S_SEARCH": "Znajdź ustawienie…",
-		"S_GRP_GENERAL": "Ogólne", "S_GRP_SPEECH": "Mowa", "S_GRP_TEXT": "Tekst", "S_GRP_INFO": "Informacje", "S_NAV_POST": "Obróbka końcowa", "S_NAV_HELP": "Pomoc", "S_NAV_CONTACTS": "Kontakty", "S_LIB_REC": "Rozpoznawanie mowy", "S_LIB_INST": "Zainstalowane", "S_LIB_AVAIL": "Dostępne do pobrania", "S_LIB_ACTIVE": "aktywna", "S_LIB_STANDBY": "zapasowa", "S_LIB_FIND": "Znajdź model…", "S_DICT_MODEL": "Model rozpoznawania", "S_TR_BY": "Tłumaczenie wykona %s", "S_LIB_ACC": "dokładność", "S_LIB_SPD": "szybkość",
-		"S_NAV_STATE": "Przegląd", "S_NAV_DICT": "Dyktowanie", "S_NAV_MIC": "Mikrofon", "S_NAV_MODELS": "Modele",
+		  "S_SEARCH": "Znajdź ustawienie…",
+		"S_GRP_GENERAL": "Ogólne", "S_GRP_SPEECH": "Przetwarzanie mowy", "S_GRP_INFO": "Informacje", "S_NAV_POST": "Obróbka końcowa", "S_NAV_HELP": "Pomoc", "S_NAV_CONTACTS": "Kontakty", "S_HIST_ADD": "Dodaj", "S_CONTACT_MAIL": "E-mail", "S_LIB_REC": "Rozpoznawanie mowy", "S_LIB_INST": "Zainstalowane", "S_LIB_AVAIL": "Dostępne do pobrania", "S_LIB_ACTIVE": "w użyciu", "S_LIB_STANDBY": "w odwodzie", "S_LIB_FIND": "Znajdź model…", "S_DICT_MODEL": "Model rozpoznawania", "S_TR_BY": "Tłumaczenie wykona %s", "S_LIB_ACC": "dokładność", "S_LIB_SPD": "szybkość",
+		"S_NAV_STATE": "Stan", "S_NAV_DICT": "Sterowanie i zachowanie", "S_NAV_MIC": "Mikrofon", "S_NAV_MODELS": "Języki i modele",
 		"S_NAV_TEXT": "Reguły", "S_NAV_TR": "Tłumaczenie", "S_NAV_SYSTEM": "System", "S_NAV_ABOUT": "O programie",
 		"S_STATE_HINT": "przytrzymaj i mów — tekst trafia tam, gdzie stoi kursor",
 		"S_STATE_RU":   "Mowa rosyjska", "S_STATE_OTHER": "Inne języki", "S_STATE_PROC": "Obróbka tekstu",
@@ -1546,8 +1542,7 @@ func init() {
 		"S_REMOTE_BADGE":   "ZDALNY",
 		"S_OK":             "Tak", "S_CANCEL": "Anuluj", "S_DL_START": "Pobierz", "S_DL_CANCEL": "Przerwij pobieranie",
 		"S_DL_ASK":    "Model „%s” nie jest pobrany (%s). Zacząć pobieranie?",
-		"S_NOT_FOUND": "nic", "S_MORE": "jeszcze %d ustawień", "S_LESS": "Zwiń %d ustawień",
-		"S_AUTHOR_HTML": "<p style=\"font-size:15px;letter-spacing:2px\"><b>Vitalii Yemets</b></p>" +
+		"S_NOT_FOUND": "nic",   "S_AUTHOR_HTML": "<p style=\"font-size:15px;letter-spacing:2px\"><b>Vitalii Yemets</b></p>" +
 			"<p>Autor i deweloper {app} — lokalnego narzędzia do dyktowania dla Windows: głos zamienia się w tekst dokładnie tam, gdzie stoi kursor, bez chmury i bez abonamentu.</p>" +
 			"<p>Projekt jest otwarty: kod, budowanie i najnowsze wydania są na GitHubie.</p>" +
 			"<ul>" +
@@ -1853,9 +1848,9 @@ func init() {
 		"S_SERVERURL": "Зовнішній сервер (URL)", "S_URLHINT": "Якщо задано — свій сервер не запускається",
 		"S_SAVED":      "Збережено",
 		"S_ABOUT_HTML": "<p><b>Голос → текст у позицію курсора.</b></p><p>Поставте курсор у поле введення, утримуйте сполучення клавіш, скажіть фразу, відпустіть — текст вставиться сам.</p><p>Повністю локально й офлайн. Технології: <b>Go + WinAPI</b>, <b>WebView2</b>, <b>whisper.cpp</b>, <b>llama.cpp</b>, <b>miniaudio</b>; моделі з Hugging Face.</p><p>Логи не перевищують ~2 МБ.</p>",
-		"S_LVL_SIMPLE": "просто", "S_LVL_ALL": "усе", "S_SEARCH": "Знайти налаштування…",
-		"S_GRP_GENERAL": "Загальне", "S_GRP_SPEECH": "Мовлення", "S_GRP_TEXT": "Текст", "S_GRP_INFO": "Відомості", "S_NAV_POST": "Постобробка", "S_NAV_HELP": "Довідка", "S_NAV_CONTACTS": "Контакти", "S_LIB_REC": "Розпізнавання мовлення", "S_LIB_INST": "Встановлені", "S_LIB_AVAIL": "Доступні для завантаження", "S_LIB_ACTIVE": "активна", "S_LIB_STANDBY": "запасна", "S_LIB_FIND": "Знайти модель…", "S_DICT_MODEL": "Модель розпізнавання", "S_TR_BY": "Переклад виконає %s", "S_LIB_ACC": "точність", "S_LIB_SPD": "швидкість",
-		"S_NAV_STATE": "Огляд", "S_NAV_DICT": "Диктування", "S_NAV_MIC": "Мікрофон", "S_NAV_MODELS": "Моделі",
+		  "S_SEARCH": "Знайти налаштування…",
+		"S_GRP_GENERAL": "Загальне", "S_GRP_SPEECH": "Обробка мовлення", "S_GRP_INFO": "Відомості", "S_NAV_POST": "Постобробка", "S_NAV_HELP": "Довідка", "S_NAV_CONTACTS": "Контакти", "S_HIST_ADD": "Додати", "S_CONTACT_MAIL": "Пошта", "S_LIB_REC": "Розпізнавання мовлення", "S_LIB_INST": "Встановлені", "S_LIB_AVAIL": "Доступні для завантаження", "S_LIB_ACTIVE": "розпізнає", "S_LIB_STANDBY": "на підхваті", "S_LIB_FIND": "Знайти модель…", "S_DICT_MODEL": "Модель розпізнавання", "S_TR_BY": "Переклад виконає %s", "S_LIB_ACC": "точність", "S_LIB_SPD": "швидкість",
+		"S_NAV_STATE": "Стан", "S_NAV_DICT": "Керування і поведінка", "S_NAV_MIC": "Мікрофон", "S_NAV_MODELS": "Мови і моделі",
 		"S_NAV_TEXT": "Правила", "S_NAV_TR": "Переклад", "S_NAV_SYSTEM": "Система", "S_NAV_ABOUT": "Про програму",
 		"S_STATE_HINT": "тримайте й говоріть — текст з'явиться там, де стоїть курсор",
 		"S_STATE_RU":   "Російська мова", "S_STATE_OTHER": "Інші мови", "S_STATE_PROC": "Постобробка",
@@ -1893,8 +1888,7 @@ func init() {
 		"S_REMOTE_BADGE": "ВІДДАЛЕНО",
 		"S_OK":           "Так", "S_CANCEL": "Скасувати", "S_DL_START": "Завантажити", "S_DL_CANCEL": "Скасувати завантаження",
 		"S_DL_ASK":    "Модель «%s» не завантажена (%s). Почати завантаження?",
-		"S_NOT_FOUND": "нічого", "S_MORE": "Ще %d налаштувань", "S_LESS": "Згорнути %d налаштувань",
-		"S_HELP_HTML": "<p class=\"wh\">Як це працює</p>" +
+		"S_NOT_FOUND": "нічого",   "S_HELP_HTML": "<p class=\"wh\">Як це працює</p>" +
 			"<p>Тримайте сполучення — починається запис (смужка внизу екрана показує ваш рівень). Відпустіть — звук розпізнається, за потреби перекладається, проходить через промпти, і готовий текст з'являється там, де стоїть курсор. ✕ на смужці скасовує на будь-якому кроці.</p>" +
 			"<p>Увесь шлях: <b>запис → розпізнавання (російська — GigaAM, інші мови — Whisper) → переклад (якщо ввімкнено) → промпти (LLM) → вставка</b>. Кожен крок видно на смужці.</p>" +
 			"<p class=\"wh\">Перший запуск</p>" +
