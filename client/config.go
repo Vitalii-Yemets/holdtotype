@@ -540,7 +540,7 @@ var translateLangNames = map[string]string{
 	"it": "Italian", "pl": "Polish", "ru": "Russian", "uk": "Ukrainian",
 }
 
-var translateLangOrder = []string{"ru", "en", "uk", "de", "fr", "es", "it", "pl"}
+var translateLangOrder = []string{"de", "en", "es", "fr", "it", "pl", "ru", "uk"}
 
 func translateLangCodes() []string { return translateLangOrder }
 

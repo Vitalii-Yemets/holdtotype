@@ -1550,10 +1550,10 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
   <div class="row"><label>{{S_RECLANG}}</label>
    <select id="language">
     <option value="auto">{{S_RECAUTO}}</option>
-    <option value="ru">Русский</option><option value="en">English</option>
-    <option value="uk">Українська</option><option value="de">Deutsch</option>
-    <option value="fr">Français</option><option value="es">Español</option>
+    <option value="de">Deutsch</option><option value="en">English</option>
+    <option value="es">Español</option><option value="fr">Français</option>
     <option value="it">Italiano</option><option value="pl">Polski</option>
+    <option value="ru">Русский</option><option value="uk">Українська</option>
    </select></div>
   <div class="row" data-adv><label>{{S_PAUSE}}<span class="sub">{{S_PAUSE_SUB}}</span></label>
    <button type="button" class="hotkey-val" id="pause_hotkey" style="min-width:110px" title="{{S_PROF_SET}}"></button>
@@ -1598,10 +1598,10 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
   <div class="row"><label>{{S_TR_DEFAULT}}</label><input type="checkbox" id="tr_default"></div>
   <div class="row"><label>{{S_TR_TARGET}}<span class="sub">{{S_SUB_TRTARGET}}</span><span class="sub warn">{{S_TR_EXP}}</span></label>
    <select id="translate_target">
-    <option value="en">English</option><option value="uk">Українська</option>
-    <option value="de">Deutsch</option><option value="fr">Français</option>
-    <option value="es">Español</option><option value="it">Italiano</option>
-    <option value="pl">Polski</option><option value="ru">Русский</option>
+    <option value="de">Deutsch</option><option value="en">English</option>
+    <option value="es">Español</option><option value="fr">Français</option>
+    <option value="it">Italiano</option><option value="pl">Polski</option>
+    <option value="ru">Русский</option><option value="uk">Українська</option>
    </select></div>
   <div class="row"><label>{{S_TR_ASK}}</label>
    <select id="translate_ask">
@@ -1615,10 +1615,10 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
    <button class="mini" id="tr_clear">{{S_PROF_CLEAR}}</button></div>
   <div class="row" data-adv><label>{{S_TR_LANGS}}</label>
    <span id="trlangs" style="display:flex;gap:9px;flex-wrap:wrap">
-    <label style="flex:none"><input type="checkbox" id="tl_en"> EN</label>
     <label style="flex:none"><input type="checkbox" id="tl_de"> DE</label>
-    <label style="flex:none"><input type="checkbox" id="tl_fr"> FR</label>
+    <label style="flex:none"><input type="checkbox" id="tl_en"> EN</label>
     <label style="flex:none"><input type="checkbox" id="tl_es"> ES</label>
+    <label style="flex:none"><input type="checkbox" id="tl_fr"> FR</label>
     <label style="flex:none"><input type="checkbox" id="tl_it"> IT</label>
     <label style="flex:none"><input type="checkbox" id="tl_pl"> PL</label>
     <label style="flex:none"><input type="checkbox" id="tl_ru"> RU</label>
@@ -1770,14 +1770,14 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
   <div class="row"><label>{{S_UILANG}}</label>
    <select id="ui_language">
     <option value="auto">{{S_AUTO}}</option>
-    <option value="en">English</option>
-    <option value="ru">Русский</option>
-    <option value="uk">Українська</option>
     <option value="de">Deutsch</option>
-    <option value="fr">Français</option>
+    <option value="en">English</option>
     <option value="es">Español</option>
+    <option value="fr">Français</option>
     <option value="it">Italiano</option>
     <option value="pl">Polski</option>
+    <option value="ru">Русский</option>
+    <option value="uk">Українська</option>
    </select></div>
   <div class="row"><label>{{S_SKIN}}<span class="sub">{{S_SKIN_SUB}}</span></label>
    <select id="skin">
@@ -1899,10 +1899,10 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
    <div class="wiztext">{{S_WIZ_MODEL_TEXT}}</div>
    <div class="wizrow"><label for="wiz_lang">{{S_RECLANG}}</label>
     <select id="wiz_lang">
-     <option value="ru">Русский</option><option value="en">English</option>
-     <option value="uk">Українська</option><option value="de">Deutsch</option>
-     <option value="fr">Français</option><option value="es">Español</option>
+     <option value="de">Deutsch</option><option value="en">English</option>
+     <option value="es">Español</option><option value="fr">Français</option>
      <option value="it">Italiano</option><option value="pl">Polski</option>
+     <option value="ru">Русский</option><option value="uk">Українська</option>
      <option value="auto">{{S_RECAUTO}}</option>
     </select></div>
    <div class="wizplan" id="wiz_plan"></div>
@@ -1957,7 +1957,7 @@ let postEnabled = CFG.post_enabled !== false;
 let postSource = CFG.post_source === "api" ? "api" : "local";
 const nums  = ["threads","min_record_ms","max_record_seconds","translate_ask_seconds","server_port","paste_delay_ms","history_days","history_max","post_api_timeout_s"];
 const sels  = ["ui_language","language","sound_theme","translate_target","translate_ask","hotkey_mode","theme","skin"];
-const trAll = ["en","de","fr","es","it","pl","ru","uk"];
+const trAll = ["de","en","es","fr","it","pl","ru","uk"];
 const L = {{L_JSON}};
 const I_DL = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12"/><path d="M6 11l6 6 6-6"/><path d="M4 21h16"/></svg>';
 const I_FIND = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="15.5" y1="15.5" x2="21" y2="21"/></svg>';
@@ -2696,7 +2696,7 @@ function initStateScreen(){
 }
 let langModels = Object.assign({}, CFG.lang_models || {});
 let modelRowsCache = [];
-const presetLangs = [["auto", ""], ["ru", "Русский"], ["en", "English"], ["uk", "Українська"], ["de", "Deutsch"], ["fr", "Français"], ["es", "Español"], ["it", "Italiano"], ["pl", "Polski"]];
+const presetLangs = [["auto", ""], ["de", "Deutsch"], ["en", "English"], ["es", "Español"], ["fr", "Français"], ["it", "Italiano"], ["pl", "Polski"], ["ru", "Русский"], ["uk", "Українська"]];
 function rowById(id){ return modelRowsCache.find(m=>m.id===id) || null; }
 function eligibleFor(m, lang){
   if(lang === "auto") return !!m.auto;
@@ -3634,7 +3634,7 @@ function renderRepls(){
     const langSel = document.createElement("select");
     langSel.className = "rlang";
     langSel.title = L.repllang;
-    [["", L.repllangall], ["ru", "RU"], ["en", "EN"], ["uk", "UK"], ["de", "DE"], ["fr", "FR"], ["es", "ES"], ["it", "IT"], ["pl", "PL"]].forEach(([v, t])=>{
+    [["", L.repllangall], ["de", "DE"], ["en", "EN"], ["es", "ES"], ["fr", "FR"], ["it", "IT"], ["pl", "PL"], ["ru", "RU"], ["uk", "UK"]].forEach(([v, t])=>{
       const o = document.createElement("option");
       o.value = v; o.textContent = t;
       langSel.appendChild(o);
