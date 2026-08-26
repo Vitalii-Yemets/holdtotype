@@ -992,6 +992,11 @@ function check(name, actual, expected) {
     ["button.mini.danger:hover{", "border-color:var(--badline)"],
     [".toast{", "text-shadow:var(--amberglow)"],
     ["button.iconbtn.danger:hover{", "filter:var(--badfilter)"],
+    ["button.mini{", "border:1px solid var(--btnline)"],
+    ["button.mini::before{", "content:var(--btnbo)"],
+    ["button.mini::after{", "content:var(--btnbc)"],
+    ["button.btn::before{", "content:var(--btnbo)"],
+    ["button.btn::after{", "content:var(--btnbc)"],
   ];
   for (const [sel, want] of skinned) {
     const at = css.indexOf(sel);

@@ -66,6 +66,7 @@ type Skin struct {
 	Pulse float64
 
 	Mark  string
+	Brackets bool
 	Flash string
 }
 
@@ -149,7 +150,7 @@ var skins = []Skin{
 		FieldPad: "6px 10px", CtlFS: "12.5px", WeightB: 700,
 		Radius: 0, BarR: "0", Border: 1, Round: false,
 		Glow: true, Scan: 1, Shadow: "none",
-		Level: "bars", Pulse: 1, Mark: "mic", Flash: "blink"},
+		Level: "bars", Pulse: 1, Mark: "mic", Flash: "blink", Brackets: true},
 
 	{ID: "editor", Palette: "editor",
 		FontCSS: `"Cascadia Mono",Consolas,"Segoe UI",sans-serif`, FontGDI: "Cascadia Mono",
@@ -392,6 +393,10 @@ func (l Look) CSSVars() string {
 	if p.Brand != "" {
 		brandBg, brandClip, brandFill = p.Brand, "text", "transparent"
 	}
+	btnBo, btnBc := `""`, `""`
+	if l.Brackets {
+		btnBo, btnBc = "\"[ \"", "\" ]\""
+	}
 	return "--wborder:" + wborder +
 		";--bg:" + p.Bg + ";--panel:" + p.Panel + ";--line:" + p.Line +
 		";--green:" + p.Text + ";--hi:" + p.Accent +
@@ -402,6 +407,7 @@ func (l Look) CSSVars() string {
 		";--navon:" + p.NavOn + ";--on:" + p.On +
 		";--titlebg:" + p.TitleBg + ";--sidebg:" + p.SideBg + ";--keybg:" + p.KeyBg +
 		";--btnbg:" + p.BtnBg + ";--btnfg:" + p.BtnFg + ";--btnline:" + p.BtnLine +
+		";--btnbo:" + btnBo + ";--btnbc:" + btnBc +
 		";--selbg:" + p.SelBg + ";--selfg:" + p.SelFg +
 		";--brandbg:" + brandBg + ";--brandclip:" + brandClip + ";--brandfill:" + brandFill +
 		";--scrim:" + p.Scrim +

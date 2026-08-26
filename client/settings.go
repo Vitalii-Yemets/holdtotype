@@ -1291,7 +1291,11 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .mram.bad{color:var(--bad)}
 .mrow .msize{color:var(--dim);font-size:12px;width:70px;text-align:right}
 .badge{font-size:11px;letter-spacing:1px;padding:4px 10px;border:1px solid var(--line);border-radius:calc(var(--r) * .5);color:var(--green);text-shadow:var(--glow);text-transform:var(--caps)}
-button.mini{flex:none;padding:5px 12px;border:1px solid var(--line);border-radius:calc(var(--r) * .5);background:none;color:var(--dim);font:inherit;font-size:11.5px;cursor:pointer;letter-spacing:var(--ls);text-transform:var(--caps)}
+button.mini{flex:none;padding:5px 12px;border:1px solid var(--btnline);border-radius:calc(var(--r) * .5);background:none;color:var(--dim);font:inherit;font-size:11.5px;cursor:pointer;letter-spacing:var(--ls);text-transform:var(--caps)}
+button.mini::before{content:var(--btnbo);color:var(--faint)}
+button.mini::after{content:var(--btnbc);color:var(--faint)}
+button.btn::before{content:var(--btnbo);color:var(--faint)}
+button.btn::after{content:var(--btnbc);color:var(--faint)}
 button.mini:hover{color:var(--green);border-color:var(--dim);box-shadow:var(--glow)}
 button.mini.danger:hover{color:var(--bad);border-color:var(--badline);background:var(--badbg);box-shadow:var(--badglow)}
 .mpct{color:var(--amber);font-size:12px;min-width:44px;text-align:right;text-shadow:var(--amberglow)}

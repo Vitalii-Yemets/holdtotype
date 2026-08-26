@@ -184,6 +184,7 @@ function varsFor(skinId, colourId) {
     "--field:" + p.field, "--soft:" + p.soft, "--navon:" + p.navon, "--on:" + p.on,
     "--titlebg:transparent", "--sidebg:transparent", "--keybg:transparent",
     "--btnbg:" + p.navon, "--btnfg:" + p.text, "--btnline:" + p.dim,
+    "--btnbo:" + (s.caps ? '"[ "' : '""'), "--btnbc:" + (s.caps ? '" ]"' : '""'),
     "--selbg:" + p.text, "--selfg:" + p.bg,
     "--brandbg:none", "--brandclip:border-box", "--brandfill:currentColor",
     "--scrim:rgba(3,7,4,.78)",
