@@ -131,7 +131,19 @@ func ovInCloseZone(x, y int32) bool {
 	w := overlayWidth()
 	dpi := dpiFor(overlayHwnd())
 	h := scaleDPI(ovH, dpi)
-	return x >= w-scaleDPI(40, dpi) && x <= w-scaleDPI(4, dpi) && y >= 0 && y <= h
+	top := int32(0)
+	ovMu.Lock()
+	st := ovState
+	ovMu.Unlock()
+	if ovLiveOn(st) {
+		ovWidthMu.Lock()
+		top = ovHeight - h
+		ovWidthMu.Unlock()
+		if top < 0 {
+			top = 0
+		}
+	}
+	return x >= w-scaleDPI(40, dpi) && x <= w-scaleDPI(4, dpi) && y >= top && y <= top+h
 }
 
 func ovCancelActive() bool {
@@ -718,7 +730,13 @@ func overlayRender(hwnd, hdc uintptr) {
 	if anim && !askActive() && (st == ovRecording || st == ovProcessing) {
 		pulse = math.Abs(math.Sin(float64(ovTick) * 0.18 / themePulse()))
 	}
-	cy := px(ovH) / 2
+	// in the live layout the control row lives at the bottom, Handy-style:
+	// the text above it slides up under the top edge of the plate
+	ctlTop := int32(0)
+	if ovLiveOn(st) && !askActive() {
+		ctlTop = rc.Bottom - px(ovH)
+	}
+	cy := ctlTop + px(ovH)/2
 	dotX := px(25)
 	core := int32(float64(px(5)) * (0.88 + 0.2*pulse))
 	halo := core
@@ -789,19 +807,20 @@ func overlayRender(hwnd, hdc uintptr) {
 		textCol, haloCol = colBad, colBadDm
 	}
 	if live {
-		// the Handy layout: a window of three lines under the control row;
-		// the phrase grows at the bottom and the surplus slides up out of view
+		// the Handy layout: the text lives above the control row, fills the
+		// window downward, and once it is full the older lines slide up out
+		// of view under the top edge of the plate
 		lineH := ovLineH.Load()
 		liveRows := ovLiveRows.Load()
 		if lineH > 0 {
-			area := rect{Left: px(16), Top: px(ovH), Right: rc.Right - px(16), Bottom: px(ovH) + ovLiveLines*lineH}
+			area := rect{Left: px(16), Top: px(4), Right: rc.Right - px(16), Bottom: ctlTop - px(4)}
 			drawRows := liveRows
 			if drawRows < 1 {
 				drawRows = 1
 			}
 			draw := area
-			if liveRows > ovLiveLines {
-				draw.Top -= (liveRows - ovLiveLines) * lineH
+			if drawRows*lineH > area.Bottom-area.Top {
+				draw.Top = area.Bottom - drawRows*lineH
 			}
 			draw.Bottom = draw.Top + drawRows*lineH
 			saved, _, _ := procSaveDC.Call(hdc)
@@ -832,7 +851,7 @@ func overlayRender(hwnd, hdc uintptr) {
 			secs := int(time.Now().UnixMilli()-start) / 1000
 			if secs >= 0 {
 				cs := fmt.Sprintf("%d:%02d", secs/60, secs%60)
-				crc := rect{Left: rc.Right - px(252), Top: 0, Right: rc.Right - px(198), Bottom: px(ovH)}
+				crc := rect{Left: rc.Right - px(252), Top: ctlTop, Right: rc.Right - px(198), Bottom: ctlTop + px(ovH)}
 				cu, _ := windows.UTF16FromString(cs)
 				procSetTextColor.Call(hdc, colGreenDm)
 				procDrawTextW.Call(hdc, uintptr(unsafe.Pointer(&cu[0])), uintptr(len(cu)-1),
@@ -842,7 +861,7 @@ func overlayRender(hwnd, hdc uintptr) {
 	}
 
 	if st == ovRecording && left >= 0 {
-		lr := rect{Left: rc.Right - px(190), Top: 0, Right: rc.Right - px(36), Bottom: px(ovH)}
+		lr := rect{Left: rc.Right - px(190), Top: ctlTop, Right: rc.Right - px(36), Bottom: ctlTop + px(ovH)}
 		ls, _ := windows.UTF16FromString(trf("ov.left", left))
 		procSetTextColor.Call(hdc, colAmber)
 		procDrawTextW.Call(hdc, uintptr(unsafe.Pointer(&ls[0])), uintptr(len(ls)-1),
@@ -870,7 +889,7 @@ func overlayRender(hwnd, hdc uintptr) {
 	}
 
 	if ovShowsClose(st) {
-		xr := rect{Left: rc.Right - px(34), Top: 0, Right: rc.Right - px(8), Bottom: px(ovH)}
+		xr := rect{Left: rc.Right - px(34), Top: ctlTop, Right: rc.Right - px(8), Bottom: ctlTop + px(ovH)}
 		xs, _ := windows.UTF16FromString("✕")
 		procSetTextColor.Call(hdc, colGreenDm)
 		procDrawTextW.Call(hdc, uintptr(unsafe.Pointer(&xs[0])), uintptr(len(xs)-1),

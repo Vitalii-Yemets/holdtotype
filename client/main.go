@@ -741,7 +741,7 @@ func main() {
 				}
 				log.Printf("testpaste: цель захвачена, вставка через 6 секунд")
 				time.Sleep(6 * time.Second)
-				app.insertResult(context.Background(), app.snapshot(), time.Now(), text, "", tw)
+				app.insertResult(context.Background(), app.snapshot(), time.Now(), text, "", tw, false)
 			}()
 		}
 	}
@@ -1506,10 +1506,10 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 	if cfg.Punctuation == punctOff {
 		text = stripPunctuation(text)
 	}
-	a.insertResult(ctx, cfg, start, text, skipped, targetWnd)
+	a.insertResult(ctx, cfg, start, text, skipped, targetWnd, liveSess != nil)
 }
 
-func (a *App) insertResult(ctx context.Context, cfg *Config, start time.Time, text, skipped string, targetWnd uintptr) {
+func (a *App) insertResult(ctx context.Context, cfg *Config, start time.Time, text, skipped string, targetWnd uintptr, liveShown bool) {
 	a.mu.Lock()
 	a.lastResult = text
 	a.lastResultAt = time.Now()
@@ -1589,6 +1589,8 @@ func (a *App) insertResult(ctx context.Context, cfg *Config, start time.Time, te
 		switch {
 		case skipped != "":
 			overlaySet(ovFlashErr, trf("ov.llm.skipped", skipped))
+		case liveShown:
+			overlayHide()
 		case cfg.OverlayText && strings.TrimSpace(text) != "":
 			overlaySet(ovFlashOK, oneLine(text))
 		default:
