@@ -238,6 +238,14 @@ func (a *App) engineFor(ctx context.Context, cfg *Config, want, wantModel string
 	if wantModel != "" && want == engineWhisper {
 		c.Model = wantModel
 	}
+	if want == engineSherpa {
+		if at := strings.Index(wantModel, "#"); at >= 0 {
+			c.SherpaModel = wantModel[:at]
+			c.CanaryTarget = wantModel[at+1:]
+		} else if wantModel != "" {
+			c.SherpaModel = wantModel
+		}
+	}
 	cfg = &c
 	log.Printf("поднимаю второй движок %s под эту диктовку", want)
 	started := time.Now()
@@ -338,6 +346,10 @@ func main() {
 			if cerr != nil {
 				log.Printf("конфигурация: %v", cerr)
 				return
+			}
+			if rest := os.Args[1:][i+2:]; len(rest) > 0 && validTranslateLang(rest[0]) {
+				cfg.CanaryTarget = rest[0]
+				log.Printf("transcribe: цель перевода %s", rest[0])
 			}
 			wav, rerr := os.ReadFile(path)
 			if rerr != nil {
@@ -1291,7 +1303,14 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 	if active != nil {
 		wantModel = active.modelPath()
 	}
-	if target != "" && (active == nil || !active.Translate) {
+	viaModel := false
+	if target != "" && modelTranslates(active, cfg.Language, target) {
+		if active.TrLangs != "" {
+			viaModel = true
+			wantModel = active.modelPath() + "#" + target
+			log.Printf("перевод: %s переводит сама, цель %s", active.NameKey, target)
+		}
+	} else if target != "" {
 		name := ""
 		if active != nil {
 			name = active.NameKey
@@ -1305,7 +1324,7 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 			}
 			target = ""
 		case askTranslateFallback(name, fallback.NameKey):
-			log.Printf("перевод: %s не переводит, пользователь выбрал %s", name, fallback.NameKey)
+			log.Printf("перевод: %s не переводит на этот язык, пользователь выбрал %s", name, fallback.NameKey)
 			wantEngine, wantModel = engineWhisper, fallback.modelPath()
 		default:
 			log.Printf("перевод: %s не переводит, пользователь отказался от Whisper — вставляю как есть", name)
@@ -1326,21 +1345,22 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 			if cfg.Overlay {
 				overlayNote(tr("ov.engine.fallback"))
 			}
+			viaModel = viaModel && srv.model() == wantModel
 		} else {
 			srv = alt
 		}
 	}
 	log.Printf("пресет: движок=%s модель=%s язык=%s перевод=%v", srv.engine(), srv.model(), cfg.Language, target != "")
-	if target != "" && !engineTranslates(srv.engine()) {
+	if target != "" && !viaModel && !engineTranslates(srv.engine()) {
 		log.Printf("перевод недоступен: активен движок %s — вставляю распознанный текст как есть", srv.engine())
 		if cfg.Overlay {
 			overlayNote(tr("ov.notranslate"))
 		}
 		target = ""
 	}
-	fastTranslate := target == "en"
+	fastTranslate := target == "en" && !viaModel
 	recLang := cfg.Language
-	if target != "" && !fastTranslate {
+	if target != "" && !fastTranslate && !viaModel {
 		recLang = target
 	}
 	var text string
@@ -1690,7 +1710,14 @@ func (a *App) reloadConfig() {
 	a.mu.Unlock()
 	initLang(fresh.UILanguage)
 
-	serverChanged := fresh.Model != old.Model ||
+	canaryLangSwitch := false
+	if fresh.Language != old.Language {
+		if am := activeModel(fresh); am != nil && am.TrLangs != "" {
+			canaryLangSwitch = true
+		}
+	}
+	serverChanged := canaryLangSwitch ||
+		fresh.Model != old.Model ||
 		fresh.SherpaModel != old.SherpaModel ||
 		primaryEngine(fresh) != primaryEngine(old) ||
 		fresh.ServerPort != old.ServerPort ||

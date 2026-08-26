@@ -142,6 +142,8 @@ type Config struct {
 	PostAPITimeout      int                `json:"post_api_timeout_s"`
 	Commands            []commands.Command `json:"commands"`
 	WizardDone          bool               `json:"wizard_done"`
+
+	CanaryTarget string `json:"-"`
 }
 
 func presetProfiles() []Profile {

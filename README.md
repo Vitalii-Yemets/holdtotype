@@ -144,6 +144,8 @@ All translation is done by Whisper itself — no second neural network needed:
 
 Note: a model that cannot translate — Turbo, GigaAM, Parakeet, Moonshine — says so right in its preset row and in the Translation block; when you ask it to translate anyway, the overlay offers to hand the phrase to the most accurate Whisper you have installed, and inserts the text as recognized if you decline.
 
+Canary 180M is the exception that translates without Whisper: between English, German, Spanish and French it does the job itself, in one pass, punctuation included.
+
 Modes: "always translate to the target language" (a checkbox, no questions), "always ask" and "ask with a timeout" — a language dialog appears above the overlay before transcription; when the countdown expires the target language is applied, ✕/Esc inserts without translation.
 
 ## 🧠 Post-processing (LLM)
@@ -235,11 +237,13 @@ Everything shipped in the archive, and every model the app offers to download, i
 | [go-webview2](https://github.com/jchv/go-webview2) | the settings window | MIT |
 | [golang.org/x/sys](https://pkg.go.dev/golang.org/x/sys) | Windows API bindings | BSD-3-Clause |
 | [IBM Plex](https://github.com/IBM/plex) | Sans for the Neon design and Mono for Terminal, both carried inside the exe | SIL Open Font License 1.1 |
-| Whisper models — Base, Small, Medium, Turbo | [ggerganov/whisper.cpp](https://huggingface.co/ggerganov/whisper.cpp) on Hugging Face | MIT |
+| Whisper models — Tiny, Base, Small, Medium, Turbo | [ggerganov/whisper.cpp](https://huggingface.co/ggerganov/whisper.cpp) on Hugging Face | MIT |
 | [GigaAM v3](https://github.com/salute-developers/GigaAM) | the Russian model, converted for sherpa-onnx | MIT |
 | [Parakeet TDT 0.6B v3](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3) | 25 European languages in one narrow model, converted for sherpa-onnx | CC-BY-4.0 |
 | [GigaAM v2](https://github.com/salute-developers/GigaAM) | the previous generation of the Russian model, converted for sherpa-onnx | MIT |
 | [Nemotron 3.5 ASR Streaming](https://huggingface.co/Masterx/sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-560ms-2026-06-11) | 40 languages with live partial text, converted for sherpa-onnx | OpenMDW-1.1 |
+| [Canary 180M Flash](https://huggingface.co/nvidia/canary-180m-flash) | English, German, Spanish, French — translates between them by itself, converted for sherpa-onnx | CC-BY-4.0 |
+| [Qwen3-ASR 0.6B](https://huggingface.co/Qwen/Qwen3-ASR-0.6B) | about 30 languages with punctuation, converted for sherpa-onnx | Apache 2.0 |
 | [Moonshine Base uk](https://github.com/moonshine-ai/moonshine) | the Ukrainian model, converted for sherpa-onnx; its licence forbids redistribution, so the app links to the archive instead of downloading it | Moonshine Community License (non-commercial) |
 | Qwen2.5-1.5B-Instruct | the editing model the app suggests first | Apache 2.0 |
 

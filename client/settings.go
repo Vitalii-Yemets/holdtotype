@@ -680,6 +680,11 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	if primaryEngine(&c) != before {
 		modelChanged = true
 	}
+	if c.Language != old.Language {
+		if am := activeModel(&c); am != nil && am.TrLangs != "" {
+			modelChanged = true
+		}
+	}
 	if f.Threads > 0 {
 		c.Threads = f.Threads
 	}
@@ -2842,7 +2847,7 @@ function paintModelCards(rows){
     const serves = (m.serves || []).map(l=>l === "auto" ? L.recauto : l.toUpperCase()).join(", ");
     const pill = m.state === "active" ? '<span class="mpill on">'+L.libactive+'</span>'
       : (serves ? '<span class="mpill">'+esc(serves)+'</span>' : "");
-    const trtag = m.translate ? '<span class="mtag">&#8594;EN</span>' : '<span class="mtag">'+L.onlyrec+'</span>';
+    const trtag = m.translate ? (m.trlangs ? '<span class="mtag">&#8594;'+m.trlangs.toUpperCase()+'</span>' : '<span class="mtag">&#8594;EN</span>') : '<span class="mtag">'+L.onlyrec+'</span>';
     let right = "";
     if(m.state === "downloading"){ right = '<span class="mpct">'+(m.pct>0?m.pct+"%":"…")+'</span><button class="iconbtn danger" title="'+L.dlcancel+'" data-a="cancel" data-id="'+m.id+'">&#10005;</button>'; }
     else if(m.state === "absent" && m.manual) right = '<button class="mini" data-a="link" data-id="'+m.id+'">'+L.manuallink+' &#8599;</button>';
@@ -2923,7 +2928,9 @@ async function refreshModels(){
   if(dm) dm.textContent = act ? act.name : "—";
   const te = document.getElementById("tr_engine");
   if(te && act){
-    te.textContent = act.translate ? L.trby.replace("%s", act.name) : L.trfallback.replace("%s", act.name);
+    let line = act.translate ? L.trby.replace("%s", act.name) : L.trfallback.replace("%s", act.name);
+    if(act.translate && act.trlangs) line += " (" + act.trlangs.toUpperCase() + ")";
+    te.textContent = line;
   }
   if(busy || pendingDl) setTimeout(refreshModels, 900);
 }

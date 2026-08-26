@@ -25,6 +25,7 @@ import (
 type sherpaServer struct {
 	addr    string
 	dir     string
+	tgt     string
 	cmd     *exec.Cmd
 	doneCh  chan struct{}
 	job     windows.Handle
@@ -46,9 +47,32 @@ func firstExisting(dir string, names ...string) string {
 }
 
 // sherpaModelArgs reads the folder layout and builds the model flags for
-// sherpa-server: a nemo transducer (encoder/decoder/joiner) or a moonshine
-// model (encoder_model + merged decoder).
+// sherpa-server: a nemo transducer (encoder/decoder/joiner), a moonshine
+// model (encoder_model + merged decoder), a Qwen3-ASR folder (conv_frontend
+// + tokenizer) or a Canary (encoder/decoder without a joiner).
 func sherpaModelArgs(dir string) ([]string, error) {
+	if fe := firstExisting(dir, "conv_frontend.int8.onnx", "conv_frontend.onnx"); fe != "" {
+		pickQ := func(name string) string {
+			p := filepath.Join(dir, name+".int8.onnx")
+			if _, statErr := os.Stat(p); statErr != nil {
+				p = filepath.Join(dir, name+".onnx")
+			}
+			return p
+		}
+		encoder, decoder := pickQ("encoder"), pickQ("decoder")
+		tokDir := filepath.Join(dir, "tokenizer")
+		for _, p := range []string{encoder, decoder, filepath.Join(tokDir, "vocab.json")} {
+			if _, statErr := os.Stat(p); statErr != nil {
+				return nil, fmt.Errorf("%s", trf("err.sherpa.model", p))
+			}
+		}
+		return []string{
+			"--qwen3-asr-encoder=" + encoder,
+			"--qwen3-asr-decoder=" + decoder,
+			"--qwen3-asr-conv-frontend=" + fe,
+			"--qwen3-asr-tokenizer=" + tokDir,
+		}, nil
+	}
 	tokens := filepath.Join(dir, "tokens.txt")
 	if _, err := os.Stat(tokens); err != nil {
 		return nil, fmt.Errorf("%s", trf("err.sherpa.model", tokens))
@@ -72,7 +96,19 @@ func sherpaModelArgs(dir string) ([]string, error) {
 		return p
 	}
 	encoder, decoder, joiner := pick("encoder"), pick("decoder"), pick("joiner")
-	for _, p := range []string{encoder, decoder, joiner} {
+	if _, statErr := os.Stat(joiner); statErr != nil {
+		for _, p := range []string{encoder, decoder} {
+			if _, serr := os.Stat(p); serr != nil {
+				return nil, fmt.Errorf("%s", trf("err.sherpa.model", p))
+			}
+		}
+		return []string{
+			"--canary-encoder=" + encoder,
+			"--canary-decoder=" + decoder,
+			"--tokens=" + tokens,
+		}, nil
+	}
+	for _, p := range []string{encoder, decoder} {
 		if _, statErr := os.Stat(p); statErr != nil {
 			return nil, fmt.Errorf("%s", trf("err.sherpa.model", p))
 		}
@@ -84,6 +120,16 @@ func sherpaModelArgs(dir string) ([]string, error) {
 		"--tokens=" + tokens,
 		"--model-type=nemo_transducer",
 	}, nil
+}
+
+var canaryLangs = map[string]bool{"en": true, "de": true, "es": true, "fr": true}
+
+func canarySrc(lang string) string {
+	lang = strings.ToLower(strings.TrimSpace(lang))
+	if canaryLangs[lang] {
+		return lang
+	}
+	return "en"
 }
 
 func startSherpaServer(cfg *Config, logw io.Writer) (*sherpaServer, error) {
@@ -112,6 +158,21 @@ func startSherpaServer(cfg *Config, logw io.Writer) (*sherpaServer, error) {
 		"--num-io-threads=1",
 		"--num-threads=" + strconv.Itoa(cfg.SherpaThreads),
 	}, modelArgs...)
+	for _, a := range modelArgs {
+		if strings.HasPrefix(a, "--canary-encoder=") {
+			src := canarySrc(cfg.Language)
+			tgt := src
+			if t := strings.ToLower(strings.TrimSpace(cfg.CanaryTarget)); canaryLangs[t] {
+				tgt = t
+			}
+			args = append(args, "--canary-src-lang="+src, "--canary-tgt-lang="+tgt, "--canary-use-pnc=true")
+			if tgt != src {
+				s.tgt = tgt
+				log.Printf("canary: перевод %s → %s", src, tgt)
+			}
+			break
+		}
+	}
 	quiet := logfilter.New(logw,
 		"handle_read_frame error",
 		"handle_read_handshake error",
@@ -145,7 +206,12 @@ func startSherpaServer(cfg *Config, logw io.Writer) (*sherpaServer, error) {
 
 func (s *sherpaServer) engine() string { return engineSherpa }
 
-func (s *sherpaServer) model() string { return filepath.ToSlash(s.dir) }
+func (s *sherpaServer) model() string {
+	if s.tgt != "" {
+		return filepath.ToSlash(s.dir) + "#" + s.tgt
+	}
+	return filepath.ToSlash(s.dir)
+}
 
 func (s *sherpaServer) external() bool { return false }
 

@@ -86,6 +86,17 @@ func primaryEngine(cfg *Config) string {
 	return engineWhisper
 }
 
+func modelTranslates(m *modelInfo, srcLang, target string) bool {
+	if m == nil || !m.Translate {
+		return false
+	}
+	if m.TrLangs == "" {
+		return true
+	}
+	return preset.Covers(strings.Split(m.TrLangs, ","), target) &&
+		preset.Covers(strings.Split(m.Langs, ","), srcLang)
+}
+
 func bestInstalledWhisper() *modelInfo {
 	var best *modelInfo
 	for i := range modelCatalog {

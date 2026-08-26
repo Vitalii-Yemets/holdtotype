@@ -34,6 +34,7 @@ type modelInfo struct {
 	Langs     string
 	Punct     bool
 	Translate bool
+	TrLangs   string
 	Speed     int
 	Hashes    map[string]string
 	Accuracy  int
@@ -68,6 +69,9 @@ func advisorCatalog() []advisor.Model {
 }
 
 var modelCatalog = []modelInfo{
+	{ID: "tiny", File: "ggml-tiny.bin", SizeMB: 74, NameKey: "Tiny", DescKey: "S_M_TINY",
+		Hashes: map[string]string{"ggml-tiny.bin": "be07e048e1e599ad46341c8d2a135645097a538221678b7acdd1b1919c6e1b21"},
+		Engine: engineWhisper, Langs: "*", Auto: true, Translate: true, Speed: 5, Accuracy: 1},
 	{ID: "base", File: "ggml-base.bin", SizeMB: 142, NameKey: "Base", DescKey: "S_M_BASE",
 		Hashes: map[string]string{"ggml-base.bin": "60ed5bc3dd14eea856493d334349b405782ddcaf0028d4b5df4088345fba2efe"},
 		Engine: engineWhisper, Langs: "*", Auto: true, Translate: true, Speed: 5, Accuracy: 2},
@@ -123,6 +127,30 @@ var modelCatalog = []modelInfo{
 			"tokens.txt":        "32be3ebfabfff475d64d7829b435f1c7856a1c497907def5c41d54ca9f1eccfd",
 		},
 		BaseURL: "https://huggingface.co/Masterx/sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-560ms-2026-06-11/resolve/main/"},
+	{ID: "canary-180m", SizeMB: 198, NameKey: "Canary 180M", DescKey: "S_M_CANARY",
+		Engine: engineSherpa, Dir: "canary-180m", Langs: "en,de,es,fr", Punct: true,
+		Translate: true, TrLangs: "en,de,es,fr", Speed: 5, Accuracy: 3,
+		Files: []string{"encoder.int8.onnx", "decoder.int8.onnx", "tokens.txt"},
+		Hashes: map[string]string{
+			"encoder.int8.onnx": "7a75b4e2a5857a6dcc0819503bbe3fad66943db4a3ccf21d3f27c633667d303f",
+			"decoder.int8.onnx": "e41a2ab9c0c2fe81a1e8ade5a45fb02a74bc4db7d1f91b89a54a25e2cf79cba2",
+			"tokens.txt":        "2dae6fc7815f9640645e0c765522b278ee0cef49b482d91f6913e334628d3e77",
+		},
+		BaseURL: "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8/resolve/main/"},
+	{ID: "qwen3-asr", SizeMB: 937, NameKey: "Qwen3 ASR 0.6B", DescKey: "S_M_QWEN3",
+		Engine: engineSherpa, Dir: "qwen3-asr", Langs: "*", Auto: true, Punct: true,
+		Speed: 2, Accuracy: 5,
+		Files: []string{"conv_frontend.onnx", "decoder.int8.onnx", "encoder.int8.onnx",
+			"tokenizer/merges.txt", "tokenizer/tokenizer_config.json", "tokenizer/vocab.json"},
+		Hashes: map[string]string{
+			"conv_frontend.onnx":              "d22dc4423e0940e49884e903d2ea2f7e5567c14fc1aed97e4e26d6b8f208ef9e",
+			"decoder.int8.onnx":               "4f6885be5959ae26af3089d38ee7972c5fafbeeb1cf8d5e76eab6d8b61ca5771",
+			"encoder.int8.onnx":               "60748d3e6744a57c9c91e1b17424a6c2990567e8adceb0783940c03ed98fa9d9",
+			"tokenizer/merges.txt":            "8831e4f1a044471340f7c0a83d7bd71306a5b867e95fd870f74d0c5308a904d5",
+			"tokenizer/tokenizer_config.json": "4942d005604266809309cabc9f4e9cb89ce855d59b14681fdc0e1cc62ea26c4c",
+			"tokenizer/vocab.json":            "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910",
+		},
+		BaseURL: "https://huggingface.co/csukuangfj2/sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/resolve/main/"},
 	{ID: "moonshine-uk", SizeMB: 135, NameKey: "Moonshine Base uk", DescKey: "S_M_MOONUK",
 		Engine: engineSherpa, Dir: "moonshine-uk", Langs: "uk", Speed: 5, Accuracy: 3,
 		Manual:  true,
@@ -274,6 +302,7 @@ type modelRow struct {
 	Serves []string `json:"serves"`
 	Speed  int      `json:"speed"`
 	Acc    int      `json:"accuracy"`
+	TrL    string   `json:"trlangs"`
 	Auto   bool     `json:"auto"`
 	Manual bool     `json:"manual"`
 	Custom bool     `json:"custom"`
@@ -305,7 +334,7 @@ func (a *App) modelRows() string {
 		row := modelRow{
 			ID: m.ID, Name: m.NameKey, Desc: strS(m.DescKey), Size: m.SizeMB,
 			Engine: m.Engine, Langs: m.Langs, Punct: m.Punct,
-			Trans: m.Translate, RAM: m.ramEstimateMB(), Fit: ramFit(m.ramEstimateMB(), freeRAM),
+			Trans: m.Translate, TrL: m.TrLangs, RAM: m.ramEstimateMB(), Fit: ramFit(m.ramEstimateMB(), freeRAM),
 			Speed: m.Speed, Acc: m.Accuracy, Auto: m.Auto, Manual: m.Manual,
 			Custom: m.Custom, Link: m.LinkURL,
 			Serves: servesLangs(cfg, m.ID),
@@ -412,6 +441,11 @@ func (a *App) doMultiDownload(ctx context.Context, key string, m *modelInfo) err
 	total := int64(m.SizeMB) * 1024 * 1024
 	var doneBytes int64
 	for _, f := range m.Files {
+		if sub := filepath.Dir(filepath.Join(dir, f)); sub != dir {
+			if err := os.MkdirAll(sub, 0o755); err != nil {
+				return err
+			}
+		}
 		written, err := downloadFile(ctx, m.BaseURL+f, filepath.Join(dir, f), func(n int64) {
 			dlMu.Lock()
 			if st := dl[key]; st != nil && total > 0 {
@@ -1125,7 +1159,14 @@ func (a *App) verifyModels() string {
 		}
 		bad := ""
 		for _, p := range m.paths() {
-			want := m.Hashes[filepath.Base(p)]
+			rel := filepath.ToSlash(p)
+			if m.Dir != "" {
+				rel = strings.TrimPrefix(rel, "models/"+m.Dir+"/")
+			}
+			want := m.Hashes[rel]
+			if want == "" {
+				want = m.Hashes[filepath.Base(p)]
+			}
 			if want == "" {
 				continue
 			}
