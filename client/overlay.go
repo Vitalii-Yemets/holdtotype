@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"math"
 	"runtime"
@@ -36,6 +37,8 @@ const (
 	ovW          = 390
 	ovH          = 52
 	ovMaxLines   = 6
+	ovLiveW      = 430
+	ovLiveLines  = 3
 	ovTimerID    = 1
 
 	wsPopup          = 0x80000000
@@ -116,6 +119,10 @@ var (
 	ovLineH   atomic.Int32
 	ovFlashAt int
 	ovTick    int
+
+	ovLive     atomic.Bool
+	ovLiveRows atomic.Int32
+	ovRecStart atomic.Int64
 
 	ovOnCancel func()
 )
@@ -205,9 +212,16 @@ func overlayHwnd() uintptr {
 	return ovHwnd
 }
 
+func ovLiveOn(state int) bool { return state == ovRecording && ovLive.Load() }
+
 func measureOverlayWidth(state int, text string) int32 {
 	need := measureStatusWidth(state, text)
 	dpi := overlayDPI()
+	if ovLiveOn(state) {
+		if w := scaleDPI(ovLiveW, dpi); w > need {
+			need = w
+		}
+	}
 	if aw := askWidthDIP(); aw > 0 {
 		if w := scaleDPI(aw, dpi); w > need {
 			need = w
@@ -267,6 +281,14 @@ func overlayHeightPx(dpi int32) int32 {
 	if askActive() {
 		return base + scaleDPI(ovAskH*askRows(), dpi)
 	}
+	ovMu.Lock()
+	st := ovState
+	ovMu.Unlock()
+	if ovLiveOn(st) {
+		if lineH := ovLineH.Load(); lineH > 0 {
+			return base + ovLiveLines*lineH + scaleDPI(10, dpi)
+		}
+	}
 	rows, lineH := ovRows.Load(), ovLineH.Load()
 	if rows > 1 && lineH > 0 {
 		return base + (rows-1)*lineH
@@ -283,6 +305,54 @@ func ovTextRoom(state int, width int32, dpi int32) int32 {
 		right = width - px(44)
 	}
 	return right - px(44)
+}
+
+// measureLiveText answers how many wrapped rows the live phrase needs and
+// how tall a line is — the plate itself stays three lines and the surplus
+// slides up out of view.
+func measureLiveText(text string, width int32) (rows, lineH int32) {
+	dpi := overlayDPI()
+	hdc, _, _ := procGetDC.Call(0)
+	if hdc == 0 {
+		return 0, 0
+	}
+	defer procReleaseDC.Call(0, hdc)
+	old, _, _ := procSelectObject.Call(hdc, uiFontDPI(dpi))
+	defer func() {
+		if old != 0 {
+			procSelectObject.Call(hdc, old)
+		}
+	}()
+	probe, err := windows.UTF16FromString("Ag")
+	if err != nil {
+		return 0, 0
+	}
+	one := rect{}
+	procDrawTextW.Call(hdc, uintptr(unsafe.Pointer(&probe[0])), uintptr(len(probe)-1),
+		uintptr(unsafe.Pointer(&one)), 0x0400|0x0020)
+	lineH = one.Bottom - one.Top
+	if lineH <= 0 {
+		return 0, 0
+	}
+	if strings.TrimSpace(text) == "" {
+		return 0, lineH
+	}
+	room := width - scaleDPI(16+16, dpi)
+	if room <= 0 {
+		return 0, lineH
+	}
+	u, uerr := windows.UTF16FromString(text)
+	if uerr != nil {
+		return 0, lineH
+	}
+	r := rect{Right: room}
+	procDrawTextW.Call(hdc, uintptr(unsafe.Pointer(&u[0])), uintptr(len(u)-1),
+		uintptr(unsafe.Pointer(&r)), 0x0400|0x0010)
+	rows = (r.Bottom - r.Top + lineH - 1) / lineH
+	if rows > 60 {
+		rows = 60
+	}
+	return rows, lineH
 }
 
 func measureTextRows(state int, text string, width int32) (rows, lineH int32) {
@@ -358,16 +428,29 @@ func overlayRefresh() {
 	state, text := ovState, ovText
 	ovMu.Unlock()
 	width := measureOverlayWidth(state, text)
-	rows, lineH := measureTextRows(state, text, width)
-	ovRows.Store(rows)
-	ovLineH.Store(lineH)
+	ovMeasure(state, text, width)
 	resizeOverlay(hwnd, width)
 	procPostMessageW.Call(hwnd, wmOvSet, 0, 0)
 }
+
+func ovMeasure(state int, text string, width int32) {
+	if ovLiveOn(state) {
+		liveRows, lineH := measureLiveText(text, width)
+		ovLiveRows.Store(liveRows)
+		ovLineH.Store(lineH)
+		ovRows.Store(1)
+		return
+	}
+	rows, lineH := measureTextRows(state, text, width)
+	ovRows.Store(rows)
+	ovLineH.Store(lineH)
+}
+
 func overlaySet(state int, text string) {
 	ovOnce.Do(startOverlayThread)
 	<-ovReady
 	ovMu.Lock()
+	old := ovState
 	ovState = state
 	ovText = text
 	if state == ovFlashOK {
@@ -378,10 +461,11 @@ func overlaySet(state int, text string) {
 	}
 	hwnd := ovHwnd
 	ovMu.Unlock()
+	if state == ovRecording && old != ovRecording && old != ovPaused {
+		ovRecStart.Store(time.Now().UnixMilli())
+	}
 	width := measureOverlayWidth(state, text)
-	rows, lineH := measureTextRows(state, text, width)
-	ovRows.Store(rows)
-	ovLineH.Store(lineH)
+	ovMeasure(state, text, width)
 	resizeOverlay(hwnd, width)
 	if hwnd != 0 {
 		procPostMessageW.Call(hwnd, wmOvSet, 0, 0)
@@ -684,6 +768,7 @@ func overlayRender(hwnd, hdc uintptr) {
 	}
 	procSelectObject.Call(hdc, overlayFont())
 	procSetBkMode.Call(hdc, 1)
+	live := ovLiveOn(st) && !askActive()
 	txtRc := rect{Left: px(44), Top: 0, Right: rc.Right - px(12), Bottom: px(ovH)}
 	if ovShowsClose(st) {
 		txtRc.Right = rc.Right - px(44)
@@ -697,24 +782,64 @@ func overlayRender(hwnd, hdc uintptr) {
 		txtRc.Bottom = txtRc.Top + lineH*rows
 		textFlags = 0x0010 | 0x8000
 	}
-	u, _ := windows.UTF16FromString(text)
-	drawText := func(r rect, color uintptr) {
-		procSetTextColor.Call(hdc, color)
-		procDrawTextW.Call(hdc, uintptr(unsafe.Pointer(&u[0])), uintptr(len(u)-1),
-			uintptr(unsafe.Pointer(&r)), textFlags)
-	}
 	// the words keep the skin's own colour; what state the program is in is
 	// said by the dot, not by tinting the text
 	textCol, haloCol := colGreen, colGreenLo
 	if st == ovFlashErr {
 		textCol, haloCol = colBad, colBadDm
 	}
-	if themeGlow() {
-		for _, off := range [][2]int32{{1, 0}, {-1, 0}, {0, 1}, {0, -1}} {
-			drawText(rect{Left: txtRc.Left + off[0], Top: txtRc.Top + off[1], Right: txtRc.Right + off[0], Bottom: txtRc.Bottom + off[1]}, haloCol)
+	if live {
+		// the Handy layout: a window of three lines under the control row;
+		// the phrase grows at the bottom and the surplus slides up out of view
+		lineH := ovLineH.Load()
+		liveRows := ovLiveRows.Load()
+		if lineH > 0 {
+			area := rect{Left: px(16), Top: px(ovH), Right: rc.Right - px(16), Bottom: px(ovH) + ovLiveLines*lineH}
+			drawRows := liveRows
+			if drawRows < 1 {
+				drawRows = 1
+			}
+			draw := area
+			if liveRows > ovLiveLines {
+				draw.Top -= (liveRows - ovLiveLines) * lineH
+			}
+			draw.Bottom = draw.Top + drawRows*lineH
+			saved, _, _ := procSaveDC.Call(hdc)
+			procIntersectClipRect.Call(hdc, uintptr(area.Left), uintptr(area.Top), uintptr(area.Right), uintptr(area.Bottom))
+			lu, _ := windows.UTF16FromString(text)
+			procSetTextColor.Call(hdc, textCol)
+			procDrawTextW.Call(hdc, uintptr(unsafe.Pointer(&lu[0])), uintptr(len(lu)-1),
+				uintptr(unsafe.Pointer(&draw)), 0x0010|0x8000)
+			procRestoreDC.Call(hdc, saved)
+		}
+	} else {
+		u, _ := windows.UTF16FromString(text)
+		drawText := func(r rect, color uintptr) {
+			procSetTextColor.Call(hdc, color)
+			procDrawTextW.Call(hdc, uintptr(unsafe.Pointer(&u[0])), uintptr(len(u)-1),
+				uintptr(unsafe.Pointer(&r)), textFlags)
+		}
+		if themeGlow() {
+			for _, off := range [][2]int32{{1, 0}, {-1, 0}, {0, 1}, {0, -1}} {
+				drawText(rect{Left: txtRc.Left + off[0], Top: txtRc.Top + off[1], Right: txtRc.Right + off[0], Bottom: txtRc.Bottom + off[1]}, haloCol)
+			}
+		}
+		drawText(txtRc, textCol)
+	}
+
+	if st == ovRecording {
+		if start := ovRecStart.Load(); start > 0 {
+			secs := int(time.Now().UnixMilli()-start) / 1000
+			if secs >= 0 {
+				cs := fmt.Sprintf("%d:%02d", secs/60, secs%60)
+				crc := rect{Left: rc.Right - px(252), Top: 0, Right: rc.Right - px(198), Bottom: px(ovH)}
+				cu, _ := windows.UTF16FromString(cs)
+				procSetTextColor.Call(hdc, colGreenDm)
+				procDrawTextW.Call(hdc, uintptr(unsafe.Pointer(&cu[0])), uintptr(len(cu)-1),
+					uintptr(unsafe.Pointer(&crc)), 0x0020|0x0004|0x0002)
+			}
 		}
 	}
-	drawText(txtRc, textCol)
 
 	if st == ovRecording && left >= 0 {
 		lr := rect{Left: rc.Right - px(190), Top: 0, Right: rc.Right - px(36), Bottom: px(ovH)}

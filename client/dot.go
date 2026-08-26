@@ -3,6 +3,9 @@ package main
 var (
 	procStretchBlt        = gdi32.NewProc("StretchBlt")
 	procSetStretchBltMode = gdi32.NewProc("SetStretchBltMode")
+	procSaveDC            = gdi32.NewProc("SaveDC")
+	procRestoreDC         = gdi32.NewProc("RestoreDC")
+	procIntersectClipRect = gdi32.NewProc("IntersectClipRect")
 	procSetBrushOrgEx     = gdi32.NewProc("SetBrushOrgEx")
 )
 

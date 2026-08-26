@@ -118,7 +118,7 @@ func (a *App) liveStream(gen int, cfg *Config) {
 		mine := a.liveGen == gen
 		a.liveMu.Unlock()
 		if mine && cfg.Overlay {
-			overlaySet(ovRecording, livetail.Tail(text, 90))
+			overlaySet(ovRecording, livetail.Tail(text, 600))
 		}
 	})
 	if err != nil {
@@ -133,6 +133,10 @@ func (a *App) liveStream(gen int, cfg *Config) {
 	a.liveGen = gen
 	a.liveFed = 0
 	a.liveMu.Unlock()
+	ovLive.Store(true)
+	if cfg.Overlay && a.state.Load() == stRecording {
+		overlaySet(ovRecording, "")
+	}
 	log.Printf("живой текст: поток открыт")
 	offset := 0
 	for {
@@ -165,12 +169,14 @@ func (a *App) takeLiveSession(gen int) (*streamSession, int) {
 	if a.live == nil || a.liveGen != gen {
 		return nil, 0
 	}
+	ovLive.Store(false)
 	sess, fed := a.live, a.liveFed
 	a.live = nil
 	return sess, fed
 }
 
 func (a *App) dropLiveSession() {
+	ovLive.Store(false)
 	a.liveMu.Lock()
 	sess := a.live
 	a.live = nil
@@ -184,6 +190,7 @@ func (a *App) dropLiveIf(gen int) {
 	a.liveMu.Lock()
 	var sess *streamSession
 	if a.live != nil && a.liveGen == gen {
+		ovLive.Store(false)
 		sess = a.live
 		a.live = nil
 	}
@@ -621,6 +628,23 @@ func main() {
 				case "pause":
 					state = ovPaused
 				}
+			}
+			if len(rest) > 1 && rest[1] == "live" {
+				ovLive.Store(true)
+				ovRecStart.Store(time.Now().UnixMilli())
+				log.Printf("демонстрация живой плашки")
+				words := strings.Fields(text + " " + text + " " + text + " " + text)
+				shown := ""
+				overlaySet(ovRecording, "")
+				for _, w := range words {
+					shown += w + " "
+					overlaySet(ovRecording, shown)
+					time.Sleep(350 * time.Millisecond)
+				}
+				time.Sleep(2 * time.Second)
+				ovLive.Store(false)
+				overlayHide()
+				return
 			}
 			log.Printf("демонстрация плашки: %q", text)
 			overlaySet(state, text)
