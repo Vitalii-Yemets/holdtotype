@@ -2624,7 +2624,8 @@ async function refreshModels(){
     if(m.state === "downloading"){ busy = true; right = '<span class="mpct">'+(m.pct>0?m.pct+"%":"…")+'</span><button class="iconbtn danger" title="'+L.dlcancel+'" data-a="cancel" data-id="'+m.id+'">&#10005;</button>'; }
     else if(m.state === "absent") right = '<button class="iconbtn" title="'+L.dl+'" data-a="dl" data-id="'+m.id+'">'+I_DL+'</button>';
     else if(m.state === "installed" || (m.state === "active" && m.id !== "custom")) right = '<button class="iconbtn danger" title="'+L.del+'" data-a="del" data-id="'+m.id+'" data-name="'+esc(m.name)+'">&#10005;</button>';
-    const tag = m.engine === "sherpa" ? '<span class="mtag">RU</span>' : (m.langs === "*" ? '<span class="mtag">99</span>' : "");
+    const langsN = m.langs === "*" ? "99" : (m.langs && m.langs.includes(",") ? String(m.langs.split(",").length) : (m.langs || "").toUpperCase());
+    const tag = langsN ? '<span class="mtag">'+langsN+'</span>' : "";
     const ram = m.ram ? '<span class="mram '+(m.fit||"")+'">≈'+m.ram+' MB RAM</span>' : '<span class="mram"></span>';
     div.innerHTML = '<span class="mname">'+m.name+tag+trtag+pill+'</span><span class="mdesc">'+m.desc+'</span>'+ram+'<span class="msize">'+(m.size?m.size+" MB":"")+'</span><span>'+right+'</span>';
     if(m.id !== "custom") div.onclick = (e)=>{ if(e.target.closest("button")) return; pickModel(m); };

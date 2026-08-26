@@ -235,6 +235,7 @@ Everything shipped in the archive, and every model the app offers to download, i
 | [IBM Plex](https://github.com/IBM/plex) | Sans for the Neon design and Mono for Terminal, both carried inside the exe | SIL Open Font License 1.1 |
 | Whisper models — Base, Small, Medium, Turbo | [ggerganov/whisper.cpp](https://huggingface.co/ggerganov/whisper.cpp) on Hugging Face | MIT |
 | [GigaAM v3](https://github.com/salute-developers/GigaAM) | the Russian model, converted for sherpa-onnx | MIT |
+| [Parakeet TDT 0.6B v3](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3) | 25 European languages in one narrow model, converted for sherpa-onnx | CC-BY-4.0 |
 | Qwen2.5-1.5B-Instruct | the editing model the app suggests first | Apache 2.0 |
 
 The WebView2 Runtime is Microsoft's and is not shipped with the app — Windows 11 has it, and Windows 10 gets it from Microsoft's own installer.

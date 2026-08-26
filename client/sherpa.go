@@ -36,12 +36,16 @@ type sherpaServer struct {
 }
 
 func sherpaModelFiles(dir string) (encoder, decoder, joiner, tokens string, err error) {
-	encoder = filepath.Join(dir, "encoder.int8.onnx")
-	if _, statErr := os.Stat(encoder); statErr != nil {
-		encoder = filepath.Join(dir, "encoder.onnx")
+	pick := func(name string) string {
+		p := filepath.Join(dir, name+".int8.onnx")
+		if _, statErr := os.Stat(p); statErr != nil {
+			p = filepath.Join(dir, name+".onnx")
+		}
+		return p
 	}
-	decoder = filepath.Join(dir, "decoder.onnx")
-	joiner = filepath.Join(dir, "joiner.onnx")
+	encoder = pick("encoder")
+	decoder = pick("decoder")
+	joiner = pick("joiner")
 	tokens = filepath.Join(dir, "tokens.txt")
 	for _, p := range []string{encoder, decoder, joiner, tokens} {
 		if _, statErr := os.Stat(p); statErr != nil {
