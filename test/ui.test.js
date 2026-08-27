@@ -421,8 +421,9 @@ function check(name, actual, expected) {
   const cards = () => [...d.querySelectorAll("#langlist .lpick .pcard")];
   check("only models that serve this language are offered", cards().map(c=>c.dataset.id).sort().join("+"), "base+gigaam-v3+local:my-model+medium-q5_0+small");
   check("no radio buttons anywhere in the choice", d.querySelectorAll('#langlist input[type="radio"]').length, 0);
-  check("the assigned model comes first", cards()[0].dataset.id === "gigaam-v3" && cards()[0].className.includes("cur"), true);
-  check("its chip says assigned", cards()[0].querySelector(".pchip").textContent, "assigned");
+  const ruOrder = cards().map(c=>c.dataset.id).join("+");
+  check("the assigned model wears the mark", d.querySelector('#langlist .pcard[data-id="gigaam-v3"]').className.includes("cur"), true);
+  check("its chip says assigned", d.querySelector('#langlist .pcard[data-id="gigaam-v3"] .pchip').textContent, "assigned");
   check("every known model measures itself in two bars", d.querySelectorAll("#langlist .mbar").length, 8);
   check("the bars are filled to the model, not all alike", [...d.querySelector('#langlist .pcard[data-id="base"]').querySelectorAll(".mtrack i")].map(i=>i.style.width), ["40%", "100%"]);
   check("a hand-copied model shows no bars — its powers are unknown", d.querySelector('#langlist .pcard[data-id="local:my-model"]').querySelectorAll(".mbar").length, 0);
@@ -441,7 +442,8 @@ function check(name, actual, expected) {
   d.querySelector('#langlist .pcard[data-id="small"]').click(); await sleep(200);
   check("a click on an installed card is the choice", w.saveCalls > saveBefore, true);
   check("and it pins the model to this language", w.lastSaveForm.lang_models.ru, "small");
-  check("the picker stays open and the mark moves", cards()[0].dataset.id === "small" && cards()[0].className.includes("cur"), true);
+  check("the picker stays open and the mark moves", d.querySelector('#langlist .pcard.cur').dataset.id, "small");
+  check("but the list keeps its order", cards().map(c=>c.dataset.id).join("+"), ruOrder);
   const backBtn = d.querySelector("#langlist .lpick button.mini:last-child");
   check("the way back to Auto-detect is offered", backBtn.textContent, "Back to Auto-detect");
   backBtn.click(); await sleep(200);

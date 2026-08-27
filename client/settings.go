@@ -1319,8 +1319,8 @@ button.mini.danger:hover{color:var(--bad);border-color:var(--badline);background
 .lrow .lmodel{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lrow .larr{flex:none;color:var(--faint);font-size:10px}
 .lrow.dim .plang,.lrow.dim .lmodel{color:var(--dim);font-weight:400}
-.lrow.open{border-color:var(--dim);border-bottom-left-radius:0;border-bottom-right-radius:0;margin-bottom:0}
-.lpick{border:1px solid var(--dim);border-top:1px solid var(--soft);border-radius:0 0 var(--r) var(--r);background:var(--bg);padding:9px 11px;margin:0 0 7px}
+.lrow.open{border-color:var(--dim);border-bottom:none;border-bottom-left-radius:0;border-bottom-right-radius:0;margin-bottom:0;background:var(--navon)}
+.lpick{border:1px solid var(--dim);border-top:none;border-radius:0 0 var(--r) var(--r);background:var(--navon);padding:9px 11px;margin:0 0 7px}
 .lpick>.hint{margin-bottom:5px}
 .pcard{display:flex;flex-direction:column;gap:7px;border:1px solid var(--line);border-radius:var(--r);background:var(--field);padding:10px 13px;margin:7px 0}
 .pcard.cur{border-color:var(--hi);box-shadow:var(--higlow)}
@@ -1328,7 +1328,7 @@ button.mini.danger:hover{color:var(--bad);border-color:var(--badline);background
 .pcard.pickable:hover{border-color:var(--dim)}
 .pcard .ptop{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
 .pcard .ptop input.psw{flex:none;margin-top:2px}
-#p-models .card+.card{margin-top:16px}
+#p-models .card+.card{margin-top:26px;border-top:1px solid var(--soft);padding-top:16px}
 .pcard .pname{flex:1 1 200px;min-width:0;font-weight:var(--wb);font-size:13.5px}
 .pcard .mbars{flex:none;width:190px;display:flex;flex-direction:column;gap:5px;padding-top:2px}
 .pcard .pdesc{color:var(--dim);font-size:12px}
@@ -1364,6 +1364,7 @@ button.mini.danger:hover{color:var(--bad);border-color:var(--badline);background
 .dlline{color:var(--amber);font-size:11.5px;margin:2px 0 8px;text-shadow:var(--amberglow)}
 input[type=text],input[type=number],input[type=password],select,button.mini{height:var(--ctlh,30px)}
 button.mini{display:inline-flex;align-items:center;justify-content:center}
+.row>button.mini,.tls .tla button.mini{min-width:118px}
 .srccard{border:1px solid var(--line);border-radius:var(--r);background:var(--field);padding:11px 14px;margin:9px 0}
 .srccard .srchead{display:flex;align-items:center;gap:10px;font-size:12.5px;font-weight:var(--wb);color:var(--green);margin:0 0 7px}
 .srccard.on{border-color:var(--hi);box-shadow:var(--higlow)}
@@ -2824,7 +2825,7 @@ function buildPicker(lang){
   const explicit = lang === "auto" || !!(langModels[lang] && rowById(langModels[lang]));
   const rec = REC_MODEL[lang];
   const list = modelRowsCache.filter(m=>eligibleFor(m, lang))
-    .sort((a,b)=>((b.id===eff && explicit)-(a.id===eff && explicit)) || ((b.id===rec)-(a.id===rec)));
+    .sort((a,b)=>((b.id===rec)-(a.id===rec)));
   list.forEach(m=>{
     const cur = m.id === eff && explicit;
     const card = document.createElement("div");
