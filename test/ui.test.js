@@ -449,7 +449,19 @@ function check(name, actual, expected) {
   check("and the row dims to the inherited truth", rowFor("ru").className.includes("dim"), true);
   d.querySelector('#langlist .pcard[data-id="small"]').click(); await sleep(200);
   check("choosing again is one click", w.lastSaveForm.lang_models.ru, "small");
+  const swFor = (id) => d.querySelector('#langlist .pcard[data-id="'+id+'"] input.psw');
+  check("every model card carries a switch", d.querySelectorAll('#langlist .pcard input.psw').length, 5);
+  check("the chosen card's switch is on and the others are off", [swFor("small").checked, swFor("base").checked, swFor("local:my-model").checked], [true, false, false]);
+  swFor("local:my-model").checked = true; swFor("local:my-model").dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(200);
+  check("a switch turned on is the choice too", w.lastSaveForm.lang_models.ru, "local:my-model");
+  const swOff = swFor("local:my-model");
+  swOff.checked = false; swOff.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(200);
+  check("turning it off returns the language to Auto-detect", "ru" in (w.lastSaveForm.lang_models || {}), false);
+  check("and the row dims to the inherited truth again", rowFor("ru").className.includes("dim"), true);
+  d.querySelector('#langlist .pcard[data-id="small"]').click(); await sleep(200);
+  check("the choice comes back with one click", w.lastSaveForm.lang_models.ru, "small");
   rowFor("uk").click(); await sleep(120);
+  check("the licensed model's switch is locked", d.querySelector('#langlist .pcard[data-id="moonshine-uk"] input.psw').disabled, true);
   check("switching languages swaps the picker", cards().map(c=>c.dataset.id).includes("moonshine-uk"), true);
   check("the licensed model offers no download button", !!d.querySelector('#langlist .pcard[data-id="moonshine-uk"] button[data-a="dl"]'), false);
   check("it explains the licence instead", d.querySelector('#langlist .pcard[data-id="moonshine-uk"]').textContent.includes("licence forbids"), true);
@@ -472,7 +484,6 @@ function check(name, actual, expected) {
   check("the threads moved in with the server", !!d.querySelector("#p-system #threads"), true);
   check("dictation names the model it uses", d.getElementById("dict_model").textContent, "Small");
   check("translation names its engine too", d.getElementById("tr_engine").textContent, "Translation is done by Small");
-  check("the honest CPU line is on the page", d.getElementById("p-models").textContent.includes("S_CPU_LINE"), true);
   w.setModelState("small", "installed"); w.setModelState("gigaam-v3", "active");
   await w.refreshModels(); await sleep(60);
   check("a model that cannot translate says Whisper will step in", d.getElementById("tr_engine").textContent.includes("does not translate"), true);

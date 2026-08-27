@@ -960,7 +960,7 @@ func (a *App) stateSnapshot() string {
 		Mic:         mic,
 		Engine:      primaryEngine(cfg) + " · " + modelNameForPath(activeModelPath(cfg)),
 		LLM:         llm,
-		RAM:         trf("adv.ram", free),
+		RAM:         trf("state.ram.free", free),
 		Last:        last,
 		LastMeta:    lastMeta,
 		LastAt:      lastAt,

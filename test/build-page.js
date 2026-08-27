@@ -81,7 +81,7 @@ const strings = {
   get: "Download", change: "Change", remotewarn: "Audio will be sent to this server.",
   ok: "Yes", cancel: "Cancel", dlask: 'The "%s" model is not downloaded (%s). Start downloading?',
   dlstart: "Download", dlcancel: "Cancel the download", nofound: "none",
-  asauto: "as Auto-detect", pickhint: "Click a model to pick it for this language. A missing one downloads itself.",
+  asauto: "as Auto-detect",
   assigned: "assigned", recchip: "recommended", backauto: "Back to Auto-detect",
   langsc: "languages: %d", langsq: "languages: unknown",
   tren: "translates to English", translist: "translates: %s", dlgoing: "downloading:",

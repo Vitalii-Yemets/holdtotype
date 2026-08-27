@@ -982,7 +982,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"trby": "S_TR_BY",
 		"acc": "S_LIB_ACC", "spd": "S_LIB_SPD",
 		"recauto": "S_RECAUTO", "trfallback": "S_TR_FALLBACK",
-		"asauto": "S_AS_AUTO", "pickhint": "S_PICK_HINT", "assigned": "S_ASSIGNED_CHIP", "recchip": "S_REC_CHIP",
+		"asauto": "S_AS_AUTO", "assigned": "S_ASSIGNED_CHIP", "recchip": "S_REC_CHIP",
 		"backauto": "S_BACK_AUTO", "langsc": "S_LANGS_COUNT", "langsq": "S_LANGS_UNKNOWN",
 		"tren": "S_TR_EN", "translist": "S_TR_LIST", "dlgoing": "S_DL_GOING",
 		"srcused": "S_SRC_USED", "srcidle": "S_SRC_IDLE", "postoff": "S_POST_OFF", "hfgo": "S_HF_GO",
@@ -1216,7 +1216,8 @@ input[type=checkbox]:focus-visible{outline:1px solid var(--green);outline-offset
 .row select,.row input[type=text]{border:1px solid var(--line);background:var(--field);color:var(--green)}
 .row select{flex:0 0 auto;width:auto;min-width:118px;max-width:min(320px,100%)}
 .row input[type=text]{flex:0 0 auto;width:min(230px,50%)}
-.row .val{color:var(--dim);font-size:11.5px;min-width:44px;text-align:right}
+.row .val{color:var(--dim);font-size:11.5px;min-width:44px;text-align:right;flex:0 1 auto;overflow-wrap:anywhere}
+.row .lbl{flex:1 1 45%}
 button,select,input[type=checkbox],input[type=radio],input[type=range]{cursor:pointer}
 button:disabled{cursor:default;opacity:.35}
 .val{min-width:52px;text-align:right;color:var(--green);text-shadow:var(--glow);font-weight:var(--wb)}
@@ -1299,7 +1300,6 @@ button.mini.danger:hover{color:var(--bad);border-color:var(--badline);background
 .ramline b{color:var(--green);font-size:14px;font-weight:var(--wb);text-shadow:var(--glow);margin-right:4px}
 .ramline .dot{margin-left:12px;font-size:10px}
 .subhead{color:var(--dim);font-size:11px;letter-spacing:1px;text-transform:uppercase;margin:14px 0 2px;padding-top:10px;border-top:1px solid var(--soft)}
-.pcard .mbars{flex:none;display:flex;flex-direction:column;gap:5px;min-width:150px}
 .mbar{display:flex;align-items:center;gap:7px;font-size:9.5px;letter-spacing:.06em;color:var(--dim)}
 .mbar .mbl{width:64px;text-align:right;text-transform:uppercase}
 .mtrack{flex:1;height:4px;background:var(--soft);border-radius:var(--barr,0);overflow:hidden}
@@ -1322,17 +1322,43 @@ button.mini.danger:hover{color:var(--bad);border-color:var(--badline);background
 .lrow.open{border-color:var(--dim);border-bottom-left-radius:0;border-bottom-right-radius:0;margin-bottom:0}
 .lpick{border:1px solid var(--dim);border-top:1px solid var(--soft);border-radius:0 0 var(--r) var(--r);background:var(--bg);padding:9px 11px;margin:0 0 7px}
 .lpick>.hint{margin-bottom:5px}
-.pcard{display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:var(--r);background:var(--field);padding:8px 11px;margin:6px 0}
+.pcard{display:flex;flex-direction:column;gap:7px;border:1px solid var(--line);border-radius:var(--r);background:var(--field);padding:10px 13px;margin:7px 0}
 .pcard.cur{border-color:var(--hi);box-shadow:var(--higlow)}
 .pcard.pickable{cursor:pointer}
 .pcard.pickable:hover{border-color:var(--dim)}
-.pcard .pmain{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-.pcard .pname{font-weight:var(--wb);font-size:13px}
+.pcard .ptop{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.pcard .ptop input.psw{flex:none;margin-top:2px}
+#p-models .card+.card{margin-top:16px}
+.pcard .pname{flex:1 1 200px;min-width:0;font-weight:var(--wb);font-size:13.5px}
+.pcard .mbars{flex:none;width:190px;display:flex;flex-direction:column;gap:5px;padding-top:2px}
 .pcard .pdesc{color:var(--dim);font-size:12px}
-.pcard .pmeta{color:var(--dim);font-size:10.5px}
-.pcard .pact{flex:none;display:flex;align-items:center;gap:6px}
+.pcard .pmeta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid var(--soft);padding-top:7px;color:var(--dim);font-size:11px}
+.pcard .pmt{border:1px solid var(--line);border-radius:calc(var(--r) * .4);padding:1px 8px;font-size:10px;letter-spacing:.06em;white-space:nowrap}
+.pcard .pram{white-space:nowrap}
+.pcard .pact{margin-left:auto;display:flex;align-items:center;gap:8px;white-space:nowrap}
 .pcard .psize{color:var(--dim);font-size:12px}
 .pcard .pcur{color:var(--hi);text-shadow:var(--higlow);font-size:14px;padding:0 5px}
+.ownm{padding:7px 0 16px;border-bottom:1px solid var(--soft);margin-bottom:6px}
+.ownm>label{display:block}
+.ownm>label .sub{display:block;margin-top:2px}
+.ownm .tl{margin-top:13px}
+.tls{position:relative;display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:0 14px;padding-bottom:20px}
+.tls:last-child{padding-bottom:0}
+.tls:not(:last-child)::before{content:"";position:absolute;top:28px;bottom:0;left:13px;width:1px;background:var(--soft)}
+.tls>i{position:relative;z-index:1;width:28px;height:28px;border:1px solid var(--line);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-style:normal;color:var(--dim);font-size:12px;background:var(--panel)}
+.tls .tlc{min-width:0;padding-top:4px}
+.tls .tlc>b{display:block;font-weight:var(--wb);font-size:13px}
+.tls .tlsub{display:block;color:var(--dim);font-size:11.5px;margin-top:2px}
+.tls .tlsub.tlok{color:var(--green)}
+.tls .tla{padding-top:3px}
+@media (max-width:640px){.tls{grid-template-columns:28px minmax(0,1fr)}.tls .tla{grid-column:2;padding-top:7px}}
+.ownm .fmts{display:flex;gap:10px;flex-wrap:wrap;margin-top:9px}
+.ownm .fmtc{flex:1 1 250px;min-width:230px;border:1px solid var(--line);border-radius:var(--r);background:var(--field);padding:9px 12px}
+.ownm .fmtc .fr{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:7px}
+.ownm .fmtc b{font-weight:var(--wb);font-size:13px}
+.ownm .fmtc .cnt{margin-left:auto;color:var(--dim);font-size:11px;white-space:nowrap}
+.ownm .chips{display:flex;gap:7px;flex-wrap:wrap}
+.code{background:var(--field);border:1px solid var(--line);border-radius:calc(var(--r) * .35);padding:0 6px;font-size:10.5px;color:var(--green);white-space:nowrap}
 .pchip{font-size:9px;letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--line);border-radius:calc(var(--r) * .4);padding:1px 6px;margin-left:8px;color:var(--dim);vertical-align:middle;font-weight:400}
 .pchip.on{color:var(--hi);border-color:var(--hi)}
 .dlline{color:var(--amber);font-size:11.5px;margin:2px 0 8px;text-shadow:var(--amberglow)}
@@ -1661,14 +1687,33 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
  </div>
  <div class="card">
   <h2 class="sect">{{S_MAINT}}</h2>
-  <div class="row"><label>{{S_MFOLDER}}<span class="sub">{{S_MFOLDER_SUB}}</span></label>
-   <button type="button" class="mini" onclick="appOpenModelsFolder()">{{S_OPEN_FOLDER}}</button></div>
+  <div class="ownm">
+   <label>{{S_MFOLDER}}<span class="sub">{{S_OWNM_SUB}}</span></label>
+   <div class="tl">
+    <div class="tls"><i>1</i>
+     <div class="tlc"><b>{{S_OWNM_S1}}</b><span class="tlsub">{{S_OWNM_S1S}} <span class="code">models\</span></span></div>
+     <div class="tla"><button type="button" class="mini" onclick="appOpenModelsFolder()">{{S_OPEN_FOLDER}}</button></div>
+    </div>
+    <div class="tls"><i>2</i>
+     <div class="tlc"><b>{{S_OWNM_S2}}</b><span class="tlsub">{{S_OWNM_S2S}}</span>
+      <div class="fmts">
+       <div class="fmtc"><div class="fr"><b>Whisper (GGML)</b><span class="cnt">{{S_OWNM_ONEFILE}}</span></div>
+        <div class="chips"><span class="code">ggml-*.bin</span></div></div>
+       <div class="fmtc"><div class="fr"><b>Sherpa-ONNX</b><span class="cnt">{{S_OWNM_FOLDERF}}</span></div>
+        <div class="chips"><span class="code">encoder.onnx</span><span class="code">decoder.onnx</span><span class="code">tokens.txt</span></div></div>
+      </div>
+     </div>
+    </div>
+    <div class="tls"><i>3</i>
+     <div class="tlc"><b>{{S_OWNM_S3}}</b><span class="tlsub tlok">✓ {{S_OWNM_S3S}}</span></div>
+    </div>
+   </div>
+  </div>
   <div class="row"><label>{{S_UNLOAD}}<span class="sub">{{S_UNLOAD_SUB}}</span></label>
    <button type="button" class="mini" id="munload">{{S_UNLOAD_GO}}</button></div>
-  <div class="row"><label>{{S_MCHECK}}<span class="sub">{{S_MCHECK_SUB}}</span></label>
+  <div class="row" style="border-bottom:0"><label>{{S_MCHECK}}<span class="sub">{{S_MCHECK_SUB}}</span></label>
    <button type="button" class="mini" id="mcheck">{{S_MCHECK_GO}}</button></div>
   <div class="micverdict" id="mcheck_out"></div>
-  <div class="hint" style="margin-top:8px">{{S_CPU_LINE}}</div>
  </div>
 </div>
 
@@ -2775,10 +2820,6 @@ function renderLangs(){
 function buildPicker(lang){
   const pick = document.createElement("div");
   pick.className = "lpick";
-  const hint = document.createElement("div");
-  hint.className = "hint";
-  hint.textContent = L.pickhint;
-  pick.appendChild(hint);
   const eff = effectiveFor(lang);
   const explicit = lang === "auto" || !!(langModels[lang] && rowById(langModels[lang]));
   const rec = REC_MODEL[lang];
@@ -2800,12 +2841,16 @@ function buildPicker(lang){
     else act = (m.loaded ? '<button class="iconbtn" title="'+L.unload+'" data-a="unload" data-id="'+m.id+'">&#9167;</button>' : "")+
       '<button class="iconbtn danger" title="'+L.del+'" data-a="del" data-id="'+m.id+'" data-name="'+esc(m.name)+'">&#10005;</button>';
     const note = m.state === "absent" && m.manual ? '<span class="pdesc" style="color:var(--amber)">'+L.manualnote+'</span>' : "";
-    const meta = '<span class="pmeta">'+esc(langWord(m))+(m.translate ? ' · '+esc(trWord(m)) : '')+(m.ram ? ' · ≈'+m.ram+' MB RAM' : '')+'</span>';
-    card.innerHTML = '<span class="pmain"><span class="pname">'+esc(m.name)+chip+'</span>'+
-      '<span class="pdesc">'+m.desc+'</span>'+note+meta+'</span>'+bars+'<span class="pact">'+act+'</span>';
+    const meta = '<span class="pmt">'+esc(langWord(m))+'</span>'+
+      (m.translate ? '<span class="pmt">'+esc(trWord(m))+'</span>' : '')+
+      (m.ram ? '<span class="pram">≈'+m.ram+' MB RAM</span>' : '');
+    const sw = '<input type="checkbox" class="psw"'+(cur?' checked':'')+((m.state === "absent" && m.manual)?' disabled':'')+' data-sw="'+m.id+'">';
+    card.innerHTML = '<span class="ptop">'+sw+'<span class="pname">'+esc(m.name)+chip+'</span>'+bars+'</span>'+
+      '<span class="pdesc">'+m.desc+'</span>'+note+
+      '<span class="pmeta">'+meta+'<span class="pact">'+act+'</span></span>';
     if(!cur && !(m.state === "absent" && m.manual)){
       card.classList.add("pickable");
-      card.onclick = (e)=>{ if(e.target.closest("button")) return; assignModel(lang, m.id); };
+      card.onclick = (e)=>{ if(e.target.closest("button,input")) return; assignModel(lang, m.id); };
     }
     pick.appendChild(card);
   });
@@ -2818,6 +2863,21 @@ function buildPicker(lang){
     pick.appendChild(back);
   }
   wireModelActions(pick);
+  pick.querySelectorAll("input.psw").forEach(sw=>{
+    sw.addEventListener("click", e=>e.stopPropagation());
+    sw.addEventListener("change", async e=>{
+      e.stopPropagation();
+      const id = sw.dataset.sw;
+      if(sw.checked){ assignModel(lang, id); }
+      else if(lang !== "auto" && langModels[lang] === id){
+        delete langModels[lang];
+        await doSave();
+        refreshModels();
+      } else {
+        sw.checked = true;
+      }
+    });
+  });
   return pick;
 }
 function wireModelActions(root){
