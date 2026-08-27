@@ -221,7 +221,7 @@ func (a *App) llmStatus() string {
 	entries, _ := os.ReadDir("models")
 	for _, e := range entries {
 		name := e.Name()
-		if e.IsDir() || !strings.HasSuffix(name, ".gguf") {
+		if e.IsDir() || !strings.HasSuffix(name, ".gguf") || strings.HasPrefix(name, "mmproj-") {
 			continue
 		}
 		info, err := e.Info()

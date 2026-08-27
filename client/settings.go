@@ -2220,10 +2220,9 @@ async function refreshLLM(){
     const cur = selLLM === m.file;
     div.className = "pcard" + (cur ? " cur" : " pickable");
     div.dataset.f = m.file;
-    div.innerHTML = '<span class="pmain"><span class="pname">'+esc(m.file)+(cur?' <span class="pchip on">'+L.srcused+'</span>':"")+'</span>'+
-      '<span class="pmeta">'+m.size+' MB</span></span>'+
-      '<span class="pact">'+(cur?'<span class="pcur">&#10003;</span>':"")+
-      '<button class="iconbtn danger" title="'+L.del+'" data-a="ldel" data-f="'+esc(m.file)+'">&#10005;</button></span>';
+    div.innerHTML = '<span class="ptop"><span class="pname">'+esc(m.file)+(cur?' <span class="pchip on">'+L.srcused+'</span>':"")+'</span></span>'+
+      '<span class="pmeta"><span class="pram">'+m.size+' MB</span><span class="pact">'+(cur?'<span class="pcur">&#10003;</span>':"")+
+      '<button class="iconbtn danger" title="'+L.del+'" data-a="ldel" data-f="'+esc(m.file)+'">&#10005;</button></span></span>';
     if(!cur) div.onclick = async (e)=>{ if(e.target.closest("button")) return; selLLM = m.file; await doSave(); refreshLLM(); };
     body.appendChild(div);
   });
