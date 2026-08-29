@@ -622,6 +622,9 @@ func overlayWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 			procSetCursor.Call(cur)
 			return 1
 		}
+	case wmChromeRefresh:
+		applyChrome(hwnd)
+		return 0
 	case wmDestroy:
 		ovBuf.release()
 		procPostQuitMessage.Call(0)

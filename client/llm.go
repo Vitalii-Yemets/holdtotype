@@ -266,7 +266,7 @@ func (a *App) llmStatus() string {
 }
 
 func (a *App) llmDownloadFile(repo, file string, sizeMB int) {
-	if !repoOK(repo) || strings.Contains(file, "/") || strings.Contains(file, "\\") || !strings.HasSuffix(file, ".gguf") {
+	if !repoOK(repo) || strings.Contains(file, "/") || strings.Contains(file, "\\") || !strings.HasSuffix(file, ".gguf") || strings.HasPrefix(file, "mmproj-") {
 		return
 	}
 	u := "https://huggingface.co/" + repo + "/resolve/main/" + file
@@ -387,7 +387,7 @@ func (a *App) llmRepoFiles(repo string) string {
 	}
 	var files []fileRow
 	for _, s := range raw.Siblings {
-		if !strings.HasSuffix(s.Rfilename, ".gguf") || strings.Contains(s.Rfilename, "/") {
+		if !strings.HasSuffix(s.Rfilename, ".gguf") || strings.Contains(s.Rfilename, "/") || strings.HasPrefix(s.Rfilename, "mmproj-") {
 			continue
 		}
 		mb := int(s.Size / (1024 * 1024))

@@ -449,8 +449,8 @@ func loadConfig(path string) (*Config, error) {
 		log.Printf("post-processing server address %q could not be parsed — reset", cfg.PostAPIURL)
 		cfg.PostAPIURL = ""
 	}
-	if cfg.PostAPITimeout < 5 || cfg.PostAPITimeout > 120 {
-		cfg.PostAPITimeout = 30
+	if cfg.PostAPITimeout < 5 || cfg.PostAPITimeout > 900 {
+		cfg.PostAPITimeout = 120
 	}
 	if cfg.PostSource != "local" && cfg.PostSource != "api" {
 		if strings.TrimSpace(cfg.PostAPIURL) != "" {

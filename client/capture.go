@@ -125,6 +125,9 @@ func captureWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 		procDrawTextW.Call(hdc, uintptr(unsafe.Pointer(&u[0])), uintptr(len(u)-1), uintptr(unsafe.Pointer(&box)), dtBlock)
 		procEndPaint.Call(hwnd, uintptr(unsafe.Pointer(&ps)))
 		return 0
+	case wmChromeRefresh:
+		applyChrome(hwnd)
+		return 0
 	case wmUserRedraw:
 		procInvalidateRect.Call(hwnd, 0, 1)
 		return 0

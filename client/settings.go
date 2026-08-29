@@ -41,7 +41,6 @@ func tryCreateWebView(width, height int) (w webview.WebView) {
 		}
 		if w != nil {
 			hwnd := uintptr(w.Window())
-			procSetWindowPos.Call(hwnd, 0, offscreenPos(), offscreenPos(), 0, 0, 0x0001|0x0004|0x0010)
 			setDarkClientBackground(hwnd)
 			applyDarkCaption(hwnd)
 		}
@@ -171,6 +170,7 @@ func (a *App) openSettings(tab string) {
 
 func (a *App) settingsThread(tab string, attempt int) {
 	runtime.LockOSThread()
+	disableIMEHere()
 	if err := windows.CoInitializeEx(0, windows.COINIT_APARTMENTTHREADED); err != nil {
 		log.Printf("openSettings: CoInitializeEx (attempt %d): %v", attempt, err)
 		if attempt < 5 {
@@ -194,9 +194,9 @@ func (a *App) settingsThread(tab string, attempt int) {
 			winW, winH = c.SettingsW, c.SettingsH
 		}
 		lastWndW, lastWndH = 0, 0
-		unpark := parkNewWebViewWindow()
+		undress := dressNewWebViewWindow()
 		w := createWebView(winW, winH)
-		unpark()
+		undress()
 		if w == nil {
 			log.Printf("WebView2 is unavailable")
 			if tab == "about" {
@@ -335,6 +335,10 @@ func (a *App) settingsThread(tab string, attempt int) {
 		})
 		_ = w.Bind("appLLM", func() string {
 			return a.llmStatus()
+		})
+		_ = w.Bind("appOpenApps", func() string {
+			out, _ := json.Marshal(listOpenApps())
+			return string(out)
 		})
 		_ = w.Bind("appLLMUnload", func() {
 			a.llmShutdown()
@@ -721,7 +725,7 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 		c.PostAPIURL = strings.TrimSpace(f.PostAPIURL)
 	}
 	c.PostAPIModel = strings.TrimSpace(f.PostAPIModel)
-	if f.PostAPITimeout >= 5 && f.PostAPITimeout <= 120 {
+	if f.PostAPITimeout >= 5 && f.PostAPITimeout <= 900 {
 		c.PostAPITimeout = f.PostAPITimeout
 	}
 	if f.MaxRecordSeconds > 0 {
@@ -989,7 +993,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"apisumurl": "S_API_SUM_URL", "apisummodel": "S_API_SUM_MODEL", "apisumkey": "S_API_SUM_KEY",
 		"apisumtimeout": "S_API_SUM_TIMEOUT", "apisumstate": "S_API_SUM_STATE", "apinomodel": "S_API_NO_MODEL",
 		"apinone": "S_API_NONE", "apisetup": "S_POSTAPI_SETUP", "apiedit": "S_API_EDIT",
-		"apitest": "S_API_TEST", "apitestrun": "S_API_TEST_RUN",
+		"apitest": "S_API_TEST", "apitestrun": "S_API_TEST_RUN", "apiclear": "S_API_CLEAR", "apiclearask": "S_API_CLEAR_ASK",
 		"postnomodel": "S_POST_NO_MODEL", "postnoapi": "S_POST_NO_API", "postbad": "S_POST_BAD", "postnoprompt": "S_POST_NO_PROMPT",
 		"llmcatalog": "S_LLM_CATALOG", "llminstalled": "S_LLM_INSTALLED", "llmsummodel": "S_LLM_SUM_MODEL",
 		"llmblock": "S_LLM_BLOCK", "llmnonehint": "S_LLM_NONE_HINT", "llminmem": "S_LLM_IN_MEM", "llmondisk": "S_LLM_ON_DISK",
@@ -998,7 +1002,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"dlgclose": "S_DLG_CLOSE", "llmnopick": "S_LLM_NOPICK",
 		"apikeydel": "S_API_KEY_DEL", "apidlg": "S_API_DLG",
 		"postapiurl": "S_POSTAPI_URL", "postapimodel": "S_POSTAPI_MODEL",
-		"postapikey": "S_POSTAPI_KEY", "postapitimeout": "S_POSTAPI_TIMEOUT",
+		"postapikey": "S_POSTAPI_KEY", "postapitimeout": "S_POSTAPI_TIMEOUT", "secshort": "S_SEC_SHORT",
 		"remotewarn": "S_REMOTE_WARN", "remoteask": "S_REMOTE_ASK", "remotebadge": "S_REMOTE_BADGE",
 		"ok": "S_OK", "cancel": "S_CANCEL", "dlask": "S_DL_ASK", "dlstart": "S_DL_START", "dlcancel": "S_DL_CANCEL", "nofound": "S_NOT_FOUND",
 		"replempty": "S_REPL_EMPTY", "repldel": "S_REPL_DEL", "replwhole": "S_REPL_WHOLE",
@@ -1007,6 +1011,8 @@ func settingsHTML(cfg *Config, tab string) string {
 		"cmdtextph":   "S_CMD_TEXT_PH",
 		"cmdpnewline": "S_CMD_P_NEWLINE", "cmdpparagraph": "S_CMD_P_PARAGRAPH", "cmdpcancel": "S_CMD_P_CANCEL", "cmdpreset": "S_CMD_PRESET",
 		"histempty": "S_HIST_EMPTY", "histcopy": "S_HIST_COPY", "histask": "S_HIST_ASK", "histclear": "S_HIST_CLEAR",
+		"skipadddlg": "S_SKIP_ADD_DLG", "skipeditdlg": "S_SKIP_EDIT_DLG", "skipname": "S_SKIP_NAME", "skipnamesub": "S_SKIP_NAME_SUB",
+		"skipopen": "S_SKIP_OPEN", "skiprefresh": "S_SKIP_REFRESH", "skippicked": "S_SKIP_PICKED", "skipnone": "S_SKIP_NONE", "skipempty": "S_SKIP_EMPTY",
 		"micchecking": "S_MIC_CHECKING", "mchecking": "S_MCHECK_RUN", "histinsert": "S_HIST_INSERT",
 		"replcase": "S_REPL_CASE", "replfromph": "S_REPL_FROM_PH", "repltoph": "S_REPL_TO_PH",
 		"repllang": "S_REPL_LANG", "repllangall": "S_REPL_LANG_ALL", "listnothing": "S_LIST_NOTHING", "replwholefull": "S_REPL_WHOLE_FULL",
@@ -1226,6 +1232,19 @@ input::placeholder{color:var(--dim)}
 input:disabled,select:disabled{opacity:.35;cursor:default}
 #trlangs label:has(input:disabled){opacity:.45}
 input[type=text],input[type=password]{width:220px;max-width:100%}select{width:210px;max-width:100%}
+input[type=number]{width:110px;max-width:100%;-moz-appearance:textfield}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.unitwrap{display:inline-flex;align-items:center;gap:8px}
+.numwrap{display:inline-flex;align-items:stretch}
+.numwrap input[type=number]{border-right:0}
+.numwrap input[type=number]:focus{box-shadow:none}
+.numwrap:focus-within{box-shadow:var(--glow)}
+.numwrap:focus-within input[type=number],.numwrap:focus-within .numspin{border-color:var(--dim)}
+.numspin{display:flex;flex-direction:column;width:20px;border:1px solid var(--line);border-left:0;background:var(--field)}
+.numbtn{flex:1;display:flex;align-items:center;justify-content:center;border:0;background:none;color:var(--dim);font-size:7px;line-height:1;padding:0;cursor:pointer}
+.numbtn:hover{color:var(--green);text-shadow:var(--glow)}
+.numbtn+.numbtn{border-top:1px solid var(--soft)}
+.unitwrap .unit{color:var(--dim);font-size:12px}
 input[type=range]{width:150px;accent-color:var(--dim);background:transparent}
 input[type=checkbox]{appearance:none;-webkit-appearance:none;width:32px;height:17px;border:1px solid var(--dim);border-radius:calc(var(--r) * .8);position:relative;cursor:pointer;background:none;flex:none;padding:0;margin:0}
 input[type=checkbox]::before,input[type=radio]::before{content:"";position:absolute;top:-11px;bottom:-11px;left:-9px;right:-9px}
@@ -1310,6 +1329,8 @@ button.mini::after{content:var(--btnbc);color:var(--faint)}
 button.btn::before{content:var(--btnbo);color:var(--faint)}
 button.btn::after{content:var(--btnbc);color:var(--faint)}
 button.mini:hover{color:var(--green);border-color:var(--dim);box-shadow:var(--glow)}
+button.mini.danger{color:var(--bad);border-color:var(--badline)}
+button.mini.danger::before,button.mini.danger::after{color:var(--bad)}
 button.mini.danger:hover{color:var(--bad);border-color:var(--badline);background:var(--badbg);box-shadow:var(--badglow)}
 .mpct{color:var(--amber);font-size:12px;min-width:44px;text-align:right;text-shadow:var(--amberglow)}
 .sect{color:var(--dim);font-weight:400;font-size:11px;letter-spacing:.14em;text-transform:uppercase;margin:0 0 4px;display:flex;align-items:center;gap:8px}
@@ -1348,7 +1369,26 @@ button.mini.danger:hover{color:var(--bad);border-color:var(--badline);background
 .tryrow .clearwrap{flex:1}
 .pfout{border:1px solid var(--soft);background:var(--field);padding:9px 11px;font-size:12px;color:var(--dim);min-height:38px;margin-top:8px;user-select:text;-webkit-user-select:text;white-space:pre-wrap}
 .row>label.blklbl{flex:1;margin:0}
-#cmdbody,#replbody,#dictbody{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+#cmdbody,#replbody,#dictbody,#hist_skip_list{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+#hist_skip_list .ruleempty{flex:1 0 100%}
+.formmodal .fmfield{margin:0 0 14px}
+.formmodal .fmfield>label{display:block;color:var(--green);font-size:12.5px;font-weight:var(--wb);margin:0 0 2px}
+.formmodal .fmfield .sub{display:block;color:var(--dim);font-size:11px;line-height:1.5;margin:0 0 7px;letter-spacing:0}
+.formmodal .fmfield input[type=text]{width:100%}
+.fmsep{height:1px;background:var(--soft);margin:0 0 12px}
+.pickhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 8px}
+.pickhead span{color:var(--dim);font-size:11.5px}
+.pchips{display:flex;gap:6px;flex-wrap:wrap;max-height:132px;overflow-y:auto;scrollbar-gutter:stable}
+.pchip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:calc(var(--r) * .5);background:var(--field);color:var(--dim);font:inherit;font-size:12px;padding:4px 10px 4px 7px;cursor:pointer}
+.pchip:hover{border-color:var(--dim);color:var(--green)}
+.pchip i{width:22px;height:12px;border:1px solid var(--btnline);border-radius:calc(var(--r) * .4);background:var(--field);position:relative;flex:none}
+.pchip i::after{content:"";position:absolute;top:1px;left:1px;width:8px;height:8px;border-radius:calc(var(--r) * .3);background:var(--dim);transition:transform .12s}
+.pchip.on{color:var(--green);border-color:var(--dim)}
+.pchip.on i{background:var(--on)}
+.pchip.on i::after{background:var(--hi);box-shadow:var(--higlow);transform:translateX(10px)}
+.pickcount{color:var(--dim);font-size:11.5px;padding:8px 0 0}
+.spin{animation:spin .6s linear}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
 #cmdbody .ruleempty,#replbody .ruleempty,#dictbody .ruleempty{flex:1 0 100%;text-align:center}
 .cmdchip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:calc(var(--r) * .5);padding:3px 9px;font-size:12px;background:var(--field);color:var(--green)}
 .cmdchip .cpmeta{color:var(--dim);font-size:12px;text-shadow:none;line-height:1.4}
@@ -1443,6 +1483,8 @@ html[data-skin="terminal"] #repl_add,html[data-skin="terminal"] #cmd_add,html[da
 .srccard .sumrow{display:flex;gap:10px;font-size:12.5px}
 .srccard .sumk{color:var(--dim);flex:0 0 118px}
 .srccard .sumv{color:var(--green);word-break:break-all}
+.srccard .sumacts{display:inline-flex;align-items:center;gap:2px;margin-left:6px}
+.srccard .sumacts .iconbtn{padding:0 4px}
 .srccard .sumv.off{color:var(--faint)}
 .srccard .acts{display:flex;justify-content:flex-end;gap:8px}
 .llmdl{display:flex;align-items:center;gap:10px;font-size:11.5px;color:var(--dim);margin-bottom:8px}
@@ -1452,7 +1494,6 @@ html[data-skin="terminal"] #repl_add,html[data-skin="terminal"] #cmd_add,html[da
 .modal.llmcat #proc-search{display:flex;flex-direction:column;gap:12px}
 .modal.llmcat #proc-models{display:flex;flex-direction:column;margin-top:16px;border-top:1px solid var(--soft);padding-top:14px}
 .modal.llmcat .mrow{padding:0 4px 0 10px;gap:10px;height:32px;flex:none;border-bottom:1px solid var(--soft)}
-.modal.llmcat #proc-models .mrow:first-of-type{border-top:1px solid var(--soft)}
 .modal.llmcat #hf_results .mrow{padding:0 4px 0 10px}
 .mrow .mstate{color:var(--faint);font-size:11px;white-space:nowrap}
 .mrow.cur .mstate{color:var(--dim)}
@@ -1462,7 +1503,6 @@ input.llmpick:disabled::after{background:var(--soft)}
 .filtrow{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .fcount{color:var(--dim);font-size:11.5px}
 .searchempty{color:var(--faint);font-size:12px;text-align:center;padding:26px 10px}
-.modal.llmcat .mrow.cur{border-color:var(--hi)}
 .catsect{color:var(--dim);font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-top:4px}
 input.llmpick{appearance:none;-webkit-appearance:none;width:32px;height:17px;border:1px solid var(--dim);border-radius:calc(var(--r) * .8);position:relative;cursor:pointer;background:none;flex:none;padding:0;margin:0}
 input.llmpick::after{content:"";position:absolute;top:2px;left:2px;width:11px;height:11px;border-radius:calc(var(--r) * .6);background:var(--dim);transition:.15s}
@@ -1676,11 +1716,16 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
    <select id="history_days"><option value="1">1</option><option value="3">3</option><option value="7">7</option><option value="30">30</option></select></div>
   <div class="row" data-adv><label>{{S_HIST_MAX}}</label>
    <select id="history_max"><option value="50">50</option><option value="100">100</option><option value="200">200</option><option value="500">500</option></select></div>
-  <div class="row" id="hist_skip_row"><label>{{S_HIST_SKIP}}<span class="sub">{{S_HIST_SKIP_SUB}}</span></label>
-   <input type="hidden" id="history_skip">
-   <input type="text" id="hist_skip_new">
-   <button type="button" class="mini" id="hist_skip_add">{{S_HIST_ADD}}</button></div>
-  <div class="skiplist" id="hist_skip_list"></div>
+ </div>
+ <div class="card" id="hist_skip_card">
+  <label class="blklbl">{{S_HIST_SKIP}}</label>
+  <div class="hint">{{S_SKIP_HINT}}</div>
+  <input type="hidden" id="history_skip">
+  <div class="rulefoot nowrap">
+   <label class="srchbox"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="15.5" y1="15.5" x2="21" y2="21"/></svg><input type="text" id="skip_filter" placeholder="{{S_LIST_FILTER_PH}}" autocomplete="off"><button type="button" class="clearx" id="skip_filter_clear" tabindex="-1" style="display:none">✕</button></label>
+   <button type="button" class="mini" id="hist_skip_add">{{S_SKIP_ADD_BTN}}</button>
+  </div>
+  <div id="hist_skip_list"></div>
  </div>
  <div class="card" id="histcard">
   <h2 class="sect">{{S_HIST_LIST}}<button type="button" class="mini" id="hist_clear">{{S_HIST_CLEAR}}</button></h2>
@@ -1898,11 +1943,11 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
    <div class="sum" id="api_sum"></div>
    <div class="note warn" id="postapi_warn"></div>
    <div class="note bad" id="postapi_err"></div>
-   <div class="acts"><button type="button" class="mini" id="api_test">{{S_API_TEST}}</button><button type="button" class="mini" id="api_edit">{{S_POSTAPI_SETUP}}</button></div>
+   <div class="acts"><button type="button" class="mini" id="api_test">{{S_API_TEST}}</button><button type="button" class="mini danger" id="api_clear" style="display:none">{{S_API_CLEAR}}</button><button type="button" class="mini" id="api_edit">{{S_POSTAPI_SETUP}}</button></div>
    <div hidden>
     <input type="text" id="post_api_url">
     <input type="text" id="post_api_model">
-    <select id="post_api_timeout_s"><option value="10">10 s</option><option value="20">20 s</option><option value="30">30 s</option><option value="60">60 s</option><option value="120">120 s</option></select>
+    <input type="number" id="post_api_timeout_s" min="5" max="900" step="5" value="120">
    </div>
   </div>
  </div>
@@ -2115,6 +2160,7 @@ const trAll = ["de","en","es","fr","it","pl","uk","ru"];
 const L = {{L_JSON}};
 const I_DL = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12"/><path d="M6 11l6 6 6-6"/><path d="M4 21h16"/></svg>';
 const I_EJECT = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 4l7 9H5z"/><path d="M5 19h14"/></svg>';
+const I_REFRESH = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M20 11a8 8 0 1 0-.6 4"/><path d="M20 4v7h-7"/></svg>';
 const I_FIND = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="15.5" y1="15.5" x2="21" y2="21"/></svg>';
 
 let profiles = (CFG.profiles || []).map(p=>Object.assign({}, p));
@@ -2351,10 +2397,34 @@ function renderLLMSummary(st){
     b.textContent = v;
     r.appendChild(a); r.appendChild(b);
     box.appendChild(r);
+    return r;
   };
   const cur = installed.find(m=>m.file === selLLM) || installed.find(m=>m.active);
   if(cur){
-    line(L.llmsummodel, cur.file);
+    const row = line(L.llmsummodel, cur.file);
+    const acts = document.createElement("span");
+    acts.className = "sumacts";
+    const eject = document.createElement("button");
+    eject.type = "button";
+    eject.className = "iconbtn";
+    eject.title = L.llmeject;
+    eject.disabled = !cur.loaded;
+    eject.innerHTML = I_EJECT;
+    eject.onclick = async e=>{ e.stopPropagation(); await appLLMUnload(); refreshLLM(); };
+    const drop = document.createElement("button");
+    drop.type = "button";
+    drop.className = "iconbtn danger";
+    drop.title = L.del;
+    drop.innerHTML = "&#10005;";
+    drop.onclick = async e=>{
+      e.stopPropagation();
+      if(!await askConfirm(L.confirmdel.replace("%s", cur.file), L.del, null, L.mtdel)) return;
+      toast(await appLLMDel(cur.file));
+      if(selLLM === cur.file) selLLM = null;
+      refreshLLM();
+    };
+    acts.appendChild(eject); acts.appendChild(drop);
+    row.appendChild(acts);
     line(L.llmsumsize, llmSize(cur.size));
     line(L.llmsumcount, String(installed.length));
   } else if(installed.length){
@@ -3364,7 +3434,7 @@ function toast(msg, severity){
   toast._t = setTimeout(()=>{ t.textContent = ""; t.className = "stsaved"; }, (severity === "error" || severity === "warn") ? 6000 : 2200);
 }
 
-const numSels = ["threads","min_record_ms","max_record_seconds","translate_ask_seconds","paste_delay_ms","history_days","history_max","post_api_timeout_s"];
+const numSels = ["threads","min_record_ms","max_record_seconds","translate_ask_seconds","paste_delay_ms","history_days","history_max"];
 function load(){
   document.getElementById("punctuation").value = CFG.punctuation || "model";
   document.getElementById("punctuation").addEventListener("change", updatePostWarn);
@@ -3526,11 +3596,13 @@ function renderApiSummary(){
     line(L.apisumurl, postURL);
     line(L.apisummodel, model || L.apinomodel, !model);
     line(L.apisumkey, apiKeySaved ? L.postkeyset : L.postkeynone, !apiKeySaved);
-    line(L.apisumtimeout, timeout + " s");
+    line(L.apisumtimeout, timeout + " " + L.secshort);
   } else {
     line(L.apisumstate, L.apinone, true);
   }
   if(btn) btn.textContent = postURL ? L.apiedit : L.apisetup;
+  const clr = document.getElementById("api_clear");
+  if(clr) clr.style.display = (postURL || apiKeySaved) ? "" : "none";
 }
 async function editPostAPI(){
   const urlEl = document.getElementById("post_api_url");
@@ -3558,14 +3630,11 @@ async function editPostAPI(){
     key.dispatchEvent(new Event("input", {bubbles: true}));
     keyTouched = false;
   });
-  const timeout = document.createElement("select");
+  const timeout = document.createElement("input");
+  timeout.type = "number";
   timeout.className = "apitimeout";
-  [...toEl.options].forEach(o=>{
-    const c = document.createElement("option");
-    c.value = o.value; c.textContent = o.textContent;
-    timeout.appendChild(c);
-  });
-  timeout.value = toEl.value;
+  timeout.min = "5"; timeout.max = "900"; timeout.step = "5";
+  timeout.value = toEl.value || "120";
   let dropKey = false;
   const extras = [];
   if(apiKeySaved) extras.push({text: L.apikeydel, onClick: async ()=>{
@@ -3580,7 +3649,15 @@ async function editPostAPI(){
     body.appendChild(fmRow(sized(clearWrap(url), 300), L.postapiurl));
     body.appendChild(fmRow(sized(clearWrap(model), 300), L.postapimodel));
     body.appendChild(fmRow(sized(clearWrap(key), 300), L.postapikey, apiKeySaved ? L.postkeyset : ""));
-    body.appendChild(fmRow(sized(timeout, 110), L.postapitimeout));
+    const towrap = document.createElement("span");
+    towrap.className = "unitwrap";
+    towrap.appendChild(numWrap(sized(timeout, 74)));
+    const unit = document.createElement("span");
+    unit.className = "unit";
+    unit.textContent = L.secshort;
+    towrap.appendChild(unit);
+    body.appendChild(fmRow(towrap, L.postapitimeout));
+
   }, extras, L.apidlg, true);
   if(!ok || dropKey) return;
   const fresh = url.value.trim();
@@ -3613,6 +3690,28 @@ function initPostAPI(){
   updPostKeyState().then(renderApiSummary);
   const edit = document.getElementById("api_edit");
   if(edit) edit.onclick = e=>{ e.stopPropagation(); editPostAPI(); };
+  const clear = document.getElementById("api_clear");
+  if(clear) clear.onclick = async e=>{
+    e.stopPropagation();
+    if(!await askConfirm(L.apiclearask, L.apiclear, null, L.apidlg)) return;
+    postURL = "";
+    document.getElementById("post_api_url").value = "";
+    document.getElementById("post_api_model").value = "";
+    if(apiKeySaved){
+      const r = JSON.parse(await appSetPostKey(""));
+      toast(r.message, r.severity);
+      apiKeySaved = false;
+    }
+    postSource = "local";
+    postTestErr = "";
+    showPostErr("", true);
+    applyPostState();
+    syncPostWarn();
+    renderApiSummary();
+    updatePostWarn();
+    await doSave();
+    refreshLLM();
+  };
   const test = document.getElementById("api_test");
   if(test) test.onclick = e=>{
     e.stopPropagation();
@@ -4197,7 +4296,28 @@ function formModal(okText, build, extra, title, wide){
     if(f) f.focus();
   });
 }
+function numWrap(inp){
+  const w = document.createElement("span");
+  w.className = "numwrap";
+  w.appendChild(inp);
+  const col = document.createElement("span");
+  col.className = "numspin";
+  const step = dir=>{
+    if(dir > 0) inp.stepUp(); else inp.stepDown();
+    inp.dispatchEvent(new Event("input", {bubbles: true}));
+  };
+  [["&#9650;", 1], ["&#9660;", -1]].forEach(([glyph, dir])=>{
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "numbtn"; b.tabIndex = -1;
+    b.innerHTML = glyph;
+    b.onclick = ()=>step(dir);
+    col.appendChild(b);
+  });
+  w.appendChild(col);
+  return w;
+}
 function clearWrap(inp){
+
   const w = document.createElement("span");
   w.className = "clearwrap";
   w.appendChild(inp);
@@ -4603,40 +4723,125 @@ function initOverlayScheme(){
   if(master) master.addEventListener("change", syncOverlayCard);
   syncOverlayCard();
 }
+let skipFilterVal = ()=>"";
+function skipItems(){
+  const store = document.getElementById("history_skip");
+  return store ? store.value.split(",").map(s=>s.trim()).filter(Boolean) : [];
+}
+function skipStore(items){
+  const store = document.getElementById("history_skip");
+  if(store) store.value = items.join(", ");
+  renderSkip();
+  doSave();
+}
 function renderSkip(){
   const box = document.getElementById("hist_skip_list");
-  const store = document.getElementById("history_skip");
-  if(!box || !store) return;
-  const items = store.value.split(",").map(s=>s.trim()).filter(Boolean);
+  if(!box) return;
   box.innerHTML = "";
+  const items = skipItems();
+  const q = skipFilterVal();
+  let shown = 0;
   items.forEach((p, i)=>{
-    const chip = document.createElement("span");
-    chip.className = "skipchip";
-    chip.textContent = p;
-    const x = document.createElement("button");
-    x.type = "button"; x.className = "chipx"; x.textContent = "✕";
-    x.onclick = ()=>{ items.splice(i, 1); store.value = items.join(", "); renderSkip(); doSave(); };
-    chip.appendChild(x);
-    box.appendChild(chip);
+    if(q && !p.toLowerCase().includes(q)) return;
+    shown++;
+    box.appendChild(listChip(p, "",
+      ()=>{ editSkip(i); },
+      ()=>{ const rest = skipItems(); rest.splice(i, 1); skipStore(rest); }));
   });
+  if(!shown) listEmpty(box, "skip_filter", q, L.skipempty);
+}
+async function editSkip(index){
+  const items = skipItems();
+  const editing = index >= 0;
+  const name = document.createElement("input");
+  name.type = "text"; name.className = "skipname";
+  name.value = editing ? items[index] : "";
+  name.placeholder = "keepass.exe";
+  const picked = new Set();
+  let apps = [];
+  const chipsBox = document.createElement("div");
+  chipsBox.className = "pchips";
+  const count = document.createElement("div");
+  count.className = "pickcount";
+  const recount = ()=>{
+    count.textContent = picked.size
+      ? L.skippicked.replace("%d", picked.size).replace("%d", apps.length)
+      : L.skipnone;
+  };
+  const drawApps = ()=>{
+    chipsBox.innerHTML = "";
+    apps.forEach(a=>{
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "pchip" + (picked.has(a.exe) ? " on" : "");
+      chip.title = a.title || a.exe;
+      const sw = document.createElement("i");
+      chip.appendChild(sw);
+      chip.appendChild(document.createTextNode(a.exe));
+      chip.onclick = ()=>{
+        if(picked.has(a.exe)) picked.delete(a.exe); else picked.add(a.exe);
+        chip.classList.toggle("on");
+        recount();
+      };
+      chipsBox.appendChild(chip);
+    });
+    recount();
+  };
+  const loadApps = async ()=>{
+    apps = JSON.parse(await appOpenApps());
+    [...picked].forEach(p=>{ if(!apps.some(a=>a.exe === p)) picked.delete(p); });
+    drawApps();
+  };
+  const ok = await formModal(editing ? L.fmsave : L.fmadd, body=>{
+    const field = document.createElement("div");
+    field.className = "fmfield";
+    const lbl = document.createElement("label");
+    lbl.textContent = L.skipname;
+    const sub = document.createElement("span");
+    sub.className = "sub";
+    sub.textContent = L.skipnamesub;
+    field.appendChild(lbl); field.appendChild(sub); field.appendChild(name);
+    body.appendChild(field);
+    if(editing) return;
+    const sep = document.createElement("div");
+    sep.className = "fmsep";
+    body.appendChild(sep);
+    const head = document.createElement("div");
+    head.className = "pickhead";
+    const title = document.createElement("span");
+    title.textContent = L.skipopen;
+    const refresh = document.createElement("button");
+    refresh.type = "button"; refresh.className = "iconbtn"; refresh.title = L.skiprefresh;
+    refresh.innerHTML = I_REFRESH;
+    refresh.onclick = async ()=>{
+      const svg = refresh.querySelector("svg");
+      if(svg){ svg.classList.remove("spin"); void svg.offsetWidth; svg.classList.add("spin"); }
+      await loadApps();
+    };
+    head.appendChild(title); head.appendChild(refresh);
+    body.appendChild(head);
+    body.appendChild(chipsBox);
+    body.appendChild(count);
+    loadApps();
+  }, null, editing ? L.skipeditdlg : L.skipadddlg, true);
+  if(!ok) return;
+  const fresh = skipItems();
+  const typed = name.value.trim();
+  if(editing){
+    if(!typed){ fresh.splice(index, 1); } else { fresh[index] = typed; }
+  } else {
+    [typed, ...picked].forEach(v=>{
+      const t = (v || "").trim();
+      if(t && !fresh.some(x=>x.toLowerCase() === t.toLowerCase())) fresh.push(t);
+    });
+  }
+  skipStore(fresh);
 }
 function initHistSkip(){
   const add = document.getElementById("hist_skip_add");
-  const inp = document.getElementById("hist_skip_new");
-  const store = document.getElementById("history_skip");
-  if(!add || !inp || !store) return;
-  const commit = ()=>{
-    const v = inp.value.trim();
-    if(!v) return;
-    const items = store.value.split(",").map(s=>s.trim()).filter(Boolean);
-    if(!items.includes(v)) items.push(v);
-    store.value = items.join(", ");
-    inp.value = "";
-    renderSkip();
-    doSave();
-  };
-  add.onclick = commit;
-  inp.addEventListener("keydown", e=>{ if(e.key === "Enter"){ e.preventDefault(); commit(); } });
+  if(!add) return;
+  add.onclick = ()=>{ editSkip(-1); };
+  skipFilterVal = wireFilter("skip_filter", "skip_filter_clear", renderSkip);
   renderSkip();
 }
 async function initAutorun(){

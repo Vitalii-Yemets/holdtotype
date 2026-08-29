@@ -68,6 +68,11 @@ const dom = new JSDOM(html, {
     window.appModelCancel = async (id) => { window.cancelCalls.push(id); modelStates[id] = "absent"; return true; };
     window.unloadCalls = 0;
     window.appUnloadEngines = async () => { window.unloadCalls++; };
+    window.appOpenApps = async () => JSON.stringify([
+      { exe: "chrome.exe", title: "Inbox — Google Chrome" },
+      { exe: "keepass.exe", title: "Database.kdbx — KeePass" },
+      { exe: "Telegram.exe", title: "Telegram (12)" },
+    ]);
     window.postKeys = [];
     let postKeySet = false;
     let postErr = "";
@@ -389,7 +394,7 @@ function check(name, actual, expected) {
   tab("history"); await sleep(300);
   check("history is a screen of its own", shown("history"), true);
   check("history is off until asked for", d.getElementById("history").checked, false);
-  check("the programs to skip are never folded away", !!d.querySelector("#hist_skip_row[data-adv]"), false);
+  check("the programs to skip are never folded away", !!d.querySelector("#hist_skip_card[data-adv]"), false);
   check("the dictations are listed", d.querySelectorAll("#histbody .histrow").length, 2);
   check("each entry names the program", d.querySelector("#histbody .histmeta").textContent.includes("chrome.exe"), true);
   check("each entry carries the text", d.querySelector("#histbody .histtext").textContent, "выложи на GitHub");
@@ -969,7 +974,8 @@ function check(name, actual, expected) {
   check("checking one back clears it", d.getElementById("post_warn").style.display, "none");
   check("and the button switches to changing it", d.getElementById("api_edit").textContent, "Change");
   check("setting an address puts the work on that server", w.lastSaveForm.post_source, "api");
-  check("the card offers a test beside Change, to its left", [...d.querySelectorAll("#src_api .acts button")].map(b => b.id), ["api_test", "api_edit"]);
+  check("the card offers a test beside Change, to its left", [...d.querySelectorAll("#src_api .acts button")].map(b => b.id), ["api_test", "api_clear", "api_edit"]);
+  check("and with something saved, a way to wipe it", d.getElementById("api_clear").style.display, "");
   w.setPostTestOK(false);
   d.getElementById("api_test").click(); await sleep(300);
   check("a failed test says why, under the honest warning", d.getElementById("postapi_err").textContent, "no credits left");
@@ -994,6 +1000,12 @@ function check(name, actual, expected) {
   d.querySelector(".modal .apiurl").value = "";
   d.querySelector(".modal .btn.yes").click(); await sleep(350);
   check("clearing the address needs no question", [!!d.querySelector(".modal-bg"), w.lastSaveForm.post_api_url], [false, ""]);
+  check("a saved key alone still offers a cleanup", d.getElementById("api_clear").style.display, "");
+  d.getElementById("api_clear").click(); await sleep(250);
+  check("wiping the server asks first", !!d.querySelector(".modal-bg"), true);
+  d.querySelector(".modal .btn.yes").click(); await sleep(400);
+  check("saying yes drops the key and hands the work back to the local model", [w.postKeys[w.postKeys.length - 1], w.lastSaveForm.post_source], ["", "local"]);
+  check("and with nothing left the button hides again", d.getElementById("api_clear").style.display, "none");
 
   const before = w.saveCalls;
   const sw = d.getElementById("auto_enter");
@@ -1006,16 +1018,35 @@ function check(name, actual, expected) {
   check("the contacts page carries the mail address", d.querySelector("#p-contacts .val").textContent, "holdtotype@outlook.com");
   check("about carries the repository button", !!d.querySelector('#p-about button[onclick="appRepoLink()"]'), true);
   tab("history"); await sleep(30);
-  const skipNew = d.getElementById("hist_skip_new");
   const skipStore = d.getElementById("history_skip");
   const savesBeforeSkip = w.saveCalls;
-  skipNew.value = "game.exe";
-  d.getElementById("hist_skip_add").click(); await sleep(220);
-  check("a skipped program is added with a button, not a comma", skipStore.value, "game.exe");
-  check("and it appears as a chip", [...d.querySelectorAll("#hist_skip_list .skipchip")].length, 1);
+  d.getElementById("hist_skip_add").click(); await sleep(300);
+  check("adding a program opens a titled dialog", d.querySelector(".modal .mtitle").textContent, "Adding a program");
+  check("the name field stands under its own label", !!d.querySelector(".modal .fmfield input.skipname"), true);
+  check("and the open programs are offered as switch chips", d.querySelectorAll(".modal .pchip").length, 3);
+  check("with nothing picked the count says so", d.querySelector(".modal .pickcount").textContent, "Nothing picked");
+  [...d.querySelectorAll(".modal .pchip")].filter(c => c.textContent.includes("keepass"))[0].click(); await sleep(60);
+  [...d.querySelectorAll(".modal .pchip")].filter(c => c.textContent.includes("Telegram"))[0].click(); await sleep(60);
+  check("picking two counts them out of the offered", d.querySelector(".modal .pickcount").textContent, "2 of 3 picked");
+  d.querySelector(".modal input.skipname").value = "game.exe";
+  d.querySelector(".modal .btn.yes").click(); await sleep(300);
+  check("the typed one and the picked ones all land in the list", skipStore.value, "game.exe, keepass.exe, Telegram.exe");
+  check("and each is a chip", d.querySelectorAll("#hist_skip_list .cmdchip").length, 3);
   check("and the change saves itself", w.saveCalls > savesBeforeSkip, true);
-  d.querySelector("#hist_skip_list .chipx").click(); await sleep(220);
-  check("the chip's cross takes it away", skipStore.value, "");
+  d.querySelector("#hist_skip_list .cmdchip .cbtn.redit").click(); await sleep(300);
+  check("the pencil opens the same dialog, retitled", d.querySelector(".modal .mtitle").textContent, "Editing the program");
+  check("with the name already in the field", d.querySelector(".modal input.skipname").value, "game.exe");
+  check("and no program picker in the way", d.querySelectorAll(".modal .pchip").length, 0);
+  d.querySelector(".modal input.skipname").value = "game2.exe";
+  d.querySelector(".modal .btn.yes").click(); await sleep(300);
+  check("editing renames it in place", skipStore.value, "game2.exe, keepass.exe, Telegram.exe");
+  d.getElementById("skip_filter").value = "kee";
+  d.getElementById("skip_filter").dispatchEvent(new w.Event("input", { bubbles: true })); await sleep(120);
+  check("the filter narrows the chips", d.querySelectorAll("#hist_skip_list .cmdchip").length, 1);
+  d.getElementById("skip_filter_clear").click(); await sleep(120);
+  check("and the cross brings them back", d.querySelectorAll("#hist_skip_list .cmdchip").length, 3);
+  d.querySelector("#hist_skip_list .cmdchip .cbtn.rdel").click(); await sleep(250);
+  check("the chip's cross takes one away", skipStore.value, "keepass.exe, Telegram.exe");
 
   const omni = d.getElementById("omni");
   omni.value = "S_PORT"; omni.dispatchEvent(new w.Event("input")); await sleep(120);

@@ -139,11 +139,7 @@ func rebuildIcons(p theme.Palette) {
 // refreshWindowChrome repaints the frame of every window that is open right now.
 func refreshWindowChrome() {
 	for _, h := range liveWindows() {
-		if h != 0 {
-			applyDarkCaption(h)
-			procSetWindowPos.Call(h, 0, 0, 0, 0, 0, 0x0002|0x0001|0x0004|0x0020)
-			procRedrawWindow.Call(h, 0, 0, 0x0001|0x0004|0x0100)
-		}
+		refreshChrome(h)
 	}
 }
 

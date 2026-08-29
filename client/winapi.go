@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"syscall"
@@ -19,6 +20,7 @@ const injectedMarker uintptr = 0x56325454
 var (
 	user32   = windows.NewLazySystemDLL("user32.dll")
 	kernel32 = windows.NewLazySystemDLL("kernel32.dll")
+	imm32    = windows.NewLazySystemDLL("imm32.dll")
 	shell32  = windows.NewLazySystemDLL("shell32.dll")
 	shcore   = windows.NewLazySystemDLL("shcore.dll")
 
@@ -110,13 +112,6 @@ func setDarkClientBackground(hwnd uintptr) {
 	procSetClassLongPtrW.Call(hwnd, ^uintptr(9), darkBrush)
 }
 
-const offscreenXY int32 = -32000
-
-func offscreenPos() uintptr {
-	v := offscreenXY
-	return uintptr(uint32(v))
-}
-
 type createStructW struct {
 	CreateParams uintptr
 	Instance     uintptr
@@ -138,9 +133,36 @@ type cbtCreateWnd struct {
 }
 
 const (
-	whCBT         = 5
-	hcbtCreateWnd = 3
+	whCBT           = 5
+	hcbtCreateWnd   = 3
+	wmChromeRefresh = 0x0400 + 110
 )
+
+// refreshChrome asks a window to redress itself on its own thread: touching
+// somebody else's window from here is what upsets the text services.
+var procImmDisableIME = imm32.NewProc("ImmDisableIME")
+
+// disableIMEHere keeps the text services away from the windows this thread is
+// about to create. Nothing here is typed through an input method, and letting
+// the services attach has been costing the session its ctfmon.
+func disableIMEHere() {
+	r, _, _ := procImmDisableIME.Call(0)
+	log.Printf("openSettings: input method services disabled for this thread (%d)", r)
+}
+
+func refreshChrome(hwnd uintptr) {
+
+	if hwnd == 0 {
+		return
+	}
+	procPostMessageW.Call(hwnd, wmChromeRefresh, 0, 0)
+}
+
+func applyChrome(hwnd uintptr) {
+	applyDarkCaption(hwnd)
+	procSetWindowPos.Call(hwnd, 0, 0, 0, 0, 0, 0x0002|0x0001|0x0004|0x0020)
+	procRedrawWindow.Call(hwnd, 0, 0, 0x0001|0x0004|0x0100)
+}
 
 func webViewClass(p *uint16) bool {
 	if p == nil || uintptr(unsafe.Pointer(p)) <= 0xFFFF {
@@ -149,17 +171,17 @@ func webViewClass(p *uint16) bool {
 	return windows.UTF16PtrToString(p) == "webview"
 }
 
-// parkNewWebViewWindow moves the WebView2 window off the screen while it is
-// still being created, on the thread that creates it. Nothing touches the
-// window from the outside afterwards, so the text services can attach to it
-// undisturbed.
-func parkNewWebViewWindow() func() {
+// dressNewWebViewWindow paints the WebView2 window dark the moment it is
+// created, on the thread that creates it: the class brush and the caption are
+// set before anything is drawn, so the window opens in place and in colour and
+// nobody has to move it about afterwards.
+func dressNewWebViewWindow() func() {
 	cb := syscall.NewCallback(func(code, wParam, lParam uintptr) uintptr {
-		if code == hcbtCreateWnd && lParam != 0 {
+		if code == hcbtCreateWnd && lParam != 0 && wParam != 0 {
 			if cbt := (*cbtCreateWnd)(unsafe.Pointer(lParam)); cbt.Cs != nil && webViewClass(cbt.Cs.Class) {
-				cbt.Cs.X = offscreenXY
-				cbt.Cs.Y = offscreenXY
-				log.Printf("openSettings: the WebView2 window is created off the screen")
+				setDarkClientBackground(wParam)
+				applyDarkCaption(wParam)
+				log.Printf("openSettings: the WebView2 window is dressed as it is created")
 			}
 		}
 		r, _, _ := procCallNextHookEx.Call(0, code, wParam, lParam)
@@ -271,6 +293,10 @@ var (
 )
 
 func minSizeProc(hwnd, msg, wp, lp uintptr) uintptr {
+	if msg == wmChromeRefresh {
+		applyChrome(hwnd)
+		return 0
+	}
 	if msg == wmNcCalcSize && wp != 0 && lp != 0 {
 		p := (*ncCalcSizeParams)(unsafe.Pointer(lp))
 		whole := p.Rgrc[0]
@@ -531,9 +557,51 @@ var (
 	procQueryFullProcessImageNameW = kernel32.NewProc("QueryFullProcessImageNameW")
 	procCloseHandleW               = kernel32.NewProc("CloseHandle")
 	procGetWindowThreadPID         = user32.NewProc("GetWindowThreadProcessId")
+	procEnumWindows                = user32.NewProc("EnumWindows")
 )
 
+type openApp struct {
+	Exe   string `json:"exe"`
+	Title string `json:"title"`
+}
+
+// listOpenApps names the programs with a window on screen right now, one entry
+// per program: the file name is what the exclusion list matches on, the window
+// title is only there to tell two browsers apart.
+func listOpenApps() []openApp {
+	var out []openApp
+	seen := map[string]bool{}
+	self := uintptr(windows.GetCurrentProcessId())
+	cb := syscall.NewCallback(func(hwnd, _ uintptr) uintptr {
+		if vis, _, _ := procIsWindowVisible.Call(hwnd); vis == 0 {
+			return 1
+		}
+		var pid uint32
+		procGetWindowThreadPID.Call(hwnd, uintptr(unsafe.Pointer(&pid)))
+		if uintptr(pid) == self {
+			return 1
+		}
+		title := windowTitle(hwnd)
+		if strings.TrimSpace(title) == "" {
+			return 1
+		}
+		exe := processNameOf(hwnd)
+		if exe == "" || seen[strings.ToLower(exe)] {
+			return 1
+		}
+		seen[strings.ToLower(exe)] = true
+		out = append(out, openApp{Exe: exe, Title: title})
+		return 1
+	})
+	procEnumWindows.Call(cb, 0)
+	sort.Slice(out, func(i, j int) bool {
+		return strings.ToLower(out[i].Exe) < strings.ToLower(out[j].Exe)
+	})
+	return out
+}
+
 func processNameOf(hwnd uintptr) string {
+
 	if hwnd == 0 || hwnd == 1 {
 		return ""
 	}

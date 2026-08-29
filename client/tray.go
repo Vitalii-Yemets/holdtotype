@@ -177,6 +177,9 @@ func trayWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 			trayShowMenu(hwnd)
 		}
 		return 0
+	case wmChromeRefresh:
+		applyChrome(hwnd)
+		return 0
 	case wmTrayUpdate:
 		trayMu.Lock()
 		nid := trayNotifyData()
