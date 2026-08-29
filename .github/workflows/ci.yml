@@ -87,7 +87,7 @@ jobs:
             APP_VERSION=${{ steps.ver.outputs.value }}
           outputs: type=local,dest=dist
           cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-to: ${{ github.ref_type == 'tag' && '' || 'type=gha,mode=max' }}
       - name: Package portable archive
         run: |
           cd dist
@@ -95,6 +95,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: holdtotype-binaries
+          retention-days: 7
           path: |
             dist/holdtotype-setup.exe
             holdtotype-portable.zip
