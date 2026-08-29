@@ -113,7 +113,7 @@ func openClipboardRetry() error {
 		}
 		time.Sleep(15 * time.Millisecond)
 	}
-	return errors.New("буфер обмена занят другим приложением")
+	return errors.New("the clipboard is held by another application")
 }
 
 func setClipboardText(s string) error {
@@ -131,12 +131,12 @@ func setClipboardText(s string) error {
 	size := len(u) * 2
 	h, _, _ := procGlobalAlloc.Call(gmemMoveable, uintptr(size))
 	if h == 0 {
-		return errors.New("GlobalAlloc не выделил память")
+		return errors.New("GlobalAlloc did not allocate memory")
 	}
 	p, _, _ := procGlobalLock.Call(h)
 	if p == 0 {
 		procGlobalFree.Call(h)
-		return errors.New("GlobalLock не удался")
+		return errors.New("GlobalLock failed")
 	}
 	dst := unsafe.Slice((*byte)(unsafe.Pointer(p)), size)
 	src := unsafe.Slice((*byte)(unsafe.Pointer(&u[0])), size)
@@ -145,7 +145,7 @@ func setClipboardText(s string) error {
 
 	if r, _, _ := procSetClipboardData.Call(cfUnicodeText, h); r == 0 {
 		procGlobalFree.Call(h)
-		return errors.New("SetClipboardData не удался")
+		return errors.New("SetClipboardData failed")
 	}
 	return nil
 }
@@ -253,7 +253,7 @@ func restoreClipboard(fmts []clipFormat) error {
 	return nil
 }
 
-var errFocusMoved = errors.New("окно ввода сменилось перед вставкой")
+var errFocusMoved = errors.New("the input window changed before pasting")
 
 func focusStillOn(expect uintptr) bool {
 	if expect == 0 {
@@ -263,7 +263,7 @@ func focusStillOn(expect uintptr) bool {
 	if cur == expect {
 		return true
 	}
-	log.Printf("окно ввода сменилось: ждали «%s», сейчас «%s»", windowTitle(expect), windowTitle(cur))
+	log.Printf("the input window changed: expected [%s], now [%s]", windowTitle(expect), windowTitle(cur))
 	return false
 }
 
@@ -285,7 +285,7 @@ func pasteText(cfg *Config, text string, expect uintptr) error {
 		var complete bool
 		snap, complete = snapshotClipboard()
 		if !complete {
-			log.Printf("буфер обмена не удаётся сохранить полностью — вставляю посимвольно, буфер не трогаю")
+			log.Printf("the clipboard cannot be preserved in full — typing character by character, leaving the clipboard alone")
 			return typeUnicode(text)
 		}
 	}

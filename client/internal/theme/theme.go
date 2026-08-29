@@ -27,6 +27,7 @@ type Palette struct {
 	BtnLine string
 	SelBg   string
 	SelFg   string
+	Label   string
 	Brand   string
 	Scrim   string
 
@@ -82,7 +83,7 @@ var palettes = []Palette{
 		Field: "#08100b", Soft: "#12241a", NavOn: "#101d14", On: "#123f22",
 		TitleBg: "transparent", SideBg: "transparent", KeyBg: "transparent",
 		BtnBg: "#101d14", BtnFg: "#3cff6e", BtnLine: "#20a34a", SelBg: "#3cff6e", SelFg: "#0b0f0c",
-		Brand: "", Scrim: "rgba(3,7,4,.78)"},
+		Label: "#f2fff5", Brand: "", Scrim: "rgba(3,7,4,.78)"},
 
 	{ID: "amber", Bg: "#100c0a", Panel: "#17110d", Line: "#4a3018",
 		Text: "#ff9e2c", Accent: "#ff9e2c", Dim: "#b56a12", Faint: "#8a4f0d",
@@ -90,7 +91,7 @@ var palettes = []Palette{
 		Field: "#120c07", Soft: "#2a1a0d", NavOn: "#22160c", On: "#402611",
 		TitleBg: "transparent", SideBg: "transparent", KeyBg: "transparent",
 		BtnBg: "#22160c", BtnFg: "#ff9e2c", BtnLine: "#b56a12", SelBg: "#ff9e2c", SelFg: "#100c0a",
-		Brand: "", Scrim: "rgba(8,5,3,.78)"},
+		Label: "#ffe9c9", Brand: "", Scrim: "rgba(8,5,3,.78)"},
 
 	{ID: "blue", Bg: "#0b0e10", Panel: "#0e1317", Line: "#1d3a4a",
 		Text: "#4cc3ff", Accent: "#4cc3ff", Dim: "#1c7fb8", Faint: "#14608f",
@@ -98,7 +99,7 @@ var palettes = []Palette{
 		Field: "#070f14", Soft: "#12222c", NavOn: "#101c24", On: "#123a52",
 		TitleBg: "transparent", SideBg: "transparent", KeyBg: "transparent",
 		BtnBg: "#101c24", BtnFg: "#4cc3ff", BtnLine: "#1c7fb8", SelBg: "#4cc3ff", SelFg: "#0b0e10",
-		Brand: "", Scrim: "rgba(3,6,8,.78)"},
+		Label: "#e4f6ff", Brand: "", Scrim: "rgba(3,6,8,.78)"},
 
 	{ID: "pink", Bg: "#100b0e", Panel: "#170e14", Line: "#4a1d3a",
 		Text: "#ff6ec7", Accent: "#ff6ec7", Dim: "#b82f86", Faint: "#8f2467",
@@ -106,7 +107,7 @@ var palettes = []Palette{
 		Field: "#120810", Soft: "#2a1222", NavOn: "#22101c", On: "#40183a",
 		TitleBg: "transparent", SideBg: "transparent", KeyBg: "transparent",
 		BtnBg: "#22101c", BtnFg: "#ff6ec7", BtnLine: "#b82f86", SelBg: "#ff6ec7", SelFg: "#100b0e",
-		Brand: "", Scrim: "rgba(8,3,6,.78)"},
+		Label: "#ffe6f4", Brand: "", Scrim: "rgba(8,3,6,.78)"},
 
 	{ID: "editor", Bg: "#1e1e1e", Panel: "#252526", Line: "#3c3c3c",
 		Text: "#d4d4d4", Accent: "#4fc1ff", Dim: "#9d9d9d", Faint: "#6e6e6e",
@@ -114,7 +115,7 @@ var palettes = []Palette{
 		Field: "#3c3c3c", Soft: "#2d2d2d", NavOn: "#37373d", On: "#094771",
 		TitleBg: "#323233", SideBg: "#252526", KeyBg: "#3c3c3c",
 		BtnBg: "#0e639c", BtnFg: "#ffffff", BtnLine: "#0e639c", SelBg: "#0e639c", SelFg: "#ffffff",
-		Brand: "", Scrim: "rgba(0,0,0,.6)"},
+		Label: "#e0e0e0", Brand: "", Scrim: "rgba(0,0,0,.6)"},
 
 	{ID: "neon", Bg: "#150a22", Panel: "#1d0e30", Line: "#4a2472",
 		Text: "#f3b6e4", Accent: "#46e0ff", Dim: "#b06ee0", Faint: "#7d4fae",
@@ -122,7 +123,7 @@ var palettes = []Palette{
 		Field: "#1e0f33", Soft: "#2a1442", NavOn: "#2b1240", On: "#4a2472",
 		TitleBg: "linear-gradient(90deg,#26103f,#1a0b2b)", SideBg: "#190c29", KeyBg: "linear-gradient(90deg,rgba(255,95,200,.18),rgba(70,224,255,.14))",
 		BtnBg: "transparent", BtnFg: "#f3b6e4", BtnLine: "#4a2472", SelBg: "linear-gradient(90deg,#ff5fc8,#46e0ff)", SelFg: "#150a22",
-		Brand: "linear-gradient(90deg,#ff5fc8,#46e0ff)", Scrim: "rgba(10,4,18,.72)"},
+		Label: "#ffffff", Brand: "linear-gradient(90deg,#ff5fc8,#46e0ff)", Scrim: "rgba(10,4,18,.72)"},
 
 	{ID: "soft", Bg: "#fff3f8", Panel: "#ffffff", Line: "#ffd0e4",
 		Text: "#c04a86", Accent: "#c04a86", Dim: "#e07bb0", Faint: "#eda3c8",
@@ -130,7 +131,7 @@ var palettes = []Palette{
 		Field: "#ffffff", Soft: "#ffe3ef", NavOn: "#ffe7f2", On: "#ffd9ea",
 		TitleBg: "#ffe7f2", SideBg: "#fff8fb", KeyBg: "#ffe7f2",
 		BtnBg: "#ffd9ea", BtnFg: "#a83a72", BtnLine: "#ffd0e4", SelBg: "#ff8ec7", SelFg: "#ffffff",
-		Brand: "", Scrim: "rgba(192,74,134,.30)"},
+		Label: "#7d2b56", Brand: "", Scrim: "rgba(192,74,134,.30)"},
 
 	{ID: "paper", Bg: "#f4f6f8", Panel: "#ffffff", Line: "#d5dbe1",
 		Text: "#1f2328", Accent: "#0969da", Dim: "#59636e", Faint: "#818b98",
@@ -138,7 +139,7 @@ var palettes = []Palette{
 		Field: "#ffffff", Soft: "#e7ebef", NavOn: "#e9edf1", On: "#ddf4ff",
 		TitleBg: "#f9fafb", SideBg: "#f9fafb", KeyBg: "#e9edf1",
 		BtnBg: "#ffffff", BtnFg: "#1f2328", BtnLine: "#d5dbe1", SelBg: "#0969da", SelFg: "#ffffff",
-		Ok: "#1a7f37", Brand: "", Scrim: "rgba(31,35,40,.35)"},
+		Ok: "#1a7f37", Label: "#111418", Brand: "", Scrim: "rgba(31,35,40,.35)"},
 }
 
 var colourChoice = []string{"green", "amber", "blue", "pink"}
@@ -393,6 +394,15 @@ func (l Look) CSSVars() string {
 	if p.Brand != "" {
 		brandBg, brandClip, brandFill = p.Brand, "text", "transparent"
 	}
+	label := p.Label
+	if label == "" {
+		label = p.Text
+	}
+	labelGlow := "none"
+	if l.Glow {
+		lr, lg, lb := RGB(label)
+		labelGlow = "0 0 7px rgba(" + itoa(int(lr)) + "," + itoa(int(lg)) + "," + itoa(int(lb)) + ",.4)"
+	}
 	btnBo, btnBc := `""`, `""`
 	if l.Brackets {
 		btnBo, btnBc = "\"[ \"", "\" ]\""
@@ -408,6 +418,7 @@ func (l Look) CSSVars() string {
 		";--titlebg:" + p.TitleBg + ";--sidebg:" + p.SideBg + ";--keybg:" + p.KeyBg +
 		";--btnbg:" + p.BtnBg + ";--btnfg:" + p.BtnFg + ";--btnline:" + p.BtnLine +
 		";--btnbo:" + btnBo + ";--btnbc:" + btnBc +
+		";--lbl:" + label + ";--lblglow:" + labelGlow +
 		";--selbg:" + p.SelBg + ";--selfg:" + p.SelFg +
 		";--brandbg:" + brandBg + ";--brandclip:" + brandClip + ";--brandfill:" + brandFill +
 		";--scrim:" + p.Scrim +

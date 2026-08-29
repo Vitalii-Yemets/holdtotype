@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -22,6 +23,8 @@ var (
 	shcore   = windows.NewLazySystemDLL("shcore.dll")
 
 	procSetWindowsHookExW    = user32.NewProc("SetWindowsHookExW")
+	procUnhookWindowsHookEx  = user32.NewProc("UnhookWindowsHookEx")
+	procGetCurrentThreadId   = kernel32.NewProc("GetCurrentThreadId")
 	procCallNextHookEx       = user32.NewProc("CallNextHookEx")
 	procGetMessageW          = user32.NewProc("GetMessageW")
 	procSendInput            = user32.NewProc("SendInput")
@@ -114,35 +117,60 @@ func offscreenPos() uintptr {
 	return uintptr(uint32(v))
 }
 
-func hideWebViewWindowEarly(title string) func() {
-	done := make(chan struct{})
-	go func() {
-		cls, _ := windows.UTF16PtrFromString("webview")
-		t, _ := windows.UTF16PtrFromString(title)
-		var styled uintptr
-		for {
-			select {
-			case <-done:
-				return
-			default:
+type createStructW struct {
+	CreateParams uintptr
+	Instance     uintptr
+	Menu         uintptr
+	Parent       uintptr
+	Cy           int32
+	Cx           int32
+	Y            int32
+	X            int32
+	Style        int32
+	Name         *uint16
+	Class        *uint16
+	ExStyle      uint32
+}
+
+type cbtCreateWnd struct {
+	Cs              *createStructW
+	HwndInsertAfter uintptr
+}
+
+const (
+	whCBT         = 5
+	hcbtCreateWnd = 3
+)
+
+func webViewClass(p *uint16) bool {
+	if p == nil || uintptr(unsafe.Pointer(p)) <= 0xFFFF {
+		return false
+	}
+	return windows.UTF16PtrToString(p) == "webview"
+}
+
+// parkNewWebViewWindow moves the WebView2 window off the screen while it is
+// still being created, on the thread that creates it. Nothing touches the
+// window from the outside afterwards, so the text services can attach to it
+// undisturbed.
+func parkNewWebViewWindow() func() {
+	cb := syscall.NewCallback(func(code, wParam, lParam uintptr) uintptr {
+		if code == hcbtCreateWnd && lParam != 0 {
+			if cbt := (*cbtCreateWnd)(unsafe.Pointer(lParam)); cbt.Cs != nil && webViewClass(cbt.Cs.Class) {
+				cbt.Cs.X = offscreenXY
+				cbt.Cs.Y = offscreenXY
+				log.Printf("openSettings: the WebView2 window is created off the screen")
 			}
-			h, _, _ := procFindWindowW.Call(uintptr(unsafe.Pointer(cls)), uintptr(unsafe.Pointer(t)))
-			if h != 0 {
-				var rc rect
-				procGetWindowRect.Call(h, uintptr(unsafe.Pointer(&rc)))
-				if rc.Left > offscreenXY+1000 {
-					procSetWindowPos.Call(h, 0, offscreenPos(), offscreenPos(), 0, 0, 0x0001|0x0004|0x0010)
-				}
-				if h != styled {
-					setDarkClientBackground(h)
-					applyDarkCaption(h)
-					styled = h
-				}
-			}
-			time.Sleep(2 * time.Millisecond)
 		}
-	}()
-	return func() { close(done) }
+		r, _, _ := procCallNextHookEx.Call(0, code, wParam, lParam)
+		return r
+	})
+	tid, _, _ := procGetCurrentThreadId.Call()
+	hook, _, _ := procSetWindowsHookExW.Call(whCBT, cb, 0, tid)
+	if hook == 0 {
+		return func() {}
+	}
+	return func() { procUnhookWindowsHookEx.Call(hook) }
 }
 
 func revealWindowCentered(hwnd uintptr, w, h int) {
@@ -552,5 +580,20 @@ func openSettingsInRunningInstance() bool {
 		return false
 	}
 	r, _, _ := procPostMessageW.Call(hwnd, wmTrayCallback, 0, wmLButtonUp)
+	return r != 0
+}
+
+// quitRunningInstance asks a running copy to close the way the tray menu does,
+// so the keyboard hook and the WebView are released instead of being torn off.
+func quitRunningInstance() bool {
+	cls, err := windows.UTF16PtrFromString(appid.Class("TrayWnd"))
+	if err != nil {
+		return false
+	}
+	hwnd, _, _ := procFindWindowW.Call(uintptr(unsafe.Pointer(cls)), 0)
+	if hwnd == 0 {
+		return false
+	}
+	r, _, _ := procPostMessageW.Call(hwnd, wmCommand, cmdQuit, 0)
 	return r != 0
 }

@@ -15,7 +15,7 @@ function searchFinds(w, d, needle) {
 }
 
 let llmState = {
-  installed: [{ file: "model.gguf", size: 4929, active: true }],
+  installed: [{ file: "model.gguf", size: 4929, active: true, loaded: true }],
   downloads: [],
   ram: 16384,
   ram_free: 9000,
@@ -57,7 +57,7 @@ const dom = new JSDOM(html, {
         installed_models: ["Small", "my-model"],
         loaded_now: "GigaAM v3", week_line: "12 dictations · 3400 characters",
         llm_ok: true, mic_ok: true, last_at: lastAt, last_app: "chrome.exe",
-        remote: remote, backend_err: backendErr,
+        remote: remote, backend_err: backendErr, post_err: postErr,
         badges: { mic: micBadge, models: "2", system: "" } });
     let modelStates = { base: "absent", small: "active", "medium-q5_0": "absent", "gigaam-v3": "absent", "moonshine-uk": "absent" };
     window.dlCalls = [];
@@ -70,6 +70,20 @@ const dom = new JSDOM(html, {
     window.appUnloadEngines = async () => { window.unloadCalls++; };
     window.postKeys = [];
     let postKeySet = false;
+    let postErr = "";
+    window.setPostErr = (v) => { postErr = v; };
+    window.postTests = [];
+    let postTestOK = true;
+    window.setPostTestOK = (v) => { postTestOK = v; };
+    window.appPostTest = async (url, model, key, timeout) => {
+      window.postTests.push([url, model, key, timeout]);
+      if(!postTestOK){
+        postErr = "no credits left";
+        return JSON.stringify({ ok: false, severity: "error", message: "no credits left" });
+      }
+      postErr = "";
+      return JSON.stringify({ ok: true, severity: "ok", message: "The server answered" });
+    };
     window.appSetPostKey = async (k) => { window.postKeys.push(k); postKeySet = !!k; return JSON.stringify({ ok: true, severity: "ok", message: "Saved" }); };
     window.appPostKeySet = async () => postKeySet;
     window.folderOpens = 0;
@@ -89,6 +103,11 @@ const dom = new JSDOM(html, {
       JSON.stringify({ repos: [{ id: "org/Repo-GGUF", downloads: 1234, updated: "2026-01-01" }] });
     window.appLLMFiles = async () =>
       JSON.stringify({ files: [{ file: "q4.gguf", size: 4000, fit: "ok", need: 6166 }, { file: "q8.gguf", size: 9000, fit: "bad", need: 13000 }] });
+    window.llmUnloads = 0;
+    window.appLLMUnload = async () => {
+      window.llmUnloads++;
+      llmState.installed.forEach(m => { m.loaded = false; });
+    };
     window.appLLMDel = async () => {
       llmState = { installed: [], downloads: [], ram: 16384, ram_free: 9000 };
       return "deleted";
@@ -133,8 +152,6 @@ const dom = new JSDOM(html, {
       window.lastSave = { ok: true, severity: "ok", message };
       return JSON.stringify(window.lastSave);
     };
-    window.replaceCalls = [];
-    window.appTestText = async (t) => { window.replaceCalls.push(t); const out = t.replace(/git hub/gi, "GitHub"); return JSON.stringify({ text: out, cancelled: false }); };
     let histItems = [{ at: 1700000000000, text: "выложи на GitHub", app: "chrome.exe" }, { at: 1699999000000, text: "привет команде", app: "Telegram.exe" }];
     window.histQueries = [];
     window.histCopied = [];
@@ -202,7 +219,7 @@ function check(name, actual, expected) {
 
   check("opens on the status screen", shown("state"), true);
   check("status hotkey shown", d.getElementById("state_hotkey").textContent, "ctrl+win");
-  for (const id of ["hotkey", "pause_hotkey", "tr_hotkey"]) {
+  for (const id of ["hotkey"]) {
     const el = d.getElementById(id);
     check("the " + id + " shortcut is one control, not a chip beside a button", el.tagName, "BUTTON");
     check("and " + id + " says what pressing it does", !!el.dataset.tip, true);
@@ -284,7 +301,7 @@ function check(name, actual, expected) {
   check("status bar led lit", d.getElementById("st_led").classList.contains("on"), true);
   check("the post-processing card offers what the state calls for", d.getElementById("state_llm_btn").textContent, "Change");
   check("copying the last dictation is offered", d.getElementById("state_copy").disabled, false);
-  check("the models badge explains itself", d.getElementById("badge_models").title, "Installed models");
+  check("the models badge explains itself", d.getElementById("badge_models").dataset.tip, "Installed models");
   check("icon buttons carry a name for screen readers", d.getElementById("mic_refresh").getAttribute("aria-label"), "S_MIC_REFRESH");
   check("and the same words are the hover hint", d.getElementById("mic_refresh").dataset.tip, "S_MIC_REFRESH");
   check("the browser's own tooltip is out of the way", d.getElementById("mic_refresh").hasAttribute("title"), false);
@@ -356,7 +373,7 @@ function check(name, actual, expected) {
   check("eleven sections in the sidebar", d.querySelectorAll(".nav").length, 11);
   check("in three groups", d.querySelectorAll(".ngrp").length, 3);
   check("in the agreed order", [...d.querySelectorAll(".nav")].map(b=>b.dataset.p),
-    ["state", "system", "mic", "history", "models", "text", "dictation", "post", "about", "help", "contacts"]);
+    ["state", "system", "mic", "history", "dictation", "models", "text", "post", "help", "about", "contacts"]);
   check("no mode switch in the header", !!d.querySelector(".lvlsw"), false);
   check("no disclosure buttons anywhere", d.querySelectorAll(".moreb").length, 0);
   check("nothing is folded away", d.querySelectorAll("[data-adv].hidden").length, 0);
@@ -398,11 +415,11 @@ function check(name, actual, expected) {
   check("after clearing the list says it is empty", d.querySelector("#histbody .histempty").textContent, "No history yet");
   const everySetting = [
     "hotkey", "min_record_ms", "max_record_seconds", "auto_enter", "restore_clipboard",
-    "type_mode", "overlay", "overlay_position", "overlay_text", "animation", "mic_device", "mic_bar", "beep", "sound_theme",
-    "langlist", "munload", "language", "threads", "punctuation", "whisper_prompt", "profbody", "dict_model", "tr_engine",
-    "tr_default", "translate_target", "translate_ask", "translate_ask_seconds", "tr_hotkey",
+    "type_mode", "overlay", "overlay_position", "overlay_text", "mic_device", "mic_bar", "beep", "sound_theme",
+    "langlist", "munload", "language", "threads", "punctuation", "dictbody", "profbody",
+    "tr_default", "translate_target", "translate_ask", "translate_ask_seconds",
     "tl_en", "ui_language", "upd_check", "check_updates", "server_autostart", "server_port",
-    "server_exe", "server_url", "proc-models", "proc-search", "ver2", "autorun", "pause_hotkey", "post_enabled",
+    "server_exe", "server_url", "llm_sum", "llm_catalog", "ver2", "autorun", "post_enabled",
   ];
   const missing = everySetting.filter((id) => !d.getElementById(id));
   check("every setting is present in the new window", missing, []);
@@ -423,7 +440,10 @@ function check(name, actual, expected) {
   check("no radio buttons anywhere in the choice", d.querySelectorAll('#langlist input[type="radio"]').length, 0);
   const ruOrder = cards().map(c=>c.dataset.id).join("+");
   check("the assigned model wears the mark", d.querySelector('#langlist .pcard[data-id="gigaam-v3"]').className.includes("cur"), true);
-  check("its chip says assigned", d.querySelector('#langlist .pcard[data-id="gigaam-v3"] .pchip').textContent, "assigned");
+  check("no chip claims assignment — the switch says it", d.querySelector('#langlist .pcard[data-id="gigaam-v3"] .pchip').textContent, "recommended");
+  check("the model story hides behind an info badge", d.querySelector('#langlist .pcard[data-id="gigaam-v3"] .pinfo').dataset.tip, "russian");
+  check("and is no longer printed on the card", d.querySelector('#langlist .pcard[data-id="gigaam-v3"] .ptop').textContent.includes("russian"), false);
+  check("every catalog model carries the badge", cards().filter(c => c.dataset.id !== "local:my-model").every(c => c.querySelector(".pinfo")), true);
   check("every known model measures itself in two bars", d.querySelectorAll("#langlist .mbar").length, 8);
   check("the bars are filled to the model, not all alike", [...d.querySelector('#langlist .pcard[data-id="base"]').querySelectorAll(".mtrack i")].map(i=>i.style.width), ["40%", "100%"]);
   check("a hand-copied model shows no bars — its powers are unknown", d.querySelector('#langlist .pcard[data-id="local:my-model"]').querySelectorAll(".mbar").length, 0);
@@ -440,7 +460,10 @@ function check(name, actual, expected) {
   check("there is a plain unload row as well", !!d.getElementById("munload"), true);
   const saveBefore = w.saveCalls;
   d.querySelector('#langlist .pcard[data-id="small"]').click(); await sleep(200);
-  check("a click on an installed card is the choice", w.saveCalls > saveBefore, true);
+  check("a click on the card itself chooses nothing", w.saveCalls, saveBefore);
+  const flick = async (id) => { const s = d.querySelector('#langlist .pcard[data-id="'+id+'"] input.psw'); s.checked = true; s.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(200); };
+  await flick("small");
+  check("the switch is the choice", w.saveCalls > saveBefore, true);
   check("and it pins the model to this language", w.lastSaveForm.lang_models.ru, "small");
   check("the picker stays open and the mark moves", d.querySelector('#langlist .pcard.cur').dataset.id, "small");
   check("but the list keeps its order", cards().map(c=>c.dataset.id).join("+"), ruOrder);
@@ -449,8 +472,8 @@ function check(name, actual, expected) {
   backBtn.click(); await sleep(200);
   check("taking it clears the language's own model", "ru" in (w.lastSaveForm.lang_models || {}), false);
   check("and the row dims to the inherited truth", rowFor("ru").className.includes("dim"), true);
-  d.querySelector('#langlist .pcard[data-id="small"]').click(); await sleep(200);
-  check("choosing again is one click", w.lastSaveForm.lang_models.ru, "small");
+  await flick("small");
+  check("choosing again is one flick of the switch", w.lastSaveForm.lang_models.ru, "small");
   const swFor = (id) => d.querySelector('#langlist .pcard[data-id="'+id+'"] input.psw');
   check("every model card carries a switch", d.querySelectorAll('#langlist .pcard input.psw').length, 5);
   check("the chosen card's switch is on and the others are off", [swFor("small").checked, swFor("base").checked, swFor("local:my-model").checked], [true, false, false]);
@@ -460,14 +483,15 @@ function check(name, actual, expected) {
   swOff.checked = false; swOff.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(200);
   check("turning it off returns the language to Auto-detect", "ru" in (w.lastSaveForm.lang_models || {}), false);
   check("and the row dims to the inherited truth again", rowFor("ru").className.includes("dim"), true);
-  d.querySelector('#langlist .pcard[data-id="small"]').click(); await sleep(200);
-  check("the choice comes back with one click", w.lastSaveForm.lang_models.ru, "small");
+  await flick("small");
+  check("the choice comes back with the switch", w.lastSaveForm.lang_models.ru, "small");
   rowFor("uk").click(); await sleep(120);
   check("the licensed model's switch is locked", d.querySelector('#langlist .pcard[data-id="moonshine-uk"] input.psw').disabled, true);
   check("switching languages swaps the picker", cards().map(c=>c.dataset.id).includes("moonshine-uk"), true);
   check("the licensed model offers no download button", !!d.querySelector('#langlist .pcard[data-id="moonshine-uk"] button[data-a="dl"]'), false);
   check("it explains the licence instead", d.querySelector('#langlist .pcard[data-id="moonshine-uk"]').textContent.includes("licence forbids"), true);
-  check("and cannot be picked by a click", d.querySelector('#langlist .pcard[data-id="moonshine-uk"]').className.includes("pickable"), false);
+  d.querySelector('#langlist .pcard[data-id="moonshine-uk"]').click(); await sleep(150);
+  check("and cannot be picked at all", "uk" in (w.lastSaveForm.lang_models || {}), false);
   const linkBtn = d.querySelector('#langlist .pcard[data-id="moonshine-uk"] button[data-a="link"]');
   check("and offers the source link", !!linkBtn, true);
   linkBtn.click(); await sleep(60);
@@ -482,15 +506,9 @@ function check(name, actual, expected) {
   const recLangs = [...d.getElementById("language").options].map(o=>o.value);
   check("italian can be dictated too", recLangs.includes("it"), true);
   check("the routing table is gone", !!d.getElementById("routing"), false);
-  check("the language moved in with the dictation", !!d.querySelector("#p-dictation #language"), true);
+  check("the language moved in with the models", !!d.querySelector("#p-models #language"), true);
   check("the threads moved in with the server", !!d.querySelector("#p-system #threads"), true);
-  check("dictation names the model it uses", d.getElementById("dict_model").textContent, "Small");
-  check("translation names its engine too", d.getElementById("tr_engine").textContent, "Translation is done by Small");
-  w.setModelState("small", "installed"); w.setModelState("gigaam-v3", "active");
-  await w.refreshModels(); await sleep(60);
-  check("a model that cannot translate says Whisper will step in", d.getElementById("tr_engine").textContent.includes("does not translate"), true);
-  w.setModelState("small", "active"); w.setModelState("gigaam-v3", "absent");
-  await w.refreshModels(); await sleep(60);
+  check("the engine hint line is gone with the manual", !!d.getElementById("tr_engine"), false);
   d.getElementById("mcheck").click(); await sleep(250);
   check("installed models can be checked", w.modelChecks, 1);
   check("the check says what it found", d.getElementById("mcheck_out").textContent, "Damaged files: Small (ggml-small.bin)");
@@ -515,36 +533,74 @@ function check(name, actual, expected) {
 
   mic.value = ""; mic.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(30);
   tab("text"); await sleep(30);
-  check("dictionary textarea present", !!d.getElementById("whisper_prompt"), true);
+  check("the dictionary shows its words as chips", d.querySelectorAll("#dictbody .cmdchip").length, 2);
+  check("a word chip carries no pencil", d.querySelector("#dictbody .cmdchip .redit"), null);
+  check("with a whisper model no warning shows", d.getElementById("dict_warn").style.display, "none");
+  d.getElementById("dict_add").click(); await sleep(120);
+  check("adding a word opens a titled dialog", d.querySelector(".modal .mtitle").textContent, "Adding a word");
+  const dw = d.querySelector(".modal .dword");
+  dw.value = "endpoint, webhook, Docker"; dw.dispatchEvent(new w.Event("input", { bubbles: true }));
+  d.querySelector(".modal .btn.yes").click(); await sleep(300);
+  check("commas bring several words at once, without duplicates", d.querySelectorAll("#dictbody .cmdchip").length, 4);
+  check("and the whole set is saved as the prompt", w.lastSaveForm.whisper_prompt, "GitHub, Docker, endpoint, webhook");
+  d.querySelectorAll("#dictbody .cmdchip .rdel")[3].click(); await sleep(300);
+  check("the cross removes a word and saves", w.lastSaveForm.whisper_prompt, "GitHub, Docker, endpoint");
+  w.setModelState("small", "installed"); w.setModelState("gigaam-v3", "active"); await w.refreshModels(); await sleep(80);
+  check("a non-whisper model raises the yellow warning", d.getElementById("dict_warn").style.display, "");
+  check("and it names the model", d.getElementById("dict_warn").textContent.includes("GigaAM v3"), true);
+  w.setModelState("gigaam-v3", "absent"); w.setModelState("small", "active"); await w.refreshModels(); await sleep(80);
+  check("bringing whisper back clears the warning", d.getElementById("dict_warn").style.display, "none");
   check("punctuation modes offered", d.getElementById("punctuation").options.length, 3);
 
   tab("dictation"); await sleep(60);
-  const dots = d.querySelectorAll("#ovscheme .ovdot");
-  check("the plate offers eight scheme positions", dots.length, 8);
-  check("it starts at the bottom of the screen", d.querySelector('#ovscheme .ovdot[data-pos="bottom"]').className.includes("on"), true);
-  check("the pause hotkey is shown", d.getElementById("pause_hotkey").textContent, "ctrl+alt+p");
-  d.getElementById("pause_clear").click(); await sleep(300);
-  check("clearing the pause hotkey is saved", w.lastSaveForm.pause_hotkey, "");
-  d.querySelector('#ovscheme .ovdot[data-pos="top-right"]').click(); await sleep(300);
-  check("a dot click moves the plate and saves itself", w.lastSaveForm.overlay_position, "top-right");
-  check("the miniature follows the chosen dot", d.getElementById("ovmini").style.left, "88%");
+  const zones = d.querySelectorAll("#ovscheme .ovzone");
+  check("the screen is divided into nine places", zones.length, 9);
+  check("the plate settings live under one heading", [!!d.querySelector("#ovcard .blklbl"), !!d.querySelector("#ovcard .hint")], [true, true]);
+  const ovMaster = d.getElementById("overlay");
+  ovMaster.checked = false; ovMaster.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
+  check("turning the plate off disables the rest of the block", [d.getElementById("ov_free").disabled, d.getElementById("ov_caret").disabled, d.getElementById("overlay_text").disabled], [true, true, true]);
+  check("and dims their rows", d.getElementById("ov_free").closest(".row").className.includes("dimmed"), true);
+  check("the screen steps aside as well", d.getElementById("ovscheme").className.includes("off"), true);
+  ovMaster.checked = true; ovMaster.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
+  check("turning it back on wakes them up", [d.getElementById("ov_free").disabled, d.getElementById("ov_free").closest(".row").className.includes("dimmed")], [false, false]);
+  check("the plate starts at the bottom of the screen", d.getElementById("ovmini").style.top, "85%");
+  check("the screen is drawn as a monitor with a stand", [!!d.querySelector("#ovscheme .ovcase"), !!d.querySelector("#ovscheme .ovneck"), !!d.querySelector("#ovscheme .ovbase")], [true, true, true]);
+  check("the pause option is gone", [!!d.getElementById("pause_hotkey"), !!d.getElementById("pause_clear")], [false, false]);
+  d.querySelector('#ovscheme .ovzone[data-pos="top-right"]').click(); await sleep(300);
+  check("clicking a place moves the plate and saves itself", w.lastSaveForm.overlay_position, "top-right");
+  check("the miniature follows the chosen place", d.getElementById("ovmini").style.left, "88%");
+  d.querySelector('#ovscheme .ovzone[data-pos="center"]').click(); await sleep(300);
+  check("the middle of the screen is offered too", [w.lastSaveForm.overlay_position, d.getElementById("ovmini").style.left, d.getElementById("ovmini").style.top], ["center", "50%", "50%"]);
   const caretBox = d.getElementById("ov_caret");
   caretBox.checked = true; caretBox.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
   check("following the cursor is the ninth choice", w.lastSaveForm.overlay_position, "caret");
   check("and the scheme steps aside while it is on", d.getElementById("ovscheme").className.includes("off"), true);
   caretBox.checked = false; caretBox.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
-  const ovbox = d.getElementById("ovscheme");
+  const crt = d.getElementById("ovcrt");
   const mini = d.getElementById("ovmini");
-  ovbox.getBoundingClientRect = () => ({ left: 0, top: 0, width: 176, height: 99 });
-  mini.dispatchEvent(new w.Event("pointerdown"));
-  mini.dispatchEvent(new w.MouseEvent("pointermove", { clientX: 44, clientY: 25 }));
-  mini.dispatchEvent(new w.Event("pointerup")); await sleep(300);
-  check("dragging the miniature makes the spot its own", w.lastSaveForm.overlay_position, "custom");
-  check("and the fraction is remembered for this screen", w.lastSaveForm.overlay_custom["1920x1080"], { x: 0.25, y: 0.253 });
-  d.querySelector('#ovscheme .ovdot[data-pos="bottom"]').click(); await sleep(300);
+  crt.getBoundingClientRect = () => ({ left: 0, top: 0, width: 156, height: 80 });
+  const freeBox = d.getElementById("ov_free");
+  check("a spot of your own is offered as a switch", freeBox.type, "checkbox");
+  check("and it is off while a place is chosen", freeBox.checked, false);
+  check("dragging does nothing while the switch is off", (() => { const before = w.saveCalls; crt.dispatchEvent(new w.MouseEvent("pointerdown", { clientX: 40, clientY: 20 })); return w.saveCalls === before; })(), true);
+  freeBox.checked = true; freeBox.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
+  check("turning it on hands the screen over to you", w.lastSaveForm.overlay_position, "custom");
+  check("the places step aside", d.getElementById("ovcrt").className.includes("free"), true);
+  check("and the hint changes to say so", d.getElementById("ovpos_sub").textContent, "drag the plate with the mouse — it lands anywhere");
+  crt.dispatchEvent(new w.MouseEvent("pointerdown", { clientX: 39, clientY: 20 }));
+  crt.dispatchEvent(new w.MouseEvent("pointermove", { clientX: 39, clientY: 20 }));
+  crt.dispatchEvent(new w.Event("pointerup")); await sleep(300);
+  check("dragging remembers the fraction for this screen", w.lastSaveForm.overlay_custom["1920x1080"], { x: 0.25, y: 0.25 });
+  freeBox.checked = false; freeBox.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
+  check("turning it off returns the last chosen place", w.lastSaveForm.overlay_position, "center");
+  freeBox.checked = true; freeBox.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
+  check("and your spot is not lost while it was off", [w.lastSaveForm.overlay_position, d.getElementById("ovmini").style.left], ["custom", "25%"]);
+  freeBox.checked = false; freeBox.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
+  d.querySelector('#ovscheme .ovzone[data-pos="bottom"]').click(); await sleep(300);
   check("with two monitors the screen choice appears", d.getElementById("ovmon_row").style.display, "");
   check("the cursor screen is the first offer", d.getElementById("overlay_monitor").options[0].textContent, "The screen with the cursor");
-  check("each monitor is named by its resolution", d.getElementById("overlay_monitor").options[1].textContent.includes("1920×1080"), true);
+  check("a monitor goes by the name it reports", d.getElementById("overlay_monitor").options[1].textContent, "DELL U2720Q (1920×1080) ★");
+  check("a nameless one keeps its number", d.getElementById("overlay_monitor").options[2].textContent, "Screen 2 (2560×1440)");
   const ovtext = d.getElementById("overlay_text");
   check("showing the text on the plate is a switch", ovtext.type, "checkbox");
   ovtext.checked = false; ovtext.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
@@ -552,33 +608,7 @@ function check(name, actual, expected) {
   ovtext.checked = true; ovtext.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
 
   tab("dictation"); await sleep(60);
-  check("with no rules the list says so", d.querySelector("#rulesbody .ruleempty").textContent, "No rules yet");
-  check("the last program is offered as a rule", d.getElementById("rule_last").textContent, "last insertion: chrome.exe");
-  d.getElementById("rule_last").click(); await sleep(300);
-  check("one click makes a rule for it", d.querySelectorAll("#rulesbody .rulerow").length, 1);
-  check("the rule carries the program", w.lastSaveForm.app_rules[0].match, "chrome.exe");
-  const rrow = d.querySelector("#rulesbody .rulerow");
-  const rpaste = rrow.querySelector(".rpaste");
-  check("a rule inherits until told otherwise", [rpaste.value, rpaste.options[0].textContent], ["", "insertion: as set"]);
-  rpaste.value = "type"; rpaste.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
-  check("the insertion method is saved", w.lastSaveForm.app_rules[0].paste_mode, "type");
-  const renter = rrow.querySelector(".renter");
-  renter.value = "off"; renter.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
-  check("Enter can be turned off for one program", w.lastSaveForm.app_rules[0].auto_enter, "off");
-  const rdelay = rrow.querySelector(".rdelay");
-  rdelay.value = "250"; rdelay.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
-  check("the delay is saved as a number", w.lastSaveForm.app_rules[0].delay_ms, 250);
-  const rprof = rrow.querySelector(".rprof");
-  check("prompts of the rule offer every profile", rprof.options.length, 4);
-  rprof.value = "-"; rprof.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
-  check("a program can be left without prompts", [w.lastSaveForm.app_rules[0].use_profiles, w.lastSaveForm.app_rules[0].profiles], [true, []]);
-  rprof.value = "formal"; rprof.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
-  check("or given its own prompt", w.lastSaveForm.app_rules[0].profiles, ["formal"]);
-  d.getElementById("rule_add").click(); await sleep(100);
-  check("more rules can be added", d.querySelectorAll("#rulesbody .rulerow").length, 2);
-  d.querySelectorAll("#rulesbody .rdel")[1].click(); await sleep(300);
-  check("and deleted", d.querySelectorAll("#rulesbody .rulerow").length, 1);
-  check("deleting leaves the other rule alone", w.lastSaveForm.app_rules.length, 1);
+  check("the app-rules block is gone", [!!d.getElementById("rulesbody"), !!d.getElementById("rule_add"), !!d.getElementById("rule_last")], [false, false, false]);
 
   tab("system"); await sleep(30);
   check("service settings shown", [shown("system"), !!d.getElementById("server_url")], [true, true]);
@@ -610,89 +640,161 @@ function check(name, actual, expected) {
 
   tab("dictation"); await sleep(30);
   check("the old turbo warning is gone — honesty lives in the engine line", !!d.getElementById("tr_warn"), false);
-  check("the target language carries the honest note", !!d.querySelector("#p-dictation .row label .sub.warn"), true);
-  check("translation lives with the other controls now", !!d.querySelector("#p-dictation #translate_target"), true);
+  check("the target language carries the honest note", !!d.querySelector("#p-models .row label .sub.warn"), true);
+  check("translation moved in with the languages", !!d.querySelector("#p-models #translate_target"), true);
   const trd = d.getElementById("tr_default");
   const ask = d.getElementById("translate_ask");
   const state = () => [
+    trd.disabled,
     d.getElementById("translate_target").disabled,
     ask.disabled,
     d.getElementById("translate_ask_seconds").disabled,
     d.getElementById("tl_en").disabled,
+    d.getElementById("tl_de").disabled,
   ];
-  trd.checked = true; trd.dispatchEvent(new w.Event("change"));
-  check("always-translate disables ask controls", state(), [false, true, true, true]);
-  trd.checked = false; trd.dispatchEvent(new w.Event("change"));
-  ask.value = "never"; ask.dispatchEvent(new w.Event("change"));
-  check("never mode disables target and dialog langs", state(), [true, false, true, true]);
-  ask.value = "always"; ask.dispatchEvent(new w.Event("change"));
-  check("always-ask enables dialog langs", state(), [true, false, true, false]);
-  ask.value = "timeout"; ask.dispatchEvent(new w.Event("change"));
-  check("timeout mode keeps target editable", state(), [false, false, false, false]);
+  check("the switch is off out of the box and everything below sleeps", [trd.checked, ...state()], [false, false, true, true, true, true, true]);
+  trd.checked = true; trd.dispatchEvent(new w.Event("change")); await sleep(100);
+  check("turning it on wakes the block, quiet mode locks other langs", state(), [false, false, false, true, false, true]);
+  ask.value = "always"; ask.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(120);
+  check("ask-every-time frees only the reachable dialog langs", state(), [false, false, false, true, false, true]);
+  check("whisper reaches English alone — other targets are locked", [...d.getElementById("translate_target").options].filter(o=>o.disabled).map(o=>o.value).includes("de"), true);
+  ask.value = "timeout"; ask.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(120);
+  check("timeout adds its seconds", state(), [false, false, false, false, false, true]);
+  ask.value = "never"; ask.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(150);
+  check("going quiet with several languages asks first", !!d.querySelector(".modal-bg"), true);
+  d.querySelector(".modal .btn.ghost").click(); await sleep(200);
+  check("saying no keeps the asking mode", ask.value, "timeout");
+  ask.value = "never"; ask.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(150);
+  d.querySelector(".modal .btn.yes").click(); await sleep(300);
+  check("agreeing locks the list to the default language", [ask.value, d.getElementById("tl_ru").disabled, d.getElementById("tl_ru").checked, d.getElementById("tl_en").disabled], ["never", true, true, false]);
+  check("and the quiet choice is saved as translate-right-away", [w.lastSaveForm.translate_default, w.lastSaveForm.translate_ask], [true, "never"]);
+  ask.value = "always"; ask.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(120);
+  const tlEn = d.getElementById("tl_en");
+  tlEn.checked = false; tlEn.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(150);
+  check("the default output language cannot be unchecked", !!d.querySelector(".modal-bg"), true);
+  check("the guard speaks with a single button", d.querySelectorAll(".modal .btn").length, 1);
+  d.querySelector(".modal .btn.yes").click(); await sleep(150);
+  check("and the checkbox springs back", tlEn.checked, true);
+  w.setModelState("gigaam-v3", "installed"); await w.refreshModels(); await sleep(80);
+  const gflick = async () => { const s = d.querySelector('#langlist .pcard[data-id="gigaam-v3"] input.psw'); s.checked = true; s.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(150); };
+  await gflick();
+  check("a mute model warns it will silence translation", d.querySelector(".modal p").textContent.includes("cannot translate"), true);
+  d.querySelector(".modal .btn.ghost").click(); await sleep(250);
+  check("declining keeps the model and the translation", [w.lastSaveForm.lang_models.ru, trd.checked], ["small", true]);
+  check("and the switch snaps back", d.querySelector('#langlist .pcard[data-id="gigaam-v3"] input.psw').checked, false);
+  await gflick();
+  d.querySelector(".modal .btn.yes").click(); await sleep(300);
+  check("agreeing assigns the model and turns translation off", [w.lastSaveForm.lang_models.ru, w.lastSaveForm.translate_default, w.lastSaveForm.translate_ask], ["gigaam-v3", false, "never"]);
+  check("the switch is down and locked while the mute model works", [trd.checked, trd.disabled], [false, true]);
+  check("and the reason is written beside the switch", d.getElementById("tr_unavail").textContent.includes("GigaAM v3"), true);
+  const ssw = d.querySelector('#langlist .pcard[data-id="small"] input.psw');
+  ssw.checked = true; ssw.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(250);
+  check("bringing a translating model back unlocks the switch", trd.disabled, false);
+  w.setModelState("gigaam-v3", "absent"); await w.refreshModels(); await sleep(80);
 
   tab("text"); await sleep(80);
   check("with no replacements the list says so", d.querySelector("#replbody .ruleempty").textContent, "No replacements yet");
-  d.getElementById("repl_add").click(); await sleep(100);
-  const rep = d.querySelector("#replbody .replrow");
-  check("a replacement row has both sides", [!!rep.querySelector(".rfrom"), !!rep.querySelector(".rto")], [true, true]);
-  check("whole words is on by default", rep.querySelector(".rwhole").checked, true);
-  check("case is off by default", rep.querySelector(".rcase").checked, false);
-  const rlang = rep.querySelector(".rlang");
+  d.getElementById("repl_add").click(); await sleep(120);
+  check("adding opens a dialog with both sides", [!!d.querySelector(".modal .rfrom"), !!d.querySelector(".modal .rto")], [true, true]);
+  check("the dialog introduces itself", d.querySelector(".modal .mtitle").textContent, "Adding a replacement");
+  check("the fields come first in the form", !!d.querySelector(".modal .fmrow .rfrom") && d.querySelector(".modal .fmrow") === d.querySelector(".modal .rfrom").closest(".fmrow"), true);
+  check("a new pair is added, not saved", d.querySelector(".modal .btn.yes").textContent, "Add");
+  check("every label explains itself in plain words", d.querySelectorAll(".modal .fmrow label .sub").length, 3);
+  check("and the explanations are real text", d.querySelector(".modal .fmrow label .sub").textContent.length > 0, true);
+  check("whole words is on by default", d.querySelector(".modal .rwhole").checked, true);
+  check("case is off by default", d.querySelector(".modal .rcase").checked, false);
+  const rfx = d.querySelector(".modal .rfrom");
+  check("an empty field hides its cross", rfx.parentNode.querySelector(".clearx").style.display, "none");
+  rfx.value = "abc"; rfx.dispatchEvent(new w.Event("input", { bubbles: true })); await sleep(60);
+  check("a filled field grows a cross inside", rfx.parentNode.querySelector(".clearx").style.display, "");
+  rfx.parentNode.querySelector(".clearx").click(); await sleep(60);
+  check("the cross empties the field", rfx.value, "");
+  const rlang = d.querySelector(".modal .rlang");
   check("a rule can be pinned to a language", !!rlang, true);
   check("but serves every language by default", rlang.value, "");
-  rlang.value = "ru"; rlang.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(250);
-  check("the pinned language is saved with the rule", w.lastSaveForm.replacements[0].lang, "ru");
-  rlang.value = ""; rlang.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(250);
-  check("the dictionary card says only Whisper reads it", d.getElementById("dict_whisper_note").textContent.includes("S_DICT_WHISPER_ONLY"), true);
-  const rfrom = rep.querySelector(".rfrom"), rto = rep.querySelector(".rto");
-  rfrom.value = "гит хаб"; rfrom.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(250);
-  rto.value = "GitHub"; rto.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(250);
-  check("the replacement is saved", [w.lastSaveForm.replacements[0].from, w.lastSaveForm.replacements[0].to], ["гит хаб", "GitHub"]);
+  d.querySelector(".modal .rfrom").value = "гит хаб";
+  d.querySelector(".modal .rto").value = "GitHub";
+  rlang.value = "ru";
+  d.querySelector(".modal .btn.yes").click(); await sleep(300);
+  check("saving the dialog adds the pair", [w.lastSaveForm.replacements[0].from, w.lastSaveForm.replacements[0].to, w.lastSaveForm.replacements[0].lang], ["гит хаб", "GitHub", "ru"]);
   check("its flags are saved too", [w.lastSaveForm.replacements[0].whole, w.lastSaveForm.replacements[0].match_case], [true, false]);
-  const rtest = d.getElementById("repl_test");
-  rtest.value = "push to git hub"; rtest.dispatchEvent(new w.Event("input", { bubbles: true })); await sleep(500);
-  check("the test field asks the program itself", w.replaceCalls[w.replaceCalls.length - 1], "push to git hub");
-  check("and shows what would come out", d.getElementById("repl_out").textContent, "push to GitHub");
+  check("the pair stands as a chip with a pencil and a cross", [!!d.querySelector("#replbody .cmdchip .redit"), !!d.querySelector("#replbody .cmdchip .rdel")], [true, true]);
+  d.querySelector("#replbody .cmdchip .redit").click(); await sleep(120);
+  check("the pencil reopens the dialog filled", d.querySelector(".modal .rfrom").value, "гит хаб");
+  check("an existing pair is saved, not added", d.querySelector(".modal .btn.yes").textContent, "Save");
+  check("and the title says editing", d.querySelector(".modal .mtitle").textContent, "Editing the replacement");
+  d.querySelector(".modal .rlang").value = "";
+  d.querySelector(".modal .btn.yes").click(); await sleep(300);
+  check("editing updates the pair", w.lastSaveForm.replacements[0].lang, "");
+  check("the try-a-phrase field is gone", !!d.getElementById("repl_test"), false);
   d.querySelector("#replbody .rdel").click(); await sleep(250);
   check("a replacement can be deleted", w.lastSaveForm.replacements.length, 0);
 
   check("with no commands the list says so", d.querySelector("#cmdbody .ruleempty").textContent, "No commands yet");
-  d.getElementById("cmd_preset").click(); await sleep(300);
-  check("the usual commands can be added in one click", d.querySelectorAll("#cmdbody .replrow").length, 3);
+  check("the preset button left the toolbar", !!d.getElementById("cmd_preset"), false);
+  d.getElementById("cmd_add").click(); await sleep(120);
+  check("the add dialog offers the usual ones as a third button", d.getElementById("fm_extra").textContent, "Add the usual ones");
+  check("and grows wider to fit three buttons", d.querySelector(".modal").className.includes("wide"), true);
+  d.getElementById("fm_extra").click(); await sleep(300);
+  check("the usual commands can be added in one click", d.querySelectorAll("#cmdbody .cmdchip").length, 3);
+  check("and the dialog closes itself", !!d.querySelector(".modal-bg"), false);
   check("they carry the phrases of this language", w.lastSaveForm.commands.map((c) => c.phrase), ["new line", "new paragraph", "cancel"]);
   check("and the actions that go with them", w.lastSaveForm.commands.map((c) => c.action), ["newline", "paragraph", "cancel"]);
-  d.getElementById("cmd_preset").click(); await sleep(300);
-  check("adding them twice changes nothing", d.querySelectorAll("#cmdbody .replrow").length, 3);
-  const cmdRow = d.querySelector("#cmdbody .replrow");
-  check("a command with no text keeps its field hidden", cmdRow.querySelector(".ctext").style.display, "none");
-  const cact = cmdRow.querySelector(".caction");
-  cact.value = "text"; cact.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
-  check("choosing insert-text reveals the field", cmdRow.querySelector(".ctext").style.display, "");
-  check("the action is saved", w.lastSaveForm.commands[0].action, "text");
+  d.getElementById("cmd_add").click(); await sleep(120);
+  d.getElementById("fm_extra").click(); await sleep(300);
+  check("adding them twice changes nothing", d.querySelectorAll("#cmdbody .cmdchip").length, 3);
+  d.querySelector("#cmdbody .cmdchip .redit").click(); await sleep(120);
+  check("a command with no text keeps its field hidden", d.querySelector(".modal .ctext").closest(".fmrow").style.display, "none");
+  const cact = d.querySelector(".modal .caction");
+  cact.value = "text"; cact.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(60);
+  check("choosing insert-text reveals the field", d.querySelector(".modal .ctext").closest(".fmrow").style.display, "");
+  d.querySelector(".modal .ctext").value = ":)";
+  d.querySelector(".modal .btn.yes").click(); await sleep(300);
+  check("the action is saved with its text", [w.lastSaveForm.commands[0].action, w.lastSaveForm.commands[0].text], ["text", ":)"]);
   d.querySelectorAll("#cmdbody .rdel")[0].click(); await sleep(300);
   check("a command can be deleted", w.lastSaveForm.commands.length, 2);
 
-  d.getElementById("lists_export").click(); await sleep(250);
-  check("the lists can be saved to a file", w.listsExported.length, 1);
-  check("what is on the page goes into the file", Array.isArray(w.listsExported[0].commands), true);
-  check("saving reports back", d.getElementById("st_saved").textContent, "saved to lists.json");
-  d.getElementById("lists_import").click(); await sleep(300);
-  check("the lists can be loaded from a file", w.listsImported.length, 1);
-  check("loading brings the replacements in", w.lastSaveForm.replacements.map((r) => r.from), ["git hub"]);
-  check("and the commands with them", w.lastSaveForm.commands.map((c) => c.phrase), ["новая строка"]);
-  check("the rows appear on the page", d.querySelectorAll("#replbody .replrow").length, 1);
+  check("the file buttons are gone", [!!d.getElementById("lists_export"), !!d.getElementById("lists_import")], [false, false]);
+  const cfilter = d.getElementById("cmd_filter");
+  cfilter.value = "paragraph"; cfilter.dispatchEvent(new w.Event("input", { bubbles: true })); await sleep(80);
+  check("the finder narrows the chips down", d.querySelectorAll("#cmdbody .cmdchip").length, 1);
+  check("and shows its cross", d.getElementById("cmd_filter_clear").style.display, "");
+  cfilter.value = "zzz"; cfilter.dispatchEvent(new w.Event("input", { bubbles: true })); await sleep(80);
+  check("a fruitless search says so with the words used", d.querySelector("#cmdbody .ruleempty").textContent, "Nothing found: “zzz”");
+  d.getElementById("cmd_filter_clear").click(); await sleep(80);
+  check("the cross brings every chip back", d.querySelectorAll("#cmdbody .cmdchip").length, 2);
+  check("and the not-found note is gone", !!d.querySelector("#cmdbody .ruleempty"), false);
 
   const pb = d.getElementById("profbody");
   check("prompts listed", pb.querySelectorAll("input.profcb").length, 2);
 
   const pencil = () => pb.querySelector('button[data-a="edit"]');
-  pencil().click(); await sleep(60);
-  check("prompt editor opens", !!d.getElementById("pf_name"), true);
-  pencil().click(); await sleep(60);
-  check("prompt editor closes on second click", !!d.getElementById("pf_name"), false);
-  pencil().click(); await sleep(60);
-  d.getElementById("pf_close").click(); await sleep(60);
-  check("prompt editor closes via collapse button", !!d.getElementById("pf_name"), false);
+  pencil().click(); await sleep(150);
+  check("the prompt editor opens as a titled dialog", d.querySelector(".modal .mtitle").textContent, "Editing the prompt");
+  check("it carries name, prompt and a try-it field", [!!d.querySelector(".modal .pfname"), !!d.querySelector(".modal .pfprompt"), !!d.querySelector(".modal .pfsample")], [true, true, true]);
+  d.querySelector(".modal .pfname").value = "Cleanup+";
+  d.querySelector(".modal .pfprompt").value = "tidy the text";
+  d.querySelector(".modal .btn.yes").click(); await sleep(350);
+  check("saving keeps the new name and prompt", [w.lastSaveForm.profiles[0].name, w.lastSaveForm.profiles[0].prompt], ["Cleanup+", "tidy the text"]);
+  check("and the list shows the new name", pb.querySelector(".prow .pnm").textContent, "Cleanup+");
+  pencil().click(); await sleep(150);
+  d.querySelector(".modal .btn.ghost").click(); await sleep(200);
+  check("cancelling changes nothing", w.lastSaveForm.profiles[0].name, "Cleanup+");
+  check("every prompt has a handle to drag it by", pb.querySelectorAll(".prow .grip").length, 2);
+  const beforeOrder = w.lastSaveForm.profiles.map(p => p.id).join("+");
+  const plist = pb.querySelector(".plist");
+  const prows = [...pb.querySelectorAll(".prow")];
+  prows.forEach((r, i) => { r.getBoundingClientRect = () => ({ top: 100 + i * 40, bottom: 140 + i * 40, height: 40, left: 0, width: 600 }); });
+  plist.getBoundingClientRect = () => ({ top: 100, bottom: 180, height: 80, left: 0, width: 600 });
+  prows[0].querySelector(".grip").dispatchEvent(new w.MouseEvent("pointerdown", { bubbles: true, clientY: 110, button: 0 }));
+  check("dragging lifts a copy and shows where it lands", [d.querySelectorAll(".prow.ghost").length, d.querySelectorAll(".dropline").length], [1, 1]);
+  d.dispatchEvent(new w.MouseEvent("pointermove", { bubbles: true, clientY: 175 }));
+  d.dispatchEvent(new w.MouseEvent("pointerup", { bubbles: true })); await sleep(350);
+  check("dropping swaps the order and saves it", w.lastSaveForm.profiles.map(p => p.id).join("+") !== beforeOrder, true);
+  check("and the helpers are cleaned up", [d.querySelectorAll(".prow.ghost").length, d.querySelectorAll(".dropline").length], [0, 0]);
+  d.getElementById("profadd").click(); await sleep(150);
+  check("adding opens the same dialog, titled anew", d.querySelector(".modal .mtitle").textContent, "New prompt");
+  d.querySelector(".modal .btn.ghost").click(); await sleep(200);
 
   const pdel = () => pb.querySelector('button[data-a="pdel"]');
   const profsBefore = w.lastSaveForm.profiles ? w.lastSaveForm.profiles.length : 2;
@@ -705,14 +807,31 @@ function check(name, actual, expected) {
   check("saying yes removes it and saves at once", w.lastSaveForm.profiles.length, profsBefore - 1);
 
   tab("post"); await sleep(30);
-  check("the editor model moved in with the post-processing", !!d.querySelector("#p-post #proc-models"), true);
-  check("and left the languages page", !!d.querySelector("#p-models #proc-models"), false);
-  const del = d.querySelector('#proc-models button[data-a="ldel"]');
+  check("the local model is summed up in the card", !!d.querySelector("#p-post #llm_sum"), true);
+  check("and the catalog waits behind a button", !!d.querySelector("#p-post #llm_catalog"), true);
+  check("the summary names the model in use", [...d.querySelectorAll("#llm_sum .sumv")][0].textContent, "model.gguf");
+  check("nothing of it is left on the languages page", !!d.querySelector("#p-models #llm_catalog"), false);
+  d.getElementById("llm_catalog").click(); await sleep(200);
+  check("the catalog opens as a titled dialog", d.querySelector(".modal .mtitle").textContent, "Model catalog");
+  check("installed models are listed with a switch each", d.querySelectorAll("#proc-models input.llmpick").length, 1);
+  check("the model in use has its switch on", d.querySelector("#proc-models input.llmpick").checked, true);
+  check("the installed models live under their own label", d.querySelector("#proc-models .blklbl").textContent, "Installed models");
+  check("a warm model says it sits in memory", d.querySelector("#proc-models .mrow .mstate").textContent, "in memory");
+  const ejectBtn = () => d.querySelector('#proc-models .mrow button[aria-label="Unload from memory"]');
+  check("and offers to free it", !!ejectBtn() && !ejectBtn().disabled, true);
+  ejectBtn().click(); await sleep(250);
+  check("ejecting asks the program to drop the model", w.llmUnloads, 1);
+  check("the row then says the model is only on disk", d.querySelector("#proc-models .mrow .mstate").textContent, "on disk");
+  check("and the eject button goes quiet", ejectBtn().disabled, true);
+  check("nothing is searched yet, and the count says so", d.getElementById("hf_count").textContent, "no search yet");
+  check("the empty result area invites a search", !!d.querySelector("#hf_results .searchempty"), true);
+  const del = d.querySelector("#proc-models button[data-a=\"ldel\"]");
   check("active LLM model can be deleted", !!del, true);
   del.click(); await sleep(60);
   check("deleting a model asks first", !!d.querySelector(".modal-bg"), true);
-  check("the question is asked in the app style, not by the browser", d.querySelectorAll(".modal .btn").length, 2);
-  check("the way out comes first, the action second", [...d.querySelectorAll(".modal .btn")].map(b=>b.className), ["btn ghost", "btn yes"]);
+  const lastModal = () => [...d.querySelectorAll(".modal")].pop();
+  check("the question is asked in the app style, not by the browser", lastModal().querySelectorAll(".btn").length, 2);
+  check("the way out comes first, the action second", [...lastModal().querySelectorAll(".btn")].map(b=>b.className), ["btn ghost", "btn yes"]);
   check("the question keeps the focus on the way out", d.activeElement.className, "btn ghost");
   check("the question is a dialog for the reader", d.querySelector(".modal").getAttribute("aria-modal"), "true");
   check("the window behind is out of reach while it is open", !!d.querySelector(".content[inert]"), true);
@@ -720,16 +839,19 @@ function check(name, actual, expected) {
   check("Tab moves between the two answers and no further", d.activeElement.className, "btn yes");
   d.dispatchEvent(new w.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
   await sleep(150);
-  check("Escape closes it as a no", !!d.querySelector(".modal-bg"), false);
-  check("and the window behind comes back", !!d.querySelector(".content[inert]"), false);
+  check("Escape closes it as a no", d.querySelectorAll(".modal").length, 1);
+  check("and the catalog behind it stays open", !!d.querySelector(".modal.llmcat"), true);
   del.click(); await sleep(150);
   d.querySelector(".modal .btn.yes").click(); await sleep(250);
-  check("the question closes with the answer", !!d.querySelector(".modal-bg"), false);
-  check("model list empty after delete", d.querySelectorAll('#proc-models .pcard').length, 0);
-
+  check("the question closes with the answer", d.querySelectorAll(".modal").length, 1);
+  check("model list empty after delete", d.querySelectorAll("#proc-models input.llmpick").length, 0);
   d.getElementById("hf_q").value = "qwen";
   d.getElementById("hf_go").click(); await sleep(300);
   check("searching Hugging Face is a button, not a decoration", d.getElementById("hf_go").tagName, "BUTTON");
+  check("a finished search counts what it found", d.getElementById("hf_count").textContent, "found 1");
+  check("the search button stands next to the field, not inside it", !d.querySelector(".srchbox").contains(d.getElementById("hf_go")), true);
+  check("memory is spelled out in words", d.getElementById("hf_ramline").textContent, "Memory available: 8.8 GB of 16 GB");
+  check("and the colour key sits on its own line", d.getElementById("hf_fitline").textContent, "●fits●tight●no RAM");
   const repo = d.querySelector(".hfrepo");
   check("a found repository is a button too", !!repo, true);
   check("and it says whether it is open", repo.getAttribute("aria-expanded"), "false");
@@ -742,19 +864,22 @@ function check(name, actual, expected) {
   fitBox.checked = false; fitBox.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(100);
   check("turning it off shows everything", d.querySelectorAll('#hf_results button[data-repo]').length, 2);
   fitBox.checked = true; fitBox.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(100);
+  d.querySelector(".modal.llmcat .btn.ghost").click(); await sleep(200);
+  check("closing the catalog leaves the card behind", [!!d.querySelector(".modal.llmcat"), !!d.getElementById("llm_sum")], [false, true]);
 
 
   tab("models"); await sleep(120);
-  const pickAbsent = () => d.querySelector('#langlist .pcard[data-id="base"]');
-  check("the list remembers which language was open", !!pickAbsent(), true);
-  pickAbsent().click(); await sleep(80);
+  const pickAbsent = async () => { const s = d.querySelector('#langlist .pcard[data-id="base"] input.psw'); s.checked = true; s.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(80); };
+  check("the list remembers which language was open", !!d.querySelector('#langlist .pcard[data-id="base"]'), true);
+  await pickAbsent();
   check("picking a model that is not here asks first", !!d.querySelector(".modal-bg"), true);
+  check("the question wears a title", d.querySelector(".modal .mtitle").textContent, "Downloading a model");
   check("the question names the model and its size", d.querySelector(".modal p").textContent.includes("Base") && d.querySelector(".modal p").textContent.includes("142 MB"), true);
   d.querySelector(".modal .btn.ghost").click(); await sleep(250);
   check("saying no downloads nothing", w.dlCalls.length, 0);
   check("saying no keeps the old choice", w.lastSaveForm.lang_models.ru, "small");
 
-  pickAbsent().click(); await sleep(80);
+  await pickAbsent();
   d.querySelector(".modal .btn.yes").click(); await sleep(250);
   check("saying yes starts the download", w.dlCalls, ["base"]);
   check("agreeing pins the language to the model at once", w.lastSaveForm.lang_models.ru, "base");
@@ -789,44 +914,86 @@ function check(name, actual, expected) {
   check("out of the expert fold", !!d.querySelector("#p-post .card[data-adv]"), false);
   tab("post"); await sleep(60);
   const master = d.getElementById("post_enabled");
-  check("post-processing has one master switch, on by default", master.checked, true);
+  check("post-processing has one master switch", master.type, "checkbox");
+  check("with no model left the heading warns about it", d.getElementById("post_warn").textContent, "on, but no model is picked");
   master.checked = false; master.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(200);
   check("turning it off is saved", w.lastSaveForm.post_enabled, false);
   check("and the cards below dim out", d.getElementById("post_model_card").className.includes("offdim") && d.getElementById("post_prompts_card").className.includes("offdim"), true);
-  check("the heading says plainly it is off", d.getElementById("post_off_note").textContent, "off");
   master.checked = true; master.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(200);
   check("turning it back lights them up", d.getElementById("post_model_card").className.includes("offdim"), false);
   check("the local model is the source out of the box", d.getElementById("src_local").className.includes("on"), true);
-  check("the external card says it is not in use", d.getElementById("src_api").className.includes("idle"), true);
-  d.getElementById("src_api").click(); await sleep(200);
-  check("a click on the idle card switches the source", w.lastSaveForm.post_source, "api");
+  check("the external card is marked as the idle one", d.getElementById("src_api").className.includes("idle"), true);
+  const flipSrc = async (id) => { const s = d.getElementById(id); s.checked = true; s.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(200); };
+  check("each source card carries a switch", d.querySelectorAll("#p-post input.srcpick").length, 2);
+  check("the local one is on out of the box", d.getElementById("pick_local").checked, true);
+  await flipSrc("pick_api");
+  check("flipping the switch moves the work to the server", w.lastSaveForm.post_source, "api");
+  check("an unset server is flagged beside the heading", d.getElementById("post_warn").textContent, "on, but the server is not set up");
+  await flipSrc("pick_local");
+  check("back on local the warning names the missing model", d.getElementById("post_warn").textContent, "on, but no model is picked");
+  await flipSrc("pick_api");
   check("and the marks trade places", d.getElementById("src_api").className.includes("on") && d.getElementById("src_local").className.includes("idle"), true);
-  d.getElementById("src_local").click(); await sleep(200);
-  check("switching back is one click too", w.lastSaveForm.post_source, "local");
-  const pu = d.getElementById("post_api_url");
-  check("an external post-processing server can be set", !!pu, true);
-  check("but nothing is filled in by default", pu.value, "");
-  check("and no warning shows while it is empty", d.getElementById("postapi_warn").textContent, "");
-  pu.value = "https://api.example.com/v1"; pu.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(200);
+  check("the switches follow the choice", [d.getElementById("pick_api").checked, d.getElementById("pick_local").checked], [true, false]);
+  await flipSrc("pick_local");
+  check("switching back is one flick too", w.lastSaveForm.post_source, "local");
+  check("the external server is summed up, not spelled out", !!d.getElementById("api_sum"), true);
+  check("while nothing is set the card says so", d.querySelector("#api_sum .sumv").textContent, "not set up — post-processing runs locally");
+  check("and the button offers to set it up", d.getElementById("api_edit").textContent, "Set up");
+  check("no warning shows while it is empty", d.getElementById("postapi_warn").textContent, "");
+  d.getElementById("api_edit").click(); await sleep(150);
+  check("the settings live in a titled dialog", d.querySelector(".modal .mtitle").textContent, "External server");
+  d.querySelector(".modal .apiurl").value = "https://api.example.com/v1";
+  d.querySelector(".modal .apimodel").value = "gpt-4.1-mini";
+  d.querySelector(".modal .apikey").value = "sk-secret";
+  d.querySelector(".modal .btn.yes").click(); await sleep(250);
   check("pointing the prompts outward asks first", !!d.querySelector(".modal-bg"), true);
   check("and the question names the address", d.querySelector(".modal p").textContent.includes("api.example.com"), true);
   d.querySelector(".modal .btn.ghost").click(); await sleep(250);
-  check("saying no puts the address back", pu.value, "");
-  pu.value = "https://api.example.com/v1"; pu.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(200);
-  d.querySelector(".modal .btn.yes").click(); await sleep(350);
+  check("saying no leaves the card untouched", [w.lastSaveForm.post_api_url, w.postKeys.length], ["", 0]);
+  d.getElementById("api_edit").click(); await sleep(150);
+  d.querySelector(".modal .apiurl").value = "https://api.example.com/v1";
+  d.querySelector(".modal .apimodel").value = "gpt-4.1-mini";
+  d.querySelector(".modal .apikey").value = "sk-secret";
+  d.querySelector(".modal .btn.yes").click(); await sleep(250);
+  d.querySelector(".modal .btn.yes").click(); await sleep(400);
   check("saying yes applies the address", w.lastSaveForm.post_api_url, "https://api.example.com/v1");
-  check("and the honest warning appears", d.getElementById("postapi_warn").textContent.includes("Recognized text"), true);
-  const pk = d.getElementById("post_api_key_new");
-  pk.value = "sk-secret";
-  d.getElementById("postapi_keysave").click(); await sleep(200);
   check("the key goes to the program, not into the config form", w.postKeys, ["sk-secret"]);
-  check("the field forgets the key at once", pk.value, "");
-  await sleep(100);
-  check("and the row says a key is saved", d.getElementById("postapi_keystate").textContent, "key saved");
   check("no later save carries the key along", Object.keys(w.lastSaveForm).includes("post_api_key"), false);
-  pu.value = ""; pu.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
+  check("the honest warning appears", d.getElementById("postapi_warn").textContent.includes("Recognized text"), true);
+  check("the summary now lists what is set", [...d.querySelectorAll("#api_sum .sumv")].map(e=>e.textContent), ["https://api.example.com/v1", "gpt-4.1-mini", "key saved", "30 s"]);
+  check("and the warning by the heading clears itself", d.getElementById("post_warn").style.display, "none");
+  const pcb = () => d.querySelector("#profbody input.profcb");
+  pcb().checked = false; pcb().dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(200);
+  check("with no prompt checked the heading says the work is idle", d.getElementById("post_warn").textContent, "on, but no prompt is checked");
+  pcb().checked = true; pcb().dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(200);
+  check("checking one back clears it", d.getElementById("post_warn").style.display, "none");
+  check("and the button switches to changing it", d.getElementById("api_edit").textContent, "Change");
+  check("setting an address puts the work on that server", w.lastSaveForm.post_source, "api");
+  check("the card offers a test beside Change, to its left", [...d.querySelectorAll("#src_api .acts button")].map(b => b.id), ["api_test", "api_edit"]);
+  w.setPostTestOK(false);
+  d.getElementById("api_test").click(); await sleep(300);
+  check("a failed test says why, under the honest warning", d.getElementById("postapi_err").textContent, "no credits left");
+  check("and the test goes to the address that is set", w.postTests[w.postTests.length - 1][0], "https://api.example.com/v1");
+  w.setPostTestOK(true);
+  d.getElementById("api_test").click(); await sleep(300);
+  check("an answering server clears the red line", d.getElementById("postapi_err").textContent, "");
+  w.setPostErr("Cleanup: no credits left");
+  await w.refreshState(); await sleep(60);
+  check("a failure during dictation shows up there too", d.getElementById("postapi_err").textContent, "Cleanup: no credits left");
+  w.setPostErr("");
+  await w.refreshState(); await sleep(60);
+  check("and a later good run wipes it", d.getElementById("postapi_err").textContent, "");
+  d.getElementById("api_edit").click(); await sleep(150);
+  check("the dialog keeps the test out of it", !!d.getElementById("fm_test"), false);
+  check("a saved key shows as dots, so it is clear one is there", d.querySelector(".modal .apikey").value, "••••••••••••");
+  d.querySelector(".modal .btn.ghost").click(); await sleep(250);
+  d.getElementById("api_edit").click(); await sleep(150);
+  check("a saved key can be deleted from the dialog", d.getElementById("fm_extra").textContent, "Delete the key");
+  d.querySelector(".modal .btn.ghost").click(); await sleep(200);
+  d.getElementById("api_edit").click(); await sleep(150);
+  d.querySelector(".modal .apiurl").value = "";
+  d.querySelector(".modal .btn.yes").click(); await sleep(350);
   check("clearing the address needs no question", [!!d.querySelector(".modal-bg"), w.lastSaveForm.post_api_url], [false, ""]);
-  check("the app rules moved in with the other rules", !!d.querySelector("#p-text #rulesbody"), true);
 
   const before = w.saveCalls;
   const sw = d.getElementById("auto_enter");
@@ -864,7 +1031,7 @@ function check(name, actual, expected) {
   check("a search with no matches highlights nothing", d.querySelectorAll(".hit").length, 0);
   omni.value = "S_SEC_CMD"; omni.dispatchEvent(new w.Event("input")); await sleep(200);
   check("search finds a heading, not only a setting row", shown("text"), true);
-  check("and the heading itself is what is highlighted", !!d.querySelector("#p-text .sect.hit"), true);
+  check("and the heading itself is what is highlighted", !!d.querySelector("#p-text .blklbl.hit"), true);
   omni.value = ""; omni.dispatchEvent(new w.Event("input")); await sleep(60);
 
   check("no save button left", !!d.querySelector(".footer"), false);
@@ -1032,7 +1199,7 @@ function check(name, actual, expected) {
     const rule = at < 0 ? "" : css.slice(at, css.indexOf("}", at));
     check(`${sel} follows the skin (${want})`, rule.includes(want), true);
   }
-  const fieldRules = css.match(/(?:input[type=text]|.row select|.rulerow input|.replrow input|.replcheck input|.advq select|.wizrow select)[^}]*{[^}]*}/g) || [];
+  const fieldRules = css.match(/(?:input[type=text]|.row select|.rulerow input|.replrow input|.advq select|.wizrow select)[^}]*{[^}]*}/g) || [];
   const strays = fieldRules.filter(r => /(?:^|;|{)(?:padding|font-size):s*(?!var(--fieldpad)|var(--ctlfs))/.test(r));
   check("no field sets its own height", strays, []);
   const literals = [...new Set((css.match(/#[0-9a-f]{6}/g) || []))].sort();

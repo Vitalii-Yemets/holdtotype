@@ -389,11 +389,11 @@ func tmKey(vk uint32) bool {
 			id = tmItems[tmHover].id
 		}
 		tmMu.Unlock()
-		log.Printf("трей-меню: выбор с клавиатуры")
+		log.Printf("tray menu: keyboard selection")
 		tmFinish(id)
 		return true
 	case vkEscape:
-		log.Printf("трей-меню: закрыто клавишей")
+		log.Printf("tray menu: closed with a key")
 		tmFinish(0)
 		return true
 	}

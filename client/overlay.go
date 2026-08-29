@@ -24,7 +24,6 @@ const (
 	ovProcessing
 	ovFlashOK
 	ovFlashErr
-	ovPaused
 )
 
 const (
@@ -109,7 +108,6 @@ var (
 	ovRecorder *Recorder
 	ovHwnd     uintptr
 
-	ovAnim atomic.Bool
 
 	ovOnce  sync.Once
 	ovReady = make(chan struct{})
@@ -138,11 +136,11 @@ func ovCancelActive() bool {
 	ovMu.Lock()
 	st := ovState
 	ovMu.Unlock()
-	return st == ovRecording || st == ovProcessing || st == ovPaused
+	return st == ovRecording || st == ovProcessing
 }
 
 func ovShowsClose(st int) bool {
-	return st == ovRecording || st == ovProcessing || st == ovPaused || st == ovFlashOK || st == ovFlashErr
+	return st == ovRecording || st == ovProcessing || st == ovFlashOK || st == ovFlashErr
 }
 
 func ovFlashState() bool {
@@ -189,7 +187,7 @@ func uiFontDPI(dpi int32) uintptr {
 	f, _, _ := procCreateFontW.Call(uintptr(^uintptr(h)+1), 0, 0, 0, uintptr(skin.Weight),
 		0, 0, 0, 1, 0, 0, 5, 0, uintptr(unsafe.Pointer(face)))
 	fontCache[dpi] = f
-	log.Printf("шрифт интерфейса создан: %s %d px для %d DPI", skin.FontGDI, skin.FontPx, dpi)
+	log.Printf("interface font created: %s %d px for %d DPI", skin.FontGDI, skin.FontPx, dpi)
 	return f
 }
 
@@ -466,7 +464,7 @@ func overlaySet(state int, text string) {
 	}
 	hwnd := ovHwnd
 	ovMu.Unlock()
-	if state == ovRecording && old != ovRecording && old != ovPaused {
+	if state == ovRecording && old != ovRecording {
 		ovRecStart.Store(time.Now().UnixMilli())
 	}
 	width := measureOverlayWidth(state, text)
@@ -488,7 +486,6 @@ func flashLife(text string, base int) time.Duration {
 func overlayHide() { overlaySet(ovHidden, "") }
 
 func startOverlayThread() {
-	ovAnim.Store(true)
 	go func() {
 		runtime.LockOSThread()
 		className, _ := windows.UTF16PtrFromString(appid.Class("OverlayWnd"))
@@ -558,7 +555,7 @@ func overlayWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 		}
 		return 0
 	case wmDpiChanged:
-		log.Printf("оверлей: масштаб экрана сменился, пересчитываю плашку")
+		log.Printf("overlay: the screen scaling changed, recomputing the plate")
 		go overlayRefresh()
 		return 0
 	case wmTimer:
@@ -582,7 +579,7 @@ func overlayWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 		}
 		askTick()
 		_, counting := askLeft()
-		if !counting && st != ovRecording && (!ovAnim.Load() || st != ovProcessing) {
+		if !counting && st != ovRecording && st != ovProcessing {
 			return 0
 		}
 		overlayRenderDirect(hwnd)
@@ -598,7 +595,7 @@ func overlayWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 			return 0
 		}
 		if ovInCloseZone(x, y) && ovFlashState() {
-			log.Printf("оверлей: вспышка закрыта нажатием")
+			log.Printf("overlay: the flash was dismissed by a click")
 			overlayHide()
 			return 0
 		}
@@ -639,8 +636,6 @@ func stateColors(st int) (bright, dim uintptr) {
 	case ovRecording:
 		return colRed, colRedDm
 	case ovProcessing:
-		return colAmber, colAmberDm
-	case ovPaused:
 		return colAmber, colAmberDm
 	case ovFlashErr:
 		return colBad, colBadDm
@@ -694,7 +689,6 @@ func overlayRender(hwnd, hdc uintptr) {
 	st := ovState
 	text := ovText
 	ovMu.Unlock()
-	anim := ovAnim.Load()
 	left := overlayCountdown()
 	bright, _ := stateColors(st)
 	if st == ovRecording && left >= 0 {
@@ -720,7 +714,7 @@ func overlayRender(hwnd, hdc uintptr) {
 		procDeleteObject.Call(brush)
 	}
 	pulse := 0.0
-	if anim && !askActive() && (st == ovRecording || st == ovProcessing) {
+	if !askActive() && (st == ovRecording || st == ovProcessing) {
 		pulse = math.Abs(math.Sin(float64(ovTick) * 0.18 / themePulse()))
 	}
 	ctlTop := int32(0)
@@ -732,7 +726,7 @@ func overlayRender(hwnd, hdc uintptr) {
 		halo = core + px(5)
 	}
 	hideDot := false
-	if anim && st == ovFlashOK && !askActive() {
+	if st == ovFlashOK && !askActive() {
 		age := float64(ovTick - ovFlashAt)
 		switch themeFlash() {
 		case "blink":
@@ -748,10 +742,6 @@ func overlayRender(hwnd, hdc uintptr) {
 		}
 	}
 	switch st {
-	case ovPaused:
-		w, h, gap := px(2), px(10), px(3)
-		fill(rect{Left: dotX - gap - w, Top: cy - h/2, Right: dotX - gap, Bottom: cy + h/2}, bright)
-		fill(rect{Left: dotX + gap, Top: cy - h/2, Right: dotX + gap + w, Bottom: cy + h/2}, bright)
 	case ovFlashErr:
 		s := px(5)
 		fill(rect{Left: dotX - s, Top: cy - s, Right: dotX + s, Bottom: cy + s}, bright)
@@ -766,11 +756,7 @@ func overlayRender(hwnd, hdc uintptr) {
 		if text == "" {
 			text = tr("ov.transcribing")
 		}
-		if anim {
-			text += strings.Repeat(".", 1+(ovTick/10)%3)
-		} else {
-			text += "…"
-		}
+		text += strings.Repeat(".", 1+(ovTick/10)%3)
 	}
 	procSelectObject.Call(hdc, overlayFont())
 	procSetBkMode.Call(hdc, 1)
@@ -855,7 +841,7 @@ func overlayRender(hwnd, hdc uintptr) {
 		procSetTextColor.Call(hdc, colAmber)
 		procDrawTextW.Call(hdc, uintptr(unsafe.Pointer(&ls[0])), uintptr(len(ls)-1),
 			uintptr(unsafe.Pointer(&lr)), 0x0020|0x0004|0x0002)
-	} else if st == ovRecording && anim {
+	} else if st == ovRecording {
 		style := themeLevelStyle()
 		for i, v := range ovHistory {
 			x := rc.Right - px(186) + int32(i)*px(7)
@@ -901,7 +887,7 @@ func overlayNote(text string) {
 		overlaySet(ovFlashErr, text)
 		return
 	}
-	log.Printf("оверлей: предупреждение поверх работы — %s", text)
+	log.Printf("overlay: warning on top of the work — %s", text)
 	overlaySet(st, text)
 }
 

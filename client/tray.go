@@ -160,7 +160,7 @@ func trayReadd() {
 		return
 	}
 	procShellNotifyIconW.Call(nimAdd, uintptr(unsafe.Pointer(&nid)))
-	log.Printf("трей: панель задач перезапущена, иконка добавлена заново")
+	log.Printf("tray: the taskbar restarted, the icon was added again")
 }
 
 func trayWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
@@ -182,6 +182,14 @@ func trayWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 		nid := trayNotifyData()
 		trayMu.Unlock()
 		procShellNotifyIconW.Call(nimModify, uintptr(unsafe.Pointer(&nid)))
+		return 0
+	case wmCommand:
+		if wParam&0xFFFF == cmdQuit && trayApp != nil {
+			go func() {
+				trayApp.onExit()
+				procPostMessageW.Call(hwnd, wmClose, 0, 0)
+			}()
+		}
 		return 0
 	case wmDestroy:
 		procPostQuitMessage.Call(0)

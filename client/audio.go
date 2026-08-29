@@ -83,7 +83,7 @@ func (r *Recorder) devices() []micDevice {
 	}
 	infos, err := ctx.Devices(malgo.Capture)
 	if err != nil {
-		log.Printf("список микрофонов: %v", err)
+		log.Printf("microphone list: %v", err)
 		return nil
 	}
 	out := make([]micDevice, 0, len(infos))
@@ -173,20 +173,20 @@ func NewRecorder(deviceID string) (*Recorder, error) {
 	}
 	ctx, err := malgo.InitContext(nil, malgo.ContextConfig{}, nil)
 	if err != nil {
-		return nil, fmt.Errorf("аудиоконтекст: %w", err)
+		return nil, fmt.Errorf("audio context: %w", err)
 	}
 	r.ctx = ctx
 
 	if err := r.openDevice(deviceID); err != nil {
 		opened := false
 		if deviceID != "" {
-			log.Printf("микрофон %s недоступен (%v) — беру системный по умолчанию", deviceID, err)
+			log.Printf("microphone %s unavailable (%v) — falling back to the system default", deviceID, err)
 			opened = r.openDevice("") == nil
 		}
 		if !opened {
 			ctx.Uninit()
 			ctx.Free()
-			return nil, fmt.Errorf("микрофон: %w", err)
+			return nil, fmt.Errorf("microphone: %w", err)
 		}
 	}
 	go r.watchMonitor()
@@ -234,12 +234,12 @@ func (r *Recorder) startDevice() error {
 	devID := r.deviceID
 	r.mu.Unlock()
 	if dev == nil {
-		return errors.New("устройство записи не открыто")
+		return errors.New("the capture device is not open")
 	}
 
 	err := dev.Start()
 	if err != nil {
-		log.Printf("микрофон не запустился (%v) — переоткрываю устройство", err)
+		log.Printf("microphone did not start (%v) — reopening the device", err)
 		rerr := r.openDevice(devID)
 		if rerr != nil && devID != "" {
 			rerr = r.openDevice("")
@@ -281,7 +281,7 @@ func (r *Recorder) Start(maxSeconds int) error {
 	r.mu.Lock()
 	if r.recording {
 		r.mu.Unlock()
-		return errors.New("запись уже идёт")
+		return errors.New("a recording is already running")
 	}
 	if maxSeconds <= 0 {
 		maxSeconds = defaultMaxSeconds
@@ -304,12 +304,6 @@ func (r *Recorder) Start(maxSeconds int) error {
 		return err
 	}
 	return nil
-}
-
-func (r *Recorder) SetPaused(v bool) {
-	r.mu.Lock()
-	r.paused = v
-	r.mu.Unlock()
 }
 
 // TakeFrom hands out the sound recorded since the given offset, so a live
@@ -336,7 +330,7 @@ func (r *Recorder) Stop() []byte {
 	r.mu.Unlock()
 	r.stopDevice()
 	if over {
-		log.Printf("запись упёрлась в предел буфера (%d с), хвост отброшен", max/(sampleRate*2))
+		log.Printf("recording hit the buffer limit (%d s), the tail was dropped", max/(sampleRate*2))
 	}
 	return pcm
 }
@@ -351,7 +345,7 @@ func (r *Recorder) MonitorPing() {
 		return
 	}
 	if err := r.startDevice(); err != nil {
-		log.Printf("монитор микрофона: %v", err)
+		log.Printf("microphone monitor: %v", err)
 		r.mu.Lock()
 		r.monitor = false
 		r.mu.Unlock()
@@ -382,7 +376,7 @@ func (r *Recorder) watchMonitor() {
 			if last > 0 && time.Since(time.Unix(0, last)) > micSilenceLimit {
 				r.lost.Store(true)
 				r.level.Store(0)
-				log.Printf("микрофон перестал отдавать звук — считаю его отключённым")
+				log.Printf("microphone stopped delivering audio — treating it as disconnected")
 				if r.onLost != nil {
 					go r.onLost()
 				}
@@ -414,4 +408,4 @@ func pcmPeak(pcm []byte) float64 { return audiolevel.Peak(pcm) }
 
 func pcmIsSilent(pcm []byte) bool { return audiolevel.IsSilent(pcm) }
 
-var errRecorderBusy = errors.New("микрофон занят записью")
+var errRecorderBusy = errors.New("the microphone is busy recording")

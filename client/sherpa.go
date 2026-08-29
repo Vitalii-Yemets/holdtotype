@@ -168,7 +168,7 @@ func startSherpaServer(cfg *Config, logw io.Writer) (*sherpaServer, error) {
 			args = append(args, "--canary-src-lang="+src, "--canary-tgt-lang="+tgt, "--canary-use-pnc=true")
 			if tgt != src {
 				s.tgt = tgt
-				log.Printf("canary: перевод %s → %s", src, tgt)
+				log.Printf("canary: translation %s → %s", src, tgt)
 			}
 			break
 		}
@@ -184,7 +184,7 @@ func startSherpaServer(cfg *Config, logw io.Writer) (*sherpaServer, error) {
 	cmd.Stderr = quiet
 	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true, CreationFlags: 0x08000000}
 	if err := cmd.Start(); err != nil {
-		log.Printf("запуск %s: %v", cfg.SherpaExe, err)
+		log.Printf("starting %s: %v", cfg.SherpaExe, err)
 		return nil, fmt.Errorf("%s", trf("err.server.launch", cfg.SherpaExe))
 	}
 	s.cmd = cmd
@@ -198,7 +198,7 @@ func startSherpaServer(cfg *Config, logw io.Writer) (*sherpaServer, error) {
 		s.mu.Unlock()
 		close(s.doneCh)
 		if !stopping {
-			log.Printf("sherpa-server аварийно завершился")
+			log.Printf("sherpa-server crashed")
 		}
 	}()
 	return s, nil
@@ -252,7 +252,7 @@ func (s *sherpaServer) waitReady(timeout time.Duration) error {
 		ok, err := s.probe()
 		if ok {
 			if lastErr != nil {
-				log.Printf("sherpa-server ответил после ошибки: %v", lastErr)
+				log.Printf("sherpa-server answered after an error: %v", lastErr)
 			}
 			return nil
 		}
@@ -279,7 +279,7 @@ func (s *sherpaServer) stop() {
 
 func (s *sherpaServer) transcribe(ctx context.Context, wav []byte, language, prompt string, translate bool) (string, error) {
 	if !s.alive() {
-		return "", fmt.Errorf("sherpa-server не запущен")
+		return "", fmt.Errorf("sherpa-server is not running")
 	}
 	if translate {
 		return "", fmt.Errorf("%s", tr("err.sherpa.translate"))
@@ -300,7 +300,7 @@ func (s *sherpaServer) decode(ctx context.Context, pcm []byte, rate int) (string
 	dialer := websocket.Dialer{HandshakeTimeout: 10 * time.Second}
 	conn, _, err := dialer.DialContext(ctx, "ws://"+s.addr, nil)
 	if err != nil {
-		return "", fmt.Errorf("подключение к sherpa-server: %w", err)
+		return "", fmt.Errorf("connecting to sherpa-server: %w", err)
 	}
 	defer conn.Close()
 
@@ -315,13 +315,13 @@ func (s *sherpaServer) decode(ctx context.Context, pcm []byte, rate int) (string
 	payload := append(sherpaproto.Header(rate, len(samples)), samples...)
 	for _, part := range sherpaproto.Chunks(payload, sherpaproto.ChunkBytes) {
 		if err := conn.WriteMessage(websocket.BinaryMessage, part); err != nil {
-			return "", fmt.Errorf("передача звука: %w", err)
+			return "", fmt.Errorf("audio streaming: %w", err)
 		}
 	}
 
 	_, raw, err := conn.ReadMessage()
 	if err != nil {
-		return "", fmt.Errorf("ответ sherpa-server: %w", err)
+		return "", fmt.Errorf("answer from sherpa-server: %w", err)
 	}
 	_ = conn.WriteMessage(websocket.TextMessage, []byte("Done"))
 	_ = conn.WriteMessage(websocket.CloseMessage,

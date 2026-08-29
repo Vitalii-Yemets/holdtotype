@@ -1,7 +1,6 @@
 package main
 
 import (
-	"holdtotype/internal/apprules"
 	"holdtotype/internal/commands"
 	"holdtotype/internal/history"
 	"holdtotype/internal/mojibake"
@@ -25,7 +24,7 @@ import (
 
 type Profile = profiles.Profile
 
-const configVersion = 4
+const configVersion = 5
 
 const (
 	hotkeyHold   = "hold"
@@ -107,14 +106,12 @@ type Config struct {
 	OverlayXY        map[string]ovplace.Frac `json:"overlay_custom"`
 	OverlayText      bool   `json:"overlay_text"`
 	PasteDelayMs     int    `json:"paste_delay_ms"`
-	Animation        bool   `json:"animation"`
 	UILanguage       string `json:"ui_language"`
 	MaxRecordSeconds int    `json:"max_record_seconds"`
 	MinRecordMs      int    `json:"min_record_ms"`
 
 	WhisperPrompt       string             `json:"whisper_prompt"`
 	TranslateHotkey     string             `json:"translate_hotkey"`
-	PauseHotkey         string             `json:"pause_hotkey"`
 	TranslateTarget     string             `json:"translate_target"`
 	TranslateAsk        string             `json:"translate_ask"`
 	TranslateAskSeconds int                `json:"translate_ask_seconds"`
@@ -131,7 +128,6 @@ type Config struct {
 	CheckUpdates        bool               `json:"check_updates"`
 	MicDevice           string             `json:"mic_device"`
 	MicDeviceName       string             `json:"mic_device_name"`
-	AppRules            []apprules.Rule    `json:"app_rules"`
 	Replacements        []replace.Rule     `json:"replacements"`
 	HistoryOn           bool               `json:"history"`
 	HistoryDays         int                `json:"history_days"`
@@ -180,7 +176,7 @@ func renameLegacyProfiles(cfg *Config) bool {
 			}
 			for _, p := range presets {
 				if p.ID == cfg.Profiles[i].ID {
-					log.Printf("имя встроенного промпта %s переведено на английский", p.ID)
+					log.Printf("built-in prompt %s renamed to English", p.ID)
 					cfg.Profiles[i].Name = p.Name
 					changed = true
 				}
@@ -221,7 +217,6 @@ func defaultConfig() *Config {
 		Overlay:          true,
 		OverlayPos:       ovPosBottom,
 		OverlayText:      true,
-		Animation:        true,
 		UILanguage:       "auto",
 		MaxRecordSeconds: 120,
 		MinRecordMs:      300,
@@ -229,7 +224,7 @@ func defaultConfig() *Config {
 		LLMPort:          8911,
 		LLMExe:           "llama-server.exe",
 		LLMModel:         "models/" + llmFile,
-		PostEnabled:      true,
+		PostEnabled:      false,
 		PostSource:       "local",
 		WizardDone:       true,
 		HistoryDays:      history.DefaultKeepDays,
@@ -331,13 +326,13 @@ func loadConfig(path string) (*Config, error) {
 		backupConfig(path, data, fileVer)
 	}
 	if fileVer > configVersion {
-		log.Printf("конфигурация из более новой версии программы (v%d, я понимаю v%d) — незнакомые поля будут потеряны при первом сохранении", fileVer, configVersion)
+		log.Printf("config comes from a newer version (v%d, this build understands v%d) — unknown fields will be lost on the first save", fileVer, configVersion)
 	}
 	if syncDictionary(cfg) {
 		migrated = true
 	}
 	if fixConfigText(cfg) {
-		log.Printf("конфигурация: текст был испорчен сторонним редактором — кодировка восстановлена")
+		log.Printf("config: the text was mangled by another editor — encoding restored")
 		migrated = true
 	}
 	if cfg.PasteMode != "clipboard" && cfg.PasteMode != "type" {
@@ -356,10 +351,16 @@ func loadConfig(path string) (*Config, error) {
 		migrateToPresets(cfg, data)
 		migrated = true
 	}
+	if !firstRun && fileConfigVersion(data) < 5 && (cfg.TranslateDefault || cfg.TranslateAsk == "always" || cfg.TranslateAsk == "timeout") {
+		cfg.TranslateDefault = false
+		cfg.TranslateAsk = "never"
+		log.Printf("translation is off by default in the new scheme — turn it on in the settings if you want it")
+		migrated = true
+	}
 	if cleaned, dropped := preset.Clean(cfg.LangModels, func(id string) *preset.Model {
 		return presetView(findModel(id))
 	}); len(dropped) > 0 {
-		log.Printf("пресеты: отброшены назначения %s", strings.Join(dropped, ", "))
+		log.Printf("presets: dropped assignments %s", strings.Join(dropped, ", "))
 		cfg.LangModels = cleaned
 		migrated = true
 	} else {
@@ -382,7 +383,7 @@ func loadConfig(path string) (*Config, error) {
 		// older versions kept one value for both; split it
 		skin, colour := theme.Migrate(cfg.Theme)
 		cfg.Skin, cfg.Theme = skin, colour
-		log.Printf("оформление разделено на облик %s и цвет %s", skin, colour)
+		log.Printf("appearance split into skin %s and colour %s", skin, colour)
 		migrated = true
 	}
 	if !theme.ValidSkin(cfg.Skin) {
@@ -445,7 +446,7 @@ func loadConfig(path string) (*Config, error) {
 		cfg.LLMModel = "models/" + llmFile
 	}
 	if !validPostAPIURL(cfg.PostAPIURL) {
-		log.Printf("адрес сервера постобработки %q не разобран — сброшен", cfg.PostAPIURL)
+		log.Printf("post-processing server address %q could not be parsed — reset", cfg.PostAPIURL)
 		cfg.PostAPIURL = ""
 	}
 	if cfg.PostAPITimeout < 5 || cfg.PostAPITimeout > 120 {
@@ -506,16 +507,16 @@ func loadConfig(path string) (*Config, error) {
 	cfg.TranslateAskLangs = langs
 	if firstRun {
 		if sys := systemLang(); sys != "" && sys != cfg.Language {
-			log.Printf("первый запуск: язык распознавания по системе — %s", sys)
+			log.Printf("first run: recognition language taken from the system — %s", sys)
 			cfg.Language = sys
 			migrated = true
 		}
 	}
 	if migrated {
 		if err := saveConfig(path, cfg); err != nil {
-			log.Printf("сохранение обновлённой конфигурации: %v", err)
+			log.Printf("saving the upgraded config: %v", err)
 		} else if fileVer != configVersion {
-			log.Printf("конфигурация обновлена: v%d → v%d", fileVer, configVersion)
+			log.Printf("config upgraded: v%d → v%d", fileVer, configVersion)
 		}
 	}
 	return cfg, nil
@@ -529,10 +530,10 @@ func backupConfig(path string, data []byte, ver int) {
 		return
 	}
 	if err := os.WriteFile(bak, data, 0o644); err != nil {
-		log.Printf("копия прежней конфигурации не записалась: %v", err)
+		log.Printf("backup of the previous config was not written: %v", err)
 		return
 	}
-	log.Printf("копия прежней конфигурации (v%d) сохранена: %s", ver, bak)
+	log.Printf("backup of the previous config (v%d) saved: %s", ver, bak)
 }
 
 var translateLangNames = map[string]string{
@@ -540,7 +541,7 @@ var translateLangNames = map[string]string{
 	"it": "Italian", "pl": "Polish", "ru": "Russian", "uk": "Ukrainian",
 }
 
-var translateLangOrder = []string{"de", "en", "es", "fr", "it", "pl", "ru", "uk"}
+var translateLangOrder = []string{"de", "en", "es", "fr", "it", "pl", "uk", "ru"}
 
 func translateLangCodes() []string { return translateLangOrder }
 
@@ -566,7 +567,7 @@ func migrateToPresets(cfg *Config, data []byte) {
 		cfg.LangModels["auto"] = wID
 	}
 	if fileSTTEngine(data) == "whisper" {
-		log.Printf("конфигурация из прошлой версии: язык → модель, всё на %s", wID)
+		log.Printf("config from an older version: language → model, everything on %s", wID)
 		return
 	}
 	dir := filepath.Base(filepath.Clean(cfg.SherpaModel))
@@ -582,7 +583,7 @@ func migrateToPresets(cfg *Config, data []byte) {
 			}
 		}
 	}
-	log.Printf("конфигурация из прошлой версии: язык → модель, универсальная %s", wID)
+	log.Printf("config from an older version: language → model, universal %s", wID)
 }
 
 func fileSTTEngine(data []byte) string {
@@ -636,7 +637,7 @@ func logUnknownConfigKeys(data []byte, cfg *Config) {
 	}
 	if len(extra) > 0 {
 		sort.Strings(extra)
-		log.Printf("конфигурация: незнакомые поля пропущены — %s", strings.Join(extra, ", "))
+		log.Printf("config: unknown fields skipped — %s", strings.Join(extra, ", "))
 	}
 }
 

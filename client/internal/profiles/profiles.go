@@ -6,7 +6,6 @@ type Profile struct {
 	ID     string `json:"id"`
 	Name   string `json:"name"`
 	Prompt string `json:"prompt"`
-	Hotkey string `json:"hotkey"`
 }
 
 func ByID(all []Profile, id string) *Profile {

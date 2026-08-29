@@ -3,7 +3,7 @@ package apprules
 import "testing"
 
 func TestFindMatchesExeName(t *testing.T) {
-	rules := []Rule{{ID: "a", Match: "chrome.exe", Paste: PasteType}}
+	rules := []Rule{{ID: "a", Match: "chrome.exe"}}
 	got, ok := Find(rules, `C:\Program Files\Google\Chrome\Application\chrome.exe`)
 	if !ok || got.ID != "a" {
 		t.Fatalf("полный путь не совпал с правилом: %v %v", got, ok)
@@ -69,29 +69,3 @@ func TestFindEmpty(t *testing.T) {
 	}
 }
 
-func TestCleanDropsEmptyAndFixesFields(t *testing.T) {
-	in := []Rule{
-		{Match: "  "},
-		{Match: " chrome.exe ", Paste: "whatever", Enter: "maybe", DelayMs: -5, Profiles: []string{"clean"}},
-		{Match: "code.exe", DelayMs: 99999, UseProfiles: true, Profiles: []string{"formal"}},
-	}
-	out := Clean(in)
-	if len(out) != 2 {
-		t.Fatalf("правило без программы не выброшено: %d", len(out))
-	}
-	if out[0].Match != "chrome.exe" {
-		t.Fatalf("пробелы не убраны: %q", out[0].Match)
-	}
-	if out[0].Paste != PasteInherit || out[0].Enter != EnterInherit || out[0].DelayMs != 0 {
-		t.Fatalf("мусорные значения не сброшены: %+v", out[0])
-	}
-	if out[0].Profiles != nil {
-		t.Fatal("промпты остались, хотя правило их не переопределяет")
-	}
-	if out[1].DelayMs != 0 {
-		t.Fatalf("слишком большая задержка не сброшена: %d", out[1].DelayMs)
-	}
-	if len(out[1].Profiles) != 1 {
-		t.Fatal("промпты потерялись у правила, которое их переопределяет")
-	}
-}

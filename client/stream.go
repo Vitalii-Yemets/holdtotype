@@ -99,7 +99,7 @@ func startStreamServer(cfg *Config, logw io.Writer) (*streamServer, error) {
 	cmd.Stderr = quiet
 	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true, CreationFlags: 0x08000000}
 	if err := cmd.Start(); err != nil {
-		log.Printf("запуск %s: %v", cfg.StreamExe, err)
+		log.Printf("starting %s: %v", cfg.StreamExe, err)
 		return nil, fmt.Errorf("%s", trf("err.server.launch", cfg.StreamExe))
 	}
 	s.cmd = cmd
@@ -113,7 +113,7 @@ func startStreamServer(cfg *Config, logw io.Writer) (*streamServer, error) {
 		s.mu.Unlock()
 		close(s.doneCh)
 		if !stopping {
-			log.Printf("потоковый распознаватель аварийно завершился")
+			log.Printf("the streaming recognizer crashed")
 		}
 	}()
 	return s, nil
@@ -195,12 +195,12 @@ type streamSession struct {
 
 func (s *streamServer) openSession(ctx context.Context, partial func(text string)) (*streamSession, error) {
 	if !s.alive() {
-		return nil, fmt.Errorf("потоковый распознаватель не запущен")
+		return nil, fmt.Errorf("the streaming recognizer is not running")
 	}
 	dialer := websocket.Dialer{HandshakeTimeout: 10 * time.Second}
 	conn, _, err := dialer.DialContext(ctx, "ws://"+s.addr, nil)
 	if err != nil {
-		return nil, fmt.Errorf("подключение к потоковому распознавателю: %w", err)
+		return nil, fmt.Errorf("connecting to the streaming recognizer: %w", err)
 	}
 	sess := &streamSession{conn: conn, partial: partial, segs: map[int]string{}, readErr: make(chan error, 1)}
 	go sess.readLoop()
@@ -330,7 +330,7 @@ func (s *streamServer) transcribe(ctx context.Context, wav []byte, language, pro
 		}
 		if err := sess.push(pcm[off:end]); err != nil {
 			sess.close()
-			return "", fmt.Errorf("передача звука: %w", err)
+			return "", fmt.Errorf("audio streaming: %w", err)
 		}
 	}
 	return sess.finish(ctx)

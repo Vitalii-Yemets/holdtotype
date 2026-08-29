@@ -62,7 +62,6 @@ type App struct {
 	enabled    bool
 	ready      bool
 	capturing  bool
-	paused     bool
 	parked     bool
 	backendErr string
 	quitting   bool
@@ -84,6 +83,9 @@ type App struct {
 	lastWnd      uintptr
 	settingsPrev uintptr
 	lastProcess  string
+	postErr      string
+	postErrProf  string
+	postErrAt    time.Time
 	updVer       string
 	updURL       string
 	updDigest    string
@@ -122,7 +124,7 @@ func (a *App) liveStream(gen int, cfg *Config) {
 		}
 	})
 	if err != nil {
-		log.Printf("живой текст не запустился (%v) — распознаю по окончании", err)
+		log.Printf("live text did not start (%v) — recognizing after the recording", err)
 		return
 	}
 	a.liveMu.Lock()
@@ -137,7 +139,7 @@ func (a *App) liveStream(gen int, cfg *Config) {
 	if cfg.Overlay && a.state.Load() == stRecording {
 		overlaySet(ovRecording, "")
 	}
-	log.Printf("живой текст: поток открыт")
+	log.Printf("live text: the stream is open")
 	offset := 0
 	for {
 		time.Sleep(180 * time.Millisecond)
@@ -150,7 +152,7 @@ func (a *App) liveStream(gen int, cfg *Config) {
 		chunk, next := rec.TakeFrom(offset)
 		if len(chunk) > 0 {
 			if err := sess.push(chunk); err != nil {
-				log.Printf("живой текст: передача звука оборвалась (%v)", err)
+				log.Printf("live text: audio streaming broke off (%v)", err)
 				return
 			}
 			offset = next
@@ -207,7 +209,7 @@ func waitReadyCtx(ctx context.Context, srv recognizer) error {
 	case err := <-done:
 		return err
 	case <-ctx.Done():
-		log.Printf("ожидание движка прервано пользователем")
+		log.Printf("waiting for the engine was cancelled by the user")
 		return ctx.Err()
 	}
 }
@@ -255,7 +257,7 @@ func (a *App) engineFor(ctx context.Context, cfg *Config, want, wantModel string
 		}
 	}
 	cfg = &c
-	log.Printf("поднимаю второй движок %s под эту диктовку", want)
+	log.Printf("starting the second engine %s for this dictation", want)
 	started := time.Now()
 	srv, err := startEngine(cfg, want, logFile)
 	if err != nil {
@@ -267,7 +269,7 @@ func (a *App) engineFor(ctx context.Context, cfg *Config, want, wantModel string
 	}
 	a.alt = srv
 	a.altUsed = time.Now()
-	log.Printf("второй движок %s готов за %.1f с", want, time.Since(started).Seconds())
+	log.Printf("second engine %s ready in %.1f s", want, time.Since(started).Seconds())
 	return srv, nil
 }
 
@@ -286,7 +288,7 @@ func (a *App) sweepOnce() bool {
 	name := a.alt.engine()
 	a.alt.stop()
 	a.alt = nil
-	log.Printf("второй движок %s выгружен после %d минут простоя", name, int(idle.Minutes()))
+	log.Printf("second engine %s unloaded after %d idle minutes", name, int(idle.Minutes()))
 	return true
 }
 
@@ -339,11 +341,11 @@ func main() {
 		if arg == "-listmics" {
 			rec, rerr := NewRecorder("")
 			if rerr != nil {
-				log.Printf("микрофоны недоступны: %v", rerr)
+				log.Printf("microphones unavailable: %v", rerr)
 				return
 			}
 			for _, d := range rec.devices() {
-				log.Printf("микрофон: %s (id=%s)", d.Name, d.ID)
+				log.Printf("microphone: %s (id=%s)", d.Name, d.ID)
 			}
 			rec.Close()
 			return
@@ -352,75 +354,75 @@ func main() {
 			path := os.Args[1:][i+1]
 			cfg, cerr := loadConfig("config.json")
 			if cerr != nil {
-				log.Printf("конфигурация: %v", cerr)
+				log.Printf("config: %v", cerr)
 				return
 			}
 			if rest := os.Args[1:][i+2:]; len(rest) > 0 && validTranslateLang(rest[0]) {
 				cfg.CanaryTarget = rest[0]
-				log.Printf("transcribe: цель перевода %s", rest[0])
+				log.Printf("transcribe: translation target %s", rest[0])
 			}
 			wav, rerr := os.ReadFile(path)
 			if rerr != nil {
-				log.Printf("файл %s: %v", path, rerr)
+				log.Printf("file %s: %v", path, rerr)
 				return
 			}
 			srv, serr := startRecognizer(cfg, logFile)
 			if serr != nil {
-				log.Printf("распознаватель: %v", serr)
+				log.Printf("recognizer: %v", serr)
 				return
 			}
 			defer srv.stop()
 			if werr := srv.waitReady(engineReadyTimeout(srv)); werr != nil {
-				log.Printf("распознаватель не поднялся: %v", werr)
+				log.Printf("recognizer did not start: %v", werr)
 				return
 			}
 			started := time.Now()
 			text, terr := srv.transcribe(context.Background(), wav, cfg.Language, cfg.WhisperPrompt, false)
 			if terr != nil {
-				log.Printf("распознавание: %v", terr)
+				log.Printf("recognition: %v", terr)
 				return
 			}
-			log.Printf("движок=%s время=%.2f c текст=%q", srv.engine(), time.Since(started).Seconds(), text)
+			log.Printf("engine=%s time=%.2f s text=%q", srv.engine(), time.Since(started).Seconds(), text)
 			return
 		}
 		if arg == "-postcheck" && i+1 < len(os.Args[1:]) {
 			sample := os.Args[1:][i+1]
 			cfg, cerr := loadConfig("config.json")
 			if cerr != nil {
-				log.Printf("конфигурация: %v", cerr)
+				log.Printf("config: %v", cerr)
 				return
 			}
 			if rest := os.Args[1:][i+2:]; len(rest) > 0 && rest[0] != "" {
 				enc, kerr := protectKey(rest[0])
 				if kerr != nil {
-					log.Printf("postcheck: шифрование ключа: %v", kerr)
+					log.Printf("postcheck: encrypting the key: %v", kerr)
 					return
 				}
 				cfg.PostAPIKey = enc
 				if serr := saveConfig("config.json", cfg); serr != nil {
-					log.Printf("postcheck: сохранение: %v", serr)
+					log.Printf("postcheck: saving: %v", serr)
 					return
 				}
-				log.Printf("postcheck: ключ зашифрован DPAPI и сохранён (%d байт)", len(enc))
+				log.Printf("postcheck: the key is encrypted with DPAPI and saved (%d bytes)", len(enc))
 			}
 			if strings.TrimSpace(cfg.PostAPIURL) == "" {
-				log.Printf("postcheck: post_api_url пуст")
+				log.Printf("postcheck: post_api_url is empty")
 				return
 			}
 			out, perr := externalChat(context.Background(), cfg, "You repeat the user's text in upper case. Return only the text.", sample)
-			log.Printf("postcheck: ошибка=%v ответ=%q", perr, out)
+			log.Printf("postcheck: error=%v answer=%q", perr, out)
 			return
 		}
 		if arg == "-streamcheck" && i+1 < len(os.Args[1:]) {
 			path := os.Args[1:][i+1]
 			cfg, cerr := loadConfig("config.json")
 			if cerr != nil {
-				log.Printf("конфигурация: %v", cerr)
+				log.Printf("config: %v", cerr)
 				return
 			}
 			wav, rerr := os.ReadFile(path)
 			if rerr != nil {
-				log.Printf("файл %s: %v", path, rerr)
+				log.Printf("file %s: %v", path, rerr)
 				return
 			}
 			pcm := wav
@@ -429,22 +431,22 @@ func main() {
 			}
 			srv, serr := startEngine(cfg, engineStream, logFile)
 			if serr != nil {
-				log.Printf("потоковый распознаватель: %v", serr)
+				log.Printf("streaming recognizer: %v", serr)
 				return
 			}
 			defer srv.stop()
 			if werr := srv.waitReady(engineReadyTimeout(srv)); werr != nil {
-				log.Printf("потоковый распознаватель не поднялся: %v", werr)
+				log.Printf("streaming recognizer did not start: %v", werr)
 				return
 			}
 			partials := 0
 			ss := srv.(*streamServer)
 			sess, oerr := ss.openSession(context.Background(), func(text string) {
 				partials++
-				log.Printf("живой текст: %q", livetail.Tail(text, 90))
+				log.Printf("live text: %q", livetail.Tail(text, 90))
 			})
 			if oerr != nil {
-				log.Printf("поток не открылся: %v", oerr)
+				log.Printf("the stream did not open: %v", oerr)
 				return
 			}
 			chunk := sampleRate / 5 * 2
@@ -455,31 +457,31 @@ func main() {
 					end = len(pcm)
 				}
 				if perr := sess.push(pcm[off:end]); perr != nil {
-					log.Printf("передача звука: %v", perr)
+					log.Printf("audio streaming: %v", perr)
 					return
 				}
 				time.Sleep(120 * time.Millisecond)
 			}
 			final, ferr := sess.finish(context.Background())
-			log.Printf("streamcheck: партиалов=%d за %.1f c, ошибка=%v, финал=%q",
+			log.Printf("streamcheck: partials=%d in %.1f s, error=%v, final=%q",
 				partials, time.Since(started).Seconds(), ferr, final)
 			return
 		}
 		if arg == "-routecheck" {
 			cfg, cerr := loadConfig("config.json")
 			if cerr != nil {
-				log.Printf("конфигурация: %v", cerr)
+				log.Printf("config: %v", cerr)
 				return
 			}
 			app := &App{cfg: cfg, enabled: true, evq: evqueue.New[ptEvent](8)}
 			primary := primaryEngine(cfg)
 			srv, serr := startEngine(cfg, primary, logFile)
 			if serr != nil {
-				log.Printf("основной движок: %v", serr)
+				log.Printf("primary engine: %v", serr)
 				return
 			}
 			if werr := srv.waitReady(engineReadyTimeout(srv)); werr != nil {
-				log.Printf("основной движок не поднялся: %v", werr)
+				log.Printf("primary engine did not start: %v", werr)
 				srv.stop()
 				return
 			}
@@ -487,7 +489,7 @@ func main() {
 			app.srv = srv
 			app.ready = true
 			app.mu.Unlock()
-			log.Printf("routecheck: основной движок %s поднят", primary)
+			log.Printf("routecheck: primary engine %s started", primary)
 
 			other := engineWhisper
 			if primary == engineWhisper {
@@ -495,29 +497,29 @@ func main() {
 			}
 			alt, aerr := app.engineFor(context.Background(), cfg, other, "")
 			if aerr != nil {
-				log.Printf("routecheck: второй движок %s не поднялся: %v", other, aerr)
+				log.Printf("routecheck: second engine %s did not start: %v", other, aerr)
 			} else {
-				log.Printf("routecheck: оба движка живы — %s и %s", srv.engine(), alt.engine())
+				log.Printf("routecheck: both engines alive — %s and %s", srv.engine(), alt.engine())
 				text, terr := alt.transcribe(context.Background(), mustReadWav(os.Args[1:], i), cfg.Language, cfg.WhisperPrompt, false)
 				if terr != nil {
-					log.Printf("routecheck: второй движок не распознал: %v", terr)
+					log.Printf("routecheck: the second engine did not recognize: %v", terr)
 				} else {
-					log.Printf("routecheck: второй движок ответил %q", text)
+					log.Printf("routecheck: the second engine answered %q", text)
 				}
 			}
-			log.Printf("routecheck: держу оба движка 20 секунд для замера памяти")
+			log.Printf("routecheck: holding both engines for 20 seconds to measure memory")
 			time.Sleep(20 * time.Second)
 			app.altMu.Lock()
 			app.altUsed = time.Now().Add(-24 * time.Hour)
 			app.altMu.Unlock()
 			if app.sweepOnce() {
-				log.Printf("routecheck: выгрузка по простою сработала")
+				log.Printf("routecheck: idle unloading worked")
 			} else {
-				log.Printf("routecheck: выгрузка по простою НЕ сработала")
+				log.Printf("routecheck: idle unloading did NOT work")
 			}
 			app.stopAltEngine()
 			srv.stop()
-			log.Printf("routecheck: оба движка остановлены")
+			log.Printf("routecheck: both engines stopped")
 			return
 		}
 		if arg == "-dialogs" {
@@ -528,27 +530,27 @@ func main() {
 				applyTheme(cfg.Skin, cfg.Theme)
 				setOverlayPlacement(cfg)
 			}
-			log.Printf("демонстрация диалогов: смена фокуса")
-			log.Printf("ответ: %q", askFocusMismatch())
+			log.Printf("dialog demo: focus change")
+			log.Printf("answer: %q", askFocusMismatch())
 			if cfg != nil {
-				log.Printf("демонстрация диалогов: выбор языка перевода")
-				log.Printf("ответ: %q", askTranslateTarget(cfg))
+				log.Printf("dialog demo: translation language choice")
+				log.Printf("answer: %q", askTranslateTarget(cfg))
 			}
 			return
 		}
 		if arg == "-replcheck" && i+1 < len(os.Args[1:]) {
 			cfg, cerr := loadConfig("config.json")
 			if cerr != nil {
-				log.Printf("конфигурация: %v", cerr)
+				log.Printf("config: %v", cerr)
 				return
 			}
 			in := os.Args[1:][i+1]
-			log.Printf("replcheck: замен в конфиге — %d", len(cfg.Replacements))
+			log.Printf("replcheck: %d replacements in the config", len(cfg.Replacements))
 			after := replace.Apply(replace.ForLang(cfg.Replacements, cfg.Language), in)
-			log.Printf("replcheck: замены: %q → %q", in, after)
+			log.Printf("replcheck: replacements: %q → %q", in, after)
 			cmd := commands.Apply(cfg.Commands, after)
-			log.Printf("replcheck: команд в конфиге — %d, сработали %v, отмена=%v", len(cfg.Commands), cmd.Applied, cmd.Cancelled)
-			log.Printf("replcheck: итог: %q", cmd.Text)
+			log.Printf("replcheck: %d commands in the config, fired %v, cancelled=%v", len(cfg.Commands), cmd.Applied, cmd.Cancelled)
+			log.Printf("replcheck: result: %q", cmd.Text)
 			return
 		}
 		if arg == "-modelcheck" {
@@ -575,31 +577,14 @@ func main() {
 			log.Printf("modelcheck: %s", out.Text)
 			return
 		}
-		if arg == "-rulecheck" {
-			cfg, cerr := loadConfig("config.json")
-			if cerr != nil {
-				log.Printf("конфигурация: %v", cerr)
-				return
-			}
-			log.Printf("rulecheck: три секунды на переключение в нужное окно")
-			time.Sleep(3 * time.Second)
-			fg, _, _ := procGetForegroundWindow.Call()
-			exe := processNameOf(fg)
-			log.Printf("rulecheck: окно=%q процесс=%q", windowTitle(fg), exe)
-			c := *cfg
-			applyAppRule(&c, exe)
-			log.Printf("rulecheck: вставка=%s enter=%v задержка=%d промпты=%v",
-				c.PasteMode, c.AutoEnter, c.PasteDelayMs, c.ActiveProfiles)
-			return
-		}
 		if arg == "-dpi" {
 			var pt point
 			procGetCursorPosDPI.Call(uintptr(unsafe.Pointer(&pt)))
-			log.Printf("dpi: GetDpiForSystem=%d dpiForCursor=%d курсор=%d,%d", dpiFor(0), dpiForCursor(), pt.X, pt.Y)
+			log.Printf("dpi: GetDpiForSystem=%d dpiForCursor=%d cursor=%d,%d", dpiFor(0), dpiForCursor(), pt.X, pt.Y)
 			mon, _, _ := procMonitorFromPoint.Call(uintptr(uint32(pt.X))|uintptr(uint32(pt.Y))<<32, 2)
 			var dx, dy uint32
 			r, _, _ := procGetDpiForMonitor.Call(mon, 0, uintptr(unsafe.Pointer(&dx)), uintptr(unsafe.Pointer(&dy)))
-			log.Printf("dpi: монитор=%x GetDpiForMonitor rc=%d dx=%d", mon, r, dx)
+			log.Printf("dpi: monitor=%x GetDpiForMonitor rc=%d dx=%d", mon, r, dx)
 			log.Printf("dpi: MonitorFromPoint.Find=%v GetDpiForMonitor.Find=%v", procMonitorFromPoint.Find(), procGetDpiForMonitor.Find())
 			return
 		}
@@ -625,14 +610,12 @@ func main() {
 					state = ovProcessing
 				case "ok":
 					state = ovFlashOK
-				case "pause":
-					state = ovPaused
 				}
 			}
 			if len(rest) > 1 && rest[1] == "live" {
 				ovLive.Store(true)
 				ovRecStart.Store(time.Now().UnixMilli())
-				log.Printf("демонстрация живой плашки")
+				log.Printf("live plate demo")
 				words := strings.Fields(text + " " + text + " " + text + " " + text)
 				shown := ""
 				overlaySet(ovRecording, "")
@@ -646,7 +629,7 @@ func main() {
 				overlayHide()
 				return
 			}
-			log.Printf("демонстрация плашки: %q", text)
+			log.Printf("plate demo: %q", text)
 			overlaySet(state, text)
 			time.Sleep(6 * time.Second)
 			overlayHide()
@@ -661,25 +644,34 @@ func main() {
 			}
 			rec, rerr := NewRecorder(device)
 			if rerr != nil {
-				log.Printf("микрофон недоступен: %v", rerr)
+				log.Printf("microphone unavailable: %v", rerr)
 				return
 			}
 			if err := rec.Start(5); err != nil {
-				log.Printf("запись для разбора не началась: %v", err)
+				log.Printf("the recording for analysis did not start: %v", err)
 			} else {
 				time.Sleep(3 * time.Second)
 				pcm := rec.Stop()
 				rep := audiolevel.Analyze(pcm)
-				log.Printf("разбор: пик %.0f дБ, RMS %.0f дБ, речь %.0f%%, обрезано %.2f%% → %s",
+				log.Printf("analysis: peak %.0f dB, RMS %.0f dB, voice %.0f%%, clipped %.2f%% → %s",
 					audiolevel.DBFS(rep.Peak), audiolevel.DBFS(rep.RMS), rep.VoiceRatio*100, rep.ClipRatio*100, audiolevel.Verdict(rep))
 			}
-			log.Printf("замер уровня без диктовки, 5 секунд")
+			log.Printf("level measurement without dictation, 5 seconds")
 			for i := 0; i < 25; i++ {
 				rec.MonitorPing()
 				time.Sleep(200 * time.Millisecond)
-				log.Printf("уровень: %.3f", rec.Level())
+				log.Printf("level: %.3f", rec.Level())
 			}
 			rec.Close()
+			return
+		}
+	}
+
+	for _, arg := range os.Args[1:] {
+		if arg == "-quit" {
+			if quitRunningInstance() {
+				log.Printf("quit command sent to the running instance")
+			}
 			return
 		}
 	}
@@ -687,7 +679,7 @@ func main() {
 	if !acquireSingleInstance() {
 		initLang(configUILanguage("config.json"))
 		if openSettingsInRunningInstance() {
-			log.Printf("уже запущено — открыл настройки работающего экземпляра")
+			log.Printf("already running — opened the settings of the running instance")
 			return
 		}
 		msgBox(tr("app.name"), tr("already.running"))
@@ -739,14 +731,14 @@ func main() {
 					text = strings.TrimPrefix(text, "@mismatch ")
 					tw = 1
 				}
-				log.Printf("testpaste: цель захвачена, вставка через 6 секунд")
+				log.Printf("testpaste: target captured, pasting in 6 seconds")
 				time.Sleep(6 * time.Second)
 				app.insertResult(context.Background(), app.snapshot(), time.Now(), text, "", tw, false)
 			}()
 		}
 	}
 	if !cfg.WizardDone {
-		log.Printf("первый запуск: открываю мастер настройки")
+		log.Printf("first run: opening the setup wizard")
 		go func() {
 			time.Sleep(1500 * time.Millisecond)
 			app.openSettings("wizard")
@@ -758,7 +750,7 @@ func main() {
 func setupLog() {
 	logFile = newRotatingWriter(appid.LogFile, 1<<20)
 	log.SetOutput(logFile)
-	log.Printf("=== %s %s запущен ===", appid.Slug, appVersion)
+	log.Printf("=== %s %s started ===", appid.Slug, appVersion)
 }
 
 func (a *App) snapshot() *Config {
@@ -770,7 +762,7 @@ func (a *App) snapshot() *Config {
 
 func (a *App) post(ev ptEvent) {
 	if !a.evq.Push(ev) {
-		log.Printf("очередь событий переполнена, событие %d пропущено (всего %d)", ev.kind, a.evq.Dropped())
+		log.Printf("event queue is full, event %d skipped (%d in total)", ev.kind, a.evq.Dropped())
 	}
 }
 
@@ -832,7 +824,7 @@ func (a *App) initBackend() {
 		parked := a.parked
 		a.mu.Unlock()
 		if parked {
-			log.Printf("движок выгружен вручную — жду следующей диктовки")
+			log.Printf("the engine was unloaded by hand — waiting for the next dictation")
 			a.setStatus(tr("status.parked"))
 			if !a.waitRetry() {
 				return
@@ -854,7 +846,7 @@ func (a *App) initBackend() {
 						langName = tr("route.lang.auto")
 					}
 					msg := trf("status.nomodel.lang", langName, modelDisplayName(presetModelID(cfg, cfg.Language)))
-					log.Printf("модель %s не найдена — жду скачивания (%s)", missing, msg)
+					log.Printf("model %s not found — waiting for the download (%s)", missing, msg)
 					a.mu.Lock()
 					a.backendErr = msg
 					a.mu.Unlock()
@@ -904,7 +896,7 @@ func (a *App) initBackend() {
 		a.backendErr = ""
 		a.mu.Unlock()
 		a.refreshIdleUI()
-		log.Printf("готов: hotkey=%s движок=%s модель=%s lang=%s", cfg.Hotkey, srv.engine(), activeModelPath(cfg), cfg.Language)
+		log.Printf("ready: hotkey=%s engine=%s model=%s lang=%s", cfg.Hotkey, srv.engine(), activeModelPath(cfg), cfg.Language)
 
 		started := time.Now()
 		<-srv.done()
@@ -918,7 +910,7 @@ func (a *App) initBackend() {
 		}
 		if srv.wasStopped() {
 			attempts = 0
-			log.Printf("перезапуск распознавателя по запросу")
+			log.Printf("restarting the recognizer on request")
 			a.setStatus(tr("status.loading"))
 			continue
 		}
@@ -941,7 +933,7 @@ func (a *App) initBackend() {
 			}
 			return
 		}
-		log.Printf("распознаватель упал, перезапуск (попытка %d)", attempts)
+		log.Printf("the recognizer crashed, restarting (attempt %d)", attempts)
 		a.setStatus(tr("status.server.restart"))
 		traySetIcon(trayError)
 	}
@@ -972,7 +964,7 @@ func (a *App) parkEngines() {
 		srv.stop()
 	}
 	a.stopAltEngine()
-	log.Printf("движки выгружены вручную — память возвращена, следующая диктовка поднимет их заново")
+	log.Printf("engines unloaded by hand — memory released, the next dictation starts them again")
 	a.setStatus(tr("status.parked"))
 	traySetIcon(trayOff)
 }
@@ -989,7 +981,7 @@ func (a *App) unparkEngines() bool {
 }
 
 func (a *App) fatal(text string) {
-	log.Printf("ОШИБКА: %s", text)
+	log.Printf("ERROR: %s", text)
 	a.setStatus(text)
 	traySetIcon(trayError)
 	msgBox(tr("err.title"), text+tr("err.details"))
@@ -1035,21 +1027,6 @@ func buildCombos(cfg *Config) []comboDef {
 			combos = append(combos, comboDef{id: "wtranslate", groups: groups})
 		}
 	}
-	if cfg.PauseHotkey != "" {
-		if groups, err := parseHotkey(cfg.PauseHotkey); err == nil {
-			combos = append(combos, comboDef{id: pauseCombo, groups: groups})
-		}
-	}
-	for _, p := range cfg.Profiles {
-		if p.Hotkey == "" {
-			continue
-		}
-		if groups, err := parseHotkey(p.Hotkey); err == nil {
-			combos = append(combos, comboDef{id: p.ID, groups: groups})
-		} else {
-			log.Printf("хоткей профиля %s не разобран: %v", p.ID, err)
-		}
-	}
 	return combos
 }
 
@@ -1086,14 +1063,13 @@ func (a *App) handleCancel() {
 	case stRecording:
 		a.mu.Lock()
 		rec := a.rec
-		a.paused = false
 		a.mu.Unlock()
 		rec.Stop()
 		a.dropLiveSession()
 		overlayClearDeadline()
 		a.gen++
 		a.state.Store(stIdle)
-		log.Printf("запись отменена пользователем")
+		log.Printf("recording cancelled by the user")
 		if a.sessionCfg != nil && a.sessionCfg.Overlay {
 			overlaySet(ovFlashErr, tr("ov.cancelled"))
 		}
@@ -1106,46 +1082,11 @@ func (a *App) handleCancel() {
 	}
 }
 
-const pauseCombo = "wpause"
-
-func (a *App) togglePause() {
-	if a.state.Load() != stRecording {
-		return
-	}
-	a.mu.Lock()
-	rec := a.rec
-	a.paused = !a.paused
-	paused := a.paused
-	a.mu.Unlock()
-	if rec != nil {
-		rec.SetPaused(paused)
-	}
-	cfg := a.sessionCfg
-	if paused {
-		log.Printf("пауза: запись приостановлена")
-		traySetIcon(trayProcessing)
-		a.setStatus(tr("status.paused"))
-		if cfg != nil && cfg.Overlay {
-			overlaySet(ovPaused, tr("ov.paused"))
-		}
-		return
-	}
-	log.Printf("пауза: запись продолжается")
-	traySetIcon(trayRecording)
-	a.setStatus(tr("status.recording"))
-	if cfg != nil && cfg.Overlay {
-		overlaySet(ovRecording, tr("ov.speak"))
-	}
-}
 
 func (a *App) handleDown(profileID string) {
-	if profileID == pauseCombo {
-		a.togglePause()
-		return
-	}
 	cfg := a.snapshot()
 	if a.state.Load() == stRecording && cfg.HotkeyMode == hotkeyToggle {
-		log.Printf("фиксация: второе нажатие останавливает запись")
+		log.Printf("latched: the second press stops the recording")
 		a.handleStop(0)
 		return
 	}
@@ -1162,7 +1103,7 @@ func (a *App) handleDown(profileID string) {
 	a.mu.Unlock()
 	if !ok {
 		if enabled && !ready && a.unparkEngines() {
-			log.Printf("нажатие будит выгруженный движок")
+			log.Printf("the press wakes the unloaded engine")
 			a.setStatus(tr("status.loading"))
 			if cfg.Overlay {
 				overlaySet(ovFlashErr, tr("status.loading"))
@@ -1173,7 +1114,7 @@ func (a *App) handleDown(profileID string) {
 		return
 	}
 	if err := rec.Start(cfg.MaxRecordSeconds); err != nil {
-		log.Printf("ошибка старта записи: %v", err)
+		log.Printf("recording start error: %v", err)
 		if cfg.Overlay {
 			overlaySet(ovFlashErr, tr("ov.err.mic"))
 		}
@@ -1182,10 +1123,8 @@ func (a *App) handleDown(profileID string) {
 	}
 	a.gen++
 	a.mu.Lock()
-	a.paused = false
 	a.mu.Unlock()
 	a.sessionTarget, _, _ = procGetForegroundWindow.Call()
-	applyAppRule(cfg, processNameOf(a.sessionTarget))
 	a.sessionCfg = cfg
 	a.sessionProfile = profileID
 	a.state.Store(stRecording)
@@ -1193,7 +1132,6 @@ func (a *App) handleDown(profileID string) {
 	a.setStatus(tr("status.recording"))
 	playCue(cfg.Beep, cfg.SoundTheme, cueStart)
 	if cfg.Overlay {
-		ovAnim.Store(cfg.Animation)
 		setOverlayPlacement(cfg)
 		overlaySet(ovRecording, tr("ov.speak"))
 	}
@@ -1215,24 +1153,11 @@ func (a *App) handleStop(expectGen int) {
 	if expectGen != 0 && expectGen != a.gen {
 		return
 	}
-	a.mu.Lock()
-	paused := a.paused
-	a.mu.Unlock()
-	if expectGen != 0 && paused {
-		log.Printf("предел записи наступил на паузе — жду продолжения")
-		gen := a.gen
-		overlaySetDeadline(time.Now().Add(time.Duration(a.sessionCfg.MaxRecordSeconds) * time.Second))
-		time.AfterFunc(time.Duration(a.sessionCfg.MaxRecordSeconds)*time.Second, func() {
-			a.post(ptEvent{kind: evTimeout, gen: gen})
-		})
-		return
-	}
 	if expectGen != 0 {
-		log.Printf("достигнут max_record_seconds=%d, останавливаю", a.sessionCfg.MaxRecordSeconds)
+		log.Printf("max_record_seconds=%d reached, stopping", a.sessionCfg.MaxRecordSeconds)
 	}
 	a.mu.Lock()
 	rec := a.rec
-	a.paused = false
 	a.mu.Unlock()
 	pcm := rec.Stop()
 	overlayClearDeadline()
@@ -1268,7 +1193,7 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 
 	minBytes := sampleRate * 2 * cfg.MinRecordMs / 1000
 	if len(pcm) < minBytes {
-		log.Printf("запись слишком короткая (%d мс), пропускаю", len(pcm)*1000/(sampleRate*2))
+		log.Printf("recording too short (%d ms), skipping", len(pcm)*1000/(sampleRate*2))
 		if cfg.Overlay {
 			overlaySet(ovFlashErr, tr("ov.tooshort"))
 		}
@@ -1279,10 +1204,10 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 	a.mu.Lock()
 	a.lastVerdict = verdict
 	a.mu.Unlock()
-	log.Printf("звук: пик %.0f дБ, речь %.0f%%, обрезано %.1f%% — %s",
+	log.Printf("audio: peak %.0f dB, voice %.0f%%, clipped %.1f%% — %s",
 		audiolevel.DBFS(sound.Peak), sound.VoiceRatio*100, sound.ClipRatio*100, verdict)
 	if verdict == audiolevel.VerdictSilent {
-		log.Printf("тишина в записи — распознавание пропущено")
+		log.Printf("silence in the recording — recognition skipped")
 		if cfg.Overlay {
 			overlaySet(ovFlashErr, tr("ov.silence"))
 		}
@@ -1293,7 +1218,7 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 	srv := a.srv
 	a.mu.Unlock()
 	if srv == nil {
-		log.Printf("сервер распознавания ещё не запущен")
+		log.Printf("the recognition server is not up yet")
 		if cfg.Overlay {
 			overlaySet(ovFlashErr, tr("ov.server.loading"))
 		}
@@ -1310,7 +1235,7 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 			target = askTranslateTarget(cfg)
 		}
 		if ctx.Err() != nil {
-			log.Printf("распознавание отменено пользователем")
+			log.Printf("recognition cancelled by the user")
 			if cfg.Overlay {
 				overlaySet(ovFlashErr, tr("ov.cancelled"))
 			}
@@ -1318,12 +1243,12 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 		}
 		switch {
 		case target == "":
-			log.Printf("перевод: отменён в диалоге, вставляю как есть")
+			log.Printf("translation: cancelled in the dialog, pasting as is")
 		case target == cfg.Language:
-			log.Printf("перевод: цель %s совпадает с языком распознавания — пропускаю", target)
+			log.Printf("translation: target %s matches the recognition language — skipping", target)
 			target = ""
 		default:
-			log.Printf("перевод: цель=%s силами Whisper (режим %s)", target, cfg.TranslateAsk)
+			log.Printf("translation: target=%s by Whisper (mode %s)", target, cfg.TranslateAsk)
 		}
 	}
 	active := activeModel(cfg)
@@ -1336,30 +1261,20 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 		if active.TrLangs != "" {
 			viaModel = true
 			wantModel = active.modelPath() + "#" + target
-			log.Printf("перевод: %s переводит сама, цель %s", active.NameKey, target)
+			log.Printf("translation: %s translates on its own, target %s", active.NameKey, target)
 		}
 	} else if target != "" {
 		name := ""
 		if active != nil {
 			name = active.NameKey
 		}
-		fallback := bestInstalledWhisper()
-		switch {
-		case fallback == nil:
-			log.Printf("перевод недоступен: %s не переводит, а Whisper не установлен — вставляю как есть", name)
-			if cfg.Overlay {
-				overlayNote(tr("ov.notranslate"))
-			}
-			target = ""
-		case askTranslateFallback(name, fallback.NameKey):
-			log.Printf("перевод: %s не переводит на этот язык, пользователь выбрал %s", name, fallback.NameKey)
-			wantEngine, wantModel = engineWhisper, fallback.modelPath()
-		default:
-			log.Printf("перевод: %s не переводит, пользователь отказался от Whisper — вставляю как есть", name)
-			target = ""
+		log.Printf("translation unavailable: %s does not translate — pasting as is", name)
+		if cfg.Overlay {
+			overlayNote(tr("ov.notranslate"))
 		}
+		target = ""
 		if ctx.Err() != nil {
-			log.Printf("распознавание отменено пользователем")
+			log.Printf("recognition cancelled by the user")
 			if cfg.Overlay {
 				overlaySet(ovFlashErr, tr("ov.cancelled"))
 			}
@@ -1369,7 +1284,7 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 	if wantEngine != srv.engine() || (wantModel != "" && !srv.external() && srv.model() != wantModel) {
 		alt, aerr := a.engineFor(ctx, cfg, wantEngine, wantModel)
 		if aerr != nil {
-			log.Printf("движок %s не поднялся (%v) — остаюсь на %s", wantEngine, aerr, srv.engine())
+			log.Printf("engine %s did not start (%v) — staying on %s", wantEngine, aerr, srv.engine())
 			if cfg.Overlay {
 				overlayNote(tr("ov.engine.fallback"))
 			}
@@ -1378,9 +1293,9 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 			srv = alt
 		}
 	}
-	log.Printf("пресет: движок=%s модель=%s язык=%s перевод=%v", srv.engine(), srv.model(), cfg.Language, target != "")
+	log.Printf("preset: engine=%s model=%s language=%s translation=%v", srv.engine(), srv.model(), cfg.Language, target != "")
 	if target != "" && !viaModel && !engineTranslates(srv.engine()) {
-		log.Printf("перевод недоступен: активен движок %s — вставляю распознанный текст как есть", srv.engine())
+		log.Printf("translation unavailable: engine %s is active — pasting the recognized text as is", srv.engine())
 		if cfg.Overlay {
 			overlayNote(tr("ov.notranslate"))
 		}
@@ -1404,29 +1319,29 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 		}
 		text, err = liveSess.finish(ctx)
 		if err != nil && ctx.Err() == nil {
-			log.Printf("живой текст не добрался до конца (%v) — распознаю пакетно", err)
+			log.Printf("live text did not reach the end (%v) — recognizing in batch", err)
 			liveSess, err = nil, nil
 		} else {
-			log.Printf("живой текст: финал получен")
+			log.Printf("live text: the final result arrived")
 		}
 	}
 	if liveSess == nil && err == nil {
 		prompt := cfg.WhisperPrompt
 		if target != "" && !viaModel && isBuiltinDictionary(prompt) {
 			prompt = builtinDictionary(target)
-			log.Printf("словарь: при переводе подсказываю набор языка %s", target)
+			log.Printf("dictionary: hinting the %s set for the translation", target)
 		}
 		text, err = srv.transcribe(ctx, wavFromPCM16(pcm, sampleRate), recLang, prompt, fastTranslate)
 	}
 	if err != nil {
 		if errors.Is(err, context.Canceled) {
-			log.Printf("распознавание отменено пользователем")
+			log.Printf("recognition cancelled by the user")
 			if cfg.Overlay {
 				overlaySet(ovFlashErr, tr("ov.cancelled"))
 			}
 			return
 		}
-		log.Printf("распознавание: %v", err)
+		log.Printf("recognition: %v", err)
 		playCue(cfg.Beep, cfg.SoundTheme, cueError)
 		if cfg.Overlay {
 			overlaySet(ovFlashErr, tr("ov.err.recognize"))
@@ -1434,7 +1349,7 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 		return
 	}
 	if ctx.Err() != nil {
-		log.Printf("распознавание отменено пользователем")
+		log.Printf("recognition cancelled by the user")
 		if cfg.Overlay {
 			overlaySet(ovFlashErr, tr("ov.cancelled"))
 		}
@@ -1446,11 +1361,11 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 		outLang = target
 	}
 	if fixed := replace.Apply(replace.ForLang(cfg.Replacements, outLang), text); fixed != text {
-		log.Printf("замены: %q → %q", text, fixed)
+		log.Printf("replacements: %q → %q", text, fixed)
 		text = fixed
 	}
 	if cmd := commands.Apply(cfg.Commands, text); len(cmd.Applied) > 0 {
-		log.Printf("команды %v: %q → %q (отмена=%v)", cmd.Applied, text, cmd.Text, cmd.Cancelled)
+		log.Printf("commands %v: %q → %q (cancelled=%v)", cmd.Applied, text, cmd.Text, cmd.Cancelled)
 		if cmd.Cancelled {
 			if cfg.Overlay {
 				overlaySet(ovFlashErr, tr("ov.cmd.cancelled"))
@@ -1460,7 +1375,7 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 		text = cmd.Text
 	}
 	if text == "" || onlyNoise.MatchString(text) {
-		log.Printf("пустой результат (%q), вставлять нечего", text)
+		log.Printf("empty result (%q), nothing to paste", text)
 		if cfg.Overlay {
 			switch verdict {
 			case audiolevel.VerdictClipped:
@@ -1487,16 +1402,18 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 			out, lerr := a.llmProcess(ctx, prof.Prompt, text)
 			if lerr == nil {
 				text = out
+				a.setPostErr("", "")
 				continue
 			}
 			if errors.Is(lerr, context.Canceled) || ctx.Err() != nil {
-				log.Printf("редактура отменена пользователем")
+				log.Printf("editing cancelled by the user")
 				if cfg.Overlay {
 					overlaySet(ovFlashErr, tr("ov.cancelled"))
 				}
 				return
 			}
-			log.Printf("профиль %s не применился, продолжаю с текущим текстом: %v", prof.ID, lerr)
+			log.Printf("profile %s did not apply, continuing with the current text: %v", prof.ID, lerr)
+			a.setPostErr(prof.Name, errText(lerr))
 			if skipped == "" {
 				skipped = prof.Name
 			}
@@ -1525,24 +1442,24 @@ func (a *App) insertResult(ctx context.Context, cfg *Config, start time.Time, te
 	if targetWnd != 0 {
 		cur, _, _ := procGetForegroundWindow.Call()
 		if cur != targetWnd {
-			log.Printf("фокус сменился во время обработки — спрашиваю")
+			log.Printf("focus changed during processing — asking")
 			switch askFocusMismatch() {
 			case "here":
 				allowEnter = false
 				expect, _, _ = procGetForegroundWindow.Call()
 			case "copy":
 				if err := setClipboardText(text); err != nil {
-					log.Printf("копирование: %v", err)
+					log.Printf("copying: %v", err)
 					return
 				}
-				log.Printf("результат скопирован в буфер по выбору пользователя")
+				log.Printf("the result was copied to the clipboard at the user request")
 				if cfg.Overlay {
 					overlaySet(ovFlashOK, tr("ov.copied"))
 				}
 				return
 			default:
 				_ = setClipboardText(text)
-				log.Printf("вставка отменена, текст сохранён в последнем результате и в буфере")
+				log.Printf("paste cancelled, the text is kept as the last result and in the clipboard")
 				if cfg.Overlay {
 					overlaySet(ovFlashErr, tr("ov.kept"))
 				}
@@ -1555,20 +1472,20 @@ func (a *App) insertResult(ctx context.Context, cfg *Config, start time.Time, te
 	}
 
 	if ctx.Err() != nil {
-		log.Printf("вставка отменена пользователем до начала")
+		log.Printf("paste cancelled by the user before it started")
 		return
 	}
 	if err := pasteText(cfg, text, expect); err != nil {
 		playCue(cfg.Beep, cfg.SoundTheme, cueError)
 		if errors.Is(err, errFocusMoved) {
-			log.Printf("вставка отменена: окно ввода сменилось, текст сохранён")
+			log.Printf("paste cancelled: the input window changed, the text is kept")
 			_ = setClipboardText(text)
 			if cfg.Overlay {
 				overlaySet(ovFlashErr, tr("ov.moved"))
 			}
 			return
 		}
-		log.Printf("вставка: %v", err)
+		log.Printf("paste: %v", err)
 		if cfg.Overlay {
 			overlaySet(ovFlashErr, tr("ov.err.paste"))
 		}
@@ -1577,14 +1494,14 @@ func (a *App) insertResult(ctx context.Context, cfg *Config, start time.Time, te
 	if allowEnter && ctx.Err() == nil {
 		time.Sleep(150 * time.Millisecond)
 		if ctx.Err() != nil {
-			log.Printf("auto-enter отменён пользователем")
+			log.Printf("auto-enter cancelled by the user")
 		} else if !focusStillOn(expect) {
-			log.Printf("auto-enter отменён: окно ввода сменилось после вставки")
+			log.Printf("auto-enter cancelled: the input window changed after pasting")
 		} else if err := pressEnter(); err != nil {
 			log.Printf("auto-enter: %v", err)
 		}
 	}
-	log.Printf("готово за %.1fс: %d символов", time.Since(start).Seconds(), len([]rune(text)))
+	log.Printf("done in %.1fs: %d characters", time.Since(start).Seconds(), len([]rune(text)))
 	if cfg.Overlay {
 		switch {
 		case skipped != "":
@@ -1611,42 +1528,15 @@ func (a *App) rememberDictation(cfg *Config, text, app string) {
 	}
 	if skip := strings.TrimSpace(cfg.HistorySkip); skip != "" && app != "" {
 		if _, hit := apprules.Find([]apprules.Rule{{Match: skip}}, app); hit {
-			log.Printf("история: %s в списке исключений, не записываю", app)
+			log.Printf("history: %s is on the exclusion list, not recording", app)
 			return
 		}
 	}
 	now := time.Now()
 	item := history.Item{At: now.UnixMilli(), Text: text, App: app}
 	if err := histStore.Add(item, now.UnixMilli(), cfg.HistoryDays, cfg.HistoryMax); err != nil {
-		log.Printf("история: %v", err)
+		log.Printf("history: %v", err)
 	}
-}
-
-func applyAppRule(cfg *Config, exe string) {
-	if exe == "" || len(cfg.AppRules) == 0 {
-		return
-	}
-	rule, ok := apprules.Find(cfg.AppRules, exe)
-	if !ok {
-		return
-	}
-	if rule.Paste == apprules.PasteClipboard || rule.Paste == apprules.PasteType {
-		cfg.PasteMode = rule.Paste
-	}
-	switch rule.Enter {
-	case apprules.EnterOn:
-		cfg.AutoEnter = true
-	case apprules.EnterOff:
-		cfg.AutoEnter = false
-	}
-	if rule.DelayMs > 0 {
-		cfg.PasteDelayMs = rule.DelayMs
-	}
-	if rule.UseProfiles {
-		cfg.ActiveProfiles = append([]string(nil), rule.Profiles...)
-	}
-	log.Printf("правило для %s: вставка=%s enter=%v задержка=%d мс промпты=%v",
-		exe, cfg.PasteMode, cfg.AutoEnter, cfg.PasteDelayMs, cfg.ActiveProfiles)
 }
 
 func (a *App) changeHotkey() {
@@ -1667,11 +1557,11 @@ func (a *App) changeHotkey() {
 	current := a.snapshot().Hotkey
 	combo, ok := captureHotkeyDialog(hook, current)
 	if !ok {
-		log.Printf("смена сочетания отменена")
+		log.Printf("hotkey change cancelled")
 		return
 	}
 	if _, err := parseHotkey(combo); err != nil {
-		log.Printf("захваченное сочетание %q не разобрано: %v", combo, err)
+		log.Printf("captured hotkey %q could not be parsed: %v", combo, err)
 		return
 	}
 	a.mu.Lock()
@@ -1681,12 +1571,12 @@ func (a *App) changeHotkey() {
 	a.mu.Unlock()
 	hook.SetCombos(buildCombos(&c))
 	if err := saveConfig("config.json", &c); err != nil {
-		log.Printf("сохранение конфига: %v", err)
+		log.Printf("saving the config: %v", err)
 	}
 	a.refreshIdleUI()
-	log.Printf("новое сочетание: %s", combo)
+	log.Printf("new hotkey: %s", combo)
 	if warn := hotkeyWarning(combo); warn != "" {
-		log.Printf("предупреждение: %s", warn)
+		log.Printf("warning: %s", warn)
 		overlayNote(warn)
 	}
 }
@@ -1708,7 +1598,7 @@ func (a *App) llmProcess(ctx context.Context, prompt, text string) (string, erro
 		}
 		out = strings.TrimSpace(out)
 		if out == "" {
-			return "", errors.New("пустой ответ сервера постобработки")
+			return "", errors.New("empty answer from the post-processing server")
 		}
 		return out, nil
 	}
@@ -1724,7 +1614,7 @@ func (a *App) llmProcess(ctx context.Context, prompt, text string) (string, erro
 	}
 	out = strings.TrimSpace(out)
 	if out == "" {
-		return "", errors.New("пустой ответ LLM")
+		return "", errors.New("empty answer from the LLM")
 	}
 	return out, nil
 }
@@ -1732,12 +1622,12 @@ func (a *App) llmProcess(ctx context.Context, prompt, text string) (string, erro
 func (a *App) reloadConfig() {
 	fresh, err := loadConfig("config.json")
 	if err != nil {
-		log.Printf("перечитать конфиг: %v", err)
+		log.Printf("reloading the config: %v", err)
 		a.setStatus(tr("status.cfg.err"))
 		return
 	}
 	if _, err := parseHotkey(fresh.Hotkey); err != nil {
-		log.Printf("перечитать конфиг: %v", err)
+		log.Printf("reloading the config: %v", err)
 		a.setStatus(tr("status.cfg.err"))
 		return
 	}
@@ -1772,15 +1662,15 @@ func (a *App) reloadConfig() {
 	if hook != nil {
 		hook.SetCombos(buildCombos(fresh))
 	} else {
-		log.Printf("хук не установлен, новое сочетание применится после перезапуска")
+		log.Printf("the hook is not installed, the new hotkey applies after a restart")
 	}
 
 	if serverChanged {
 		a.setStatus(tr("status.loading"))
-		log.Printf("конфиг перечитан; распознаватель перезапускается с новыми настройками")
+		log.Printf("config reloaded; the recognizer restarts with the new settings")
 	} else {
 		a.refreshIdleUI()
-		log.Printf("конфиг перечитан: hotkey=%s paste=%s", fresh.Hotkey, fresh.PasteMode)
+		log.Printf("config reloaded: hotkey=%s paste=%s", fresh.Hotkey, fresh.PasteMode)
 	}
 }
 
@@ -1790,7 +1680,9 @@ func (a *App) onExit() {
 	srv := a.srv
 	rec := a.rec
 	llm := a.llm
+	hook := a.hook
 	a.mu.Unlock()
+	hook.release()
 	if srv != nil {
 		srv.stop()
 	}
@@ -1801,7 +1693,7 @@ func (a *App) onExit() {
 	if rec != nil {
 		rec.Close()
 	}
-	log.Printf("выход")
+	log.Printf("exit")
 	if logFile != nil {
 		logFile.Close()
 	}
@@ -1814,6 +1706,18 @@ func mustReadWav(args []string, i int) []byte {
 		}
 	}
 	return wavFromPCM16(make([]byte, sampleRate/5*2), sampleRate)
+}
+
+func (a *App) setPostErr(profile, msg string) {
+	a.mu.Lock()
+	a.postErr = msg
+	a.postErrProf = profile
+	if msg == "" {
+		a.postErrAt = time.Time{}
+	} else {
+		a.postErrAt = time.Now()
+	}
+	a.mu.Unlock()
 }
 
 func punctChain(cfg *Config, chain []*Profile) []*Profile {
@@ -1856,7 +1760,7 @@ func (a *App) micCheck() string {
 		return fail(tr("ov.err.mic"))
 	}
 	if err := rec.Start(5); err != nil {
-		log.Printf("проверка микрофона: %v", err)
+		log.Printf("microphone check: %v", err)
 		return fail(humanError(err))
 	}
 	time.Sleep(3 * time.Second)
@@ -1864,7 +1768,7 @@ func (a *App) micCheck() string {
 	rep := audiolevel.Analyze(pcm)
 	verdict := audiolevel.Verdict(rep)
 	peak := audiolevel.DBFS(rep.Peak)
-	log.Printf("проверка микрофона: пик %.0f дБ, речь %.0f%%, обрезано %.1f%% — %s",
+	log.Printf("microphone check: peak %.0f dB, voice %.0f%%, clipped %.1f%% — %s",
 		peak, rep.VoiceRatio*100, rep.ClipRatio*100, verdict)
 	text := ""
 	switch verdict {
@@ -1882,7 +1786,7 @@ func (a *App) micCheck() string {
 }
 
 func (a *App) backendFailed(text string) {
-	log.Printf("распознаватель не поднялся: %s", text)
+	log.Printf("recognizer did not start: %s", text)
 	a.mu.Lock()
 	a.ready = false
 	a.backendErr = text
@@ -1896,11 +1800,11 @@ func (a *App) backendFailed(text string) {
 }
 
 func (a *App) waitRetry() bool {
-	log.Printf("жду исправления настроек или кнопки «повторить»")
+	log.Printf("waiting for the settings to be fixed or for the retry button")
 	for {
 		select {
 		case <-a.retryCh:
-			log.Printf("пробую поднять распознаватель заново")
+			log.Printf("trying to start the recognizer again")
 			a.mu.Lock()
 			a.backendErr = ""
 			a.mu.Unlock()
@@ -1931,14 +1835,13 @@ func (a *App) handleMicLost() {
 	a.mu.Lock()
 	rec := a.rec
 	cfg := a.sessionCfg
-	a.paused = false
 	a.mu.Unlock()
 	if a.state.Load() == stRecording && rec != nil {
 		rec.Stop()
 		a.dropLiveSession()
 		a.gen++
 		a.state.Store(stIdle)
-		log.Printf("микрофон отключён во время записи — запись прервана")
+		log.Printf("microphone disconnected during the recording — recording aborted")
 		if cfg != nil {
 			playCue(cfg.Beep, cfg.SoundTheme, cueError)
 			if cfg.Overlay {
@@ -1946,13 +1849,13 @@ func (a *App) handleMicLost() {
 			}
 		}
 	} else {
-		log.Printf("микрофон отключён")
+		log.Printf("microphone disconnected")
 	}
 	if rec != nil {
 		if err := rec.SetDevice(""); err != nil {
-			log.Printf("возврат на микрофон по умолчанию: %v", err)
+			log.Printf("falling back to the default microphone: %v", err)
 		} else {
-			log.Printf("перешёл на микрофон по умолчанию")
+			log.Printf("switched to the default microphone")
 			a.mu.Lock()
 			if a.cfg != nil && a.cfg.MicDevice != "" {
 				c := *a.cfg
@@ -1972,22 +1875,22 @@ func (a *App) explainIgnoredPress(cfg *Config, enabled, capturing bool, backendE
 	case capturing:
 		return
 	case !enabled:
-		log.Printf("нажатие пропущено: приложение выключено в трее")
+		log.Printf("press ignored: the app is switched off in the tray")
 		return
 	case backendErr != "":
-		log.Printf("нажатие пропущено: распознаватель не поднялся")
+		log.Printf("press ignored: the recognizer did not start")
 		if cfg.Overlay {
 			overlaySet(ovFlashErr, backendErr)
 		}
 		playCue(cfg.Beep, cfg.SoundTheme, cueError)
 	case !haveRec:
-		log.Printf("нажатие пропущено: микрофон недоступен")
+		log.Printf("press ignored: the microphone is unavailable")
 		if cfg.Overlay {
 			overlaySet(ovFlashErr, tr("ov.err.mic"))
 		}
 		playCue(cfg.Beep, cfg.SoundTheme, cueError)
 	default:
-		log.Printf("нажатие пропущено: распознаватель ещё готовится")
+		log.Printf("press ignored: the recognizer is still getting ready")
 		if cfg.Overlay {
 			overlaySet(ovFlashErr, tr("status.loading"))
 		}
@@ -2002,7 +1905,6 @@ func (a *App) resetSettings() {
 	fresh := defaultConfig()
 	fresh.Profiles = old.Profiles
 	fresh.ActiveProfiles = old.ActiveProfiles
-	fresh.AppRules = old.AppRules
 	fresh.Replacements = old.Replacements
 	fresh.Commands = old.Commands
 	fresh.Model = old.Model
@@ -2014,9 +1916,9 @@ func (a *App) resetSettings() {
 	syncDictionary(fresh)
 
 	if err := saveConfig("config.json", fresh); err != nil {
-		log.Printf("сброс настроек: %v", err)
+		log.Printf("resetting the settings: %v", err)
 		return
 	}
-	log.Printf("настройки сброшены к заводским (модели, история и промпты сохранены)")
+	log.Printf("settings reset to factory defaults (models, history and prompts kept)")
 	a.reloadConfig()
 }

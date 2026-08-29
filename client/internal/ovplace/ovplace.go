@@ -21,13 +21,14 @@ const (
 	PosRight       = "right"
 	PosBottomLeft  = "bottom-left"
 	PosBottomRight = "bottom-right"
+	PosCenter      = "center"
 	PosCustom      = "custom"
 )
 
 var anchors = map[string]bool{
 	PosBottom: true, PosTop: true, PosCaret: true,
 	PosTopLeft: true, PosTopRight: true, PosLeft: true, PosRight: true,
-	PosBottomLeft: true, PosBottomRight: true, PosCustom: true,
+	PosBottomLeft: true, PosBottomRight: true, PosCenter: true, PosCustom: true,
 }
 
 func Valid(mode string) bool { return anchors[mode] }
@@ -76,6 +77,8 @@ func Anchor(mode string, wa Rect, w, h, margin int32) (int32, int32) {
 		x, y = left, bottom
 	case PosBottomRight:
 		x, y = right, bottom
+	case PosCenter:
+		x, y = centerX, centerY
 	default:
 		x, y = centerX, bottom
 	}

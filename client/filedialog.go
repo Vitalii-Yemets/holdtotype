@@ -85,7 +85,6 @@ func runFileDialog(save bool, title, suggested string) string {
 	copy(buf, utf16Of(suggested))
 	filter := jsonFilter()
 	ofn := openFileNameW{
-		Owner:       settingsHwnd.Load(),
 		Filter:      &filter[0],
 		FilterIndex: 1,
 		File:        &buf[0],

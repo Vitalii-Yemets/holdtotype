@@ -88,7 +88,7 @@ func applyTheme(skin, colour string) {
 	colLine = colorref(p.Line)
 
 	rebuildIcons(p)
-	log.Printf("оформление: %s, цвет %s", skin, p.ID)
+	log.Printf("appearance: %s, colour %s", skin, p.ID)
 }
 
 func nrgba(hex string) color.NRGBA {

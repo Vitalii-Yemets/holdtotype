@@ -79,7 +79,7 @@ func startLlamaServer(cfg *Config, logw io.Writer) (*llamaServer, error) {
 		CreationFlags: 0x08000000,
 	}
 	if err := cmd.Start(); err != nil {
-		return nil, fmt.Errorf("запуск %s: %w", cfg.LLMExe, err)
+		return nil, fmt.Errorf("starting %s: %w", cfg.LLMExe, err)
 	}
 	s.cmd = cmd
 	s.job = uintptr(attachProcessToJob(cmd.Process.Pid))
@@ -104,7 +104,7 @@ func (s *llamaServer) waitReady(timeout time.Duration) error {
 	deadline := time.Now().Add(timeout)
 	for time.Now().Before(deadline) {
 		if !s.alive() {
-			return fmt.Errorf("llama-server завершился при старте (см. лог)")
+			return fmt.Errorf("llama-server exited during startup (see the log)")
 		}
 		resp, err := healthClient.Get(s.baseURL + "/health")
 		if err == nil {
@@ -116,7 +116,7 @@ func (s *llamaServer) waitReady(timeout time.Duration) error {
 		}
 		time.Sleep(400 * time.Millisecond)
 	}
-	return fmt.Errorf("llama-server не ответил за %s", timeout)
+	return fmt.Errorf("llama-server did not answer within %s", timeout)
 }
 
 func (s *llamaServer) stop() {
@@ -165,7 +165,7 @@ func (s *llamaServer) chat(ctx context.Context, system, user string) (string, er
 		return "", fmt.Errorf("llama-server (%d): %.200s", resp.StatusCode, string(raw))
 	}
 	if len(parsed.Choices) == 0 {
-		return "", fmt.Errorf("llama-server: пустой ответ (%d): %.200s", resp.StatusCode, string(raw))
+		return "", fmt.Errorf("llama-server: empty answer (%d): %.200s", resp.StatusCode, string(raw))
 	}
 	return parsed.Choices[0].Message.Content, nil
 }
@@ -216,7 +216,12 @@ func (a *App) llmStatus() string {
 		File   string `json:"file"`
 		SizeMB int    `json:"size"`
 		Active bool   `json:"active"`
+		Loaded bool   `json:"loaded"`
 	}
+	a.mu.Lock()
+	llm := a.llm
+	a.mu.Unlock()
+	warm := llm != nil && llm.alive()
 	var installed []instRow
 	entries, _ := os.ReadDir("models")
 	for _, e := range entries {
@@ -228,7 +233,7 @@ func (a *App) llmStatus() string {
 		if err != nil {
 			continue
 		}
-		installed = append(installed, instRow{File: name, SizeMB: int(info.Size() / (1024 * 1024)), Active: name == activeFile})
+		installed = append(installed, instRow{File: name, SizeMB: int(info.Size() / (1024 * 1024)), Active: name == activeFile, Loaded: warm && name == activeFile})
 	}
 	type dlRow struct {
 		File string `json:"file"`
@@ -296,10 +301,10 @@ func (a *App) llmDelete(file string) string {
 		a.cfg = &c
 		a.mu.Unlock()
 		if serr := saveConfig("config.json", &c); serr != nil {
-			log.Printf("сохранение конфига: %v", serr)
+			log.Printf("saving the config: %v", serr)
 		}
 	}
-	log.Printf("LLM-модель %s удалена", file)
+	log.Printf("LLM model %s deleted", file)
 	return tr("model.del.ok")
 }
 
@@ -410,7 +415,7 @@ var llmStartMu sync.Mutex
 func (a *App) ensureLLM() (*llamaServer, error) {
 	cfg := a.snapshot()
 	if !llmInstalled(cfg) {
-		return nil, fmt.Errorf("LLM-модель не установлена")
+		return nil, fmt.Errorf("no LLM model is installed")
 	}
 	a.mu.Lock()
 	llm := a.llm
@@ -431,7 +436,7 @@ func (a *App) ensureLLM() (*llamaServer, error) {
 	if llm != nil {
 		llm.stop()
 	}
-	log.Printf("запускаю llama-server")
+	log.Printf("starting llama-server")
 	llm, err := startLlamaServer(cfg, logFile)
 	if err != nil {
 		return nil, err
@@ -444,10 +449,10 @@ func (a *App) ensureLLM() (*llamaServer, error) {
 	if a.quitting {
 		a.mu.Unlock()
 		llm.stop()
-		return nil, fmt.Errorf("завершение приложения")
+		return nil, fmt.Errorf("the application is shutting down")
 	}
 	a.llm = llm
 	a.mu.Unlock()
-	log.Printf("llama-server готов")
+	log.Printf("llama-server ready")
 	return llm, nil
 }

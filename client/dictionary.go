@@ -45,7 +45,7 @@ func syncDictionary(cfg *Config) bool {
 		return false
 	}
 	cfg.WhisperPrompt = want
-	log.Printf("словарь распознавания заменён на набор для языка %s", cfg.Language)
+	log.Printf("recognition dictionary replaced with the set for language %s", cfg.Language)
 	return true
 }
 

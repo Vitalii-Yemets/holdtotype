@@ -93,7 +93,7 @@ func startWhisperServer(cfg *Config, logw io.Writer) (*whisperServer, error) {
 		CreationFlags: 0x08000000,
 	}
 	if err := cmd.Start(); err != nil {
-		log.Printf("запуск %s: %v", cfg.ServerExe, err)
+		log.Printf("starting %s: %v", cfg.ServerExe, err)
 		return nil, fmt.Errorf("%s", trf("err.server.launch", cfg.ServerExe))
 	}
 	s.cmd = cmd
@@ -106,7 +106,7 @@ func startWhisperServer(cfg *Config, logw io.Writer) (*whisperServer, error) {
 		s.mu.Unlock()
 		close(s.doneCh)
 		if !stopping {
-			log.Printf("whisper-server аварийно завершился")
+			log.Printf("whisper-server crashed")
 		}
 	}()
 	return s, nil
@@ -115,7 +115,7 @@ func startWhisperServer(cfg *Config, logw io.Writer) (*whisperServer, error) {
 func attachProcessToJob(pid int) windows.Handle {
 	job, err := windows.CreateJobObject(nil, nil)
 	if err != nil {
-		log.Printf("Job Object не создан (%v) — при аварийном выходе дочерний процесс может остаться", err)
+		log.Printf("Job Object not created (%v) — a child process may survive a crash", err)
 		return 0
 	}
 	info := windows.JOBOBJECT_EXTENDED_LIMIT_INFORMATION{
@@ -125,19 +125,19 @@ func attachProcessToJob(pid int) windows.Handle {
 	}
 	if _, err := windows.SetInformationJobObject(job, windows.JobObjectExtendedLimitInformation,
 		uintptr(unsafe.Pointer(&info)), uint32(unsafe.Sizeof(info))); err != nil {
-		log.Printf("Job Object не настроен: %v", err)
+		log.Printf("Job Object not configured: %v", err)
 		windows.CloseHandle(job)
 		return 0
 	}
 	h, err := windows.OpenProcess(windows.PROCESS_SET_QUOTA|windows.PROCESS_TERMINATE, false, uint32(pid))
 	if err != nil {
-		log.Printf("процесс не открыт для Job Object: %v", err)
+		log.Printf("process not opened for the Job Object: %v", err)
 		windows.CloseHandle(job)
 		return 0
 	}
 	defer windows.CloseHandle(h)
 	if err := windows.AssignProcessToJobObject(job, h); err != nil {
-		log.Printf("процесс не привязан к Job Object: %v", err)
+		log.Printf("process not assigned to the Job Object: %v", err)
 		windows.CloseHandle(job)
 		return 0
 	}
@@ -208,7 +208,7 @@ func (s *whisperServer) transcribe(ctx context.Context, wav []byte, language, pr
 	dead := s.exited
 	s.mu.Unlock()
 	if dead {
-		return "", fmt.Errorf("whisper-server не запущен")
+		return "", fmt.Errorf("whisper-server is not running")
 	}
 
 	var body bytes.Buffer
@@ -243,7 +243,7 @@ func (s *whisperServer) transcribe(ctx context.Context, wav []byte, language, pr
 
 	resp, err := s.client.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("запрос к whisper-server: %w", err)
+		return "", fmt.Errorf("request to whisper-server: %w", err)
 	}
 	defer resp.Body.Close()
 	raw, err := io.ReadAll(io.LimitReader(resp.Body, maxResponseBytes))
@@ -256,7 +256,7 @@ func (s *whisperServer) transcribe(ctx context.Context, wav []byte, language, pr
 		Error string `json:"error"`
 	}
 	if err := json.Unmarshal(raw, &parsed); err != nil {
-		return "", fmt.Errorf("неожиданный ответ сервера (%d): %.200s", resp.StatusCode, string(raw))
+		return "", fmt.Errorf("unexpected answer from the server (%d): %.200s", resp.StatusCode, string(raw))
 	}
 	if parsed.Error != "" {
 		return "", fmt.Errorf("whisper-server: %s", parsed.Error)

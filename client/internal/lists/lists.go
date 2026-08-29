@@ -22,7 +22,7 @@ type File struct {
 	Commands     []commands.Command `json:"commands"`
 }
 
-var ErrNotOurs = errors.New("файл не похож на списки")
+var ErrNotOurs = errors.New("the file does not look like lists")
 
 func Encode(rules []replace.Rule, cmds []commands.Command) ([]byte, error) {
 	f := File{Kind: Kind, Version: Version, Replacements: replace.Clean(rules), Commands: commands.Clean(cmds)}

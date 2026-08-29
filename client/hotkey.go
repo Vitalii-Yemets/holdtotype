@@ -57,7 +57,7 @@ func parseHotkey(s string) ([][]uint32, error) {
 		groups = append(groups, g)
 	}
 	if len(groups) == 0 {
-		return nil, fmt.Errorf("пустое сочетание клавиш")
+		return nil, fmt.Errorf("empty key combination")
 	}
 	return groups, nil
 }
@@ -113,7 +113,7 @@ func keyGroup(name string) ([]uint32, error) {
 			return []uint32{uint32(c) - '0' + 0x30}, nil
 		}
 	}
-	return nil, fmt.Errorf("неизвестная клавиша в сочетании: %q", name)
+	return nil, fmt.Errorf("unknown key in the combination: %q", name)
 }
 
 type comboDef struct {
@@ -141,6 +141,7 @@ type hotkeyHook struct {
 	onUp     func()
 	onEsc    func() bool
 	capture  *captureSession
+	handle   uintptr
 	q        *evqueue.Queue[func()]
 }
 
@@ -149,7 +150,7 @@ func (h *hotkeyHook) post(fn func()) {
 		return
 	}
 	if !h.q.Push(fn) {
-		log.Printf("очередь хоткея переполнена, событие отброшено (всего %d)", h.q.Dropped())
+		log.Printf("hotkey queue is full, event dropped (%d in total)", h.q.Dropped())
 	}
 }
 
@@ -255,6 +256,9 @@ func startHotkeyHook(combos []comboDef, onDown func(id string), onUp func(), onE
 			errCh <- fmt.Errorf("SetWindowsHookEx: %v", callErr)
 			return
 		}
+		h.mu.Lock()
+		h.handle = hook
+		h.mu.Unlock()
 		errCh <- nil
 		var m msgStruct
 		for {
@@ -262,6 +266,22 @@ func startHotkeyHook(combos []comboDef, onDown func(id string), onUp func(), onE
 		}
 	}()
 	return h, <-errCh
+}
+
+// release takes the low-level keyboard hook back off the system. Windows cleans
+// it up on its own when the process ends, but a hook left hanging while the
+// text services rewire themselves is what makes ctfmon.exe fall over.
+func (h *hotkeyHook) release() {
+	if h == nil {
+		return
+	}
+	h.mu.Lock()
+	hook := h.handle
+	h.handle = 0
+	h.mu.Unlock()
+	if hook != 0 {
+		procUnhookWindowsHookEx.Call(hook)
+	}
 }
 
 func (h *hotkeyHook) setCombosLocked(combos []comboDef) {

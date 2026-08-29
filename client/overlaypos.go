@@ -2,10 +2,14 @@ package main
 
 import (
 	"log"
+	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"syscall"
 	"unsafe"
+
+	"golang.org/x/sys/windows"
 
 	"holdtotype/internal/ovplace"
 )
@@ -77,12 +81,150 @@ func overlayCustomMap() map[string]ovplace.Frac {
 }
 
 type monitorEntry struct {
-	Index   int   `json:"index"`
-	Work    rect  `json:"-"`
-	Screen  rect  `json:"-"`
-	W       int32 `json:"w"`
-	H       int32 `json:"h"`
-	Primary bool  `json:"primary"`
+	Index   int    `json:"index"`
+	Work    rect   `json:"-"`
+	Screen  rect   `json:"-"`
+	W       int32  `json:"w"`
+	H       int32  `json:"h"`
+	Primary bool   `json:"primary"`
+	Name    string `json:"name"`
+	Device  string `json:"-"`
+}
+
+type monitorInfoEx struct {
+	Size    uint32
+	Monitor rect
+	Work    rect
+	Flags   uint32
+	Device  [32]uint16
+}
+
+type luid struct {
+	Low  uint32
+	High int32
+}
+
+type dcPathSourceInfo struct {
+	AdapterID   luid
+	ID          uint32
+	ModeInfoIdx uint32
+	StatusFlags uint32
+}
+
+type dcRational struct {
+	Numerator   uint32
+	Denominator uint32
+}
+
+type dcPathTargetInfo struct {
+	AdapterID        luid
+	ID               uint32
+	ModeInfoIdx      uint32
+	OutputTechnology uint32
+	Rotation         uint32
+	Scaling          uint32
+	RefreshRate      dcRational
+	ScanLineOrdering uint32
+	TargetAvailable  int32
+	StatusFlags      uint32
+}
+
+type dcPathInfo struct {
+	SourceInfo dcPathSourceInfo
+	TargetInfo dcPathTargetInfo
+	Flags      uint32
+}
+
+type dcModeInfo struct {
+	InfoType  uint32
+	ID        uint32
+	AdapterID luid
+	Data      [48]byte
+}
+
+type dcDeviceInfoHeader struct {
+	Type      uint32
+	Size      uint32
+	AdapterID luid
+	ID        uint32
+}
+
+type dcTargetDeviceName struct {
+	Header            dcDeviceInfoHeader
+	Flags             uint32
+	OutputTechnology  uint32
+	EdidManufactureID uint16
+	EdidProductCodeID uint16
+	ConnectorInstance uint32
+	FriendlyName      [64]uint16
+	DevicePath        [128]uint16
+}
+
+type dcSourceDeviceName struct {
+	Header      dcDeviceInfoHeader
+	GdiDeviceName [32]uint16
+}
+
+const (
+	qdcOnlyActivePaths = 2
+	dcInfoGetSourceName = 1
+	dcInfoGetTargetName = 2
+)
+
+var (
+	procGetDisplayConfigBufferSizes = user32.NewProc("GetDisplayConfigBufferSizes")
+	procQueryDisplayConfig          = user32.NewProc("QueryDisplayConfig")
+	procDisplayConfigGetDeviceInfo  = user32.NewProc("DisplayConfigGetDeviceInfo")
+)
+
+// monitorNames asks Windows what the screens are actually called, keyed by the
+// device name the enumeration hands out (\\.\DISPLAY1 and friends). Screens
+// whose firmware keeps quiet simply stay out of the map.
+func monitorNames() map[string]string {
+	out := map[string]string{}
+	if procGetDisplayConfigBufferSizes.Find() != nil || procQueryDisplayConfig.Find() != nil || procDisplayConfigGetDeviceInfo.Find() != nil {
+		return out
+	}
+	var pathCount, modeCount uint32
+	if r, _, _ := procGetDisplayConfigBufferSizes.Call(qdcOnlyActivePaths,
+		uintptr(unsafe.Pointer(&pathCount)), uintptr(unsafe.Pointer(&modeCount))); r != 0 || pathCount == 0 {
+		return out
+	}
+	paths := make([]dcPathInfo, pathCount)
+	modes := make([]dcModeInfo, modeCount)
+	if modeCount == 0 {
+		modes = make([]dcModeInfo, 1)
+	}
+	if r, _, _ := procQueryDisplayConfig.Call(qdcOnlyActivePaths,
+		uintptr(unsafe.Pointer(&pathCount)), uintptr(unsafe.Pointer(&paths[0])),
+		uintptr(unsafe.Pointer(&modeCount)), uintptr(unsafe.Pointer(&modes[0])), 0); r != 0 {
+		return out
+	}
+	for i := uint32(0); i < pathCount; i++ {
+		src := dcSourceDeviceName{}
+		src.Header.Type = dcInfoGetSourceName
+		src.Header.Size = uint32(unsafe.Sizeof(src))
+		src.Header.AdapterID = paths[i].SourceInfo.AdapterID
+		src.Header.ID = paths[i].SourceInfo.ID
+		if r, _, _ := procDisplayConfigGetDeviceInfo.Call(uintptr(unsafe.Pointer(&src))); r != 0 {
+			continue
+		}
+		tgt := dcTargetDeviceName{}
+		tgt.Header.Type = dcInfoGetTargetName
+		tgt.Header.Size = uint32(unsafe.Sizeof(tgt))
+		tgt.Header.AdapterID = paths[i].TargetInfo.AdapterID
+		tgt.Header.ID = paths[i].TargetInfo.ID
+		if r, _, _ := procDisplayConfigGetDeviceInfo.Call(uintptr(unsafe.Pointer(&tgt))); r != 0 {
+			continue
+		}
+		name := strings.TrimSpace(windows.UTF16ToString(tgt.FriendlyName[:]))
+		device := windows.UTF16ToString(src.GdiDeviceName[:])
+		if name == "" || device == "" {
+			continue
+		}
+		out[device] = name
+	}
+	return out
 }
 
 var (
@@ -93,12 +235,13 @@ var (
 )
 
 func monEnumProc(hmon, hdc uintptr, rc *rect, lp uintptr) uintptr {
-	mi := monitorInfo{Size: uint32(unsafe.Sizeof(monitorInfo{}))}
+	mi := monitorInfoEx{Size: uint32(unsafe.Sizeof(monitorInfoEx{}))}
 	if r, _, _ := procGetMonitorInfoW.Call(hmon, uintptr(unsafe.Pointer(&mi))); r != 0 {
 		monAcc = append(monAcc, monitorEntry{
 			Index: len(monAcc), Work: mi.Work, Screen: mi.Monitor,
 			W: mi.Monitor.Right - mi.Monitor.Left, H: mi.Monitor.Bottom - mi.Monitor.Top,
 			Primary: mi.Flags&1 != 0,
+			Device:  windows.UTF16ToString(mi.Device[:]),
 		})
 	}
 	return 1
@@ -113,7 +256,23 @@ func listMonitors() []monitorEntry {
 	defer monMu.Unlock()
 	monAcc = nil
 	procEnumDisplayMonitors.Call(0, 0, monCb, 0)
-	return append([]monitorEntry(nil), monAcc...)
+	out := append([]monitorEntry(nil), monAcc...)
+	names := monitorNames()
+	seen := map[string]int{}
+	for _, n := range names {
+		seen[n]++
+	}
+	for i := range out {
+		n := names[out[i].Device]
+		if n == "" {
+			continue
+		}
+		if seen[n] > 1 {
+			n = n + " #" + strconv.Itoa(out[i].Index+1)
+		}
+		out[i].Name = n
+	}
+	return out
 }
 
 func monitorRectsForPoint(x, y int32) (work, screen rect) {
@@ -202,7 +361,7 @@ func overlayOrigin(w, h int32) (int32, int32) {
 		if x+w > wa.Right-gap {
 			x = wa.Right - gap - w
 		}
-		log.Printf("плашка у курсора: якорь=%d,%d-%d,%d позиция=%d,%d",
+		log.Printf("plate at the cursor: anchor=%d,%d-%d,%d position=%d,%d",
 			anchor.Left, anchor.Top, anchor.Right, anchor.Bottom, x, y)
 		return x, y
 	}

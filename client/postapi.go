@@ -35,6 +35,8 @@ func postReady(cfg *Config) bool {
 
 const dpapiNoUI = 1
 
+const postTestPrompt = "Reply with the single word: ok"
+
 func protectKey(plain string) (string, error) {
 	if plain == "" {
 		return "", nil
@@ -56,7 +58,7 @@ func unprotectKey(stored string) (string, error) {
 	}
 	raw, err := base64.StdEncoding.DecodeString(stored)
 	if err != nil || len(raw) == 0 {
-		return "", fmt.Errorf("ключ повреждён")
+		return "", fmt.Errorf("the key is damaged")
 	}
 	var out windows.DataBlob
 	blob := windows.DataBlob{Size: uint32(len(raw)), Data: &raw[0]}
@@ -124,7 +126,7 @@ func externalChat(ctx context.Context, cfg *Config, prompt, text string) (string
 	}
 	req.Header.Set("Content-Type", "application/json")
 	if key, kerr := unprotectKey(cfg.PostAPIKey); kerr != nil {
-		return "", fmt.Errorf("ключ API: %w", kerr)
+		return "", fmt.Errorf("API key: %w", kerr)
 	} else if key != "" {
 		req.Header.Set("Authorization", "Bearer "+key)
 	}
@@ -139,17 +141,17 @@ func externalChat(ctx context.Context, cfg *Config, prompt, text string) (string
 	}
 	var parsed chatResponse
 	if err := json.Unmarshal(raw, &parsed); err != nil {
-		return "", fmt.Errorf("неожиданный ответ сервера (%d): %.200s", resp.StatusCode, string(raw))
+		return "", fmt.Errorf("unexpected answer from the server (%d): %.200s", resp.StatusCode, string(raw))
 	}
 	if parsed.Error.Message != "" {
-		return "", fmt.Errorf("сервер постобработки: %s", parsed.Error.Message)
+		return "", fmt.Errorf("post-processing server: %s", parsed.Error.Message)
 	}
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("сервер постобработки: HTTP %d: %.200s", resp.StatusCode, string(raw))
+		return "", fmt.Errorf("post-processing server: HTTP %d: %.200s", resp.StatusCode, string(raw))
 	}
 	if len(parsed.Choices) == 0 {
-		return "", fmt.Errorf("пустой ответ сервера постобработки")
+		return "", fmt.Errorf("empty answer from the post-processing server")
 	}
-	log.Printf("постобработка через внешний сервер %s: %d → %d символов", base, len([]rune(text)), len([]rune(parsed.Choices[0].Message.Content)))
+	log.Printf("post-processing through the external server %s: %d → %d characters", base, len([]rune(text)), len([]rune(parsed.Choices[0].Message.Content)))
 	return parsed.Choices[0].Message.Content, nil
 }

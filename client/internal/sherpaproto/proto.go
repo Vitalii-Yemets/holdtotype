@@ -8,7 +8,7 @@ import (
 
 const ChunkBytes = 10240
 
-var ErrShortWAV = errors.New("файл короче заголовка WAV")
+var ErrShortWAV = errors.New("the file is shorter than the WAV header")
 
 func Header(sampleRate, payloadBytes int) []byte {
 	b := make([]byte, 8)

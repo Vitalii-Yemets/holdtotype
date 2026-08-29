@@ -52,19 +52,19 @@ func (m *modelInfo) ramEstimateMB() int {
 }
 
 var modelCatalog = []modelInfo{
-	{ID: "tiny", File: "ggml-tiny.bin", SizeMB: 74, NameKey: "Tiny", DescKey: "S_M_TINY",
+	{ID: "tiny", File: "ggml-tiny.bin", SizeMB: 74, NameKey: "Whisper Tiny", DescKey: "S_M_TINY",
 		Hashes: map[string]string{"ggml-tiny.bin": "be07e048e1e599ad46341c8d2a135645097a538221678b7acdd1b1919c6e1b21"},
 		Engine: engineWhisper, Langs: "*", Auto: true, Translate: true, Speed: 5, Accuracy: 1},
-	{ID: "base", File: "ggml-base.bin", SizeMB: 142, NameKey: "Base", DescKey: "S_M_BASE",
+	{ID: "base", File: "ggml-base.bin", SizeMB: 142, NameKey: "Whisper Base", DescKey: "S_M_BASE",
 		Hashes: map[string]string{"ggml-base.bin": "60ed5bc3dd14eea856493d334349b405782ddcaf0028d4b5df4088345fba2efe"},
 		Engine: engineWhisper, Langs: "*", Auto: true, Translate: true, Speed: 5, Accuracy: 2},
-	{ID: "small", File: "ggml-small.bin", SizeMB: 466, NameKey: "Small", DescKey: "S_M_SMALL",
+	{ID: "small", File: "ggml-small.bin", SizeMB: 466, NameKey: "Whisper Small", DescKey: "S_M_SMALL",
 		Hashes: map[string]string{"ggml-small.bin": "1be3a9b2063867b937e64e2ec7483364a79917e157fa98c5d94b5c1fffea987b"},
 		Engine: engineWhisper, Langs: "*", Auto: true, Translate: true, Speed: 3, Accuracy: 3},
-	{ID: "medium-q5_0", File: "ggml-medium-q5_0.bin", SizeMB: 539, NameKey: "Medium (q5)", DescKey: "S_M_MED",
+	{ID: "medium-q5_0", File: "ggml-medium-q5_0.bin", SizeMB: 539, NameKey: "Whisper Medium (q5)", DescKey: "S_M_MED",
 		Hashes: map[string]string{"ggml-medium-q5_0.bin": "19fea4b380c3a618ec4723c3eef2eb785ffba0d0538cf43f8f235e7b3b34220f"},
 		Engine: engineWhisper, Langs: "*", Auto: true, Translate: true, Speed: 2, Accuracy: 4},
-	{ID: "large-v3-turbo-q5_0", File: "ggml-large-v3-turbo-q5_0.bin", SizeMB: 574, NameKey: "Turbo (q5)", DescKey: "S_M_TURBO",
+	{ID: "large-v3-turbo-q5_0", File: "ggml-large-v3-turbo-q5_0.bin", SizeMB: 574, NameKey: "Whisper Large v3 Turbo (q5)", DescKey: "S_M_TURBO",
 		Hashes: map[string]string{"ggml-large-v3-turbo-q5_0.bin": "394221709cd5ad1f40c46e6031ca61bce88931e6e088c188294c6d5a55ffa7e2"},
 		Engine: engineWhisper, Langs: "*", Auto: true, Translate: false, Speed: 4, Accuracy: 4},
 	{ID: "gigaam-v3", SizeMB: 232, NameKey: "GigaAM v3", DescKey: "S_M_GIGAAM",
@@ -87,7 +87,7 @@ var modelCatalog = []modelInfo{
 			"tokens.txt":        "17cc514451bcceac9c280068c71502f8448f99e9fb1456b8d0761651fd0392f2",
 		},
 		BaseURL: "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19/resolve/main/"},
-	{ID: "parakeet-v3", SizeMB: 670, NameKey: "Parakeet v3", DescKey: "S_M_PARAKEET",
+	{ID: "parakeet-v3", SizeMB: 670, NameKey: "Parakeet TDT 0.6B v3", DescKey: "S_M_PARAKEET",
 		Engine: engineSherpa, Dir: "parakeet-v3", Auto: true,
 		Langs: "en,es,fr,de,bg,hr,cs,da,nl,et,fi,el,hu,it,lv,lt,mt,pl,pt,ro,sk,sl,sv,ru,uk",
 		Punct: true, Speed: 5, Accuracy: 4,
@@ -110,7 +110,7 @@ var modelCatalog = []modelInfo{
 			"tokens.txt":        "32be3ebfabfff475d64d7829b435f1c7856a1c497907def5c41d54ca9f1eccfd",
 		},
 		BaseURL: "https://huggingface.co/Masterx/sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-560ms-2026-06-11/resolve/main/"},
-	{ID: "canary-180m", SizeMB: 198, NameKey: "Canary 180M", DescKey: "S_M_CANARY",
+	{ID: "canary-180m", SizeMB: 198, NameKey: "Canary 180M Flash", DescKey: "S_M_CANARY",
 		Engine: engineSherpa, Dir: "canary-180m", Langs: "en,de,es,fr", Punct: true,
 		Translate: true, TrLangs: "en,de,es,fr", Speed: 5, Accuracy: 3,
 		Files: []string{"encoder.int8.onnx", "decoder.int8.onnx", "tokens.txt"},
@@ -177,7 +177,7 @@ func scanLocalModels() {
 					NameKey: strings.TrimSuffix(strings.TrimPrefix(name, "ggml-"), ".bin"),
 					DescKey: "S_M_LOCAL", Engine: engineWhisper, Langs: "*", Custom: true,
 				})
-				log.Printf("папка models: найдена своя модель %s (%d МБ)", name, info.Size()/(1024*1024))
+				log.Printf("models folder: found your own model %s (%d MB)", name, info.Size()/(1024*1024))
 				continue
 			}
 			if knownDir[name] {
@@ -199,7 +199,7 @@ func scanLocalModels() {
 				ID: "local:" + name, Dir: name, SizeMB: size, NameKey: name,
 				DescKey: "S_M_LOCAL", Engine: engineSherpa, Langs: "*", Custom: true,
 			})
-			log.Printf("папка models: найдена своя модель %s (%d МБ)", name, size)
+			log.Printf("models folder: found your own model %s (%d MB)", name, size)
 		}
 	})
 }
@@ -425,13 +425,13 @@ func (a *App) startMultiDownload(key string, m *modelInfo) {
 		dlMu.Lock()
 		switch {
 		case errors.Is(err, context.Canceled):
-			log.Printf("скачивание %s отменено", m.ID)
+			log.Printf("download of %s cancelled", m.ID)
 			delete(dl, key)
 		case err != nil:
-			log.Printf("скачивание %s: %v", m.ID, err)
+			log.Printf("download of %s: %v", m.ID, err)
 			dl[key] = &dlState{err: humanError(err)}
 		default:
-			log.Printf("модель %s скачана целиком", m.ID)
+			log.Printf("model %s downloaded in full", m.ID)
 			dl[key] = &dlState{pct: 100}
 		}
 		dlMu.Unlock()
@@ -471,12 +471,12 @@ func (a *App) doMultiDownload(ctx context.Context, key string, m *modelInfo) err
 		if want := m.Hashes[f]; want != "" {
 			if verr := checksum.Verify(filepath.Join(dir, f), want); verr != nil {
 				_ = os.Remove(filepath.Join(dir, f))
-				log.Printf("хеш не сошёлся: %v", verr)
+				log.Printf("hash mismatch: %v", verr)
 				return fmt.Errorf("%s", tr("err.hash"))
 			}
 		}
 		doneBytes += written
-		log.Printf("модель %s: файл %s готов (%d МБ)", m.ID, f, written/(1024*1024))
+		log.Printf("model %s: file %s ready (%d MB)", m.ID, f, written/(1024*1024))
 	}
 	return nil
 }
@@ -507,7 +507,7 @@ func downloadFile(ctx context.Context, url, final string, progress func(written 
 	if !resumed {
 		have = 0
 	} else {
-		log.Printf("%s: продолжаю с %d МБ", filepath.Base(final), have/(1024*1024))
+		log.Printf("%s: resuming from %d MB", filepath.Base(final), have/(1024*1024))
 	}
 	var f *os.File
 	if resumed {
@@ -557,7 +557,7 @@ func downloadFile(ctx context.Context, url, final string, progress func(written 
 	}
 	if expected > 0 && written != expected {
 		os.Remove(tmp)
-		return 0, fmt.Errorf("файл получен не целиком: %d из %d байт", written, expected)
+		return 0, fmt.Errorf("the file was not received in full: %d of %d bytes", written, expected)
 	}
 	os.Remove(final)
 	if err := os.Rename(tmp, final); err != nil {
@@ -585,13 +585,13 @@ func (a *App) startDownload(key, file, url string, sizeMB int) {
 		dlMu.Lock()
 		switch {
 		case errors.Is(err, context.Canceled):
-			log.Printf("скачивание %s отменено", file)
+			log.Printf("download of %s cancelled", file)
 			delete(dl, key)
 		case err != nil:
-			log.Printf("скачивание %s: %v", file, err)
+			log.Printf("download of %s: %v", file, err)
 			dl[key] = &dlState{err: humanError(err)}
 		default:
-			log.Printf("модель %s скачана", file)
+			log.Printf("model %s downloaded", file)
 			dl[key] = &dlState{pct: 100}
 		}
 		dlMu.Unlock()
@@ -649,10 +649,10 @@ func cleanupStaleParts() {
 				continue
 			}
 			if time.Since(info.ModTime()) < partKeep {
-				log.Printf("незавершённая загрузка %s (%d МБ) сохранена — можно продолжить", p, info.Size()/(1024*1024))
+				log.Printf("unfinished download %s (%d MB) kept — it can be resumed", p, info.Size()/(1024*1024))
 				continue
 			}
-			log.Printf("удаляю незавершённую загрузку %s (%d МБ)", p, info.Size()/(1024*1024))
+			log.Printf("removing the unfinished download %s (%d MB)", p, info.Size()/(1024*1024))
 			_ = os.Remove(p)
 		}
 	}
@@ -673,7 +673,7 @@ func (a *App) doDownload(ctx context.Context, key, file, url string, sizeMB int)
 			if need < 0 {
 				need = 0
 			}
-			log.Printf("%s: уже скачано %d МБ, осталось ~%d МБ", file, int(fi.Size()/(1024*1024)), need)
+			log.Printf("%s: %d MB downloaded, ~%d MB to go", file, int(fi.Size()/(1024*1024)), need)
 		}
 		if free := freeDiskMB("models"); free >= 0 && free < need+512 {
 			return fmt.Errorf("%s", trf("err.disk.space", free, need))
@@ -701,10 +701,10 @@ func (a *App) doDownload(ctx context.Context, key, file, url string, sizeMB int)
 		if want := m.Hashes[file]; want != "" {
 			if verr := checksum.Verify(final, want); verr != nil {
 				_ = os.Remove(final)
-				log.Printf("хеш не сошёлся: %v", verr)
+				log.Printf("hash mismatch: %v", verr)
 				return fmt.Errorf("%s", tr("err.hash"))
 			}
-			log.Printf("%s: хеш совпал", file)
+			log.Printf("%s: hash matches", file)
 		}
 	}
 	return nil
@@ -719,7 +719,7 @@ func (a *App) deleteModel(id string, force bool) string {
 		if !force {
 			return tr("model.del.active")
 		}
-		log.Printf("удаляю активную модель %s по подтверждению — распознавание остановится до выбора другой", m.ID)
+		log.Printf("deleting the active model %s as confirmed — recognition stops until another one is picked", m.ID)
 		a.requestServerRestart()
 		time.Sleep(800 * time.Millisecond)
 	}
@@ -734,13 +734,13 @@ func (a *App) deleteModel(id string, force bool) string {
 		if err := os.RemoveAll(dir); err != nil {
 			return humanError(err)
 		}
-		log.Printf("модель %s удалена", m.ID)
+		log.Printf("model %s deleted", m.ID)
 		return tr("model.del.ok")
 	}
 	if err := os.Remove(filepath.Join("models", m.File)); err != nil {
 		return humanError(err)
 	}
-	log.Printf("модель %s удалена", m.File)
+	log.Printf("model %s deleted", m.File)
 	return tr("model.del.ok")
 }
 
@@ -776,6 +776,7 @@ type stateOut struct {
 	StatusLine  string          `json:"status_line"`
 	Remote      bool            `json:"remote"`
 	BackendErr  string          `json:"backend_err"`
+	PostErr     string          `json:"post_err"`
 	UpdVersion  string          `json:"upd_version"`
 	Badges      struct {
 		Mic     string `json:"mic"`
@@ -897,6 +898,8 @@ func (a *App) stateSnapshot() string {
 	rec := a.rec
 	last := a.lastResult
 	verdict := a.lastVerdict
+	postErr := a.postErr
+	postErrProf := a.postErrProf
 	a.mu.Unlock()
 
 	mic := strS("S_MIC_DEFAULT")
@@ -979,6 +982,7 @@ func (a *App) stateSnapshot() string {
 		StatusLine:  statusLine(cfg, ready, free),
 		Remote:      strings.TrimSpace(cfg.ServerURL) != "",
 		BackendErr:  backendErr,
+		PostErr:     postErrLine(postErrProf, postErr),
 	}
 	a.mu.Lock()
 	st.UpdVersion = a.updVer
@@ -995,6 +999,16 @@ func (a *App) stateSnapshot() string {
 	}
 	out, _ := json.Marshal(st)
 	return string(out)
+}
+
+func postErrLine(profile, msg string) string {
+	if msg == "" {
+		return ""
+	}
+	if profile == "" {
+		return msg
+	}
+	return profile + ": " + msg
 }
 
 func itoaSafe(n int) string {
@@ -1112,7 +1126,7 @@ func (a *App) verifyModels() string {
 				continue
 			}
 			if err := checksum.Verify(p, want); err != nil {
-				log.Printf("проверка моделей: %v", err)
+				log.Printf("model check: %v", err)
 				bad = filepath.Base(p)
 				break
 			}
@@ -1138,7 +1152,7 @@ func (a *App) verifyModels() string {
 		}
 		text = trf("models.check.bad", strings.Join(names, ", "))
 	}
-	log.Printf("проверка моделей: проверено %d, повреждено %d", checked, broken)
+	log.Printf("model check: %d checked, %d broken", checked, broken)
 	out, _ := json.Marshal(map[string]any{"rows": rows, "text": text, "ok": broken == 0})
 	return string(out)
 }

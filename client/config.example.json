@@ -16,7 +16,7 @@
   "hotkey_mode": "hold",
   "ui_level": "all",
   "theme": "green",
-  "config_version": 4,
+  "config_version": 5,
   "sherpa_model": "models/gigaam-v3",
   "paste_mode": "clipboard",
   "restore_clipboard": true,

@@ -275,7 +275,7 @@ func overlayAsk(prompt string, choices []ovChoice, seconds int) string {
 	} else {
 		overlaySet(prevState, prevText)
 	}
-	log.Printf("вопрос %q → %q", prompt, res)
+	log.Printf("question %q → %q", prompt, res)
 	return res
 }
 
@@ -369,13 +369,6 @@ func askTranslateTarget(cfg *Config) string {
 	return overlayAsk(tr("td.title"), choices, seconds)
 }
 
-func askTranslateFallback(modelName, whisperName string) bool {
-	res := overlayAsk(trf("tf.title", modelName), []ovChoice{
-		{id: "yes", label: trf("tf.yes", whisperName), def: true},
-		{id: "no", label: tr("tf.no")},
-	}, 0)
-	return res == "yes"
-}
 
 func askFocusMismatch() string {
 	return overlayAsk(tr("fd.title"), []ovChoice{

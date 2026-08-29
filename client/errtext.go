@@ -2,15 +2,28 @@ package main
 
 import (
 	"log"
+	"strings"
 
 	"holdtotype/internal/errkind"
 )
 
-func humanError(err error) string {
+func errText(err error) string {
 	if err == nil {
 		return ""
 	}
-	log.Printf("подробность ошибки: %v", err)
+	s := strings.TrimSpace(err.Error())
+	if r := []rune(s); len(r) > 200 {
+		s = string(r[:200]) + "…"
+	}
+	return s
+}
+
+func humanError(err error) string {
+
+	if err == nil {
+		return ""
+	}
+	log.Printf("error detail: %v", err)
 	switch errkind.Of(err) {
 	case errkind.DNS:
 		host := errkind.Host(err)

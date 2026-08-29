@@ -60,11 +60,11 @@ func (a *App) startupUpdateCheck() {
 	}
 	tag, url, digest, err := fetchLatestRelease()
 	if err != nil {
-		log.Printf("проверка обновлений: %v", err)
+		log.Printf("update check: %v", err)
 		return
 	}
 	if verNewer(tag, appVersion) && url != "" {
-		log.Printf("доступно обновление %s (текущая %s)", tag, appVersion)
+		log.Printf("update %s available (current %s)", tag, appVersion)
 		a.mu.Lock()
 		a.updVer, a.updURL, a.updDigest = tag, url, digest
 		a.mu.Unlock()
@@ -117,10 +117,10 @@ func downloadSetup(url, digest string, progress func(pct int)) (string, error) {
 	}
 	if err := checksum.Verify(dst, digest); err != nil {
 		os.Remove(dst)
-		log.Printf("обновление: хеш не сошёлся: %v", err)
+		log.Printf("update: hash mismatch: %v", err)
 		return "", fmt.Errorf("%s", tr("err.hash"))
 	}
-	log.Printf("обновление: хеш совпал")
+	log.Printf("update: hash matches")
 	return dst, nil
 }
 
@@ -134,7 +134,7 @@ func launchUpdater(setupPath string) error {
 }
 
 func (a *App) quitForUpdate() {
-	log.Printf("выхожу для обновления")
+	log.Printf("exiting to update")
 	a.onExit()
 	trayMu.Lock()
 	h := trayHwnd

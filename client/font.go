@@ -24,10 +24,10 @@ func registerBundledFonts() {
 				uintptr(unsafe.Pointer(&face.Data[0])), uintptr(len(face.Data)), 0,
 				uintptr(unsafe.Pointer(&installed)))
 			if h == 0 {
-				log.Printf("шрифт %s не удалось подключить к процессу", face.Family)
+				log.Printf("font %s could not be added to the process", face.Family)
 				return
 			}
 		}
-		log.Printf("шрифты %s и %s подключены к процессу", plexfont.Sans, plexfont.Mono)
+		log.Printf("fonts %s and %s added to the process", plexfont.Sans, plexfont.Mono)
 	})
 }
