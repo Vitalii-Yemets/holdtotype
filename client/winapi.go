@@ -558,6 +558,8 @@ var (
 	procCloseHandleW               = kernel32.NewProc("CloseHandle")
 	procGetWindowThreadPID         = user32.NewProc("GetWindowThreadProcessId")
 	procEnumWindows                = user32.NewProc("EnumWindows")
+	procWindowFromPoint            = user32.NewProc("WindowFromPoint")
+	procGetAncestor                = user32.NewProc("GetAncestor")
 )
 
 type openApp struct {

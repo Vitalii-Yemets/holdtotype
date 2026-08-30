@@ -257,6 +257,9 @@ func (a *App) settingsThread(tab string, attempt int) {
 		_ = w.Bind("appState", func() string {
 			return a.stateSnapshot()
 		})
+		_ = w.Bind("appToggleEnabled", func() {
+			a.toggleEnabled()
+		})
 		_ = w.Bind("appUnloadEngines", func() {
 			a.parkEngines()
 		})
@@ -544,6 +547,20 @@ func (a *App) settingsThread(tab string, attempt int) {
 				}
 			}
 			return listsAnswer(listsReply{Text: tr("hist.insert.gone")})
+		})
+		_ = w.Bind("appHistoryAim", func(at float64) string {
+			for _, it := range histStore.Items() {
+				if it.At == int64(at) {
+					return a.aimPaste(it.Text)
+				}
+			}
+			out, _ := json.Marshal(map[string]any{"ok": false, "text": tr("hist.insert.gone")})
+			return string(out)
+		})
+		_ = w.Bind("appHistoryDelete", func(at float64) {
+			if err := histStore.Delete(int64(at)); err != nil {
+				log.Printf("history: deleting an entry: %v", err)
+			}
 		})
 		_ = w.Bind("appHistoryInsert", func(at float64) string {
 			for _, it := range histStore.Items() {
@@ -1011,6 +1028,15 @@ func settingsHTML(cfg *Config, tab string) string {
 		"cmdtextph":   "S_CMD_TEXT_PH",
 		"cmdpnewline": "S_CMD_P_NEWLINE", "cmdpparagraph": "S_CMD_P_PARAGRAPH", "cmdpcancel": "S_CMD_P_CANCEL", "cmdpreset": "S_CMD_PRESET",
 		"histempty": "S_HIST_EMPTY", "histcopy": "S_HIST_COPY", "histask": "S_HIST_ASK", "histclear": "S_HIST_CLEAR",
+		"stsummary": "S_ST_SUMMARY", "stquick": "S_ST_QUICK", "stmodels": "S_ST_MODELS", "stusage": "S_ST_USAGE",
+		"stready": "S_ST_READY", "stoff": "S_ST_OFF", "stoffsub": "S_ST_OFF_SUB", "stenable": "S_ST_ENABLE",
+		"stgoto": "S_ST_GOTO", "sthotkeygo": "S_ST_HOTKEY_GO", "stupdlast": "S_ST_UPD_LAST", "stupdhave": "S_ST_UPD_HAVE",
+		"stmem": "S_ST_MEM", "stmemsub": "S_ST_MEM_SUB", "stmemnone": "S_ST_MEM_NONE", "stlang": "S_ST_LANG", "stasr": "S_ST_ASR",
+		"ston": "S_ST_ON", "stoffw": "S_ST_OFF_W", "stonf": "S_ST_ON_F", "stofff": "S_ST_OFF_F", "stactive": "S_ST_ACTIVE",
+		"stidle": "S_ST_IDLE", "stdisk": "S_ST_DISK", "stusagesub": "S_ST_USAGE_SUB", "stnoweek": "S_ST_NO_WEEK",
+		"stautorunsub": "S_ST_AUTORUN_SUB", "stoverlaysub": "S_ST_OVERLAY_SUB", "sthint": "S_STATE_HINT",
+		"navmic": "S_NAV_MIC", "overlay": "S_OVERLAY", "beep": "S_BEEP", "autorun": "S_AUTORUN", "postenable": "S_POST_ENABLE",
+		"berropen": "S_BERR_OPEN", "updcheck": "S_UPD_CHECK", "postapi": "S_POSTAPI", "histtill": "S_HIST_TILL", "histtill1": "S_HIST_TILL1", "histtillfull": "S_HIST_TILL_FULL",
 		"skipadddlg": "S_SKIP_ADD_DLG", "skipeditdlg": "S_SKIP_EDIT_DLG", "skipname": "S_SKIP_NAME", "skipnamesub": "S_SKIP_NAME_SUB",
 		"skipopen": "S_SKIP_OPEN", "skiprefresh": "S_SKIP_REFRESH", "skippicked": "S_SKIP_PICKED", "skipnone": "S_SKIP_NONE", "skipempty": "S_SKIP_EMPTY",
 		"micchecking": "S_MIC_CHECKING", "mchecking": "S_MCHECK_RUN", "histinsert": "S_HIST_INSERT",
@@ -1275,15 +1301,21 @@ button.ghost:hover{color:var(--green)}
 .rulerow select{flex:0 0 auto;width:auto;min-width:118px}
 .rdel{flex:none;border:1px solid var(--line);border-radius:calc(var(--r) * .5);background:none;color:var(--dim);font:inherit;font-size:12px;cursor:pointer;padding:4px 9px}
 .rdel:hover{color:var(--bad);border-color:var(--badline)}
-.histrow{display:flex;align-items:flex-start;gap:10px;padding:9px 2px;border-bottom:1px solid var(--soft)}
+.histrow{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--soft)}
 .histrow:last-child{border-bottom:none}
 .histmeta{flex:none;width:150px;font-size:10.5px;color:var(--dim);line-height:1.5}
 .histmeta b{display:block;color:var(--dim);font-weight:400}
+.histtext{flex:1;min-width:0;font-size:12.5px;line-height:1.5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:default}
+.histlife{flex:none;color:var(--faint);font-size:10.5px;white-space:nowrap;cursor:default}
+.histlife.warn{color:var(--amber)}
+.histacts{display:flex;align-items:center;gap:2px;flex:none;opacity:.55;transition:opacity .12s}
+.histrow:hover .histacts{opacity:1}
 .histtext{flex:1;min-width:0;font-size:12.5px;line-height:1.5;color:var(--green);user-select:text;overflow-wrap:anywhere}
 .histrow .mini{flex:none}
 .histfind{margin:8px 0 4px;max-width:320px}
 .histempty{color:var(--dim);font-size:12px;padding:8px 0}
 .micverdict{font-size:12.5px;line-height:1.5;color:var(--dim);padding:4px 0;min-height:18px}
+.micverdict:empty{display:none}
 .micverdict.ok{color:var(--green);text-shadow:var(--glow)}
 .micverdict.bad{color:var(--amber)}
 .sect .mini{margin-left:auto}
@@ -1378,14 +1410,14 @@ button.mini.danger:hover{color:var(--bad);border-color:var(--badline);background
 .fmsep{height:1px;background:var(--soft);margin:0 0 12px}
 .pickhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 8px}
 .pickhead span{color:var(--dim);font-size:11.5px}
-.pchips{display:flex;gap:6px;flex-wrap:wrap;max-height:132px;overflow-y:auto;scrollbar-gutter:stable}
-.pchip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:calc(var(--r) * .5);background:var(--field);color:var(--dim);font:inherit;font-size:12px;padding:4px 10px 4px 7px;cursor:pointer}
-.pchip:hover{border-color:var(--dim);color:var(--green)}
-.pchip i{width:22px;height:12px;border:1px solid var(--btnline);border-radius:calc(var(--r) * .4);background:var(--field);position:relative;flex:none}
-.pchip i::after{content:"";position:absolute;top:1px;left:1px;width:8px;height:8px;border-radius:calc(var(--r) * .3);background:var(--dim);transition:transform .12s}
-.pchip.on{color:var(--green);border-color:var(--dim)}
-.pchip.on i{background:var(--on)}
-.pchip.on i::after{background:var(--hi);box-shadow:var(--higlow);transform:translateX(10px)}
+.appchips{display:flex;gap:8px;flex-wrap:wrap;align-items:center;max-width:430px;max-height:128px;overflow-y:auto;scrollbar-gutter:stable}
+.cmdchip.appchip{padding-left:6px;color:var(--dim);cursor:pointer;letter-spacing:0;text-transform:none}
+.cmdchip.appchip:hover{border-color:var(--dim);color:var(--green)}
+.cmdchip.appchip i{width:22px;height:12px;border:1px solid var(--btnline);border-radius:calc(var(--r) * .4);background:var(--field);position:relative;flex:none}
+.cmdchip.appchip i::after{content:"";position:absolute;top:1px;left:1px;width:8px;height:8px;border-radius:calc(var(--r) * .3);background:var(--dim);transition:transform .12s}
+.cmdchip.appchip.on{color:var(--green);border-color:var(--dim)}
+.cmdchip.appchip.on i{background:var(--on)}
+.cmdchip.appchip.on i::after{background:var(--hi);box-shadow:var(--higlow);transform:translateX(10px)}
 .pickcount{color:var(--dim);font-size:11.5px;padding:8px 0 0}
 .spin{animation:spin .6s linear}
 @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
@@ -1456,6 +1488,7 @@ html[data-skin="terminal"] .tls>i{border-radius:calc(var(--r) * .4)}
 input[type=text],input[type=number],input[type=password],select,button.mini{height:var(--ctlh,30px)}
 button.mini{display:inline-flex;align-items:center;justify-content:center}
 html[data-skin="terminal"] .row>button.mini,html[data-skin="terminal"] .tls .tla button.mini{min-width:142px}
+html[data-skin="terminal"] .row>button.mini.narrow{min-width:0}
 html[data-skin="terminal"] #repl_add,html[data-skin="terminal"] #cmd_add,html[data-skin="terminal"] #dict_add{min-width:176px}
 .pairrow{display:flex;align-items:center;gap:10px;padding:7px 2px;border-bottom:1px solid var(--soft);font-size:12.5px}
 .pairrow:last-child{border-bottom:0}
@@ -1672,41 +1705,43 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
 
 <div class="content">
 <div class="page" role="tabpanel" aria-hidden="true" id="p-state">
- <div class="hero"><span class="herokey" id="state_hotkey"></span><span class="herotext">{{S_STATE_HINT}}</span></div>
- <div class="berr" id="state_backend" style="display:none">
-  <span class="berrtext" id="state_backend_text"></span>
-  <button type="button" class="mini" id="state_retry">{{S_RETRY}}</button>
-  <button type="button" class="mini ghost" data-goto="system">{{S_BERR_OPEN}}</button>
+ <div class="blkhead"><div><label class="blklbl">{{S_ST_SUMMARY}}</label></div></div>
+ <div class="hero" id="state_hero">
+  <i class="led" id="state_hero_led"></i>
+  <div class="herotxt">
+   <div class="herobig" id="state_hero_title">—</div>
+   <div class="herosub" id="state_hero_sub">{{S_STATE_HINT}}</div>
+  </div>
+  <div class="keys" id="state_keys">
+   <span class="herokey" id="state_hotkey"></span>
+   <button type="button" class="iconbtn goto" data-goto="system" title="{{S_ST_HOTKEY_GO}}">&#8599;</button>
+  </div>
+  <button type="button" class="mini" id="state_enable" style="display:none">{{S_ST_ENABLE}}</button>
  </div>
- <div class="berr upd" id="state_upd" style="display:none">
-  <span class="berrtext" id="state_upd_text"></span>
-  <button type="button" class="mini" data-goto="system">{{S_UPD}}</button>
+ <div class="alerts" id="state_alerts"></div>
+ <div class="pair">
+  <div class="upd">
+   <div class="utop"><i class="led" id="state_upd_led"></i>
+    <div class="utxt"><div class="uttl" id="state_upd_title">—</div><div class="usub" id="state_upd_sub"></div></div>
+   </div>
+   <button type="button" class="mini small" id="state_upd_btn">{{S_UPD_CHECK}}</button>
+  </div>
+  <div class="upd">
+   <div class="utop"><i class="led" id="state_mem_led"></i>
+    <div class="utxt"><div class="uttl" id="state_mem_title">—</div><div class="usub" id="state_mem_sub"></div></div>
+   </div>
+   <button type="button" class="mini small" id="state_unload">{{S_UNLOAD_GO}}</button>
+  </div>
  </div>
- <div class="cards">
-  <div class="scard"><span class="k">{{S_NAV_MIC}}</span>
-   <span class="v"><i class="led" id="state_mic_led"></i><span id="state_mic">—</span></span>
-   <span class="miclevel grow" id="state_mic_bar"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
-  <div class="scard"><span class="k">{{S_STATE_ACTIVE}} · <span id="state_active_lang"></span></span>
-   <span class="v"><i class="led" id="state_active_led"></i><span id="state_active">—</span></span>
-   <button class="mini" id="state_active_btn" data-goto="models">{{S_CHANGE_MODEL}}</button></div>
-  <div class="scard"><span class="k">{{S_STATE_PROC}}</span>
-   <span class="v"><i class="led" id="state_llm_led"></i><span id="state_llm">—</span></span>
-   <button class="mini" id="state_llm_btn" data-goto="post">{{S_PICK_MODEL}}</button></div>
- </div>
- <h2 class="sect">{{S_STATE_USED}}</h2>
- <div id="state_assigned"></div>
- <div class="row"><span class="lbl">{{S_STATE_INST}}<span class="sub">{{S_STATE_INST_SUB}}</span></span>
-  <span class="val" id="state_installed">—</span>
-  <button class="mini" data-goto="models">{{S_CHANGE_MODEL}}</button></div>
- <h2 class="sect">{{S_STATE_LAST}}</h2>
- <div class="row"><span class="lbl"><span class="lastres" id="state_last">—</span><span class="sub" id="state_last_meta"></span></span>
-  <button class="mini" id="state_copy">{{S_STATE_COPY}}</button></div>
- <div class="row"><span class="lbl">{{S_STATE_MEM}}<span class="sub">{{S_STATE_MEM_SUB}}</span></span>
-  <span class="val" id="state_ram">—</span></div>
- <div class="row"><span class="lbl">{{S_STATE_LOADED}}<span class="sub">{{S_STATE_LOADED_SUB}}</span></span>
-  <span class="val" id="state_loaded">—</span></div>
- <div class="row" id="state_week_row" style="display:none"><span class="lbl">{{S_STATE_WEEK}}</span>
-  <span class="val" id="state_week">—</span></div>
+
+ <div class="blkhead"><div><label class="blklbl">{{S_ST_QUICK}}</label></div></div>
+ <div class="grid" id="state_quick"></div>
+
+ <div class="blkhead"><div><label class="blklbl">{{S_ST_MODELS}}</label></div></div>
+ <div class="wide" id="state_models"></div>
+
+ <div class="blkhead"><div><label class="blklbl">{{S_ST_USAGE}}</label></div></div>
+ <div class="upd stats" id="state_usage"></div>
 </div>
 
 <div class="page" role="tabpanel" aria-hidden="true" id="p-history">
@@ -1728,8 +1763,14 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
   <div id="hist_skip_list"></div>
  </div>
  <div class="card" id="histcard">
-  <h2 class="sect">{{S_HIST_LIST}}<button type="button" class="mini" id="hist_clear">{{S_HIST_CLEAR}}</button></h2>
-  <label class="omni histfind"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="15.5" y1="15.5" x2="21" y2="21"/></svg><input id="hist_find" type="text" placeholder="{{S_HIST_FIND}}" autocomplete="off"></label>
+  <div class="blkhead">
+   <div>
+    <label class="blklbl">{{S_HIST_LIST}}</label>
+    <div class="hint">{{S_HIST_LIST_HINT}}</div>
+   </div>
+   <button type="button" class="mini danger" id="hist_clear">{{S_HIST_CLEAR}}</button>
+  </div>
+  <label class="srchbox histfind"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="15.5" y1="15.5" x2="21" y2="21"/></svg><input id="hist_find" type="text" placeholder="{{S_HIST_FIND}}" autocomplete="off"><button type="button" class="clearx" id="hist_find_clear" tabindex="-1" style="display:none">✕</button></label>
   <div id="histbody"></div>
  </div>
 </div>
@@ -1793,14 +1834,9 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
    <span class="miclevel grow" id="mic_bar"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
   <div class="row"><label>{{S_MIC_CHECK}}<span class="sub">{{S_MIC_CHECK_SUB}}</span></label>
    <button type="button" class="mini" id="mic_check">{{S_PROF_TEST}}</button></div>
-  <div class="micverdict" id="mic_verdict"></div>
-  <div class="note warn" id="mic_err"></div>
- </div>
- <div class="card">
-  <h2 class="sect">{{S_SEC_SOUND}}</h2>
   <div class="row"><label>{{S_BEEP}}</label><input type="checkbox" id="beep"></div>
   <div class="row" data-adv><label>{{S_SOUND}}</label>
-   <button class="mini" onclick="appPreviewSound(document.getElementById('sound_theme').value)">&#9654;</button>
+   <button class="mini narrow" onclick="appPreviewSound(document.getElementById('sound_theme').value)">&#9654;</button>
    <select id="sound_theme">
     <option value="speech">{{S_SND_SPEECH}}</option>
     <option value="chime">{{S_SND_CHIME}}</option>
@@ -1809,6 +1845,8 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
     <option value="blip">{{S_SND_BLIP}}</option>
     <option value="pop">{{S_SND_POP}}</option>
    </select></div>
+  <div class="micverdict" id="mic_verdict"></div>
+  <div class="note warn" id="mic_err"></div>
  </div>
 </div>
 
@@ -2160,6 +2198,8 @@ const trAll = ["de","en","es","fr","it","pl","uk","ru"];
 const L = {{L_JSON}};
 const I_DL = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12"/><path d="M6 11l6 6 6-6"/><path d="M4 21h16"/></svg>';
 const I_EJECT = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 4l7 9H5z"/><path d="M5 19h14"/></svg>';
+const I_COPY = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12"/><path d="M5 15V4a1 1 0 0 1 1-1h9"/></svg>';
+const I_PASTE = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 11l5 5 5-5"/><path d="M4 21h16"/></svg>';
 const I_REFRESH = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M20 11a8 8 0 1 0-.6 4"/><path d="M20 4v7h-7"/></svg>';
 const I_FIND = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="15.5" y1="15.5" x2="21" y2="21"/></svg>';
 
@@ -3046,18 +3086,6 @@ let pendingDl = null;
 async function refreshState(){
   const s = JSON.parse(await appState());
   const set = (id, v)=>{ const el = document.getElementById(id); if(el) el.textContent = v; };
-  const setWithTip = (id, v)=>{
-    const el = document.getElementById(id);
-    if(!el) return;
-    el.textContent = v;
-    const card = el.closest(".scard") || el;
-    if(v && v !== "—") card.dataset.tip = v; else delete card.dataset.tip;
-  };
-  const capLed = (ledId, btnId, state)=>{
-    led(ledId, state === "ready" || state === "remote", state === "missing" || state === "downloading");
-    const b = document.getElementById(btnId);
-    if(b) b.textContent = state === "missing" ? L.get : L.change;
-  };
   const led = (id, on, warn)=>{
     const el = document.getElementById(id);
     if(!el) return;
@@ -3065,55 +3093,69 @@ async function refreshState(){
     el.classList.toggle("warn", !!warn);
   };
   showPostErr(s.post_err || "");
-  const berr = document.getElementById("state_backend");
-  if(berr){
-    berr.style.display = s.backend_err ? "" : "none";
-    set("state_backend_text", s.backend_err || "");
-  }
+
+  const hero = document.getElementById("state_hero");
+  const off = s.enabled === false;
+  if(hero) hero.classList.toggle("warn", off || !!s.backend_err);
+  set("state_hero_title", off ? L.stoff : (s.backend_err ? s.status : L.stready));
+  set("state_hero_sub", off ? L.stoffsub : (s.backend_err ? s.backend_err : L.sthint));
+  led("state_hero_led", !off && !s.backend_err && s.ready, off || !!s.backend_err);
   set("state_hotkey", s.hotkey);
-  setWithTip("state_mic", s.mic);
-  setWithTip("state_active", s.active_model);
-  set("state_active_lang", s.active_lang || "");
-  setWithTip("state_llm", s.llm);
-  set("state_ram", s.ram);
-  set("state_loaded", s.loaded_now || "—");
-  const wk = document.getElementById("state_week_row");
-  if(wk){ wk.style.display = s.week_line ? "" : "none"; }
-  set("state_week", s.week_line || "—");
-  const abox = document.getElementById("state_assigned");
-  if(abox){
-    const sig = JSON.stringify(s.assigned || []);
-    if(abox.dataset.sig !== sig){
-      abox.dataset.sig = sig;
-      abox.innerHTML = "";
-      (s.assigned || []).forEach(r=>{
-        const row = document.createElement("div");
-        row.className = "arow" + (r.current ? " on" : "");
-        row.innerHTML = '<i class="led'+(r.state==="ready"||r.state==="remote" ? " on" : " warn")+'"></i>'+
-          '<span class="aname">'+esc(r.model)+'</span>'+
-          '<span class="alangs">'+esc(r.langs)+'</span>'+
-          (r.state==="missing" ? '<span class="amiss">'+L.notinstalled+'</span>' : "");
-        row.onclick = ()=>show("models");
-        abox.appendChild(row);
+  const keys = document.getElementById("state_keys");
+  if(keys) keys.style.display = off ? "none" : "";
+  const enable = document.getElementById("state_enable");
+  if(enable) enable.style.display = off ? "" : "none";
+
+  const alerts = document.getElementById("state_alerts");
+  if(alerts){
+    const rows = [];
+    if(s.backend_err) rows.push({cls: "bad", text: s.backend_err, btn: L.retry, act: async ()=>{ await appRetryBackend(); refreshState(); }});
+    if(s.post_err) rows.push({cls: "bad", text: s.post_err, btn: L.berropen, act: ()=>show("post")});
+    const sig = JSON.stringify(rows.map(r=>[r.cls, r.text]));
+    if(alerts.dataset.sig !== sig){
+      alerts.dataset.sig = sig;
+      alerts.innerHTML = "";
+      rows.forEach(r=>{
+        const box = document.createElement("div");
+        box.className = "alert " + r.cls;
+        const dot = document.createElement("i");
+        dot.className = "led " + r.cls;
+        const txt = document.createElement("span");
+        txt.className = "atext";
+        txt.textContent = r.text;
+        txt.dataset.tip = r.text;
+        const btn = document.createElement("button");
+        btn.type = "button"; btn.className = "mini small"; btn.textContent = r.btn;
+        btn.onclick = r.act;
+        box.appendChild(dot); box.appendChild(txt); box.appendChild(btn);
+        alerts.appendChild(box);
       });
     }
   }
-  const inst = document.getElementById("state_installed");
-  if(inst) inst.textContent = (s.installed_models || []).join(", ") || "—";
-  set("state_last", s.last);
-  const copyBtn = document.getElementById("state_copy");
-  if(copyBtn) copyBtn.disabled = !s.last || s.last === "—";
-  const lastEl = document.getElementById("state_last");
-  if(lastEl) lastEl.title = s.last && s.last !== "—" ? s.last : "";
-  set("state_last_meta", s.last_meta || "");
-  const metaEl = document.getElementById("state_last_meta");
-  if(metaEl) metaEl.title = s.last_meta || "";
+
+  const hasUpd = !!s.upd_version;
+  set("state_upd_title", hasUpd ? L.stupdhave.replace("%s", s.upd_version) : L.stupdlast.replace("%s", CFG._version || ""));
+  set("state_upd_sub", hasUpd ? L.updgo : "");
+  led("state_upd_led", !hasUpd, hasUpd);
+  const updBtn = document.getElementById("state_upd_btn");
+  if(updBtn) updBtn.textContent = hasUpd ? L.updgo : L.updcheck;
+
+  const freeMB = s.ram_free_mb || 0;
+  const totalMB = s.ram_mb || 0;
+  set("state_mem_title", L.stmem.replace("%s", (freeMB / 1024).toFixed(1)).replace("%s", (totalMB / 1024).toFixed(0)));
+  set("state_mem_sub", L.stmemsub
+    .replace("%s", s.loaded_now || L.stmemnone)
+    .replace("%d", (s.installed_models || []).length)
+    .replace("%s", ((s.disk_mb || 0) / 1024).toFixed(1)));
+  led("state_mem_led", freeMB > totalMB * 0.25, freeMB <= totalMB * 0.25);
+  const unload = document.getElementById("state_unload");
+  if(unload) unload.disabled = !s.loaded_now;
+
+  renderQuickCards(s);
+  renderStateModels(s);
+  renderUsage(s);
+
   set("st_main", s.status_line || s.status);
-  led("state_mic_led", s.mic_ok);
-  capLed("state_active_led", "state_active_btn", s.active_state);
-  led("state_llm_led", s.llm_ok, !s.llm_ok);
-  const llmBtn = document.getElementById("state_llm_btn");
-  if(llmBtn) llmBtn.textContent = s.llm_ok ? L.change : L.get;
   led("st_led", s.ready);
   const badge = (id, v, full, cls)=>{
     const el = document.getElementById(id);
@@ -3129,18 +3171,207 @@ async function refreshState(){
   badge("badge_history", s.badges && s.badges.history, L.badgehist);
   const rem = document.getElementById("st_remote");
   if(rem) rem.textContent = s.remote ? L.remotebadge : "";
-  const upd = document.getElementById("state_upd");
-  if(upd){
-    upd.style.display = s.upd_version ? "" : "none";
-    const label = document.getElementById("state_upd_text");
-    if(label) label.textContent = s.upd_version ? L.updfound.replace("%s", s.upd_version) : "";
+}
+function stateCard(cap, tab, value, on, under){
+  const card = document.createElement("div");
+  card.className = "card";
+  const head = document.createElement("div");
+  head.className = "chead";
+  const capEl = document.createElement("span");
+  capEl.className = "cap";
+  capEl.textContent = cap;
+  const go = document.createElement("button");
+  go.type = "button"; go.className = "iconbtn goto"; go.title = L.stgoto;
+  go.innerHTML = "&#8599;";
+  go.onclick = ()=>show(tab);
+  head.appendChild(capEl); head.appendChild(go);
+  const val = document.createElement("div");
+  val.className = "val";
+  const dot = document.createElement("i");
+  dot.className = "led" + (on ? " on" : "");
+  const txt = document.createElement("span");
+  txt.textContent = value;
+  txt.dataset.tip = value;
+  val.appendChild(dot); val.appendChild(txt);
+  const sub = document.createElement("div");
+  sub.className = "under";
+  sub.textContent = under || "";
+  card.appendChild(head); card.appendChild(val); card.appendChild(sub);
+  return card;
+}
+function renderQuickCards(s){
+  const box = document.getElementById("state_quick");
+  if(!box) return;
+  const overlayOn = CFG.overlay !== false;
+  const beepOn = CFG.beep !== false;
+  const sig = [s.mic, s.active_lang, s.active_model, overlayOn, beepOn, s.autostart].join("|");
+  if(box.dataset.sig === sig) return;
+  box.dataset.sig = sig;
+  box.innerHTML = "";
+  const mic = stateCard(L.navmic, "mic", s.mic, s.mic_ok, "");
+  const bar = document.createElement("span");
+  bar.className = "miclevel grow";
+  bar.id = "state_mic_bar";
+  bar.innerHTML = new Array(7).fill("<i></i>").join("");
+  mic.insertBefore(bar, mic.lastChild);
+  box.appendChild(mic);
+  box.appendChild(stateCard(L.stlang, "models", s.active_lang, true, s.active_model));
+  box.appendChild(stateCard(L.overlay, "dictation", overlayOn ? L.ston : L.stoffw, overlayOn, L.stoverlaysub));
+  box.appendChild(stateCard(L.beep, "mic", beepOn ? L.ston : L.stoffw, beepOn, ""));
+  box.appendChild(stateCard(L.autorun, "system", s.autostart ? L.ston : L.stoffw, s.autostart, s.autostart ? "" : L.stautorunsub));
+}
+function modelRow(name, note, badgeText, badgeCls, on){
+  const row = document.createElement("div");
+  row.className = "wrow";
+  const nm = document.createElement("span");
+  nm.className = "wv";
+  const dot = document.createElement("i");
+  dot.className = "led" + (on ? " on" : "");
+  nm.appendChild(dot);
+  nm.appendChild(document.createTextNode(name));
+  if(badgeText){
+    const b = document.createElement("span");
+    b.className = "bdg" + (badgeCls ? " " + badgeCls : "");
+    b.textContent = badgeText;
+    nm.appendChild(b);
   }
+  const wu = document.createElement("span");
+  wu.className = "wu";
+  wu.textContent = note || "";
+  wu.dataset.tip = note || "";
+  row.appendChild(nm); row.appendChild(wu);
+  return row;
+}
+function renderStateModels(s){
+  const box = document.getElementById("state_models");
+  if(!box) return;
+  const postOn = CFG.post_enabled !== false;
+  const postModel = (CFG.llm_model || "").split(/[\\/]/).pop();
+  const sig = JSON.stringify([s.assigned, s.installed_models, s.active_model, postOn, postModel]);
+  if(box.dataset.sig === sig) return;
+  box.dataset.sig = sig;
+  box.innerHTML = "";
+
+  const asr = document.createElement("div");
+  asr.className = "card";
+  const ahead = document.createElement("div");
+  ahead.className = "chead";
+  const acap = document.createElement("span");
+  acap.className = "cap";
+  acap.textContent = L.stasr;
+  const ago = document.createElement("button");
+  ago.type = "button"; ago.className = "iconbtn goto"; ago.title = L.stgoto;
+  ago.innerHTML = "&#8599;";
+  ago.onclick = ()=>show("models");
+  ahead.appendChild(acap); ahead.appendChild(ago);
+  asr.appendChild(ahead);
+  const seen = [];
+  (s.assigned || []).forEach(r=>{
+    seen.push(r.model);
+    const cur = r.model === s.active_model;
+    asr.appendChild(modelRow(r.model, r.langs, cur ? L.stactive : "", cur ? "on" : "", cur));
+  });
+  (s.installed_models || []).forEach(name=>{
+    if(seen.includes(name)) return;
+    asr.appendChild(modelRow(name, L.stdisk.replace("%s", ""), "", "", false));
+  });
+  box.appendChild(asr);
+
+  const post = document.createElement("div");
+  post.className = "card";
+  const phead = document.createElement("div");
+  phead.className = "chead";
+  const pcap = document.createElement("span");
+  pcap.className = "cap";
+  pcap.textContent = L.postenable;
+  const pbdg = document.createElement("span");
+  pbdg.className = "bdg " + (postOn ? "on" : "warn");
+  pbdg.textContent = postOn ? L.stonf : L.stofff;
+  const pgo = document.createElement("button");
+  pgo.type = "button"; pgo.className = "iconbtn goto"; pgo.title = L.stgoto;
+  pgo.innerHTML = "&#8599;";
+  pgo.onclick = ()=>show("post");
+  phead.appendChild(pcap); phead.appendChild(pbdg); phead.appendChild(pgo);
+  post.appendChild(phead);
+  const marks = [];
+  if(CFG.post_source === "api") marks.push(L.postapi);
+  const prompts = (CFG.active_profiles || []).length;
+  if(prompts) marks.push(L.llmsumcount + ": " + prompts);
+  post.appendChild(modelRow(postModel || s.llm, marks.join(" · "), postOn ? "" : L.stidle, postOn ? "" : "warn", postOn));
+  box.appendChild(post);
+}
+function renderUsage(s){
+  const box = document.getElementById("state_usage");
+  if(!box) return;
+  const apps = s.week_apps || [];
+  const total = s.week_count || 0;
+  const sig = JSON.stringify([apps, total, s.week_chars, s.today_count]);
+  if(box.dataset.sig === sig) return;
+  box.dataset.sig = sig;
+  box.innerHTML = "";
+  if(!total){
+    const none = document.createElement("div");
+    none.className = "usub";
+    none.textContent = L.stnoweek;
+    box.appendChild(none);
+    return;
+  }
+  const top = document.createElement("div");
+  top.className = "utop";
+  const donut = document.createElement("div");
+  donut.className = "donut";
+  let acc = 0;
+  const stops = apps.map((a, idx)=>{
+    const from = acc / total * 100;
+    acc += a.count;
+    const to = acc / total * 100;
+    const colour = ["var(--hi)", "var(--dim)", "var(--faint)", "var(--soft)"][idx] || "var(--soft)";
+    return colour + " " + from.toFixed(1) + "% " + to.toFixed(1) + "%";
+  });
+  donut.style.background = "conic-gradient(" + stops.join(",") + ")";
+  const mid = document.createElement("span");
+  mid.textContent = String(total);
+  donut.appendChild(mid);
+  const txt = document.createElement("div");
+  txt.className = "utxt";
+  const legend = document.createElement("div");
+  legend.className = "legend";
+  apps.forEach((a, idx)=>{
+    const row = document.createElement("div");
+    row.className = "lrow";
+    const sw = document.createElement("i");
+    sw.style.background = ["var(--hi)", "var(--dim)", "var(--faint)", "var(--soft)"][idx] || "var(--soft)";
+    const nm = document.createElement("span");
+    nm.className = "ln";
+    nm.textContent = a.app;
+    nm.dataset.tip = a.app;
+    const cnt = document.createElement("b");
+    cnt.textContent = String(a.count);
+    row.appendChild(sw); row.appendChild(nm); row.appendChild(cnt);
+    legend.appendChild(row);
+  });
+  const sub = document.createElement("div");
+  sub.className = "usub";
+  sub.textContent = L.stusagesub
+    .replace("%d", s.week_chars || 0)
+    .replace("%d", s.today_count || 0)
+    .replace("%d", total ? Math.round((s.week_chars || 0) / total) : 0);
+  txt.appendChild(legend); txt.appendChild(sub);
+  top.appendChild(donut); top.appendChild(txt);
+  box.appendChild(top);
+  const go = document.createElement("button");
+  go.type = "button"; go.className = "mini small";
+  go.textContent = L.stmodels;
+  go.onclick = ()=>show("models");
+  box.appendChild(go);
 }
 function initStateScreen(){
-  const copy = document.getElementById("state_copy");
-  if(copy) copy.onclick = async ()=>{ const r = JSON.parse(await appCopyLast()); toast(r.text, r.ok ? "ok" : "error"); };
-  const retry = document.getElementById("state_retry");
-  if(retry) retry.onclick = async ()=>{ retry.disabled = true; await appRetryBackend(); setTimeout(()=>{ retry.disabled = false; refreshState(); }, 1200); };
+  const enable = document.getElementById("state_enable");
+  if(enable) enable.onclick = async ()=>{ await appToggleEnabled(); refreshState(); };
+  const unload = document.getElementById("state_unload");
+  if(unload) unload.onclick = async ()=>{ await appUnloadEngines(); refreshState(); };
+  const updBtn = document.getElementById("state_upd_btn");
+  if(updBtn) updBtn.onclick = ()=>{ show("system"); updCheck(); };
   document.querySelectorAll("[data-goto]").forEach(b=>{ b.onclick = ()=>show(b.dataset.goto); });
   setInterval(refreshState, 1500);
   startMeter("state_mic_bar", "p-state", null);
@@ -4159,7 +4390,16 @@ function initWizard(){
     if(wizStep === 3) wizPollTry();
   }, 800);
 }
-function histWhen(ms){
+function histLife(at){
+  const days = parseInt(CFG.history_days) || 0;
+  if(!days || !at) return null;
+  const till = new Date(at + days * 86400000);
+  const left = Math.ceil((till - Date.now()) / 86400000);
+  const short = left <= 1 ? L.histtill1 : L.histtill.replace("%s", till.toLocaleDateString(undefined, {day: "numeric", month: "short"}));
+  return {short: short, soon: left <= 1, full: L.histtillfull.replace("%s", till.toLocaleDateString()).replace("%d", days)};
+}
+function histWhen(
+ms){
   const d = new Date(ms);
   const pad = n=>String(n).padStart(2, "0");
   const today = new Date();
@@ -4191,28 +4431,50 @@ async function refreshHistory(){
     const text = document.createElement("div");
     text.className = "histtext";
     text.textContent = it.text;
+    text.dataset.tip = it.text;
     row.appendChild(text);
+    const life = histLife(it.at);
+    if(life){
+      const till = document.createElement("div");
+      till.className = "histlife" + (life.soon ? " warn" : "");
+      till.textContent = life.short;
+      till.dataset.tip = life.full;
+      row.appendChild(till);
+    }
+    const acts = document.createElement("div");
+    acts.className = "histacts";
     const copy = document.createElement("button");
     copy.type = "button";
-    copy.className = "mini";
-    copy.textContent = L.histcopy;
+    copy.className = "iconbtn";
+    copy.title = L.histcopy;
+    copy.innerHTML = I_COPY;
     copy.onclick = async ()=>{ const r = JSON.parse(await appHistoryCopy(it.at)); toast(r.text, r.ok ? "ok" : "error"); };
-    row.appendChild(copy);
+    acts.appendChild(copy);
     const ins = document.createElement("button");
     ins.type = "button";
-    ins.className = "mini ghost";
-    ins.textContent = L.histinsert;
+    ins.className = "iconbtn";
+    ins.title = L.histinsert;
+    ins.innerHTML = I_PASTE;
     ins.onclick = async ()=>{
-      const r = JSON.parse(await appHistoryInsert(it.at));
-      toast(r.text, r.ok ? "ok" : "error");
+      const r = JSON.parse(await appHistoryAim(it.at));
+      if(!r.ok) toast(r.text, "error");
     };
-    row.appendChild(ins);
+    acts.appendChild(ins);
+    const del = document.createElement("button");
+    del.type = "button";
+    del.className = "iconbtn danger";
+    del.title = L.del;
+    del.innerHTML = "&#10005;";
+    del.onclick = async ()=>{ await appHistoryDelete(it.at); refreshHistory(); };
+    acts.appendChild(del);
+    row.appendChild(acts);
     body.appendChild(row);
   });
 }
 function initHistory(){
   const find = document.getElementById("hist_find");
   if(!find) return;
+  wireFilter("hist_find", "hist_find_clear", refreshHistory);
   let t = null;
   find.addEventListener("input", ()=>{
     clearTimeout(t);
@@ -4760,7 +5022,7 @@ async function editSkip(index){
   const picked = new Set();
   let apps = [];
   const chipsBox = document.createElement("div");
-  chipsBox.className = "pchips";
+  chipsBox.className = "appchips";
   const count = document.createElement("div");
   count.className = "pickcount";
   const recount = ()=>{
@@ -4773,7 +5035,7 @@ async function editSkip(index){
     apps.forEach(a=>{
       const chip = document.createElement("button");
       chip.type = "button";
-      chip.className = "pchip" + (picked.has(a.exe) ? " on" : "");
+      chip.className = "cmdchip appchip" + (picked.has(a.exe) ? " on" : "");
       chip.title = a.title || a.exe;
       const sw = document.createElement("i");
       chip.appendChild(sw);
@@ -4823,7 +5085,7 @@ async function editSkip(index){
     body.appendChild(chipsBox);
     body.appendChild(count);
     loadApps();
-  }, null, editing ? L.skipeditdlg : L.skipadddlg, true);
+  }, null, editing ? L.skipeditdlg : L.skipadddlg, false);
   if(!ok) return;
   const fresh = skipItems();
   const typed = name.value.trim();

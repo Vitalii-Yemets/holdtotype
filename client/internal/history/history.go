@@ -107,7 +107,22 @@ func (s *Store) Clear() error {
 	return s.save()
 }
 
+// Delete drops a single entry, found by the moment it was written.
+func (s *Store) Delete(at int64) error {
+	s.mu.Lock()
+	kept := s.items[:0]
+	for _, it := range s.items {
+		if it.At != at {
+			kept = append(kept, it)
+		}
+	}
+	s.items = kept
+	s.mu.Unlock()
+	return s.save()
+}
+
 func (s *Store) Count() int {
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return len(s.items)

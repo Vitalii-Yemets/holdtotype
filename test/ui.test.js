@@ -58,6 +58,9 @@ const dom = new JSDOM(html, {
         loaded_now: "GigaAM v3", week_line: "12 dictations · 3400 characters",
         llm_ok: true, mic_ok: true, last_at: lastAt, last_app: "chrome.exe",
         remote: remote, backend_err: backendErr, post_err: postErr,
+        enabled: true, autostart: false, disk_mb: 3400, ram_mb: 16384, ram_free_mb: 9000,
+        week_count: 12, week_chars: 3400, today_count: 4,
+        week_apps: [{ app: "chrome.exe", count: 8 }, { app: "Telegram.exe", count: 4 }],
         badges: { mic: micBadge, models: "2", system: "" } });
     let modelStates = { base: "absent", small: "active", "medium-q5_0": "absent", "gigaam-v3": "absent", "moonshine-uk": "absent" };
     window.dlCalls = [];
@@ -68,6 +71,10 @@ const dom = new JSDOM(html, {
     window.appModelCancel = async (id) => { window.cancelCalls.push(id); modelStates[id] = "absent"; return true; };
     window.unloadCalls = 0;
     window.appUnloadEngines = async () => { window.unloadCalls++; };
+    window.histAimed = [];
+    window.appHistoryAim = async (at) => { window.histAimed.push(at); return JSON.stringify({ ok: true, text: "click the field to paste into" }); };
+    window.histDeleted = [];
+    window.appHistoryDelete = async (at) => { window.histDeleted.push(at); histItems = histItems.filter(h => h.at !== at); };
     window.appOpenApps = async () => JSON.stringify([
       { exe: "chrome.exe", title: "Inbox — Google Chrome" },
       { exe: "keepass.exe", title: "Database.kdbx — KeePass" },
@@ -233,25 +240,22 @@ function check(name, actual, expected) {
     check("and pressing " + id + " asks for a new combination", w.captureCalls > before, true);
   }
   check("no separate set button is left beside them", [...d.querySelectorAll("[id60_set]")].map(e=>e.id), []);
-  check("status names the model behind the current language", d.getElementById("state_active").textContent, "GigaAM v3");
-  check("and the language stands beside it", d.getElementById("state_active_lang").textContent, "RU");
-  check("the models in use are listed", d.querySelectorAll("#state_assigned .arow").length, 2);
-  check("each with the languages it serves", d.querySelector("#state_assigned .arow .alangs").textContent, "RU");
-  check("the current one is marked", d.querySelector("#state_assigned .arow").className.includes("on"), true);
-  check("installed models are listed in one line", d.getElementById("state_installed").textContent, "Small, my-model");
-  check("the memory row says what is loaded right now", d.getElementById("state_loaded").textContent, "GigaAM v3");
-  check("a week of dictations is summed up", d.getElementById("state_week").textContent, "12 dictations · 3400 characters");
-  check("and the row is shown when there is something to sum", d.getElementById("state_week_row").style.display, "");
-  check("last dictation carries details", d.getElementById("state_last_meta").textContent, "just now · 5 characters");
-  const lastCS = w.getComputedStyle(d.getElementById("state_last"));
-  check("last dictation is clamped to its row", [lastCS.display, lastCS.overflow, lastCS.textOverflow, lastCS.whiteSpace], ["block", "hidden", "ellipsis", "nowrap"]);
-  check("full dictation text kept on hover", d.getElementById("state_last").title, "hello");
+  check("the summary says it is ready", d.getElementById("state_hero_title").textContent, "Ready to dictate");
+  check("quick settings are five cards", d.querySelectorAll("#state_quick .card").length, 5);
+  check("the first names the microphone", d.querySelector("#state_quick .card .val span").textContent, "Realtek");
+  check("every card offers a way to its own tab", d.querySelectorAll("#state_quick .card .iconbtn.goto").length, 5);
+  check("the models block holds recognition and post-processing", d.querySelectorAll("#state_models .card").length, 2);
+  check("the working model is badged", d.querySelector("#state_models .bdg").textContent, "active");
+  check("memory is summed up in its own plate", d.getElementById("state_mem_title").textContent, "8.8 GB free of 16");
+  check("and it says what sits in memory", d.getElementById("state_mem_sub").textContent.includes("GigaAM v3"), true);
+  check("the update plate names the version", d.getElementById("state_upd_title").textContent, "Version 0.0.0-test — the latest");
+  check("the week is drawn as a ring", !!d.querySelector("#state_usage .donut"), true);
+  check("with a line per program", d.querySelectorAll("#state_usage .legend .lrow").length, 2);
   check("status screen meter follows the microphone", meterMoves(d, "state_mic_bar"), true);
   check("the status meter is drawn as bars", d.querySelectorAll("#state_mic_bar i").length, 7);
-  const micCard = d.getElementById("state_mic").closest(".scard");
-  check("a long device name is kept to one line", w.getComputedStyle(d.getElementById("state_mic").closest(".v")).textOverflow, "ellipsis");
-  check("and the whole name waits under the pointer", micCard.dataset.tip, "Realtek");
-  w.showTip(micCard);
+  const micCard = d.querySelector("#state_quick .card");
+  check("and the whole name waits under the pointer", micCard.querySelector(".val span").dataset.tip, "Realtek");
+  w.showTip(micCard.querySelector(".val span"));
   check("the hint shows what it was given", d.getElementById("tip").textContent, "Realtek");
   check("and it is dressed like the rest of the window", d.getElementById("tip").classList.contains("on"), true);
   w.hideTip();
@@ -304,8 +308,7 @@ function check(name, actual, expected) {
   check("status bar names both models", d.getElementById("st_main").textContent, "Ready · gigaam-v3 + ggml-small.bin · 7.8 GB free");
   check("sidebar badges filled", [d.getElementById("badge_mic").textContent, d.getElementById("badge_models").textContent], ["Realtek", "2"]);
   check("status bar led lit", d.getElementById("st_led").classList.contains("on"), true);
-  check("the post-processing card offers what the state calls for", d.getElementById("state_llm_btn").textContent, "Change");
-  check("copying the last dictation is offered", d.getElementById("state_copy").disabled, false);
+  check("post-processing carries its own on-off badge", d.querySelectorAll("#state_models .card")[1].querySelector(".bdg").textContent, "on");
   check("the models badge explains itself", d.getElementById("badge_models").dataset.tip, "Installed models");
   check("icon buttons carry a name for screen readers", d.getElementById("mic_refresh").getAttribute("aria-label"), "S_MIC_REFRESH");
   check("and the same words are the hover hint", d.getElementById("mic_refresh").dataset.tip, "S_MIC_REFRESH");
@@ -398,17 +401,23 @@ function check(name, actual, expected) {
   check("the dictations are listed", d.querySelectorAll("#histbody .histrow").length, 2);
   check("each entry names the program", d.querySelector("#histbody .histmeta").textContent.includes("chrome.exe"), true);
   check("each entry carries the text", d.querySelector("#histbody .histtext").textContent, "выложи на GitHub");
-  d.querySelector("#histbody .mini").click(); await sleep(200);
+  check("the whole text waits in a tooltip", d.querySelector("#histbody .histtext").dataset.tip, "выложи на GitHub");
+  check("and the entry says when it goes", !!d.querySelector("#histbody .histlife"), true);
+  check("the row acts are icons now, not worded buttons", d.querySelectorAll("#histbody .histrow")[0].querySelectorAll(".histacts .iconbtn").length, 3);
+  d.querySelector("#histbody .histacts .iconbtn").click(); await sleep(200);
   check("an entry can be copied", w.histCopied, [1700000000000]);
   check("copying says it copied", d.getElementById("st_saved").textContent, "Copied");
   w.setCopyFails(true);
-  d.querySelectorAll("#histbody .histrow")[0].querySelectorAll("button")[0].click(); await sleep(250);
+  d.querySelectorAll("#histbody .histrow")[0].querySelectorAll(".histacts .iconbtn")[0].click(); await sleep(250);
   check("a failed copy says so instead of success", d.getElementById("st_saved").textContent, "Could not copy: clipboard busy");
   check("and it is marked as an error", d.getElementById("st_saved").className.includes("bad"), true);
   w.setCopyFails(false);
-  d.querySelectorAll("#histbody .histrow")[0].querySelectorAll("button")[1].click(); await sleep(250);
-  check("an entry can be pasted back", w.histInserted, [1700000000000]);
-  check("the program says where it went", d.getElementById("st_saved").textContent, "pasted into “Editor”");
+  d.querySelectorAll("#histbody .histrow")[0].querySelectorAll(".histacts .iconbtn")[1].click(); await sleep(250);
+  check("the paste icon arms the aim instead of guessing a window", w.histAimed, [1700000000000]);
+  const histRowsBefore = d.querySelectorAll("#histbody .histrow").length;
+  d.querySelectorAll("#histbody .histrow")[0].querySelectorAll(".histacts .iconbtn")[2].click(); await sleep(300);
+  check("the cross drops that one entry", w.histDeleted, [1700000000000]);
+  check("and the list loses a row", d.querySelectorAll("#histbody .histrow").length, histRowsBefore - 1);
   const hfind = d.getElementById("hist_find");
   hfind.value = "Telegram"; hfind.dispatchEvent(new w.Event("input", { bubbles: true })); await sleep(400);
   check("search reaches the program itself", w.histQueries[w.histQueries.length - 1], "Telegram");
@@ -1023,10 +1032,10 @@ function check(name, actual, expected) {
   d.getElementById("hist_skip_add").click(); await sleep(300);
   check("adding a program opens a titled dialog", d.querySelector(".modal .mtitle").textContent, "Adding a program");
   check("the name field stands under its own label", !!d.querySelector(".modal .fmfield input.skipname"), true);
-  check("and the open programs are offered as switch chips", d.querySelectorAll(".modal .pchip").length, 3);
+  check("and the open programs are offered as switch chips", d.querySelectorAll(".modal .appchip").length, 3);
   check("with nothing picked the count says so", d.querySelector(".modal .pickcount").textContent, "Nothing picked");
-  [...d.querySelectorAll(".modal .pchip")].filter(c => c.textContent.includes("keepass"))[0].click(); await sleep(60);
-  [...d.querySelectorAll(".modal .pchip")].filter(c => c.textContent.includes("Telegram"))[0].click(); await sleep(60);
+  [...d.querySelectorAll(".modal .appchip")].filter(c => c.textContent.includes("keepass"))[0].click(); await sleep(60);
+  [...d.querySelectorAll(".modal .appchip")].filter(c => c.textContent.includes("Telegram"))[0].click(); await sleep(60);
   check("picking two counts them out of the offered", d.querySelector(".modal .pickcount").textContent, "2 of 3 picked");
   d.querySelector(".modal input.skipname").value = "game.exe";
   d.querySelector(".modal .btn.yes").click(); await sleep(300);
@@ -1036,7 +1045,7 @@ function check(name, actual, expected) {
   d.querySelector("#hist_skip_list .cmdchip .cbtn.redit").click(); await sleep(300);
   check("the pencil opens the same dialog, retitled", d.querySelector(".modal .mtitle").textContent, "Editing the program");
   check("with the name already in the field", d.querySelector(".modal input.skipname").value, "game.exe");
-  check("and no program picker in the way", d.querySelectorAll(".modal .pchip").length, 0);
+  check("and no program picker in the way", d.querySelectorAll(".modal .appchip").length, 0);
   d.querySelector(".modal input.skipname").value = "game2.exe";
   d.querySelector(".modal .btn.yes").click(); await sleep(300);
   check("editing renames it in place", skipStore.value, "game2.exe, keepass.exe, Telegram.exe");
@@ -1089,26 +1098,26 @@ function check(name, actual, expected) {
   check("a refused microphone is not saved", w.saveCalls, savesBefore);
   w.setMicFails(false);
 
-  w.setModelStates("missing", "downloading"); await sleep(1700);
-  check("a missing model is not green", d.getElementById("state_active_led").className.includes("on"), false);
-  check("a missing model warns", d.getElementById("state_active_led").className.includes("warn"), true);
-  check("a missing model offers to download it", d.getElementById("state_active_btn").textContent, "Download");
-  check("a missing model is named in the list of models in use", d.querySelector("#state_assigned .arow .amiss").textContent, "not installed");
-  w.setModelStates("ready", "ready"); await sleep(1700);
-  check("an installed model is green", d.getElementById("state_active_led").className.includes("on"), true);
+  w.setBackendErr("the recognizer did not start"); await sleep(1700);
+  check("a broken engine turns the summary amber", d.getElementById("state_hero").className.includes("warn"), true);
+  check("and says what happened instead of «ready»", d.getElementById("state_hero_sub").textContent, "the recognizer did not start");
+  check("the trouble is listed as an alert", d.querySelectorAll("#state_alerts .alert").length, 1);
+  w.setBackendErr(""); await sleep(1700);
+  check("a working engine takes the warning back", d.getElementById("state_hero").className.includes("warn"), false);
+  check("and the alerts are gone", d.querySelectorAll("#state_alerts .alert").length, 0);
 
   w.setRemote(true); await sleep(1700);
   check("remote recognition is announced", d.getElementById("st_remote").textContent, "REMOTE");
   w.setRemote(false); await sleep(1700);
   check("local recognition says nothing", d.getElementById("st_remote").textContent, "");
 
-  check("with everything working the failure card stays away", d.getElementById("state_backend").style.display, "none");
+  check("with everything working no alert is shown", d.querySelectorAll("#state_alerts .alert").length, 0);
   w.setBackendErr("port 8910 is busy"); await sleep(1700);
-  check("a recognizer that will not start says why", d.getElementById("state_backend_text").textContent, "port 8910 is busy");
-  check("and the card is on screen", d.getElementById("state_backend").style.display !== "none", true);
-  d.getElementById("state_retry").click(); await sleep(1800);
-  check("the card offers to try again, and it reaches the program", w.retryCalls, 1);
-  check("a recognizer that came up takes the card away", d.getElementById("state_backend").style.display, "none");
+  check("a recognizer that will not start says why", d.querySelector("#state_alerts .alert .atext").textContent, "port 8910 is busy");
+  d.querySelector("#state_alerts .alert .mini").click(); await sleep(1800);
+  check("the alert offers to try again, and it reaches the program", w.retryCalls, 1);
+  w.setBackendErr(""); await sleep(1700);
+  check("a recognizer that came up takes the alert away", d.querySelectorAll("#state_alerts .alert").length, 0);
 
   tab("dictation"); await sleep(80);
   const enterRow = d.getElementById("auto_enter").closest(".row");

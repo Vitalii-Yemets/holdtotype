@@ -777,6 +777,15 @@ type stateOut struct {
 	Remote      bool            `json:"remote"`
 	BackendErr  string          `json:"backend_err"`
 	PostErr     string          `json:"post_err"`
+	Enabled     bool            `json:"enabled"`
+	Autostart   bool            `json:"autostart"`
+	DiskMB      int             `json:"disk_mb"`
+	WeekChars   int             `json:"week_chars"`
+	WeekCount   int             `json:"week_count"`
+	TodayCount  int             `json:"today_count"`
+	WeekApps    []appShare      `json:"week_apps"`
+	RAMFreeMB   int             `json:"ram_free_mb"`
+	RAMTotalMB  int             `json:"ram_mb"`
 	UpdVersion  string          `json:"upd_version"`
 	Badges      struct {
 		Mic     string `json:"mic"`
@@ -898,6 +907,7 @@ func (a *App) stateSnapshot() string {
 	rec := a.rec
 	last := a.lastResult
 	verdict := a.lastVerdict
+	enabled := a.enabled
 	postErr := a.postErr
 	postErrProf := a.postErrProf
 	a.mu.Unlock()
@@ -923,7 +933,7 @@ func (a *App) stateSnapshot() string {
 	} else if cfg.PostSource == "local" && llmInstalled(cfg) {
 		llm = filepath.Base(cfg.LLMModel)
 	}
-	_, free := ramMB()
+	total, free := ramMB()
 	status := tr("status.loading")
 	if ready {
 		status = trf("status.ready", cfg.Hotkey)
@@ -983,10 +993,18 @@ func (a *App) stateSnapshot() string {
 		Remote:      strings.TrimSpace(cfg.ServerURL) != "",
 		BackendErr:  backendErr,
 		PostErr:     postErrLine(postErrProf, postErr),
+		Enabled:     enabled,
+		Autostart:   autorunEnabled(),
+		DiskMB:      installedDiskMB(),
+		RAMFreeMB:   free,
+		RAMTotalMB:  total,
 	}
 	a.mu.Lock()
 	st.UpdVersion = a.updVer
 	a.mu.Unlock()
+	st.WeekCount, st.WeekChars = histStore.Stats(time.Now().Add(-7 * 24 * time.Hour).UnixMilli())
+	st.TodayCount, _ = histStore.Stats(startOfDayMs())
+	st.WeekApps = weekByApp()
 	st.Badges.Mic = micBadge(mic)
 	st.Badges.Models = itoaSafe(installedModelCount())
 	st.Badges.History = histBadge()
@@ -1029,7 +1047,82 @@ func (a *App) loadedModelsLine() string {
 	return strings.Join(names, " + ")
 }
 
+type appShare struct {
+	App   string `json:"app"`
+	Count int    `json:"count"`
+}
+
+func startOfDayMs() int64 {
+	now := time.Now()
+	return time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location()).UnixMilli()
+}
+
+// weekByApp counts where the week went: which programs took the dictations,
+// biggest first, so the summary can draw them.
+func weekByApp() []appShare {
+	since := time.Now().Add(-7 * 24 * time.Hour).UnixMilli()
+	counts := map[string]int{}
+	for _, it := range histStore.Items() {
+		if it.At < since {
+			continue
+		}
+		app := strings.TrimSpace(it.App)
+		if app == "" {
+			app = "—"
+		}
+		counts[app]++
+	}
+	out := make([]appShare, 0, len(counts))
+	for app, n := range counts {
+		out = append(out, appShare{App: app, Count: n})
+	}
+	sort.Slice(out, func(i, j int) bool {
+		if out[i].Count != out[j].Count {
+			return out[i].Count > out[j].Count
+		}
+		return out[i].App < out[j].App
+	})
+	if len(out) > 4 {
+		rest := 0
+		for _, s := range out[3:] {
+			rest += s.Count
+		}
+		out = append(out[:3], appShare{App: strS("S_WEEK_OTHER"), Count: rest})
+	}
+	return out
+}
+
+// installedDiskMB adds up what the downloaded models weigh.
+func installedDiskMB() int {
+	total := 0
+	for _, dir := range []string{"models"} {
+		entries, _ := os.ReadDir(dir)
+		for _, e := range entries {
+			if e.IsDir() {
+				total += dirSizeMB(filepath.Join(dir, e.Name()))
+				continue
+			}
+			if info, err := e.Info(); err == nil {
+				total += int(info.Size() / (1024 * 1024))
+			}
+		}
+	}
+	return total
+}
+
+func dirSizeMB(dir string) int {
+	total := int64(0)
+	filepath.Walk(dir, func(_ string, info os.FileInfo, err error) error {
+		if err == nil && info != nil && !info.IsDir() {
+			total += info.Size()
+		}
+		return nil
+	})
+	return int(total / (1024 * 1024))
+}
+
 func weekLine() string {
+
 	since := time.Now().Add(-7 * 24 * time.Hour).UnixMilli()
 	n, chars := histStore.Stats(since)
 	if n == 0 {

@@ -138,3 +138,17 @@ func TestEnforceDropsWhatRetentionForbids(t *testing.T) {
 		t.Fatalf("повторное применение выбросило ещё %d", again)
 	}
 }
+
+func TestDeleteDropsOneEntry(t *testing.T) {
+	dir := t.TempDir()
+	s := Open(dir + "/hist.json")
+	s.Add(Item{At: 1, Text: "first"}, 10, 7, 100)
+	s.Add(Item{At: 2, Text: "second"}, 10, 7, 100)
+	if err := s.Delete(1); err != nil {
+		t.Fatalf("delete: %v", err)
+	}
+	items := s.Items()
+	if len(items) != 1 || items[0].At != 2 {
+		t.Fatalf("want only the second entry, got %+v", items)
+	}
+}

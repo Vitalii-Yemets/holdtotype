@@ -6,7 +6,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"time"
+	"unsafe"
 
 	"holdtotype/internal/appid"
 	"holdtotype/internal/commands"
@@ -103,7 +105,87 @@ func (a *App) insertTarget() uintptr {
 	return 0
 }
 
+var aimBusy atomic.Bool
+
+// aimPaste hides the settings window and waits for the next click: whatever
+// window is under the cursor gets the text. Esc calls it off. Nothing is
+// hooked — the mouse and the Escape key are only asked about their state.
+func (a *App) aimPaste(text string) string {
+	if strings.TrimSpace(text) == "" {
+		return listsAnswer(listsReply{Text: tr("hist.insert.gone")})
+	}
+	if !aimBusy.CompareAndSwap(false, true) {
+		return listsAnswer(listsReply{Text: tr("hist.aim.busy")})
+	}
+	settings := settingsHwnd.Load()
+	if settings != 0 {
+		procShowWindow.Call(settings, 0)
+	}
+	overlaySet(ovProcessing, tr("ov.aim"))
+	go a.aimWatch(text, settings)
+	return listsAnswer(listsReply{OK: true, Text: tr("hist.aim.armed")})
+}
+
+func (a *App) aimWatch(text string, settings uintptr) {
+	defer aimBusy.Store(false)
+	const (
+		vkLButton = 0x01
+		vkEscape  = 0x1B
+		gaRoot    = 2
+	)
+	down := func(vk uintptr) bool {
+		st, _, _ := procGetAsyncKeyState.Call(vk)
+		return st&0x8000 != 0
+	}
+	restore := func(state int, msg string) {
+		overlaySet(state, msg)
+		if settings != 0 {
+			procShowWindow.Call(settings, 5)
+			procSetForegroundWnd.Call(settings)
+		}
+	}
+	deadline := time.Now().Add(30 * time.Second)
+	for time.Now().Before(deadline) {
+		if down(vkEscape) {
+			log.Printf("history: the aimed paste was called off")
+			restore(ovFlashErr, tr("hist.aim.off"))
+			return
+		}
+		if down(vkLButton) {
+			for down(vkLButton) {
+				time.Sleep(20 * time.Millisecond)
+			}
+			var pt point
+			procGetCursorPos.Call(uintptr(unsafe.Pointer(&pt)))
+			target, _, _ := procWindowFromPoint.Call(uintptr(uint32(pt.X)), uintptr(uint32(pt.Y)))
+			if root, _, _ := procGetAncestor.Call(target, gaRoot); root != 0 {
+				target = root
+			}
+			if target == 0 || ownWindow(target) || target == settings {
+				log.Printf("history: the aimed paste landed on our own window, calling it off")
+				restore(ovFlashErr, tr("hist.aim.off"))
+				return
+			}
+			time.Sleep(220 * time.Millisecond)
+			cfg := a.snapshot()
+			if err := pasteText(cfg, text, target); err != nil {
+				log.Printf("history: aimed pasting: %v", err)
+				_ = setClipboardText(text)
+				restore(ovFlashErr, humanError(err))
+				return
+			}
+			log.Printf("history: pasted %d characters into '%s' by aim", len([]rune(text)), windowTitle(target))
+			overlaySet(ovFlashOK, trf("ov.inserted", len([]rune(text))))
+			return
+		}
+		time.Sleep(35 * time.Millisecond)
+	}
+	log.Printf("history: nothing was aimed at within the waiting time")
+	restore(ovFlashErr, tr("hist.aim.off"))
+}
+
 func (a *App) insertFromHistory(text string) string {
+
 	if strings.TrimSpace(text) == "" {
 		return listsAnswer(listsReply{Text: tr("hist.insert.gone")})
 	}
