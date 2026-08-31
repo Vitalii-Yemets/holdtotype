@@ -159,7 +159,7 @@ var palettes = []Palette{
 		TitleBg: "#e2cedb", SideBg: "#e4d2dd", KeyBg: "#e2cedb",
 		BtnBg: "#c2467f", BtnFg: "#ffffff", BtnLine: "transparent", SelBg: "#c2467f", SelFg: "#ffffff",
 		BtnBgH: "#ad3b71", Btn2Bg: "#d5b6c8", Btn2Fg: "#6d2349", Btn2Line: "#bf9bb0", Btn2BgH: "#cba9be",
-		DangerBg: "#ab2445", DangerFg: "#ffffff", DangerBgH: "#8f1c39", Dot: "#3f8a58", Focus: "#b8407c",
+		DangerBg: "#ab2445", DangerFg: "#ffffff", DangerBgH: "#8f1c39", Dot: "#2e7d4f", Ok: "#2e7d4f", Focus: "#b8407c",
 		Label: "#6d2349", Brand: "", Scrim: "rgba(120,45,85,.35)"},
 
 	{ID: "paper", Bg: "#e7eaee", Panel: "#f3f5f7", Line: "#ced5dc",

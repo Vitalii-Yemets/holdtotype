@@ -321,11 +321,14 @@ func TestTheLightSkinsKeepTheirDrawnCharacter(t *testing.T) {
 	if !strings.Contains(paper.CSSVars(), "--ok:#1a7f37") {
 		t.Error("the paper skin lost its green lamp")
 	}
-	for _, id := range []string{"terminal", "editor", "neon", "soft"} {
+	for _, id := range []string{"terminal", "editor", "neon"} {
 		p := GetPalette(GetSkin(id).Palette)
 		if p.Ok != p.Accent {
 			t.Errorf("the %s palette should light its lamps in its own accent, got %q", id, p.Ok)
 		}
+	}
+	if soft.Palette.Ok == soft.Palette.Accent {
+		t.Error("the soft palette lights its lamps green, so they do not vanish into the pink")
 	}
 }
 

@@ -1224,7 +1224,7 @@ button.cap.close:hover{background:var(--badbg);color:var(--bad);border-color:var
 .statusbar #st_main{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .statusbar .stsaved{flex:none}
 .statusbar .led{width:6px;height:6px;border-radius:50%;background:var(--faint);flex:none}
-.statusbar .led.on{background:var(--hi);box-shadow:var(--higlow)}
+.statusbar .led.on{background:var(--ok);box-shadow:var(--higlow)}
 .statusbar .led.bad{background:var(--bad);box-shadow:var(--badglow)}
 .statusbar #st_main.bad{color:var(--bad);text-shadow:var(--badglow)}
 .statusbar .stsaved{color:var(--dim)}
@@ -1293,7 +1293,7 @@ button.btn.ghost:hover{color:var(--green);border-color:var(--dim);background:non
 .herokey{border:1px solid var(--line);background:var(--keybg);border-radius:calc(var(--r) * .6);color:var(--green);padding:5px 12px;font-size:14px;font-weight:var(--wb);letter-spacing:1px;text-shadow:var(--glow)}
 .herotext{font-size:12px;color:var(--dim)}
 .sthero .led,.stplate .led,.stcard .led,.strow .led,.stalert .led{width:8px;height:8px;border-radius:var(--dotr);background:var(--dim);display:inline-block;flex:none}
-.sthero .led.on,.stplate .led.on,.stcard .led.on,.strow .led.on{background:var(--hi);box-shadow:var(--higlow)}
+.sthero .led.on,.stplate .led.on,.stcard .led.on,.strow .led.on{background:var(--ok);box-shadow:var(--higlow)}
 .sthero .led.warn,.stplate .led.warn,.stalert .led.warn{background:var(--amber);box-shadow:var(--amberglow)}
 .sthero .led.bad{background:var(--bad);box-shadow:var(--badglow)}
 .stalert .led.bad{background:var(--bad);box-shadow:var(--badglow)}
