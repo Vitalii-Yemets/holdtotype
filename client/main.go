@@ -369,12 +369,12 @@ func main() {
 			}
 			srv, serr := startRecognizer(cfg, logFile)
 			if serr != nil {
-				log.Printf("recognizer: %v", serr)
+				log.Printf("recognizer: %s", logText(serr))
 				return
 			}
 			defer srv.stop()
 			if werr := srv.waitReady(engineReadyTimeout(srv)); werr != nil {
-				log.Printf("recognizer did not start: %v", werr)
+				log.Printf("recognizer did not start: %s", logText(werr))
 				return
 			}
 			started := time.Now()
@@ -432,12 +432,12 @@ func main() {
 			}
 			srv, serr := startEngine(cfg, engineStream, logFile)
 			if serr != nil {
-				log.Printf("streaming recognizer: %v", serr)
+				log.Printf("streaming recognizer: %s", logText(serr))
 				return
 			}
 			defer srv.stop()
 			if werr := srv.waitReady(engineReadyTimeout(srv)); werr != nil {
-				log.Printf("streaming recognizer did not start: %v", werr)
+				log.Printf("streaming recognizer did not start: %s", logText(werr))
 				return
 			}
 			partials := 0
@@ -478,11 +478,11 @@ func main() {
 			primary := primaryEngine(cfg)
 			srv, serr := startEngine(cfg, primary, logFile)
 			if serr != nil {
-				log.Printf("primary engine: %v", serr)
+				log.Printf("primary engine: %s", logText(serr))
 				return
 			}
 			if werr := srv.waitReady(engineReadyTimeout(srv)); werr != nil {
-				log.Printf("primary engine did not start: %v", werr)
+				log.Printf("primary engine did not start: %s", logText(werr))
 				srv.stop()
 				return
 			}
@@ -498,7 +498,7 @@ func main() {
 			}
 			alt, aerr := app.engineFor(context.Background(), cfg, other, "")
 			if aerr != nil {
-				log.Printf("routecheck: second engine %s did not start: %v", other, aerr)
+				log.Printf("routecheck: second engine %s did not start: %s", other, logText(aerr))
 			} else {
 				log.Printf("routecheck: both engines alive — %s and %s", srv.engine(), alt.engine())
 				text, terr := alt.transcribe(context.Background(), mustReadWav(os.Args[1:], i), cfg.Language, cfg.WhisperPrompt, false)
@@ -847,7 +847,7 @@ func (a *App) initBackend() {
 						langName = tr("route.lang.auto")
 					}
 					msg := trf("status.nomodel.lang", langName, modelDisplayName(presetModelID(cfg, cfg.Language)))
-					log.Printf("model %s not found — waiting for the download (%s)", missing, msg)
+					log.Printf("model %s not found — waiting for the download", missing)
 					a.mu.Lock()
 					a.backendErr = msg
 					a.mu.Unlock()
@@ -868,7 +868,7 @@ func (a *App) initBackend() {
 		}
 		srv, err := startRecognizer(cfg, logFile)
 		if err != nil {
-			a.backendFailed(err.Error())
+			a.backendFailed(logText(err), err.Error())
 			if a.waitRetry() {
 				continue
 			}
@@ -885,7 +885,7 @@ func (a *App) initBackend() {
 
 		if err := srv.waitReady(engineReadyTimeout(srv)); err != nil {
 			srv.stop()
-			a.backendFailed(err.Error())
+			a.backendFailed(logText(err), err.Error())
 			if a.waitRetry() {
 				continue
 			}
@@ -916,7 +916,7 @@ func (a *App) initBackend() {
 			continue
 		}
 		if srv.external() {
-			a.backendFailed(tr("err.server.dead"))
+			a.backendFailed("the recognition server is not answering", tr("err.server.dead"))
 			if a.waitRetry() {
 				continue
 			}
@@ -927,7 +927,7 @@ func (a *App) initBackend() {
 		}
 		attempts++
 		if attempts > 3 {
-			a.backendFailed(tr("err.server.repeat"))
+			a.backendFailed("the recognition server keeps crashing", tr("err.server.repeat"))
 			if a.waitRetry() {
 				attempts = 0
 				continue
@@ -1787,8 +1787,8 @@ func (a *App) micCheck() string {
 	return string(b)
 }
 
-func (a *App) backendFailed(text string) {
-	log.Printf("recognizer did not start: %s", text)
+func (a *App) backendFailed(logMsg, text string) {
+	log.Printf("recognizer did not start: %s", logMsg)
 	a.mu.Lock()
 	a.ready = false
 	a.backendErr = text

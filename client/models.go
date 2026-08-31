@@ -444,7 +444,7 @@ func (a *App) doMultiDownload(ctx context.Context, key string, m *modelInfo) err
 		return err
 	}
 	if free := freeDiskMB("models"); free >= 0 && free < m.SizeMB+256 {
-		return fmt.Errorf("%s", trf("err.disk.space", free, m.SizeMB))
+		return uiErr(fmt.Sprintf("not enough disk space: %d MB free, %d MB needed", free, m.SizeMB), trf("err.disk.space", free, m.SizeMB))
 	}
 	total := int64(m.SizeMB) * 1024 * 1024
 	var doneBytes int64
@@ -472,7 +472,7 @@ func (a *App) doMultiDownload(ctx context.Context, key string, m *modelInfo) err
 			if verr := checksum.Verify(filepath.Join(dir, f), want); verr != nil {
 				_ = os.Remove(filepath.Join(dir, f))
 				log.Printf("hash mismatch: %v", verr)
-				return fmt.Errorf("%s", tr("err.hash"))
+				return uiErr("the downloaded file does not match its checksum", tr("err.hash"))
 			}
 		}
 		doneBytes += written
@@ -676,7 +676,7 @@ func (a *App) doDownload(ctx context.Context, key, file, url string, sizeMB int)
 			log.Printf("%s: %d MB downloaded, ~%d MB to go", file, int(fi.Size()/(1024*1024)), need)
 		}
 		if free := freeDiskMB("models"); free >= 0 && free < need+512 {
-			return fmt.Errorf("%s", trf("err.disk.space", free, need))
+			return uiErr(fmt.Sprintf("not enough disk space: %d MB free, %d MB needed", free, need), trf("err.disk.space", free, need))
 		}
 	}
 	total := int64(sizeMB) * 1024 * 1024
@@ -702,7 +702,7 @@ func (a *App) doDownload(ctx context.Context, key, file, url string, sizeMB int)
 			if verr := checksum.Verify(final, want); verr != nil {
 				_ = os.Remove(final)
 				log.Printf("hash mismatch: %v", verr)
-				return fmt.Errorf("%s", tr("err.hash"))
+				return uiErr("the downloaded file does not match its checksum", tr("err.hash"))
 			}
 			log.Printf("%s: hash matches", file)
 		}

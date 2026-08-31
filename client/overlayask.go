@@ -275,7 +275,7 @@ func overlayAsk(prompt string, choices []ovChoice, seconds int) string {
 	} else {
 		overlaySet(prevState, prevText)
 	}
-	log.Printf("question %q → %q", prompt, res)
+	log.Printf("ask dialog answered %q", res)
 	return res
 }
 

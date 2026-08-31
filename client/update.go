@@ -119,7 +119,7 @@ func downloadSetup(url, digest string, progress func(pct int)) (string, error) {
 	if err := checksum.Verify(dst, digest); err != nil {
 		os.Remove(dst)
 		log.Printf("update: hash mismatch: %v", err)
-		return "", fmt.Errorf("%s", tr("err.hash"))
+		return "", uiErr("the downloaded file does not match its checksum", tr("err.hash"))
 	}
 	log.Printf("update: hash matches")
 	return dst, nil

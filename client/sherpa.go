@@ -63,7 +63,7 @@ func sherpaModelArgs(dir string) ([]string, error) {
 		tokDir := filepath.Join(dir, "tokenizer")
 		for _, p := range []string{encoder, decoder, filepath.Join(tokDir, "vocab.json")} {
 			if _, statErr := os.Stat(p); statErr != nil {
-				return nil, fmt.Errorf("%s", trf("err.sherpa.model", p))
+				return nil, uiErrModel(p)
 			}
 		}
 		return []string{
@@ -75,12 +75,12 @@ func sherpaModelArgs(dir string) ([]string, error) {
 	}
 	tokens := filepath.Join(dir, "tokens.txt")
 	if _, err := os.Stat(tokens); err != nil {
-		return nil, fmt.Errorf("%s", trf("err.sherpa.model", tokens))
+		return nil, uiErrModel(tokens)
 	}
 	if enc := firstExisting(dir, "encoder_model.int8.ort", "encoder_model.ort", "encoder_model.onnx"); enc != "" {
 		dec := firstExisting(dir, "decoder_model_merged.int8.ort", "decoder_model_merged.ort", "decoder_model_merged.onnx")
 		if dec == "" {
-			return nil, fmt.Errorf("%s", trf("err.sherpa.model", filepath.Join(dir, "decoder_model_merged.ort")))
+			return nil, uiErrModel(filepath.Join(dir, "decoder_model_merged.ort"))
 		}
 		return []string{
 			"--moonshine-encoder=" + enc,
@@ -99,7 +99,7 @@ func sherpaModelArgs(dir string) ([]string, error) {
 	if _, statErr := os.Stat(joiner); statErr != nil {
 		for _, p := range []string{encoder, decoder} {
 			if _, serr := os.Stat(p); serr != nil {
-				return nil, fmt.Errorf("%s", trf("err.sherpa.model", p))
+				return nil, uiErrModel(p)
 			}
 		}
 		return []string{
@@ -110,7 +110,7 @@ func sherpaModelArgs(dir string) ([]string, error) {
 	}
 	for _, p := range []string{encoder, decoder} {
 		if _, statErr := os.Stat(p); statErr != nil {
-			return nil, fmt.Errorf("%s", trf("err.sherpa.model", p))
+			return nil, uiErrModel(p)
 		}
 	}
 	return []string{
@@ -150,7 +150,7 @@ func startSherpaServer(cfg *Config, logw io.Writer) (*sherpaServer, error) {
 		}
 	}
 	if _, serr := os.Stat(exePath); serr != nil {
-		return nil, fmt.Errorf("%s", trf("err.sherpa.notfound", exePath))
+		return nil, uiErr(fmt.Sprintf("sherpa-server not found: %s", exePath), trf("err.sherpa.notfound", exePath))
 	}
 	args := append([]string{
 		"--port=" + strconv.Itoa(cfg.SherpaPort),
@@ -185,7 +185,7 @@ func startSherpaServer(cfg *Config, logw io.Writer) (*sherpaServer, error) {
 	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true, CreationFlags: 0x08000000}
 	if err := cmd.Start(); err != nil {
 		log.Printf("starting %s: %v", cfg.SherpaExe, err)
-		return nil, fmt.Errorf("%s", trf("err.server.launch", cfg.SherpaExe))
+		return nil, uiErr(fmt.Sprintf("sherpa-server did not start: %s", cfg.SherpaExe), trf("err.server.launch", cfg.SherpaExe))
 	}
 	s.cmd = cmd
 	s.job = attachProcessToJob(cmd.Process.Pid)
@@ -247,7 +247,7 @@ func (s *sherpaServer) waitReady(timeout time.Duration) error {
 	var lastErr error
 	for time.Now().Before(deadline) {
 		if !s.alive() {
-			return fmt.Errorf("%s", tr("err.sherpa.start"))
+			return uiErr("sherpa-server exited during startup", tr("err.sherpa.start"))
 		}
 		ok, err := s.probe()
 		if ok {
@@ -262,7 +262,7 @@ func (s *sherpaServer) waitReady(timeout time.Duration) error {
 	if lastErr != nil {
 		return fmt.Errorf("%s: %v", trf("err.server.timeout", timeout), lastErr)
 	}
-	return fmt.Errorf("%s", trf("err.server.timeout", timeout))
+	return uiErr(fmt.Sprintf("sherpa-server did not answer within %s", timeout), trf("err.server.timeout", timeout))
 }
 
 func (s *sherpaServer) stop() {
@@ -282,7 +282,7 @@ func (s *sherpaServer) transcribe(ctx context.Context, wav []byte, language, pro
 		return "", fmt.Errorf("sherpa-server is not running")
 	}
 	if translate {
-		return "", fmt.Errorf("%s", tr("err.sherpa.translate"))
+		return "", uiErr("this sherpa model cannot translate", tr("err.sherpa.translate"))
 	}
 	pcm, rate, err := sherpaproto.PCMFromWAV(wav)
 	if err != nil {

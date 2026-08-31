@@ -48,7 +48,7 @@ func streamModelArgs(dir string) ([]string, error) {
 	tokens := filepath.Join(dir, "tokens.txt")
 	for _, p := range []string{encoder, decoder, joiner, tokens} {
 		if _, statErr := os.Stat(p); statErr != nil {
-			return nil, fmt.Errorf("%s", trf("err.sherpa.model", p))
+			return nil, uiErrModel(p)
 		}
 	}
 	return []string{
@@ -82,7 +82,7 @@ func startStreamServer(cfg *Config, logw io.Writer) (*streamServer, error) {
 		}
 	}
 	if _, serr := os.Stat(exePath); serr != nil {
-		return nil, fmt.Errorf("%s", trf("err.sherpa.notfound", exePath))
+		return nil, uiErr(fmt.Sprintf("streaming server not found: %s", exePath), trf("err.sherpa.notfound", exePath))
 	}
 	args := append([]string{
 		"--port=" + strconv.Itoa(cfg.StreamPort),
@@ -100,7 +100,7 @@ func startStreamServer(cfg *Config, logw io.Writer) (*streamServer, error) {
 	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true, CreationFlags: 0x08000000}
 	if err := cmd.Start(); err != nil {
 		log.Printf("starting %s: %v", cfg.StreamExe, err)
-		return nil, fmt.Errorf("%s", trf("err.server.launch", cfg.StreamExe))
+		return nil, uiErr(fmt.Sprintf("streaming server did not start: %s", cfg.StreamExe), trf("err.server.launch", cfg.StreamExe))
 	}
 	s.cmd = cmd
 	s.job = attachProcessToJob(cmd.Process.Pid)
@@ -155,14 +155,14 @@ func (s *streamServer) waitReady(timeout time.Duration) error {
 	deadline := time.Now().Add(timeout)
 	for time.Now().Before(deadline) {
 		if !s.alive() {
-			return fmt.Errorf("%s", tr("err.sherpa.start"))
+			return uiErr("streaming server exited during startup", tr("err.sherpa.start"))
 		}
 		if dialOK(s.addr) {
 			return nil
 		}
 		time.Sleep(300 * time.Millisecond)
 	}
-	return fmt.Errorf("%s", trf("err.server.timeout", timeout))
+	return uiErr(fmt.Sprintf("streaming server did not answer within %s", timeout), trf("err.server.timeout", timeout))
 }
 
 func floatBytes(pcm []byte) []byte {
@@ -312,7 +312,7 @@ func (ss *streamSession) close() {
 
 func (s *streamServer) transcribe(ctx context.Context, wav []byte, language, prompt string, translate bool) (string, error) {
 	if translate {
-		return "", fmt.Errorf("%s", tr("err.sherpa.translate"))
+		return "", uiErr("this streaming model cannot translate", tr("err.sherpa.translate"))
 	}
 	pcm := wav
 	if len(wav) > 44 && string(wav[0:4]) == "RIFF" {

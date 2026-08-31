@@ -60,7 +60,7 @@ func startWhisperServer(cfg *Config, logw io.Writer) (*whisperServer, error) {
 	}
 	if cfg.SttSource == "remote" {
 		if sttRemoteURL(cfg) == "" {
-			return nil, fmt.Errorf("%s", tr("err.srv.noaddr"))
+			return nil, uiErr("the remote recognition server is chosen but no address is set", tr("err.srv.noaddr"))
 		}
 		s.baseURL = sttRemoteURL(cfg)
 		return s, nil
@@ -71,7 +71,7 @@ func startWhisperServer(cfg *Config, logw io.Writer) (*whisperServer, error) {
 	}
 
 	if _, err := os.Stat(cfg.Model); err != nil {
-		return nil, fmt.Errorf("%s", trf("err.model.notfound", cfg.Model))
+		return nil, uiErr(fmt.Sprintf("model file not found: %s", cfg.Model), trf("err.model.notfound", cfg.Model))
 	}
 	s.modelPath = cfg.Model
 
@@ -97,7 +97,7 @@ func startWhisperServer(cfg *Config, logw io.Writer) (*whisperServer, error) {
 	}
 	if err := cmd.Start(); err != nil {
 		log.Printf("starting %s: %v", cfg.ServerExe, err)
-		return nil, fmt.Errorf("%s", trf("err.server.launch", cfg.ServerExe))
+		return nil, uiErr(fmt.Sprintf("whisper-server did not start: %s", cfg.ServerExe), trf("err.server.launch", cfg.ServerExe))
 	}
 	s.cmd = cmd
 	s.attachToJob()
@@ -177,7 +177,7 @@ func (s *whisperServer) waitReady(timeout time.Duration) error {
 			dead := s.exited
 			s.mu.Unlock()
 			if dead {
-				return fmt.Errorf("%s", tr("err.server.start"))
+				return uiErr("whisper-server exited during startup", tr("err.server.start"))
 			}
 		}
 		if dialOK(addr) {
@@ -186,9 +186,9 @@ func (s *whisperServer) waitReady(timeout time.Duration) error {
 		time.Sleep(300 * time.Millisecond)
 	}
 	if s.external() {
-		return fmt.Errorf("%s", trf("err.server.dead", s.baseURL))
+		return uiErr(fmt.Sprintf("whisper-server is not answering at %s", s.baseURL), trf("err.server.dead", s.baseURL))
 	}
-	return fmt.Errorf("%s", trf("err.server.timeout", timeout))
+	return uiErr(fmt.Sprintf("whisper-server did not answer within %s", timeout), trf("err.server.timeout", timeout))
 }
 
 func (s *whisperServer) stop() {
