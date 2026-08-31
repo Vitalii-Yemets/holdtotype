@@ -173,7 +173,7 @@ func missingModelPath(cfg *Config) string {
 		}
 		return ""
 	}
-	if strings.TrimSpace(cfg.ServerURL) != "" {
+	if cfg.SttSource == "remote" {
 		return ""
 	}
 	if _, err := os.Stat(cfg.Model); err != nil {

@@ -16,19 +16,20 @@ type Item struct {
 }
 
 const (
-	DefaultKeepDays = 7
+	DefaultKeepDays    = 7
+	DefaultKeepMinutes = DefaultKeepDays * 24 * 60
 	DefaultMax      = 200
-	MaxAllowed      = 2000
+	MaxAllowed         = 10000
 )
 
-func Prune(items []Item, nowMs int64, keepDays, max int) []Item {
-	if keepDays <= 0 {
-		keepDays = DefaultKeepDays
+func Prune(items []Item, nowMs int64, keepMinutes, max int) []Item {
+	if keepMinutes <= 0 {
+		keepMinutes = DefaultKeepMinutes
 	}
 	if max <= 0 || max > MaxAllowed {
 		max = DefaultMax
 	}
-	cutoff := nowMs - int64(keepDays)*24*60*60*1000
+	cutoff := nowMs - int64(keepMinutes)*60*1000
 	kept := make([]Item, 0, len(items))
 	for _, it := range items {
 		if it.At >= cutoff && strings.TrimSpace(it.Text) != "" {
@@ -93,9 +94,9 @@ func (s *Store) Search(query string, limit int) []Item {
 	return out
 }
 
-func (s *Store) Add(it Item, nowMs int64, keepDays, max int) error {
+func (s *Store) Add(it Item, nowMs int64, keepMinutes, max int) error {
 	s.mu.Lock()
-	s.items = Prune(append([]Item{it}, s.items...), nowMs, keepDays, max)
+	s.items = Prune(append([]Item{it}, s.items...), nowMs, keepMinutes, max)
 	s.mu.Unlock()
 	return s.save()
 }
@@ -166,10 +167,10 @@ func (s *Store) save() error {
 	return os.Rename(tmp, filepath.Clean(path))
 }
 
-func (s *Store) Enforce(nowMs int64, keepDays, max int) (int, error) {
+func (s *Store) Enforce(nowMs int64, keepMinutes, max int) (int, error) {
 	s.mu.Lock()
 	before := len(s.items)
-	s.items = Prune(s.items, nowMs, keepDays, max)
+	s.items = Prune(s.items, nowMs, keepMinutes, max)
 	dropped := before - len(s.items)
 	s.mu.Unlock()
 	if dropped == 0 {

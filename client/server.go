@@ -58,8 +58,11 @@ func startWhisperServer(cfg *Config, logw io.Writer) (*whisperServer, error) {
 		client: &http.Client{Timeout: 5 * time.Minute},
 		doneCh: make(chan struct{}),
 	}
-	if cfg.ServerURL != "" {
-		s.baseURL = strings.TrimRight(cfg.ServerURL, "/")
+	if cfg.SttSource == "remote" {
+		if sttRemoteURL(cfg) == "" {
+			return nil, fmt.Errorf("%s", tr("err.srv.noaddr"))
+		}
+		s.baseURL = sttRemoteURL(cfg)
 		return s, nil
 	}
 	s.baseURL = fmt.Sprintf("http://127.0.0.1:%d", cfg.ServerPort)
@@ -268,6 +271,17 @@ func (s *whisperServer) transcribe(ctx context.Context, wav []byte, language, pr
 }
 
 const defaultServerExe = "whisper-server.exe"
+
+func sttRemoteURL(cfg *Config) string {
+	if cfg.SttSource != "remote" {
+		return ""
+	}
+	return strings.TrimRight(strings.TrimSpace(cfg.ServerURL), "/")
+}
+
+func sttRemoteBroken(cfg *Config) bool {
+	return cfg.SttSource == "remote" && strings.TrimSpace(cfg.ServerURL) == ""
+}
 
 func resolveServerExe(p string) string {
 	p = strings.TrimSpace(p)

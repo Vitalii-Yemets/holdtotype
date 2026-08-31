@@ -205,6 +205,29 @@ func revealWindowCentered(hwnd uintptr, w, h int) {
 	procSetForegroundWnd.Call(hwnd)
 }
 
+func setWindowWidth(hwnd uintptr, want int) (prev int, got int) {
+	var rc rect
+	procGetWindowRect.Call(hwnd, uintptr(unsafe.Pointer(&rc)))
+	prev = int(rc.Right - rc.Left)
+	height := int(rc.Bottom - rc.Top)
+	work, _ := monitorRectsFor(hwnd)
+	if maxW := int(work.Right - work.Left); want > maxW {
+		want = maxW
+	}
+	if want < 520 {
+		want = 520
+	}
+	x := int(rc.Left)
+	if x+want > int(work.Right) {
+		x = int(work.Right) - want
+	}
+	if x < int(work.Left) {
+		x = int(work.Left)
+	}
+	procSetWindowPos.Call(hwnd, 0, uintptr(uint32(int32(x))), uintptr(uint32(rc.Top)), uintptr(want), uintptr(height), 0x0004|0x0010)
+	return prev, want
+}
+
 func makeBorderless(hwnd uintptr) {
 	if hwnd == 0 {
 		return

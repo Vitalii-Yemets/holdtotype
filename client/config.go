@@ -81,6 +81,7 @@ type Config struct {
 	ServerAutostart  bool              `json:"server_autostart"`
 	ServerExe        string            `json:"server_exe"`
 	ServerURL        string            `json:"server_url"`
+	SttSource        string            `json:"stt_source"`
 	SherpaExe        string            `json:"sherpa_exe"`
 	SherpaPort       int    `json:"sherpa_port"`
 	SherpaModel      string `json:"sherpa_model"`
@@ -131,6 +132,7 @@ type Config struct {
 	Replacements        []replace.Rule     `json:"replacements"`
 	HistoryOn           bool               `json:"history"`
 	HistoryDays         int                `json:"history_days"`
+	HistoryKeepMin      int                `json:"history_keep_min"`
 	HistoryMax          int                `json:"history_max"`
 	HistorySkip         string             `json:"history_skip"`
 	PostEnabled         bool               `json:"post_enabled"`
@@ -226,8 +228,10 @@ func defaultConfig() *Config {
 		LLMModel:         "models/" + llmFile,
 		PostEnabled:      false,
 		PostSource:       "local",
+		SttSource:        "local",
 		WizardDone:       true,
 		HistoryDays:      history.DefaultKeepDays,
+		HistoryKeepMin:   history.DefaultKeepMinutes,
 		HistoryMax:       history.DefaultMax,
 	}
 }
@@ -305,6 +309,7 @@ func loadConfig(path string) (*Config, error) {
 	}
 	cfg.LangModels = nil
 	cfg.PostSource = ""
+	cfg.SttSource = ""
 	data = bytes.TrimPrefix(data, []byte{0xEF, 0xBB, 0xBF})
 	logUnknownConfigKeys(data, cfg)
 	dec := json.NewDecoder(bytes.NewReader(data))
@@ -451,6 +456,30 @@ func loadConfig(path string) (*Config, error) {
 	}
 	if cfg.PostAPITimeout < 5 || cfg.PostAPITimeout > 900 {
 		cfg.PostAPITimeout = 120
+	}
+	if cfg.HistoryKeepMin <= 0 {
+		if cfg.HistoryDays > 0 {
+			cfg.HistoryKeepMin = cfg.HistoryDays * 24 * 60
+		} else {
+			cfg.HistoryKeepMin = history.DefaultKeepMinutes
+		}
+		migrated = true
+	}
+	if cfg.HistoryKeepMin > 365*24*60 {
+		cfg.HistoryKeepMin = 365 * 24 * 60
+		migrated = true
+	}
+	if cfg.HistoryMax > history.MaxAllowed {
+		cfg.HistoryMax = history.MaxAllowed
+		migrated = true
+	}
+	if cfg.SttSource != "local" && cfg.SttSource != "remote" {
+		if strings.TrimSpace(cfg.ServerURL) != "" {
+			cfg.SttSource = "remote"
+		} else {
+			cfg.SttSource = "local"
+		}
+		migrated = true
 	}
 	if cfg.PostSource != "local" && cfg.PostSource != "api" {
 		if strings.TrimSpace(cfg.PostAPIURL) != "" {

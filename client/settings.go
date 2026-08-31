@@ -8,7 +8,10 @@ import (
 	"holdtotype/internal/ovplace"
 	"holdtotype/internal/preset"
 	"holdtotype/internal/replace"
+	"io"
 	"log"
+	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -113,7 +116,7 @@ type settingsForm struct {
 	MinRecordMs      int    `json:"min_record_ms"`
 	PasteDelayMs     int    `json:"paste_delay_ms"`
 	HistoryOn        bool   `json:"history"`
-	HistoryDays      int    `json:"history_days"`
+	HistoryKeepMin   int    `json:"history_keep_min"`
 	HistoryMax       int    `json:"history_max"`
 	HistorySkip      string `json:"history_skip"`
 	PostEnabled      *bool  `json:"post_enabled"`
@@ -134,6 +137,7 @@ type settingsForm struct {
 	ServerPort       int    `json:"server_port"`
 	ServerExe        string `json:"server_exe"`
 	ServerURL        string `json:"server_url"`
+	SttSource        string `json:"stt_source"`
 
 	WhisperPrompt       string             `json:"whisper_prompt"`
 	TranslateHotkey     string             `json:"translate_hotkey"`
@@ -230,6 +234,11 @@ func (a *App) settingsThread(tab string, attempt int) {
 		_ = w.Bind("appDrag", func() {
 			beginWindowDrag(hwnd)
 		})
+		_ = w.Bind("appWindowWidth", func(want float64) string {
+			prev, got := setWindowWidth(hwnd, int(want))
+			log.Printf("settings window width: %d -> %d", prev, got)
+			return jsonResult(widthResult{Prev: prev, Width: got})
+		})
 		_ = w.Bind("appSave", func(formJSON string) string {
 			var f settingsForm
 			if err := json.Unmarshal([]byte(formJSON), &f); err != nil {
@@ -309,6 +318,27 @@ func (a *App) settingsThread(tab string, attempt int) {
 			}
 			log.Printf("post-processing server test: the server answered")
 			a.setPostErr("", "")
+			return jsonResult(saveResult{OK: true, Severity: "ok", Message: strS("S_API_TEST_OK")})
+		})
+		_ = w.Bind("appSttTest", func(rawURL string) string {
+			target := strings.TrimSpace(rawURL)
+			if target == "" {
+				return jsonResult(saveResult{Severity: "error", Message: strS("S_SRV_NOADDR")})
+			}
+			client := &http.Client{Timeout: 8 * time.Second}
+			resp, err := client.Get(strings.TrimRight(target, "/") + "/")
+			if err != nil {
+				msg := errText(err)
+				log.Printf("recognition server test: %v", err)
+				return jsonResult(saveResult{Severity: "error", Message: msg})
+			}
+			defer resp.Body.Close()
+			io.Copy(io.Discard, io.LimitReader(resp.Body, 4096))
+			if resp.StatusCode >= 500 {
+				log.Printf("recognition server test: HTTP %d", resp.StatusCode)
+				return jsonResult(saveResult{Severity: "error", Message: fmt.Sprintf("HTTP %d", resp.StatusCode)})
+			}
+			log.Printf("recognition server test: the server answered (HTTP %d)", resp.StatusCode)
 			return jsonResult(saveResult{OK: true, Severity: "ok", Message: strS("S_API_TEST_OK")})
 		})
 		_ = w.Bind("appPostKeySet", func() bool {
@@ -416,6 +446,28 @@ func (a *App) settingsThread(tab string, attempt int) {
 		})
 		_ = w.Bind("appAuthorLink", func() {
 			shellOpenURL(appid.AuthorURL)
+		})
+		_ = w.Bind("appIssuesLink", func() {
+			shellOpenURL(appid.IssuesURL)
+		})
+		_ = w.Bind("appDepLink", func(raw string) {
+			for _, ok := range []string{"https://github.com/", "https://huggingface.co/", "https://developer.microsoft.com/"} {
+				if strings.HasPrefix(raw, ok) {
+					shellOpenURL(raw)
+					return
+				}
+			}
+			log.Printf("dependency link refused: %s", raw)
+		})
+		_ = w.Bind("appMailLink", func() {
+			shellOpenURL("mailto:" + appid.Email + "?subject=" + url.QueryEscape(appid.Name+" "+appVersion))
+		})
+		_ = w.Bind("appMailCopy", func() string {
+			if err := setClipboardText(appid.Email); err != nil {
+				log.Printf("copying the address: %v", err)
+				return jsonResult(saveResult{Severity: "error", Message: trf("copy.fail", humanError(err))})
+			}
+			return jsonResult(saveResult{OK: true, Severity: "ok", Message: tr("copy.ok")})
 		})
 		_ = w.Bind("appCaptureCombo", func() {
 			go func() {
@@ -725,8 +777,8 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 		c.PasteDelayMs = f.PasteDelayMs
 	}
 	c.HistoryOn = f.HistoryOn
-	if f.HistoryDays > 0 {
-		c.HistoryDays = f.HistoryDays
+	if f.HistoryKeepMin > 0 {
+		c.HistoryKeepMin = f.HistoryKeepMin
 	}
 	if f.HistoryMax > 0 {
 		c.HistoryMax = f.HistoryMax
@@ -776,6 +828,9 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	c.ServerPort = f.ServerPort
 	c.ServerExe = f.ServerExe
 	c.ServerURL = strings.TrimSpace(f.ServerURL)
+	if f.SttSource == "local" || f.SttSource == "remote" {
+		c.SttSource = f.SttSource
+	}
 	c.WhisperPrompt = strings.TrimSpace(f.WhisperPrompt)
 	if c.Language != old.Language {
 		syncDictionary(&c)
@@ -883,7 +938,7 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 		}()
 	}
 	initLang(c.UILanguage)
-	if c.HistoryDays != old.HistoryDays || c.HistoryMax != old.HistoryMax {
+	if c.HistoryKeepMin != old.HistoryKeepMin || c.HistoryMax != old.HistoryMax {
 		a.enforceHistory(&c)
 	}
 	a.refreshIdleUI()
@@ -894,6 +949,7 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	serverChanged := c.ServerPort != old.ServerPort ||
 		c.Threads != old.Threads ||
 		c.ServerURL != old.ServerURL ||
+		c.SttSource != old.SttSource ||
 		c.ServerExe != old.ServerExe ||
 		c.ServerAutostart != old.ServerAutostart
 
@@ -932,7 +988,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"min_record_ms":           cfg.MinRecordMs,
 		"paste_delay_ms":          cfg.PasteDelayMs,
 		"history":                 cfg.HistoryOn,
-		"history_days":            cfg.HistoryDays,
+		"history_keep_min":        cfg.HistoryKeepMin,
 		"history_max":             cfg.HistoryMax,
 		"history_skip":            cfg.HistorySkip,
 		"post_enabled":            cfg.PostEnabled,
@@ -955,6 +1011,9 @@ func settingsHTML(cfg *Config, tab string) string {
 		"server_exe_default":      defaultServerExe,
 		"server_exe_path_default": resolveServerExe(defaultServerExe),
 		"server_url":              cfg.ServerURL,
+		"_mail":                   appid.Email,
+		"_repo":                   appid.RepoURL,
+		"stt_source":              cfg.SttSource,
 		"whisper_prompt":          cfg.WhisperPrompt,
 		"translate_default":       cfg.TranslateDefault,
 		"active_profiles":         cfg.ActiveProfiles,
@@ -1020,13 +1079,28 @@ func settingsHTML(cfg *Config, tab string) string {
 		"apikeydel": "S_API_KEY_DEL", "apidlg": "S_API_DLG",
 		"postapiurl": "S_POSTAPI_URL", "postapimodel": "S_POSTAPI_MODEL",
 		"postapikey": "S_POSTAPI_KEY", "postapitimeout": "S_POSTAPI_TIMEOUT", "secshort": "S_SEC_SHORT",
-		"remotewarn": "S_REMOTE_WARN", "remoteask": "S_REMOTE_ASK", "remotebadge": "S_REMOTE_BADGE",
+		"remotewarn": "S_REMOTE_WARN", "remoteask": "S_REMOTE_ASK",
+		"srvkauto": "S_SRV_K_AUTO", "srvkfile": "S_SRV_K_FILE", "srvkaddr": "S_SRV_K_ADDR", "srvkcheck": "S_SRV_K_CHECK",
+		"srvnear": "S_SRV_NEAR", "srvnoaddr": "S_SRV_NOADDR", "srvnocheck": "S_SRV_NOCHECK", "srvon": "S_SRV_ON", "srvoff": "S_SRV_OFF",
+		"srvlocaldlg": "S_SRV_LOCAL_DLG", "srvaddr": "S_SRV_ADDR", "srvaddrsub": "S_SRV_ADDR_SUB",
+		"threads": "S_THREADS", "threadssub": "S_SUB_THREADS", "srvport": "S_PORT", "srvportsub": "S_SUB_PORT",
+		"srvkthreads": "S_SRV_K_THREADS", "srvkport": "S_SRV_K_PORT",
+		"helptocshow": "S_HELP_TOC_SHOW", "helptochide": "S_HELP_TOC_HIDE",
+		"srvdown": "S_SRV_DOWN", "srvdownwhy": "S_SRV_DOWN_WHY", "srvdowngo": "S_SRV_DOWN_GO",
+		"srvwarnnow": "S_SRV_WARN_NOW", "srvwarnlater": "S_SRV_WARN_LATER",
+		"srvautostart": "S_AUTOSTART", "srvautostartsub": "S_SUB_AUTOSTART", "serverexe": "S_SERVEREXE", "serverexesub": "S_SERVEREXE_SUB",
+		"profedit": "S_PROF_EDIT",
 		"ok": "S_OK", "cancel": "S_CANCEL", "dlask": "S_DL_ASK", "dlstart": "S_DL_START", "dlcancel": "S_DL_CANCEL", "nofound": "S_NOT_FOUND",
 		"replempty": "S_REPL_EMPTY", "repldel": "S_REPL_DEL", "replwhole": "S_REPL_WHOLE",
 		"cmdempty": "S_CMD_EMPTY", "cmddel": "S_CMD_DEL", "cmdph": "S_CMD_PH",
 		"cmdnewline": "S_CMD_NEWLINE", "cmdparagraph": "S_CMD_PARAGRAPH", "cmdtext": "S_CMD_TEXT", "cmdcancel": "S_CMD_CANCEL",
 		"cmdtextph":   "S_CMD_TEXT_PH",
 		"cmdpnewline": "S_CMD_P_NEWLINE", "cmdpparagraph": "S_CMD_P_PARAGRAPH", "cmdpcancel": "S_CMD_P_CANCEL", "cmdpreset": "S_CMD_PRESET",
+		"unitmin": "S_UNIT_MIN", "unithour": "S_UNIT_HOUR", "unitday": "S_UNIT_DAY",
+		"depwhisper": "S_DEP_WHISPER", "depllama": "S_DEP_LLAMA", "depsherpa": "S_DEP_SHERPA", "depggml": "S_DEP_GGML",
+		"deponnx": "S_DEP_ONNX", "depwebview": "S_DEP_WEBVIEW", "depwv2rt": "S_DEP_WV2RT", "depmalgo": "S_DEP_MALGO",
+		"depminiaudio": "S_DEP_MINIAUDIO", "depws": "S_DEP_WS", "depxsys": "S_DEP_XSYS", "depwinloader": "S_DEP_WINLOADER",
+		"depplex": "S_DEP_PLEX", "dephf": "S_DEP_HF",
 		"histempty": "S_HIST_EMPTY", "histcopy": "S_HIST_COPY", "histask": "S_HIST_ASK", "histclear": "S_HIST_CLEAR",
 		"stsummary": "S_ST_SUMMARY", "stquick": "S_ST_QUICK", "stmodels": "S_ST_MODELS", "stusage": "S_ST_USAGE",
 		"stready": "S_ST_READY", "stoff": "S_ST_OFF", "stoffsub": "S_ST_OFF_SUB", "stenable": "S_ST_ENABLE",
@@ -1035,8 +1109,11 @@ func settingsHTML(cfg *Config, tab string) string {
 		"ston": "S_ST_ON", "stoffw": "S_ST_OFF_W", "stonf": "S_ST_ON_F", "stofff": "S_ST_OFF_F", "stactive": "S_ST_ACTIVE",
 		"stidle": "S_ST_IDLE", "stdisk": "S_ST_DISK", "stusagesub": "S_ST_USAGE_SUB", "stnoweek": "S_ST_NO_WEEK",
 		"stautorunsub": "S_ST_AUTORUN_SUB", "stoverlaysub": "S_ST_OVERLAY_SUB", "sthint": "S_STATE_HINT",
+		"stoverlay": "S_ST_OVERLAY", "stbeep": "S_ST_BEEP", "stautorun": "S_ST_AUTORUN", "stpost": "S_ST_POST",
+		"stonm": "S_ST_ON_M", "stoffm": "S_ST_OFF_M", "stmicok": "S_ST_MIC_OK", "stmicbad": "S_ST_MIC_BAD",
+		"stlocal": "S_ST_LOCAL", "stchecked": "S_ST_CHECKED", "stgb": "S_ST_GB", "stcheck": "S_ST_CHECK", "strecog": "S_ST_RECOG", "stver": "S_ST_VER", "stlatest": "S_ST_LATEST", "stoutdated": "S_ST_OUTDATED", "stupdok": "S_ST_UPD_OK", "stupddl": "S_ST_UPD_DL",
 		"navmic": "S_NAV_MIC", "overlay": "S_OVERLAY", "beep": "S_BEEP", "autorun": "S_AUTORUN", "postenable": "S_POST_ENABLE",
-		"berropen": "S_BERR_OPEN", "updcheck": "S_UPD_CHECK", "postapi": "S_POSTAPI", "histtill": "S_HIST_TILL", "histtill1": "S_HIST_TILL1", "histtillfull": "S_HIST_TILL_FULL",
+		"berropen": "S_BERR_OPEN", "retry": "S_RETRY", "updcheck": "S_UPD_CHECK", "postapi": "S_POSTAPI", "histtill": "S_HIST_TILL", "histtill1": "S_HIST_TILL1", "histtillfull": "S_HIST_TILL_FULL",
 		"skipadddlg": "S_SKIP_ADD_DLG", "skipeditdlg": "S_SKIP_EDIT_DLG", "skipname": "S_SKIP_NAME", "skipnamesub": "S_SKIP_NAME_SUB",
 		"skipopen": "S_SKIP_OPEN", "skiprefresh": "S_SKIP_REFRESH", "skippicked": "S_SKIP_PICKED", "skipnone": "S_SKIP_NONE", "skipempty": "S_SKIP_EMPTY",
 		"micchecking": "S_MIC_CHECKING", "mchecking": "S_MCHECK_RUN", "histinsert": "S_HIST_INSERT",
@@ -1063,7 +1140,7 @@ func settingsHTML(cfg *Config, tab string) string {
 	pairs := []string{"{{CFG}}", string(cfgJSON), "{{L_JSON}}", string(lJSON), "{{APP}}", appid.Name,
 		"{{SKIN}}", cfg.Skin,
 		"{{THEME_VARS}}", theme.Current(cfg.Skin, cfg.Theme).CSSVars(), "{{THEME_LIST}}", skinListJSON(), "{{FONT_FACE}}", plexfont.FaceCSS()}
-	remote := strings.TrimSpace(cfg.ServerURL) != ""
+	remote := sttRemoteURL(cfg) != ""
 	for k := range settingsStrings["en"] {
 		v := str(k)
 		if k == "S_ABOUT_HTML" && remote {
@@ -1130,6 +1207,7 @@ button.cap.close:hover{background:var(--badbg);color:var(--bad);border-color:var
 .nbadge:empty{display:none}
 .nbadge.warn{color:var(--amber);border-color:var(--amber)}
 .nbadge.miss{color:var(--amber);border-color:var(--amber);box-shadow:var(--amberglow)}
+.nbadge.bad{color:var(--bad);border-color:var(--bad);box-shadow:var(--badglow)}
 .scard .led{width:6px;height:6px;border-radius:50%;background:var(--faint);display:inline-block;margin-right:6px;flex:none}
 .scard .led.on{background:var(--ok);box-shadow:var(--higlow)}
 .scard .led.warn{background:var(--amber)}
@@ -1144,11 +1222,11 @@ button.cap.close:hover{background:var(--badbg);color:var(--bad);border-color:var
 .row .lbl{flex:1;min-width:0}
 .statusbar{border-top:1px solid var(--line);padding:6px 14px;display:flex;gap:12px;align-items:center;font-size:11px;color:var(--dim);flex-wrap:nowrap;white-space:nowrap}
 .statusbar #st_main{min-width:0;overflow:hidden;text-overflow:ellipsis}
-.statusbar .stsaved,.statusbar .stremote{flex:none}
-.statusbar .stremote{color:var(--amber);border:1px solid var(--amber);border-radius:calc(var(--r) * .4);padding:0 5px;letter-spacing:.08em}
-.statusbar .stremote:empty{display:none;border:0;padding:0}
+.statusbar .stsaved{flex:none}
 .statusbar .led{width:6px;height:6px;border-radius:50%;background:var(--faint);flex:none}
 .statusbar .led.on{background:var(--hi);box-shadow:var(--higlow)}
+.statusbar .led.bad{background:var(--bad);box-shadow:var(--badglow)}
+.statusbar #st_main.bad{color:var(--bad);text-shadow:var(--badglow)}
 .statusbar .stsaved{color:var(--dim)}
 .statusbar .stsaved.warn{color:var(--amber)}
 .statusbar .stsaved.bad{color:var(--bad)}
@@ -1214,11 +1292,88 @@ button.btn.ghost:hover{color:var(--green);border-color:var(--dim);background:non
 .hero{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel);padding:12px 14px;margin-bottom:10px;flex-wrap:wrap}
 .herokey{border:1px solid var(--line);background:var(--keybg);border-radius:calc(var(--r) * .6);color:var(--green);padding:5px 12px;font-size:14px;font-weight:var(--wb);letter-spacing:1px;text-shadow:var(--glow)}
 .herotext{font-size:12px;color:var(--dim)}
+.sthero .led,.stplate .led,.stcard .led,.strow .led,.stalert .led{width:8px;height:8px;border-radius:0;background:var(--dim);display:inline-block;flex:none}
+.sthero .led.on,.stplate .led.on,.stcard .led.on,.strow .led.on{background:var(--hi);box-shadow:var(--higlow)}
+.sthero .led.warn,.stplate .led.warn,.stalert .led.warn{background:var(--amber);box-shadow:var(--amberglow)}
+.sthero .led.bad{background:var(--bad);box-shadow:var(--badglow)}
+.stalert .led.bad{background:var(--bad);box-shadow:var(--badglow)}
+#p-state .stlbl{margin:24px 0 10px}
+#p-state .stlbl:first-child{margin-top:0}
+.sthero{display:flex;align-items:flex-start;gap:14px;border:1px solid var(--line);border-radius:calc(var(--r) * .6);background:var(--field);padding:14px 16px}
+.sthero>.led{margin-top:6px}
+.sthero>.stkeys{align-self:center}
+.sthero>.mini{align-self:center}
+.sthero.warn{border-color:var(--amber)}
+.sthero.bad{border-color:var(--bad)}
+.sthero.bad .sthbig{color:var(--bad);text-shadow:var(--badglow)}
+.sthero.bad .sthsub{color:var(--bad)}
+.sthtxt{flex:1;min-width:0}
+.sthbig{font-size:14px;font-weight:var(--wb);text-shadow:var(--glow)}
+.sthero.warn .sthbig{color:var(--amber);text-shadow:var(--amberglow)}
+.sthero.bad .sthbig{color:var(--bad);text-shadow:var(--badglow)}
+.sthero.bad .sthsub{color:var(--bad)}
+.sthsub{color:var(--dim);font-size:11.5px;line-height:1.5;margin-top:2px}
+.stkeys{display:flex;align-items:center;gap:6px;flex:none}
+.stcombo{display:flex;align-items:center;gap:6px}
+.stplus{color:var(--faint)}
+.iconbtn.stgo{font-size:13px;padding:2px 4px}
+.stalerts{display:flex;flex-direction:column;gap:6px}
+.stalerts:not(:empty){margin-top:12px}
+.stalert{display:flex;align-items:center;gap:10px;border:1px solid var(--amber);border-radius:calc(var(--r) * .6);background:var(--field);padding:8px 12px;font-size:12px;color:var(--amber)}
+.stalert.bad{border-color:var(--bad);color:var(--bad)}
+.stalert .statext{flex:1;min-width:0;white-space:normal;overflow-wrap:anywhere}
+.stalert .mini{flex:none;color:inherit;border-color:currentColor}
+.stalert .mini::before,.stalert .mini::after{color:inherit}
+.stpair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;margin-top:12px}
+.stplate{display:flex;flex-direction:column;gap:10px;border:1px solid var(--line);border-radius:calc(var(--r) * .6);background:var(--field);padding:11px 13px}
+.stptop{display:flex;align-items:flex-start;gap:12px}
+.stptop>.led{margin-top:5px}
+.stptxt{flex:1;min-width:0}
+.stpttl{display:flex;align-items:center;gap:8px;font-size:12.5px;line-height:1.4}
+.stpttl .stbdg{margin-left:0}
+.stpsub{color:var(--faint);font-size:10.5px;line-height:1.5;margin-top:2px}
+.stpsub.ok{color:var(--green)}
+.stpsub.bad{color:var(--bad)}
+.stplate>.mini{align-self:flex-end;margin-top:auto;height:22px;font-size:10.5px;padding:0 9px}
+.stgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.stcard{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:calc(var(--r) * .6);background:var(--field);padding:10px 12px;min-width:0}
+.sthead{display:flex;align-items:center;gap:8px}
+.stspace{flex:1}
+.stcap{flex:1;min-width:0;color:var(--dim);font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stval{display:flex;align-items:center;gap:8px;font-size:12.5px;min-width:0}
+.stval span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stunder{color:var(--faint);font-size:10.5px;line-height:1.5}
+.stcard .miclevel{margin:1px 0}
+.stwide{display:flex;flex-direction:column;gap:12px}
+.stwide .stcard{gap:7px}
+.strow{display:flex;align-items:center;gap:12px;font-size:12.5px;line-height:1.5;min-width:0}
+.strow .stnm{flex:0 0 auto;max-width:60%;display:flex;align-items:center;gap:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.strow .stwu{flex:1;min-width:0;color:var(--faint);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stbdg{flex:none;border:1px solid var(--line);border-radius:calc(var(--r) * .4);color:var(--lbl,var(--green));text-shadow:var(--lblglow,none);font-size:10px;letter-spacing:.06em;padding:1px 7px;white-space:nowrap;margin-left:2px}
+.stbdg.on{border-color:var(--dim)}
+.stbdg.warn{border-color:var(--amber)}
+.stusage{margin-top:12px}
+.stusage .stptop{align-items:center;gap:18px}
+.stufoot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px}
+.stufoot .stpsub{margin:0}
+.stpie{flex:none;line-height:0}
+.stpie svg{display:block}
+.stpie .stslice{stroke:var(--field);stroke-width:1.5}
+.stuchips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.cmdchip.stuchip{padding:2px 9px;color:var(--dim);letter-spacing:0;text-transform:none;max-width:100%}
+.cmdchip.stuchip i{width:8px;height:8px;border-radius:0;flex:none}
+.cmdchip.stuchip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cmdchip.stuchip b{font-weight:var(--wb);font-variant-numeric:tabular-nums;color:var(--lbl,var(--green));text-shadow:var(--lblglow,none)}
+
 .berr{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:1px solid var(--bad);border-radius:var(--r);background:var(--panel);padding:10px 12px;margin-bottom:10px}
 .berr.upd{border-color:var(--amber)}
 .berr.upd .berrtext{color:var(--amber)}
 .berr .berrtext{flex:1 1 220px;color:var(--bad);min-width:0}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:12px}
+.ccard{min-height:98px;gap:6px}
+.ccard .v{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ccard .acts{margin-top:auto;display:flex;justify-content:flex-end;gap:2px}
+.ccard .iconbtn{padding:0 4px}
 .scard{border:1px solid var(--line);border-radius:var(--r);background:var(--panel);padding:9px 11px;display:flex;flex-direction:column;gap:5px}
 .scard .k{font-size:9.5px;letter-spacing:.12em;color:var(--dim);text-transform:uppercase}
 .scard .v{font-size:12.5px;color:var(--green)}
@@ -1546,11 +1701,23 @@ input.llmpick:checked::after{left:17px;background:var(--hi);box-shadow:var(--hig
 .srccard.idle>*{opacity:.38;pointer-events:none}
 .srccard.idle>.acts{pointer-events:auto;opacity:.62}
 .srccard.idle>.srchead{opacity:.62}
-.srccard.idle>.srchead .srcpick{pointer-events:auto}
-input.srcpick{appearance:none;-webkit-appearance:none;width:32px;height:17px;border:1px solid var(--dim);border-radius:calc(var(--r) * .8);position:relative;cursor:pointer;background:none;flex:none;padding:0;margin:0}
-input.srcpick::after{content:"";position:absolute;top:2px;left:2px;width:11px;height:11px;border-radius:calc(var(--r) * .6);background:var(--dim);transition:.15s}
-input.srcpick:checked::after{left:17px;background:var(--hi);box-shadow:var(--higlow)}
+.srccard.idle>.srchead .srcpick,.srccard.idle>.srchead .srvpick{pointer-events:auto}
+input.srcpick,input.srvpick{appearance:none;-webkit-appearance:none;width:32px;height:17px;border:1px solid var(--dim);border-radius:calc(var(--r) * .8);position:relative;cursor:pointer;background:none;flex:none;padding:0;margin:0}
+input.srcpick::after,input.srvpick::after{content:"";position:absolute;top:2px;left:2px;width:11px;height:11px;border-radius:calc(var(--r) * .6);background:var(--dim);transition:.15s}
+input.srcpick:checked::after,input.srvpick:checked::after{left:17px;background:var(--hi);box-shadow:var(--higlow)}
 #p-post .card+.card{margin-top:18px;border-top:1px solid var(--soft);padding-top:18px}
+#p-history .card+.card{margin-top:16px;border-top:1px solid var(--soft);padding-top:12px}
+#p-history .card>.row:last-child{padding-bottom:0}
+#p-history #hist_skip_list{margin-bottom:0}
+#p-history #hist_skip_list:empty{margin-top:0}
+#p-history #hist_skip_list .ruleempty{padding:0}
+#p-system .grp+.grp{border-top:1px solid var(--soft);margin-top:14px;padding-top:12px}
+#p-system .grp .row{border-bottom:0}
+#p-system .card+.card{border-top:1px solid var(--soft);padding-top:16px}
+#srv_local,#srv_remote{min-height:150px;display:flex;flex-direction:column}
+#srv_local .sum,#srv_remote .sum{flex:1;display:flex;flex-direction:column;gap:6px;margin:8px 0 10px}
+button.mini.eq{min-width:186px}
+.sumrow.hit{background:var(--navon);box-shadow:inset 2px 0 0 var(--hi)}
 .srccard.idle:hover{border-color:var(--dim)}
 .card.offdim>:not(h2):not(.blklbl){opacity:.38;pointer-events:none}
 .srchrow{display:flex;align-items:center;gap:8px}
@@ -1607,6 +1774,56 @@ button.iconbtn:hover{color:var(--green);filter:drop-shadow(0 0 4px rgba(var(--rg
 button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
 .about p{margin:8px 0;line-height:1.55;user-select:text;color:var(--green);max-width:80ch}
 .about li{max-width:78ch}
+#p-help{max-width:1180px;position:relative}
+.helpwide{position:absolute;top:10px;right:6px;z-index:2;padding:3px 6px;line-height:0}
+.helpwrap{display:flex;align-items:flex-start;gap:24px}
+.helpbody{flex:1;min-width:0;max-width:780px}
+.helptoc{position:sticky;top:0;flex:0 0 208px;align-self:flex-start;padding:2px 0 10px;border-left:1px solid var(--soft);max-height:100vh;overflow-y:auto}
+.helptoc .toch{color:var(--faint);font-size:10px;letter-spacing:.14em;text-transform:uppercase;padding:0 30px 6px 12px}
+.helptoc a{display:block;padding:3px 10px 3px 12px;color:var(--dim);font-size:11.5px;text-decoration:none;border-left:2px solid transparent;margin-left:-1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.helptoc a:hover{color:var(--green)}
+.helptoc a.on{color:var(--green);border-left-color:var(--hi);text-shadow:var(--glow)}
+@media (max-width:920px){.helptoc{display:none}}
+.helpbody .hdim{color:var(--dim)}
+.helpbody .hsub{color:var(--green);font-weight:var(--wb);font-size:12.5px;margin:14px 0 5px}
+.hopt{width:100%;border-collapse:collapse;margin:0 0 12px;font-size:12px}
+.hopt td{border-bottom:1px solid var(--soft);padding:6px 10px 6px 0;color:var(--dim);vertical-align:top;line-height:1.5}
+.hopt td:first-child{color:var(--green);width:38%}
+.hopt tr:last-child td{border-bottom:0}
+.hshot{border:1px solid var(--line);border-radius:var(--r);background:var(--field);padding:12px 14px;margin:0 0 12px}
+.hshot .hcap{color:var(--faint);font-size:10.5px;margin-top:8px}
+.hshot .hrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--soft)}
+.hshot .hrow:last-of-type{border-bottom:0}
+.hshot .hrow label{flex:1;color:var(--green);font-size:12.5px}
+.hshot .hrow label .hs{display:block;color:var(--dim);font-size:10.5px;margin-top:2px}
+.hpill{display:inline-flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel);padding:8px 12px}
+.hpill .hdot{width:7px;height:7px;background:var(--rec);flex:none}
+.hbars{display:inline-flex;align-items:flex-end;gap:2px;height:16px}
+.hbars i{width:3px;background:var(--hi);display:block}
+.hcard{display:flex;align-items:flex-start;gap:12px;border:1px solid var(--line);border-radius:var(--r);background:var(--field);padding:11px 13px}
+.hcard .ht{flex:1}
+.hcard .ht b{font-size:13px}
+.hcard .ht span{display:block;color:var(--dim);font-size:11px;margin-top:2px}
+.hsw{width:32px;height:17px;border:1px solid var(--dim);border-radius:calc(var(--r) * .8);position:relative;flex:none}
+.hsw i{position:absolute;top:2px;left:2px;width:11px;height:11px;background:var(--dim);display:block}
+.hsw.on i{left:17px;background:var(--hi);box-shadow:var(--higlow)}
+.hfld{border:1px solid var(--line);background:var(--field);color:var(--green);font-size:12px;padding:4px 9px;min-width:70px}
+.hnum{display:inline-flex;align-items:stretch}
+.hnum .hfld{border-right:0}
+.hnum .hspin{display:flex;flex-direction:column;width:20px;border:1px solid var(--line)}
+.hnum .hspin i{flex:1;display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:7px;font-style:normal}
+.hnum .hspin i+i{border-top:1px solid var(--soft)}
+.hbtn{border:1px solid var(--btnline);border-radius:calc(var(--r) * .5);background:none;color:var(--dim);font:inherit;font-size:11.5px;padding:4px 12px;letter-spacing:var(--ls);text-transform:var(--caps)}
+.hkey{border:1px solid var(--line);background:var(--keybg);border-radius:calc(var(--r) * .5);padding:2px 9px;color:var(--green);font-size:12px}
+.hchips{display:flex;gap:6px;flex-wrap:wrap}
+.hchip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:calc(var(--r) * .5);background:var(--field);padding:3px 9px;font-size:12px;color:var(--dim)}
+.hchip i{width:8px;height:8px;flex:none;background:var(--hi);display:block}
+.hled{width:8px;height:8px;background:var(--hi);box-shadow:var(--higlow);display:inline-block;flex:none;margin-top:5px}
+.hflow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+.hflow span{border:1px solid var(--line);background:var(--field);padding:5px 10px;font-size:11.5px;color:var(--green)}
+.hflow em{color:var(--faint);font-style:normal}
+.hwarn{border:1px solid var(--amber);color:var(--amber);font-size:11.5px;padding:7px 10px;margin:0 0 11px}
+.hbad{border:1px solid var(--bad);color:var(--bad);font-size:11.5px;padding:7px 10px;margin:0 0 11px}
 .toc{display:flex;flex-wrap:wrap;gap:6px 14px;margin:6px 0 4px;max-width:80ch}
 .swatches{display:flex;gap:6px;margin-left:auto}
 .swatch{width:16px;height:16px;border:1px solid var(--line);border-radius:calc(var(--r) * .35);cursor:pointer;padding:0;background:none;overflow:hidden}
@@ -1620,7 +1837,15 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
 .about p.hit,.about li.hit{background:var(--navon);box-shadow:inset 2px 0 0 var(--hi);padding-left:7px}
 .about p.warn{color:var(--amber);border-left:2px solid var(--amber);padding-left:9px}
 .about b{font-weight:var(--wb);text-shadow:var(--glow)}
-.about .wh{color:var(--dim);font-size:12px;letter-spacing:1px;text-transform:uppercase;margin:16px 0 4px;border-bottom:1px solid var(--soft);padding-bottom:3px}
+.about .wh{color:var(--green);font-weight:var(--wb);font-size:13px;letter-spacing:0;margin:18px 0 6px;border-bottom:1px solid var(--soft);padding-bottom:4px}
+.deprow{padding:9px 0;border-bottom:1px solid var(--soft);font-size:12px}
+.deprow:last-child{border-bottom:0}
+.dphead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.dphead .dn{color:var(--green);font-weight:var(--wb);font-size:12.5px}
+.dphead .dl{color:var(--faint);font-size:11px}
+.deprow .dw{color:var(--dim);line-height:1.55;margin-top:3px;max-width:80ch}
+.deprow .du{display:inline-block;margin-top:4px;color:var(--dim);font-size:11.5px;cursor:pointer;border-bottom:1px dotted var(--line)}
+.deprow .du:hover{color:var(--green);border-bottom-color:var(--dim);text-shadow:var(--glow)}
 .about ul{margin:4px 0 10px 20px;padding:0}
 .about li{margin:4px 0;line-height:1.55;color:var(--green);user-select:text}
 .mock{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px 14px;margin:8px 0;max-width:420px}
@@ -1705,52 +1930,54 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
 
 <div class="content">
 <div class="page" role="tabpanel" aria-hidden="true" id="p-state">
- <div class="blkhead"><div><label class="blklbl">{{S_ST_SUMMARY}}</label></div></div>
- <div class="hero" id="state_hero">
+ <label class="blklbl stlbl">{{S_ST_SUMMARY}}</label>
+ <div class="sthero" id="state_hero">
   <i class="led" id="state_hero_led"></i>
-  <div class="herotxt">
-   <div class="herobig" id="state_hero_title">—</div>
-   <div class="herosub" id="state_hero_sub">{{S_STATE_HINT}}</div>
+  <div class="sthtxt">
+   <div class="sthbig" id="state_hero_title">—</div>
+   <div class="sthsub" id="state_hero_sub">{{S_STATE_HINT}}</div>
   </div>
-  <div class="keys" id="state_keys">
-   <span class="herokey" id="state_hotkey"></span>
-   <button type="button" class="iconbtn goto" data-goto="system" title="{{S_ST_HOTKEY_GO}}">&#8599;</button>
+  <div class="stkeys" id="state_keys">
+   <span class="stcombo" id="state_hotkey"></span>
+   <button type="button" class="iconbtn stgo" data-goto="system" title="{{S_ST_HOTKEY_GO}}">&#8599;</button>
   </div>
   <button type="button" class="mini" id="state_enable" style="display:none">{{S_ST_ENABLE}}</button>
+  <button type="button" class="mini danger" id="state_srv_go" style="display:none">{{S_SRV_DOWN_GO}}</button>
  </div>
- <div class="alerts" id="state_alerts"></div>
- <div class="pair">
-  <div class="upd">
-   <div class="utop"><i class="led" id="state_upd_led"></i>
-    <div class="utxt"><div class="uttl" id="state_upd_title">—</div><div class="usub" id="state_upd_sub"></div></div>
+ <div class="stalerts" id="state_alerts"></div>
+ <div class="stplate stusage" id="state_usage"></div>
+ <div class="stpair">
+  <div class="stplate">
+   <div class="stptop"><i class="led" id="state_upd_led"></i>
+    <div class="stptxt"><div class="stpttl"><span id="state_upd_title">—</span><span class="stbdg" id="state_upd_badge" style="display:none"></span></div><div class="stpsub" id="state_upd_sub"></div></div>
+    <button type="button" class="iconbtn stgo" data-goto="system" title="{{S_ST_GOTO}}">&#8599;</button>
    </div>
-   <button type="button" class="mini small" id="state_upd_btn">{{S_UPD_CHECK}}</button>
+   <button type="button" class="mini" id="state_upd_btn">{{S_ST_CHECK}}</button>
   </div>
-  <div class="upd">
-   <div class="utop"><i class="led" id="state_mem_led"></i>
-    <div class="utxt"><div class="uttl" id="state_mem_title">—</div><div class="usub" id="state_mem_sub"></div></div>
+  <div class="stplate">
+   <div class="stptop"><i class="led" id="state_mem_led"></i>
+    <div class="stptxt"><div class="stpttl" id="state_mem_title">—</div><div class="stpsub" id="state_mem_sub"></div></div>
    </div>
-   <button type="button" class="mini small" id="state_unload">{{S_UNLOAD_GO}}</button>
+   <button type="button" class="mini" id="state_unload">{{S_UNLOAD_GO}}</button>
   </div>
  </div>
 
- <div class="blkhead"><div><label class="blklbl">{{S_ST_QUICK}}</label></div></div>
- <div class="grid" id="state_quick"></div>
+ <label class="blklbl stlbl">{{S_ST_QUICK}}</label>
+ <div class="stgrid" id="state_quick"></div>
 
- <div class="blkhead"><div><label class="blklbl">{{S_ST_MODELS}}</label></div></div>
- <div class="wide" id="state_models"></div>
+ <label class="blklbl stlbl">{{S_ST_MODELS}}</label>
+ <div class="stwide" id="state_models"></div>
 
- <div class="blkhead"><div><label class="blklbl">{{S_ST_USAGE}}</label></div></div>
- <div class="upd stats" id="state_usage"></div>
 </div>
 
 <div class="page" role="tabpanel" aria-hidden="true" id="p-history">
  <div class="card">
   <div class="row"><label>{{S_HIST_ON}}<span class="sub">{{S_HIST_ON_SUB}}</span></label><input type="checkbox" id="history"></div>
-  <div class="row" data-adv><label>{{S_HIST_DAYS}}</label>
-   <select id="history_days"><option value="1">1</option><option value="3">3</option><option value="7">7</option><option value="30">30</option></select></div>
-  <div class="row" data-adv><label>{{S_HIST_MAX}}</label>
-   <select id="history_max"><option value="50">50</option><option value="100">100</option><option value="200">200</option><option value="500">500</option></select></div>
+  <div class="row"><label>{{S_HIST_KEEP}}</label>
+   <span class="unitwrap" id="hist_keep_wrap"><input type="number" id="history_keep" min="1" max="999" step="1">
+    <select id="history_unit"><option value="min">{{S_UNIT_MIN}}</option><option value="hour">{{S_UNIT_HOUR}}</option><option value="day">{{S_UNIT_DAY}}</option></select></span></div>
+  <div class="row"><label>{{S_HIST_MAX}}</label>
+   <span class="unitwrap" id="hist_max_wrap"><input type="number" id="history_max" min="1" max="10000" step="1"></span></div>
  </div>
  <div class="card" id="hist_skip_card">
   <label class="blklbl">{{S_HIST_SKIP}}</label>
@@ -2004,57 +2231,73 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
 
 <div class="page" role="tabpanel" aria-hidden="true" id="p-system">
  <div class="card">
-  <div class="row"><label>{{S_UILANG}}</label>
-   <select id="ui_language">
-    <option value="auto">{{S_AUTO}}</option>
-    <option value="de">Deutsch</option>
-    <option value="en">English</option>
-    <option value="es">Español</option>
-    <option value="fr">Français</option>
-    <option value="it">Italiano</option>
-    <option value="pl">Polski</option>
-    <option value="uk">Українська</option>
-    <option value="ru">Русский</option>
-   </select></div>
-  <div class="row"><label>{{S_SKIN}}<span class="sub">{{S_SKIN_SUB}}</span></label>
-   <select id="skin">
-    <option value="terminal">{{S_SKIN_TERMINAL}}</option>
-    <option value="editor">{{S_THEME_EDITOR}}</option>
-    <option value="neon">{{S_THEME_NEON}}</option>
-    <option value="soft">{{S_SKIN_SOFT}}</option>
-    <option value="paper">{{S_SKIN_PAPER}}</option>
-   </select></div>
-  <div class="row" id="colour_row"><label>{{S_THEME}}<span class="sub">{{S_THEME_SUB}}</span></label>
-   <span class="swatches" id="theme_swatches"></span>
-   <select id="theme">
-    <option value="green">{{S_THEME_GREEN}}</option>
-    <option value="amber">{{S_THEME_AMBER}}</option>
-    <option value="blue">{{S_THEME_BLUE}}</option>
-    <option value="pink">{{S_THEME_PINK}}</option>
-   </select></div>
-  <div class="row"><label>{{S_AUTORUN}}<span class="sub">{{S_AUTORUN_SUB}}</span></label><input type="checkbox" id="autorun"></div>
-  <div class="row"><label>{{S_UPD}}</label>
-   <button class="mini" id="upd_check">{{S_UPD_CHECK}}</button></div>
-  <div class="row" data-adv><label>{{S_UPD_AUTO}}<span class="sub">{{S_SUB_UPD}}</span></label><input type="checkbox" id="check_updates"></div>
-  <div id="upd_out" style="font-size:12px;min-height:18px;color:var(--amber)"></div>
-  <div class="row" data-adv><label>{{S_LOG}}<span class="sub">{{S_LOG_SUB}}</span></label>
-   <button class="mini" id="log_open">{{S_LOG_OPEN}}</button></div>
-  <div class="row" data-adv><label>{{S_RELOAD_CFG}}<span class="sub">{{S_RELOAD_CFG_SUB}}</span></label>
-   <button class="mini" id="cfg_reload">{{S_RELOAD_CFG_BTN}}</button></div>
-  <div class="row" data-adv><label>{{S_RESET_ALL}}<span class="sub">{{S_RESET_ALL_SUB}}</span></label>
-   <button class="mini danger" id="cfg_reset">{{S_RESET_ALL_BTN}}</button></div>
+  <div class="grp">
+   <div class="row"><label>{{S_UILANG}}</label>
+    <select id="ui_language">
+     <option value="auto">{{S_AUTO}}</option>
+     <option value="de">Deutsch</option>
+     <option value="en">English</option>
+     <option value="es">Español</option>
+     <option value="fr">Français</option>
+     <option value="it">Italiano</option>
+     <option value="pl">Polski</option>
+     <option value="uk">Українська</option>
+     <option value="ru">Русский</option>
+    </select></div>
+   <div class="row"><label>{{S_SKIN}}<span class="sub">{{S_SKIN_SUB}}</span></label>
+    <select id="skin">
+     <option value="terminal">{{S_SKIN_TERMINAL}}</option>
+     <option value="editor">{{S_THEME_EDITOR}}</option>
+     <option value="neon">{{S_THEME_NEON}}</option>
+     <option value="soft">{{S_SKIN_SOFT}}</option>
+     <option value="paper">{{S_SKIN_PAPER}}</option>
+    </select></div>
+   <div class="row" id="colour_row"><label>{{S_THEME}}<span class="sub">{{S_THEME_SUB}}</span></label>
+    <span class="swatches" id="theme_swatches"></span>
+    <select id="theme">
+     <option value="green">{{S_THEME_GREEN}}</option>
+     <option value="amber">{{S_THEME_AMBER}}</option>
+     <option value="blue">{{S_THEME_BLUE}}</option>
+     <option value="pink">{{S_THEME_PINK}}</option>
+    </select></div>
+  </div>
+  <div class="grp">
+   <div class="row"><label>{{S_AUTORUN}}<span class="sub">{{S_AUTORUN_SUB}}</span></label><input type="checkbox" id="autorun"></div>
+   <div class="row"><label>{{S_UPD_AUTO}}<span class="sub">{{S_SUB_UPD}}</span></label><input type="checkbox" id="check_updates"></div>
+   <div class="row"><label>{{S_UPD}}</label>
+    <button class="mini eq" id="upd_check">{{S_UPD_CHECK}}</button></div>
+   <div id="upd_out" style="font-size:12px;min-height:18px;color:var(--amber)"></div>
+  </div>
+  <div class="grp">
+   <div class="row"><label>{{S_LOG}}<span class="sub">{{S_LOG_SUB}}</span></label>
+    <button class="mini eq" id="log_open">{{S_LOG_OPEN}}</button></div>
+   <div class="row"><label>{{S_RELOAD_CFG}}<span class="sub">{{S_RELOAD_CFG_SUB}}</span></label>
+    <button class="mini eq" id="cfg_reload">{{S_RELOAD_CFG_BTN}}</button></div>
+   <div class="row"><label>{{S_RESET_ALL}}<span class="sub">{{S_RESET_ALL_SUB}}</span></label>
+    <button class="mini danger eq" id="cfg_reset">{{S_RESET_ALL_BTN}}</button></div>
+  </div>
  </div>
- <div class="card">
-  <h2 class="sect" data-adv>{{S_SEC_SERVICE}}</h2>
-  <div class="row" data-adv><label>{{S_THREADS}}<span class="sub">{{S_SUB_THREADS}}</span></label><select id="threads"><option value="1">1</option><option value="2">2</option><option value="4">4</option><option value="6">6</option><option value="8">8</option><option value="12">12</option><option value="16">16</option></select></div>
-  <div class="row" data-adv><label>{{S_AUTOSTART}}<span class="sub">{{S_SUB_AUTOSTART}}</span></label><input type="checkbox" id="server_autostart"></div>
-  <div class="row" data-adv><label>{{S_PORT}}<span class="sub">{{S_SUB_PORT}}</span></label><input type="text" id="server_port" style="width:90px"></div>
-  <div class="row" data-adv><label>{{S_SERVEREXE}}<span class="sub">{{S_SERVEREXE_SUB}}</span></label>
-   <input type="text" id="server_exe" readonly>
-   <button class="mini" id="exe_edit">{{S_PROF_EDIT}}</button>
-   <button class="mini" id="exe_reset">{{S_EXE_RESET}}</button></div>
-  <div class="row" data-adv><label>{{S_SERVERURL}}<div class="hint">{{S_URLHINT}}</div></label><input type="text" id="server_url"></div>
-  <div class="note warn" id="remote_warn"></div>
+ <div class="card" id="stt_srv_card">
+  <label class="blklbl">{{S_STT_SRV}}</label>
+  <div class="hint">{{S_STT_SRV_HINT}}</div>
+  <div class="srccard" id="srv_local">
+   <h3 class="srchead"><input type="checkbox" class="srvpick" id="pick_srv_local">{{S_SRV_LOCAL}}</h3>
+   <div class="sum" id="srv_local_sum"></div>
+   <div class="acts"><button type="button" class="mini" id="srv_local_edit">{{S_PROF_EDIT}}</button></div>
+  </div>
+  <div class="srccard" id="srv_remote">
+   <h3 class="srchead"><input type="checkbox" class="srvpick" id="pick_srv_remote">{{S_SRV_REMOTE}}</h3>
+   <div class="hint">{{S_SRV_REMOTE_HINT}}</div>
+   <div class="sum" id="srv_remote_sum"></div>
+   <div class="note warn" id="remote_warn"></div>
+   <div class="acts"><button type="button" class="mini" id="srv_test">{{S_API_TEST}}</button><button type="button" class="mini" id="srv_remote_edit">{{S_PROF_EDIT}}</button></div>
+  </div>
+  <div hidden>
+   <select id="threads"><option value="1">1</option><option value="2">2</option><option value="4">4</option><option value="6">6</option><option value="8">8</option><option value="12">12</option><option value="16">16</option></select>
+   <input type="checkbox" id="server_autostart">
+   <input type="text" id="server_port">
+   <input type="text" id="server_url">
+  </div>
  </div>
 </div>
 
@@ -2062,17 +2305,44 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
  <div class="card">
   <p style="font-size:15px;letter-spacing:2px"><b>{{APP}}</b> <span id="ver2"></span></p>
   {{S_ABOUT_HTML}}
-  <div class="row"><label>GitHub</label><button type="button" class="mini" onclick="appRepoLink()">github.com &#8599;</button></div>
+ </div>
+ <div class="card">
+  <p class="wh">{{S_ABOUT_DEPS}}</p>
+  <div class="hint">{{S_ABOUT_DEPS_HINT}}</div>
+  <div id="deps"></div>
  </div>
 </div>
 
 <div class="page about" role="tabpanel" aria-hidden="true" id="p-help">
- <div class="card">{{S_HELP_HTML}}</div>
+ <button type="button" class="iconbtn helpwide" id="help_wide" style="display:none"></button>
+ <div class="helpwrap">
+  <div class="card helpbody" id="helpbody">{{S_HELP_HTML}}</div>
+  <nav class="helptoc" id="helptoc" aria-label="{{S_HELP_TOC}}"><div class="toch">{{S_HELP_TOC}}</div></nav>
+ </div>
 </div>
 
 <div class="page about" role="tabpanel" aria-hidden="true" id="p-contacts">
- <div class="card">{{S_AUTHOR_HTML}}</div>
- <div class="card"><div class="row"><label>{{S_CONTACT_MAIL}}</label><span class="val" style="user-select:text">holdtotype@outlook.com</span></div></div>
+ <div class="card">
+  <label class="blklbl">{{S_CONTACT_TITLE}}</label>
+  <div class="hint">{{S_CONTACT_HINT}}</div>
+  <div class="cards">
+   <div class="scard ccard">
+    <span class="k">{{S_CONTACT_MAIL}}</span>
+    <span class="v lnk" id="contact_mail" data-tip="{{S_CONTACT_WRITE}}"></span>
+    <div class="acts"><button type="button" class="iconbtn" id="mail_copy" title="{{S_HIST_COPY}}"></button><button type="button" class="iconbtn" id="mail_write" title="{{S_CONTACT_WRITE}}">&#9993;</button></div>
+   </div>
+   <div class="scard ccard">
+    <span class="k">{{S_CONTACT_REPO}}</span>
+    <span class="v lnk" id="contact_repo"></span>
+    <div class="acts"><button type="button" class="iconbtn" id="repo_open" title="{{S_CONTACT_OPEN}}">&#8599;</button></div>
+   </div>
+   <div class="scard ccard">
+    <span class="k">{{S_CONTACT_ISSUES}}</span>
+    <span class="v lnk" id="contact_issues">issues</span>
+    <div class="acts"><button type="button" class="iconbtn" id="issues_open" title="{{S_CONTACT_OPEN}}">&#8599;</button></div>
+   </div>
+  </div>
+ </div>
 </div>
 </div>
 </div>
@@ -2081,7 +2351,6 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
  <span class="led" id="st_led"></span>
  <span id="st_main">—</span>
  <span class="stsaved" id="st_saved"></span>
- <span class="stremote" id="st_remote"></span>
  <span class="ver">v<span id="ver"></span></span>
 </div>
 
@@ -2187,12 +2456,14 @@ const CFG = {{CFG}};
 const bools = ["beep","auto_enter","restore_clipboard","overlay","overlay_text","type_mode","server_autostart","check_updates","history"];
 const texts = ["history_skip","post_api_model"];
 let exeStored = CFG.server_exe || "";
-let exeUnlocked = false;
 let remoteURL = (CFG.server_url || "").trim();
+let sttSource = CFG.stt_source === "remote" ? "remote" : "local";
+let srvChecked = "";
+let whisperNow = false;
 let postURL = (CFG.post_api_url || "").trim();
 let postEnabled = CFG.post_enabled !== false;
 let postSource = CFG.post_source === "api" ? "api" : "local";
-const nums  = ["threads","min_record_ms","max_record_seconds","translate_ask_seconds","server_port","paste_delay_ms","history_days","history_max","post_api_timeout_s"];
+const nums  = ["threads","min_record_ms","max_record_seconds","translate_ask_seconds","server_port","paste_delay_ms","history_max","post_api_timeout_s"];
 const sels  = ["ui_language","language","sound_theme","translate_target","translate_ask","hotkey_mode","theme","skin"];
 const trAll = ["de","en","es","fr","it","pl","uk","ru"];
 const L = {{L_JSON}};
@@ -2279,50 +2550,328 @@ function initTheme(){
   colour.addEventListener("change", paintLook);
   paintLook();
 }
-function initServerExe(){
-  const box = document.getElementById("server_exe");
-  const edit = document.getElementById("exe_edit");
-  const reset = document.getElementById("exe_reset");
-  if(!box || !edit || !reset) return;
-  box.value = CFG.server_exe_path || CFG.server_exe || "";
-  edit.onclick = async ()=>{
-    if(exeUnlocked) return;
-    if(!await askConfirm(L.exewarn, L.exeedit, null, L.mtexe)) return;
-    exeUnlocked = true;
-    box.readOnly = false;
-    box.focus();
-    box.select();
-  };
-  reset.onclick = ()=>{
-    exeStored = CFG.server_exe_default || "whisper-server.exe";
-    exeUnlocked = false;
-    box.readOnly = true;
-    box.value = CFG.server_exe_path_default || CFG.server_exe_default || "";
-    doSave();
-    toast(L.upd, "ok");
-  };
-  box.onchange = ()=>{ if(exeUnlocked){ exeStored = box.value.trim(); doSave(); } };
+function srvExeDefault(){
+  return CFG.server_exe_default || "whisper-server.exe";
 }
-function buildToc(){
-  let card = null, best = 0;
-  document.querySelectorAll("#p-help .card").forEach(c=>{
-    const n = c.querySelectorAll(".wh").length;
-    if(n > best){ best = n; card = c; }
+function srvExeShown(){
+  const stored = (exeStored || "").trim();
+  return !stored || stored === srvExeDefault() ? "" : stored;
+}
+function srvSumLine(box, k, v, off){
+  const r = document.createElement("div");
+  r.className = "sumrow";
+  const a = document.createElement("span");
+  a.className = "sumk";
+  a.textContent = k;
+  const b = document.createElement("span");
+  b.className = "sumv" + (off ? " off" : "");
+  b.textContent = v;
+  r.appendChild(a); r.appendChild(b);
+  box.appendChild(r);
+}
+function renderSrvCards(){
+  const localSum = document.getElementById("srv_local_sum");
+  const remoteSum = document.getElementById("srv_remote_sum");
+  if(!localSum || !remoteSum) return;
+  const remote = sttSource === "remote";
+  const auto = document.getElementById("server_autostart").checked;
+  const exe = srvExeShown();
+  localSum.innerHTML = "";
+  srvSumLine(localSum, L.srvkthreads, document.getElementById("threads").value);
+  srvSumLine(localSum, L.srvkauto, auto ? L.srvon : L.srvoff, !auto);
+  srvSumLine(localSum, L.srvkport, document.getElementById("server_port").value);
+  srvSumLine(localSum, L.srvkfile, exe || L.srvnear, !exe);
+  remoteSum.innerHTML = "";
+  srvSumLine(remoteSum, L.srvkaddr, remote ? remoteURL : L.srvnoaddr, !remote);
+  srvSumLine(remoteSum, L.srvkcheck, srvChecked || L.srvnocheck, !srvChecked);
+  const note = document.getElementById("remote_warn");
+  if(note){
+    if(remote && !remoteURL) note.textContent = whisperNow ? L.srvwarnnow : L.srvwarnlater;
+    else note.textContent = remote ? L.remotewarn : "";
+    note.classList.toggle("bad", remote && !remoteURL && whisperNow);
+  }
+  [["srv_local", "pick_srv_local", !remote], ["srv_remote", "pick_srv_remote", remote]].forEach(pair=>{
+    const card = document.getElementById(pair[0]);
+    if(card){
+      card.classList.toggle("on", pair[2]);
+      card.classList.toggle("idle", !pair[2]);
+    }
+    const sw = document.getElementById(pair[1]);
+    if(sw) sw.checked = pair[2];
   });
-  if(!card || best < 3) return;
-  const heads = [...card.querySelectorAll(".wh")];
-  const toc = document.createElement("nav");
-  toc.className = "toc";
-  toc.setAttribute("aria-label", card.querySelector(".wh").textContent);
-  heads.forEach((h, i)=>{
+  const test = document.getElementById("srv_test");
+  if(test) test.disabled = !remoteURL;
+  const edit = document.getElementById("srv_remote_edit");
+  if(edit) edit.textContent = remoteURL ? L.profedit : L.apisetup;
+}
+async function editSrvLocal(){
+  const threadsEl = document.getElementById("threads");
+  const autoEl = document.getElementById("server_autostart");
+  const portEl = document.getElementById("server_port");
+  const threads = document.createElement("select");
+  [...threadsEl.options].forEach(o=>{
+    const c = document.createElement("option");
+    c.value = o.value; c.textContent = o.textContent;
+    threads.appendChild(c);
+  });
+  threads.value = threadsEl.value;
+  threads.style.minWidth = "86px";
+  const auto = document.createElement("input");
+  auto.type = "checkbox"; auto.checked = autoEl.checked;
+  const port = document.createElement("input");
+  port.type = "text"; port.value = portEl.value;
+  port.style.flex = "0 0 86px"; port.style.width = "86px";
+  const exe = document.createElement("input");
+  exe.type = "text";
+  exe.value = srvExeShown() || (CFG.server_exe_path_default || srvExeDefault());
+  const ok = await formModal(L.fmsave, body=>{
+    body.appendChild(fmRow(threads, L.threads, L.threadssub));
+    body.appendChild(fmRow(auto, L.srvautostart, L.srvautostartsub));
+    body.appendChild(fmRow(port, L.srvport, L.srvportsub));
+    const sep = document.createElement("div");
+    sep.className = "fmsep";
+    body.appendChild(sep);
+    const field = document.createElement("div");
+    field.className = "fmfield";
+    const lbl = document.createElement("label");
+    lbl.textContent = L.serverexe;
+    const sub = document.createElement("span");
+    sub.className = "sub";
+    sub.textContent = L.serverexesub;
+    field.appendChild(lbl); field.appendChild(sub); field.appendChild(clearWrap(exe));
+    body.appendChild(field);
+  }, null, L.srvlocaldlg, false);
+  if(!ok) return;
+  const typed = exe.value.trim();
+  const def = CFG.server_exe_path_default || srvExeDefault();
+  if(typed && typed !== def && typed !== exeStored && !await askConfirm(L.exewarn, L.exeedit, null, L.mtexe)) return;
+  threadsEl.value = threads.value;
+  autoEl.checked = auto.checked;
+  portEl.value = String(parseInt(port.value) || CFG.server_port || 8910);
+  exeStored = !typed || typed === def ? srvExeDefault() : typed;
+  renderSrvCards();
+  doSave();
+}
+async function editSrvRemote(){
+  const url = document.createElement("input");
+  url.type = "text"; url.value = remoteURL; url.placeholder = "http://192.168.1.50:8080";
+  const ok = await formModal(L.fmsave, body=>{
+    const field = document.createElement("div");
+    field.className = "fmfield";
+    const lbl = document.createElement("label");
+    lbl.textContent = L.srvaddr;
+    const sub = document.createElement("span");
+    sub.className = "sub";
+    sub.textContent = L.srvaddrsub;
+    field.appendChild(lbl); field.appendChild(sub); field.appendChild(clearWrap(url));
+    body.appendChild(field);
+    const sep = document.createElement("div");
+    sep.className = "fmsep";
+    body.appendChild(sep);
+    const note = document.createElement("div");
+    note.className = "note warn";
+    note.textContent = L.remotewarn;
+    body.appendChild(note);
+  }, null, L.mtremote, false);
+  if(!ok) return;
+  const fresh = url.value.trim();
+  if(fresh === remoteURL) return;
+  if(fresh && !await askConfirm(L.remoteask.replace("%s", fresh), null, null, L.mtremote)) return;
+  remoteURL = fresh;
+  srvChecked = "";
+  document.getElementById("server_url").value = fresh;
+  renderSrvCards();
+  doSave();
+}
+function pickSrvSource(remote){
+  const want = remote ? "remote" : "local";
+  if(sttSource === want) return;
+  sttSource = want;
+  srvChecked = "";
+  renderSrvCards();
+  doSave();
+}
+const DEPS = [
+  ["whisper.cpp", "whisper", "MIT", "https://github.com/ggerganov/whisper.cpp"],
+  ["llama.cpp", "llama", "MIT", "https://github.com/ggml-org/llama.cpp"],
+  ["sherpa-onnx", "sherpa", "Apache-2.0", "https://github.com/k2-fsa/sherpa-onnx"],
+  ["ggml", "ggml", "MIT", "https://github.com/ggml-org/ggml"],
+  ["ONNX Runtime", "onnx", "MIT", "https://github.com/microsoft/onnxruntime"],
+  ["go-webview2", "webview", "MIT", "https://github.com/jchv/go-webview2"],
+  ["WebView2 Runtime", "wv2rt", "Microsoft", "https://developer.microsoft.com/microsoft-edge/webview2/"],
+  ["malgo", "malgo", "Unlicense", "https://github.com/gen2brain/malgo"],
+  ["miniaudio", "miniaudio", "MIT-0", "https://github.com/mackron/miniaudio"],
+  ["gorilla/websocket", "ws", "BSD-2", "https://github.com/gorilla/websocket"],
+  ["golang.org/x/sys", "xsys", "BSD-3", "https://github.com/golang/sys"],
+  ["go-winloader", "winloader", "MIT", "https://github.com/jchv/go-winloader"],
+  ["IBM Plex Mono", "plex", "OFL-1.1", "https://github.com/IBM/plex"],
+  ["Hugging Face", "hf", "", "https://huggingface.co/"],
+];
+function renderDeps(){
+  const box = document.getElementById("deps");
+  if(!box || box.dataset.done) return;
+  box.dataset.done = "1";
+  DEPS.forEach(dep=>{
+    const row = document.createElement("div");
+    row.className = "deprow";
+    const head = document.createElement("div");
+    head.className = "dphead";
+    const name = document.createElement("span");
+    name.className = "dn";
+    name.textContent = dep[0];
+    const lic = document.createElement("span");
+    lic.className = "dl";
+    lic.textContent = dep[2];
+    head.appendChild(name);
+    if(dep[2]) head.appendChild(lic);
+    const what = document.createElement("div");
+    what.className = "dw";
+    what.textContent = L["dep" + dep[1]] || "";
+    const url = document.createElement("span");
+    url.className = "du";
+    url.textContent = dep[3].replace(/^https?:\/\//, "").replace(/\/$/, "");
+    url.onclick = ()=>appDepLink(dep[3]);
+    row.appendChild(head); row.appendChild(what); row.appendChild(url);
+    box.appendChild(row);
+  });
+}
+function initContacts(){
+  const mail = document.getElementById("contact_mail");
+  if(!mail) return;
+  mail.textContent = CFG._mail || "";
+  const repo = document.getElementById("contact_repo");
+  if(repo) repo.textContent = (CFG._repo || "").replace(/^https?:\/\//, "");
+  const write = ()=>appMailLink();
+  mail.onclick = write;
+  const wbtn = document.getElementById("mail_write");
+  if(wbtn) wbtn.onclick = write;
+  const copy = document.getElementById("mail_copy");
+  if(copy){
+    copy.innerHTML = I_COPY;
+    copy.onclick = async ()=>{
+      const r = JSON.parse(await appMailCopy());
+      toast(r.message, r.severity);
+    };
+  }
+  const openRepo = ()=>appRepoLink();
+  if(repo) repo.onclick = openRepo;
+  const rbtn = document.getElementById("repo_open");
+  if(rbtn) rbtn.onclick = openRepo;
+  const openIssues = ()=>appIssuesLink();
+  const issues = document.getElementById("contact_issues");
+  if(issues) issues.onclick = openIssues;
+  const ibtn = document.getElementById("issues_open");
+  if(ibtn) ibtn.onclick = openIssues;
+}
+function initSrvCards(){
+  const card = document.getElementById("stt_srv_card");
+  if(!card) return;
+  const localEdit = document.getElementById("srv_local_edit");
+  if(localEdit) localEdit.onclick = e=>{ e.stopPropagation(); editSrvLocal(); };
+  const remoteEdit = document.getElementById("srv_remote_edit");
+  if(remoteEdit) remoteEdit.onclick = e=>{ e.stopPropagation(); editSrvRemote(); };
+  const test = document.getElementById("srv_test");
+  if(test) test.onclick = async e=>{
+    e.stopPropagation();
+    const was = test.textContent;
+    test.disabled = true;
+    test.textContent = L.apitestrun;
+    let r = {ok: false, message: "", severity: "error"};
+    try {
+      r = JSON.parse(await appSttTest(remoteURL));
+    } catch(err){
+      r.message = String(err);
+    }
+    test.disabled = false;
+    test.textContent = was;
+    srvChecked = r.message;
+    renderSrvCards();
+    toast(r.message, r.severity);
+  };
+  document.querySelectorAll("input.srvpick").forEach(sw=>{
+    sw.addEventListener("change", e=>{
+      e.stopPropagation();
+      const remote = sw.id === "pick_srv_remote" ? sw.checked : !sw.checked;
+      pickSrvSource(remote);
+    });
+  });
+  renderSrvCards();
+}
+const I_TOC_ON = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="14" y2="6"/><line x1="3" y1="12" x2="14" y2="12"/><line x1="3" y1="18" x2="14" y2="18"/><path d="M17 8l4 4-4 4"/></svg>';
+const I_TOC_OFF = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M7 8l-4 4 4 4"/></svg>';
+const HELP_WIDE_CSS = 1180;
+let helpPrevWidth = 0;
+let helpWantedCss = 0;
+let helpQuietUntil = 0;
+function helpWideSync(){
+  const btn = document.getElementById("help_wide");
+  if(!btn) return;
+  const narrow = window.innerWidth < 921;
+  const back = helpPrevWidth > 0;
+  btn.style.display = narrow || back ? "" : "none";
+  btn.innerHTML = back ? I_TOC_OFF : I_TOC_ON;
+  btn.title = back ? L.helptochide : L.helptocshow;
+}
+function initHelpWide(){
+  const btn = document.getElementById("help_wide");
+  if(!btn || !window.appWindowWidth) return;
+  btn.onclick = async ()=>{
+    const ratio = window.devicePixelRatio || 1;
+    const back = helpPrevWidth > 0;
+    const want = back ? helpPrevWidth : Math.round(HELP_WIDE_CSS * ratio);
+    helpQuietUntil = Date.now() + 1200;
+    let r = null;
+    try { r = JSON.parse(await appWindowWidth(want)); } catch(e){ r = null; }
+    if(!r) return;
+    helpPrevWidth = back ? 0 : r.prev;
+    helpWantedCss = Math.round(r.width / ratio);
+    helpQuietUntil = Date.now() + 1200;
+    setTimeout(()=>{ helpWideSync(); if(helpMark) helpMark(); }, 80);
+    setTimeout(()=>{ helpWideSync(); if(helpMark) helpMark(); }, 400);
+  };
+  window.addEventListener("resize", ()=>{
+    const settling = Date.now() < helpQuietUntil;
+    if(!settling && helpPrevWidth > 0 && helpWantedCss && Math.abs(window.innerWidth - helpWantedCss) > 48) helpPrevWidth = 0;
+    helpWideSync();
+  });
+  helpWideSync();
+}
+let helpMark = null;
+function buildToc(){
+  const body = document.getElementById("helpbody");
+  const toc = document.getElementById("helptoc");
+  const scroller = document.querySelector(".content");
+  if(!body || !toc || toc.dataset.done) return;
+  const heads = [...body.querySelectorAll(".wh")];
+  if(heads.length < 3) return;
+  toc.dataset.done = "1";
+  const links = heads.map((h, i)=>{
     if(!h.id) h.id = "wh" + i;
     const a = document.createElement("a");
     a.href = "#" + h.id;
     a.textContent = h.textContent;
-    a.onclick = (e)=>{ e.preventDefault(); h.scrollIntoView({block:"start"}); h.classList.add("hit"); setTimeout(()=>h.classList.remove("hit"), 1500); };
+    a.onclick = e=>{
+      e.preventDefault();
+      if(scroller) scroller.scrollTo({ top: h.offsetTop - 10, behavior: "smooth" });
+      else h.scrollIntoView({ block: "start" });
+    };
     toc.appendChild(a);
+    return a;
   });
-  card.insertBefore(toc, card.firstChild);
+  const mark = ()=>{
+    if(!scroller || !body.offsetParent) return;
+    const line = scroller.scrollTop + 26;
+    let at = 0;
+    heads.forEach((h, i)=>{ if(h.offsetTop <= line) at = i; });
+    links.forEach((a, i)=>a.classList.toggle("on", i === at));
+    const on = links[at];
+    if(!on) return;
+    if(on.offsetTop < toc.scrollTop) toc.scrollTop = on.offsetTop - 20;
+    if(on.offsetTop > toc.scrollTop + toc.clientHeight - 30) toc.scrollTop = on.offsetTop - toc.clientHeight + 40;
+  };
+  if(scroller) scroller.addEventListener("scroll", mark);
+  helpMark = mark;
+  mark();
 }
 function labelPages(){
   document.querySelectorAll(".nav").forEach(b=>{
@@ -2944,8 +3493,16 @@ async function updCheck(){
   if(r.error){ out.textContent = L.upderr; return; }
   updShow(r.latest, r.newer);
 }
-function updProgress(p){ document.getElementById("upd_out").textContent = L.upddl + " " + p + "%"; }
-function updError(e){ document.getElementById("upd_out").textContent = L.upderr + ": " + e; }
+function updProgress(p){
+  const out = document.getElementById("upd_out");
+  if(out) out.textContent = L.upddl + " " + p + "%";
+  stateUpdNote(L.upddl + " " + p + "%", "");
+}
+function updError(e){
+  const out = document.getElementById("upd_out");
+  if(out) out.textContent = L.upderr + ": " + e;
+  stateUpdNote(L.upderr + ": " + e, "bad");
+}
 
 let micTimer = null;
 async function refreshMics(){
@@ -3096,20 +3653,47 @@ async function refreshState(){
 
   const hero = document.getElementById("state_hero");
   const off = s.enabled === false;
-  if(hero) hero.classList.toggle("warn", off || !!s.backend_err);
-  set("state_hero_title", off ? L.stoff : (s.backend_err ? s.status : L.stready));
-  set("state_hero_sub", off ? L.stoffsub : (s.backend_err ? s.backend_err : L.sthint));
-  led("state_hero_led", !off && !s.backend_err && s.ready, off || !!s.backend_err);
-  set("state_hotkey", s.hotkey);
+  const down = !!(s.stt_broken && s.whisper_now);
+  const trouble = off || down || !!s.backend_err;
+  if(hero){
+    hero.classList.toggle("warn", trouble && !down);
+    hero.classList.toggle("bad", down);
+  }
+  set("state_hero_title", off ? L.stoff : down ? L.srvdown : (s.backend_err ? s.status : L.stready));
+  set("state_hero_sub", off ? L.stoffsub : down ? L.srvdownwhy : (s.backend_err ? s.backend_err : L.sthint));
+  led("state_hero_led", !trouble && s.ready, trouble);
+  const heroLed = document.getElementById("state_hero_led");
+  if(heroLed) heroLed.classList.toggle("bad", down);
+  const heroFix = document.getElementById("state_srv_go");
+  if(heroFix) heroFix.style.display = down ? "" : "none";
+  const keyBox = document.getElementById("state_hotkey");
+  if(keyBox && keyBox.dataset.combo !== s.hotkey){
+    keyBox.dataset.combo = s.hotkey;
+    keyBox.innerHTML = "";
+    (s.hotkey || "").split("+").forEach((part, idx)=>{
+      if(idx){
+        const plus = document.createElement("span");
+        plus.className = "stplus";
+        plus.textContent = "+";
+        keyBox.appendChild(plus);
+      }
+      const key = document.createElement("span");
+      key.className = "herokey";
+      key.textContent = part.trim();
+      keyBox.appendChild(key);
+    });
+  }
+
   const keys = document.getElementById("state_keys");
-  if(keys) keys.style.display = off ? "none" : "";
+  if(keys) keys.style.display = off || down ? "none" : "";
   const enable = document.getElementById("state_enable");
   if(enable) enable.style.display = off ? "" : "none";
 
   const alerts = document.getElementById("state_alerts");
   if(alerts){
     const rows = [];
-    if(s.backend_err) rows.push({cls: "bad", text: s.backend_err, btn: L.retry, act: async ()=>{ await appRetryBackend(); refreshState(); }});
+    const sttDown = !!(s.stt_broken && s.whisper_now);
+    if(s.backend_err && !sttDown) rows.push({cls: "bad", text: s.backend_err, btn: L.retry, act: async ()=>{ await appRetryBackend(); refreshState(); }});
     if(s.post_err) rows.push({cls: "bad", text: s.post_err, btn: L.berropen, act: ()=>show("post")});
     const sig = JSON.stringify(rows.map(r=>[r.cls, r.text]));
     if(alerts.dataset.sig !== sig){
@@ -3117,11 +3701,11 @@ async function refreshState(){
       alerts.innerHTML = "";
       rows.forEach(r=>{
         const box = document.createElement("div");
-        box.className = "alert " + r.cls;
+        box.className = "stalert " + r.cls;
         const dot = document.createElement("i");
         dot.className = "led " + r.cls;
         const txt = document.createElement("span");
-        txt.className = "atext";
+        txt.className = "statext";
         txt.textContent = r.text;
         txt.dataset.tip = r.text;
         const btn = document.createElement("button");
@@ -3134,11 +3718,25 @@ async function refreshState(){
   }
 
   const hasUpd = !!s.upd_version;
-  set("state_upd_title", hasUpd ? L.stupdhave.replace("%s", s.upd_version) : L.stupdlast.replace("%s", CFG._version || ""));
-  set("state_upd_sub", hasUpd ? L.updgo : "");
+  set("state_upd_title", hasUpd ? L.stupdhave.replace("%s", s.upd_version) : L.stver.replace("%s", CFG._version || ""));
+  const updBadge = document.getElementById("state_upd_badge");
+  if(updBadge){
+    updBadge.textContent = hasUpd ? L.stoutdated : L.stlatest;
+    updBadge.className = "stbdg " + (hasUpd ? "warn" : "on");
+    updBadge.style.display = "";
+  }
+  led("state_upd_led", !hasUpd, hasUpd);
+  const updSub = document.getElementById("state_upd_sub");
+  if(updSub && !updSub.dataset.sticky){
+    updSub.textContent = (!hasUpd && s.upd_checked > 0) ? L.stchecked.replace("%s", histWhen(s.upd_checked)) : "";
+  }
+
   led("state_upd_led", !hasUpd, hasUpd);
   const updBtn = document.getElementById("state_upd_btn");
-  if(updBtn) updBtn.textContent = hasUpd ? L.updgo : L.updcheck;
+  if(updBtn){
+    updBtn.textContent = hasUpd ? L.updgo : L.stcheck;
+    updBtn.dataset.mode = hasUpd ? "update" : "check";
+  }
 
   const freeMB = s.ram_free_mb || 0;
   const totalMB = s.ram_mb || 0;
@@ -3155,38 +3753,77 @@ async function refreshState(){
   renderStateModels(s);
   renderUsage(s);
 
-  set("st_main", s.status_line || s.status);
-  led("st_led", s.ready);
+  const sttDown = !!(s.stt_broken && s.whisper_now);
+  set("st_main", sttDown ? L.srvdown : (s.status_line || s.status));
+  led("st_led", s.ready && !sttDown);
+  const stMain = document.getElementById("st_main");
+  if(stMain) stMain.classList.toggle("bad", sttDown);
+  const stLed = document.getElementById("st_led");
+  if(stLed) stLed.classList.toggle("bad", sttDown);
+  if(whisperNow !== !!s.whisper_now){
+    whisperNow = !!s.whisper_now;
+    renderSrvCards();
+  }
   const badge = (id, v, full, cls)=>{
     const el = document.getElementById(id);
     if(!el) return;
     el.textContent = v || "";
     if(full || v) el.dataset.tip = full || v; else delete el.dataset.tip;
     el.classList.toggle("miss", cls === "miss");
+    el.classList.toggle("bad", cls === "bad");
   };
   const missing = (s.assigned || []).some(r=>r.state === "missing");
   badge("badge_mic", s.badges && s.badges.mic, s.mic);
   badge("badge_models", s.badges && s.badges.models, missing ? L.badgemiss : L.badgemodels, missing ? "miss" : "");
-  badge("badge_system", s.badges && s.badges.system, L.badgesystem);
+  badge("badge_system", s.badges && s.badges.system, L.badgesystem, sttDown ? "bad" : "");
   badge("badge_history", s.badges && s.badges.history, L.badgehist);
-  const rem = document.getElementById("st_remote");
-  if(rem) rem.textContent = s.remote ? L.remotebadge : "";
+}
+function langsPretty(langs){
+  const one = String(langs || "").trim();
+  if(!one || one.includes(",")) return one.toLowerCase();
+  const full = langName(one);
+  return full === one ? one : full.toLowerCase();
+}
+function langName(code){
+
+  const sel = document.getElementById("language");
+  if(!sel) return code;
+  const want = String(code || "").toLowerCase();
+  const hit = [...sel.options].find(o=>o.value.toLowerCase() === want);
+  return hit ? hit.textContent : code;
+}
+function soundName(){
+  const sel = document.getElementById("sound_theme");
+  if(!sel || sel.selectedIndex < 0) return "";
+  return sel.options[sel.selectedIndex].textContent;
+}
+function gbLabel(mb){
+
+  return L.stgb.replace("%s", ((mb || 0) / 1024).toFixed(1));
+}
+function stateUpdNote(text, cls){
+  const el = document.getElementById("state_upd_sub");
+  if(!el) return;
+  el.textContent = text;
+  el.className = "stpsub" + (cls ? " " + cls : "");
+  el.dataset.sticky = text ? "1" : "";
 }
 function stateCard(cap, tab, value, on, under){
+
   const card = document.createElement("div");
-  card.className = "card";
+  card.className = "stcard";
   const head = document.createElement("div");
-  head.className = "chead";
+  head.className = "sthead";
   const capEl = document.createElement("span");
-  capEl.className = "cap";
+  capEl.className = "stcap";
   capEl.textContent = cap;
   const go = document.createElement("button");
-  go.type = "button"; go.className = "iconbtn goto"; go.title = L.stgoto;
+  go.type = "button"; go.className = "iconbtn stgo"; go.title = L.stgoto;
   go.innerHTML = "&#8599;";
   go.onclick = ()=>show(tab);
   head.appendChild(capEl); head.appendChild(go);
   const val = document.createElement("div");
-  val.className = "val";
+  val.className = "stval";
   const dot = document.createElement("i");
   dot.className = "led" + (on ? " on" : "");
   const txt = document.createElement("span");
@@ -3194,7 +3831,7 @@ function stateCard(cap, tab, value, on, under){
   txt.dataset.tip = value;
   val.appendChild(dot); val.appendChild(txt);
   const sub = document.createElement("div");
-  sub.className = "under";
+  sub.className = "stunder";
   sub.textContent = under || "";
   card.appendChild(head); card.appendChild(val); card.appendChild(sub);
   return card;
@@ -3204,39 +3841,39 @@ function renderQuickCards(s){
   if(!box) return;
   const overlayOn = CFG.overlay !== false;
   const beepOn = CFG.beep !== false;
-  const sig = [s.mic, s.active_lang, s.active_model, overlayOn, beepOn, s.autostart].join("|");
+  const sig = [s.mic, s.mic_ok, s.active_lang, s.active_model, overlayOn, beepOn, soundName(), s.autostart].join("|");
   if(box.dataset.sig === sig) return;
   box.dataset.sig = sig;
   box.innerHTML = "";
-  const mic = stateCard(L.navmic, "mic", s.mic, s.mic_ok, "");
+  const mic = stateCard(L.navmic, "mic", s.mic, s.mic_ok, s.mic_ok ? L.stmicok : L.stmicbad);
   const bar = document.createElement("span");
   bar.className = "miclevel grow";
   bar.id = "state_mic_bar";
   bar.innerHTML = new Array(7).fill("<i></i>").join("");
   mic.insertBefore(bar, mic.lastChild);
   box.appendChild(mic);
-  box.appendChild(stateCard(L.stlang, "models", s.active_lang, true, s.active_model));
-  box.appendChild(stateCard(L.overlay, "dictation", overlayOn ? L.ston : L.stoffw, overlayOn, L.stoverlaysub));
-  box.appendChild(stateCard(L.beep, "mic", beepOn ? L.ston : L.stoffw, beepOn, ""));
-  box.appendChild(stateCard(L.autorun, "system", s.autostart ? L.ston : L.stoffw, s.autostart, s.autostart ? "" : L.stautorunsub));
+  box.appendChild(stateCard(L.stlang, "models", langName(s.active_lang), true, L.strecog.replace("%s", s.active_model)));
+  box.appendChild(stateCard(L.stoverlay, "dictation", overlayOn ? L.stonf : L.stofff, overlayOn, L.stoverlaysub));
+  box.appendChild(stateCard(L.stbeep, "mic", beepOn ? L.stonm : L.stoffm, beepOn, soundName()));
+  box.appendChild(stateCard(L.stautorun, "system", s.autostart ? L.stonm : L.stoffm, s.autostart, s.autostart ? "" : L.stautorunsub));
 }
 function modelRow(name, note, badgeText, badgeCls, on){
   const row = document.createElement("div");
-  row.className = "wrow";
+  row.className = "strow";
   const nm = document.createElement("span");
-  nm.className = "wv";
+  nm.className = "stnm";
   const dot = document.createElement("i");
   dot.className = "led" + (on ? " on" : "");
   nm.appendChild(dot);
   nm.appendChild(document.createTextNode(name));
   if(badgeText){
     const b = document.createElement("span");
-    b.className = "bdg" + (badgeCls ? " " + badgeCls : "");
+    b.className = "stbdg" + (badgeCls ? " " + badgeCls : "");
     b.textContent = badgeText;
     nm.appendChild(b);
   }
   const wu = document.createElement("span");
-  wu.className = "wu";
+  wu.className = "stwu";
   wu.textContent = note || "";
   wu.dataset.tip = note || "";
   row.appendChild(nm); row.appendChild(wu);
@@ -3247,131 +3884,269 @@ function renderStateModels(s){
   if(!box) return;
   const postOn = CFG.post_enabled !== false;
   const postModel = (CFG.llm_model || "").split(/[\\/]/).pop();
-  const sig = JSON.stringify([s.assigned, s.installed_models, s.active_model, postOn, postModel]);
+  const sig = JSON.stringify([s.assigned, s.idle_models, s.active_model, postOn, s.post_model, s.post_size, s.post_prompts, s.post_remote]);
   if(box.dataset.sig === sig) return;
   box.dataset.sig = sig;
   box.innerHTML = "";
 
   const asr = document.createElement("div");
-  asr.className = "card";
+  asr.className = "stcard";
   const ahead = document.createElement("div");
-  ahead.className = "chead";
+  ahead.className = "sthead";
   const acap = document.createElement("span");
-  acap.className = "cap";
+  acap.className = "stcap";
   acap.textContent = L.stasr;
   const ago = document.createElement("button");
-  ago.type = "button"; ago.className = "iconbtn goto"; ago.title = L.stgoto;
+  ago.type = "button"; ago.className = "iconbtn stgo"; ago.title = L.stgoto;
   ago.innerHTML = "&#8599;";
   ago.onclick = ()=>show("models");
   ahead.appendChild(acap); ahead.appendChild(ago);
   asr.appendChild(ahead);
-  const seen = [];
-  (s.assigned || []).forEach(r=>{
-    seen.push(r.model);
-    const cur = r.model === s.active_model;
-    asr.appendChild(modelRow(r.model, r.langs, cur ? L.stactive : "", cur ? "on" : "", cur));
+  const rows = (s.assigned || []).slice().sort((a, b)=>{
+    const aCur = a.model === s.active_model ? 0 : 1;
+    const bCur = b.model === s.active_model ? 0 : 1;
+    return aCur - bCur;
   });
-  (s.installed_models || []).forEach(name=>{
-    if(seen.includes(name)) return;
-    asr.appendChild(modelRow(name, L.stdisk.replace("%s", ""), "", "", false));
+  rows.forEach(r=>{
+    const cur = r.model === s.active_model;
+    asr.appendChild(modelRow(r.model, langsPretty(r.langs), cur ? L.stactive : "", cur ? "on" : "", cur));
+  });
+  (s.idle_models || []).forEach(m=>{
+    asr.appendChild(modelRow(m.name, L.stdisk.replace("%s", gbLabel(m.size)), "", "", false));
   });
   box.appendChild(asr);
 
   const post = document.createElement("div");
-  post.className = "card";
+  post.className = "stcard";
   const phead = document.createElement("div");
-  phead.className = "chead";
+  phead.className = "sthead";
   const pcap = document.createElement("span");
-  pcap.className = "cap";
-  pcap.textContent = L.postenable;
+  pcap.className = "stcap";
+  pcap.textContent = L.stpost;
   const pbdg = document.createElement("span");
-  pbdg.className = "bdg " + (postOn ? "on" : "warn");
+  pbdg.className = "stbdg " + (postOn ? "on" : "warn");
   pbdg.textContent = postOn ? L.stonf : L.stofff;
   const pgo = document.createElement("button");
-  pgo.type = "button"; pgo.className = "iconbtn goto"; pgo.title = L.stgoto;
+  pgo.type = "button"; pgo.className = "iconbtn stgo"; pgo.title = L.stgoto;
   pgo.innerHTML = "&#8599;";
   pgo.onclick = ()=>show("post");
-  phead.appendChild(pcap); phead.appendChild(pbdg); phead.appendChild(pgo);
+  pcap.style.flex = "0 0 auto";
+  const pspace = document.createElement("span");
+  pspace.className = "stspace";
+  phead.appendChild(pcap); phead.appendChild(pbdg); phead.appendChild(pspace); phead.appendChild(pgo);
   post.appendChild(phead);
   const marks = [];
-  if(CFG.post_source === "api") marks.push(L.postapi);
-  const prompts = (CFG.active_profiles || []).length;
-  if(prompts) marks.push(L.llmsumcount + ": " + prompts);
-  post.appendChild(modelRow(postModel || s.llm, marks.join(" · "), postOn ? "" : L.stidle, postOn ? "" : "warn", postOn));
+  marks.push(s.post_remote ? L.postapi : L.stlocal);
+  if(s.post_size) marks.push(gbLabel(s.post_size));
+  if(s.post_prompts) marks.push(L.llmsumcount + ": " + s.post_prompts);
+  post.appendChild(modelRow(s.post_model || postModel || s.llm, marks.join(" · "), postOn ? "" : L.stidle, postOn ? "" : "warn", postOn));
   box.appendChild(post);
+}
+const PIE_FALLBACK = { hi: "#3cff6e", amber: "#ffb347", rec: "#ff5b4d", bg: "#0b0f0c", lbl: "#f2fff5", soft: "#12241a", faint: "#14803a" };
+function cssColour(name){
+  let v = "";
+  try{ v = getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }catch(e){ v = ""; }
+  return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(v) ? v : PIE_FALLBACK[name.slice(2)];
+}
+function hex2rgb(h){
+  const s = h.replace("#", "");
+  const n = s.length === 3 ? s.split("").map(c=>c + c).join("") : s;
+  return [parseInt(n.slice(0, 2), 16), parseInt(n.slice(2, 4), 16), parseInt(n.slice(4, 6), 16)];
+}
+function rgb2hex(c){
+  return "#" + c.map(v=>Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0")).join("");
+}
+function rgb2hsl(c){
+  const r = c[0] / 255, g = c[1] / 255, b = c[2] / 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+  let h = 0;
+  if(d){
+    if(mx === r) h = ((g - b) / d) % 6;
+    else if(mx === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+  }
+  h = (h * 60 + 360) % 360;
+  const l = (mx + mn) / 2;
+  return [h, d ? d / (1 - Math.abs(2 * l - 1)) : 0, l];
+}
+function hsl2rgb(h, s, l){
+  const c = (1 - Math.abs(2 * l - 1)) * s, x = c * (1 - Math.abs(((h / 60) % 2) - 1)), m = l - c / 2;
+  let t;
+  if(h < 60) t = [c, x, 0];
+  else if(h < 120) t = [x, c, 0];
+  else if(h < 180) t = [0, c, x];
+  else if(h < 240) t = [0, x, c];
+  else if(h < 300) t = [x, 0, c];
+  else t = [c, 0, x];
+  return t.map(v=>(v + m) * 255);
+}
+function hueDist(a, b){
+  const d = Math.abs(a - b) % 360;
+  return d > 180 ? 360 - d : d;
+}
+function luma(colour){
+  const c = hex2rgb(colour).map(v=>{
+    const x = v / 255;
+    return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+}
+function weekPalette(){
+  const hi = cssColour("--hi"), used = [], out = [];
+  [hi, cssColour("--amber"), cssColour("--rec")].forEach(c=>{
+    const h = rgb2hsl(hex2rgb(c))[0];
+    if(used.every(u=>hueDist(h, u) >= 34)){
+      used.push(h);
+      out.push(c);
+    }
+  });
+  const base = rgb2hsl(hex2rgb(hi)), light = luma(cssColour("--bg")) > 0.5;
+  for(let d = 30; d < 360 && out.length < 6; d += 8){
+    const h = (base[0] + d) % 360;
+    if(used.every(u=>hueDist(h, u) >= 36)){
+      used.push(h);
+      const sat = light ? Math.min(0.62, Math.max(0.42, base[1] * 0.8)) : Math.max(0.55, Math.min(0.9, base[1]));
+      const lit = light ? 0.46 : Math.min(0.7, Math.max(0.5, base[2] + 0.04));
+      out.push(rgb2hex(hsl2rgb(h, sat, lit)));
+    }
+  }
+  return out;
+}
+function svgTag(tag, attrs){
+  const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  Object.keys(attrs).forEach(k=>el.setAttribute(k, attrs[k]));
+  return el;
+}
+function piePoint(cx, cy, r, a){
+  const rad = (a - 90) * Math.PI / 180;
+  return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
+}
+function pieSlice(cx, cy, r, from, to){
+  const p1 = piePoint(cx, cy, r, from), p2 = piePoint(cx, cy, r, to);
+  if(to - from >= 359.99) return "M " + cx + " " + (cy - r) + " A " + r + " " + r + " 0 1 1 " + (cx - 0.01) + " " + (cy - r) + " Z";
+  return "M " + cx + " " + cy + " L " + p1[0] + " " + p1[1] + " A " + r + " " + r + " 0 " + (to - from > 180 ? 1 : 0) + " 1 " + p2[0] + " " + p2[1] + " Z";
+}
+function weekPie(apps, total, pal){
+  const size = 92, r = size / 2 - 4, cx = size / 2, cy = size / 2;
+  const svg = svgTag("svg", { width: size, height: size, viewBox: "0 0 " + size + " " + size });
+  const bg = cssColour("--bg"), lbl = cssColour("--lbl"), soft = cssColour("--soft");
+  let acc = 0;
+  apps.forEach((a, idx)=>{
+    const from = acc / total * 360;
+    acc += a.count;
+    const to = acc / total * 360;
+    const fill = pal[idx] || soft;
+    const full = to - from >= 359.99;
+    svg.appendChild(svgTag("path", { d: pieSlice(cx, cy, r, from, to), fill: fill, class: "stslice" }));
+    if(full || (to - from) / 360 >= 0.12){
+      const p = full ? [cx, cy + size / 15 - 4] : piePoint(cx, cy, r * 0.62, (from + to) / 2);
+      const t = svgTag("text", { x: p[0], y: p[1] + 4, "text-anchor": "middle", "font-size": full ? 15 : 11, "font-weight": 600, fill: luma(fill) > 0.34 ? bg : lbl });
+      t.textContent = String(a.count);
+      svg.appendChild(t);
+    }
+  });
+  return svg;
+}
+function weekZero(){
+  const size = 92, r = size / 2 - 4, cx = size / 2, cy = size / 2;
+  const svg = svgTag("svg", { width: size, height: size, viewBox: "0 0 " + size + " " + size });
+  svg.appendChild(svgTag("circle", { cx: cx, cy: cy, r: r, fill: cssColour("--soft") }));
+  const t = svgTag("text", { x: cx, y: cy + size / 15, "text-anchor": "middle", "font-size": 15, "font-weight": 600, fill: cssColour("--faint") });
+  t.textContent = "0";
+  svg.appendChild(t);
+  return svg;
 }
 function renderUsage(s){
   const box = document.getElementById("state_usage");
   if(!box) return;
   const apps = s.week_apps || [];
   const total = s.week_count || 0;
-  const sig = JSON.stringify([apps, total, s.week_chars, s.today_count]);
+  const sig = JSON.stringify([apps, total, s.week_chars, s.today_count, cssColour("--hi"), cssColour("--bg")]);
   if(box.dataset.sig === sig) return;
   box.dataset.sig = sig;
   box.innerHTML = "";
-  if(!total){
-    const none = document.createElement("div");
-    none.className = "usub";
-    none.textContent = L.stnoweek;
-    box.appendChild(none);
-    return;
-  }
+  const head = document.createElement("div");
+  head.className = "sthead";
+  const cap = document.createElement("span");
+  cap.className = "stcap";
+  cap.textContent = L.stusage;
+  const headGo = document.createElement("button");
+  headGo.type = "button"; headGo.className = "iconbtn stgo"; headGo.title = L.stgoto;
+  headGo.innerHTML = "&#8599;";
+  headGo.onclick = ()=>show("models");
+  head.appendChild(cap); head.appendChild(headGo);
+  box.appendChild(head);
   const top = document.createElement("div");
-  top.className = "utop";
-  const donut = document.createElement("div");
-  donut.className = "donut";
-  let acc = 0;
-  const stops = apps.map((a, idx)=>{
-    const from = acc / total * 100;
-    acc += a.count;
-    const to = acc / total * 100;
-    const colour = ["var(--hi)", "var(--dim)", "var(--faint)", "var(--soft)"][idx] || "var(--soft)";
-    return colour + " " + from.toFixed(1) + "% " + to.toFixed(1) + "%";
-  });
-  donut.style.background = "conic-gradient(" + stops.join(",") + ")";
-  const mid = document.createElement("span");
-  mid.textContent = String(total);
-  donut.appendChild(mid);
+  top.className = "stptop";
+  const chart = document.createElement("div");
+  chart.className = "stpie";
   const txt = document.createElement("div");
-  txt.className = "utxt";
-  const legend = document.createElement("div");
-  legend.className = "legend";
-  apps.forEach((a, idx)=>{
-    const row = document.createElement("div");
-    row.className = "lrow";
-    const sw = document.createElement("i");
-    sw.style.background = ["var(--hi)", "var(--dim)", "var(--faint)", "var(--soft)"][idx] || "var(--soft)";
-    const nm = document.createElement("span");
-    nm.className = "ln";
-    nm.textContent = a.app;
-    nm.dataset.tip = a.app;
-    const cnt = document.createElement("b");
-    cnt.textContent = String(a.count);
-    row.appendChild(sw); row.appendChild(nm); row.appendChild(cnt);
-    legend.appendChild(row);
-  });
-  const sub = document.createElement("div");
-  sub.className = "usub";
-  sub.textContent = L.stusagesub
-    .replace("%d", s.week_chars || 0)
-    .replace("%d", s.today_count || 0)
-    .replace("%d", total ? Math.round((s.week_chars || 0) / total) : 0);
-  txt.appendChild(legend); txt.appendChild(sub);
-  top.appendChild(donut); top.appendChild(txt);
+  txt.className = "stptxt";
+  if(!total){
+    chart.appendChild(weekZero());
+    const none = document.createElement("div");
+    none.className = "stpsub";
+    none.textContent = L.stnoweek;
+    txt.appendChild(none);
+  } else {
+    const pal = weekPalette();
+    chart.appendChild(weekPie(apps, total, pal));
+    const chips = document.createElement("div");
+    chips.className = "stuchips";
+    apps.forEach((a, idx)=>{
+      const chip = document.createElement("span");
+      chip.className = "cmdchip stuchip";
+      const sw = document.createElement("i");
+      sw.style.background = pal[idx] || cssColour("--soft");
+      const nm = document.createElement("span");
+      nm.textContent = a.app;
+      nm.dataset.tip = a.app;
+      const cnt = document.createElement("b");
+      cnt.textContent = String(a.count);
+      chip.appendChild(sw); chip.appendChild(nm); chip.appendChild(cnt);
+      chips.appendChild(chip);
+    });
+    const sub = document.createElement("div");
+    sub.className = "stpsub";
+    sub.textContent = L.stusagesub
+      .replace("%d", s.week_chars || 0)
+      .replace("%d", s.today_count || 0)
+      .replace("%d", total ? Math.round((s.week_chars || 0) / total) : 0);
+    txt.appendChild(chips); txt.appendChild(sub);
+  }
+  top.appendChild(chart); top.appendChild(txt);
   box.appendChild(top);
-  const go = document.createElement("button");
-  go.type = "button"; go.className = "mini small";
-  go.textContent = L.stmodels;
-  go.onclick = ()=>show("models");
-  box.appendChild(go);
 }
 function initStateScreen(){
   const enable = document.getElementById("state_enable");
   if(enable) enable.onclick = async ()=>{ await appToggleEnabled(); refreshState(); };
   const unload = document.getElementById("state_unload");
   if(unload) unload.onclick = async ()=>{ await appUnloadEngines(); refreshState(); };
+  const srvGo = document.getElementById("state_srv_go");
+  if(srvGo) srvGo.onclick = ()=>{
+    show("system");
+    const card = document.getElementById("stt_srv_card");
+    if(card && card.scrollIntoView) card.scrollIntoView({block: "center"});
+  };
   const updBtn = document.getElementById("state_upd_btn");
-  if(updBtn) updBtn.onclick = ()=>{ show("system"); updCheck(); };
+  if(updBtn) updBtn.onclick = async ()=>{
+    if(updBtn.dataset.busy) return;
+    if(updBtn.dataset.mode === "update"){
+      stateUpdNote(L.stupddl, "");
+      appDoUpdate();
+      return;
+    }
+    updBtn.dataset.busy = "1";
+    const was = updBtn.textContent;
+    updBtn.textContent = L.micchecking;
+    const r = JSON.parse(await appCheckUpdate());
+    delete updBtn.dataset.busy;
+    updBtn.textContent = was;
+    if(r.error){ stateUpdNote(L.upderr, "bad"); return; }
+    stateUpdNote(r.newer ? L.updavail.replace("%s", r.latest) : L.stupdok, r.newer ? "" : "ok");
+    refreshState();
+  };
+
   document.querySelectorAll("[data-goto]").forEach(b=>{ b.onclick = ()=>show(b.dataset.goto); });
   setInterval(refreshState, 1500);
   startMeter("state_mic_bar", "p-state", null);
@@ -3665,7 +4440,7 @@ function toast(msg, severity){
   toast._t = setTimeout(()=>{ t.textContent = ""; t.className = "stsaved"; }, (severity === "error" || severity === "warn") ? 6000 : 2200);
 }
 
-const numSels = ["threads","min_record_ms","max_record_seconds","translate_ask_seconds","paste_delay_ms","history_days","history_max"];
+const numSels = ["threads","min_record_ms","max_record_seconds","translate_ask_seconds","paste_delay_ms"];
 function load(){
   document.getElementById("punctuation").value = CFG.punctuation || "model";
   document.getElementById("punctuation").addEventListener("change", updatePostWarn);
@@ -3728,7 +4503,6 @@ function load(){
   document.getElementById("threads").max = CFG._cpus || 16;
   bools.forEach(k=>document.getElementById(k).checked = !!CFG[k]);
   texts.forEach(k=>document.getElementById(k).value = CFG[k]||"");
-  initServerExe();
   document.getElementById("server_url").value = remoteURL;
   nums.forEach(k=>document.getElementById(k).value = CFG[k]);
   sels.forEach(k=>{
@@ -3745,35 +4519,6 @@ function load(){
     el.value = v;
   });
   syncTrControls();
-}
-function syncRemoteWarn(){
-  const el = document.getElementById("server_url");
-  const note = document.getElementById("remote_warn");
-  if(!el || !note) return;
-  note.textContent = el.value.trim() ? L.remotewarn : "";
-}
-function initRemote(){
-  const el = document.getElementById("server_url");
-  if(!el) return;
-  let known = el.value.trim();
-  syncRemoteWarn();
-  el.addEventListener("change", async e=>{
-    e.stopPropagation();
-    const url = el.value.trim();
-    if(url === known){
-      syncRemoteWarn();
-      return;
-    }
-    if(url && !await askConfirm(L.remoteask.replace("%s", url), null, null, L.mtremote)){
-      el.value = known;
-      syncRemoteWarn();
-      return;
-    }
-    known = url;
-    remoteURL = url;
-    syncRemoteWarn();
-    doSave();
-  });
 }
 async function runPostTest(btn, url, model, timeout, key){
   const was = btn.textContent;
@@ -4099,6 +4844,8 @@ async function doSave(){
     whisper_prompt: dictWords.join(", "),
     translate_hotkey: translateHotkey,
     server_url: remoteURL,
+    history_keep_min: keepMinutes(),
+    stt_source: sttSource,
     translate_ask_langs: trAll.filter(l=>document.getElementById("tl_"+l).checked),
     active_profiles: activeProfiles,
     replacements: repls,
@@ -4107,7 +4854,7 @@ async function doSave(){
     profiles: profiles};
   bools.forEach(k=>f[k]=document.getElementById(k).checked);
   texts.forEach(k=>f[k]=document.getElementById(k).value);
-  f.server_exe = exeUnlocked ? document.getElementById("server_exe").value.trim() : exeStored;
+  f.server_exe = exeStored;
   nums.forEach(k=>f[k]=parseInt(document.getElementById(k).value)||0);
   sels.forEach(k=>f[k]=document.getElementById(k).value);
   const trSw = document.getElementById("tr_default");
@@ -4137,6 +4884,7 @@ function show(p){
   if(p==="state") refreshState();
   if(p==="history") refreshHistory();
   document.querySelector(".content").scrollTop = 0;
+  if(p==="help" && helpMark) helpMark();
 }
 function bindLabels(){
   document.querySelectorAll(".row").forEach(row=>{
@@ -4150,7 +4898,7 @@ let hits = [];
 let hitAt = -1;
 let searchFrom = null;
 function searchMatches(s){
-  const items = [...document.querySelectorAll(".page .row, .page .mrow, .page .sect, .page .blklbl, .page .hint, .page .mslot, .page .wizh, .about p, .about li")];
+  const items = [...document.querySelectorAll(".page .row, .page .mrow, .page .sumrow, .page .sect, .page .blklbl, .page .hint, .page .mslot, .page .wizh, .about p, .about li")];
   const seen = new Set();
   return items.filter(r=>{
     if(!r.textContent.toLowerCase().includes(s)) return false;
@@ -4390,13 +5138,29 @@ function initWizard(){
     if(wizStep === 3) wizPollTry();
   }, 800);
 }
+function keepMinutes(){
+  const el = document.getElementById("history_keep");
+  const unit = document.getElementById("history_unit");
+  const n = el ? parseInt(el.value) || 0 : 0;
+  const mult = unit && unit.value === "day" ? 1440 : unit && unit.value === "hour" ? 60 : 1;
+  return n > 0 ? n * mult : 0;
+}
+function keepLabel(){
+  const el = document.getElementById("history_keep");
+  const unit = document.getElementById("history_unit");
+  if(!el || !unit) return "";
+  const name = unit.value === "day" ? L.unitday : unit.value === "hour" ? L.unithour : L.unitmin;
+  return (parseInt(el.value) || 0) + " " + name;
+}
 function histLife(at){
-  const days = parseInt(CFG.history_days) || 0;
-  if(!days || !at) return null;
-  const till = new Date(at + days * 86400000);
-  const left = Math.ceil((till - Date.now()) / 86400000);
-  const short = left <= 1 ? L.histtill1 : L.histtill.replace("%s", till.toLocaleDateString(undefined, {day: "numeric", month: "short"}));
-  return {short: short, soon: left <= 1, full: L.histtillfull.replace("%s", till.toLocaleDateString()).replace("%d", days)};
+  const mins = keepMinutes() || parseInt(CFG.history_keep_min) || 0;
+  if(!mins || !at) return null;
+  const till = new Date(at + mins * 60000);
+  const leftMs = till - Date.now();
+  const sameDay = leftMs < 86400000;
+  const when = sameDay ? histWhen(till.getTime()) : till.toLocaleDateString(undefined, {day: "numeric", month: "short"});
+  const soon = leftMs < 86400000;
+  return {short: L.histtill.replace("%s", when), soon: soon, full: L.histtillfull.replace("%s", till.toLocaleString()).replace("%s", keepLabel())};
 }
 function histWhen(
 ms){
@@ -4491,12 +5255,35 @@ function initHistory(){
   }
   const on = document.getElementById("history");
   if(on) on.addEventListener("change", ()=>{ syncHistControls(); setTimeout(refreshHistory, 300); });
+  initKeepFields();
   syncHistControls();
+}
+function initKeepFields(){
+  const keep = document.getElementById("history_keep");
+  const unit = document.getElementById("history_unit");
+  const max = document.getElementById("history_max");
+  if(!keep || !unit || !max) return;
+  const mins = parseInt(CFG.history_keep_min) || 10080;
+  if(mins % 1440 === 0){ unit.value = "day"; keep.value = String(mins / 1440); }
+  else if(mins % 60 === 0){ unit.value = "hour"; keep.value = String(mins / 60); }
+  else { unit.value = "min"; keep.value = String(mins); }
+  if(!keep.parentElement.classList.contains("numwrap")){
+    const holder = document.getElementById("hist_keep_wrap");
+    holder.insertBefore(numWrap(keep), holder.firstChild);
+  }
+  if(!max.parentElement.classList.contains("numwrap")){
+    const holder = document.getElementById("hist_max_wrap");
+    holder.appendChild(numWrap(max));
+  }
+  unit.addEventListener("change", ()=>{ doSave(); refreshHistory(); });
+  [keep, max].forEach(el=>{
+    el.addEventListener("change", ()=>{ doSave(); refreshHistory(); });
+  });
 }
 function syncHistControls(){
   const on = document.getElementById("history");
   if(!on) return;
-  ["history_days","history_max"].forEach(id=>{
+  ["history_keep","history_unit","history_max"].forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.disabled = !on.checked;
   });
@@ -5156,7 +5943,9 @@ document.querySelector(".header").addEventListener("mousedown", e=>{
 load();
 (async ()=>{
   initStateScreen();
-  initRemote();
+  initSrvCards();
+  initContacts();
+  renderDeps();
   initPostAPI();
   initWizard();
   initAutorun();
@@ -5171,6 +5960,7 @@ load();
   initWindowButtons();
   labelPages();
   buildToc();
+  initHelpWide();
   const omni = document.getElementById("omni");
   if(omni){
     omni.addEventListener("input", ()=>searchSettings(omni.value));

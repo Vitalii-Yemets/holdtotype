@@ -87,6 +87,7 @@ type App struct {
 	postErrProf  string
 	postErrAt    time.Time
 	updVer       string
+	updChecked   time.Time
 	updURL       string
 	updDigest    string
 
@@ -831,7 +832,7 @@ func (a *App) initBackend() {
 			}
 			continue
 		}
-		if cfg.ServerAutostart && cfg.ServerURL == "" {
+		if cfg.ServerAutostart && cfg.SttSource != "remote" {
 			if missing := missingModelPath(cfg); missing != "" {
 				a.mu.Lock()
 				q := a.quitting
@@ -1534,7 +1535,7 @@ func (a *App) rememberDictation(cfg *Config, text, app string) {
 	}
 	now := time.Now()
 	item := history.Item{At: now.UnixMilli(), Text: text, App: app}
-	if err := histStore.Add(item, now.UnixMilli(), cfg.HistoryDays, cfg.HistoryMax); err != nil {
+	if err := histStore.Add(item, now.UnixMilli(), cfg.HistoryKeepMin, cfg.HistoryMax); err != nil {
 		log.Printf("history: %v", err)
 	}
 }
@@ -1653,6 +1654,7 @@ func (a *App) reloadConfig() {
 		fresh.Threads != old.Threads ||
 		fresh.SherpaThreads != old.SherpaThreads ||
 		fresh.ServerURL != old.ServerURL ||
+		fresh.SttSource != old.SttSource ||
 		fresh.ServerExe != old.ServerExe ||
 		fresh.ServerAutostart != old.ServerAutostart
 	if serverChanged {

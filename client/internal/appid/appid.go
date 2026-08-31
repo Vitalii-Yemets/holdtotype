@@ -19,6 +19,8 @@ const (
 	Repo      = "Vitalii-Yemets/" + Slug
 	RepoURL   = "https://github.com/" + Repo
 	AuthorURL = "https://github.com/Vitalii-Yemets"
+	IssuesURL = RepoURL + "/issues"
+	Email     = "holdtotype@outlook.com"
 	LatestAPI = "https://api.github.com/repos/" + Repo + "/releases/latest"
 
 	LLMAlias = Slug + "-local"
@@ -26,7 +28,7 @@ const (
 	PrevSlug = "voxterminal"
 )
 
-var Version = "0.75.0"
+var Version = "0.75.1"
 
 func Class(suffix string) string { return Name + suffix }
 

@@ -751,6 +751,11 @@ type stateModelRow struct {
 	Current bool   `json:"current"`
 }
 
+type widthResult struct {
+	Prev  int `json:"prev"`
+	Width int `json:"width"`
+}
+
 type stateOut struct {
 	Hotkey   string `json:"hotkey"`
 	Mic      string `json:"mic"`
@@ -775,6 +780,9 @@ type stateOut struct {
 	MicOK       bool            `json:"mic_ok"`
 	StatusLine  string          `json:"status_line"`
 	Remote      bool            `json:"remote"`
+	SttSource   string          `json:"stt_source"`
+	SttBroken   bool            `json:"stt_broken"`
+	WhisperNow  bool            `json:"whisper_now"`
 	BackendErr  string          `json:"backend_err"`
 	PostErr     string          `json:"post_err"`
 	Enabled     bool            `json:"enabled"`
@@ -786,6 +794,12 @@ type stateOut struct {
 	WeekApps    []appShare      `json:"week_apps"`
 	RAMFreeMB   int             `json:"ram_free_mb"`
 	RAMTotalMB  int             `json:"ram_mb"`
+	Idle        []idleModel     `json:"idle_models"`
+	PostModel   string          `json:"post_model"`
+	PostSizeMB  int             `json:"post_size"`
+	PostPrompts int             `json:"post_prompts"`
+	PostRemote  bool            `json:"post_remote"`
+	UpdChecked  int64           `json:"upd_checked"`
 	UpdVersion  string          `json:"upd_version"`
 	Badges      struct {
 		Mic     string `json:"mic"`
@@ -818,7 +832,7 @@ func installedModelCount() int {
 
 func systemWarnings(cfg *Config) int {
 	n := 0
-	if cfg.ServerURL != "" {
+	if cfg.SttSource == "remote" {
 		n++
 	}
 	if !cfg.ServerAutostart {
@@ -831,7 +845,7 @@ func stateForModel(cfg *Config, m *modelInfo) string {
 	if m == nil {
 		return "missing"
 	}
-	if m.Engine == engineWhisper && strings.TrimSpace(cfg.ServerURL) != "" {
+	if m.Engine == engineWhisper && cfg.SttSource == "remote" {
 		return "remote"
 	}
 	if m.installed() {
@@ -886,7 +900,51 @@ func assignedModelRows(cfg *Config) []stateModelRow {
 	return rows
 }
 
+type idleModel struct {
+	Name   string `json:"name"`
+	SizeMB int    `json:"size"`
+}
+
+// idleModels names what is downloaded but serves no language: the summary
+// shows them so the disk space has a face.
+func idleModels(cfg *Config) []idleModel {
+	busy := map[string]bool{}
+	for _, row := range assignedModelRows(cfg) {
+		busy[row.Model] = true
+	}
+	var out []idleModel
+	for i := range modelCatalog {
+		m := &modelCatalog[i]
+		if !m.installed() || busy[m.NameKey] {
+			continue
+		}
+		out = append(out, idleModel{Name: m.NameKey, SizeMB: m.SizeMB})
+	}
+	return out
+}
+
+func postModelName(cfg *Config) string {
+	name := filepath.Base(strings.TrimSpace(cfg.LLMModel))
+	if name == "." || name == string(filepath.Separator) {
+		return ""
+	}
+	return strings.TrimSuffix(name, ".gguf")
+}
+
+func postModelSizeMB(cfg *Config) int {
+	name := filepath.Base(strings.TrimSpace(cfg.LLMModel))
+	if name == "" {
+		return 0
+	}
+	info, err := os.Stat(filepath.Join("models", name))
+	if err != nil {
+		return 0
+	}
+	return int(info.Size() / (1024 * 1024))
+}
+
 func installedModelNames() []string {
+
 	var out []string
 	for i := range modelCatalog {
 		if modelCatalog[i].installed() {
@@ -934,8 +992,14 @@ func (a *App) stateSnapshot() string {
 		llm = filepath.Base(cfg.LLMModel)
 	}
 	total, free := ramMB()
+	sttDown := sttRemoteBroken(cfg) && primaryEngine(cfg) == engineWhisper
+	if sttDown {
+		ready = false
+	}
 	status := tr("status.loading")
-	if ready {
+	if sttDown {
+		status = strS("S_SRV_DOWN")
+	} else if ready {
 		status = trf("status.ready", cfg.Hotkey)
 	} else if backendErr != "" {
 		status = backendErr
@@ -990,7 +1054,10 @@ func (a *App) stateSnapshot() string {
 		LLMOK:       postReady(cfg),
 		MicOK:       rec != nil,
 		StatusLine:  statusLine(cfg, ready, free),
-		Remote:      strings.TrimSpace(cfg.ServerURL) != "",
+		Remote:      cfg.SttSource == "remote",
+		SttSource:   cfg.SttSource,
+		SttBroken:   sttRemoteBroken(cfg),
+		WhisperNow:  primaryEngine(cfg) == engineWhisper,
 		BackendErr:  backendErr,
 		PostErr:     postErrLine(postErrProf, postErr),
 		Enabled:     enabled,
@@ -998,9 +1065,15 @@ func (a *App) stateSnapshot() string {
 		DiskMB:      installedDiskMB(),
 		RAMFreeMB:   free,
 		RAMTotalMB:  total,
+		Idle:        idleModels(cfg),
+		PostModel:   postModelName(cfg),
+		PostSizeMB:  postModelSizeMB(cfg),
+		PostPrompts: len(cfg.ActiveProfiles),
+		PostRemote:  postAPIOn(cfg),
 	}
 	a.mu.Lock()
 	st.UpdVersion = a.updVer
+	st.UpdChecked = a.updChecked.UnixMilli()
 	a.mu.Unlock()
 	st.WeekCount, st.WeekChars = histStore.Stats(time.Now().Add(-7 * 24 * time.Hour).UnixMilli())
 	st.TodayCount, _ = histStore.Stats(startOfDayMs())
@@ -1082,12 +1155,12 @@ func weekByApp() []appShare {
 		}
 		return out[i].App < out[j].App
 	})
-	if len(out) > 4 {
+	if len(out) > 6 {
 		rest := 0
-		for _, s := range out[3:] {
+		for _, s := range out[5:] {
 			rest += s.Count
 		}
-		out = append(out[:3], appShare{App: strS("S_WEEK_OTHER"), Count: rest})
+		out = append(out[:5], appShare{App: strS("S_WEEK_OTHER"), Count: rest})
 	}
 	return out
 }
@@ -1164,6 +1237,9 @@ func micBadge(name string) string {
 }
 
 func statusLine(cfg *Config, ready bool, freeMB int) string {
+	if sttRemoteBroken(cfg) && primaryEngine(cfg) == engineWhisper {
+		return strS("S_SRV_DOWN")
+	}
 	if !ready {
 		return tr("status.loading")
 	}

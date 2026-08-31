@@ -63,12 +63,13 @@ func (a *App) startupUpdateCheck() {
 		log.Printf("update check: %v", err)
 		return
 	}
+	a.mu.Lock()
+	a.updChecked = time.Now()
 	if verNewer(tag, appVersion) && url != "" {
-		log.Printf("update %s available (current %s)", tag, appVersion)
-		a.mu.Lock()
 		a.updVer, a.updURL, a.updDigest = tag, url, digest
-		a.mu.Unlock()
+		log.Printf("update %s available (current %s)", tag, appVersion)
 	}
+	a.mu.Unlock()
 }
 
 func downloadSetup(url, digest string, progress func(pct int)) (string, error) {

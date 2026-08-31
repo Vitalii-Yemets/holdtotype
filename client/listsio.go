@@ -231,7 +231,7 @@ func (a *App) copyLastResult() (bool, string) {
 }
 
 func (a *App) enforceHistory(cfg *Config) {
-	dropped, err := histStore.Enforce(time.Now().UnixMilli(), cfg.HistoryDays, cfg.HistoryMax)
+	dropped, err := histStore.Enforce(time.Now().UnixMilli(), cfg.HistoryKeepMin, cfg.HistoryMax)
 	if err != nil {
 		log.Printf("history: applying the retention period: %v", err)
 		return

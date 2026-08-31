@@ -34,6 +34,8 @@ const dom = new JSDOM(html, {
     window.setMicFails = (v) => { micFails = v; };
     window.setModelStates = (ru, other) => { ruState = ru; otherState = other; };
     window.setRemote = (v) => { remote = v; };
+    let sttBroken = false, whisperNow = false;
+    window.setSttDown = (broken, whisper) => { sttBroken = broken; whisperNow = whisper; };
     let lastAt = 0;
     window.setLastAt = (v) => { lastAt = v; };
     let backendErr = "";
@@ -58,6 +60,7 @@ const dom = new JSDOM(html, {
         loaded_now: "GigaAM v3", week_line: "12 dictations · 3400 characters",
         llm_ok: true, mic_ok: true, last_at: lastAt, last_app: "chrome.exe",
         remote: remote, backend_err: backendErr, post_err: postErr,
+        stt_broken: sttBroken, whisper_now: whisperNow,
         enabled: true, autostart: false, disk_mb: 3400, ram_mb: 16384, ram_free_mb: 9000,
         week_count: 12, week_chars: 3400, today_count: 4,
         week_apps: [{ app: "chrome.exe", count: 8 }, { app: "Telegram.exe", count: 4 }],
@@ -134,12 +137,20 @@ const dom = new JSDOM(html, {
     });
     for (const name of [
       "appLLMDlFile", "appLLMTest", "appHFPage", "appHFHome", "appRepoLink",
-      "appAuthorLink", "appReload",
+      "appAuthorLink", "appReload", "appDepLink",
       "appPreviewSound", "appMin", "appClose",
       "appDoUpdate", "appReady", "appJSError",
     ]) {
       window[name] = () => {};
     }
+    window.widthCalls = [];
+    window.appWindowWidth = async (w) => { window.widthCalls.push(w); return JSON.stringify({ prev: 700, width: w }); };
+    window.mailOpens = 0;
+    window.mailCopies = 0;
+    window.issuesOpens = 0;
+    window.appMailLink = () => { window.mailOpens++; };
+    window.appIssuesLink = () => { window.issuesOpens++; };
+    window.appMailCopy = async () => { window.mailCopies++; return JSON.stringify({ ok: true, severity: "ok", message: "Copied" }); };
     window.captureCalls = 0;
     window.appCapture = () => { window.captureCalls++; };
     window.appCaptureCombo = () => { window.captureCalls++; };
@@ -241,21 +252,28 @@ function check(name, actual, expected) {
   }
   check("no separate set button is left beside them", [...d.querySelectorAll("[id60_set]")].map(e=>e.id), []);
   check("the summary says it is ready", d.getElementById("state_hero_title").textContent, "Ready to dictate");
-  check("quick settings are five cards", d.querySelectorAll("#state_quick .card").length, 5);
-  check("the first names the microphone", d.querySelector("#state_quick .card .val span").textContent, "Realtek");
-  check("every card offers a way to its own tab", d.querySelectorAll("#state_quick .card .iconbtn.goto").length, 5);
-  check("the models block holds recognition and post-processing", d.querySelectorAll("#state_models .card").length, 2);
-  check("the working model is badged", d.querySelector("#state_models .bdg").textContent, "active");
+  check("quick settings are five cards", d.querySelectorAll("#state_quick .stcard").length, 5);
+  check("the first names the microphone", d.querySelector("#state_quick .stcard .stval span").textContent, "Realtek");
+  check("every card offers a way to its own tab", d.querySelectorAll("#state_quick .stcard .iconbtn.stgo").length, 5);
+  check("the models block holds recognition and post-processing", d.querySelectorAll("#state_models .stcard").length, 2);
+  check("the working model is badged", d.querySelector("#state_models .stbdg").textContent, "active");
   check("memory is summed up in its own plate", d.getElementById("state_mem_title").textContent, "8.8 GB free of 16");
   check("and it says what sits in memory", d.getElementById("state_mem_sub").textContent.includes("GigaAM v3"), true);
-  check("the update plate names the version", d.getElementById("state_upd_title").textContent, "Version 0.0.0-test — the latest");
-  check("the week is drawn as a ring", !!d.querySelector("#state_usage .donut"), true);
-  check("with a line per program", d.querySelectorAll("#state_usage .legend .lrow").length, 2);
+  check("the update plate names the version", d.getElementById("state_upd_title").textContent, "Version 0.0.0-test");
+  check("and marks it as the latest with a badge", d.getElementById("state_upd_badge").textContent, "latest");
+  check("the week is drawn as a pie", d.querySelectorAll("#state_usage .stpie svg path.stslice").length, 2);
+  check("with a chip per program", d.querySelectorAll("#state_usage .stuchips .stuchip").length, 2);
+  check("and the chips carry the colours of their slices", [...d.querySelectorAll("#state_usage .stuchip i")].map(i=>i.style.background).filter(Boolean).length, 2);
+  w.renderUsage({ week_apps: [{ app: "Code.exe", count: 5 }], week_count: 5, week_chars: 300, today_count: 1 });
+  check("a lone program fills the circle", d.querySelectorAll("#state_usage .stpie svg path.stslice").length, 1);
+  const solo = d.querySelector("#state_usage .stpie svg text");
+  check("and its count stands in the middle", solo.getAttribute("x"), "46");
+  check("in the size the empty circle uses", solo.getAttribute("font-size"), "15");
   check("status screen meter follows the microphone", meterMoves(d, "state_mic_bar"), true);
   check("the status meter is drawn as bars", d.querySelectorAll("#state_mic_bar i").length, 7);
-  const micCard = d.querySelector("#state_quick .card");
-  check("and the whole name waits under the pointer", micCard.querySelector(".val span").dataset.tip, "Realtek");
-  w.showTip(micCard.querySelector(".val span"));
+  const micCard = d.querySelector("#state_quick .stcard");
+  check("and the whole name waits under the pointer", micCard.querySelector(".stval span").dataset.tip, "Realtek");
+  w.showTip(micCard.querySelector(".stval span"));
   check("the hint shows what it was given", d.getElementById("tip").textContent, "Realtek");
   check("and it is dressed like the rest of the window", d.getElementById("tip").classList.contains("on"), true);
   w.hideTip();
@@ -308,7 +326,7 @@ function check(name, actual, expected) {
   check("status bar names both models", d.getElementById("st_main").textContent, "Ready · gigaam-v3 + ggml-small.bin · 7.8 GB free");
   check("sidebar badges filled", [d.getElementById("badge_mic").textContent, d.getElementById("badge_models").textContent], ["Realtek", "2"]);
   check("status bar led lit", d.getElementById("st_led").classList.contains("on"), true);
-  check("post-processing carries its own on-off badge", d.querySelectorAll("#state_models .card")[1].querySelector(".bdg").textContent, "on");
+  check("post-processing carries its own on-off badge", d.querySelectorAll("#state_models .stcard")[1].querySelector(".stbdg").textContent, "on");
   check("the models badge explains itself", d.getElementById("badge_models").dataset.tip, "Installed models");
   check("icon buttons carry a name for screen readers", d.getElementById("mic_refresh").getAttribute("aria-label"), "S_MIC_REFRESH");
   check("and the same words are the hover hint", d.getElementById("mic_refresh").dataset.tip, "S_MIC_REFRESH");
@@ -387,17 +405,40 @@ function check(name, actual, expected) {
   check("nothing is folded away", d.querySelectorAll("[data-adv].hidden").length, 0);
 
   tab("about"); await sleep(200);
-  const toc = d.querySelector("#p-help .toc");
-  const helpCard = toc && toc.closest(".card");
-  check("the help opens with a table of contents", !!toc, true);
+  const toc = d.querySelector("#p-help .helptoc");
+  const helpCard = d.getElementById("helpbody");
+  check("the help carries a table of contents beside it", !!toc, true);
   check("every help heading is listed", toc ? toc.querySelectorAll("a").length : 0, helpCard ? helpCard.querySelectorAll(".wh").length : -1);
   check("the contents link to the headings", toc ? toc.querySelector("a").getAttribute("href") : "", "#" + (helpCard ? helpCard.querySelector(".wh").id : ""));
+  check("and the list stands to the right of the text, not above it", !!d.querySelector("#p-help .helpwrap > .helptoc"), true);
+  const wideBtn = d.getElementById("help_wide");
+  check("a narrow window can be widened from the help itself", !!wideBtn, true);
+  wideBtn.click(); await sleep(220);
+  check("the button asks the window to grow", w.widthCalls.length, 1);
+  check("and then offers to put it back", wideBtn.title, "Hide the contents and restore the window width");
+  wideBtn.click(); await sleep(220);
+  check("the second press restores the width it remembered", w.widthCalls[1], 700);
+  check("and the button offers to widen again", wideBtn.title, "Show the contents — the window gets wider");
   check("the help is reachable from search", searchFinds(w, d, "config.json"), true);
 
   tab("history"); await sleep(300);
   check("history is a screen of its own", shown("history"), true);
   check("history is off until asked for", d.getElementById("history").checked, false);
   check("the programs to skip are never folded away", !!d.querySelector("#hist_skip_card[data-adv]"), false);
+  check("how long to keep is typed by hand, in any unit", [d.getElementById("history_keep").value, d.getElementById("history_unit").value], ["7", "day"]);
+  check("both retention fields carry the arrows", d.querySelectorAll("#p-history .numwrap .numspin").length, 2);
+  check("and the blocks are parted by a line", (() => { const c = [...d.querySelectorAll("#p-history .card")]; return c.length; })(), 3);
+  const keepBox = d.getElementById("history_keep");
+  const unitBox = d.getElementById("history_unit");
+  unitBox.value = "min"; unitBox.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
+  keepBox.value = "5"; keepBox.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
+  check("five minutes is five minutes, not five days", w.lastSaveForm.history_keep_min, 5);
+  check("the arrows step by one, whatever the unit", [keepBox.step, d.getElementById("history_max").step], ["1", "1"]);
+  const maxBox = d.getElementById("history_max");
+  maxBox.value = "1234"; maxBox.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
+  check("any number of entries can be typed", w.lastSaveForm.history_max, 1234);
+  unitBox.value = "day"; unitBox.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(200);
+  keepBox.value = "7"; keepBox.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
   check("the dictations are listed", d.querySelectorAll("#histbody .histrow").length, 2);
   check("each entry names the program", d.querySelector("#histbody .histmeta").textContent.includes("chrome.exe"), true);
   check("each entry carries the text", d.querySelector("#histbody .histtext").textContent, "выложи на GitHub");
@@ -433,7 +474,7 @@ function check(name, actual, expected) {
     "langlist", "munload", "language", "threads", "punctuation", "dictbody", "profbody",
     "tr_default", "translate_target", "translate_ask", "translate_ask_seconds",
     "tl_en", "ui_language", "upd_check", "check_updates", "server_autostart", "server_port",
-    "server_exe", "server_url", "llm_sum", "llm_catalog", "ver2", "autorun", "post_enabled",
+    "srv_local_edit", "server_url", "llm_sum", "llm_catalog", "ver2", "autorun", "post_enabled",
   ];
   const missing = everySetting.filter((id) => !d.getElementById(id));
   check("every setting is present in the new window", missing, []);
@@ -626,24 +667,71 @@ function check(name, actual, expected) {
 
   tab("system"); await sleep(30);
   check("service settings shown", [shown("system"), !!d.getElementById("server_url")], [true, true]);
-  const su = d.getElementById("server_url");
+  check("settings are grouped, not lined one by one", d.querySelectorAll("#p-system .grp").length, 3);
+  check("the maintenance buttons share one width", [...d.querySelectorAll("#p-system .grp button.mini")].every(b=>b.classList.contains("eq")), true);
+  check("the recognition server stands as two cards", d.querySelectorAll("#stt_srv_card .srccard").length, 2);
+  check("the local one is the working one", [d.getElementById("srv_local").classList.contains("on"), d.getElementById("srv_remote").classList.contains("idle")], [true, true]);
+  check("and its summary carries the port", [...d.querySelectorAll("#srv_local_sum .sumv")].map(e=>e.textContent).includes("8910"), true);
+  check("no whisper-server settings are left on the page itself", d.querySelectorAll("#p-system .row #threads, #p-system .row #server_port").length, 0);
+  d.getElementById("srv_local_edit").click(); await sleep(200);
+  check("the local server is edited in a window", !!d.querySelector(".modal-bg"), true);
+  const portBox = [...d.querySelectorAll(".modal .fmrow input[type=text]")].pop();
+  portBox.value = "9100";
+  check("the path lives in the same window, with a cross to wipe it", !!d.querySelector(".modal .fmfield .clearwrap .clearx"), true);
+  d.querySelector(".modal .btn.yes").click(); await sleep(350);
+  check("the new port is saved", w.lastSaveForm.server_port, 9100);
+  check("and the summary shows it", [...d.querySelectorAll("#srv_local_sum .sumv")].map(e=>e.textContent).includes("9100"), true);
   const savesBeforeURL = w.saveCalls;
-  su.value = "http://192.168.0.5:9000"; su.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(350);
+  d.getElementById("srv_remote_edit").click(); await sleep(200);
+  const addr = d.querySelector(".modal .fmfield input[type=text]");
+  check("the remote server is edited in a window too", !!addr, true);
+  addr.value = "http://192.168.0.5:9000"; addr.dispatchEvent(new w.Event("input", { bubbles: true }));
+  d.querySelector(".modal .btn.yes").click(); await sleep(300);
   check("the remote address asks before it is applied", !!d.querySelector(".modal-bg"), true);
   check("and nothing is saved while the question is open", w.saveCalls, savesBeforeURL);
   d.querySelector(".modal .btn.ghost").click(); await sleep(350);
-  check("saying no puts the field back", su.value, "");
   check("saying no saves nothing", w.saveCalls, savesBeforeURL);
-  su.value = "http://192.168.0.5:9000"; su.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(350);
+  check("and the local server stays the working one", d.getElementById("srv_local").classList.contains("on"), true);
+  d.getElementById("srv_remote_edit").click(); await sleep(200);
+  const addr2 = d.querySelector(".modal .fmfield input[type=text]");
+  addr2.value = "http://192.168.0.5:9000"; addr2.dispatchEvent(new w.Event("input", { bubbles: true }));
+  d.querySelector(".modal .btn.yes").click(); await sleep(300);
   d.querySelector(".modal .btn.yes").click(); await sleep(400);
   check("saying yes applies the address", w.lastSaveForm.server_url, "http://192.168.0.5:9000");
+  check("but the working server changes by the switch alone", d.getElementById("srv_local").classList.contains("on"), true);
   const beepBox = d.getElementById("beep");
-  su.value = "http://sneaky.example";
   beepBox.checked = !beepBox.checked; beepBox.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(350);
-  check("an unconfirmed address never rides along with another setting", w.lastSaveForm.server_url, "http://192.168.0.5:9000");
+  check("another setting saves the confirmed address, nothing else", w.lastSaveForm.server_url, "http://192.168.0.5:9000");
   beepBox.checked = !beepBox.checked; beepBox.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(350);
-  su.value = ""; su.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(350);
+  d.getElementById("pick_srv_remote").click(); await sleep(350);
+  check("the switch flips the pair at once, without questions", [!!d.querySelector(".modal-bg"), d.getElementById("srv_remote").classList.contains("on"), d.getElementById("srv_local").classList.contains("idle")], [false, true, true]);
+  check("and the chosen source is saved", w.lastSaveForm.stt_source, "remote");
+  check("the warning about leaving the machine is shown", d.getElementById("remote_warn").textContent.length > 0, true);
+  d.getElementById("pick_srv_local").click(); await sleep(350);
+  check("switching back keeps the address for next time", [d.getElementById("srv_local").classList.contains("on"), w.lastSaveForm.server_url], [true, "http://192.168.0.5:9000"]);
+  check("and local is saved as the source", w.lastSaveForm.stt_source, "local");
+  d.getElementById("srv_remote_edit").click(); await sleep(200);
+  const addr3 = d.querySelector(".modal .fmfield input[type=text]");
+  addr3.value = ""; addr3.dispatchEvent(new w.Event("input", { bubbles: true }));
+  d.querySelector(".modal .btn.yes").click(); await sleep(350);
   check("clearing the address needs no question", [!!d.querySelector(".modal-bg"), w.lastSaveForm.server_url], [false, ""]);
+  d.getElementById("pick_srv_remote").click(); await sleep(350);
+  check("with no address the card warns instead of refusing the switch", [d.getElementById("srv_remote").classList.contains("on"), d.getElementById("remote_warn").textContent.includes("no address")], [true, true]);
+  w.setSttDown(true, true); await sleep(1700);
+  check("the summary card says recognition is unavailable", d.getElementById("state_hero_title").textContent, "Recognition is unavailable");
+  check("and spells out why underneath", d.getElementById("state_hero_sub").textContent.includes("not set up"), true);
+  check("the shortcut gives way to a way out", [d.getElementById("state_keys").style.display, d.getElementById("state_srv_go").style.display], ["none", ""]);
+  check("the way out is a red button, like the other dangerous ones", d.getElementById("state_srv_go").classList.contains("danger"), true);
+  check("the whole card is red, text and all", [d.getElementById("state_hero").classList.contains("bad"), d.getElementById("state_hero_led").classList.contains("bad")], [true, true]);
+  d.getElementById("state_srv_go").click(); await sleep(200);
+  check("and it takes you to the server settings", shown("system"), true);
+  tab("state"); await sleep(120);
+  check("no alert repeats what the card already says", d.querySelectorAll("#state_alerts .stalert").length, 0);
+  check("the system badge turns red", d.getElementById("badge_system").classList.contains("bad"), true);
+  w.setSttDown(false, false); await sleep(1700);
+  check("and everything goes back when it is set up", [d.getElementById("state_hero_title").textContent, d.getElementById("badge_system").classList.contains("bad")], ["Ready to dictate", false]);
+  d.getElementById("pick_srv_local").click(); await sleep(350);
+  check("both switches are the same kind as in post-processing", [...d.querySelectorAll("#stt_srv_card .srvpick")].length, 2);
   const autorun = d.getElementById("autorun");
   const autorunBefore = w.autorunCalls.length;
   autorun.checked = true; autorun.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(200);
@@ -919,11 +1007,26 @@ function check(name, actual, expected) {
   check("and the program is told this was meant", w.delCalls[w.delCalls.length - 1], ["small", true]);
   tab("about"); await sleep(60);
   check("about section shown", shown("about"), true);
-  check("about keeps the version card to itself", d.querySelectorAll("#p-about .card").length, 1);
+  check("about holds the version and the modules it is built from", d.querySelectorAll("#p-about .card").length, 2);
+  check("every external module is listed", d.querySelectorAll("#p-about #deps .deprow").length >= 12, true);
+  check("each one names its licence", d.querySelector("#p-about #deps .deprow .dl").textContent, "MIT");
+  check("and says what it is used for here", d.querySelector("#p-about #deps .deprow .dw").textContent.length > 20, true);
+  check("every dependency shows its address", d.querySelectorAll("#p-about #deps .deprow .du").length, d.querySelectorAll("#p-about #deps .deprow").length);
+  check("the address opens the project page", d.querySelector("#p-about #deps .deprow .du").textContent.startsWith("github.com"), true);
   tab("help"); await sleep(60);
   check("the guide lives on its own page", shown("help") && d.querySelectorAll("#p-help .card").length === 1, true);
   tab("contacts"); await sleep(60);
-  check("and so does the author card", shown("contacts") && d.querySelectorAll("#p-contacts .card").length === 2, true);
+  check("contacts is one card of three ways to reach out", shown("contacts") && d.querySelectorAll("#p-contacts .cards .scard").length === 3, true);
+  check("the address is spelled out, not hidden behind a word", d.getElementById("contact_mail").textContent.includes("@"), true);
+  check("and the repository is named in full", d.getElementById("contact_repo").textContent.includes("github.com"), true);
+  d.getElementById("mail_copy").click(); await sleep(200);
+  check("the address can be copied", w.mailCopies, 1);
+  check("copying says it copied", d.getElementById("st_saved").textContent, "Copied");
+  d.getElementById("contact_mail").click(); await sleep(120);
+  check("clicking the address opens the mail program", w.mailOpens, 1);
+  d.getElementById("issues_open").click(); await sleep(120);
+  check("issues open in the browser", w.issuesOpens, 1);
+  check("no biography is left on the tab", d.querySelectorAll("#p-contacts ul").length, 0);
   check("the prompts stand on their own page too", !!d.querySelector("#p-post #profbody"), true);
   check("out of the expert fold", !!d.querySelector("#p-post .card[data-adv]"), false);
   tab("post"); await sleep(60);
@@ -1024,8 +1127,8 @@ function check(name, actual, expected) {
   check("no permanent mode line in the status bar", !!d.getElementById("st_level"), false);
   check("no switching from the status bar", !!d.getElementById("st_levelbtn"), false);
   tab("contacts"); await sleep(30);
-  check("the contacts page carries the mail address", d.querySelector("#p-contacts .val").textContent, "holdtotype@outlook.com");
-  check("about carries the repository button", !!d.querySelector('#p-about button[onclick="appRepoLink()"]'), true);
+  check("the contacts page carries the mail address", d.getElementById("contact_mail").textContent, "holdtotype@outlook.com");
+  check("no repository row is left on the about page", !!d.getElementById("about_repo"), false);
   tab("history"); await sleep(30);
   const skipStore = d.getElementById("history_skip");
   const savesBeforeSkip = w.saveCalls;
@@ -1058,9 +1161,12 @@ function check(name, actual, expected) {
   check("the chip's cross takes one away", skipStore.value, "keepass.exe, Telegram.exe");
 
   const omni = d.getElementById("omni");
-  omni.value = "S_PORT"; omni.dispatchEvent(new w.Event("input")); await sleep(120);
+  omni.value = "S_RELOAD_CFG"; omni.dispatchEvent(new w.Event("input")); await sleep(120);
   check("search jumps to the section", shown("system"), true);
   check("search highlights the row", d.querySelectorAll(".row.hit").length, 1);
+  omni.value = "9100"; omni.dispatchEvent(new w.Event("input")); await sleep(120);
+  check("what moved into a card is still findable", d.querySelectorAll("#srv_local_sum .sumrow.hit").length, 1);
+  omni.value = "S_RELOAD_CFG"; omni.dispatchEvent(new w.Event("input")); await sleep(120);
   check("search says how many it found", /^1\/\d+$/.test(d.getElementById("ocount").textContent), true);
   const firstHit = d.querySelector(".hit");
   const total = Number(d.getElementById("ocount").textContent.split("/")[1]);
@@ -1101,23 +1207,26 @@ function check(name, actual, expected) {
   w.setBackendErr("the recognizer did not start"); await sleep(1700);
   check("a broken engine turns the summary amber", d.getElementById("state_hero").className.includes("warn"), true);
   check("and says what happened instead of «ready»", d.getElementById("state_hero_sub").textContent, "the recognizer did not start");
-  check("the trouble is listed as an alert", d.querySelectorAll("#state_alerts .alert").length, 1);
+  check("the trouble is listed as an alert", d.querySelectorAll("#state_alerts .stalert").length, 1);
   w.setBackendErr(""); await sleep(1700);
   check("a working engine takes the warning back", d.getElementById("state_hero").className.includes("warn"), false);
-  check("and the alerts are gone", d.querySelectorAll("#state_alerts .alert").length, 0);
+  check("and the alerts are gone", d.querySelectorAll("#state_alerts .stalert").length, 0);
 
   w.setRemote(true); await sleep(1700);
-  check("remote recognition is announced", d.getElementById("st_remote").textContent, "REMOTE");
+  check("no badge is hung in the status bar", !!d.getElementById("st_remote"), false);
   w.setRemote(false); await sleep(1700);
-  check("local recognition says nothing", d.getElementById("st_remote").textContent, "");
+  w.setSttDown(true, true); await sleep(1700);
+  check("an unreachable remote server is spelled out in the status bar", d.getElementById("st_main").textContent.includes("unavailable"), true);
+  check("and it is spelled out in red", [d.getElementById("st_main").classList.contains("bad"), d.getElementById("st_led").classList.contains("bad")], [true, true]);
+  w.setSttDown(false, false); await sleep(1700);
 
-  check("with everything working no alert is shown", d.querySelectorAll("#state_alerts .alert").length, 0);
+  check("with everything working no alert is shown", d.querySelectorAll("#state_alerts .stalert").length, 0);
   w.setBackendErr("port 8910 is busy"); await sleep(1700);
-  check("a recognizer that will not start says why", d.querySelector("#state_alerts .alert .atext").textContent, "port 8910 is busy");
-  d.querySelector("#state_alerts .alert .mini").click(); await sleep(1800);
+  check("a recognizer that will not start says why", d.querySelector("#state_alerts .stalert .statext").textContent, "port 8910 is busy");
+  d.querySelector("#state_alerts .stalert .mini").click(); await sleep(1800);
   check("the alert offers to try again, and it reaches the program", w.retryCalls, 1);
   w.setBackendErr(""); await sleep(1700);
-  check("a recognizer that came up takes the alert away", d.querySelectorAll("#state_alerts .alert").length, 0);
+  check("a recognizer that came up takes the alert away", d.querySelectorAll("#state_alerts .stalert").length, 0);
 
   tab("dictation"); await sleep(80);
   const enterRow = d.getElementById("auto_enter").closest(".row");
@@ -1207,6 +1316,7 @@ function check(name, actual, expected) {
     const rule = at < 0 ? "" : css.slice(at, css.indexOf("}", at));
     check(`${sel} takes its corners from the skin`, rule.includes(want), true);
   }
+  check("the switch on a dimmed card still takes clicks", css.includes(".srccard.idle>.srchead .srcpick,.srccard.idle>.srchead .srvpick{pointer-events:auto}"), true);
   const skinned = [
     ["body::after{", "opacity:var(--scan)"],
     [".header h1{", "animation:var(--flicker)"],
