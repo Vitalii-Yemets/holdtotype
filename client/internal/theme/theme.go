@@ -38,6 +38,10 @@ type Palette struct {
 	BadLine string
 
 	BtnBgH  string
+	DangerBg string
+	DangerFg string
+	DangerBgH string
+	Dot      string
 	Btn2Bg  string
 	Btn2Fg  string
 	Btn2Line string
@@ -66,9 +70,10 @@ type Skin struct {
 	BarR   string
 	Border int32
 	Round  bool
-	DotR   string
-	BadgeR string
-	PanelR string
+	DotR    string
+	BadgeR  string
+	PanelR  string
+	SwitchR string
 
 	Glow   bool
 	Scan   float64
@@ -127,6 +132,7 @@ var palettes = []Palette{
 		TitleBg: "#323233", SideBg: "#252526", KeyBg: "#3c3c3c",
 		BtnBg: "#0e639c", BtnFg: "#ffffff", BtnLine: "#0e639c", SelBg: "#0e639c", SelFg: "#ffffff",
 		BtnBgH: "#1177bb", Btn2Bg: "#0e639c", Btn2Fg: "#ffffff", Btn2Line: "transparent", Btn2BgH: "#1177bb",
+		DangerBg: "#a1260d", DangerFg: "#ffffff", DangerBgH: "#c42b1c", Dot: "#89d185",
 		Focus: "#007fd4",
 		Label: "#e0e0e0", Brand: "", Scrim: "rgba(0,0,0,.6)"},
 
@@ -171,7 +177,7 @@ var skins = []Skin{
 		PagePx: 13, FontPx: 14, Weight: 400, BrandLS: ".02em",
 		FieldPad: "6px 11px", CtlFS: "12.5px", WeightB: 600,
 		Radius: 8, BarR: "0", Border: 1, Round: false,
-		DotR: "50%", BadgeR: "10px", PanelR: "6px",
+		DotR: "50%", BadgeR: "10px", PanelR: "6px", SwitchR: "999px",
 		Glow: false, Scan: 0, Shadow: "0 10px 30px rgba(0,0,0,.45)",
 		Level: "flat", Pulse: 1.5, Mark: "mic", Flash: "none"},
 
@@ -289,6 +295,18 @@ func (p Palette) filled() Palette {
 	}
 	if p.Card == "" {
 		p.Card = p.Field
+	}
+	if p.DangerBg == "" {
+		p.DangerBg = "transparent"
+	}
+	if p.DangerFg == "" {
+		p.DangerFg = p.Bad
+	}
+	if p.DangerBgH == "" {
+		p.DangerBgH = p.BadBg
+	}
+	if p.Dot == "" {
+		p.Dot = p.Text
 	}
 	return p
 }
@@ -450,6 +468,10 @@ func (l Look) CSSVars() string {
 	if panelR == "" {
 		panelR = itoa(int(l.Radius)) + "px"
 	}
+	switchR := l.SwitchR
+	if switchR == "" {
+		switchR = "calc(" + itoa(int(l.Radius)) + "px * .8)"
+	}
 	btnBo, btnBc := `""`, `""`
 	if l.Brackets {
 		btnBo, btnBc = "\"[ \"", "\" ]\""
@@ -465,6 +487,8 @@ func (l Look) CSSVars() string {
 		";--titlebg:" + p.TitleBg + ";--sidebg:" + p.SideBg + ";--keybg:" + p.KeyBg +
 		";--btnbg:" + p.BtnBg + ";--btnfg:" + p.BtnFg + ";--btnline:" + p.BtnLine +
 		";--btnbgh:" + p.BtnBgH + ";--btn2bg:" + p.Btn2Bg + ";--btn2fg:" + p.Btn2Fg +
+		";--dangerbg:" + p.DangerBg + ";--dangerfg:" + p.DangerFg + ";--dangerbgh:" + p.DangerBgH +
+		";--switchr:" + switchR +
 		";--btn2line:" + p.Btn2Line + ";--btn2bgh:" + p.Btn2BgH + ";--focus:" + p.Focus +
 		";--dotr:" + dotR + ";--badger:" + badgeR + ";--panelr:" + panelR +
 		";--btnbo:" + btnBo + ";--btnbc:" + btnBc +

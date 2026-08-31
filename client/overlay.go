@@ -86,6 +86,7 @@ var (
 	colBg      uintptr = 0x0C0F0B
 	colBgLine  uintptr = 0x0A0C09
 	colGreen   uintptr = 0x6EFF3C
+	colDot     uintptr = 0x6EFF3C
 	colGreenDm uintptr = 0x4AA320
 	colGreenLo uintptr = 0x2B4A1D
 	colRed     uintptr = 0x6B6BFF
@@ -643,7 +644,7 @@ func stateColors(st int) (bright, dim uintptr) {
 	case ovFlashErr:
 		return colBad, colBadDm
 	default:
-		return colGreen, colGreenDm
+		return colDot, colGreenDm
 	}
 }
 

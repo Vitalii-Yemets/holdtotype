@@ -74,6 +74,7 @@ func applyTheme(skin, colour string) {
 	colBg = colorref(p.Bg)
 	colBgLine = mixHex(p.Bg, 0.75)
 	colGreen = colorref(p.Text)
+	colDot = colorref(p.Dot)
 	colGreenDm = colorref(p.Dim)
 	colGreenLo = colorref(p.Faint)
 	colHi = colorref(p.Accent)

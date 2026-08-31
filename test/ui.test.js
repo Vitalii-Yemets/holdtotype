@@ -1320,7 +1320,7 @@ function check(name, actual, expected) {
     ["button.btn{", "border-radius:calc(var(--r) * .5)"],
     ["button.mini{", "border-radius:calc(var(--r) * .5)"],
     ["input[type=text],input[type=number],input[type=password],select{", "border-radius:calc(var(--r) * .55)"],
-    ["input[type=checkbox]{", "border-radius:calc(var(--r) * .8)"],
+    ["input[type=checkbox]{", "border-radius:var(--switchr)"],
   ];
   for (const [sel, want] of shaped) {
     const at = css.indexOf(sel);
