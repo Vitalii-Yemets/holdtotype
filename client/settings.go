@@ -4059,6 +4059,13 @@ function weekZero(){
 function renderUsage(s){
   const box = document.getElementById("state_usage");
   if(!box) return;
+  const keeping = !!(document.getElementById("history") || {}).checked;
+  box.style.display = keeping ? "" : "none";
+  if(!keeping){
+    box.dataset.sig = "off";
+    box.innerHTML = "";
+    return;
+  }
   const apps = s.week_apps || [];
   const total = s.week_count || 0;
   const sig = JSON.stringify([apps, total, s.week_chars, s.today_count, cssColour("--hi"), cssColour("--bg")]);
@@ -5254,7 +5261,7 @@ function initHistory(){
     };
   }
   const on = document.getElementById("history");
-  if(on) on.addEventListener("change", ()=>{ syncHistControls(); setTimeout(refreshHistory, 300); });
+  if(on) on.addEventListener("change", ()=>{ syncHistControls(); refreshState(); setTimeout(refreshHistory, 300); });
   initKeepFields();
   syncHistControls();
 }

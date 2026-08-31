@@ -261,6 +261,10 @@ function check(name, actual, expected) {
   check("and it says what sits in memory", d.getElementById("state_mem_sub").textContent.includes("GigaAM v3"), true);
   check("the update plate names the version", d.getElementById("state_upd_title").textContent, "Version 0.0.0-test");
   check("and marks it as the latest with a badge", d.getElementById("state_upd_badge").textContent, "latest");
+  check("with history off the week keeps quiet", d.getElementById("state_usage").style.display, "none");
+  const histSw = d.getElementById("history");
+  histSw.checked = true; histSw.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(500);
+  check("with history on the week comes back", d.getElementById("state_usage").style.display, "");
   check("the week is drawn as a pie", d.querySelectorAll("#state_usage .stpie svg path.stslice").length, 2);
   check("with a chip per program", d.querySelectorAll("#state_usage .stuchips .stuchip").length, 2);
   check("and the chips carry the colours of their slices", [...d.querySelectorAll("#state_usage .stuchip i")].map(i=>i.style.background).filter(Boolean).length, 2);
@@ -269,6 +273,9 @@ function check(name, actual, expected) {
   const solo = d.querySelector("#state_usage .stpie svg text");
   check("and its count stands in the middle", solo.getAttribute("x"), "46");
   check("in the size the empty circle uses", solo.getAttribute("font-size"), "15");
+  histSw.checked = false; histSw.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(500);
+  check("switching history off hides the week again", d.getElementById("state_usage").style.display, "none");
+  histSw.checked = true; histSw.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(500);
   check("status screen meter follows the microphone", meterMoves(d, "state_mic_bar"), true);
   check("the status meter is drawn as bars", d.querySelectorAll("#state_mic_bar i").length, 7);
   const micCard = d.querySelector("#state_quick .stcard");
@@ -423,7 +430,8 @@ function check(name, actual, expected) {
 
   tab("history"); await sleep(300);
   check("history is a screen of its own", shown("history"), true);
-  check("history is off until asked for", d.getElementById("history").checked, false);
+  d.getElementById("history").checked = false; d.getElementById("history").dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(400);
+  check("history can be switched off again", d.getElementById("history").checked, false);
   check("the programs to skip are never folded away", !!d.querySelector("#hist_skip_card[data-adv]"), false);
   check("how long to keep is typed by hand, in any unit", [d.getElementById("history_keep").value, d.getElementById("history_unit").value], ["7", "day"]);
   check("both retention fields carry the arrows", d.querySelectorAll("#p-history .numwrap .numspin").length, 2);
