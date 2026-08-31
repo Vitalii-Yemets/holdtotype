@@ -158,7 +158,7 @@ var palettes = []Palette{
 		Field: "#ffffff", Card: "#f7f9fa", Soft: "#dde2e8", NavOn: "#dfe5eb", On: "#ddf4ff",
 		TitleBg: "#eff2f5", SideBg: "#eef1f4", KeyBg: "#e4e9ee",
 		BtnBg: "#0969da", BtnFg: "#ffffff", BtnLine: "#0969da", SelBg: "#0969da", SelFg: "#ffffff",
-		BtnBgH: "#0860ca", Btn2Bg: "#f6f8fa", Btn2Fg: "#24292f", Btn2Line: "#d0d7de", Btn2BgH: "#eaeef2",
+		BtnBgH: "#0860ca", Btn2Bg: "#d8dee5", Btn2Fg: "#24292f", Btn2Line: "#bcc5ce", Btn2BgH: "#c9d1da",
 		DangerBg: "#cf222e", DangerFg: "#ffffff", DangerBgH: "#a40e26", Dot: "#1a7f37", Focus: "#0969da",
 		Ok: "#1a7f37", Label: "#111418", Brand: "", Scrim: "rgba(31,35,40,.35)"},
 }
