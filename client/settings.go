@@ -1647,6 +1647,9 @@ html[data-skin="editor"] .row>button.mini,html[data-skin="editor"] .tls .tla but
 html[data-skin="terminal"] .row>button.mini.narrow,html[data-skin="editor"] .row>button.mini.narrow{min-width:0}
 html[data-skin="terminal"] #repl_add,html[data-skin="terminal"] #cmd_add,html[data-skin="terminal"] #dict_add,
 html[data-skin="editor"] #repl_add,html[data-skin="editor"] #cmd_add,html[data-skin="editor"] #dict_add{min-width:176px}
+html[data-skin="editor"] button.mini.danger{background:none;border-color:var(--badline);color:var(--bad)}
+html[data-skin="editor"] button.mini.danger:hover{background:var(--badbg)}
+html[data-skin="editor"] button.mini:hover{color:var(--btn2fg);border-color:transparent;background:var(--btn2bgh)}
 html[data-skin="editor"] code,html[data-skin="editor"] .stcombo,html[data-skin="editor"] .hotkey-val,
 html[data-skin="editor"] .srccard .sumv,html[data-skin="editor"] .deprow .du,html[data-skin="editor"] .hkey,
 html[data-skin="editor"] #server_port,html[data-skin="editor"] .histmeta,html[data-skin="editor"] .lastres{font-family:"Cascadia Mono",Consolas,monospace}

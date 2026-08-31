@@ -176,8 +176,8 @@ func TestCSSVarsCarryEverythingThePageNeeds(t *testing.T) {
 	css := Current("editor", "").CSSVars()
 	for _, want := range []string{
 		"--bg:#1e1e1e", "--green:#d4d4d4", "--hi:#4fc1ff", "--rgb:212,212,212",
-		"--glow:none", "--font:", "--fs:13px", "--r:4px", "--bw:1px", "--scan:0",
-		"--btnbgh:#1177bb", "--btn2bg:#3a3d41", "--btn2fg:#cccccc", "--focus:#007fd4",
+		"--glow:none", "--font:", "--fs:13px", "--r:8px", "--bw:1px", "--scan:0",
+		"--btnbgh:#1177bb", "--btn2bg:#0e639c", "--btn2fg:#ffffff", "--focus:#007fd4",
 		"--dotr:50%", "--badger:10px", "--panelr:6px",
 		"--shadow:0 10px 30px", "--titlebg:#323233", "--keybg:#3c3c3c",
 		"--btnbg:#0e639c", "--btnfg:#ffffff", "--caps:none", "--ls:0", "--flicker:none",

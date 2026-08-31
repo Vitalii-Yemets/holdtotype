@@ -126,7 +126,7 @@ var palettes = []Palette{
 		Field: "#3c3c3c", Card: "#252526", Soft: "#2d2d2d", NavOn: "#37373d", On: "#094771",
 		TitleBg: "#323233", SideBg: "#252526", KeyBg: "#3c3c3c",
 		BtnBg: "#0e639c", BtnFg: "#ffffff", BtnLine: "#0e639c", SelBg: "#0e639c", SelFg: "#ffffff",
-		BtnBgH: "#1177bb", Btn2Bg: "#3a3d41", Btn2Fg: "#cccccc", Btn2Line: "transparent", Btn2BgH: "#45494e",
+		BtnBgH: "#1177bb", Btn2Bg: "#0e639c", Btn2Fg: "#ffffff", Btn2Line: "transparent", Btn2BgH: "#1177bb",
 		Focus: "#007fd4",
 		Label: "#e0e0e0", Brand: "", Scrim: "rgba(0,0,0,.6)"},
 
@@ -170,7 +170,7 @@ var skins = []Skin{
 		FontCSS: `"Segoe UI Variable Text","Segoe UI",system-ui,sans-serif`, FontGDI: "Segoe UI",
 		PagePx: 13, FontPx: 14, Weight: 400, BrandLS: ".02em",
 		FieldPad: "6px 11px", CtlFS: "12.5px", WeightB: 600,
-		Radius: 4, BarR: "0", Border: 1, Round: false,
+		Radius: 8, BarR: "0", Border: 1, Round: false,
 		DotR: "50%", BadgeR: "10px", PanelR: "6px",
 		Glow: false, Scan: 0, Shadow: "0 10px 30px rgba(0,0,0,.45)",
 		Level: "flat", Pulse: 1.5, Mark: "mic", Flash: "none"},
