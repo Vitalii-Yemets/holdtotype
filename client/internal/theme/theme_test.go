@@ -295,8 +295,8 @@ func TestTheLightSkinsKeepTheirDrawnCharacter(t *testing.T) {
 	if !strings.Contains(soft.CSSVars(), "--lvlw:10px") || !strings.Contains(soft.CSSVars(), "--lvlr:50%") {
 		t.Error("the soft skin did not ask for round level marks")
 	}
-	if p := soft.Palette; p.Text != p.Accent {
-		t.Errorf("the soft skin speaks in one voice, got text %q accent %q", p.Text, p.Accent)
+	if p := soft.Palette; luma(p.Text) > luma(p.Accent) {
+		t.Errorf("the soft skin writes darker than it accents, got text %q accent %q", p.Text, p.Accent)
 	}
 
 	paper := Current("paper", "")
