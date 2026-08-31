@@ -373,8 +373,11 @@ function check(name, actual, expected) {
   skinSel.value = "editor";
   skinSel.dispatchEvent(new w.Event("change", { bubbles: true }));
   await sleep(200);
-  check("a design brings its own font", d.documentElement.style.getPropertyValue("--font").includes("Cascadia"), true);
-  check("and its own corners", d.documentElement.style.getPropertyValue("--r"), "3px");
+  check("a design brings its own font", d.documentElement.style.getPropertyValue("--font").includes("Segoe UI"), true);
+  check("and its own corners", d.documentElement.style.getPropertyValue("--r"), "4px");
+  check("with rounder dots and pill badges, as the editor draws them", [d.documentElement.style.getPropertyValue("--dotr"), d.documentElement.style.getPropertyValue("--badger")], ["50%", "10px"]);
+  check("its secondary buttons are filled, not outlined", d.documentElement.style.getPropertyValue("--btn2bg"), "#3a3d41");
+  check("and the focus ring is the editor blue", d.documentElement.style.getPropertyValue("--focus"), "#007fd4");
   check("and turns the halo off", d.documentElement.style.getPropertyValue("--glow"), "none");
   check("and its own colours, not the picked one", d.documentElement.style.getPropertyValue("--green"), "#d4d4d4");
   check("with its accent kept apart from its text", d.documentElement.style.getPropertyValue("--hi"), "#4fc1ff");
@@ -1313,7 +1316,7 @@ function check(name, actual, expected) {
   const shaped = [
     [".scard{", "border-radius:var(--r)"],
     [".hero{", "border-radius:var(--r)"],
-    [".modal{", "border-radius:var(--r)"],
+    [".modal{", "border-radius:var(--panelr)"],
     ["button.btn{", "border-radius:calc(var(--r) * .5)"],
     ["button.mini{", "border-radius:calc(var(--r) * .5)"],
     ["input[type=text],input[type=number],input[type=password],select{", "border-radius:calc(var(--r) * .55)"],
@@ -1346,7 +1349,7 @@ function check(name, actual, expected) {
     ["button.mini.danger:hover{", "border-color:var(--badline)"],
     [".toast{", "text-shadow:var(--amberglow)"],
     ["button.iconbtn.danger:hover{", "filter:var(--badfilter)"],
-    ["button.mini{", "border:1px solid var(--btnline)"],
+    ["button.mini{", "border:1px solid var(--btn2line)"],
     ["button.mini::before{", "content:var(--btnbo)"],
     ["button.mini::after{", "content:var(--btnbc)"],
     ["button.btn::before{", "content:var(--btnbo)"],

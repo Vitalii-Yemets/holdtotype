@@ -1203,7 +1203,7 @@ button.cap.close:hover{background:var(--badbg);color:var(--bad);border-color:var
 .nav.active{color:var(--green);border-left-color:var(--hi);background:var(--navon);text-shadow:var(--glow)}
 .nav{display:flex;align-items:center;gap:6px;min-width:0}
 .nav .nlabel{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.nbadge{flex:none;max-width:64px;font-size:9px;padding:1px 5px;border:1px solid var(--line);border-radius:calc(var(--r) * .4);color:var(--lbl,var(--dim));text-shadow:var(--lblglow,none);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nbadge{flex:none;max-width:64px;font-size:9px;padding:1px 6px;border:1px solid var(--line);border-radius:var(--badger);color:var(--lbl,var(--dim));text-shadow:var(--lblglow,none);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .nbadge:empty{display:none}
 .nbadge.warn{color:var(--amber);border-color:var(--amber)}
 .nbadge.miss{color:var(--amber);border-color:var(--amber);box-shadow:var(--amberglow)}
@@ -1281,25 +1281,25 @@ button.btn.ghost:hover{color:var(--green);border-color:var(--dim);background:non
 .row.hidden{display:none}
 .row.hit{background:var(--navon);box-shadow:inset 2px 0 0 var(--hi)}
 .modal-bg{position:fixed;inset:0;background:var(--scrim);display:flex;align-items:center;justify-content:center;z-index:20}
-.modal{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 0 24px rgba(var(--rgb),.18),var(--shadow);padding:20px 22px;max-width:380px;display:flex;flex-direction:column;gap:16px}
+.modal{background:var(--panel);border:1px solid var(--line);border-radius:var(--panelr);box-shadow:0 0 24px rgba(var(--rgb),.18),var(--shadow);padding:20px 22px;max-width:380px;display:flex;flex-direction:column;gap:16px}
 .modal p{font-size:13px;line-height:1.55;color:var(--green)}
 .modal-btns{display:flex;gap:10px;justify-content:flex-end}
 .modal .btn{padding:7px 18px;border:1px solid var(--btnline);border-radius:calc(var(--r) * .5);background:var(--btnbg);color:var(--btnfg);font:inherit;font-size:12px;letter-spacing:var(--ls);text-transform:var(--caps);cursor:pointer;white-space:nowrap;flex:none}
-.modal .btn:hover{filter:brightness(1.12);box-shadow:var(--glow)}
+.modal .btn:hover{background:var(--btnbgh);filter:brightness(1.06);box-shadow:var(--glow)}
 .modal .btn.ghost{border-color:var(--line);background:none;color:var(--dim);filter:none}
 .modal .btn.ghost:hover{color:var(--green);border-color:var(--dim)}
 .modal .btn:focus-visible{outline:1px solid var(--green);outline-offset:2px}
 .hero{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel);padding:12px 14px;margin-bottom:10px;flex-wrap:wrap}
 .herokey{border:1px solid var(--line);background:var(--keybg);border-radius:calc(var(--r) * .6);color:var(--green);padding:5px 12px;font-size:14px;font-weight:var(--wb);letter-spacing:1px;text-shadow:var(--glow)}
 .herotext{font-size:12px;color:var(--dim)}
-.sthero .led,.stplate .led,.stcard .led,.strow .led,.stalert .led{width:8px;height:8px;border-radius:0;background:var(--dim);display:inline-block;flex:none}
+.sthero .led,.stplate .led,.stcard .led,.strow .led,.stalert .led{width:8px;height:8px;border-radius:var(--dotr);background:var(--dim);display:inline-block;flex:none}
 .sthero .led.on,.stplate .led.on,.stcard .led.on,.strow .led.on{background:var(--hi);box-shadow:var(--higlow)}
 .sthero .led.warn,.stplate .led.warn,.stalert .led.warn{background:var(--amber);box-shadow:var(--amberglow)}
 .sthero .led.bad{background:var(--bad);box-shadow:var(--badglow)}
 .stalert .led.bad{background:var(--bad);box-shadow:var(--badglow)}
 #p-state .stlbl{margin:24px 0 10px}
 #p-state .stlbl:first-child{margin-top:0}
-.sthero{display:flex;align-items:flex-start;gap:14px;border:1px solid var(--line);border-radius:calc(var(--r) * .6);background:var(--field);padding:14px 16px}
+.sthero{display:flex;align-items:flex-start;gap:14px;border:1px solid var(--line);border-radius:calc(var(--r) * .6);background:var(--card);padding:14px 16px}
 .sthero>.led{margin-top:6px}
 .sthero>.stkeys{align-self:center}
 .sthero>.mini{align-self:center}
@@ -1325,7 +1325,7 @@ button.btn.ghost:hover{color:var(--green);border-color:var(--dim);background:non
 .stalert .mini{flex:none;color:inherit;border-color:currentColor}
 .stalert .mini::before,.stalert .mini::after{color:inherit}
 .stpair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;margin-top:12px}
-.stplate{display:flex;flex-direction:column;gap:10px;border:1px solid var(--line);border-radius:calc(var(--r) * .6);background:var(--field);padding:11px 13px}
+.stplate{display:flex;flex-direction:column;gap:10px;border:1px solid var(--line);border-radius:calc(var(--r) * .6);background:var(--card);padding:11px 13px}
 .stptop{display:flex;align-items:flex-start;gap:12px}
 .stptop>.led{margin-top:5px}
 .stptxt{flex:1;min-width:0}
@@ -1336,7 +1336,7 @@ button.btn.ghost:hover{color:var(--green);border-color:var(--dim);background:non
 .stpsub.bad{color:var(--bad)}
 .stplate>.mini{align-self:flex-end;margin-top:auto;height:22px;font-size:10.5px;padding:0 9px}
 .stgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-.stcard{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:calc(var(--r) * .6);background:var(--field);padding:10px 12px;min-width:0}
+.stcard{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:calc(var(--r) * .6);background:var(--card);padding:10px 12px;min-width:0}
 .sthead{display:flex;align-items:center;gap:8px}
 .stspace{flex:1}
 .stcap{flex:1;min-width:0;color:var(--dim);font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1349,7 +1349,7 @@ button.btn.ghost:hover{color:var(--green);border-color:var(--dim);background:non
 .strow{display:flex;align-items:center;gap:12px;font-size:12.5px;line-height:1.5;min-width:0}
 .strow .stnm{flex:0 0 auto;max-width:60%;display:flex;align-items:center;gap:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .strow .stwu{flex:1;min-width:0;color:var(--faint);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.stbdg{flex:none;border:1px solid var(--line);border-radius:calc(var(--r) * .4);color:var(--lbl,var(--green));text-shadow:var(--lblglow,none);font-size:10px;letter-spacing:.06em;padding:1px 7px;white-space:nowrap;margin-left:2px}
+.stbdg{flex:none;border:1px solid var(--line);border-radius:var(--badger);color:var(--lbl,var(--green));text-shadow:var(--lblglow,none);font-size:10px;letter-spacing:.06em;padding:1px 7px;white-space:nowrap;margin-left:2px}
 .stbdg.on{border-color:var(--dim)}
 .stbdg.warn{border-color:var(--amber)}
 .stusage{margin-top:12px}
@@ -1361,7 +1361,7 @@ button.btn.ghost:hover{color:var(--green);border-color:var(--dim);background:non
 .stpie .stslice{stroke:var(--field);stroke-width:1.5}
 .stuchips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .cmdchip.stuchip{padding:2px 9px;color:var(--dim);letter-spacing:0;text-transform:none;max-width:100%}
-.cmdchip.stuchip i{width:8px;height:8px;border-radius:0;flex:none}
+.cmdchip.stuchip i{width:8px;height:8px;border-radius:var(--dotr);flex:none}
 .cmdchip.stuchip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cmdchip.stuchip b{font-weight:var(--wb);font-variant-numeric:tabular-nums;color:var(--lbl,var(--green));text-shadow:var(--lblglow,none)}
 
@@ -1408,7 +1408,7 @@ select::picker-icon{color:var(--faint)}
 select:open::picker-icon{transform:rotate(180deg)}
 select:open{border-color:var(--dim)}
 input[type=text],input[type=number],input[type=password],select{padding:var(--fieldpad);border:1px solid var(--line);border-radius:calc(var(--r) * .55);background:var(--field);color:var(--green);font:inherit;font-size:var(--ctlfs);line-height:1.2;outline:none}
-input:focus,select:focus,textarea:focus{border-color:var(--dim);box-shadow:var(--glow)}
+input:focus,select:focus,textarea:focus{border-color:var(--focus);box-shadow:var(--glow)}
 input::placeholder{color:var(--dim)}
 input:disabled,select:disabled{opacity:.35;cursor:default}
 #trlangs label:has(input:disabled){opacity:.45}
@@ -1444,7 +1444,7 @@ button:disabled{cursor:default;opacity:.35}
 .hotkey-val{appearance:none;font:inherit;font-weight:var(--wb);font-size:15px;color:var(--green);background:var(--keybg);border:1px solid var(--line);border-radius:calc(var(--r) * .6);padding:8px 14px;min-width:150px;text-align:center;text-shadow:var(--glow);letter-spacing:1px;cursor:pointer}
 .hotkey-val:hover{border-color:var(--dim);box-shadow:var(--glow)}
 button.btn{padding:8px 18px;border:1px solid var(--btnline);border-radius:calc(var(--r) * .5);background:var(--btnbg);color:var(--btnfg);font:inherit;cursor:pointer;letter-spacing:var(--ls);text-transform:var(--caps);font-size:12px}
-button.btn:hover{filter:brightness(1.12);box-shadow:var(--glow)}
+button.btn:hover{background:var(--btnbgh);filter:brightness(1.06);box-shadow:var(--glow)}
 button.ghost{border-color:var(--line);background:none;color:var(--dim);filter:none}
 button.ghost:hover{color:var(--green)}
 .footer{flex:none;display:flex;gap:12px;align-items:center;padding:10px 16px;background:var(--panel);border-top:1px solid var(--line)}
@@ -1509,8 +1509,8 @@ button:focus-visible{outline:1px solid var(--green);outline-offset:2px}
 .mram.warn{color:var(--amber)}
 .mram.bad{color:var(--bad)}
 .mrow .msize{color:var(--dim);font-size:12px;width:70px;text-align:right}
-.badge{font-size:11px;letter-spacing:1px;padding:4px 10px;border:1px solid var(--line);border-radius:calc(var(--r) * .5);color:var(--lbl,var(--green));text-shadow:var(--lblglow,var(--glow));text-transform:var(--caps)}
-button.mini{flex:none;padding:5px 12px;border:1px solid var(--btnline);border-radius:calc(var(--r) * .5);background:none;color:var(--dim);font:inherit;font-size:11.5px;cursor:pointer;letter-spacing:var(--ls);text-transform:var(--caps)}
+.badge{font-size:11px;letter-spacing:1px;padding:4px 10px;border:1px solid var(--line);border-radius:var(--badger);color:var(--lbl,var(--green));text-shadow:var(--lblglow,var(--glow));text-transform:var(--caps)}
+button.mini{flex:none;padding:5px 12px;border:1px solid var(--btn2line);border-radius:calc(var(--r) * .5);background:var(--btn2bg);color:var(--btn2fg);font:inherit;font-size:11.5px;cursor:pointer;letter-spacing:var(--ls);text-transform:var(--caps)}
 button.mini::before{content:var(--btnbo);color:var(--faint)}
 button.mini::after{content:var(--btnbc);color:var(--faint)}
 button.btn::before{content:var(--btnbo);color:var(--faint)}
@@ -1642,9 +1642,15 @@ html[data-skin="terminal"] .tls>i{border-radius:calc(var(--r) * .4)}
 .dlline{color:var(--amber);font-size:11.5px;margin:2px 0 8px;text-shadow:var(--amberglow)}
 input[type=text],input[type=number],input[type=password],select,button.mini{height:var(--ctlh,30px)}
 button.mini{display:inline-flex;align-items:center;justify-content:center}
-html[data-skin="terminal"] .row>button.mini,html[data-skin="terminal"] .tls .tla button.mini{min-width:142px}
-html[data-skin="terminal"] .row>button.mini.narrow{min-width:0}
-html[data-skin="terminal"] #repl_add,html[data-skin="terminal"] #cmd_add,html[data-skin="terminal"] #dict_add{min-width:176px}
+html[data-skin="terminal"] .row>button.mini,html[data-skin="terminal"] .tls .tla button.mini,
+html[data-skin="editor"] .row>button.mini,html[data-skin="editor"] .tls .tla button.mini{min-width:142px}
+html[data-skin="terminal"] .row>button.mini.narrow,html[data-skin="editor"] .row>button.mini.narrow{min-width:0}
+html[data-skin="terminal"] #repl_add,html[data-skin="terminal"] #cmd_add,html[data-skin="terminal"] #dict_add,
+html[data-skin="editor"] #repl_add,html[data-skin="editor"] #cmd_add,html[data-skin="editor"] #dict_add{min-width:176px}
+html[data-skin="editor"] code,html[data-skin="editor"] .stcombo,html[data-skin="editor"] .hotkey-val,
+html[data-skin="editor"] .srccard .sumv,html[data-skin="editor"] .deprow .du,html[data-skin="editor"] .hkey,
+html[data-skin="editor"] #server_port,html[data-skin="editor"] .histmeta,html[data-skin="editor"] .lastres{font-family:"Cascadia Mono",Consolas,monospace}
+html[data-skin="editor"] .stcombo,html[data-skin="editor"] .hotkey-val{letter-spacing:.02em}
 .pairrow{display:flex;align-items:center;gap:10px;padding:7px 2px;border-bottom:1px solid var(--soft);font-size:12.5px}
 .pairrow:last-child{border-bottom:0}
 .pairrow .psum{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--green)}
@@ -1665,7 +1671,7 @@ html[data-skin="terminal"] #repl_add,html[data-skin="terminal"] #cmd_add,html[da
 .row.dimmed>label{color:var(--dim)}
 .row.dimmed>label .sub{color:var(--faint)}
 .row.dimmed>label .sub.warn{color:var(--amber)}
-.srccard{border:1px solid var(--line);border-radius:var(--r);background:var(--field);padding:11px 14px;margin:9px 0}
+.srccard{border:1px solid var(--line);border-radius:var(--r);background:var(--card);padding:11px 14px;margin:9px 0}
 #src_api,#src_local{min-height:172px;display:flex;flex-direction:column}
 #src_api .sum,#src_local .sum{flex:1;display:flex;flex-direction:column;gap:6px;margin:8px 0 10px}
 .srccard .sumrow{display:flex;gap:10px;font-size:12.5px}

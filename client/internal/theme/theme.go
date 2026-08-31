@@ -16,6 +16,7 @@ type Palette struct {
 	Rec    string
 
 	Field   string
+	Card    string
 	Soft    string
 	NavOn   string
 	On      string
@@ -35,6 +36,13 @@ type Palette struct {
 	Ok      string
 	BadBg   string
 	BadLine string
+
+	BtnBgH  string
+	Btn2Bg  string
+	Btn2Fg  string
+	Btn2Line string
+	Btn2BgH string
+	Focus   string
 }
 
 type Skin struct {
@@ -58,6 +66,9 @@ type Skin struct {
 	BarR   string
 	Border int32
 	Round  bool
+	DotR   string
+	BadgeR string
+	PanelR string
 
 	Glow   bool
 	Scan   float64
@@ -112,9 +123,11 @@ var palettes = []Palette{
 	{ID: "editor", Bg: "#1e1e1e", Panel: "#252526", Line: "#3c3c3c",
 		Text: "#d4d4d4", Accent: "#4fc1ff", Dim: "#9d9d9d", Faint: "#6e6e6e",
 		Warn: "#cca700", Bad: "#f14c4c", Rec: "#f14c4c",
-		Field: "#3c3c3c", Soft: "#2d2d2d", NavOn: "#37373d", On: "#094771",
+		Field: "#3c3c3c", Card: "#252526", Soft: "#2d2d2d", NavOn: "#37373d", On: "#094771",
 		TitleBg: "#323233", SideBg: "#252526", KeyBg: "#3c3c3c",
 		BtnBg: "#0e639c", BtnFg: "#ffffff", BtnLine: "#0e639c", SelBg: "#0e639c", SelFg: "#ffffff",
+		BtnBgH: "#1177bb", Btn2Bg: "#3a3d41", Btn2Fg: "#cccccc", Btn2Line: "transparent", Btn2BgH: "#45494e",
+		Focus: "#007fd4",
 		Label: "#e0e0e0", Brand: "", Scrim: "rgba(0,0,0,.6)"},
 
 	{ID: "neon", Bg: "#150a22", Panel: "#1d0e30", Line: "#4a2472",
@@ -154,10 +167,11 @@ var skins = []Skin{
 		Level: "bars", Pulse: 1, Mark: "mic", Flash: "blink", Brackets: true},
 
 	{ID: "editor", Palette: "editor",
-		FontCSS: `"Cascadia Mono",Consolas,"Segoe UI",sans-serif`, FontGDI: "Cascadia Mono",
+		FontCSS: `"Segoe UI Variable Text","Segoe UI",system-ui,sans-serif`, FontGDI: "Segoe UI",
 		PagePx: 13, FontPx: 14, Weight: 400, BrandLS: ".02em",
 		FieldPad: "6px 11px", CtlFS: "12.5px", WeightB: 600,
-		Radius: 3, BarR: "0", Border: 1, Round: false,
+		Radius: 4, BarR: "0", Border: 1, Round: false,
+		DotR: "50%", BadgeR: "10px", PanelR: "6px",
 		Glow: false, Scan: 0, Shadow: "0 10px 30px rgba(0,0,0,.45)",
 		Level: "flat", Pulse: 1.5, Mark: "mic", Flash: "none"},
 
@@ -254,6 +268,27 @@ func (p Palette) filled() Palette {
 	}
 	if p.BadLine == "" {
 		p.BadLine = blend(p.Bad, p.Bg, 0.52)
+	}
+	if p.BtnBgH == "" {
+		p.BtnBgH = p.BtnBg
+	}
+	if p.Btn2Bg == "" {
+		p.Btn2Bg = "transparent"
+	}
+	if p.Btn2Fg == "" {
+		p.Btn2Fg = p.Dim
+	}
+	if p.Btn2Line == "" {
+		p.Btn2Line = p.BtnLine
+	}
+	if p.Btn2BgH == "" {
+		p.Btn2BgH = p.Btn2Bg
+	}
+	if p.Focus == "" {
+		p.Focus = p.Dim
+	}
+	if p.Card == "" {
+		p.Card = p.Field
 	}
 	return p
 }
@@ -403,6 +438,18 @@ func (l Look) CSSVars() string {
 		lr, lg, lb := RGB(label)
 		labelGlow = "0 0 7px rgba(" + itoa(int(lr)) + "," + itoa(int(lg)) + "," + itoa(int(lb)) + ",.4)"
 	}
+	dotR := l.DotR
+	if dotR == "" {
+		dotR = "0"
+	}
+	badgeR := l.BadgeR
+	if badgeR == "" {
+		badgeR = "calc(" + itoa(int(l.Radius)) + "px * .4)"
+	}
+	panelR := l.PanelR
+	if panelR == "" {
+		panelR = itoa(int(l.Radius)) + "px"
+	}
 	btnBo, btnBc := `""`, `""`
 	if l.Brackets {
 		btnBo, btnBc = "\"[ \"", "\" ]\""
@@ -413,10 +460,13 @@ func (l Look) CSSVars() string {
 		";--dim:" + p.Dim + ";--faint:" + p.Faint +
 		";--amber:" + p.Warn + ";--bad:" + p.Bad + ";--rec:" + p.Rec +
 		";--rgb:" + rgb +
-		";--field:" + p.Field + ";--soft:" + p.Soft +
+		";--field:" + p.Field + ";--card:" + p.Card + ";--soft:" + p.Soft +
 		";--navon:" + p.NavOn + ";--on:" + p.On +
 		";--titlebg:" + p.TitleBg + ";--sidebg:" + p.SideBg + ";--keybg:" + p.KeyBg +
 		";--btnbg:" + p.BtnBg + ";--btnfg:" + p.BtnFg + ";--btnline:" + p.BtnLine +
+		";--btnbgh:" + p.BtnBgH + ";--btn2bg:" + p.Btn2Bg + ";--btn2fg:" + p.Btn2Fg +
+		";--btn2line:" + p.Btn2Line + ";--btn2bgh:" + p.Btn2BgH + ";--focus:" + p.Focus +
+		";--dotr:" + dotR + ";--badger:" + badgeR + ";--panelr:" + panelR +
 		";--btnbo:" + btnBo + ";--btnbc:" + btnBc +
 		";--lbl:" + label + ";--lblglow:" + labelGlow +
 		";--selbg:" + p.SelBg + ";--selfg:" + p.SelFg +

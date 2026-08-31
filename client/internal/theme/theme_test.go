@@ -176,7 +176,9 @@ func TestCSSVarsCarryEverythingThePageNeeds(t *testing.T) {
 	css := Current("editor", "").CSSVars()
 	for _, want := range []string{
 		"--bg:#1e1e1e", "--green:#d4d4d4", "--hi:#4fc1ff", "--rgb:212,212,212",
-		"--glow:none", "--font:", "--fs:13px", "--r:3px", "--bw:1px", "--scan:0",
+		"--glow:none", "--font:", "--fs:13px", "--r:4px", "--bw:1px", "--scan:0",
+		"--btnbgh:#1177bb", "--btn2bg:#3a3d41", "--btn2fg:#cccccc", "--focus:#007fd4",
+		"--dotr:50%", "--badger:10px", "--panelr:6px",
 		"--shadow:0 10px 30px", "--titlebg:#323233", "--keybg:#3c3c3c",
 		"--btnbg:#0e639c", "--btnfg:#ffffff", "--caps:none", "--ls:0", "--flicker:none",
 	} {
@@ -216,8 +218,8 @@ func TestSkinsNameTheFacesTheyShipWith(t *testing.T) {
 		}
 	}
 	ed := Current("editor", "")
-	if ed.FontGDI != "Cascadia Mono" {
-		t.Errorf("the editor skin keeps its own face, got %q", ed.FontGDI)
+	if ed.FontGDI != "Segoe UI" {
+		t.Errorf("the editor skin speaks in the system face like VS Code does, got %q", ed.FontGDI)
 	}
 }
 
