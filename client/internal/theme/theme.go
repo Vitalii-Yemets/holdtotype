@@ -74,6 +74,7 @@ type Skin struct {
 	BadgeR  string
 	PanelR  string
 	SwitchR string
+	CtlH    string
 
 	Glow   bool
 	Scan   float64
@@ -139,9 +140,11 @@ var palettes = []Palette{
 	{ID: "neon", Bg: "#150a22", Panel: "#1d0e30", Line: "#4a2472",
 		Text: "#f3b6e4", Accent: "#46e0ff", Dim: "#b06ee0", Faint: "#7d4fae",
 		Warn: "#ffd24a", Bad: "#ff4d7d", Rec: "#ff4d7d",
-		Field: "#1e0f33", Soft: "#2a1442", NavOn: "#2b1240", On: "#4a2472",
+		Field: "#1e0f33", Card: "#231039", Soft: "#2a1442", NavOn: "#2b1240", On: "#4a2472",
 		TitleBg: "linear-gradient(90deg,#26103f,#1a0b2b)", SideBg: "#190c29", KeyBg: "linear-gradient(90deg,rgba(255,95,200,.18),rgba(70,224,255,.14))",
-		BtnBg: "transparent", BtnFg: "#f3b6e4", BtnLine: "#4a2472", SelBg: "linear-gradient(90deg,#ff5fc8,#46e0ff)", SelFg: "#150a22",
+		BtnBg: "#46e0ff", BtnFg: "#150a22", BtnLine: "transparent", SelBg: "linear-gradient(90deg,#ff5fc8,#46e0ff)", SelFg: "#150a22",
+		BtnBgH: "#7ceaff", Btn2Bg: "#46e0ff", Btn2Fg: "#150a22", Btn2Line: "transparent", Btn2BgH: "#7ceaff",
+		DangerBg: "#ff4d7d", DangerFg: "#150a22", DangerBgH: "#ff7a9c", Dot: "#46e0ff", Focus: "#46e0ff",
 		Label: "#ffffff", Brand: "linear-gradient(90deg,#ff5fc8,#46e0ff)", Scrim: "rgba(10,4,18,.72)"},
 
 	{ID: "soft", Bg: "#fff3f8", Panel: "#ffffff", Line: "#ffd0e4",
@@ -186,8 +189,9 @@ var skins = []Skin{
 	{ID: "neon", Palette: "neon",
 		FontCSS: `"IBM Plex Sans","Segoe UI",system-ui,sans-serif`, FontGDI: "IBM Plex Sans",
 		PagePx: 15, FontPx: 16, Weight: 400, BrandLS: ".04em",
-		FieldPad: "9px 13px", CtlFS: "13.5px", WeightB: 600,
+		FieldPad: "8px 14px", CtlFS: "13.5px", WeightB: 600,
 		Radius: 14, BarR: "99px", Border: 1, Round: true,
+		DotR: "50%", BadgeR: "999px", PanelR: "20px", SwitchR: "999px", CtlH: "36px",
 		Glow: true, Scan: 0.18, Shadow: "0 18px 46px rgba(150,40,220,.35)",
 		Level: "bars", Pulse: 0.8, Mark: "mic", Flash: "glow"},
 
@@ -475,6 +479,10 @@ func (l Look) CSSVars() string {
 	if switchR == "" {
 		switchR = "calc(" + itoa(int(l.Radius)) + "px * .8)"
 	}
+	ctlH := l.CtlH
+	if ctlH == "" {
+		ctlH = "30px"
+	}
 	btnBo, btnBc := `""`, `""`
 	if l.Brackets {
 		btnBo, btnBc = "\"[ \"", "\" ]\""
@@ -491,7 +499,7 @@ func (l Look) CSSVars() string {
 		";--btnbg:" + p.BtnBg + ";--btnfg:" + p.BtnFg + ";--btnline:" + p.BtnLine +
 		";--btnbgh:" + p.BtnBgH + ";--btn2bg:" + p.Btn2Bg + ";--btn2fg:" + p.Btn2Fg +
 		";--dangerbg:" + p.DangerBg + ";--dangerfg:" + p.DangerFg + ";--dangerbgh:" + p.DangerBgH +
-		";--switchr:" + switchR +
+		";--switchr:" + switchR + ";--ctlh:" + ctlH +
 		";--btn2line:" + p.Btn2Line + ";--btn2bgh:" + p.Btn2BgH + ";--focus:" + p.Focus +
 		";--dotr:" + dotR + ";--badger:" + badgeR + ";--panelr:" + panelR +
 		";--btnbo:" + btnBo + ";--btnbc:" + btnBc +
