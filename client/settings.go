@@ -1792,6 +1792,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
 .helptoc a:hover{color:var(--green)}
 .helptoc a.on{color:var(--green);border-left-color:var(--hi);text-shadow:var(--glow)}
 @media (max-width:920px){.helptoc{display:none}}
+#p-help.tochidden .helptoc{display:none}
 .helpbody .hdim{color:var(--dim)}
 .helpbody .hsub{color:var(--green);font-weight:var(--wb);font-size:12.5px;margin:14px 0 5px}
 .hopt{width:100%;border-collapse:collapse;margin:0 0 12px;font-size:12px}
@@ -2811,27 +2812,39 @@ const HELP_WIDE_CSS = 1180;
 let helpPrevWidth = 0;
 let helpWantedCss = 0;
 let helpQuietUntil = 0;
+let helpTocHidden = false;
+function helpTocShown(){
+  return window.innerWidth >= 921 && !helpTocHidden;
+}
 function helpWideSync(){
   const btn = document.getElementById("help_wide");
   if(!btn) return;
-  const narrow = window.innerWidth < 921;
-  const back = helpPrevWidth > 0;
-  btn.style.display = narrow || back ? "" : "none";
-  btn.innerHTML = back ? I_TOC_OFF : I_TOC_ON;
-  btn.title = back ? L.helptochide : L.helptocshow;
+  const page = document.getElementById("p-help");
+  if(page) page.classList.toggle("tochidden", helpTocHidden);
+  const shown = helpTocShown();
+  btn.style.display = "";
+  btn.innerHTML = shown ? I_TOC_OFF : I_TOC_ON;
+  btn.title = shown ? L.helptochide : L.helptocshow;
 }
 function initHelpWide(){
   const btn = document.getElementById("help_wide");
   if(!btn || !window.appWindowWidth) return;
   btn.onclick = async ()=>{
     const ratio = window.devicePixelRatio || 1;
-    const back = helpPrevWidth > 0;
-    const want = back ? helpPrevWidth : Math.round(HELP_WIDE_CSS * ratio);
+    const hiding = helpTocShown();
+    helpTocHidden = hiding;
+    const wantsWidth = hiding ? helpPrevWidth > 0 : window.innerWidth < 921;
+    helpWideSync();
+    if(!wantsWidth){
+      if(helpMark) helpMark();
+      return;
+    }
+    const want = hiding ? helpPrevWidth : Math.round(HELP_WIDE_CSS * ratio);
     helpQuietUntil = Date.now() + 1200;
     let r = null;
     try { r = JSON.parse(await appWindowWidth(want)); } catch(e){ r = null; }
     if(!r) return;
-    helpPrevWidth = back ? 0 : r.prev;
+    helpPrevWidth = hiding ? 0 : r.prev;
     helpWantedCss = Math.round(r.width / ratio);
     helpQuietUntil = Date.now() + 1200;
     setTimeout(()=>{ helpWideSync(); if(helpMark) helpMark(); }, 80);

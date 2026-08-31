@@ -422,13 +422,18 @@ function check(name, actual, expected) {
   check("the contents link to the headings", toc ? toc.querySelector("a").getAttribute("href") : "", "#" + (helpCard ? helpCard.querySelector(".wh").id : ""));
   check("and the list stands to the right of the text, not above it", !!d.querySelector("#p-help .helpwrap > .helptoc"), true);
   const wideBtn = d.getElementById("help_wide");
-  check("a narrow window can be widened from the help itself", !!wideBtn, true);
+  check("the contents have a button of their own, always in the corner", [!!wideBtn, wideBtn.style.display], [true, ""]);
+  check("with the contents in sight it offers to hide them", wideBtn.title, "Hide the contents and restore the window width");
   wideBtn.click(); await sleep(220);
-  check("the button asks the window to grow", w.widthCalls.length, 1);
-  check("and then offers to put it back", wideBtn.title, "Hide the contents and restore the window width");
+  check("one press hides the column without touching the window", [d.getElementById("p-help").classList.contains("tochidden"), w.widthCalls.length], [true, 0]);
+  check("and the button turns into the one that brings them back", wideBtn.title, "Show the contents — the window gets wider");
   wideBtn.click(); await sleep(220);
-  check("the second press restores the width it remembered", w.widthCalls[1], 700);
-  check("and the button offers to widen again", wideBtn.title, "Show the contents — the window gets wider");
+  check("the next press brings the column back", d.getElementById("p-help").classList.contains("tochidden"), false);
+  w.innerWidth = 800; w.dispatchEvent(new w.Event("resize")); await sleep(120);
+  check("on a narrow window it offers to widen instead", wideBtn.title, "Show the contents — the window gets wider");
+  wideBtn.click(); await sleep(260);
+  check("and that press asks the window to grow", w.widthCalls.length, 1);
+  w.innerWidth = 1024; w.dispatchEvent(new w.Event("resize")); await sleep(120);
   check("the help is reachable from search", searchFinds(w, d, "config.json"), true);
 
   tab("history"); await sleep(300);

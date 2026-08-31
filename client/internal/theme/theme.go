@@ -152,12 +152,14 @@ var palettes = []Palette{
 		BtnBg: "#ffd9ea", BtnFg: "#a83a72", BtnLine: "#ffd0e4", SelBg: "#ff8ec7", SelFg: "#ffffff",
 		Label: "#7d2b56", Brand: "", Scrim: "rgba(192,74,134,.30)"},
 
-	{ID: "paper", Bg: "#f4f6f8", Panel: "#ffffff", Line: "#d5dbe1",
+	{ID: "paper", Bg: "#e7eaee", Panel: "#f3f5f7", Line: "#ced5dc",
 		Text: "#1f2328", Accent: "#0969da", Dim: "#59636e", Faint: "#818b98",
 		Warn: "#9a6700", Bad: "#cf222e", Rec: "#cf222e",
-		Field: "#ffffff", Soft: "#e7ebef", NavOn: "#e9edf1", On: "#ddf4ff",
-		TitleBg: "#f9fafb", SideBg: "#f9fafb", KeyBg: "#e9edf1",
-		BtnBg: "#ffffff", BtnFg: "#1f2328", BtnLine: "#d5dbe1", SelBg: "#0969da", SelFg: "#ffffff",
+		Field: "#ffffff", Card: "#f7f9fa", Soft: "#dde2e8", NavOn: "#dfe5eb", On: "#ddf4ff",
+		TitleBg: "#eff2f5", SideBg: "#eef1f4", KeyBg: "#e4e9ee",
+		BtnBg: "#0969da", BtnFg: "#ffffff", BtnLine: "#0969da", SelBg: "#0969da", SelFg: "#ffffff",
+		BtnBgH: "#0860ca", Btn2Bg: "#0969da", Btn2Fg: "#ffffff", Btn2Line: "transparent", Btn2BgH: "#0860ca",
+		DangerBg: "#cf222e", DangerFg: "#ffffff", DangerBgH: "#a40e26", Dot: "#1a7f37", Focus: "#0969da",
 		Ok: "#1a7f37", Label: "#111418", Brand: "", Scrim: "rgba(31,35,40,.35)"},
 }
 
@@ -202,6 +204,7 @@ var skins = []Skin{
 		PagePx: 14, FontPx: 15, Weight: 400, BrandLS: "-.01em",
 		FieldPad: "7px 11px", CtlFS: "12.5px", WeightB: 600,
 		Radius: 10, BarR: "2px", Border: 1, Round: true,
+		DotR: "50%", BadgeR: "999px", PanelR: "12px", SwitchR: "999px",
 		Glow: false, Scan: 0, Shadow: "0 8px 24px rgba(31,35,40,.12)",
 		Level: "bars", Pulse: 1.4, Mark: "mic", Flash: "none"},
 }
