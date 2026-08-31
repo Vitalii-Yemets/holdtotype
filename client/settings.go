@@ -1416,12 +1416,11 @@ input[type=text],input[type=password]{width:220px;max-width:100%}select{width:21
 input[type=number]{width:110px;max-width:100%;-moz-appearance:textfield}
 input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .unitwrap{display:inline-flex;align-items:center;gap:8px}
-.numwrap{display:inline-flex;align-items:stretch}
-.numwrap input[type=number]{border-right:0}
+.numwrap{display:inline-flex;align-items:stretch;border:1px solid var(--line);border-radius:calc(var(--r) * .55);background:var(--field);overflow:hidden;height:var(--ctlh,30px)}
+.numwrap input[type=number]{border:0;background:none;border-radius:0;height:100%}
 .numwrap input[type=number]:focus{box-shadow:none}
-.numwrap:focus-within{box-shadow:var(--glow)}
-.numwrap:focus-within input[type=number],.numwrap:focus-within .numspin{border-color:var(--dim)}
-.numspin{display:flex;flex-direction:column;width:20px;border:1px solid var(--line);border-left:0;background:var(--field)}
+.numwrap:focus-within{box-shadow:var(--glow);border-color:var(--focus)}
+.numspin{display:flex;flex-direction:column;width:20px;border:0;background:none}
 .numbtn{flex:1;display:flex;align-items:center;justify-content:center;border:0;background:none;color:var(--dim);font-size:7px;line-height:1;padding:0;cursor:pointer}
 .numbtn:hover{color:var(--green);text-shadow:var(--glow)}
 .numbtn+.numbtn{border-top:1px solid var(--soft)}

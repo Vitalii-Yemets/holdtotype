@@ -154,7 +154,7 @@ var palettes = []Palette{
 
 	{ID: "soft", Bg: "#f3e2ea", Panel: "#fbeef4", Line: "#e9c3d8",
 		Text: "#a83a72", Accent: "#c04a86", Dim: "#c47ba3", Faint: "#c9a2b8",
-		Warn: "#c07a1f", Bad: "#c02a50", Rec: "#e2597b",
+		Warn: "#8a5300", Bad: "#c02a50", Rec: "#e2597b",
 		Field: "#fffafc", Card: "#fdf4f8", Soft: "#ecd5e0", NavOn: "#f0d9e6", On: "#f6cfe2",
 		TitleBg: "#f4dfea", SideBg: "#f7e7ef", KeyBg: "#f4dfea",
 		BtnBg: "#d9538f", BtnFg: "#ffffff", BtnLine: "transparent", SelBg: "#d9538f", SelFg: "#ffffff",
