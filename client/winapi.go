@@ -182,20 +182,27 @@ func webViewClass(p *uint16) bool {
 // created, on the thread that creates it: the class brush and the caption are
 // set before anything is drawn, so the window opens in place and in colour and
 // nobody has to move it about afterwards.
-func dressNewWebViewWindow() func() {
-	cb := syscall.NewCallback(func(code, wParam, lParam uintptr) uintptr {
-		if code == hcbtCreateWnd && lParam != 0 && wParam != 0 {
-			if cbt := (*cbtCreateWnd)(unsafe.Pointer(lParam)); cbt.Cs != nil && webViewClass(cbt.Cs.Class) {
-				setDarkClientBackground(wParam)
-				applyDarkCaption(wParam)
-				log.Printf("openSettings: the WebView2 window is dressed as it is created")
-			}
+var (
+	dressOnce sync.Once
+	dressCB   uintptr
+)
+
+func dressWebViewProc(code, wParam, lParam uintptr) uintptr {
+	if code == hcbtCreateWnd && lParam != 0 && wParam != 0 {
+		if cbt := (*cbtCreateWnd)(unsafe.Pointer(lParam)); cbt.Cs != nil && webViewClass(cbt.Cs.Class) {
+			setDarkClientBackground(wParam)
+			applyDarkCaption(wParam)
+			log.Printf("openSettings: the WebView2 window is dressed as it is created")
 		}
-		r, _, _ := procCallNextHookEx.Call(0, code, wParam, lParam)
-		return r
-	})
+	}
+	r, _, _ := procCallNextHookEx.Call(0, code, wParam, lParam)
+	return r
+}
+
+func dressNewWebViewWindow() func() {
+	dressOnce.Do(func() { dressCB = syscall.NewCallback(dressWebViewProc) })
 	tid, _, _ := procGetCurrentThreadId.Call()
-	hook, _, _ := procSetWindowsHookExW.Call(whCBT, cb, 0, tid)
+	hook, _, _ := procSetWindowsHookExW.Call(whCBT, dressCB, 0, tid)
 	if hook == 0 {
 		return func() {}
 	}
@@ -600,32 +607,48 @@ type openApp struct {
 // listOpenApps names the programs with a window on screen right now, one entry
 // per program: the file name is what the exclusion list matches on, the window
 // title is only there to tell two browsers apart.
-func listOpenApps() []openApp {
-	var out []openApp
-	seen := map[string]bool{}
-	self := uintptr(windows.GetCurrentProcessId())
-	cb := syscall.NewCallback(func(hwnd, _ uintptr) uintptr {
-		if vis, _, _ := procIsWindowVisible.Call(hwnd); vis == 0 {
-			return 1
-		}
-		var pid uint32
-		procGetWindowThreadPID.Call(hwnd, uintptr(unsafe.Pointer(&pid)))
-		if uintptr(pid) == self {
-			return 1
-		}
-		title := windowTitle(hwnd)
-		if strings.TrimSpace(title) == "" {
-			return 1
-		}
-		exe := processNameOf(hwnd)
-		if exe == "" || seen[strings.ToLower(exe)] {
-			return 1
-		}
-		seen[strings.ToLower(exe)] = true
-		out = append(out, openApp{Exe: exe, Title: title})
+var (
+	appsMu   sync.Mutex
+	appsOnce sync.Once
+	appsCB   uintptr
+	appsOut  []openApp
+	appsSeen map[string]bool
+	appsSelf uintptr
+)
+
+func collectOpenApp(hwnd, _ uintptr) uintptr {
+	if vis, _, _ := procIsWindowVisible.Call(hwnd); vis == 0 {
 		return 1
-	})
-	procEnumWindows.Call(cb, 0)
+	}
+	var pid uint32
+	procGetWindowThreadPID.Call(hwnd, uintptr(unsafe.Pointer(&pid)))
+	if uintptr(pid) == appsSelf {
+		return 1
+	}
+	title := windowTitle(hwnd)
+	if strings.TrimSpace(title) == "" {
+		return 1
+	}
+	exe := processNameOf(hwnd)
+	if exe == "" || appsSeen[strings.ToLower(exe)] {
+		return 1
+	}
+	appsSeen[strings.ToLower(exe)] = true
+	appsOut = append(appsOut, openApp{Exe: exe, Title: title})
+	return 1
+}
+
+func listOpenApps() []openApp {
+	appsMu.Lock()
+	defer appsMu.Unlock()
+	appsOut = nil
+	appsSeen = map[string]bool{}
+	appsSelf = uintptr(windows.GetCurrentProcessId())
+	appsOnce.Do(func() { appsCB = syscall.NewCallback(collectOpenApp) })
+	procEnumWindows.Call(appsCB, 0)
+	out := appsOut
+	appsOut = nil
+	appsSeen = nil
 	sort.Slice(out, func(i, j int) bool {
 		return strings.ToLower(out[i].Exe) < strings.ToLower(out[j].Exe)
 	})
