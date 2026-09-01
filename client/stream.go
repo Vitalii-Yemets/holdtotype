@@ -84,6 +84,9 @@ func startStreamServer(cfg *Config, logw io.Writer) (*streamServer, error) {
 	if _, serr := os.Stat(exePath); serr != nil {
 		return nil, uiErr(fmt.Sprintf("streaming server not found: %s", exePath), trf("err.sherpa.notfound", exePath))
 	}
+	if !waitPortFree(cfg.StreamPort, portFreeWait) {
+		return nil, uiErr(fmt.Sprintf("port %d is taken by another program", cfg.StreamPort), trf("err.port.busy", cfg.StreamPort))
+	}
 	args := append([]string{
 		"--port=" + strconv.Itoa(cfg.StreamPort),
 		"--num-threads=" + strconv.Itoa(cfg.SherpaThreads),

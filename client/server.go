@@ -70,6 +70,10 @@ func startWhisperServer(cfg *Config, logw io.Writer) (*whisperServer, error) {
 		return s, nil
 	}
 
+	if !waitPortFree(cfg.ServerPort, portFreeWait) {
+		return nil, uiErr(fmt.Sprintf("port %d is taken by another program", cfg.ServerPort), trf("err.port.busy", cfg.ServerPort))
+	}
+
 	if _, err := os.Stat(cfg.Model); err != nil {
 		return nil, uiErr(fmt.Sprintf("model file not found: %s", cfg.Model), trf("err.model.notfound", cfg.Model))
 	}

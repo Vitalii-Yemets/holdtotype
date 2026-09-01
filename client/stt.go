@@ -5,11 +5,14 @@ import (
 	"io"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
 	"holdtotype/internal/preset"
 )
+
+const portFreeWait = 2 * time.Second
 
 const (
 	engineWhisper = "whisper"
@@ -26,6 +29,28 @@ type recognizer interface {
 	wasStopped() bool
 	engine() string
 	model() string
+}
+
+func portFree(port int) bool {
+	ln, err := net.Listen("tcp", net.JoinHostPort("127.0.0.1", strconv.Itoa(port)))
+	if err != nil {
+		return false
+	}
+	ln.Close()
+	return true
+}
+
+func waitPortFree(port int, timeout time.Duration) bool {
+	deadline := time.Now().Add(timeout)
+	for {
+		if portFree(port) {
+			return true
+		}
+		if time.Now().After(deadline) {
+			return false
+		}
+		time.Sleep(150 * time.Millisecond)
+	}
 }
 
 func dialOK(addr string) bool {

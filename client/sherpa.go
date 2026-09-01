@@ -152,6 +152,9 @@ func startSherpaServer(cfg *Config, logw io.Writer) (*sherpaServer, error) {
 	if _, serr := os.Stat(exePath); serr != nil {
 		return nil, uiErr(fmt.Sprintf("sherpa-server not found: %s", exePath), trf("err.sherpa.notfound", exePath))
 	}
+	if !waitPortFree(cfg.SherpaPort, portFreeWait) {
+		return nil, uiErr(fmt.Sprintf("port %d is taken by another program", cfg.SherpaPort), trf("err.port.busy", cfg.SherpaPort))
+	}
 	args := append([]string{
 		"--port=" + strconv.Itoa(cfg.SherpaPort),
 		"--num-work-threads=2",

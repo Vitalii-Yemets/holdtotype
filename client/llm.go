@@ -63,6 +63,9 @@ func startLlamaServer(cfg *Config, logw io.Writer) (*llamaServer, error) {
 			exePath = abs
 		}
 	}
+	if !waitPortFree(cfg.LLMPort, portFreeWait) {
+		return nil, uiErr(fmt.Sprintf("port %d is taken by another program", cfg.LLMPort), trf("err.port.busy", cfg.LLMPort))
+	}
 	args := []string{
 		"-m", cfg.LLMModel,
 		"--host", "127.0.0.1",
