@@ -66,3 +66,26 @@ func TestNormalize(t *testing.T) {
 		t.Fatalf("нормализация неверна: %q", got)
 	}
 }
+
+func TestVerifyShortWantDoesNotPanic(t *testing.T) {
+	path := write(t, "e.bin", "")
+	if err := Verify(path, "abc"); err == nil {
+		t.Fatal("короткий эталон не дал ошибки")
+	}
+	if err := Verify(path, "sha256:ab"); err == nil {
+		t.Fatal("обрезанный эталон с префиксом не дал ошибки")
+	}
+}
+
+func TestRequireRefusesEmptyWant(t *testing.T) {
+	path := write(t, "f.bin", "")
+	if err := Require(path, ""); err == nil {
+		t.Fatal("без эталона проверка обязана падать")
+	}
+	if err := Require(path, "  "); err == nil {
+		t.Fatal("пробелы вместо эталона обязаны падать")
+	}
+	if err := Require(path, emptySHA); err != nil {
+		t.Fatalf("верный эталон отвергнут: %v", err)
+	}
+}
