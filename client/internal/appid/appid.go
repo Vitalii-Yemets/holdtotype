@@ -17,7 +17,6 @@ const (
 	MutexName      = `Local\` + Name + `TrayMutex`
 
 	Repo      = "Vitalii-Yemets/" + Slug
-	SiteURL   = "https://holdtotype.com"
 	RepoURL   = "https://github.com/" + Repo
 	AuthorURL = "https://github.com/Vitalii-Yemets"
 	IssuesURL = RepoURL + "/issues"

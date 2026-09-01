@@ -137,7 +137,7 @@ const dom = new JSDOM(html, {
       ],
     });
     for (const name of [
-      "appLLMDlFile", "appLLMTest", "appHFPage", "appHFHome", "appRepoLink", "appSiteLink",
+      "appLLMDlFile", "appLLMTest", "appHFPage", "appHFHome", "appRepoLink",
       "appAuthorLink", "appReload", "appDepLink",
       "appPreviewSound", "appMin", "appClose",
       "appDoUpdate", "appReady", "appJSError",
@@ -1035,8 +1035,7 @@ function check(name, actual, expected) {
   tab("help"); await sleep(60);
   check("the guide lives on its own page", shown("help") && d.querySelectorAll("#p-help .card").length === 1, true);
   tab("contacts"); await sleep(60);
-  check("contacts is one card of four ways to reach out", shown("contacts") && d.querySelectorAll("#p-contacts .cards .scard").length === 4, true);
-  check("the site is named first", d.getElementById("contact_site").textContent, "holdtotype.com");
+  check("contacts is one card of three ways to reach out", shown("contacts") && d.querySelectorAll("#p-contacts .cards .scard").length === 3, true);
   check("the address is spelled out, not hidden behind a word", d.getElementById("contact_mail").textContent.includes("@"), true);
   check("and the repository is named in full", d.getElementById("contact_repo").textContent.includes("github.com"), true);
   d.getElementById("mail_copy").click(); await sleep(200);
