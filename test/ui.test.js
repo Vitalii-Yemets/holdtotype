@@ -4,6 +4,7 @@ const { JSDOM } = require("jsdom");
 
 const html = fs.readFileSync(path.join(__dirname, "page.html"), "utf8");
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const EVIL_FILE = 'q4" data-evil="1.gguf';
 function meterMoves(d, id) {
   const bars = [...d.querySelectorAll(`#${id} i`)];
   if (!bars.length) return false;
@@ -117,7 +118,7 @@ const dom = new JSDOM(html, {
     window.appLLMSearch = async () =>
       JSON.stringify({ repos: [{ id: "org/Repo-GGUF", downloads: 1234, updated: "2026-01-01" }] });
     window.appLLMFiles = async () =>
-      JSON.stringify({ files: [{ file: "q4.gguf", size: 4000, fit: "ok", need: 6166 }, { file: "q8.gguf", size: 9000, fit: "bad", need: 13000 }] });
+      JSON.stringify({ files: [{ file: EVIL_FILE, size: 4000, fit: "ok", need: 6166 }, { file: "q8.gguf", size: 9000, fit: "bad", need: 13000 }] });
     window.llmUnloads = 0;
     window.appLLMUnload = async () => {
       window.llmUnloads++;
@@ -981,6 +982,8 @@ function check(name, actual, expected) {
   check("the fit filter is a visible choice", !!fitBox && fitBox.checked, true);
   fitBox.checked = false; fitBox.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(100);
   check("turning it off shows everything", d.querySelectorAll('#hf_results button[data-repo]').length, 2);
+  check("a file name cannot bring its own attributes along", d.querySelectorAll("#hf_results [data-evil]").length, 0);
+  check("and the name is kept whole", d.querySelector("#hf_results button[data-file]").dataset.file, EVIL_FILE);
   fitBox.checked = true; fitBox.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(100);
   d.querySelector(".modal.llmcat .btn.ghost").click(); await sleep(200);
   check("closing the catalog leaves the card behind", [!!d.querySelector(".modal.llmcat"), !!d.getElementById("llm_sum")], [false, true]);

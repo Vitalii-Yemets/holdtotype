@@ -2489,7 +2489,7 @@ let translateHotkey = CFG.translate_hotkey || "";
 let expandedID = null;
 let captureFor = null;
 
-function esc(s){ const d=document.createElement("span"); d.textContent=s||""; return d.innerHTML; }
+function esc(s){ const d=document.createElement("span"); d.textContent=s||""; return d.innerHTML.replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
 async function toggleMax(){
   const max = await appMaxRestore();
   paintMaxButton(max);
