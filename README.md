@@ -9,6 +9,13 @@
 </p>
 
 <p align="center">
+  <b><a href="https://holdtotype.com">holdtotype.com</a></b> ·
+  <a href="https://holdtotype.com/en/docs/">Docs</a> ·
+  <a href="https://holdtotype.com/en/releases/">Releases</a> ·
+  <a href="https://holdtotype.com/en/roadmap/">Roadmap</a>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-0b0f0c?style=flat-square&logo=windows&logoColor=3cff6e&labelColor=0e1410&color=1d4a2b" alt="Windows">
   <img src="https://img.shields.io/badge/Go-client-0b0f0c?style=flat-square&logo=go&logoColor=3cff6e&labelColor=0e1410&color=1d4a2b" alt="Go">
   <img src="https://img.shields.io/badge/whisper.cpp-STT-0b0f0c?style=flat-square&labelColor=0e1410&color=1d4a2b" alt="whisper.cpp">

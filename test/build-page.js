@@ -69,6 +69,7 @@ const cfg = {
     { id: "formal", name: "Business", prompt: "p2", hotkey: "" },
   ],
   _mail: "holdtotype@outlook.com",
+  _site: "https://holdtotype.com",
   _repo: "https://github.com/Vitalii-Yemets/holdtotype",
   _version: "0.0.0-test",
   _tab: "general",

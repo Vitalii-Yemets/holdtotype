@@ -442,6 +442,9 @@ func (a *App) settingsThread(tab string, attempt int) {
 				a.quitForUpdate()
 			}()
 		})
+		_ = w.Bind("appSiteLink", func() {
+			shellOpenURL(appid.SiteURL)
+		})
 		_ = w.Bind("appRepoLink", func() {
 			shellOpenURL(appid.RepoURL)
 		})
@@ -1013,6 +1016,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"server_exe_path_default": resolveServerExe(defaultServerExe),
 		"server_url":              cfg.ServerURL,
 		"_mail":                   appid.Email,
+		"_site":                   appid.SiteURL,
 		"_repo":                   appid.RepoURL,
 		"stt_source":              cfg.SttSource,
 		"whisper_prompt":          cfg.WhisperPrompt,
@@ -2336,6 +2340,11 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
   <div class="hint">{{S_CONTACT_HINT}}</div>
   <div class="cards">
    <div class="scard ccard">
+    <span class="k">{{S_CONTACT_SITE}}</span>
+    <span class="v lnk" id="contact_site"></span>
+    <div class="acts"><button type="button" class="iconbtn" id="site_open" title="{{S_CONTACT_OPEN}}">&#8599;</button></div>
+   </div>
+   <div class="scard ccard">
     <span class="k">{{S_CONTACT_MAIL}}</span>
     <span class="v lnk" id="contact_mail" data-tip="{{S_CONTACT_WRITE}}"></span>
     <div class="acts"><button type="button" class="iconbtn" id="mail_copy" title="{{S_HIST_COPY}}"></button><button type="button" class="iconbtn" id="mail_write" title="{{S_CONTACT_WRITE}}">&#9993;</button></div>
@@ -2748,6 +2757,12 @@ function initContacts(){
   const mail = document.getElementById("contact_mail");
   if(!mail) return;
   mail.textContent = CFG._mail || "";
+  const site = document.getElementById("contact_site");
+  if(site) site.textContent = (CFG._site || "").replace(/^https?:\/\//, "");
+  const openSite = ()=>appSiteLink();
+  if(site) site.onclick = openSite;
+  const sbtn = document.getElementById("site_open");
+  if(sbtn) sbtn.onclick = openSite;
   const repo = document.getElementById("contact_repo");
   if(repo) repo.textContent = (CFG._repo || "").replace(/^https?:\/\//, "");
   const write = ()=>appMailLink();
