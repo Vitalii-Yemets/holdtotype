@@ -212,8 +212,10 @@ func tmRender(hwnd, hdc uintptr) {
 		procDeleteObject.Call(br)
 	}
 	fill(rc, colBg)
-	for y := rc.Top + 3; y < rc.Bottom; y += 3 {
-		fill(rect{Left: rc.Left, Top: y, Right: rc.Right, Bottom: y + 1}, colBgLine)
+	if themeScanlines() {
+		for y := rc.Top + 3; y < rc.Bottom; y += 3 {
+			fill(rect{Left: rc.Left, Top: y, Right: rc.Right, Bottom: y + 1}, colBgLine)
+		}
 	}
 
 	procSelectObject.Call(hdc, uiFont(hwnd))
@@ -237,7 +239,7 @@ func tmRender(hwnd, hdc uintptr) {
 		}
 		row := rect{Left: px(4), Top: cur, Right: rc.Right - px(4), Bottom: cur + itemH}
 		if i == hov {
-			fill(row, 0x223F12)
+			fill(row, colOn)
 		}
 		var color uintptr = colGreen
 		if it.grayed {

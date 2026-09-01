@@ -92,11 +92,21 @@ var (
 )
 
 var (
-	darkBrushOnce sync.Once
-	darkBrush     uintptr
-	darkBgMu      sync.Mutex
-	darkBgDone    = map[uintptr]bool{}
+	darkBgMu   sync.Mutex
+	darkBgDone = map[uintptr]bool{}
+	bgBrushes  = map[uintptr]uintptr{}
 )
+
+func windowBackgroundBrush() uintptr {
+	darkBgMu.Lock()
+	defer darkBgMu.Unlock()
+	if br, ok := bgBrushes[colBg]; ok {
+		return br
+	}
+	br, _, _ := procCreateSolidBrush.Call(colBg)
+	bgBrushes[colBg] = br
+	return br
+}
 
 func setDarkClientBackground(hwnd uintptr) {
 	darkBgMu.Lock()
@@ -106,10 +116,7 @@ func setDarkClientBackground(hwnd uintptr) {
 	}
 	darkBgDone[hwnd] = true
 	darkBgMu.Unlock()
-	darkBrushOnce.Do(func() {
-		darkBrush, _, _ = procCreateSolidBrush.Call(0x0C0F0B)
-	})
-	procSetClassLongPtrW.Call(hwnd, ^uintptr(9), darkBrush)
+	procSetClassLongPtrW.Call(hwnd, ^uintptr(9), windowBackgroundBrush())
 }
 
 type createStructW struct {

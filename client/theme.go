@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"image/color"
 	"log"
+	"strings"
 	"sync/atomic"
 
 	"holdtotype/internal/theme"
@@ -35,6 +36,14 @@ func themeRoundCorners() bool { return themeLook().Round }
 func themeGlow() bool { return themeLook().Glow }
 
 func themeScanlines() bool { return themeLook().Scan > 0 }
+
+func webviewBgHex() string {
+	hex := strings.TrimPrefix(themeLook().Palette.Bg, "#")
+	if len(hex) != 6 {
+		return "FF0B0F0C"
+	}
+	return "FF" + strings.ToUpper(hex)
+}
 
 func themeLevelStyle() string { return themeLook().Level }
 
@@ -77,6 +86,7 @@ func applyTheme(skin, colour string) {
 	colDot = colorref(p.Dot)
 	colGreenDm = colorref(p.Dim)
 	colGreenLo = colorref(p.Faint)
+	colOn = colorref(p.On)
 	colHi = colorref(p.Accent)
 	colHiLo = mixHex(p.Accent, 0.45)
 	colAmber = colorref(p.Warn)

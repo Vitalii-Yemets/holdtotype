@@ -96,6 +96,7 @@ var (
 	colBad     uintptr = 0x6B6BFF
 	colBadDm   uintptr = 0x26265C
 	colAskBg   uintptr = 0x0D100B
+	colOn      uintptr = 0x223F12
 	colHi      uintptr = 0x6EFF3C
 	colHiLo    uintptr = 0x2B4A1D
 	colLine    uintptr = 0x2B4A1D

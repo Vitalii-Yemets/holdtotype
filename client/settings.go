@@ -48,6 +48,7 @@ func tryCreateWebView(width, height int) (w webview.WebView) {
 			applyDarkCaption(hwnd)
 		}
 	}()
+	_ = os.Setenv("WEBVIEW2_DEFAULT_BACKGROUND_COLOR", webviewBgHex())
 	return webview.NewWithOptions(webview.WebViewOptions{
 		DataPath:  filepath.Join(os.TempDir(), appid.TempDirName("webview", os.Getpid())),
 		AutoFocus: true,
