@@ -189,6 +189,7 @@ type streamResult struct {
 // the segments joined, not the last message.
 type streamSession struct {
 	conn    *websocket.Conn
+	wmu     sync.Mutex
 	mu      sync.Mutex
 	segs    map[int]string
 	closed  bool
@@ -258,6 +259,8 @@ func (ss *streamSession) push(pcm []byte) error {
 	if len(pcm) < 2 {
 		return nil
 	}
+	ss.wmu.Lock()
+	defer ss.wmu.Unlock()
 	ss.mu.Lock()
 	closed := ss.closed
 	ss.mu.Unlock()
@@ -275,9 +278,11 @@ func (ss *streamSession) finish(ctx context.Context) (string, error) {
 	ss.closed = true
 	ss.mu.Unlock()
 	tail := make([]byte, sampleRate/2*2)
+	ss.wmu.Lock()
 	_ = ss.conn.WriteMessage(websocket.BinaryMessage, floatBytes(tail))
 	_ = ss.conn.SetWriteDeadline(time.Now().Add(5 * time.Second))
 	_ = ss.conn.WriteMessage(websocket.TextMessage, []byte("Done"))
+	ss.wmu.Unlock()
 	settle := time.NewTimer(600 * time.Millisecond)
 	defer settle.Stop()
 	lastSeen := ss.snapshot()
@@ -308,8 +313,10 @@ func (ss *streamSession) snapshot() string {
 }
 
 func (ss *streamSession) close() {
+	ss.wmu.Lock()
 	_ = ss.conn.WriteMessage(websocket.CloseMessage,
 		websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+	ss.wmu.Unlock()
 	_ = ss.conn.Close()
 }
 
