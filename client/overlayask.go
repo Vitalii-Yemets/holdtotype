@@ -356,9 +356,37 @@ func askRender(hwnd, hdc uintptr, rc rect, fill func(rect, uintptr), drawText fu
 	}
 }
 
+func containsLang(list []string, want string) bool {
+	for _, l := range list {
+		if l == want {
+			return true
+		}
+	}
+	return false
+}
+
 func askTranslateTarget(cfg *Config) string {
-	choices := make([]ovChoice, 0, len(cfg.TranslateAskLangs)+1)
+	reach := translatableTargets(cfg)
+	picked := make([]string, 0, len(cfg.TranslateAskLangs))
 	for _, l := range cfg.TranslateAskLangs {
+		if containsLang(reach, l) {
+			picked = append(picked, l)
+		}
+	}
+	if len(picked) == 0 {
+		picked = append(picked, reach...)
+	}
+	ordered := make([]string, 0, len(picked))
+	if containsLang(picked, cfg.TranslateTarget) {
+		ordered = append(ordered, cfg.TranslateTarget)
+	}
+	for _, l := range translateLangCodes() {
+		if l != cfg.TranslateTarget && containsLang(picked, l) {
+			ordered = append(ordered, l)
+		}
+	}
+	choices := make([]ovChoice, 0, len(ordered)+1)
+	for _, l := range ordered {
 		choices = append(choices, ovChoice{id: l, label: langLabel(l), def: l == cfg.TranslateTarget})
 	}
 	choices = append(choices, ovChoice{id: "", label: tr("td.plain")})
@@ -369,6 +397,14 @@ func askTranslateTarget(cfg *Config) string {
 	return overlayAsk(tr("td.title"), choices, seconds)
 }
 
+
+func askTranslateFallback(modelName, whisperName string) bool {
+	res := overlayAsk(trf("tf.title", modelName), []ovChoice{
+		{id: "yes", label: trf("tf.yes", whisperName), def: true},
+		{id: "no", label: tr("tf.no")},
+	}, 0)
+	return res == "yes"
+}
 
 func askFocusMismatch() string {
 	return overlayAsk(tr("fd.title"), []ovChoice{

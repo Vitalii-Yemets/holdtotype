@@ -115,6 +115,9 @@ var msgs = map[string]map[string]string{
 		"err.webview":           "Для окна настроек нужен Microsoft WebView2 Runtime (входит в Windows 11).\nСейчас откроется страница загрузки — установите его и откройте настройки снова.",
 		"status.loading":        "Загрузка модели…",
 		"status.nomodel":        "Модель распознавания не скачана — выберите её в настройках",
+		"tf.title": "%s не переводит. Перевести?",
+		"tf.yes": "Да, через %s",
+		"tf.no": "Как есть",
 		"state.loaded.none": "ничего не загружено",
 		"state.week": "%d диктовок · %d знаков",
 		"snd.ok": "уровень в норме",
@@ -204,7 +207,7 @@ var msgs = map[string]map[string]string{
 		"ov.translating":         "Перевожу",
 		"ov.llm.needed":          "Для этого языка нужен LLM-модуль",
 		"td.title":               "Переводить на:",
-		"td.plain":               "Без перевода",
+		"td.plain":               "Перевести на язык исходной речи",
 		"cap.title":              "{app} — сочетание клавиш",
 		"cap.prompt":             "Нажмите новое сочетание клавиш\n\nсейчас: %s   ·   Esc — отмена",
 		"cap.selected":           "Выбрано: %s",
@@ -290,6 +293,9 @@ var msgs = map[string]map[string]string{
 		"err.webview":           "The settings window requires Microsoft WebView2 Runtime (bundled with Windows 11).\nThe download page will open now — install it and open Settings again.",
 		"status.loading":        "Loading model…",
 		"status.nomodel":        "No recognition model downloaded — pick one in Settings",
+		"tf.title": "%s can’t translate. Translate anyway?",
+		"tf.yes": "Yes, via %s",
+		"tf.no": "As recognized",
 		"state.loaded.none": "nothing loaded",
 		"state.week": "%d dictations · %d characters",
 		"snd.ok": "sound level fine",
@@ -379,7 +385,7 @@ var msgs = map[string]map[string]string{
 		"ov.translating":         "Translating",
 		"ov.llm.needed":          "This language requires the LLM module",
 		"td.title":               "Translate to:",
-		"td.plain":               "No translation",
+		"td.plain":               "Translate into the source language",
 		"cap.title":              "{app} — shortcut",
 		"cap.prompt":             "Press a new key combination\n\nnow: %s   ·   Esc — cancel",
 		"cap.selected":           "Selected: %s",
@@ -456,7 +462,8 @@ var settingsStrings = map[string]map[string]string{
 		"S_TR_TARGET":      "Язык текстового вывода по умолчанию",
 		"S_SRCLANG_SUB": "на нём вы говорите; он определяет модель распознавания",
 		"S_TR_LANGS_SUB": "эти языки будут кнопками на плашке при вставке",
-		"S_TR_UNAVAIL": "недоступно — %s не умеет переводить",
+		"S_TR_UNAVAIL": "%s не умеет переводить — текст будет на языке исходной речи",
+		"S_TR_STANDIN": "%s не умеет переводить — на плашке предложит перевести %s",
 		"S_TR_LOCK": "%s нельзя убрать из списка — он выбран языком текстового вывода по умолчанию. Выберите другой язык по умолчанию, и тогда %s можно будет исключить.",
 		"S_TR_LOCK_OK": "Понятно",
 		"S_TR_ONE": "В списке отмечено несколько языков, но без вопроса перевод всегда пойдёт в один — %s (язык текстового вывода по умолчанию). Остальные останутся отмеченными, но будут отключены.",
@@ -593,7 +600,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_STATE_INST": "Установлены локально",
 		"S_STATE_INST_SUB": "модели на диске, готовые к назначению",
 		"S_PRESETS": "Какая модель какому языку",
-		"S_PRESETS_HINT": "Щёлкните язык — под ним раскроется выбор моделей для него. Языки без своей модели используют модель Автоопределения.",
+		"S_PRESETS_HINT": "Модель из строки «Автоопределение» работает для всех языков, которым не выбрана своя — в списке они серые. Щёлкните язык, чтобы дать ему отдельную модель. Она же определяет, на каком языке говорят, когда язык исходной речи не задан.",
 		"S_MFOLDER": "Своя модель",
 		"S_DICT_SAVE": "Сохранить",
 		"S_OWNM_SUB": "Добавьте локальную модель распознавания речи",
@@ -610,7 +617,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_BACK_AUTO": "Вернуть как Автоопределение",
 		"S_LANGS_COUNT": "языков: %d",
 		"S_LANGS_UNKNOWN": "языки: неизвестны",
-		"S_TR_EN": "переводит на английский",
+		"S_TR_EN": "переводит на %d языков",
 		"S_TR_LIST": "переводит: %s",
 		"S_DL_GOING": "скачивается:",
 		"S_OPEN_FOLDER": "Открыть папку",
@@ -1018,7 +1025,7 @@ var settingsStrings = map[string]map[string]string{
 			"<p>Здесь вы говорите, на каком языке будете диктовать, а приложение решает, чем это распознавать. Моделей несколько: одни быстрые, другие точные, третьи знают редкие языки.</p>" +
 			"<table class=\"hopt\">" +
 			"<tr><td>Язык исходной речи</td><td>Язык, на котором вы говорите. Если языков несколько, поставьте «Автоопределение»: модель разберётся сама, хотя чуть медленнее и чуть менее точно, чем когда язык назван прямо.</td></tr>" +
-			"<tr><td>Какая модель какому языку</td><td>Щёлкните по языку — раскроется список моделей, которые его знают, с оценкой скорости, точности и весом файла. Так можно оставить для русского быструю модель, а для английского выбрать точную.</td></tr>" +
+			"<tr><td>Какая модель какому языку</td><td>Щёлкните по языку — раскроется список моделей, которые его знают, с оценкой скорости, точности и весом файла. Так можно оставить для русского быструю модель, а для английского выбрать точную. Отдельная строка «Автоопределение» — общая: её модель обслуживает все языки, которым своя не выбрана, и они стоят в списке серыми. Она же разбирает, на каком языке говорят, когда язык исходной речи не задан.</td></tr>" +
 			"</table>" +
 			"<div class=\"hshot\">" +
 			"<div class=\"hrow\"><label>Русский<span class=\"hs\">GigaAM v3 · точность 5 из 5 · скорость 5 из 5 · 232 МБ</span></label><span class=\"hchip\"><i></i>активна</span></div>" +
@@ -1026,7 +1033,7 @@ var settingsStrings = map[string]map[string]string{
 			"<div class=\"hcap\">видно, кто ведёт язык и чего это стоит по скорости и месту на диске</div>" +
 			"</div>" +
 			"<p class=\"hsub\">Перевод</p>" +
-			"<p>Некоторые модели умеют не просто расшифровать речь, а сразу перевести её: вы говорите по-русски, в поле встаёт английский текст. Если выбранная модель так не умеет, переключатель будет недоступен, а рядом будет написано почему.</p>" +
+			"<p>Некоторые модели умеют не просто расшифровать речь, а сразу перевести её: вы говорите по-русски, в поле встаёт английский текст. Переводит Whisper: на английский — своей штатной задачей перевода, на остальные языки — тем, что ей называют язык результата как язык речи; на дальних парах качество неровное. Если выбранная модель переводить не умеет, рядом с переключателем появится оранжевая строка: при установленном Whisper плашка предложит перевести им, иначе текст останется на языке исходной речи.</p>" +
 			"<table class=\"hopt\">" +
 			"<tr><td>Изменить язык текстового вывода</td><td>Включает перевод.</td></tr>" +
 			"<tr><td>Язык по умолчанию</td><td>На какой язык переводить, если вы не выбрали другой прямо во время диктовки.</td></tr>" +
@@ -1132,7 +1139,8 @@ var settingsStrings = map[string]map[string]string{
 		"S_TR_TARGET":      "Default text output language",
 		"S_SRCLANG_SUB": "you speak it; it decides the recognition model",
 		"S_TR_LANGS_SUB": "these languages become buttons on the plate at insertion",
-		"S_TR_UNAVAIL": "unavailable — %s cannot translate",
+		"S_TR_UNAVAIL": "%s cannot translate — the text will stay in the source language",
+		"S_TR_STANDIN": "%s cannot translate — the plate will offer %s instead",
 		"S_TR_LOCK": "%s cannot be removed from the list — it is the default text output language. Pick another default language, and then %s can be excluded.",
 		"S_TR_LOCK_OK": "Got it",
 		"S_TR_ONE": "Several languages are checked, but without asking the translation will always go into one — %s (the default text output language). The others stay checked but get disabled.",
@@ -1269,7 +1277,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_STATE_INST": "Installed locally",
 		"S_STATE_INST_SUB": "models on disk, ready to be assigned",
 		"S_PRESETS": "Which model serves which language",
-		"S_PRESETS_HINT": "Click a language — the model choice for it unfolds below. Languages without their own model use the Auto-detect one.",
+		"S_PRESETS_HINT": "The Auto-detect model serves every language that has none of its own — those are the grey rows. Click a language to give it a model of its own. The same model works out which language is being spoken when no source language is set.",
 		"S_MFOLDER": "Your own model",
 		"S_DICT_SAVE": "Save",
 		"S_OWNM_SUB": "Add a local speech recognition model",
@@ -1286,7 +1294,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_BACK_AUTO": "Back to Auto-detect",
 		"S_LANGS_COUNT": "languages: %d",
 		"S_LANGS_UNKNOWN": "languages: unknown",
-		"S_TR_EN": "translates to English",
+		"S_TR_EN": "translates into %d languages",
 		"S_TR_LIST": "translates: %s",
 		"S_DL_GOING": "downloading:",
 		"S_OPEN_FOLDER": "Open the folder",
@@ -1559,8 +1567,8 @@ var settingsStrings = map[string]map[string]string{
 			"<li>The look comes from two lists in the System section. Design sets the font, the shape, the border width, the halo and the character of the motion; there are three — Terminal (green, the default), Editor (flat grey, no halo) and Neon (violet, rounded). Colour is offered to Terminal alone and changes nothing but the colour of the window, the plate and the tray icon: green, amber, blue, pink. The other designs bring their own colours. The choice applies at once, with no restart.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">The translation question</p>" +
-			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Transcribing…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Translate to:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">No translation</span></div></div>" +
-			"<p>The plate itself asks, on a second line, the moment you let the shortcut go — in the \"always ask\" and \"ask with a countdown\" modes. The buttons come from \"Languages in the dialog\"; the target language is highlighted. With a countdown, a line under that button shrinks: when it runs out, the highlighted language is used. <b>No translation</b> inserts the text as it was heard; the ✕ on the plate cancels the whole operation. The keyboard works too: Enter takes the highlighted answer, 1…9 pick a button by number, Esc cancels.</p>" +
+			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Transcribing…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Translate to:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Translate into the source language</span></div></div>" +
+			"<p>The plate itself asks, on a second line, the moment you let the shortcut go — in the \"always ask\" and \"ask with a countdown\" modes. The buttons come from \"Languages in the dialog\"; the target language is highlighted. With a countdown, a line under that button shrinks: when it runs out, the highlighted language is used. <b>Translate into the source language</b> inserts the text in the language you spoke; the ✕ on the plate cancels the whole operation. The keyboard works too: Enter takes the highlighted answer, 1…9 pick a button by number, Esc cancels.</p>" +
 			"<p class=\"wh\">Safe insertion</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Transcribing…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span style=\"color:var(--amber)\">Focus changed — insert?</span><span class=\"mock-btn on mock-cd\">Insert here</span><span class=\"mock-btn\">Copy</span></div></div>" +
 			"<ul>" +

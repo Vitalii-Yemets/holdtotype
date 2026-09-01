@@ -521,7 +521,7 @@ function check(name, actual, expected) {
   check("a hand-copied model shows no bars — its powers are unknown", d.querySelector('#langlist .pcard[data-id="local:my-model"]').querySelectorAll(".mbar").length, 0);
   check("and admits its languages are unknown", d.querySelector('#langlist .pcard[data-id="local:my-model"] .pmeta').textContent.includes("languages: unknown"), true);
   check("a multilingual model counts its languages in words", d.querySelector('#langlist .pcard[data-id="small"] .pmeta').textContent.includes("languages: 99"), true);
-  check("a model that translates says so in words", d.querySelector('#langlist .pcard[data-id="small"] .pmeta').textContent.includes("translates to English"), true);
+  check("a model that translates counts the languages it reaches", d.querySelector('#langlist .pcard[data-id="small"] .pmeta').textContent.includes("translates into 99 languages"), true);
   check("the words recognition-only are gone from the page", d.getElementById("p-models").textContent.includes("recognition only"), false);
   check("ram is estimated where it is known", d.querySelector('#langlist .pcard[data-id="small"] .pmeta').textContent.includes("≈921 MB RAM"), true);
   check("the models folder can be opened for hand-copied files", !!d.querySelector('#p-models button[onclick="appOpenModelsFolder()"]'), true);
@@ -775,10 +775,10 @@ function check(name, actual, expected) {
   trd.checked = true; trd.dispatchEvent(new w.Event("change")); await sleep(100);
   check("turning it on wakes the block, quiet mode locks other langs", state(), [false, false, false, true, false, true]);
   ask.value = "always"; ask.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(120);
-  check("ask-every-time frees only the reachable dialog langs", state(), [false, false, false, true, false, true]);
-  check("whisper reaches English alone — other targets are locked", [...d.getElementById("translate_target").options].filter(o=>o.disabled).map(o=>o.value).includes("de"), true);
+  check("ask-every-time frees the dialog langs", state(), [false, false, false, true, false, false]);
+  check("whisper reaches every dialog language, not English alone", [...d.getElementById("translate_target").options].filter(o=>o.disabled).map(o=>o.value).includes("de"), false);
   ask.value = "timeout"; ask.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(120);
-  check("timeout adds its seconds", state(), [false, false, false, false, false, true]);
+  check("timeout adds its seconds", state(), [false, false, false, false, false, false]);
   ask.value = "never"; ask.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(150);
   check("going quiet with several languages asks first", !!d.querySelector(".modal-bg"), true);
   d.querySelector(".modal .btn.ghost").click(); await sleep(200);
@@ -796,19 +796,27 @@ function check(name, actual, expected) {
   check("and the checkbox springs back", tlEn.checked, true);
   w.setModelState("gigaam-v3", "installed"); await w.refreshModels(); await sleep(80);
   const gflick = async () => { const s = d.querySelector('#langlist .pcard[data-id="gigaam-v3"] input.psw'); s.checked = true; s.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(150); };
-  await gflick();
-  check("a mute model warns it will silence translation", d.querySelector(".modal p").textContent.includes("cannot translate"), true);
-  d.querySelector(".modal .btn.ghost").click(); await sleep(250);
-  check("declining keeps the model and the translation", [w.lastSaveForm.lang_models.ru, trd.checked], ["small", true]);
-  check("and the switch snaps back", d.querySelector('#langlist .pcard[data-id="gigaam-v3"] input.psw').checked, false);
-  await gflick();
-  d.querySelector(".modal .btn.yes").click(); await sleep(300);
-  check("agreeing assigns the model and turns translation off", [w.lastSaveForm.lang_models.ru, w.lastSaveForm.translate_default, w.lastSaveForm.translate_ask], ["gigaam-v3", false, "never"]);
-  check("the switch is down and locked while the mute model works", [trd.checked, trd.disabled], [false, true]);
-  check("and the reason is written beside the switch", d.getElementById("tr_unavail").textContent.includes("GigaAM v3"), true);
+  await gflick(); await sleep(200);
+  check("a mute model no longer silences translation — Whisper stands in", !!d.querySelector(".modal-bg"), false);
+  check("the model is assigned and the switch stays on", [w.lastSaveForm.lang_models.ru, trd.checked, trd.disabled], ["gigaam-v3", true, false]);
+  const unav = () => d.getElementById("tr_unavail");
+  check("an amber line names the mute model and the one standing in for it",
+    [unav().style.display, unav().textContent.includes("GigaAM v3"), unav().textContent.includes("Small")],
+    ["", true, true]);
+  trd.checked = false; trd.dispatchEvent(new w.Event("change")); await sleep(150);
+  check("with translation off the warning goes quiet", unav().style.display, "none");
+  trd.checked = true; trd.dispatchEvent(new w.Event("change")); await sleep(150);
+  check("and comes back when translation is on again", unav().style.display, "");
+  check("English stays reachable through the stand-in", d.getElementById("tl_en").disabled, false);
+  for (const id of ["base", "small", "medium-q5_0"]) w.setModelState(id, "absent");
+  await w.refreshModels(); await sleep(200);
+  check("with no Whisper left there is nothing to stand in, and the switch locks", trd.disabled, true);
+  check("and the reason names the mute model", d.getElementById("tr_unavail").textContent.includes("GigaAM v3"), true);
+  w.setModelState("small", "active"); await w.refreshModels(); await sleep(200);
+  check("bringing a translating model back unlocks the switch", trd.disabled, false);
   const ssw = d.querySelector('#langlist .pcard[data-id="small"] input.psw');
   ssw.checked = true; ssw.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(250);
-  check("bringing a translating model back unlocks the switch", trd.disabled, false);
+  check("and the language goes back to it", w.lastSaveForm.lang_models.ru, "small");
   w.setModelState("gigaam-v3", "absent"); await w.refreshModels(); await sleep(80);
 
   tab("text"); await sleep(80);

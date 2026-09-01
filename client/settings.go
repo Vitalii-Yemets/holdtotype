@@ -1058,7 +1058,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"asauto": "S_AS_AUTO", "recchip": "S_REC_CHIP",
 		"backauto": "S_BACK_AUTO", "langsc": "S_LANGS_COUNT", "langsq": "S_LANGS_UNKNOWN",
 		"tren": "S_TR_EN", "translist": "S_TR_LIST", "dlgoing": "S_DL_GOING",
-		"trunavail": "S_TR_UNAVAIL", "trlockmsg": "S_TR_LOCK", "trlockok": "S_TR_LOCK_OK", "tronedlg": "S_TR_ONE", "trmodeldlg": "S_TR_NOMODEL", "trconfirm": "S_TR_CONFIRM", "fmsave": "S_DICT_SAVE",
+		"trunavail": "S_TR_UNAVAIL", "trstandin": "S_TR_STANDIN", "trlockmsg": "S_TR_LOCK", "trlockok": "S_TR_LOCK_OK", "tronedlg": "S_TR_ONE", "trmodeldlg": "S_TR_NOMODEL", "trconfirm": "S_TR_CONFIRM", "fmsave": "S_DICT_SAVE",
 		"srcused": "S_SRC_USED", "hfgo": "S_HF_GO",
 		"notforlang": "S_NOT_FOR_LANG", "notinstalled": "S_NOT_INSTALLED",
 		"manualnote": "S_MANUAL_NOTE", "manuallink": "S_MANUAL_LINK",
@@ -4209,7 +4209,7 @@ async function assignModel(lang, id){
     return;
   }
   const trSw = document.getElementById("tr_default");
-  if(trSw && trSw.checked && !trSw.disabled && !row.translate){
+  if(trSw && trSw.checked && !trSw.disabled && !row.translate && !trWhisperFallback()){
     if(!await askConfirm(L.trmodeldlg.replace("%s", row.name), L.trconfirm, null, L.mttroff)){
       refreshModels();
       return;
@@ -4241,7 +4241,9 @@ function langWord(m){
 }
 function trWord(m){
   if(!m.translate) return "";
-  return m.trlangs ? L.translist.replace("%s", m.trlangs.toUpperCase().split(",").join(", ")) : L.tren;
+  if(m.trlangs) return L.translist.replace("%s", m.trlangs.toUpperCase().split(",").join(", "));
+  const n = m.langs === "*" ? 99 : (m.langs || "").split(",").filter(Boolean).length;
+  return L.tren.replace("%d", String(n));
 }
 function renderLangs(){
   const box = document.getElementById("langlist");
@@ -4759,16 +4761,26 @@ function applyPostState(){
   mark("src_local", "pick_local", postSource !== "api");
   mark("src_api", "pick_api", postSource === "api");
 }
-function trUnavailRow(){
+function trWhisperFallback(){
+  if(!modelRowsCache.length) return null;
+  return modelRowsCache.find(m=>m.engine === "whisper" && m.translate && !m.custom &&
+    (m.state === "active" || m.state === "installed")) || null;
+}
+function trMuteRow(){
   if(!modelRowsCache.length) return null;
   const m = rowById(effectiveFor(curLang()));
   return m && !m.translate ? m : null;
 }
+function trUnavailRow(){
+  const m = trMuteRow();
+  if(!m) return null;
+  return trWhisperFallback() ? null : m;
+}
 function trTargetsFor(){
   if(!modelRowsCache.length) return null;
   const m = rowById(effectiveFor(curLang()));
-  if(!m || !m.translate) return [];
-  return m.trlangs ? m.trlangs.split(",") : ["en"];
+  if(!m || !m.translate) return trWhisperFallback() ? trAll.slice() : [];
+  return m.trlangs ? m.trlangs.split(",") : trAll.slice();
 }
 function syncTrControls(){
   const sw = document.getElementById("tr_default");
@@ -4797,8 +4809,14 @@ function syncTrControls(){
   });
   const un = document.getElementById("tr_unavail");
   if(un){
-    un.style.display = bad ? "" : "none";
-    if(bad) un.textContent = L.trunavail.replace("%s", bad.name);
+    const mute = (sw.checked || bad) ? trMuteRow() : null;
+    const stand = mute ? trWhisperFallback() : null;
+    un.style.display = mute ? "" : "none";
+    if(mute){
+      un.textContent = stand
+        ? L.trstandin.replace("%s", mute.name).replace("%s", stand.name)
+        : L.trunavail.replace("%s", mute.name);
+    }
   }
   const dimRow = (el, dim)=>{ const r = el && el.closest(".row"); if(r) r.classList.toggle("dimmed", dim); };
   dimRow(sw, !!bad);

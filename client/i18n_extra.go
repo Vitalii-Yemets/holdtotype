@@ -33,13 +33,16 @@ func init() {
 		"ov.silence":       "Stille — nichts erkannt", "ov.server.loading": "Server lädt noch",
 		"ov.tooshort":  "Zu kurz — Tasten länger halten",
 		"ov.cancelled": "Abgebrochen", "ov.editing": "Bearbeite: %s", "ov.translating": "Übersetze",
-		"ov.llm.needed": "Diese Sprache benötigt das LLM-Modul", "td.title": "Übersetzen nach:", "td.plain": "Ohne Übersetzung",
+		"ov.llm.needed": "Diese Sprache benötigt das LLM-Modul", "td.title": "Übersetzen nach:", "td.plain": "In die Ausgangssprache übersetzen",
 		"cap.title": "{app} — Tastenkürzel", "cap.prompt": "Neue Tastenkombination drücken\n\njetzt: %s   ·   Esc — Abbrechen",
 		"cap.selected": "Gewählt: %s", "cap.cancelled": "Abgebrochen", "hk.taken": "%s ist von Windows belegt: %s. Das Diktat startet womöglich nie", "hk.lock": "Computer sperren", "hk.desktop": "Desktop anzeigen", "hk.explorer": "Explorer", "hk.run": "Ausführen-Fenster", "hk.settings": "Windows-Einstellungen", "hk.search": "Suche", "hk.center": "Infocenter", "hk.menu": "Power-User-Menü", "hk.clipboard": "Zwischenablageverlauf", "hk.gamebar": "Gamebar", "hk.voice": "Windows-Spracheingabe", "hk.project": "Projizieren", "hk.tasks": "Taskansicht", "hk.layout": "Tastaturlayout wechseln", "hk.newdesktop": "neuer Desktop", "hk.closedesktop": "Desktop schließen", "hk.snip": "Screenshot-Werkzeug", "hk.switch": "Fenster wechseln", "hk.close": "Fenster schließen", "hk.cycle": "Fenster durchblättern", "hk.start": "Startmenü", "hk.taskmgr": "Task-Manager", "hk.secure": "Sicherheitsbildschirm",
 		"model.switching": "Modellwechsel — der Erkenner startet neu…", "model.del.active": "Aktives Modell kann nicht gelöscht werden",
 		"model.del.ok":   "Modell gelöscht",
 		"about.text":     "{app} %s\n\nSprache → Text an der Cursorposition.\nCursor in ein Eingabefeld setzen, %s halten, sprechen, loslassen — der Text wird eingefügt.\n\nErkennung: whisper.cpp, vollständig lokal und offline.\nModell: %s (Sprache: %s)\n\nEinstellungen: Klick auf das Tray-Symbol oder config.json.\nLogs: {log} (max. ~2 MB).",
 		"status.nomodel": "Kein Erkennungsmodell geladen — wählen Sie eines in den Einstellungen",
+		"tf.title": "%s übersetzt nicht. Trotzdem übersetzen?",
+		"tf.yes": "Ja, über %s",
+		"tf.no": "Wie erkannt",
 		"state.loaded.none": "nichts geladen",
 		"state.week": "%d Diktate · %d Zeichen",
 		"snd.ok": "Pegel in Ordnung",
@@ -128,13 +131,16 @@ func init() {
 		"ov.silence":       "Silence — rien reconnu", "ov.server.loading": "Le serveur charge encore",
 		"ov.tooshort":  "Trop court — maintenez les touches plus longtemps",
 		"ov.cancelled": "Annulé", "ov.editing": "Édition : %s", "ov.translating": "Traduction",
-		"ov.llm.needed": "Cette langue nécessite le module LLM", "td.title": "Traduire vers :", "td.plain": "Sans traduction",
+		"ov.llm.needed": "Cette langue nécessite le module LLM", "td.title": "Traduire vers :", "td.plain": "Traduire dans la langue source",
 		"cap.title": "{app} — raccourci", "cap.prompt": "Appuyez une nouvelle combinaison\n\nactuel : %s   ·   Échap — annuler",
 		"cap.selected": "Choisi : %s", "cap.cancelled": "Annulé", "hk.taken": "%s est pris par Windows : %s. La dictée risque de ne jamais démarrer", "hk.lock": "verrouiller l'ordinateur", "hk.desktop": "afficher le bureau", "hk.explorer": "explorateur de fichiers", "hk.run": "fenêtre Exécuter", "hk.settings": "paramètres Windows", "hk.search": "recherche", "hk.center": "centre de notifications", "hk.menu": "menu avancé", "hk.clipboard": "historique du presse-papiers", "hk.gamebar": "barre de jeu", "hk.voice": "saisie vocale Windows", "hk.project": "projeter sur un écran", "hk.tasks": "affichage des tâches", "hk.layout": "changer de disposition", "hk.newdesktop": "nouveau bureau", "hk.closedesktop": "fermer le bureau", "hk.snip": "outil capture d'écran", "hk.switch": "changer de fenêtre", "hk.close": "fermer la fenêtre", "hk.cycle": "parcourir les fenêtres", "hk.start": "menu Démarrer", "hk.taskmgr": "gestionnaire des tâches", "hk.secure": "écran de sécurité",
 		"model.switching": "Changement de modèle — redémarrage…", "model.del.active": "Impossible de supprimer le modèle actif",
 		"model.del.ok":   "Modèle supprimé",
 		"about.text":     "{app} %s\n\nVoix → texte à la position du curseur.\nPlacez le curseur, maintenez %s, parlez, relâchez — le texte s'insère.\n\nReconnaissance : whisper.cpp, entièrement locale et hors ligne.\nModèle : %s (langue : %s)\n\nRéglages : clic sur l'icône ou config.json.\nLogs : {log} (max ~2 Mo).",
 		"status.nomodel": "Aucun modèle de reconnaissance téléchargé — choisissez-en un dans les réglages",
+		"tf.title": "%s ne traduit pas. Traduire quand même ?",
+		"tf.yes": "Oui, via %s",
+		"tf.no": "Tel quel",
 		"state.loaded.none": "rien de chargé",
 		"state.week": "%d dictées · %d caractères",
 		"snd.ok": "niveau correct",
@@ -223,13 +229,16 @@ func init() {
 		"ov.silence":       "Silencio — nada reconocido", "ov.server.loading": "El servidor aún carga",
 		"ov.tooshort":  "Demasiado corto: mantén las teclas más tiempo",
 		"ov.cancelled": "Cancelado", "ov.editing": "Editando: %s", "ov.translating": "Traduciendo",
-		"ov.llm.needed": "Este idioma requiere el módulo LLM", "td.title": "Traducir a:", "td.plain": "Sin traducción",
+		"ov.llm.needed": "Este idioma requiere el módulo LLM", "td.title": "Traducir a:", "td.plain": "Traducir al idioma de origen",
 		"cap.title": "{app} — atajo", "cap.prompt": "Pulse una nueva combinación\n\nactual: %s   ·   Esc — cancelar",
 		"cap.selected": "Elegido: %s", "cap.cancelled": "Cancelado", "hk.taken": "%s lo usa Windows: %s. Puede que el dictado no empiece nunca", "hk.lock": "bloquear el equipo", "hk.desktop": "mostrar el escritorio", "hk.explorer": "explorador de archivos", "hk.run": "ventana Ejecutar", "hk.settings": "configuración de Windows", "hk.search": "búsqueda", "hk.center": "centro de notificaciones", "hk.menu": "menú avanzado", "hk.clipboard": "historial del portapapeles", "hk.gamebar": "barra de juego", "hk.voice": "escritura por voz de Windows", "hk.project": "proyectar en pantalla", "hk.tasks": "vista de tareas", "hk.layout": "cambiar la distribución", "hk.newdesktop": "escritorio nuevo", "hk.closedesktop": "cerrar el escritorio", "hk.snip": "herramienta de recortes", "hk.switch": "cambiar de ventana", "hk.close": "cerrar la ventana", "hk.cycle": "recorrer ventanas", "hk.start": "menú Inicio", "hk.taskmgr": "administrador de tareas", "hk.secure": "pantalla de seguridad",
 		"model.switching": "Cambiando modelo — reiniciando…", "model.del.active": "No se puede borrar el modelo activo",
 		"model.del.ok":   "Modelo borrado",
 		"about.text":     "{app} %s\n\nVoz → texto en la posición del cursor.\nColoque el cursor, mantenga %s, hable, suelte — el texto se inserta.\n\nReconocimiento: whisper.cpp, totalmente local y sin conexión.\nModelo: %s (idioma: %s)\n\nAjustes: clic en el icono o config.json.\nLogs: {log} (máx ~2 MB).",
 		"status.nomodel": "No hay ningún modelo descargado — elige uno en los ajustes",
+		"tf.title": "%s no traduce. ¿Traducir de todos modos?",
+		"tf.yes": "Sí, con %s",
+		"tf.no": "Tal cual",
 		"state.loaded.none": "nada cargado",
 		"state.week": "%d dictados · %d caracteres",
 		"snd.ok": "nivel correcto",
@@ -318,13 +327,16 @@ func init() {
 		"ov.silence":       "Silenzio — nulla riconosciuto", "ov.server.loading": "Il server sta ancora caricando",
 		"ov.tooshort":  "Troppo breve — tieni premuti i tasti più a lungo",
 		"ov.cancelled": "Annullato", "ov.editing": "Modifica: %s", "ov.translating": "Traduzione",
-		"ov.llm.needed": "Questa lingua richiede il modulo LLM", "td.title": "Traduci in:", "td.plain": "Senza traduzione",
+		"ov.llm.needed": "Questa lingua richiede il modulo LLM", "td.title": "Traduci in:", "td.plain": "Tradurre nella lingua di partenza",
 		"cap.title": "{app} — scorciatoia", "cap.prompt": "Premi una nuova combinazione\n\nattuale: %s   ·   Esc — annulla",
 		"cap.selected": "Scelto: %s", "cap.cancelled": "Annullato", "hk.taken": "%s è occupata da Windows: %s. La dettatura potrebbe non partire", "hk.lock": "bloccare il computer", "hk.desktop": "mostrare il desktop", "hk.explorer": "esplora file", "hk.run": "finestra Esegui", "hk.settings": "impostazioni di Windows", "hk.search": "ricerca", "hk.center": "centro notifiche", "hk.menu": "menu avanzato", "hk.clipboard": "cronologia appunti", "hk.gamebar": "barra di gioco", "hk.voice": "dettatura di Windows", "hk.project": "proiettare su schermo", "hk.tasks": "visualizzazione attività", "hk.layout": "cambio layout", "hk.newdesktop": "nuovo desktop", "hk.closedesktop": "chiudere il desktop", "hk.snip": "strumento di cattura", "hk.switch": "cambiare finestra", "hk.close": "chiudere la finestra", "hk.cycle": "scorrere le finestre", "hk.start": "menu Start", "hk.taskmgr": "gestione attività", "hk.secure": "schermata di sicurezza",
 		"model.switching": "Cambio modello — riavvio…", "model.del.active": "Impossibile eliminare il modello attivo",
 		"model.del.ok":   "Modello eliminato",
 		"about.text":     "{app} %s\n\nVoce → testo alla posizione del cursore.\nPosiziona il cursore, tieni %s, parla, rilascia — il testo viene inserito.\n\nRiconoscimento: whisper.cpp, completamente locale e offline.\nModello: %s (lingua: %s)\n\nImpostazioni: clic sull'icona o config.json.\nLog: {log} (max ~2 MB).",
 		"status.nomodel": "Nessun modello di riconoscimento scaricato — scegline uno nelle impostazioni",
+		"tf.title": "%s non traduce. Tradurre comunque?",
+		"tf.yes": "Sì, con %s",
+		"tf.no": "Così com’è",
 		"state.loaded.none": "niente in memoria",
 		"state.week": "%d dettature · %d caratteri",
 		"snd.ok": "livello a posto",
@@ -413,13 +425,16 @@ func init() {
 		"ov.silence":       "Cisza — nic nie rozpoznano", "ov.server.loading": "Serwer wciąż się ładuje",
 		"ov.tooshort":  "Za krótko — przytrzymaj klawisze dłużej",
 		"ov.cancelled": "Anulowano", "ov.editing": "Edycja: %s", "ov.translating": "Tłumaczenie",
-		"ov.llm.needed": "Ten język wymaga modułu LLM", "td.title": "Tłumacz na:", "td.plain": "Bez tłumaczenia",
+		"ov.llm.needed": "Ten język wymaga modułu LLM", "td.title": "Tłumacz na:", "td.plain": "Przetłumacz na język źródłowy",
 		"cap.title": "{app} — skrót", "cap.prompt": "Naciśnij nową kombinację\n\nobecna: %s   ·   Esc — anuluj",
 		"cap.selected": "Wybrano: %s", "cap.cancelled": "Anulowano", "hk.taken": "%s jest zajęty przez Windows: %s. Dyktowanie może się nie zacząć", "hk.lock": "blokada komputera", "hk.desktop": "pokaż pulpit", "hk.explorer": "eksplorator plików", "hk.run": "okno Uruchom", "hk.settings": "ustawienia Windows", "hk.search": "wyszukiwanie", "hk.center": "centrum powiadomień", "hk.menu": "menu zaawansowane", "hk.clipboard": "historia schowka", "hk.gamebar": "pasek gier", "hk.voice": "pisanie głosem Windows", "hk.project": "projektowanie obrazu", "hk.tasks": "widok zadań", "hk.layout": "zmiana układu klawiatury", "hk.newdesktop": "nowy pulpit", "hk.closedesktop": "zamknięcie pulpitu", "hk.snip": "narzędzie wycinania", "hk.switch": "przełączanie okien", "hk.close": "zamknięcie okna", "hk.cycle": "przeglądanie okien", "hk.start": "menu Start", "hk.taskmgr": "menedżer zadań", "hk.secure": "ekran zabezpieczeń",
 		"model.switching": "Zmiana modelu — restart…", "model.del.active": "Nie można usunąć aktywnego modelu",
 		"model.del.ok":   "Model usunięty",
 		"about.text":     "{app} %s\n\nGłos → tekst w pozycji kursora.\nUstaw kursor, przytrzymaj %s, mów, puść — tekst zostanie wstawiony.\n\nRozpoznawanie: whisper.cpp, w pełni lokalnie i offline.\nModel: %s (język: %s)\n\nUstawienia: kliknij ikonę lub config.json.\nLogi: {log} (maks. ~2 MB).",
 		"status.nomodel": "Nie pobrano żadnego modelu — wybierz go w ustawieniach",
+		"tf.title": "%s nie tłumaczy. Przetłumaczyć mimo to?",
+		"tf.yes": "Tak, przez %s",
+		"tf.no": "Jak rozpoznano",
 		"state.loaded.none": "nic nie wczytano",
 		"state.week": "%d dyktowań · %d znaków",
 		"snd.ok": "poziom w porządku",
@@ -482,7 +497,8 @@ func init() {
 		"S_TR_DEFAULT": "Sprache der Textausgabe ändern", "S_TR_TARGET": "Standardsprache der Textausgabe", "S_TR_ASK": "Nach der Ausgabesprache fragen", "S_TR_ASK_NEVER": "Nicht fragen — sofort übersetzen",
 		"S_SRCLANG_SUB": "Sie sprechen sie; sie bestimmt das Erkennungsmodell",
 		"S_TR_LANGS_SUB": "diese Sprachen werden beim Einfügen zu Schaltflächen auf der Leiste",
-		"S_TR_UNAVAIL": "nicht verfügbar — %s kann nicht übersetzen",
+		"S_TR_UNAVAIL": "%s kann nicht übersetzen — der Text bleibt in der Ausgangssprache",
+		"S_TR_STANDIN": "%s kann nicht übersetzen — die Leiste bietet stattdessen %s an",
 		"S_TR_LOCK": "%s kann nicht aus der Liste entfernt werden — sie ist die Standardsprache der Textausgabe. Wählen Sie eine andere Standardsprache, dann lässt sich %s ausschließen.",
 		"S_TR_LOCK_OK": "Verstanden",
 		"S_TR_ONE": "Mehrere Sprachen sind angehakt, aber ohne Nachfrage geht die Übersetzung immer in eine — %s (Standardsprache der Textausgabe). Die übrigen bleiben angehakt, werden aber deaktiviert.",
@@ -615,7 +631,7 @@ func init() {
 		"S_STATE_INST": "Lokal installiert",
 		"S_STATE_INST_SUB": "Modelle auf der Festplatte, bereit zur Zuweisung",
 		"S_PRESETS": "Welches Modell für welche Sprache",
-		"S_PRESETS_HINT": "Klicken Sie eine Sprache an — darunter öffnet sich die Modellwahl für sie. Sprachen ohne eigenes Modell nutzen das der automatischen Erkennung.",
+		"S_PRESETS_HINT": "Das Modell der Zeile «Automatisch» bedient alle Sprachen ohne eigenes Modell — sie stehen grau in der Liste. Klicken Sie eine Sprache an, um ihr ein eigenes zu geben. Dasselbe Modell erkennt auch, welche Sprache gesprochen wird, wenn keine Ausgangssprache gesetzt ist.",
 		"S_MFOLDER": "Eigenes Modell",
 		"S_DICT_SAVE": "Speichern",
 		"S_OWNM_SUB": "Fügen Sie ein lokales Spracherkennungsmodell hinzu",
@@ -632,7 +648,7 @@ func init() {
 		"S_BACK_AUTO": "Zurück zur automatischen Erkennung",
 		"S_LANGS_COUNT": "Sprachen: %d",
 		"S_LANGS_UNKNOWN": "Sprachen: unbekannt",
-		"S_TR_EN": "übersetzt ins Englische",
+		"S_TR_EN": "übersetzt in %d Sprachen",
 		"S_TR_LIST": "übersetzt: %s",
 		"S_DL_GOING": "wird geladen:",
 		"S_OPEN_FOLDER": "Ordner öffnen",
@@ -787,8 +803,8 @@ func init() {
 			"<li>Das Aussehen kommt aus zwei Listen im Bereich „System“. „Design“ bestimmt Schrift, Form, Rahmenstärke, Schein und Art der Bewegung; es gibt drei: „Terminal“ (grün, Standard), „Editor“ (flaches Grau, ohne Schein) und „Neon“ (violett, abgerundet). „Farbe“ wird nur beim Terminal angeboten und ändert allein die Farbe von Fenster, Leiste und Symbol im Infobereich: Grün, Bernstein, Blau, Rosa. Die anderen Designs bringen ihre eigenen Farben mit. Die Wahl gilt sofort, ohne Neustart.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Die Frage nach der Übersetzung</p>" +
-			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Erkenne…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Übersetzen nach:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Ohne Übersetzung</span></div></div>" +
-			"<p>Die Leiste fragt selbst, auf einer zweiten Zeile, sobald Sie das Kürzel loslassen — in den Modi „jedes Mal fragen“ und „mit Timeout fragen“. Die Schaltflächen kommen aus „Sprachen im Dialog“; die Zielsprache ist hervorgehoben. Mit Timeout schrumpft unter dieser Schaltfläche ein Strich: läuft er aus, gilt die hervorgehobene Sprache. <b>Ohne Übersetzung</b> fügt den Text so ein, wie er gehört wurde; das ✕ auf der Leiste bricht alles ab. Auch die Tastatur geht: Enter nimmt die hervorgehobene Antwort, 1…9 wählen eine Schaltfläche, Esc bricht ab.</p>" +
+			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Erkenne…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Übersetzen nach:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">In die Ausgangssprache übersetzen</span></div></div>" +
+			"<p>Die Leiste fragt selbst, auf einer zweiten Zeile, sobald Sie das Kürzel loslassen — in den Modi „jedes Mal fragen“ und „mit Timeout fragen“. Die Schaltflächen kommen aus „Sprachen im Dialog“; die Zielsprache ist hervorgehoben. Mit Timeout schrumpft unter dieser Schaltfläche ein Strich: läuft er aus, gilt die hervorgehobene Sprache. <b>In die Ausgangssprache übersetzen</b> fügt den Text in der gesprochenen Sprache ein; das ✕ auf der Leiste bricht alles ab. Auch die Tastatur geht: Enter nimmt die hervorgehobene Antwort, 1…9 wählen eine Schaltfläche, Esc bricht ab.</p>" +
 			"<p class=\"wh\">Sicheres Einfügen</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Erkenne…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span style=\"color:var(--amber)\">Fokus gewechselt — einfügen?</span><span class=\"mock-btn on mock-cd\">Hier einfügen</span><span class=\"mock-btn\">Kopieren</span></div></div>" +
 			"<ul>" +
@@ -909,7 +925,8 @@ func init() {
 		"S_TR_DEFAULT": "Changer la langue de sortie du texte", "S_TR_TARGET": "Langue de sortie du texte par défaut", "S_TR_ASK": "Demander la langue de sortie du texte", "S_TR_ASK_NEVER": "Ne pas demander — traduire aussitôt",
 		"S_SRCLANG_SUB": "vous la parlez ; elle détermine le modèle de reconnaissance",
 		"S_TR_LANGS_SUB": "ces langues deviennent des boutons sur la plaque à l’insertion",
-		"S_TR_UNAVAIL": "indisponible — %s ne sait pas traduire",
+		"S_TR_UNAVAIL": "%s ne sait pas traduire — le texte restera dans la langue source",
+		"S_TR_STANDIN": "%s ne sait pas traduire — la plaque proposera %s à la place",
 		"S_TR_LOCK": "%s ne peut pas être retirée de la liste — c’est la langue de sortie du texte par défaut. Choisissez une autre langue par défaut, et %s pourra être exclue.",
 		"S_TR_LOCK_OK": "Compris",
 		"S_TR_ONE": "Plusieurs langues sont cochées, mais sans question la traduction ira toujours vers une seule — %s (langue de sortie par défaut). Les autres restent cochées mais sont désactivées.",
@@ -1042,7 +1059,7 @@ func init() {
 		"S_STATE_INST": "Installés localement",
 		"S_STATE_INST_SUB": "modèles sur le disque, prêts à être affectés",
 		"S_PRESETS": "Quel modèle pour quelle langue",
-		"S_PRESETS_HINT": "Cliquez sur une langue — le choix des modèles s’ouvre dessous. Les langues sans modèle propre utilisent celui de la détection automatique.",
+		"S_PRESETS_HINT": "Le modèle de la ligne « Auto » sert toutes les langues qui n’ont pas le leur — elles sont en gris dans la liste. Cliquez sur une langue pour lui en donner un. Ce même modèle reconnaît aussi la langue parlée quand aucune langue source n’est choisie.",
 		"S_MFOLDER": "Votre propre modèle",
 		"S_DICT_SAVE": "Enregistrer",
 		"S_OWNM_SUB": "Ajoutez un modèle local de reconnaissance vocale",
@@ -1059,7 +1076,7 @@ func init() {
 		"S_BACK_AUTO": "Revenir à la détection automatique",
 		"S_LANGS_COUNT": "langues : %d",
 		"S_LANGS_UNKNOWN": "langues : inconnues",
-		"S_TR_EN": "traduit vers l’anglais",
+		"S_TR_EN": "traduit vers %d langues",
 		"S_TR_LIST": "traduit : %s",
 		"S_DL_GOING": "téléchargement :",
 		"S_OPEN_FOLDER": "Ouvrir le dossier",
@@ -1214,8 +1231,8 @@ func init() {
 			"<li>L'apparence vient de deux listes dans la section « Système ». « Design » donne la police, les formes, l'épaisseur des bordures, le halo et le caractère des animations ; il y en a trois : « Terminal » (vert, par défaut), « Éditeur » (gris plat, sans halo) et « Néon » (violet, arrondi). « Couleur » n'est proposée qu'au Terminal et ne change que la couleur de la fenêtre, du bandeau et de l'icône : vert, ambre, bleu, rose. Les autres designs ont leurs propres couleurs. Le choix s'applique aussitôt, sans redémarrage.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">La question de la traduction</p>" +
-			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Reconnaissance…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Traduire vers :</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Sans traduction</span></div></div>" +
-			"<p>C'est le bandeau lui-même qui demande, sur une deuxième ligne, dès que vous relâchez le raccourci — dans les modes « demander à chaque fois » et « demander avec délai ». Les boutons viennent de « Langues du dialogue » ; la langue cible est mise en avant. Avec un délai, un trait se raccourcit sous ce bouton : à la fin, la langue mise en avant s'applique. <b>Sans traduction</b> insère le texte tel qu'il a été entendu ; le ✕ du bandeau annule tout. Le clavier fonctionne aussi : Entrée prend la réponse mise en avant, 1…9 choisissent un bouton, Échap annule.</p>" +
+			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Reconnaissance…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Traduire vers :</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Traduire dans la langue source</span></div></div>" +
+			"<p>C'est le bandeau lui-même qui demande, sur une deuxième ligne, dès que vous relâchez le raccourci — dans les modes « demander à chaque fois » et « demander avec délai ». Les boutons viennent de « Langues du dialogue » ; la langue cible est mise en avant. Avec un délai, un trait se raccourcit sous ce bouton : à la fin, la langue mise en avant s'applique. <b>Traduire dans la langue source</b> insère le texte dans la langue que vous avez parlée ; le ✕ du bandeau annule tout. Le clavier fonctionne aussi : Entrée prend la réponse mise en avant, 1…9 choisissent un bouton, Échap annule.</p>" +
 			"<p class=\"wh\">Insertion sûre</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Reconnaissance…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span style=\"color:var(--amber)\">Le focus a changé — insérer ?</span><span class=\"mock-btn on mock-cd\">Insérer ici</span><span class=\"mock-btn\">Copier</span></div></div>" +
 			"<ul>" +
@@ -1336,7 +1353,8 @@ func init() {
 		"S_TR_DEFAULT": "Cambiar el idioma de salida del texto", "S_TR_TARGET": "Idioma de salida del texto por defecto", "S_TR_ASK": "Preguntar el idioma de salida del texto", "S_TR_ASK_NEVER": "No preguntar — traducir enseguida",
 		"S_SRCLANG_SUB": "usted lo habla; determina el modelo de reconocimiento",
 		"S_TR_LANGS_SUB": "estos idiomas serán botones en la placa al insertar",
-		"S_TR_UNAVAIL": "no disponible — %s no sabe traducir",
+		"S_TR_UNAVAIL": "%s no sabe traducir — el texto se quedará en el idioma de origen",
+		"S_TR_STANDIN": "%s no sabe traducir — la placa ofrecerá %s en su lugar",
 		"S_TR_LOCK": "%s no se puede quitar de la lista — es el idioma de salida del texto por defecto. Elija otro idioma por defecto y entonces %s podrá excluirse.",
 		"S_TR_LOCK_OK": "Entendido",
 		"S_TR_ONE": "Hay varios idiomas marcados, pero sin preguntar la traducción irá siempre a uno — %s (idioma de salida por defecto). Los demás quedan marcados pero deshabilitados.",
@@ -1469,7 +1487,7 @@ func init() {
 		"S_STATE_INST": "Instalados localmente",
 		"S_STATE_INST_SUB": "modelos en disco, listos para asignar",
 		"S_PRESETS": "Qué modelo para qué idioma",
-		"S_PRESETS_HINT": "Haga clic en un idioma — debajo se abre la elección de modelos para él. Los idiomas sin modelo propio usan el de la detección automática.",
+		"S_PRESETS_HINT": "El modelo de la fila «Auto» sirve a todos los idiomas que no tienen el suyo — en la lista aparecen en gris. Haga clic en un idioma para darle uno propio. Ese mismo modelo reconoce qué idioma se habla cuando no hay idioma de origen fijado.",
 		"S_MFOLDER": "Modelo propio",
 		"S_DICT_SAVE": "Guardar",
 		"S_OWNM_SUB": "Añada un modelo local de reconocimiento de voz",
@@ -1486,7 +1504,7 @@ func init() {
 		"S_BACK_AUTO": "Volver a la detección automática",
 		"S_LANGS_COUNT": "idiomas: %d",
 		"S_LANGS_UNKNOWN": "idiomas: desconocidos",
-		"S_TR_EN": "traduce al inglés",
+		"S_TR_EN": "traduce a %d idiomas",
 		"S_TR_LIST": "traduce: %s",
 		"S_DL_GOING": "descargando:",
 		"S_OPEN_FOLDER": "Abrir la carpeta",
@@ -1641,8 +1659,8 @@ func init() {
 			"<li>El aspecto sale de dos listas en la sección «Sistema». «Diseño» fija la tipografía, las formas, el grosor de los bordes, el halo y el carácter de las animaciones; hay tres: «Terminal» (verde, por defecto), «Editor» (gris plano, sin halo) y «Neón» (violeta, redondeado). «Color» solo se ofrece al Terminal y cambia únicamente el color de la ventana, la barra y el icono: verde, ámbar, azul, rosa. Los demás diseños traen sus propios colores. La elección se aplica al momento, sin reiniciar.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">La pregunta de la traducción</p>" +
-			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Reconociendo…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Traducir a:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Sin traducción</span></div></div>" +
-			"<p>Pregunta la propia barra, en una segunda línea, en cuanto sueltas el atajo — en los modos «preguntar siempre» y «preguntar con cuenta atrás». Los botones vienen de «Idiomas del diálogo»; el idioma de destino está resaltado. Con cuenta atrás, bajo ese botón se acorta una línea: cuando se agota, se aplica el idioma resaltado. <b>Sin traducción</b> inserta el texto tal como se oyó; la ✕ de la barra cancela toda la operación. El teclado también sirve: Intro toma la respuesta resaltada, 1…9 eligen un botón, Esc cancela.</p>" +
+			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Reconociendo…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Traducir a:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Traducir al idioma de origen</span></div></div>" +
+			"<p>Pregunta la propia barra, en una segunda línea, en cuanto sueltas el atajo — en los modos «preguntar siempre» y «preguntar con cuenta atrás». Los botones vienen de «Idiomas del diálogo»; el idioma de destino está resaltado. Con cuenta atrás, bajo ese botón se acorta una línea: cuando se agota, se aplica el idioma resaltado. <b>Traducir al idioma de origen</b> inserta el texto en el idioma que habló; la ✕ de la barra cancela toda la operación. El teclado también sirve: Intro toma la respuesta resaltada, 1…9 eligen un botón, Esc cancela.</p>" +
 			"<p class=\"wh\">Inserción segura</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Reconociendo…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span style=\"color:var(--amber)\">Cambió el foco, ¿insertar?</span><span class=\"mock-btn on mock-cd\">Insertar aquí</span><span class=\"mock-btn\">Copiar</span></div></div>" +
 			"<ul>" +
@@ -1763,7 +1781,8 @@ func init() {
 		"S_TR_DEFAULT": "Cambiare la lingua di uscita del testo", "S_TR_TARGET": "Lingua di uscita del testo predefinita", "S_TR_ASK": "Chiedere la lingua di uscita del testo", "S_TR_ASK_NEVER": "Non chiedere — tradurre subito",
 		"S_SRCLANG_SUB": "la parlate voi; determina il modello di riconoscimento",
 		"S_TR_LANGS_SUB": "queste lingue diventano pulsanti sulla targa all’inserimento",
-		"S_TR_UNAVAIL": "non disponibile — %s non sa tradurre",
+		"S_TR_UNAVAIL": "%s non sa tradurre — il testo resterà nella lingua di partenza",
+		"S_TR_STANDIN": "%s non sa tradurre — la targhetta proporrà %s",
 		"S_TR_LOCK": "%s non può essere tolta dall’elenco — è la lingua di uscita del testo predefinita. Scegliete un’altra lingua predefinita e allora %s potrà essere esclusa.",
 		"S_TR_LOCK_OK": "Capito",
 		"S_TR_ONE": "Sono spuntate più lingue, ma senza domanda la traduzione andrà sempre in una sola — %s (lingua di uscita predefinita). Le altre restano spuntate ma disabilitate.",
@@ -1896,7 +1915,7 @@ func init() {
 		"S_STATE_INST": "Installati localmente",
 		"S_STATE_INST_SUB": "modelli su disco, pronti da assegnare",
 		"S_PRESETS": "Quale modello per quale lingua",
-		"S_PRESETS_HINT": "Fate clic su una lingua — sotto si apre la scelta dei modelli per essa. Le lingue senza modello proprio usano quello del rilevamento automatico.",
+		"S_PRESETS_HINT": "Il modello della riga «Auto» serve tutte le lingue che non ne hanno uno proprio — nell’elenco sono in grigio. Fate clic su una lingua per assegnarle il suo. Lo stesso modello riconosce anche quale lingua si parla quando la lingua di partenza non è impostata.",
 		"S_MFOLDER": "Modello proprio",
 		"S_DICT_SAVE": "Salva",
 		"S_OWNM_SUB": "Aggiungete un modello locale di riconoscimento vocale",
@@ -1913,7 +1932,7 @@ func init() {
 		"S_BACK_AUTO": "Tornare al rilevamento automatico",
 		"S_LANGS_COUNT": "lingue: %d",
 		"S_LANGS_UNKNOWN": "lingue: sconosciute",
-		"S_TR_EN": "traduce in inglese",
+		"S_TR_EN": "traduce in %d lingue",
 		"S_TR_LIST": "traduce: %s",
 		"S_DL_GOING": "scaricamento:",
 		"S_OPEN_FOLDER": "Apri la cartella",
@@ -2068,8 +2087,8 @@ func init() {
 			"<li>L'aspetto viene da due elenchi nella sezione «Sistema». «Design» decide il carattere tipografico, le forme, lo spessore dei bordi, l'alone e il modo in cui tutto si muove; sono tre: «Terminale» (verde, predefinito), «Editor» (grigio piatto, senza alone) e «Neon» (viola, arrotondato). «Colore» viene offerto solo al Terminale e cambia soltanto il colore della finestra, della barra e dell'icona: verde, ambra, blu, rosa. Gli altri design portano i propri colori. La scelta vale subito, senza riavvio.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">La domanda sulla traduzione</p>" +
-			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Riconoscimento…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Tradurre in:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Senza traduzione</span></div></div>" +
-			"<p>È la barra stessa a chiedere, su una seconda riga, appena rilasci la scorciatoia — nelle modalità «chiedi sempre» e «chiedi con timer». I pulsanti vengono da «Lingue nella finestra»; la lingua di destinazione è evidenziata. Con il timer, sotto quel pulsante si accorcia una linea: quando finisce vale la lingua evidenziata. <b>Senza traduzione</b> inserisce il testo così come è stato sentito; la ✕ della barra annulla tutta l'operazione. Funziona anche la tastiera: Invio prende la risposta evidenziata, 1…9 scelgono un pulsante, Esc annulla.</p>" +
+			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Riconoscimento…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Tradurre in:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Tradurre nella lingua di partenza</span></div></div>" +
+			"<p>È la barra stessa a chiedere, su una seconda riga, appena rilasci la scorciatoia — nelle modalità «chiedi sempre» e «chiedi con timer». I pulsanti vengono da «Lingue nella finestra»; la lingua di destinazione è evidenziata. Con il timer, sotto quel pulsante si accorcia una linea: quando finisce vale la lingua evidenziata. <b>Tradurre nella lingua di partenza</b> inserisce il testo nella lingua parlata; la ✕ della barra annulla tutta l'operazione. Funziona anche la tastiera: Invio prende la risposta evidenziata, 1…9 scelgono un pulsante, Esc annulla.</p>" +
 			"<p class=\"wh\">Inserimento sicuro</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Riconoscimento…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span style=\"color:var(--amber)\">Il fuoco è cambiato — inserire?</span><span class=\"mock-btn on mock-cd\">Inserisci qui</span><span class=\"mock-btn\">Copia</span></div></div>" +
 			"<ul>" +
@@ -2190,7 +2209,8 @@ func init() {
 		"S_TR_DEFAULT": "Zmień język wyjściowego tekstu", "S_TR_TARGET": "Domyślny język wyjściowego tekstu", "S_TR_ASK": "Pytaj o język wyjściowego tekstu", "S_TR_ASK_NEVER": "Nie pytaj — tłumacz od razu",
 		"S_SRCLANG_SUB": "mówisz w nim; określa model rozpoznawania",
 		"S_TR_LANGS_SUB": "te języki będą przyciskami na plakietce przy wstawianiu",
-		"S_TR_UNAVAIL": "niedostępne — %s nie umie tłumaczyć",
+		"S_TR_UNAVAIL": "%s nie umie tłumaczyć — tekst zostanie w języku źródłowym",
+		"S_TR_STANDIN": "%s nie umie tłumaczyć — plakietka zaproponuje %s",
 		"S_TR_LOCK": "%s nie można usunąć z listy — to domyślny język wyjściowego tekstu. Wybierz inny język domyślny, a wtedy %s będzie można wykluczyć.",
 		"S_TR_LOCK_OK": "Rozumiem",
 		"S_TR_ONE": "Zaznaczono kilka języków, ale bez pytania tłumaczenie zawsze pójdzie w jeden — %s (domyślny język wyjściowy). Pozostałe zostaną zaznaczone, ale wyłączone.",
@@ -2323,7 +2343,7 @@ func init() {
 		"S_STATE_INST": "Zainstalowane lokalnie",
 		"S_STATE_INST_SUB": "modele na dysku, gotowe do przypisania",
 		"S_PRESETS": "Który model dla którego języka",
-		"S_PRESETS_HINT": "Kliknij język — pod nim otworzy się wybór modeli dla niego. Języki bez własnego modelu używają modelu automatycznego wykrywania.",
+		"S_PRESETS_HINT": "Model z wiersza «Auto» obsługuje wszystkie języki bez własnego modelu — na liście są szare. Kliknij język, aby nadać mu własny. Ten sam model rozpoznaje też, w jakim języku mówisz, gdy język źródłowy nie jest ustawiony.",
 		"S_MFOLDER": "Własny model",
 		"S_DICT_SAVE": "Zapisz",
 		"S_OWNM_SUB": "Dodaj lokalny model rozpoznawania mowy",
@@ -2340,7 +2360,7 @@ func init() {
 		"S_BACK_AUTO": "Wróć do automatycznego wykrywania",
 		"S_LANGS_COUNT": "języków: %d",
 		"S_LANGS_UNKNOWN": "języki: nieznane",
-		"S_TR_EN": "tłumaczy na angielski",
+		"S_TR_EN": "tłumaczy na %d języków",
 		"S_TR_LIST": "tłumaczy: %s",
 		"S_DL_GOING": "pobieranie:",
 		"S_OPEN_FOLDER": "Otwórz folder",
@@ -2495,8 +2515,8 @@ func init() {
 			"<li>Wygląd bierze się z dwóch list w sekcji „System”. „Wygląd” ustawia krój pisma, kształty, grubość ramek, poświatę i charakter animacji; są trzy: „Terminal” (zielony, domyślny), „Edytor” (płaska szarość, bez poświaty) i „Neon” (fiolet, zaokrąglony). „Kolor” pojawia się tylko przy Terminalu i zmienia jedynie kolor okna, paska i ikony w zasobniku: zielony, bursztynowy, niebieski, różowy. Pozostałe wyglądy mają własne kolory. Wybór działa od razu, bez ponownego uruchamiania.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Pytanie o tłumaczenie</p>" +
-			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Rozpoznawanie…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Tłumaczyć na:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Bez tłumaczenia</span></div></div>" +
-			"<p>Pyta sam pasek, w drugim wierszu, gdy tylko puścisz skrót — w trybach „pytaj za każdym razem” i „pytaj z odliczaniem”. Przyciski biorą się z „Języków w oknie”; język docelowy jest wyróżniony. Przy odliczaniu pod tym przyciskiem skraca się kreska: gdy zniknie, obowiązuje wyróżniony język. <b>Bez tłumaczenia</b> wstawia tekst tak, jak został usłyszany; ✕ na pasku przerywa całą operację. Klawiatura też działa: Enter wybiera wyróżnioną odpowiedź, 1…9 wskazują przycisk, Esc przerywa.</p>" +
+			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Rozpoznawanie…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Tłumaczyć na:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Przetłumacz na język źródłowy</span></div></div>" +
+			"<p>Pyta sam pasek, w drugim wierszu, gdy tylko puścisz skrót — w trybach „pytaj za każdym razem” i „pytaj z odliczaniem”. Przyciski biorą się z „Języków w oknie”; język docelowy jest wyróżniony. Przy odliczaniu pod tym przyciskiem skraca się kreska: gdy zniknie, obowiązuje wyróżniony język. <b>Przetłumacz na język źródłowy</b> wstawia tekst w języku, w którym mówiłeś; ✕ na pasku przerywa całą operację. Klawiatura też działa: Enter wybiera wyróżnioną odpowiedź, 1…9 wskazują przycisk, Esc przerywa.</p>" +
 			"<p class=\"wh\">Bezpieczne wstawianie</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Rozpoznawanie…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span style=\"color:var(--amber)\">Zmieniło się okno — wstawić?</span><span class=\"mock-btn on mock-cd\">Wstaw tutaj</span><span class=\"mock-btn\">Kopiuj</span></div></div>" +
 			"<ul>" +
@@ -2630,6 +2650,9 @@ func init() {
 		"status.recording": "Йде запис…", "status.transcribing": "Розпізнаю…", "status.disabled": "Вимкнено",
 		"status.server.restart": "Сервер розпізнавання впав, перезапускаю…", "status.cfg.err": "Помилка в config.json (див. лог)",
 		"status.nomodel": "Модель розпізнавання не завантажена — оберіть її в налаштуваннях",
+		"tf.title": "%s не перекладає. Перекласти?",
+		"tf.yes": "Так, через %s",
+		"tf.no": "Як є",
 		"state.loaded.none": "нічого не завантажено",
 		"state.week": "%d диктувань · %d знаків",
 		"snd.ok": "рівень у нормі",
@@ -2661,7 +2684,7 @@ func init() {
 		"ov.silence":       "Тиша — нічого не розпізнано", "ov.server.loading": "Сервер ще завантажується",
 		"ov.tooshort":  "Занадто коротко — тримайте клавіші довше",
 		"ov.cancelled": "Скасовано", "ov.editing": "Редагую: %s", "ov.translating": "Перекладаю",
-		"ov.llm.needed": "Ця мова потребує LLM-модуль", "td.title": "Перекласти на:", "td.plain": "Без перекладу",
+		"ov.llm.needed": "Ця мова потребує LLM-модуль", "td.title": "Перекласти на:", "td.plain": "Перекласти мовою вихідного мовлення",
 		"cap.title": "{app} — сполучення клавіш", "cap.prompt": "Натисніть нове сполучення клавіш\n\nзараз: %s   ·   Esc — скасувати",
 		"cap.selected": "Обрано: %s", "cap.cancelled": "Скасовано", "hk.taken": "Сполучення %s зайняте Windows: %s. Диктування може не початися", "hk.lock": "блокування комп’ютера", "hk.desktop": "показати робочий стіл", "hk.explorer": "провідник", "hk.run": "вікно «Виконати»", "hk.settings": "параметри Windows", "hk.search": "пошук", "hk.center": "центр сповіщень", "hk.menu": "меню досвідченого користувача", "hk.clipboard": "журнал буфера обміну", "hk.gamebar": "ігрова панель", "hk.voice": "голосове введення Windows", "hk.project": "проєціювання на екран", "hk.tasks": "подання завдань", "hk.layout": "зміна розкладки", "hk.newdesktop": "новий робочий стіл", "hk.closedesktop": "закрити робочий стіл", "hk.snip": "знімок екрана", "hk.switch": "перемикання вікон", "hk.close": "закрити вікно", "hk.cycle": "перебір вікон", "hk.start": "меню «Пуск»", "hk.taskmgr": "диспетчер завдань", "hk.secure": "екран безпеки",
 		"err.hotkey.dup":    "Сполучення «%s» призначено двічі — хоткеї не повинні збігатися",
@@ -2714,7 +2737,8 @@ func init() {
 		"S_TR_DEFAULT": "Змінити мову текстового виводу", "S_TR_TARGET": "Мова текстового виводу за замовчуванням", "S_TR_ASK": "Питати мову текстового виводу", "S_TR_ASK_NEVER": "Не питати — перекладати одразу",
 		"S_SRCLANG_SUB": "нею ви говорите; вона визначає модель розпізнавання",
 		"S_TR_LANGS_SUB": "ці мови будуть кнопками на плашці під час вставлення",
-		"S_TR_UNAVAIL": "недоступно — %s не вміє перекладати",
+		"S_TR_UNAVAIL": "%s не вміє перекладати — текст залишиться мовою вихідного мовлення",
+		"S_TR_STANDIN": "%s не вміє перекладати — на плашці запропонує %s",
 		"S_TR_LOCK": "%s не можна прибрати зі списку — це мова текстового виводу за замовчуванням. Виберіть іншу мову за замовчуванням, і тоді %s можна буде виключити.",
 		"S_TR_LOCK_OK": "Зрозуміло",
 		"S_TR_ONE": "Позначено кілька мов, але без запитання переклад завжди йтиме в одну — %s (мова виводу за замовчуванням). Решта залишаться позначеними, але вимкненими.",
@@ -2873,7 +2897,7 @@ func init() {
 		"S_STATE_INST": "Встановлені локально",
 		"S_STATE_INST_SUB": "моделі на диску, готові до призначення",
 		"S_PRESETS": "Яка модель якій мові",
-		"S_PRESETS_HINT": "Клацніть мову — під нею розгорнеться вибір моделей для неї. Мови без власної моделі використовують модель автовизначення.",
+		"S_PRESETS_HINT": "Модель із рядка «Автовизначення» працює для всіх мов, яким не обрано власну — у списку вони сірі. Клацніть мову, щоб дати їй окрему модель. Вона ж визначає, якою мовою говорять, коли мову вихідного мовлення не задано.",
 		"S_MFOLDER": "Своя модель",
 		"S_DICT_SAVE": "Зберегти",
 		"S_OWNM_SUB": "Додайте локальну модель розпізнавання мовлення",
@@ -2890,7 +2914,7 @@ func init() {
 		"S_BACK_AUTO": "Повернути як автовизначення",
 		"S_LANGS_COUNT": "мов: %d",
 		"S_LANGS_UNKNOWN": "мови: невідомі",
-		"S_TR_EN": "перекладає англійською",
+		"S_TR_EN": "перекладає на %d мов",
 		"S_TR_LIST": "перекладає: %s",
 		"S_DL_GOING": "завантажується:",
 		"S_OPEN_FOLDER": "Відкрити теку",
@@ -3020,8 +3044,8 @@ func init() {
 			"<li>Зовнішній вигляд задається двома списками в розділі «Система». «Дизайн» — це шрифт, форма, товщина рамок, сяйво та характер анімації; дизайнів три: «Термінал» (зелений, за замовчуванням), «Редактор» (плаский сірий, без сяйва) і «Неон» (фіолетовий, зі скругленнями). «Колір» пропонується лише «Терміналу» і змінює тільки колір вікна, смужки та значка в лотку: зелений, бурштиновий, синій, рожевий. Решта дизайнів мають власні кольори. Вибір діє одразу, без перезапуску.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">Питання про переклад</p>" +
-			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Розпізнаю…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Перекласти на:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Без перекладу</span></div></div>" +
-			"<p>Питає сама смужка, другим рядком, щойно ви відпустили сполучення, — у режимах «питати щоразу» та «питати з відліком». Кнопки беруться з «Мов у вікні»; цільова мова виділена. У режимі з відліком під цією кнопкою коротшає риска: коли вона скінчиться, застосується виділена мова. <b>Без перекладу</b> вставляє текст так, як почуто; хрестик смужки скасовує операцію цілком. Клавіатура теж працює: Enter — виділена відповідь, 1…9 — кнопка за номером, Esc — скасувати.</p>" +
+			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Розпізнаю…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Перекласти на:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Перекласти мовою вихідного мовлення</span></div></div>" +
+			"<p>Питає сама смужка, другим рядком, щойно ви відпустили сполучення, — у режимах «питати щоразу» та «питати з відліком». Кнопки беруться з «Мов у вікні»; цільова мова виділена. У режимі з відліком під цією кнопкою коротшає риска: коли вона скінчиться, застосується виділена мова. <b>Перекласти мовою вихідного мовлення</b> вставляє текст мовою, якою ви говорили; хрестик смужки скасовує операцію цілком. Клавіатура теж працює: Enter — виділена відповідь, 1…9 — кнопка за номером, Esc — скасувати.</p>" +
 			"<p class=\"wh\">Безпечна вставка</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Розпізнаю…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span style=\"color:var(--amber)\">Вікно змінилося — вставити?</span><span class=\"mock-btn on mock-cd\">Вставити тут</span><span class=\"mock-btn\">Копіювати</span></div></div>" +
 			"<ul>" +

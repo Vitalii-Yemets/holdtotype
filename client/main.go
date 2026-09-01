@@ -10,6 +10,7 @@ import (
 	"holdtotype/internal/livetail"
 	"holdtotype/internal/profiles"
 	"holdtotype/internal/replace"
+	"holdtotype/internal/segments"
 	"unsafe"
 
 	"context"
@@ -1269,11 +1270,21 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 		if active != nil {
 			name = active.NameKey
 		}
-		log.Printf("translation unavailable: %s does not translate — pasting as is", name)
-		if cfg.Overlay {
-			overlayNote(tr("ov.notranslate"))
+		fallback := bestInstalledWhisper()
+		switch {
+		case fallback == nil:
+			log.Printf("translation unavailable: %s does not translate and no Whisper is installed — pasting as is", name)
+			if cfg.Overlay {
+				overlayNote(tr("ov.notranslate"))
+			}
+			target = ""
+		case askTranslateFallback(name, fallback.NameKey):
+			log.Printf("translation: %s does not translate, the user picked %s", name, fallback.NameKey)
+			wantEngine, wantModel = engineWhisper, fallback.modelPath()
+		default:
+			log.Printf("translation: %s does not translate, the user declined Whisper — pasting as is", name)
+			target = ""
 		}
-		target = ""
 		if ctx.Err() != nil {
 			log.Printf("recognition cancelled by the user")
 			if cfg.Overlay {
@@ -1357,6 +1368,10 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 		return
 	}
 	text = strings.TrimSpace(text)
+	if joined := segments.Join(text); joined != text {
+		log.Printf("recognition: %d line break(s) from the engine joined into spaces", strings.Count(text, "\n"))
+		text = joined
+	}
 	outLang := cfg.Language
 	if target != "" {
 		outLang = target

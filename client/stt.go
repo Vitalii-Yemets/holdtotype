@@ -122,6 +122,25 @@ func modelTranslates(m *modelInfo, srcLang, target string) bool {
 		preset.Covers(strings.Split(m.Langs, ","), srcLang)
 }
 
+func translatableTargets(cfg *Config) []string {
+	if m := activeModel(cfg); m != nil && m.Translate {
+		if m.TrLangs == "" {
+			return translateLangCodes()
+		}
+		var out []string
+		for _, l := range strings.Split(m.TrLangs, ",") {
+			if l = strings.TrimSpace(l); l != "" {
+				out = append(out, l)
+			}
+		}
+		return out
+	}
+	if bestInstalledWhisper() != nil {
+		return translateLangCodes()
+	}
+	return nil
+}
+
 func bestInstalledWhisper() *modelInfo {
 	var best *modelInfo
 	for i := range modelCatalog {
