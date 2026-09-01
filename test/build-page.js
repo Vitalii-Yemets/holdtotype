@@ -76,122 +76,53 @@ const cfg = {
   _cpus: 8,
 };
 
-const strings = {
-  nohot: "-", dl: "Download", del: 'Delete "x"', mdlready: "Model downloaded",
-  get: "Download", change: "Change", remotewarn: "Audio will be sent to this server.",
-  ok: "Yes", cancel: "Cancel", dlask: 'The "%s" model is not downloaded (%s). Start downloading?',
-  dlstart: "Download", dlcancel: "Cancel the download", nofound: "none",
-  asauto: "as Auto-detect",
-  recchip: "recommended", backauto: "Back to Auto-detect",
-  langsc: "languages: %d", langsq: "languages: unknown",
-  tren: "translates to English", translist: "translates: %s", dlgoing: "downloading:",
-  trunavail: "unavailable — %s cannot translate", trlockok: "Got it", trconfirm: "Confirm",
-  trlockmsg: "%s cannot be removed from the list — it is the default text output language. Pick another default language, and then %s can be excluded.",
-  tronedlg: "Several languages are checked, but without asking the translation will always go into one — %s. The others stay checked but get disabled.",
-  trmodeldlg: "%s cannot translate. If you continue, translation will be turned off and unavailable while this model works.",
-  srcused: "in use", hfgo: "Search",
-  remoteask: "Send audio to %s?", remotebadge: "REMOTE",
-  helptocshow: "Show the contents — the window gets wider", helptochide: "Hide the contents and restore the window width",
-  unitmin: "minutes", unithour: "hours", unitday: "days",
-  depwhisper: "Runs Whisper models: a separate program next to the app that turns audio into text.", depllama: "post-processing, GGUF models", depsherpa: "engine for GigaAM and friends",
-  depggml: "tensor library", deponnx: "runs the models inside sherpa-onnx", depwebview: "the settings window on WebView2",
-  depwv2rt: "the Windows component that draws that window", depmalgo: "microphone capture", depminiaudio: "the audio layer inside malgo",
-  depws: "talks to sherpa-server", depxsys: "WinAPI calls from Go", depwinloader: "DLL loading inside go-webview2",
-  depplex: "the interface font", dephf: "where the models are downloaded from",
-  srvdown: "Recognition is unavailable", srvdownwhy: "the remote recognition server is not set up — set its address in the settings", srvdowngo: "Open the server settings", retry: "Try again", srvwarnnow: "Dictation does not work right now: no address for the remote server.", srvwarnlater: "As soon as a Whisper model is picked, recognition will not work: no address for the remote server.",
-  srvkthreads: "CPU threads", srvkport: "port", srvkauto: "autostart", srvkfile: "file", srvkaddr: "address", srvkcheck: "last check",
-  srvnear: "whisper-server.exe next to the app", srvnoaddr: "not set", srvnocheck: "never checked",
-  srvon: "on", srvoff: "off", srvlocaldlg: "Local recognition server", srvaddr: "Server address",
-  srvaddrsub: "the address of whisper-server on the other machine, port included",
-  threads: "CPU threads", threadssub: "more threads is not always faster",
-  srvport: "Port", srvportsub: "the recognizer restarts itself",
-  srvautostart: "Start whisper-server automatically", srvautostartsub: "turn off if you start the server yourself",
-  serverexe: "whisper-server path", serverexesub: "filled in for you", profedit: "Edit",
-  add: "Add profile", pname: "Name", pprompt: "Prompt", profadd: "Add",
-  noprompts: "No prompts yet", pdrag: "drag to reorder", pnameph: "name it",
-  ptestph: "type a phrase", pfnew: "New prompt", pfedit: "Editing the prompt",
-  ptest: "Test", fitok: "fits", fitwarn: "tight",
-  fitbad: "no RAM", ram: "RAM:", hfph: "model name", nollm: "no models",
-  upd: "updated", pedit: "Edit", pclose: "Collapse",
-  llmcatalog: "Model catalog",
-  llmblock: "Installed models", llmnonehint: "No model is installed yet — download a found one with the arrow and it will appear here",
-  llminmem: "in memory", llmondisk: "on disk", llmeject: "Unload from memory",
-  llmfound: "found %d", llmnosearch: "no search yet", llmsearchhint: "Type a model name and press it", llmpickwait: "Available once the model is downloaded", llminstalled: "installed", llmsummodel: "model",
-  llmsumsize: "size", llmsumcount: "installed", llmsumram: "memory",
-  dlgclose: "Close", llmnopick: "not picked",
-  confirmdel: 'Delete the "%s" model?',
-  delactive: 'Delete the active model "%s"? Recognition stops until you pick another one.',
-  wizneedmodel: "Download a model first",
-  free: "free", updnone: "latest",
-  ramavail: "Memory available: %s GB of %s GB", ramof: "%s GB of %s GB",
-  badgemodels: "Installed models", badgemiss: "A model is not downloaded",
-  badgesystem: "Warnings need attention", badgehist: "Entries in history",
-  updavail: "Version %s available.", updgo: "Update", upderr: "Check failed",
-  upddl: "Downloading", micdefault: "System default", micquiet: "quiet",
-  more: "%d more settings", less: "Collapse %d settings",
-  replempty: "No replacements yet", repldel: "Delete the replacement", replwhole: "whole words",
-  replcase: "case", replfromph: "git hub", repltoph: "GitHub",
-  repllang: "Rule language", repllangall: "all languages", listnothing: "Nothing found: “%s”", replwholefull: "Whole words only",
-  replcasefull: "Match letter case", cmdaction: "Action",
-  fmtrepladd: "Adding a replacement", fmtrepledit: "Editing the replacement",
-  fmtcmdadd: "Adding a command", fmtcmdedit: "Editing the command",
-  mtdel: "Deleting a model", mtdelprompt: "Deleting a prompt", mtdl: "Downloading a model",
-  mttroff: "Turning translation off", mttrone: "Translating without asking", mttrlock: "Default output language",
-  mtremote: "Remote server", mtpost: "External server", mthist: "Clearing the history",
-  mtreset: "Resetting the settings", mtexe: "Server path",
-  fmtdictadd: "Adding a word", dictempty: "No words yet",
-  dictnomodel: "The current model %s does not support the dictionary — only Whisper models read it.",
-  dictaddph: "a word, or several separated by commas",
-  ovposscheme: "click the screen — the plate lands there",
-  ovposdrag: "drag the plate with the mouse — it lands anywhere",
-  fmadd: "Add", fmsave: "Save",
-  tiprepllang: "fires only in the chosen language", tipreplcase: "case matters when on",
-  tipreplwhole: "matches whole words only", tipcmdaction: "what saying the phrase does",
-    stsummary: "Summary", stquick: "Quick settings", stmodels: "Models", stusage: "This week",
-  stready: "Ready to dictate", stoff: "Switched off in the tray", stoffsub: "the shortcut does nothing until you switch it back on",
-  stenable: "Switch on", stgoto: "Open this setting on its own tab", sthotkeygo: "Change the shortcut",
-  stupdlast: "Version %s — the latest", stupdhave: "Version %s is available",
-  stmem: "%s GB free of %s", stmemsub: "in memory: %s · on disk: %d models, %s GB", stmemnone: "nothing",
-  stlang: "Speech language", stasr: "Recognition", ston: "on", stoffw: "off", stonf: "on", stofff: "off",
-  stactive: "active", stidle: "not started", stdisk: "on disk, %s",
-  stusagesub: "%d characters · %d today · %d characters on average", stnoweek: "no dictations this week",
-  stautorunsub: "the app will not start by itself", stoverlaysub: "shown while recording",
-  sthint: "hold the shortcut and speak", stcheck: "Check", strecog: "recognized by %s", stver: "Version %s", stlatest: "latest", navmic: "Microphone", overlay: "Plate on screen", beep: "Sound cue",
-  autorun: "Start with Windows", postenable: "Enable post-processing", berropen: "Open", updcheck: "Check",
-  histtill: "till %s", histtill1: "till tomorrow", histtillfull: "Will be deleted on %s — kept for %d days",
-  histempty: "No history yet", histcopy: "Copy", histask: "Delete the whole dictation history?", histclear: "Clear",
-  micchecking: "Checking…", mchecking: "Checking models…", histinsert: "Paste",
-  retry: "Try again",
-  acc: "accuracy", spd: "speed",
-  recauto: "Detect itself",
-  notforlang: "%s does not recognize this language", notinstalled: "not installed",
-  manualnote: "Cannot be downloaded from the app — the licence forbids redistribution.",
-  manuallink: "Download yourself", unload: "Unload", unloaded: "Unloaded",
-  hffit: "only those that fit this computer", hfhidden: "hidden: %s",
-  ovmoncursor: "The screen with the cursor", ovmonn: "Screen %d",
-  postwarn: "Recognized text will go to this address.",
-  postask: "Send recognized text to %s?",
-  postkeyset: "key saved", postkeynone: "no key",
-  apisumurl: "address", apisummodel: "model", apisumkey: "key", apisumtimeout: "timeout",
-  apisumstate: "state", apinomodel: "not set", apinone: "not set up — post-processing runs locally",
-  apisetup: "Set up", apiedit: "Change", apikeydel: "Delete the key", apidlg: "External server",
-  apitest: "Test connection", apitestrun: "Checking…", apitestok: "The server answered",
-  apiclear: "Clear", apiclearask: "Delete the address, the model and the key of the external server?",
-  postnomodel: "on, but no model is picked", postnoprompt: "on, but no prompt is checked", postnoapi: "on, but the server is not set up",
-  postbad: "the server did not answer: %s",
-  postapiurl: "Address", postapimodel: "Model",
-  postapikey: "API key", postapitimeout: "Response timeout", secshort: "s",
-  skipadddlg: "Adding a program", skipeditdlg: "Editing the program", skipname: "Program name", skipnamesub: "The file name without a path",
-  skipopen: "Programs open right now", skiprefresh: "Refresh the list", skippicked: "%d of %d picked", skipnone: "Nothing picked", skipempty: "The list is empty",
-  cmdempty: "No commands yet", cmddel: "Delete the command", cmdph: "new line",
-  cmdnewline: "line break", cmdparagraph: "new paragraph", cmdtext: "insert text", cmdcancel: "cancel the dictation",
-  cmdtextph: "what to insert",
-  cmdpnewline: "new line", cmdpparagraph: "new paragraph", cmdpcancel: "cancel", cmdpreset: "Add the usual ones",
-  wiznext: "Next", wizfinish: "Finish", wizwait: "Waiting for the first phrase…",
-  wizheard: "Heard:", wizhave: "Everything you need is already downloaded",
-  wiztry: "Put the caret in the field below, hold %s, say a phrase and let go.",
-  wndmax: "S_WND_MAX", wndrestore: "S_WND_RESTORE", wndmin: "S_WND_MIN", wndclose: "S_WND_CLOSE",
+const i18nSrc = fs.readFileSync(path.join(root, "client", "i18n.go"), "utf8");
+
+const NAMES = {
+  "{app}": "HoldToType",
+  "{exe}": "holdtotype.exe",
+  "{setup}": "holdtotype-setup.exe",
+  "{log}": "holdtotype.log",
+  "{zip}": "holdtotype-portable.zip",
 };
+
+function goText(raw) {
+  const map = { '"': '"', "\\": "\\", n: "\n", r: "\r", t: "\t" };
+  const text = raw.replace(/\\(.)/g, (m, c) => (c in map ? map[c] : m));
+  return text.replace(/\{(app|exe|setup|log|zip)\}/g, (m) => NAMES[m]);
+}
+
+const tableStart = i18nSrc.indexOf("var settingsStrings");
+const enStart = tableStart < 0 ? -1 : i18nSrc.indexOf('\n\t"en": {', tableStart);
+const enEnd = enStart < 0 ? -1 : i18nSrc.indexOf("\n\t},", enStart);
+if (enStart < 0 || enEnd < 0) {
+  console.error("the English settings strings were not found in client/i18n.go");
+  process.exit(1);
+}
+const EN = {};
+for (const m of i18nSrc.slice(enStart, enEnd).matchAll(/"(S_[A-Z0-9_]+)":\s*"((?:[^"\\]|\\.)*)"/g)) {
+  EN[m[1]] = goText(m[2]);
+}
+
+const lStart = src.indexOf("lMap := map[string]string{");
+const lEnd = src.indexOf("lJSON, _ := json.Marshal(lMap)");
+if (lStart < 0 || lEnd < 0) {
+  console.error("the L table was not found in client/settings.go");
+  process.exit(1);
+}
+const strings = { nohot: "—" };
+const noText = [];
+for (const m of src.slice(lStart, lEnd).matchAll(/"([a-z0-9_]+)":\s*"(S_[A-Z0-9_]+)"/g)) {
+  if (EN[m[2]] === undefined) {
+    noText.push(m[1] + " → " + m[2]);
+    continue;
+  }
+  strings[m[1]] = EN[m[2]];
+}
+if (noText.length) {
+  console.error("no English text for: " + noText.join(", "));
+  process.exit(1);
+}
 
 const HELP_HTML = [
   '<p class="wh">How it works</p>',

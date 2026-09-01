@@ -326,7 +326,7 @@ function check(name, actual, expected) {
   d.getElementById("cap_max").click();
   await sleep(150);
   check("the button fills the screen", w.maximized, true);
-  check("and turns into a restore button", d.getElementById("cap_max").title, "S_WND_RESTORE");
+  check("and turns into a restore button", d.getElementById("cap_max").title, "Back to the previous size");
   d.getElementById("cap_max").click();
   await sleep(150);
   check("pressing it again gives the size back", w.maximized, false);
@@ -732,7 +732,7 @@ function check(name, actual, expected) {
   d.querySelector(".modal .btn.yes").click(); await sleep(350);
   check("clearing the address needs no question", [!!d.querySelector(".modal-bg"), w.lastSaveForm.server_url], [false, ""]);
   d.getElementById("pick_srv_remote").click(); await sleep(350);
-  check("with no address the card warns instead of refusing the switch", [d.getElementById("srv_remote").classList.contains("on"), d.getElementById("remote_warn").textContent.includes("no address")], [true, true]);
+  check("with no address the card warns instead of refusing the switch", [d.getElementById("srv_remote").classList.contains("on"), d.getElementById("remote_warn").textContent.includes("address is not set")], [true, true]);
   w.setSttDown(true, true); await sleep(1700);
   check("the summary card says recognition is unavailable", d.getElementById("state_hero_title").textContent, "Recognition is unavailable");
   check("and spells out why underneath", d.getElementById("state_hero_sub").textContent.includes("not set up"), true);
@@ -969,7 +969,7 @@ function check(name, actual, expected) {
   check("a finished search counts what it found", d.getElementById("hf_count").textContent, "found 1");
   check("the search button stands next to the field, not inside it", !d.querySelector(".srchbox").contains(d.getElementById("hf_go")), true);
   check("memory is spelled out in words", d.getElementById("hf_ramline").textContent, "Memory available: 8.8 GB of 16 GB");
-  check("and the colour key sits on its own line", d.getElementById("hf_fitline").textContent, "●fits●tight●no RAM");
+  check("and the colour key sits on its own line", d.getElementById("hf_fitline").textContent, "●fits●tight●not enough RAM");
   const repo = d.querySelector(".hfrepo");
   check("a found repository is a button too", !!repo, true);
   check("and it says whether it is open", repo.getAttribute("aria-expanded"), "false");
@@ -1013,7 +1013,7 @@ function check(name, actual, expected) {
   check("the arrow downloads without choosing", w.dlCalls.length, dlBefore + 1);
   check("and the language keeps its model", w.lastSaveForm.lang_models.ru, ruBefore);
   w.finishDl("base"); await sleep(1400);
-  check("and the program says the model is ready", d.getElementById("st_saved").textContent, "Model downloaded");
+  check("and the program says the model is ready", d.getElementById("st_saved").textContent, "Model downloaded — pick it to switch");
 
   const activeDel = () => d.querySelector('#langlist .pcard[data-id="small"] button[data-a="del"]');
   check("the model in use can be removed too — that is the way out of a full disk", !!activeDel(), true);
@@ -1092,8 +1092,8 @@ function check(name, actual, expected) {
   check("saying yes applies the address", w.lastSaveForm.post_api_url, "https://api.example.com/v1");
   check("the key goes to the program, not into the config form", w.postKeys, ["sk-secret"]);
   check("no later save carries the key along", Object.keys(w.lastSaveForm).includes("post_api_key"), false);
-  check("the honest warning appears", d.getElementById("postapi_warn").textContent.includes("Recognized text"), true);
-  check("the summary now lists what is set", [...d.querySelectorAll("#api_sum .sumv")].map(e=>e.textContent), ["https://api.example.com/v1", "gpt-4.1-mini", "key saved", "30 s"]);
+  check("the honest warning appears", d.getElementById("postapi_warn").textContent.includes("recognized text"), true);
+  check("the summary now lists what is set", [...d.querySelectorAll("#api_sum .sumv")].map(e=>e.textContent), ["https://api.example.com/v1", "gpt-4.1-mini", "key saved (encrypted with Windows DPAPI)", "30 s"]);
   check("and the warning by the heading clears itself", d.getElementById("post_warn").style.display, "none");
   const pcb = () => d.querySelector("#profbody input.profcb");
   pcb().checked = false; pcb().dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(200);
