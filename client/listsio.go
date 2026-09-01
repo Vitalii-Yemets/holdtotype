@@ -174,7 +174,7 @@ func (a *App) aimWatch(text string, settings uintptr) {
 				restore(ovFlashErr, humanError(err))
 				return
 			}
-			log.Printf("history: pasted %d characters into '%s' by aim", len([]rune(text)), windowTitle(target))
+			log.Printf("history: pasted %d characters into %s by aim", len([]rune(text)), processNameOf(target))
 			overlaySet(ovFlashOK, trf("ov.inserted", len([]rune(text))))
 			return
 		}
@@ -211,7 +211,7 @@ func (a *App) insertFromHistory(text string) string {
 		return listsAnswer(listsReply{Text: humanError(err)})
 	}
 	title := windowTitle(wnd)
-	log.Printf("history: pasted %d characters into '%s'", len([]rune(text)), title)
+	log.Printf("history: pasted %d characters into %s", len([]rune(text)), processNameOf(wnd))
 	return listsAnswer(listsReply{OK: true, Text: trf("hist.insert.ok", title)})
 }
 

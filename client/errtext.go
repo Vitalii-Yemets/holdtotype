@@ -50,7 +50,7 @@ func humanError(err error) string {
 	if err == nil {
 		return ""
 	}
-	log.Printf("error detail: %v", err)
+	log.Printf("error detail: %s", logText(err))
 	switch errkind.Of(err) {
 	case errkind.DNS:
 		host := errkind.Host(err)

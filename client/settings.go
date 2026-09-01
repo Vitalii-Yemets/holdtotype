@@ -159,7 +159,7 @@ func (a *App) openSettings(tab string) {
 		a.mu.Lock()
 		a.settingsPrev = fg
 		a.mu.Unlock()
-		log.Printf("openSettings: the text can be returned to the window [%s]", windowTitle(fg))
+		log.Printf("openSettings: the text can be returned to the window of %s", processNameOf(fg))
 	}
 	if !settingsOpen.CompareAndSwap(false, true) {
 		if hwnd := settingsHwnd.Load(); hwnd != 0 {

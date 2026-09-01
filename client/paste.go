@@ -263,7 +263,7 @@ func focusStillOn(expect uintptr) bool {
 	if cur == expect {
 		return true
 	}
-	log.Printf("the input window changed: expected [%s], now [%s]", windowTitle(expect), windowTitle(cur))
+	log.Printf("the input window changed: expected [%s], now [%s]", processNameOf(expect), processNameOf(cur))
 	return false
 }
 

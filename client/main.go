@@ -773,7 +773,7 @@ func (a *App) startCore() {
 	go a.worker()
 
 	if _, err := parseHotkey(a.cfg.Hotkey); err != nil {
-		a.fatal(trf("err.hotkey.cfg", err.Error()))
+		a.fatal(fmt.Sprintf("the shortcut in the config cannot be read: %v", err), trf("err.hotkey.cfg", err.Error()))
 		return
 	}
 	hook, err := startHotkeyHook(buildCombos(a.cfg),
@@ -788,7 +788,7 @@ func (a *App) startCore() {
 		},
 	)
 	if err != nil {
-		a.fatal(trf("err.hook", err.Error()))
+		a.fatal(fmt.Sprintf("the keyboard hook was not installed: %v", err), trf("err.hook", err.Error()))
 		return
 	}
 	a.mu.Lock()
@@ -801,7 +801,7 @@ func (a *App) startCore() {
 func (a *App) initBackend() {
 	rec, err := NewRecorder(a.snapshot().MicDevice)
 	if err != nil {
-		a.fatal(trf("err.mic", err.Error()))
+		a.fatal(fmt.Sprintf("the microphone was not opened: %v", err), trf("err.mic", err.Error()))
 		return
 	}
 	a.mu.Lock()
@@ -981,8 +981,8 @@ func (a *App) unparkEngines() bool {
 	return parked
 }
 
-func (a *App) fatal(text string) {
-	log.Printf("ERROR: %s", text)
+func (a *App) fatal(logMsg, text string) {
+	log.Printf("ERROR: %s", logMsg)
 	a.setStatus(text)
 	traySetIcon(trayError)
 	msgBox(tr("err.title"), text+tr("err.details"))
@@ -1362,11 +1362,11 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 		outLang = target
 	}
 	if fixed := replace.Apply(replace.ForLang(cfg.Replacements, outLang), text); fixed != text {
-		log.Printf("replacements: %q → %q", text, fixed)
+		log.Printf("replacements: %d → %d characters", len([]rune(text)), len([]rune(fixed)))
 		text = fixed
 	}
 	if cmd := commands.Apply(cfg.Commands, text); len(cmd.Applied) > 0 {
-		log.Printf("commands %v: %q → %q (cancelled=%v)", cmd.Applied, text, cmd.Text, cmd.Cancelled)
+		log.Printf("commands %v: %d → %d characters (cancelled=%v)", cmd.Applied, len([]rune(text)), len([]rune(cmd.Text)), cmd.Cancelled)
 		if cmd.Cancelled {
 			if cfg.Overlay {
 				overlaySet(ovFlashErr, tr("ov.cmd.cancelled"))
@@ -1376,7 +1376,7 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 		text = cmd.Text
 	}
 	if text == "" || onlyNoise.MatchString(text) {
-		log.Printf("empty result (%q), nothing to paste", text)
+		log.Printf("empty result (%d characters), nothing to paste", len([]rune(text)))
 		if cfg.Overlay {
 			switch verdict {
 			case audiolevel.VerdictClipped:
