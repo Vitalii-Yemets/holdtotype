@@ -215,6 +215,7 @@ func (a *App) settingsThread(tab string, attempt int) {
 		defer w.Destroy()
 
 		hwnd := uintptr(w.Window())
+		procShowWindow.Call(hwnd, 0)
 		_ = w.Bind("appMin", func() {
 			procShowWindow.Call(hwnd, 6)
 		})
@@ -1710,9 +1711,13 @@ input.llmpick:checked::after{left:17px;background:var(--hi);box-shadow:var(--hig
 .srccard.idle>.acts{pointer-events:auto;opacity:.62}
 .srccard.idle>.srchead{opacity:.62}
 .srccard.idle>.srchead .srcpick,.srccard.idle>.srchead .srvpick{pointer-events:auto}
-input.srcpick,input.srvpick{appearance:none;-webkit-appearance:none;width:32px;height:17px;border:1px solid var(--dim);border-radius:var(--switchr);position:relative;cursor:pointer;background:none;flex:none;padding:0;margin:0}
-input.srcpick::after,input.srvpick::after{content:"";position:absolute;top:2px;left:2px;width:11px;height:11px;border-radius:var(--dotr,calc(var(--r) * .6));background:var(--dim);transition:.15s}
-input.srcpick:checked::after,input.srvpick:checked::after{left:17px;background:var(--hi);box-shadow:var(--higlow)}
+input.srcpick,input.srvpick{appearance:none;-webkit-appearance:none;width:15px;height:15px;border:1px solid var(--dim);border-radius:0;position:relative;cursor:pointer;background:none;flex:none;padding:0;margin:0}
+input.srcpick::after,input.srvpick::after{content:"";position:absolute;top:3px;left:3px;width:7px;height:7px;border-radius:0;background:none;transition:.15s}
+input.srcpick:checked,input.srvpick:checked{border-color:var(--hi)}
+input.srcpick:checked::after,input.srvpick:checked::after{border-radius:0;background:var(--hi);box-shadow:var(--higlow)}
+input.srcpick:disabled,input.srvpick:disabled{opacity:.4;cursor:default}
+#stt_srv_card .srccard.idle>*,#stt_srv_card .srccard.idle>.acts,#stt_srv_card .srccard.idle>.srchead,
+#post_model_card .srccard.idle>*,#post_model_card .srccard.idle>.acts,#post_model_card .srccard.idle>.srchead{opacity:1}
 #p-post .card+.card{margin-top:18px;border-top:1px solid var(--soft);padding-top:18px}
 #p-history .card+.card{margin-top:16px;border-top:1px solid var(--soft);padding-top:12px}
 #p-history .card>.row:last-child{padding-bottom:0}
@@ -2206,13 +2211,13 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
  <div class="card" id="post_model_card">
   <label class="blklbl">{{S_POST_MODEL}}</label>
   <div class="srccard" id="src_local">
-   <h3 class="srchead"><input type="checkbox" class="srcpick" id="pick_local">{{S_SRC_LOCAL}}<span class="hfhome" onclick="appHFHome()" title="huggingface.co">Hugging Face ↗</span></h3>
+   <h3 class="srchead"><input type="radio" name="postsrc" class="srcpick" id="pick_local">{{S_SRC_LOCAL}}<span class="hfhome" onclick="appHFHome()" title="huggingface.co">Hugging Face ↗</span></h3>
    <div class="sum" id="llm_sum"></div>
    <div id="llm_dl"></div>
    <div class="acts"><button type="button" class="mini" id="llm_catalog">{{S_LLM_CATALOG}}</button></div>
   </div>
   <div class="srccard" id="src_api">
-   <h3 class="srchead"><input type="checkbox" class="srcpick" id="pick_api">{{S_POSTAPI}}</h3>
+   <h3 class="srchead"><input type="radio" name="postsrc" class="srcpick" id="pick_api">{{S_POSTAPI}}</h3>
    <div class="hint">{{S_POSTAPI_HINT}}</div>
    <div class="sum" id="api_sum"></div>
    <div class="note warn" id="postapi_warn"></div>
@@ -2290,12 +2295,12 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
   <label class="blklbl">{{S_STT_SRV}}</label>
   <div class="hint">{{S_STT_SRV_HINT}}</div>
   <div class="srccard" id="srv_local">
-   <h3 class="srchead"><input type="checkbox" class="srvpick" id="pick_srv_local">{{S_SRV_LOCAL}}</h3>
+   <h3 class="srchead"><input type="radio" name="srvsrc" class="srvpick" id="pick_srv_local">{{S_SRV_LOCAL}}</h3>
    <div class="sum" id="srv_local_sum"></div>
    <div class="acts"><button type="button" class="mini" id="srv_local_edit">{{S_PROF_EDIT}}</button></div>
   </div>
   <div class="srccard" id="srv_remote">
-   <h3 class="srchead"><input type="checkbox" class="srvpick" id="pick_srv_remote">{{S_SRV_REMOTE}}</h3>
+   <h3 class="srchead"><input type="radio" name="srvsrc" class="srvpick" id="pick_srv_remote">{{S_SRV_REMOTE}}</h3>
    <div class="hint">{{S_SRV_REMOTE_HINT}}</div>
    <div class="sum" id="srv_remote_sum"></div>
    <div class="note warn" id="remote_warn"></div>
@@ -2467,6 +2472,8 @@ const texts = ["history_skip","post_api_model"];
 let exeStored = CFG.server_exe || "";
 let remoteURL = (CFG.server_url || "").trim();
 let sttSource = CFG.stt_source === "remote" ? "remote" : "local";
+let srvSyncing = false;
+let postSyncing = false;
 let srvChecked = "";
 let whisperNow = false;
 let postURL = (CFG.post_api_url || "").trim();
@@ -2599,6 +2606,7 @@ function renderSrvCards(){
     else note.textContent = remote ? L.remotewarn : "";
     note.classList.toggle("bad", remote && !remoteURL && whisperNow);
   }
+  srvSyncing = true;
   [["srv_local", "pick_srv_local", !remote], ["srv_remote", "pick_srv_remote", remote]].forEach(pair=>{
     const card = document.getElementById(pair[0]);
     if(card){
@@ -2608,6 +2616,7 @@ function renderSrvCards(){
     const sw = document.getElementById(pair[1]);
     if(sw) sw.checked = pair[2];
   });
+  srvSyncing = false;
   const test = document.getElementById("srv_test");
   if(test) test.disabled = !remoteURL;
   const edit = document.getElementById("srv_remote_edit");
@@ -2800,9 +2809,13 @@ function initSrvCards(){
   document.querySelectorAll("input.srvpick").forEach(sw=>{
     sw.addEventListener("change", e=>{
       e.stopPropagation();
-      const remote = sw.id === "pick_srv_remote" ? sw.checked : !sw.checked;
-      pickSrvSource(remote);
+      if(srvSyncing || !sw.checked) return;
+      pickSrvSource(sw.id === "pick_srv_remote");
     });
+  });
+  [["srv_local", false], ["srv_remote", true]].forEach(([id, remote])=>{
+    const c = document.getElementById(id);
+    if(c) c.addEventListener("click", ()=>pickSrvSource(remote));
   });
   renderSrvCards();
 }
@@ -4728,15 +4741,23 @@ function initPostAPI(){
   const master = document.getElementById("post_enabled");
   master.checked = CFG.post_enabled !== false;
   master.addEventListener("change", e=>{ e.stopPropagation(); postEnabled = master.checked; applyPostState(); doSave(); });
+  const pickPostSource = want=>{
+    if(!postEnabled || postSource === want) return;
+    postSource = want;
+    applyPostState();
+    doSave();
+    refreshLLM();
+  };
   document.querySelectorAll("input.srcpick").forEach(sw=>{
     sw.addEventListener("change", e=>{
       e.stopPropagation();
-      if(!sw.checked){ sw.checked = true; return; }
-      postSource = sw.id === "pick_api" ? "api" : "local";
-      applyPostState();
-      doSave();
-      refreshLLM();
+      if(postSyncing || !sw.checked) return;
+      pickPostSource(sw.id === "pick_api" ? "api" : "local");
     });
+  });
+  [["src_local", "local"], ["src_api", "api"]].forEach(([id, want])=>{
+    const card = document.getElementById(id);
+    if(card) card.addEventListener("click", ()=>pickPostSource(want));
   });
   applyPostState();
 }
@@ -4758,8 +4779,10 @@ function applyPostState(){
       sw.disabled = !postEnabled;
     }
   };
+  postSyncing = true;
   mark("src_local", "pick_local", postSource !== "api");
   mark("src_api", "pick_api", postSource === "api");
+  postSyncing = false;
 }
 function trWhisperFallback(){
   if(!modelRowsCache.length) return null;

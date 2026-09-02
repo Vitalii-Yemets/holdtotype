@@ -748,7 +748,13 @@ function check(name, actual, expected) {
   w.setSttDown(false, false); await sleep(1700);
   check("and everything goes back when it is set up", [d.getElementById("state_hero_title").textContent, d.getElementById("badge_system").classList.contains("bad")], ["Ready to dictate", false]);
   d.getElementById("pick_srv_local").click(); await sleep(350);
-  check("both switches are the same kind as in post-processing", [...d.querySelectorAll("#stt_srv_card .srvpick")].length, 2);
+  check("the two servers are one choice, not two switches", [...d.querySelectorAll("#stt_srv_card .srvpick")].map(i=>i.type + ":" + i.name), ["radio:srvsrc", "radio:srvsrc"]);
+  check("post-processing picks the same way", [...d.querySelectorAll("#post_model_card .srcpick")].map(i=>i.type + ":" + i.name), ["radio:postsrc", "radio:postsrc"]);
+  d.getElementById("srv_remote").click(); await sleep(350);
+  check("a click anywhere on the card picks it", [d.getElementById("srv_remote").classList.contains("on"), w.lastSaveForm.stt_source], [true, "remote"]);
+  d.getElementById("srv_local").click(); await sleep(350);
+  check("and the same click brings it back", [d.getElementById("srv_local").classList.contains("on"), w.lastSaveForm.stt_source], [true, "local"]);
+  check("only one of them can be picked at a time", (()=>{ const [a,b]=d.querySelectorAll("#stt_srv_card .srvpick"); a.checked=true; b.checked=true; return a.checked; })(), false);
   const autorun = d.getElementById("autorun");
   const autorunBefore = w.autorunCalls.length;
   autorun.checked = true; autorun.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(200);
@@ -1344,6 +1350,9 @@ function check(name, actual, expected) {
     check(`${sel} takes its corners from the skin`, rule.includes(want), true);
   }
   check("the switch on a dimmed card still takes clicks", css.includes(".srccard.idle>.srchead .srcpick,.srccard.idle>.srchead .srvpick{pointer-events:auto}"), true);
+  check("neither block dims the card you did not pick", [css.includes("#stt_srv_card .srccard.idle>*"), css.includes("#post_model_card .srccard.idle>*")], [true, true]);
+  check("both pickers are square, not pills", css.includes("input.srcpick,input.srvpick{appearance:none;-webkit-appearance:none;width:15px;height:15px;border:1px solid var(--dim);border-radius:0"), true);
+  check("and the mark inside is square too, against the round default", [css.includes("input.srcpick::after,input.srvpick::after{content:\"\";position:absolute;top:3px;left:3px;width:7px;height:7px;border-radius:0"), css.includes("input.srcpick:checked::after,input.srvpick:checked::after{border-radius:0")], [true, true]);
   const skinned = [
     ["body::after{", "opacity:var(--scan)"],
     [".header h1{", "animation:var(--flicker)"],

@@ -142,6 +142,8 @@ type cbtCreateWnd struct {
 const (
 	whCBT           = 5
 	hcbtCreateWnd   = 3
+	offScreenX      = -32000
+	offScreenY      = -32000
 	wmChromeRefresh = 0x0400 + 110
 )
 
@@ -190,9 +192,11 @@ var (
 func dressWebViewProc(code, wParam, lParam uintptr) uintptr {
 	if code == hcbtCreateWnd && lParam != 0 && wParam != 0 {
 		if cbt := (*cbtCreateWnd)(unsafe.Pointer(lParam)); cbt.Cs != nil && webViewClass(cbt.Cs.Class) {
+			cbt.Cs.Style &^= wsVisible
+			cbt.Cs.X, cbt.Cs.Y = offScreenX, offScreenY
 			setDarkClientBackground(wParam)
 			applyDarkCaption(wParam)
-			log.Printf("openSettings: the WebView2 window is dressed as it is created")
+			log.Printf("openSettings: the WebView2 window is created off the screen and dressed")
 		}
 	}
 	r, _, _ := procCallNextHookEx.Call(0, code, wParam, lParam)
