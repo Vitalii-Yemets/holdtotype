@@ -16,3 +16,5 @@ research/
 docs/*research*.md
 docs/*audit*.md
 log.txt
+
+.codex/
