@@ -61,3 +61,13 @@ func Normalize(combo string) string {
 func TakenBySystem(combo string) string {
 	return systemCombos[Normalize(combo)]
 }
+
+var modifierNames = map[string]bool{"ctrl": true, "control": true, "shift": true, "alt": true, "win": true, "super": true, "meta": true}
+
+func LoneKey(combo string) bool {
+	parts := strings.Split(Normalize(combo), "+")
+	if len(parts) != 1 || parts[0] == "" {
+		return false
+	}
+	return !modifierNames[parts[0]]
+}

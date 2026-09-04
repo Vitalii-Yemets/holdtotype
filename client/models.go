@@ -1213,18 +1213,39 @@ func shortLabel(s string, max int) string {
 }
 
 var micNoise = map[string]bool{
-	"microphone": true, "mic": true, "audio": true, "input": true, "device": true,
-	"микрофон": true, "звук": true, "устройство": true, "system": true, "системный": true,
+	"microphone": true, "mic": true, "audio": true, "input": true, "device": true, "array": true,
+	"headset": true, "internal": true, "external": true, "digital": true, "stereo": true, "line": true,
+	"микрофон": true, "микрофонная": true, "микрофонов": true, "массив": true, "решетка": true, "решётка": true,
+	"звук": true, "устройство": true, "system": true, "системный": true,
+	"мікрофон": true, "мікрофонний": true, "мікрофонів": true, "масив": true, "пристрій": true,
+	"mikrofon": true, "mikrofonarray": true, "microfono": true, "micrófono": true, "microfone": true,
+	"matrice": true, "matriz": true, "arreglo": true, "réseau": true, "mikrofonów": true, "macierz": true,
+}
+
+var micVendors = []string{
+	"Realtek", "Intel", "Conexant", "Cirrus", "Synaptics", "Qualcomm", "NVIDIA", "AMD",
+	"Logitech", "Razer", "HyperX", "SteelSeries", "Corsair", "Creative", "Elgato", "Blue", "Rode", "RØDE",
+	"Shure", "Sennheiser", "Jabra", "Poly", "Plantronics", "Bose", "JBL", "Sony", "Samsung", "Apple",
+	"Dell", "Lenovo", "ASUS", "Acer", "MSI", "Fifine", "Maono", "Trust", "Genius", "A4Tech", "Defender", "Sven",
+	"Focusrite", "Behringer", "Yamaha", "Audio-Technica", "Beyerdynamic", "AKG", "Zoom", "Tascam",
 }
 
 func micBadge(name string) string {
 	clean := strings.Map(func(r rune) rune {
-		if r == '(' || r == ')' || r == '-' || r == ',' {
+		if r == '(' || r == ')' || r == ',' {
 			return ' '
 		}
 		return r
 	}, name)
-	for _, w := range strings.Fields(clean) {
+	words := strings.Fields(clean)
+	for _, v := range micVendors {
+		for _, w := range words {
+			if strings.EqualFold(strings.Trim(w, "®™"), v) {
+				return v
+			}
+		}
+	}
+	for _, w := range words {
 		if len([]rune(w)) < 3 {
 			continue
 		}

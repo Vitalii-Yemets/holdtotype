@@ -98,6 +98,115 @@ func keyGroup(name string) ([]uint32, error) {
 		return []uint32{0x91}, nil
 	case "numlock":
 		return []uint32{0x90}, nil
+	case "backspace":
+		return []uint32{0x08}, nil
+	case "enter":
+		return []uint32{0x0D}, nil
+	case "printscreen":
+		return []uint32{0x2C}, nil
+	case "menu":
+		return []uint32{0x5D}, nil
+	case "left":
+		return []uint32{0x25}, nil
+	case "up":
+		return []uint32{0x26}, nil
+	case "right":
+		return []uint32{0x27}, nil
+	case "down":
+		return []uint32{0x28}, nil
+	case "num0":
+		return []uint32{0x60}, nil
+	case "num1":
+		return []uint32{0x61}, nil
+	case "num2":
+		return []uint32{0x62}, nil
+	case "num3":
+		return []uint32{0x63}, nil
+	case "num4":
+		return []uint32{0x64}, nil
+	case "num5":
+		return []uint32{0x65}, nil
+	case "num6":
+		return []uint32{0x66}, nil
+	case "num7":
+		return []uint32{0x67}, nil
+	case "num8":
+		return []uint32{0x68}, nil
+	case "num9":
+		return []uint32{0x69}, nil
+	case "multiply":
+		return []uint32{0x6A}, nil
+	case "add":
+		return []uint32{0x6B}, nil
+	case "subtract":
+		return []uint32{0x6D}, nil
+	case "decimal":
+		return []uint32{0x6E}, nil
+	case "divide":
+		return []uint32{0x6F}, nil
+	case "semicolon":
+		return []uint32{0xBA}, nil
+	case "equals":
+		return []uint32{0xBB}, nil
+	case "comma":
+		return []uint32{0xBC}, nil
+	case "minus":
+		return []uint32{0xBD}, nil
+	case "period":
+		return []uint32{0xBE}, nil
+	case "slash":
+		return []uint32{0xBF}, nil
+	case "backquote":
+		return []uint32{0xC0}, nil
+	case "lbracket":
+		return []uint32{0xDB}, nil
+	case "backslash":
+		return []uint32{0xDC}, nil
+	case "rbracket":
+		return []uint32{0xDD}, nil
+	case "quote":
+		return []uint32{0xDE}, nil
+	case "volumemute":
+		return []uint32{0xAD}, nil
+	case "volumedown":
+		return []uint32{0xAE}, nil
+	case "volumeup":
+		return []uint32{0xAF}, nil
+	case "medianext":
+		return []uint32{0xB0}, nil
+	case "mediaprev":
+		return []uint32{0xB1}, nil
+	case "mediastop":
+		return []uint32{0xB2}, nil
+	case "mediaplay":
+		return []uint32{0xB3}, nil
+	case "browserback":
+		return []uint32{0xA6}, nil
+	case "browserforward":
+		return []uint32{0xA7}, nil
+	case "browserrefresh":
+		return []uint32{0xA8}, nil
+	case "browserstop":
+		return []uint32{0xA9}, nil
+	case "browsersearch":
+		return []uint32{0xAA}, nil
+	case "browserfavorites":
+		return []uint32{0xAB}, nil
+	case "browserhome":
+		return []uint32{0xAC}, nil
+	case "launchmail":
+		return []uint32{0xB4}, nil
+	case "launchmedia":
+		return []uint32{0xB5}, nil
+	case "launchapp1":
+		return []uint32{0xB6}, nil
+	case "launchapp2":
+		return []uint32{0xB7}, nil
+	}
+	if strings.HasPrefix(name, "vk0x") && len(name) == 6 {
+		if n, err := strconv.ParseUint(name[4:], 16, 32); err == nil && n > 0 && n < 256 {
+			return []uint32{uint32(n)}, nil
+		}
 	}
 	if len(name) >= 2 && name[0] == 'f' {
 		if n, err := strconv.Atoi(name[1:]); err == nil && n >= 1 && n <= 24 {

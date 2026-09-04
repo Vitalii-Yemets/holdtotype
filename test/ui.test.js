@@ -1351,8 +1351,8 @@ function check(name, actual, expected) {
   }
   check("the switch on a dimmed card still takes clicks", css.includes(".srccard.idle>.srchead .srcpick,.srccard.idle>.srchead .srvpick{pointer-events:auto}"), true);
   check("neither block dims the card you did not pick", [css.includes("#stt_srv_card .srccard.idle>*"), css.includes("#post_model_card .srccard.idle>*")], [true, true]);
-  check("both pickers are square, not pills", css.includes("input.srcpick,input.srvpick{appearance:none;-webkit-appearance:none;width:15px;height:15px;border:1px solid var(--dim);border-radius:0"), true);
-  check("and the mark inside is square too, against the round default", [css.includes("input.srcpick::after,input.srvpick::after{content:\"\";position:absolute;top:3px;left:3px;width:7px;height:7px;border-radius:0"), css.includes("input.srcpick:checked::after,input.srvpick:checked::after{border-radius:0")], [true, true]);
+  check("both pickers take the skin's dot shape: square on terminal, round elsewhere", css.includes("input.srcpick,input.srvpick{appearance:none;-webkit-appearance:none;width:15px;height:15px;border:1px solid var(--dim);border-radius:var(--dotr)"), true);
+  check("and the mark inside follows the same shape", [css.includes("input.srcpick::after,input.srvpick::after{content:\"\";position:absolute;top:3px;left:3px;width:7px;height:7px;border-radius:var(--dotr)"), css.includes("input.srcpick:checked::after,input.srvpick:checked::after{border-radius:var(--dotr)")], [true, true]);
   const skinned = [
     ["body::after{", "opacity:var(--scan)"],
     [".header h1{", "animation:var(--flicker)"],

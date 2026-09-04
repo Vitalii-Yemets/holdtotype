@@ -1711,10 +1711,10 @@ input.llmpick:checked::after{left:17px;background:var(--hi);box-shadow:var(--hig
 .srccard.idle>.acts{pointer-events:auto;opacity:.62}
 .srccard.idle>.srchead{opacity:.62}
 .srccard.idle>.srchead .srcpick,.srccard.idle>.srchead .srvpick{pointer-events:auto}
-input.srcpick,input.srvpick{appearance:none;-webkit-appearance:none;width:15px;height:15px;border:1px solid var(--dim);border-radius:0;position:relative;cursor:pointer;background:none;flex:none;padding:0;margin:0}
-input.srcpick::after,input.srvpick::after{content:"";position:absolute;top:3px;left:3px;width:7px;height:7px;border-radius:0;background:none;transition:.15s}
+input.srcpick,input.srvpick{appearance:none;-webkit-appearance:none;width:15px;height:15px;border:1px solid var(--dim);border-radius:var(--dotr);position:relative;cursor:pointer;background:none;flex:none;padding:0;margin:0}
+input.srcpick::after,input.srvpick::after{content:"";position:absolute;top:3px;left:3px;width:7px;height:7px;border-radius:var(--dotr);background:none;transition:.15s}
 input.srcpick:checked,input.srvpick:checked{border-color:var(--hi)}
-input.srcpick:checked::after,input.srvpick:checked::after{border-radius:0;background:var(--hi);box-shadow:var(--higlow)}
+input.srcpick:checked::after,input.srvpick:checked::after{border-radius:var(--dotr);background:var(--hi);box-shadow:var(--higlow)}
 input.srcpick:disabled,input.srvpick:disabled{opacity:.4;cursor:default}
 #stt_srv_card .srccard.idle>*,#stt_srv_card .srccard.idle>.acts,#stt_srv_card .srccard.idle>.srchead,
 #post_model_card .srccard.idle>*,#post_model_card .srccard.idle>.acts,#post_model_card .srccard.idle>.srchead{opacity:1}

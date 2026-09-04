@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"runtime"
 	"sort"
 	"sync"
@@ -262,6 +263,110 @@ func vkName(vk uint32) string {
 		return "scrolllock"
 	case 0x90:
 		return "numlock"
+	case 0x08:
+		return "backspace"
+	case 0x0D:
+		return "enter"
+	case 0x2C:
+		return "printscreen"
+	case 0x5D:
+		return "menu"
+	case 0x25:
+		return "left"
+	case 0x26:
+		return "up"
+	case 0x27:
+		return "right"
+	case 0x28:
+		return "down"
+	case 0x60:
+		return "num0"
+	case 0x61:
+		return "num1"
+	case 0x62:
+		return "num2"
+	case 0x63:
+		return "num3"
+	case 0x64:
+		return "num4"
+	case 0x65:
+		return "num5"
+	case 0x66:
+		return "num6"
+	case 0x67:
+		return "num7"
+	case 0x68:
+		return "num8"
+	case 0x69:
+		return "num9"
+	case 0x6A:
+		return "multiply"
+	case 0x6B:
+		return "add"
+	case 0x6D:
+		return "subtract"
+	case 0x6E:
+		return "decimal"
+	case 0x6F:
+		return "divide"
+	case 0xBA:
+		return "semicolon"
+	case 0xBB:
+		return "equals"
+	case 0xBC:
+		return "comma"
+	case 0xBD:
+		return "minus"
+	case 0xBE:
+		return "period"
+	case 0xBF:
+		return "slash"
+	case 0xC0:
+		return "backquote"
+	case 0xDB:
+		return "lbracket"
+	case 0xDC:
+		return "backslash"
+	case 0xDD:
+		return "rbracket"
+	case 0xDE:
+		return "quote"
+	case 0xAD:
+		return "volumemute"
+	case 0xAE:
+		return "volumedown"
+	case 0xAF:
+		return "volumeup"
+	case 0xB0:
+		return "medianext"
+	case 0xB1:
+		return "mediaprev"
+	case 0xB2:
+		return "mediastop"
+	case 0xB3:
+		return "mediaplay"
+	case 0xA6:
+		return "browserback"
+	case 0xA7:
+		return "browserforward"
+	case 0xA8:
+		return "browserrefresh"
+	case 0xA9:
+		return "browserstop"
+	case 0xAA:
+		return "browsersearch"
+	case 0xAB:
+		return "browserfavorites"
+	case 0xAC:
+		return "browserhome"
+	case 0xB4:
+		return "launchmail"
+	case 0xB5:
+		return "launchmedia"
+	case 0xB6:
+		return "launchapp1"
+	case 0xB7:
+		return "launchapp2"
 	}
 	if vk >= 0x70 && vk <= 0x87 {
 		return "f" + itoa(int(vk-0x70+1))
@@ -271,6 +376,9 @@ func vkName(vk uint32) string {
 	}
 	if vk >= '0' && vk <= '9' {
 		return string(rune(vk))
+	}
+	if vk > 0 && vk < 256 {
+		return fmt.Sprintf("vk0x%02X", vk)
 	}
 	return ""
 }

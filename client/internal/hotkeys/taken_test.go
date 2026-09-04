@@ -41,3 +41,15 @@ func TestTakenBySystemLeavesOrdinaryCombosAlone(t *testing.T) {
 		}
 	}
 }
+
+func TestLoneKeyWarnsOnlyForAnOrdinaryKeyByItself(t *testing.T) {
+	for combo, want := range map[string]bool{
+		"backspace": true, "f8": true, "a": true, "space": true, "num5": true,
+		"ctrl": false, "shift": false, "win": false,
+		"shift+backspace": false, "ctrl+win": false, "a+s": false, "": false,
+	} {
+		if got := LoneKey(combo); got != want {
+			t.Errorf("LoneKey(%q) = %v, want %v", combo, got, want)
+		}
+	}
+}
