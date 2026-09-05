@@ -345,8 +345,8 @@ function check(name, actual, expected) {
   const themeSel = d.getElementById("theme");
   const skinSel = d.getElementById("skin");
   check("design and colour are two separate choices", [!!skinSel, !!themeSel], [true, true]);
-  check("five designs are offered", [...skinSel.options].map(o=>o.value), ["terminal", "editor", "neon", "soft", "paper"]);
-  check("the two light ones come last", [...skinSel.options].slice(-2).map(o=>o.value), ["soft", "paper"]);
+  check("seven designs are offered, in the agreed order", [...skinSel.options].map(o=>o.value), ["editor", "fluent", "studio", "soft", "paper", "neon", "terminal"]);
+  check("the terminal closes the list", [...skinSel.options].slice(-1).map(o=>o.value), ["terminal"]);
   for (const light of ["soft", "paper"]) {
     w.applyThemeVars(light);
     const root = d.documentElement.style;
@@ -374,18 +374,20 @@ function check(name, actual, expected) {
   skinSel.value = "editor";
   skinSel.dispatchEvent(new w.Event("change", { bubbles: true }));
   await sleep(200);
-  check("a design brings its own font", d.documentElement.style.getPropertyValue("--font").includes("Segoe UI"), true);
+  check("every design keeps the terminal face", d.documentElement.style.getPropertyValue("--font").includes("IBM Plex Mono"), true);
   check("and its own corners", d.documentElement.style.getPropertyValue("--r"), "8px");
-  check("with rounder dots and pill badges, as the editor draws them", [d.documentElement.style.getPropertyValue("--dotr"), d.documentElement.style.getPropertyValue("--badger")], ["50%", "10px"]);
-  check("its buttons are filled with the editor blue", d.documentElement.style.getPropertyValue("--btn2bg"), "#0e639c");
-  check("and the focus ring is the editor blue", d.documentElement.style.getPropertyValue("--focus"), "#007fd4");
+  check("buttons and fields take the editor radius outright", [d.documentElement.style.getPropertyValue("--btnr"), d.documentElement.style.getPropertyValue("--fieldr")], ["6px", "6px"]);
+  check("the switch fills with the editor blue when on", [d.documentElement.style.getPropertyValue("--swonbg"), d.documentElement.style.getPropertyValue("--swknob")], ["#2f81c8", "#ffffff"]);
+  check("with rounder dots and pill badges, as the editor draws them", [d.documentElement.style.getPropertyValue("--dotr"), d.documentElement.style.getPropertyValue("--badger")], ["50%", "6px"]);
+  check("its secondary buttons sit on the editor grey", d.documentElement.style.getPropertyValue("--btn2bg"), "#262c34");
+  check("and the focus ring is the editor blue", d.documentElement.style.getPropertyValue("--focus"), "#4fc1ff");
   check("and turns the halo off", d.documentElement.style.getPropertyValue("--glow"), "none");
-  check("and its own colours, not the picked one", d.documentElement.style.getPropertyValue("--green"), "#d4d4d4");
+  check("and its own colours, not the picked one", d.documentElement.style.getPropertyValue("--green"), "#d7dce2");
   check("with its accent kept apart from its text", d.documentElement.style.getPropertyValue("--hi"), "#4fc1ff");
   check("and no capitals shouted at the buttons", d.documentElement.style.getPropertyValue("--caps"), "none");
   check("controls take their height from the design", d.documentElement.style.getPropertyValue("--fieldpad"), "6px 11px");
   check("and one type size for every field", d.documentElement.style.getPropertyValue("--ctlfs"), "12.5px");
-  check("down to the surfaces you type into", d.documentElement.style.getPropertyValue("--field"), "#3c3c3c");
+  check("down to the surfaces you type into", d.documentElement.style.getPropertyValue("--field"), "#161a1f");
   check("so the colour row steps aside", d.getElementById("colour_row").style.display, "none");
 
   skinSel.value = "terminal";
@@ -571,7 +573,7 @@ function check(name, actual, expected) {
   rowFor("ru").click(); await sleep(120);
   check("the mark carries both shapes", [d.querySelectorAll(".mk.mic").length, d.querySelectorAll(".mk.face").length], [2, 2]);
   w.applyThemeVars("soft");
-  check("the soft design shows the face", [d.documentElement.style.getPropertyValue("--markmic"), d.documentElement.style.getPropertyValue("--markface")], ["none", "block"]);
+  check("the soft design shows the microphone like the rest", [d.documentElement.style.getPropertyValue("--markmic"), d.documentElement.style.getPropertyValue("--markface")], ["block", "none"]);
   w.applyThemeVars("terminal:green");
   check("and every other one keeps the microphone", [d.documentElement.style.getPropertyValue("--markmic"), d.documentElement.style.getPropertyValue("--markface")], ["block", "none"]);
 
@@ -1339,9 +1341,15 @@ function check(name, actual, expected) {
     [".scard{", "border-radius:var(--r)"],
     [".hero{", "border-radius:var(--r)"],
     [".modal{", "border-radius:var(--panelr)"],
-    ["button.btn{", "border-radius:calc(var(--r) * .5)"],
-    ["button.mini{", "border-radius:calc(var(--r) * .5)"],
-    ["input[type=text],input[type=number],input[type=password],select{", "border-radius:calc(var(--r) * .55)"],
+    ["button.btn{", "border-radius:var(--btnr)"],
+    ["button.mini{", "border-radius:var(--btnr)"],
+    ['html[data-skin="terminal"] .row>button.mini.eq', "min-width:186px"],
+    ["input[type=text],input[type=number],input[type=password],select{", "border-radius:var(--fieldr)"],
+    ["input[type=checkbox]{", "background:var(--swbg)"],
+    ["input[type=checkbox]:checked{", "background:var(--swonbg)"],
+    ["input[type=checkbox]:checked::after{", "background:var(--swknob)"],
+    [".herokey{", "color:var(--keyfg)"],
+    [".herokey{", "border:1px solid var(--keyline)"],
     ["input[type=checkbox]{", "border-radius:var(--switchr)"],
   ];
   for (const [sel, want] of shaped) {
@@ -1363,6 +1371,10 @@ function check(name, actual, expected) {
     [".modal-bg{", "background:var(--scrim)"],
     [".content{", "scrollbar-gutter:stable both-edges"],
     [".hotkey-val{", "background:var(--keybg)"],
+    [".hotkey-val{", "color:var(--keyfg)"],
+    [".badge{", "color:var(--tagfg)"],
+    [".badge{", "border:1px solid var(--tagline)"],
+    [".stbdg{flex", "background:var(--tagbg)"],
     [".scard .led.on{", "background:var(--ok)"],
     [".miclevel i{", "background:var(--soft)"],
     [".miclevel i{", "width:var(--lvlw,4px)"],

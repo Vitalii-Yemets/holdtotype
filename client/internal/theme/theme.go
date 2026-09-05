@@ -47,6 +47,15 @@ type Palette struct {
 	Btn2Line string
 	Btn2BgH string
 	Focus   string
+	SwBg     string
+	SwOnBg   string
+	SwKnob   string
+	SwOnLine string
+	KeyFg    string
+	KeyLine  string
+	TagFg    string
+	TagLine  string
+	TagBg    string
 }
 
 type Skin struct {
@@ -70,11 +79,16 @@ type Skin struct {
 	BarR   string
 	Border int32
 	Round  bool
+	SmallR bool
 	DotR    string
 	BadgeR  string
 	PanelR  string
 	SwitchR string
 	CtlH    string
+	BtnR    string
+	FieldR  string
+	CardR   string
+	KeyR    string
 
 	Glow   bool
 	Scan   float64
@@ -89,7 +103,7 @@ type Skin struct {
 }
 
 const (
-	DefaultSkin    = "terminal"
+	DefaultSkin    = "editor"
 	DefaultPalette = "green"
 )
 
@@ -100,7 +114,7 @@ var palettes = []Palette{
 		Field: "#08100b", Soft: "#12241a", NavOn: "#101d14", On: "#123f22",
 		TitleBg: "transparent", SideBg: "transparent", KeyBg: "transparent",
 		BtnBg: "#101d14", BtnFg: "#3cff6e", BtnLine: "#20a34a", SelBg: "#3cff6e", SelFg: "#0b0f0c",
-		Label: "#f2fff5", Brand: "", Scrim: "rgba(3,7,4,.78)"},
+		Label: "#f2fff5", Brand: "", Scrim: "rgba(3,7,4,.78)", KeyFg: "#f2fff5"},
 
 	{ID: "amber", Bg: "#100c0a", Panel: "#17110d", Line: "#4a3018",
 		Text: "#ff9e2c", Accent: "#ff9e2c", Dim: "#b56a12", Faint: "#8a4f0d",
@@ -108,7 +122,7 @@ var palettes = []Palette{
 		Field: "#120c07", Soft: "#2a1a0d", NavOn: "#22160c", On: "#402611",
 		TitleBg: "transparent", SideBg: "transparent", KeyBg: "transparent",
 		BtnBg: "#22160c", BtnFg: "#ff9e2c", BtnLine: "#b56a12", SelBg: "#ff9e2c", SelFg: "#100c0a",
-		Label: "#ffe9c9", Brand: "", Scrim: "rgba(8,5,3,.78)"},
+		Label: "#ffe9c9", Brand: "", Scrim: "rgba(8,5,3,.78)", KeyFg: "#ffe9c9"},
 
 	{ID: "blue", Bg: "#0b0e10", Panel: "#0e1317", Line: "#1d3a4a",
 		Text: "#4cc3ff", Accent: "#4cc3ff", Dim: "#1c7fb8", Faint: "#14608f",
@@ -116,7 +130,7 @@ var palettes = []Palette{
 		Field: "#070f14", Soft: "#12222c", NavOn: "#101c24", On: "#123a52",
 		TitleBg: "transparent", SideBg: "transparent", KeyBg: "transparent",
 		BtnBg: "#101c24", BtnFg: "#4cc3ff", BtnLine: "#1c7fb8", SelBg: "#4cc3ff", SelFg: "#0b0e10",
-		Label: "#e4f6ff", Brand: "", Scrim: "rgba(3,6,8,.78)"},
+		Label: "#e4f6ff", Brand: "", Scrim: "rgba(3,6,8,.78)", KeyFg: "#e4f6ff"},
 
 	{ID: "pink", Bg: "#100b0e", Panel: "#170e14", Line: "#4a1d3a",
 		Text: "#ff6ec7", Accent: "#ff6ec7", Dim: "#b82f86", Faint: "#8f2467",
@@ -124,53 +138,84 @@ var palettes = []Palette{
 		Field: "#120810", Soft: "#2a1222", NavOn: "#22101c", On: "#40183a",
 		TitleBg: "transparent", SideBg: "transparent", KeyBg: "transparent",
 		BtnBg: "#22101c", BtnFg: "#ff6ec7", BtnLine: "#b82f86", SelBg: "#ff6ec7", SelFg: "#100b0e",
-		Label: "#ffe6f4", Brand: "", Scrim: "rgba(8,3,6,.78)"},
+		Label: "#ffe6f4", Brand: "", Scrim: "rgba(8,3,6,.78)", KeyFg: "#ffe6f4"},
 
-	{ID: "editor", Bg: "#1e1e1e", Panel: "#252526", Line: "#3c3c3c",
-		Text: "#d4d4d4", Accent: "#4fc1ff", Dim: "#9d9d9d", Faint: "#6e6e6e",
-		Warn: "#cca700", Bad: "#f14c4c", Rec: "#f14c4c",
-		Field: "#3c3c3c", Card: "#252526", Soft: "#2d2d2d", NavOn: "#37373d", On: "#094771",
-		TitleBg: "#323233", SideBg: "#252526", KeyBg: "#3c3c3c",
-		BtnBg: "#0e639c", BtnFg: "#ffffff", BtnLine: "#0e639c", SelBg: "#0e639c", SelFg: "#ffffff",
-		BtnBgH: "#1177bb", Btn2Bg: "#0e639c", Btn2Fg: "#ffffff", Btn2Line: "transparent", Btn2BgH: "#1177bb",
-		DangerBg: "#a1260d", DangerFg: "#ffffff", DangerBgH: "#c42b1c", Dot: "#89d185",
-		Focus: "#007fd4",
-		Label: "#e0e0e0", Brand: "", Scrim: "rgba(0,0,0,.6)"},
+	{ID: "editor", Bg: "#1b1f24", Panel: "#20252b", Line: "#2c333c",
+		Text: "#d7dce2", Accent: "#4fc1ff", Dim: "#9aa4b1", Faint: "#6b7480",
+		Warn: "#e3b341", Bad: "#e5534b", Rec: "#e5534b",
+		Field: "#161a1f", Card: "#20252b", Soft: "#262c34", NavOn: "#2a3139", On: "#1e3a55",
+		TitleBg: "#1f242a", SideBg: "#1a1e23", KeyBg: "#161a1f",
+		BtnBg: "#2f81c8", BtnFg: "#ffffff", BtnLine: "#2f81c8", SelBg: "#2f81c8", SelFg: "#ffffff",
+		BtnBgH: "#3a8fd8", Btn2Bg: "#262c34", Btn2Fg: "#d7dce2", Btn2Line: "#39414b", Btn2BgH: "#2f3640",
+		DangerBg: "#b23a3a", DangerFg: "#ffffff", DangerBgH: "#c44545", Dot: "#7ed49b", Ok: "#7ed49b",
+		Focus: "#4fc1ff", SwBg: "#161a1f", SwOnBg: "#2f81c8", SwKnob: "#ffffff", SwOnLine: "#4fc1ff",
+		KeyFg: "#4fc1ff", KeyLine: "#39414b",
+		Label: "#e6eaef", Brand: "", Scrim: "rgba(0,0,0,.6)"},
 
-	{ID: "neon", Bg: "#150a22", Panel: "#1d0e30", Line: "#4a2472",
-		Text: "#f3b6e4", Accent: "#46e0ff", Dim: "#b06ee0", Faint: "#7d4fae",
+	{ID: "neon", Bg: "#120a1e", Panel: "#190f2b", Line: "#3a2360",
+		Text: "#f1e4ff", Accent: "#46e0ff", Dim: "#b79bd6", Faint: "#7e63a3",
 		Warn: "#ffd24a", Bad: "#ff4d7d", Rec: "#ff4d7d",
-		Field: "#1e0f33", Card: "#231039", Soft: "#2a1442", NavOn: "#2b1240", On: "#4a2472",
-		TitleBg: "linear-gradient(90deg,#26103f,#1a0b2b)", SideBg: "#190c29", KeyBg: "linear-gradient(90deg,rgba(255,95,200,.18),rgba(70,224,255,.14))",
-		BtnBg: "linear-gradient(90deg,rgba(255,95,200,.20),rgba(70,224,255,.16))", BtnFg: "#ffffff", BtnLine: "#4a2472",
-		SelBg: "linear-gradient(90deg,#ff5fc8,#46e0ff)", SelFg: "#150a22",
-		BtnBgH: "linear-gradient(90deg,rgba(255,95,200,.34),rgba(70,224,255,.28))",
-		Btn2Bg: "linear-gradient(90deg,rgba(255,95,200,.20),rgba(70,224,255,.16))", Btn2Fg: "#ffffff", Btn2Line: "#4a2472",
-		Btn2BgH: "linear-gradient(90deg,rgba(255,95,200,.34),rgba(70,224,255,.28))",
-		DangerBg: "linear-gradient(90deg,rgba(255,77,125,.30),rgba(255,77,125,.14))", DangerFg: "#ffd7e3",
-		DangerBgH: "linear-gradient(90deg,rgba(255,77,125,.46),rgba(255,77,125,.24))",
-		Dot: "#46e0ff", Focus: "#46e0ff",
+		Field: "#150b25", Card: "#190f2b", Soft: "#24163d", NavOn: "#221540", On: "#2b1a4a",
+		TitleBg: "#160c26", SideBg: "#140b22", KeyBg: "#1a0f2e",
+		BtnBg: "linear-gradient(90deg,#ff5fc8,#46e0ff)", BtnFg: "#120a1e", BtnLine: "transparent",
+		SelBg: "linear-gradient(90deg,#ff5fc8,#46e0ff)", SelFg: "#120a1e",
+		BtnBgH: "linear-gradient(90deg,#ff7ad2,#6be7ff)",
+		Btn2Bg: "#1f1236", Btn2Fg: "#f1e4ff", Btn2Line: "#4a2f78", Btn2BgH: "#291a45",
+		DangerBg: "#ff4d7d", DangerFg: "#1b0710", DangerBgH: "#ff6690",
+		Dot: "#5cf2c4", Ok: "#5cf2c4", Focus: "#46e0ff",
+		SwBg: "#150b25", SwOnBg: "#2b1a4a", SwKnob: "#46e0ff", SwOnLine: "#46e0ff",
+		KeyFg: "#46e0ff", KeyLine: "#46e0ff", TagFg: "#ff8fd9", TagLine: "#ff5fc8",
 		Label: "#ffffff", Brand: "linear-gradient(90deg,#ff5fc8,#46e0ff)", Scrim: "rgba(10,4,18,.72)"},
 
-	{ID: "soft", Bg: "#ddc9d5", Panel: "#e7d5df", Line: "#c9a5b9",
-		Text: "#8f2f60", Accent: "#b8407c", Dim: "#9d6885", Faint: "#ae8b9e",
-		Warn: "#7d4a00", Bad: "#ab2445", Rec: "#c74a6c",
-		Field: "#f4e8ee", Card: "#eadbe4", Soft: "#d2b9c7", NavOn: "#d8c0ce", On: "#e6c6d8",
-		TitleBg: "#e2cedb", SideBg: "#e4d2dd", KeyBg: "#e2cedb",
-		BtnBg: "#c2467f", BtnFg: "#ffffff", BtnLine: "transparent", SelBg: "#c2467f", SelFg: "#ffffff",
-		BtnBgH: "#ad3b71", Btn2Bg: "#d5b6c8", Btn2Fg: "#6d2349", Btn2Line: "#bf9bb0", Btn2BgH: "#cba9be",
-		DangerBg: "#ab2445", DangerFg: "#ffffff", DangerBgH: "#8f1c39", Dot: "#2e7d4f", Ok: "#2e7d4f", Focus: "#b8407c",
-		Label: "#6d2349", Brand: "", Scrim: "rgba(120,45,85,.35)"},
+	{ID: "soft", Bg: "#f2eef8", Panel: "#fbf9fe", Line: "#e0d8ee",
+		Text: "#2b2438", Accent: "#7c5cff", Dim: "#6f6684", Faint: "#9a92ab",
+		Warn: "#b26a00", Bad: "#c93d64", Rec: "#e2557a",
+		Field: "#ffffff", Card: "#fbf9fe", Soft: "#e6dff3", NavOn: "#e8e0f6", On: "#e8e0f6",
+		TitleBg: "#f6f2fb", SideBg: "#f4f0fa", KeyBg: "#ffffff",
+		BtnBg: "#7c5cff", BtnFg: "#ffffff", BtnLine: "transparent", SelBg: "#7c5cff", SelFg: "#ffffff",
+		BtnBgH: "#6c4cf0", Btn2Bg: "#ebe5f7", Btn2Fg: "#4a3f66", Btn2Line: "transparent", Btn2BgH: "#e1d9f2",
+		DangerBg: "#e2557a", DangerFg: "#ffffff", DangerBgH: "#d1436a", Dot: "#2e9e6a", Ok: "#2e9e6a", Focus: "#7c5cff",
+		SwBg: "#e6dff3", SwOnBg: "#7c5cff", SwKnob: "#ffffff", SwOnLine: "#7c5cff",
+		KeyFg: "#7c5cff", KeyLine: "#d8cdf2", TagFg: "#6f6684", TagLine: "transparent", TagBg: "#efe9fb",
+		Label: "#241d33", Brand: "", Scrim: "rgba(80,60,120,.35)"},
 
-	{ID: "paper", Bg: "#e7eaee", Panel: "#f3f5f7", Line: "#ced5dc",
-		Text: "#1f2328", Accent: "#0969da", Dim: "#59636e", Faint: "#818b98",
-		Warn: "#9a6700", Bad: "#cf222e", Rec: "#cf222e",
-		Field: "#ffffff", Card: "#f7f9fa", Soft: "#dde2e8", NavOn: "#dfe5eb", On: "#ddf4ff",
-		TitleBg: "#eff2f5", SideBg: "#eef1f4", KeyBg: "#e4e9ee",
-		BtnBg: "#0969da", BtnFg: "#ffffff", BtnLine: "#0969da", SelBg: "#0969da", SelFg: "#ffffff",
-		BtnBgH: "#0860ca", Btn2Bg: "#d8dee5", Btn2Fg: "#24292f", Btn2Line: "#bcc5ce", Btn2BgH: "#c9d1da",
-		DangerBg: "#cf222e", DangerFg: "#ffffff", DangerBgH: "#a40e26", Dot: "#1a7f37", Focus: "#0969da",
-		Ok: "#1a7f37", Label: "#111418", Brand: "", Scrim: "rgba(31,35,40,.35)"},
+	{ID: "paper", Bg: "#f4f1ea", Panel: "#fbfaf6", Line: "#d9d4c8",
+		Text: "#1d1d1b", Accent: "#1f4fbf", Dim: "#5d6067", Faint: "#8b8e94",
+		Warn: "#8a5a00", Bad: "#b3261e", Rec: "#b3261e",
+		Field: "#ffffff", Card: "#fbfaf6", Soft: "#e9e5db", NavOn: "#e6e1d5", On: "#dfe6f7",
+		TitleBg: "#efebe2", SideBg: "#f1ede4", KeyBg: "#ffffff",
+		BtnBg: "#1f4fbf", BtnFg: "#ffffff", BtnLine: "#1f4fbf", SelBg: "#1f4fbf", SelFg: "#ffffff",
+		BtnBgH: "#1a45a8", Btn2Bg: "#e9e5db", Btn2Fg: "#1d1d1b", Btn2Line: "#cfc9bb", Btn2BgH: "#dfdacd",
+		DangerBg: "#b3261e", DangerFg: "#ffffff", DangerBgH: "#9a1f18", Dot: "#1f7a3f", Focus: "#1f4fbf",
+		Ok: "#1f7a3f", SwBg: "#e9e5db", SwOnBg: "#1f4fbf", SwKnob: "#ffffff", SwOnLine: "#1f4fbf",
+		KeyFg: "#1f4fbf", KeyLine: "#c7c1b3", TagFg: "#5d6067", TagLine: "#cfc9bb", TagBg: "#ffffff",
+		Label: "#111110", Brand: "", Scrim: "rgba(40,35,20,.35)"},
+
+
+	{ID: "fluent", Bg: "#202020", Panel: "#2b2b2b", Line: "#3a3a3a",
+		Text: "#ffffff", Accent: "#60cdff", Dim: "#c5c5c5", Faint: "#8a8a8a",
+		Warn: "#fce100", Bad: "#ff99a4", Rec: "#ff6b6b",
+		Field: "#323232", Card: "#2b2b2b", Soft: "#323232", NavOn: "#2d2d2d", On: "#24404f",
+		TitleBg: "#202020", SideBg: "#202020", KeyBg: "#323232",
+		BtnBg: "#60cdff", BtnFg: "#000000", BtnLine: "#60cdff", SelBg: "#60cdff", SelFg: "#000000",
+		BtnBgH: "#56b8e6", Btn2Bg: "#323232", Btn2Fg: "#ffffff", Btn2Line: "#3f3f3f", Btn2BgH: "#3a3a3a",
+		DangerBg: "#c42b1c", DangerFg: "#ffffff", DangerBgH: "#d33a2b", Dot: "#6ccb5f", Ok: "#6ccb5f", Focus: "#60cdff",
+		SwBg: "transparent", SwOnBg: "#60cdff", SwKnob: "#000000", SwOnLine: "#60cdff",
+		KeyFg: "#60cdff", KeyLine: "#454545", TagFg: "#c5c5c5", TagLine: "transparent", TagBg: "#323232",
+		Label: "#ffffff", Brand: "", Scrim: "rgba(0,0,0,.6)"},
+
+	{ID: "studio", Bg: "#1c1d1f", Panel: "#242527", Line: "#343538",
+		Text: "#e6e3dc", Accent: "#ff9f43", Dim: "#a19d94", Faint: "#6f6c66",
+		Warn: "#ffd166", Bad: "#e06060", Rec: "#d64545",
+		Field: "#161718", Card: "#242527", Soft: "#2c2d30", NavOn: "#2c2d30", On: "#3a2a16",
+		TitleBg: "#191a1c", SideBg: "#1a1b1d", KeyBg: "#161718",
+		BtnBg: "#ff9f43", BtnFg: "#1c1d1f", BtnLine: "#ff9f43", SelBg: "#ff9f43", SelFg: "#1c1d1f",
+		BtnBgH: "#ffb066", Btn2Bg: "#2c2d30", Btn2Fg: "#e6e3dc", Btn2Line: "#45464a", Btn2BgH: "#35363a",
+		DangerBg: "#d64545", DangerFg: "#ffffff", DangerBgH: "#e05555", Dot: "#7bd88f", Ok: "#7bd88f", Focus: "#ff9f43",
+		SwBg: "#161718", SwOnBg: "#3a2a16", SwKnob: "#ff9f43", SwOnLine: "#ff9f43",
+		KeyFg: "#ff9f43", KeyLine: "#45464a", TagFg: "#ff9f43", TagLine: "#5a4a33", TagBg: "#161718",
+		Label: "#f3f1ea", Brand: "", Scrim: "rgba(0,0,0,.65)"},
+
 }
 
 var colourChoice = []string{"green", "amber", "blue", "pink"}
@@ -185,40 +230,66 @@ var skins = []Skin{
 		Level: "bars", Pulse: 1, Mark: "mic", Flash: "blink", Brackets: true},
 
 	{ID: "editor", Palette: "editor",
-		FontCSS: `"Segoe UI Variable Text","Segoe UI",system-ui,sans-serif`, FontGDI: "Segoe UI",
+		FontCSS: `"IBM Plex Mono",Consolas,monospace`, FontGDI: "IBM Plex Mono",
 		PagePx: 13, FontPx: 14, Weight: 400, BrandLS: ".02em",
 		FieldPad: "6px 11px", CtlFS: "12.5px", WeightB: 600,
-		Radius: 8, BarR: "0", Border: 1, Round: false,
-		DotR: "50%", BadgeR: "10px", PanelR: "6px", SwitchR: "999px",
+		Radius: 8, BarR: "1px", Border: 1, Round: true,
+		DotR: "50%", BadgeR: "6px", PanelR: "8px", SwitchR: "999px",
+		BtnR: "6px", FieldR: "6px", CardR: "8px", KeyR: "6px",
 		Glow: false, Scan: 0, Shadow: "0 10px 30px rgba(0,0,0,.45)",
 		Level: "flat", Pulse: 1.5, Mark: "mic", Flash: "none"},
 
 	{ID: "neon", Palette: "neon",
-		FontCSS: `"IBM Plex Sans","Segoe UI",system-ui,sans-serif`, FontGDI: "IBM Plex Sans",
+		FontCSS: `"IBM Plex Mono",Consolas,monospace`, FontGDI: "IBM Plex Mono",
 		PagePx: 15, FontPx: 16, Weight: 400, BrandLS: ".04em",
 		FieldPad: "8px 14px", CtlFS: "13.5px", WeightB: 600,
-		Radius: 14, BarR: "99px", Border: 1, Round: true,
-		DotR: "50%", BadgeR: "999px", PanelR: "20px", SwitchR: "999px", CtlH: "36px",
-		Glow: true, Scan: 0.18, Shadow: "0 18px 46px rgba(150,40,220,.35)",
+		Radius: 10, BarR: "3px", Border: 1, Round: true,
+		DotR: "50%", BadgeR: "999px", PanelR: "14px", SwitchR: "999px", CtlH: "36px",
+		BtnR: "10px", FieldR: "10px", CardR: "14px", KeyR: "10px",
+		Glow: true, Scan: 0.18, Shadow: "0 18px 46px rgba(120,40,220,.35)",
 		Level: "bars", Pulse: 0.8, Mark: "mic", Flash: "glow"},
 
+
+	{ID: "fluent", Palette: "fluent",
+		FontCSS: `"IBM Plex Mono",Consolas,monospace`, FontGDI: "IBM Plex Mono",
+		PagePx: 13, FontPx: 14, Weight: 400, BrandLS: ".02em",
+		FieldPad: "6px 11px", CtlFS: "12.5px", WeightB: 600,
+		Radius: 8, BarR: "2px", Border: 1, Round: true,
+		DotR: "50%", BadgeR: "4px", PanelR: "8px", SwitchR: "999px",
+		BtnR: "4px", FieldR: "4px", CardR: "8px", KeyR: "4px",
+		Glow: false, Scan: 0, Shadow: "0 32px 64px rgba(0,0,0,.5)",
+		Level: "bars", Pulse: 1.4, Mark: "mic", Flash: "none"},
+
+	{ID: "studio", Palette: "studio",
+		FontCSS: `"IBM Plex Mono",Consolas,monospace`, FontGDI: "IBM Plex Mono",
+		PagePx: 13, FontPx: 14, Weight: 400, BrandLS: ".02em",
+		FieldPad: "6px 11px", CtlFS: "12.5px", WeightB: 600,
+		Radius: 4, BarR: "1px", Border: 1, Round: true, SmallR: true,
+		DotR: "50%", BadgeR: "3px", PanelR: "4px", SwitchR: "999px",
+		BtnR: "3px", FieldR: "3px", CardR: "4px", KeyR: "3px",
+		Glow: false, Scan: 0, Shadow: "0 24px 60px rgba(0,0,0,.6)",
+		Level: "bars", Pulse: 1.4, Mark: "mic", Flash: "none"},
+
 	{ID: "soft", Palette: "soft",
-		FontCSS: `"Comic Sans MS","Segoe UI Variable Display","Segoe UI",sans-serif`, FontGDI: "Comic Sans MS",
+		FontCSS: `"IBM Plex Mono",Consolas,monospace`, FontGDI: "IBM Plex Mono",
 		PagePx: 15, FontPx: 16, Weight: 400, BrandLS: ".02em",
 		FieldPad: "8px 14px", CtlFS: "13.5px", WeightB: 600,
-		Radius: 16, BarR: "99px", Border: 1, Round: true,
-		DotR: "50%", BadgeR: "999px", PanelR: "22px", SwitchR: "999px", CtlH: "36px",
-		Glow: false, Scan: 0, Shadow: "0 14px 34px rgba(255,140,190,.28)",
-		Level: "dots", Pulse: 1.2, Mark: "face", Flash: "bounce"},
+		Radius: 20, BarR: "99px", Border: 1, Round: true,
+		DotR: "50%", BadgeR: "999px", PanelR: "20px", SwitchR: "999px", CtlH: "36px",
+		BtnR: "14px", FieldR: "14px", CardR: "20px", KeyR: "14px",
+		Glow: false, Scan: 0, Shadow: "0 14px 34px rgba(124,92,255,.18)",
+		Level: "dots", Pulse: 1.2, Mark: "mic", Flash: "bounce"},
 
 	{ID: "paper", Palette: "paper",
-		FontCSS: `"Segoe UI",system-ui,sans-serif`, FontGDI: "Segoe UI",
+		FontCSS: `"IBM Plex Mono",Consolas,monospace`, FontGDI: "IBM Plex Mono",
 		PagePx: 14, FontPx: 15, Weight: 400, BrandLS: "-.01em",
 		FieldPad: "7px 11px", CtlFS: "12.5px", WeightB: 600,
-		Radius: 10, BarR: "2px", Border: 1, Round: true,
-		DotR: "50%", BadgeR: "999px", PanelR: "12px", SwitchR: "999px",
-		Glow: false, Scan: 0, Shadow: "0 8px 24px rgba(31,35,40,.12)",
+		Radius: 8, BarR: "1px", Border: 1, Round: true,
+		DotR: "50%", BadgeR: "4px", PanelR: "8px", SwitchR: "999px",
+		BtnR: "6px", FieldR: "6px", CardR: "8px", KeyR: "6px",
+		Glow: false, Scan: 0, Shadow: "0 12px 30px rgba(40,35,20,.14)",
 		Level: "bars", Pulse: 1.4, Mark: "mic", Flash: "none"},
+
 }
 
 type Look struct {
@@ -368,7 +439,7 @@ func Current(skinID, colourID string) Look {
 func Migrate(old string) (skin, colour string) {
 	switch {
 	case ValidColour(old):
-		return DefaultSkin, old
+		return "terminal", old
 	case ValidSkin(old):
 		return old, DefaultPalette
 	}
@@ -491,6 +562,58 @@ func (l Look) CSSVars() string {
 	if ctlH == "" {
 		ctlH = "30px"
 	}
+	btnR := l.BtnR
+	if btnR == "" {
+		btnR = "calc(" + itoa(int(l.Radius)) + "px * .5)"
+	}
+	fieldR := l.FieldR
+	if fieldR == "" {
+		fieldR = "calc(" + itoa(int(l.Radius)) + "px * .55)"
+	}
+	cardR := l.CardR
+	if cardR == "" {
+		cardR = "calc(" + itoa(int(l.Radius)) + "px * .6)"
+	}
+	keyR := l.KeyR
+	if keyR == "" {
+		keyR = "calc(" + itoa(int(l.Radius)) + "px * .6)"
+	}
+	keyFg := p.KeyFg
+	if keyFg == "" {
+		keyFg = p.Text
+	}
+	keyLine := p.KeyLine
+	if keyLine == "" {
+		keyLine = p.Line
+	}
+	tagFg := p.TagFg
+	if tagFg == "" {
+		tagFg = label
+	}
+	tagLine := p.TagLine
+	if tagLine == "" {
+		tagLine = p.Line
+	}
+	tagBg := p.TagBg
+	if tagBg == "" {
+		tagBg = "transparent"
+	}
+	swBg := p.SwBg
+	if swBg == "" {
+		swBg = "transparent"
+	}
+	swOnBg := p.SwOnBg
+	if swOnBg == "" {
+		swOnBg = "transparent"
+	}
+	swKnob := p.SwKnob
+	if swKnob == "" {
+		swKnob = p.Accent
+	}
+	swOnLine := p.SwOnLine
+	if swOnLine == "" {
+		swOnLine = p.Dim
+	}
 	btnBo, btnBc := `""`, `""`
 	if l.Brackets {
 		btnBo, btnBc = "\"[ \"", "\" ]\""
@@ -508,6 +631,9 @@ func (l Look) CSSVars() string {
 		";--btnbgh:" + p.BtnBgH + ";--btn2bg:" + p.Btn2Bg + ";--btn2fg:" + p.Btn2Fg +
 		";--dangerbg:" + p.DangerBg + ";--dangerfg:" + p.DangerFg + ";--dangerbgh:" + p.DangerBgH +
 		";--switchr:" + switchR + ";--ctlh:" + ctlH +
+		";--btnr:" + btnR + ";--fieldr:" + fieldR + ";--cardr:" + cardR + ";--keyr:" + keyR + ";--keyfg:" + keyFg + ";--keyline:" + keyLine +
+		";--tagfg:" + tagFg + ";--tagline:" + tagLine + ";--tagbg:" + tagBg +
+		";--swbg:" + swBg + ";--swonbg:" + swOnBg + ";--swknob:" + swKnob + ";--swonline:" + swOnLine +
 		";--btn2line:" + p.Btn2Line + ";--btn2bgh:" + p.Btn2BgH + ";--focus:" + p.Focus +
 		";--dotr:" + dotR + ";--badger:" + badgeR + ";--panelr:" + panelR +
 		";--btnbo:" + btnBo + ";--btnbc:" + btnBc +

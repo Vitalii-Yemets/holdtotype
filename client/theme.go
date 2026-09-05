@@ -33,6 +33,8 @@ func themeLook() theme.Look { return theme.Current(skinID(), colourID()) }
 
 func themeRoundCorners() bool { return themeLook().Round }
 
+func themeRoundSmall() bool { return themeLook().SmallR }
+
 func themeGlow() bool { return themeLook().Glow }
 
 func themeScanlines() bool { return themeLook().Scan > 0 }

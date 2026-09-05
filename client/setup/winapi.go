@@ -89,7 +89,8 @@ func colorref(hex string) int32 {
 	return int32(b)<<16 | int32(g)<<8 | int32(r)
 }
 
-func applyCaption(hwnd uintptr, p theme.Palette) {
+func applyCaption(hwnd uintptr, l theme.Look) {
+	p := l.Palette
 	dark := int32(1)
 	if p.Light() {
 		dark = 0
@@ -99,9 +100,16 @@ func applyCaption(hwnd uintptr, p theme.Palette) {
 	procDwmSetWindowAttribute.Call(hwnd, 35, uintptr(unsafe.Pointer(&capColor)), 4)
 	txtColor := colorref(p.Text)
 	procDwmSetWindowAttribute.Call(hwnd, 36, uintptr(unsafe.Pointer(&txtColor)), 4)
-	border := colorref(p.Line)
+	border := int32(-2)
+	corner := int32(1)
+	if l.Round {
+		border = colorref(p.Line)
+		corner = 2
+		if l.SmallR {
+			corner = 3
+		}
+	}
 	procDwmSetWindowAttribute.Call(hwnd, 34, uintptr(unsafe.Pointer(&border)), 4)
-	corner := int32(2)
 	procDwmSetWindowAttribute.Call(hwnd, 33, uintptr(unsafe.Pointer(&corner)), 4)
 }
 
@@ -119,7 +127,7 @@ func offscreenPos() uintptr {
 
 type winRect struct{ Left, Top, Right, Bottom int32 }
 
-func hideWebViewWindowEarly(title string, p theme.Palette) func() {
+func hideWebViewWindowEarly(title string, l theme.Look) func() {
 	done := make(chan struct{})
 	go func() {
 		cls, _ := windows.UTF16PtrFromString("webview")
@@ -137,8 +145,8 @@ func hideWebViewWindowEarly(title string, p theme.Palette) func() {
 				if rc.Left > offscreenXY+1000 {
 					procSetWindowPos.Call(h, 0, offscreenPos(), offscreenPos(), 0, 0, 0x0001|0x0004|0x0010)
 				}
-				setClientBackground(h, p)
-				applyCaption(h, p)
+				setClientBackground(h, l.Palette)
+				applyCaption(h, l)
 			}
 			time.Sleep(2 * time.Millisecond)
 		}

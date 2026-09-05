@@ -388,7 +388,7 @@ func main() {
 	if err := windows.CoInitializeEx(0, windows.COINIT_APARTMENTTHREADED); err != nil {
 		_ = err
 	}
-	stopHider := hideWebViewWindowEarly(tr("title"), theme.Current(installedLook(updateDir)).Palette)
+	stopHider := hideWebViewWindowEarly(tr("title"), theme.Current(installedLook(updateDir)))
 	w := webview.NewWithOptions(webview.WebViewOptions{
 		DataPath:  filepath.Join(os.TempDir(), appid.TempDirName("setup", os.Getpid())),
 		AutoFocus: true,
@@ -409,9 +409,9 @@ func main() {
 	defer w.Destroy()
 
 	hwnd := uintptr(w.Window())
-	pal := theme.Current(installedLook(updateDir)).Palette
-	setClientBackground(hwnd, pal)
-	applyCaption(hwnd, pal)
+	look := theme.Current(installedLook(updateDir))
+	setClientBackground(hwnd, look.Palette)
+	applyCaption(hwnd, look)
 	makeBorderless(hwnd)
 	var shown int32
 	reveal := func() {

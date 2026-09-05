@@ -779,6 +779,8 @@ var settingsStrings = map[string]map[string]string{
 		"S_SKIN_TERMINAL": "Терминал",
 		"S_SKIN_SOFT": "Мягкий",
 		"S_SKIN_PAPER": "Документ",
+		"S_SKIN_FLUENT": "Fluent",
+		"S_SKIN_STUDIO": "Студия",
 		"S_SKIN_SUB": "шрифт, форма, эффекты и анимация",
 		"S_SKIN": "Дизайн",
 		"S_WND_CLOSE":       "Закрыть окно",
@@ -939,8 +941,8 @@ var settingsStrings = map[string]map[string]string{
 			"<p>Три строки: язык интерфейса, дизайн и цвет. На работу они не влияют совсем.</p>" +
 			"<table class=\"hopt\">" +
 			"<tr><td>Язык интерфейса</td><td>Язык окна настроек и подписей на плашке. К языку диктовки отношения не имеет: окно может быть русским, а говорить вы будете по-английски.</td></tr>" +
-			"<tr><td>Дизайн</td><td>Общий облик. «Терминал» — зелёные буквы на чёрном, как здесь. «Документ» — светлый и деловой. «Мягкий» — светлый и округлый. Есть ещё «Редактор» и «Неон».</td></tr>" +
-			"<tr><td>Цвет</td><td>Оттенок выбранного дизайна: зелёный, янтарный, синий, розовый. Тем же цветом будет плашка и значок у часов. У светлых дизайнов цвет свой, и строка прячется.</td></tr>" +
+			"<tr><td>Дизайн</td><td>Общий облик. Их семь: «Редактор» (по умолчанию: тёмно-серый с синим), «Fluent» (как в параметрах Windows 11), «Студия» (графит с оранжевым, почти без скруглений), «Мягкий» (светло-сиреневый, округлый), «Документ» (бумага с синим), «Неон» (фиолетовый с градиентом от розового к бирюзовому) и «Терминал» (зелёные буквы на чёрном, скобки вокруг кнопок). Все семь набраны одним шрифтом, IBM Plex Mono.</td></tr>" +
+			"<tr><td>Цвет</td><td>Оттенок только для «Терминала»: зелёный, янтарный, синий, розовый. Тем же цветом будет плашка и значок у часов. У остальных дизайнов цвета свои, и строка прячется.</td></tr>" +
 			"</table>" +
 			"<p class=\"hsub\">Запуск и обновления</p>" +
 			"<p>Здесь решается, стартует ли приложение вместе с системой и следит ли оно за новыми версиями.</p>" +
@@ -1456,6 +1458,8 @@ var settingsStrings = map[string]map[string]string{
 		"S_SKIN_TERMINAL": "Terminal",
 		"S_SKIN_SOFT": "Soft",
 		"S_SKIN_PAPER": "Document",
+		"S_SKIN_FLUENT": "Fluent",
+		"S_SKIN_STUDIO": "Studio",
 		"S_SKIN_SUB": "font, shape, effects and motion",
 		"S_SKIN": "Design",
 		"S_WND_CLOSE":       "Close the window",
@@ -1566,7 +1570,7 @@ var settingsStrings = map[string]map[string]string{
 			"<li>While the plate is asking something its top line says so — \"Waiting for your answer\" — and the dot stops pulsing. Every answer carries a number: 1…9 pick one, Enter takes the highlighted one, Esc cancels everything; the keys are spelled out at the right of the same row. Ten seconds before the recording limit an amber countdown runs on the plate.</li>" +
 			"<li>The title bar carries three buttons: hide to the tray, fill the screen and close. The same button brings a filled window back to the size it had, and the size you set with the mouse is remembered — filling the screen does not replace it. The window never goes below 760×500, where the rows and cards stop fitting.</li>" +
 			"<li>Long names — a device, a model, a file — are cut with an ellipsis on the Status cards so the cards line up; the whole name appears as a hint if the pointer rests on the card. The hints are drawn in the colours of the current skin, not the system ones.</li>" +
-			"<li>The look comes from two lists in the System section. Design sets the font, the shape, the border width, the halo and the character of the motion; there are three — Terminal (green, the default), Editor (flat grey, no halo) and Neon (violet, rounded). Colour is offered to Terminal alone and changes nothing but the colour of the window, the plate and the tray icon: green, amber, blue, pink. The other designs bring their own colours. The choice applies at once, with no restart.</li>" +
+			"<li>The look comes from two lists in the System section. Design sets the shape, the colours, the corners, the halo and the character of the motion; there are seven — Editor (the default: dark grey with blue), Fluent (like the Windows 11 settings), Studio (graphite with orange, nearly square), Soft (light lilac, rounded), Document (paper with blue), Neon (violet with a pink-to-cyan gradient) and Terminal (green on black, brackets around the buttons). All seven are set in one face, IBM Plex Mono. Colour is offered to Terminal alone and changes nothing but the colour of the window, the plate and the tray icon: green, amber, blue, pink. The other designs bring their own colours. The choice applies at once, with no restart.</li>" +
 			"</ul>" +
 			"<p class=\"wh\">The translation question</p>" +
 			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Transcribing…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Translate to:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Translate into the source language</span></div></div>" +

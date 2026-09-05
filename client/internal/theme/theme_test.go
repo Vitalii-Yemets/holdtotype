@@ -7,17 +7,17 @@ import (
 
 func TestSkinsAndColoursAreSeparate(t *testing.T) {
 	skins := SkinIDs()
-	if len(skins) != 5 {
-		t.Fatalf("SkinIDs() = %v, want five skins", skins)
+	if len(skins) != 7 {
+		t.Fatalf("SkinIDs() = %v, want seven skins", skins)
 	}
-	if skins[0] != DefaultSkin {
-		t.Errorf("the first skin is %q, want the default %q", skins[0], DefaultSkin)
+	if !ValidSkin(DefaultSkin) || DefaultSkin != "editor" {
+		t.Errorf("the default skin is %q, want editor", DefaultSkin)
 	}
 	colours := ColourIDs("terminal")
 	if len(colours) != 4 || colours[0] != DefaultPalette {
 		t.Errorf("ColourIDs(terminal) = %v, want the four with green first", colours)
 	}
-	for _, id := range []string{"editor", "neon", "soft", "paper"} {
+	for _, id := range []string{"editor", "neon", "fluent", "studio", "soft", "paper"} {
 		if got := ColourIDs(id); len(got) != 0 {
 			t.Errorf("ColourIDs(%q) = %v, want none — the skin carries its own", id, got)
 		}
@@ -34,7 +34,7 @@ func TestASkinWithOwnColoursIgnoresTheChoice(t *testing.T) {
 	if got := Current("terminal", "nonsense").Palette.ID; got != DefaultPalette {
 		t.Errorf("an unknown colour gave %q, want the default", got)
 	}
-	if got := Current("nonsense", "amber"); got.ID != DefaultSkin || got.Palette.ID != "amber" {
+	if got := Current("nonsense", "amber"); got.ID != DefaultSkin || got.Palette.ID != "editor" {
 		t.Errorf("an unknown skin gave %q/%q", got.ID, got.Palette.ID)
 	}
 }
@@ -47,8 +47,8 @@ func TestMigrateSplitsTheOldSingleValue(t *testing.T) {
 		"pink":   {"terminal", "pink"},
 		"editor": {"editor", "green"},
 		"neon":   {"neon", "green"},
-		"":       {"terminal", "green"},
-		"what":   {"terminal", "green"},
+		"":       {"editor", "green"},
+		"what":   {"editor", "green"},
 	}
 	for old, want := range cases {
 		skin, colour := Migrate(old)
@@ -130,7 +130,7 @@ func TestOnlyTheTerminalShouts(t *testing.T) {
 	if !GetSkin("terminal").Caps || !GetSkin("terminal").Flicker {
 		t.Error("the terminal skin lost its capitals or its flicker")
 	}
-	for _, id := range []string{"editor", "neon", "soft", "paper"} {
+	for _, id := range []string{"editor", "neon", "fluent", "studio", "soft", "paper"} {
 		s := GetSkin(id)
 		if s.Caps || s.Flicker {
 			t.Errorf("%s: capitals %v, flicker %v — both should be off", id, s.Caps, s.Flicker)
@@ -140,8 +140,8 @@ func TestOnlyTheTerminalShouts(t *testing.T) {
 
 func TestTheThreeSkinsDifferInMoreThanColour(t *testing.T) {
 	term, editor, neon := GetSkin("terminal"), GetSkin("editor"), GetSkin("neon")
-	if term.FontGDI == neon.FontGDI {
-		t.Error("Terminal and Neon are drawn with the same font")
+	if term.FontGDI != neon.FontGDI {
+		t.Error("every design is set in the terminal face")
 	}
 	if editor.Glow || editor.Scan != 0 {
 		t.Error("Editor should be flat: no halo, no scanlines")
@@ -175,19 +175,21 @@ func TestRGBReadsTheChannels(t *testing.T) {
 func TestCSSVarsCarryEverythingThePageNeeds(t *testing.T) {
 	css := Current("editor", "").CSSVars()
 	for _, want := range []string{
-		"--bg:#1e1e1e", "--green:#d4d4d4", "--hi:#4fc1ff", "--rgb:212,212,212",
+		"--bg:#1b1f24", "--green:#d7dce2", "--hi:#4fc1ff", "--rgb:215,220,226",
 		"--glow:none", "--font:", "--fs:13px", "--r:8px", "--bw:1px", "--scan:0",
-		"--btnbgh:#1177bb", "--btn2bg:#0e639c", "--btn2fg:#ffffff", "--focus:#007fd4",
-		"--dotr:50%", "--badger:10px", "--panelr:6px",
-		"--shadow:0 10px 30px", "--titlebg:#323233", "--keybg:#3c3c3c",
-		"--btnbg:#0e639c", "--btnfg:#ffffff", "--caps:none", "--ls:0", "--flicker:none",
+		"--btnr:6px", "--fieldr:6px", "--cardr:8px", "--keyr:6px", "--keyfg:#4fc1ff", "--keyline:#39414b",
+		"--swbg:#161a1f", "--swonbg:#2f81c8", "--swknob:#ffffff", "--swonline:#4fc1ff",
+		"--btnbgh:#3a8fd8", "--btn2bg:#262c34", "--btn2fg:#d7dce2", "--focus:#4fc1ff",
+		"--dotr:50%", "--badger:6px", "--panelr:8px",
+		"--shadow:0 10px 30px", "--titlebg:#1f242a", "--keybg:#161a1f",
+		"--btnbg:#2f81c8", "--btnfg:#ffffff", "--caps:none", "--ls:0", "--flicker:none",
 	} {
 		if !strings.Contains(css, want) {
 			t.Errorf("CSSVars() misses %q: %s", want, css)
 		}
 	}
 	term := Current("terminal", "green").CSSVars()
-	for _, want := range []string{"--caps:uppercase", "--ls:1px", "--flicker:flicker 6s infinite", "--brandbg:none"} {
+	for _, want := range []string{"--caps:uppercase", "--ls:1px", "--flicker:flicker 6s infinite", "--brandbg:none", "--btnr:calc(0px * .5)", "--fieldr:calc(0px * .55)", "--keyfg:#f2fff5", "--keyline:#1d4a2b", "--tagfg:#f2fff5", "--tagline:#1d4a2b", "--tagbg:transparent", "--swbg:transparent", "--swonbg:transparent", "--swknob:#3cff6e", "--swonline:#20a34a"} {
 		if !strings.Contains(term, want) {
 			t.Errorf("the terminal skin misses %q", want)
 		}
@@ -198,28 +200,49 @@ func TestCSSVarsCarryEverythingThePageNeeds(t *testing.T) {
 	if !strings.Contains(term, "--glow:0 0 7px rgba(60,255,110,.55)") {
 		t.Error("the terminal skin lost its halo")
 	}
+	fluent := Current("fluent", "")
+	if !fluent.Round || fluent.Radius != 8 {
+		t.Errorf("the fluent skin should be rounded at 8, got round=%v r=%d", fluent.Round, fluent.Radius)
+	}
+	for _, want := range []string{"--btnr:4px", "--fieldr:4px", "--cardr:8px", "--keyr:4px", "--keyfg:#60cdff", "--keyline:#454545", "--swbg:transparent", "--swonbg:#60cdff", "--swknob:#000000", "--swonline:#60cdff", "--tagfg:#c5c5c5", "--tagline:transparent", "--tagbg:#323232"} {
+		if !strings.Contains(fluent.CSSVars(), want) {
+			t.Errorf("the fluent skin misses %q", want)
+		}
+	}
+	studio := Current("studio", "")
+	if !studio.Round || !studio.SmallR || studio.Radius != 4 {
+		t.Errorf("the studio skin should take the small system corners at 4, got round=%v small=%v r=%d", studio.Round, studio.SmallR, studio.Radius)
+	}
+	for _, want := range []string{"--btnr:3px", "--fieldr:3px", "--cardr:4px", "--keyr:3px", "--switchr:999px", "--keyfg:#ff9f43", "--keyline:#45464a", "--swbg:#161718", "--swonbg:#3a2a16", "--swknob:#ff9f43", "--tagfg:#ff9f43", "--tagline:#5a4a33", "--tagbg:#161718"} {
+		if !strings.Contains(studio.CSSVars(), want) {
+			t.Errorf("the studio skin misses %q", want)
+		}
+	}
+	for _, id := range SkinIDs() {
+		if id != "studio" && GetSkin(id).SmallR {
+			t.Errorf("the %s skin asks for small corners, only studio should", id)
+		}
+	}
 	neon := Current("neon", "").CSSVars()
 	if !strings.Contains(neon, "--brandclip:text") || !strings.Contains(neon, "--brandfill:transparent") {
 		t.Error("the neon title should be painted with its gradient")
 	}
-}
-
-func TestSkinsNameTheFacesTheyShipWith(t *testing.T) {
-	for _, c := range []struct{ skin, want string }{
-		{"terminal", "IBM Plex Mono"},
-		{"neon", "IBM Plex Sans"},
-	} {
-		look := Current(c.skin, "")
-		if !strings.HasPrefix(look.FontCSS, `"`+c.want+`"`) {
-			t.Errorf("the %s page asks for %q, want %q first", c.skin, look.FontCSS, c.want)
-		}
-		if look.FontGDI != c.want {
-			t.Errorf("the %s windows are drawn with %q, want %q", c.skin, look.FontGDI, c.want)
+	for _, want := range []string{"--btnr:10px", "--fieldr:10px", "--cardr:14px", "--keyr:10px", "--keyfg:#46e0ff", "--keyline:#46e0ff", "--swbg:#150b25", "--swonbg:#2b1a4a", "--swknob:#46e0ff", "--tagfg:#ff8fd9", "--tagline:#ff5fc8", "--tagbg:transparent"} {
+		if !strings.Contains(neon, want) {
+			t.Errorf("the neon skin misses %q", want)
 		}
 	}
-	ed := Current("editor", "")
-	if ed.FontGDI != "Segoe UI" {
-		t.Errorf("the editor skin speaks in the system face like VS Code does, got %q", ed.FontGDI)
+}
+
+func TestEveryDesignIsSetInTheTerminalFace(t *testing.T) {
+	for _, id := range SkinIDs() {
+		look := Current(id, "")
+		if !strings.HasPrefix(look.FontCSS, `"IBM Plex Mono"`) {
+			t.Errorf("the %s page asks for %q, want IBM Plex Mono first", id, look.FontCSS)
+		}
+		if look.FontGDI != "IBM Plex Mono" {
+			t.Errorf("the %s windows are drawn with %q, want IBM Plex Mono", id, look.FontGDI)
+		}
 	}
 }
 
@@ -236,7 +259,7 @@ func TestTheLightSkinsAreLight(t *testing.T) {
 			t.Errorf("the %s skin has too little between its ink and its paper", id)
 		}
 	}
-	for _, id := range []string{"terminal", "editor", "neon"} {
+	for _, id := range []string{"terminal", "editor", "neon", "fluent", "studio"} {
 		if Current(id, "").Palette.Light() {
 			t.Errorf("the %s skin should stay dark", id)
 		}
@@ -244,7 +267,7 @@ func TestTheLightSkinsAreLight(t *testing.T) {
 }
 
 func TestEveryPaletteFillsInTheDerivedColours(t *testing.T) {
-	for _, id := range []string{"green", "amber", "blue", "pink", "editor", "neon", "soft", "paper"} {
+	for _, id := range []string{"green", "amber", "blue", "pink", "editor", "neon", "soft", "paper", "fluent", "studio"} {
 		p := GetPalette(id)
 		for name, v := range map[string]string{"Off": p.Off, "BadBg": p.BadBg, "BadLine": p.BadLine} {
 			if len(v) != 7 || v[0] != '#' {
@@ -286,8 +309,13 @@ func TestALightSkinAsksForNoHalo(t *testing.T) {
 
 func TestTheLightSkinsKeepTheirDrawnCharacter(t *testing.T) {
 	soft := Current("soft", "")
-	if !soft.Round || soft.Radius != 16 {
-		t.Errorf("the soft skin should be round at 16, got round=%v r=%d", soft.Round, soft.Radius)
+	if !soft.Round || soft.Radius != 20 {
+		t.Errorf("the soft skin should be round at 20, got round=%v r=%d", soft.Round, soft.Radius)
+	}
+	for _, want := range []string{"--btnr:14px", "--fieldr:14px", "--cardr:20px", "--keyr:14px", "--keyfg:#7c5cff", "--keyline:#d8cdf2", "--swbg:#e6dff3", "--swonbg:#7c5cff", "--swknob:#ffffff", "--tagfg:#6f6684", "--tagline:transparent", "--tagbg:#efe9fb"} {
+		if !strings.Contains(soft.CSSVars(), want) {
+			t.Errorf("the soft skin misses %q", want)
+		}
 	}
 	if soft.Level != "dots" {
 		t.Errorf("the soft skin shows the level as %q, want bouncing dots", soft.Level)
@@ -300,10 +328,10 @@ func TestTheLightSkinsKeepTheirDrawnCharacter(t *testing.T) {
 	}
 
 	paper := Current("paper", "")
-	if !paper.Round || paper.Radius != 10 {
-		t.Errorf("the paper skin should be rounded at 10, got round=%v r=%d", paper.Round, paper.Radius)
+	if !paper.Round || paper.Radius != 8 {
+		t.Errorf("the paper skin should be rounded at 8, got round=%v r=%d", paper.Round, paper.Radius)
 	}
-	if !strings.Contains(paper.CSSVars(), "--barr:2px") {
+	if !strings.Contains(paper.CSSVars(), "--barr:1px") {
 		t.Error("the paper skin should keep its level marks nearly square")
 	}
 	if !strings.Contains(paper.CSSVars(), "--scheme:light") || !strings.Contains(soft.CSSVars(), "--scheme:light") {
@@ -318,13 +346,23 @@ func TestTheLightSkinsKeepTheirDrawnCharacter(t *testing.T) {
 	if p := paper.Palette; p.Ok == p.Accent {
 		t.Error("the paper skin should light its lamps green, not in the link blue")
 	}
-	if !strings.Contains(paper.CSSVars(), "--ok:#1a7f37") {
+	if !strings.Contains(paper.CSSVars(), "--ok:#1f7a3f") {
 		t.Error("the paper skin lost its green lamp")
 	}
-	for _, id := range []string{"terminal", "editor", "neon"} {
-		p := GetPalette(GetSkin(id).Palette)
-		if p.Ok != p.Accent {
-			t.Errorf("the %s palette should light its lamps in its own accent, got %q", id, p.Ok)
+	for _, want := range []string{"--btnr:6px", "--fieldr:6px", "--cardr:8px", "--keyr:6px", "--keyfg:#1f4fbf", "--keyline:#c7c1b3", "--swbg:#e9e5db", "--swonbg:#1f4fbf", "--swknob:#ffffff", "--tagfg:#5d6067", "--tagline:#cfc9bb", "--tagbg:#ffffff"} {
+		if !strings.Contains(paper.CSSVars(), want) {
+			t.Errorf("the paper skin misses %q", want)
+		}
+	}
+	if p := GetPalette("green"); p.Ok != p.Accent {
+		t.Errorf("the terminal palette should light its lamps in its own accent, got %q", p.Ok)
+	}
+	for _, id := range SkinIDs() {
+		if id == "terminal" {
+			continue
+		}
+		if p := GetPalette(GetSkin(id).Palette); p.Ok == p.Accent {
+			t.Errorf("the %s palette should light its lamps green, not in its accent", id)
 		}
 	}
 	if soft.Palette.Ok == soft.Palette.Accent {
@@ -337,8 +375,10 @@ func TestEverySkinCarriesItsOwnMarkAndFlash(t *testing.T) {
 		"terminal": {"mic", "blink"},
 		"editor":   {"mic", "none"},
 		"neon":     {"mic", "glow"},
-		"soft":     {"face", "bounce"},
+		"soft":     {"mic", "bounce"},
 		"paper":    {"mic", "none"},
+		"fluent":   {"mic", "none"},
+		"studio":   {"mic", "none"},
 	}
 	for id, w := range want {
 		s := GetSkin(id)

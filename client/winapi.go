@@ -78,7 +78,11 @@ func applyDarkCaption(hwnd uintptr) {
 	set(36, uint32(colGreen))
 	if themeRoundCorners() {
 		set(34, uint32(colLine))
-		set(33, 2)
+		if themeRoundSmall() {
+			set(33, 3)
+		} else {
+			set(33, 2)
+		}
 	} else {
 		set(34, dwmColorNone)
 		set(33, 1)
