@@ -151,6 +151,12 @@ func tmWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 		changed := idx != tmHover
 		tmHover = idx
 		tmMu.Unlock()
+		shape := uintptr(idcArrow)
+		if idx >= 0 {
+			shape = 32649
+		}
+		cur, _, _ := procLoadCursorW.Call(0, shape)
+		procSetCursor.Call(cur)
 		if changed {
 			hdc, _, _ := procGetDC.Call(hwnd)
 			if hdc != 0 {
@@ -168,6 +174,9 @@ func tmWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 			procSetCursor.Call(cur)
 			return 1
 		}
+		cur, _, _ := procLoadCursorW.Call(0, idcArrow)
+		procSetCursor.Call(cur)
+		return 1
 	case wmLBtnDown, wmRBtnDown:
 		x := int32(int16(lParam & 0xFFFF))
 		y := int32(int16(lParam >> 16 & 0xFFFF))
@@ -272,9 +281,11 @@ func showTrayMenu(items []tmItem) uintptr {
 		tmClassOnce.Do(func() {
 			className, _ := windows.UTF16PtrFromString(appid.Class("TrayMenu"))
 			cb := syscall.NewCallback(tmWndProc)
+			cursor, _, _ := procLoadCursorW.Call(0, idcArrow)
 			wc := wndClassExW{
 				Size:      uint32(unsafe.Sizeof(wndClassExW{})),
 				WndProc:   cb,
+				Cursor:    cursor,
 				ClassName: className,
 			}
 			procRegisterClassExW.Call(uintptr(unsafe.Pointer(&wc)))
@@ -317,6 +328,8 @@ func showTrayMenu(items []tmItem) uintptr {
 			procReleaseDC.Call(hwnd, hdc)
 		}
 		procSetCapture.Call(hwnd)
+		arrow, _, _ := procLoadCursorW.Call(0, idcArrow)
+		procSetCursor.Call(arrow)
 		var m msgStruct
 		for {
 			r, _, _ := procGetMessageW.Call(uintptr(unsafe.Pointer(&m)), 0, 0, 0)
