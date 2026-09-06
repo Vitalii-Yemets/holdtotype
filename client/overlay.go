@@ -414,6 +414,7 @@ func resizeOverlay(hwnd uintptr, width int32) {
 	}
 	h := overlayHeightPx(overlayDPI())
 	x, y := overlayOrigin(width, h)
+	shapeOverlay(hwnd, width, h)
 	ovWidthMu.Lock()
 	same := ovWidth == width && ovHeight == h && ovX == x && ovY == y
 	ovWidth, ovHeight, ovX, ovY = width, h, x, y
@@ -422,6 +423,30 @@ func resizeOverlay(hwnd uintptr, width int32) {
 		return
 	}
 	procSetWindowPos.Call(hwnd, 0, uintptr(x), uintptr(y), uintptr(width), uintptr(h), 0x0004|0x0010)
+}
+
+// overlayRegion is the rounded outline a design asks for, or zero when it wants square corners.
+func overlayRegion(w, h, dpi int32) uintptr {
+	if !themeRoundCorners() || w <= 0 || h <= 0 {
+		return 0
+	}
+	r := scaleDPI(themeLook().Radius, dpi)
+	if r < 2 {
+		r = 2
+	}
+	if max := h / 2; r > max {
+		r = max
+	}
+	rgn, _, _ := procCreateRoundRectRgn.Call(0, 0, uintptr(w+1), uintptr(h+1), uintptr(2*r), uintptr(2*r))
+	return rgn
+}
+
+// shapeOverlay cuts the plate to the outline of the chosen design.
+func shapeOverlay(hwnd uintptr, w, h int32) {
+	if hwnd == 0 {
+		return
+	}
+	procSetWindowRgn.Call(hwnd, overlayRegion(w, h, overlayDPI()), 1)
 }
 
 func overlayRefresh() {
@@ -515,6 +540,7 @@ func startOverlayThread() {
 		if hwnd != 0 {
 			applyDarkCaption(hwnd)
 			procSetLayeredWindowAttributes.Call(hwnd, 0, 240, lwaAlpha)
+			shapeOverlay(hwnd, int32(startW), int32(startH))
 		}
 		ovMu.Lock()
 		ovHwnd = hwnd
@@ -712,12 +738,15 @@ func overlayRender(hwnd, hdc uintptr) {
 			fill(rect{Left: rc.Left, Top: y, Right: rc.Right, Bottom: y + 1}, colBgLine)
 		}
 	}
-	if !themeRoundCorners() {
+	brush, _, _ := procCreateSolidBrush.Call(colLine)
+	if rgn := overlayRegion(rc.Right-rc.Left, rc.Bottom-rc.Top, dpi); rgn != 0 {
+		procFrameRgn.Call(hdc, rgn, brush, 1, 1)
+		procDeleteObject.Call(rgn)
+	} else {
 		border := rc
-		brush, _, _ := procCreateSolidBrush.Call(colLine)
 		procFrameRect.Call(hdc, uintptr(unsafe.Pointer(&border)), brush)
-		procDeleteObject.Call(brush)
 	}
+	procDeleteObject.Call(brush)
 	pulse := 0.0
 	if !askActive() && (st == ovRecording || st == ovProcessing) {
 		pulse = math.Abs(math.Sin(float64(ovTick) * 0.18 / themePulse()))
