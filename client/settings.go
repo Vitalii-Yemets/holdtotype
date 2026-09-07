@@ -1651,6 +1651,7 @@ html[data-skin="terminal"] #repl_add,html[data-skin="terminal"] #cmd_add,html[da
 html[data-skin="editor"] #repl_add,html[data-skin="editor"] #cmd_add,html[data-skin="editor"] #dict_add{min-width:176px}
 html[data-skin="editor"] button.mini.danger{border-color:transparent}
 html[data-skin="editor"] button.mini:hover{color:var(--btn2fg);border-color:transparent;background:var(--btn2bgh)}
+html .stalert button.mini:hover{color:inherit;border-color:currentColor;box-shadow:none}
 html[data-skin="editor"] button.mini.pri,html[data-skin="neon"] button.mini.pri,html[data-skin="paper"] button.mini.pri,html[data-skin="soft"] button.mini.pri,html[data-skin="fluent"] button.mini.pri,html[data-skin="studio"] button.mini.pri{background:var(--btnbg);color:var(--btnfg);border-color:var(--btnline)}
 html[data-skin="editor"] button.mini.pri:hover,html[data-skin="neon"] button.mini.pri:hover,html[data-skin="paper"] button.mini.pri:hover,html[data-skin="soft"] button.mini.pri:hover,html[data-skin="fluent"] button.mini.pri:hover,html[data-skin="studio"] button.mini.pri:hover{background:var(--btnbgh);color:var(--btnfg);border-color:var(--btnbgh)}
 html[data-skin="neon"] button.mini.pri,html[data-skin="neon"] button.btn,html[data-skin="neon"] .modal .btn{background-origin:border-box}
