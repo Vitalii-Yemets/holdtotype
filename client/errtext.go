@@ -50,6 +50,15 @@ func humanError(err error) string {
 	if err == nil {
 		return ""
 	}
+	// an error that already carries its own wording keeps it: the guesswork
+	// below only has the kinds it knows, and it used to answer "it did not
+	// work" to errors that had already said exactly what went wrong — no disk
+	// space, a damaged file, a folder that could not be made.
+	var ue *uiError
+	if errors.As(err, &ue) && ue.ui != "" {
+		log.Printf("error detail: %s", ue.en)
+		return ue.ui
+	}
 	log.Printf("error detail: %s", logText(err))
 	switch errkind.Of(err) {
 	case errkind.DNS:
