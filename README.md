@@ -5,7 +5,7 @@
 <h1 align="center">HoldToType</h1>
 
 <p align="center">
-  Voice → text at the cursor position. Fully local, offline, retro-terminal styled.
+  Voice → text at the cursor position. Fully local, offline, open source.
 </p>
 
 <p align="center">
@@ -16,13 +16,13 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-0b0f0c?style=flat-square&logo=windows&logoColor=3cff6e&labelColor=0e1410&color=1d4a2b" alt="Windows">
-  <img src="https://img.shields.io/badge/Go-client-0b0f0c?style=flat-square&logo=go&logoColor=3cff6e&labelColor=0e1410&color=1d4a2b" alt="Go">
-  <img src="https://img.shields.io/badge/whisper.cpp-STT-0b0f0c?style=flat-square&labelColor=0e1410&color=1d4a2b" alt="whisper.cpp">
-  <img src="https://img.shields.io/badge/llama.cpp-LLM-0b0f0c?style=flat-square&labelColor=0e1410&color=1d4a2b" alt="llama.cpp">
-  <img src="https://img.shields.io/badge/100%25-offline-0b0f0c?style=flat-square&labelColor=0e1410&color=1d4a2b" alt="offline">
-  <img src="https://img.shields.io/badge/GPU-not%20required-0b0f0c?style=flat-square&labelColor=0e1410&color=1d4a2b" alt="CPU only">
-  <img src="https://img.shields.io/badge/license-MIT-0b0f0c?style=flat-square&labelColor=0e1410&color=1d4a2b" alt="MIT">
+  <img src="https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-1b1f24?style=flat-square&logo=windows&logoColor=4fc1ff&labelColor=20252b&color=2f81c8" alt="Windows">
+  <img src="https://img.shields.io/badge/Go-client-1b1f24?style=flat-square&logo=go&logoColor=4fc1ff&labelColor=20252b&color=2f81c8" alt="Go">
+  <img src="https://img.shields.io/badge/whisper.cpp-STT-1b1f24?style=flat-square&labelColor=20252b&color=2f81c8" alt="whisper.cpp">
+  <img src="https://img.shields.io/badge/llama.cpp-LLM-1b1f24?style=flat-square&labelColor=20252b&color=2f81c8" alt="llama.cpp">
+  <img src="https://img.shields.io/badge/100%25-offline-1b1f24?style=flat-square&labelColor=20252b&color=2f81c8" alt="offline">
+  <img src="https://img.shields.io/badge/GPU-not%20required-1b1f24?style=flat-square&labelColor=20252b&color=2f81c8" alt="CPU only">
+  <img src="https://img.shields.io/badge/license-MIT-1b1f24?style=flat-square&labelColor=20252b&color=2f81c8" alt="MIT">
   <a href="https://github.com/Vitalii-Yemets/holdtotype/actions/workflows/ci.yml"><img src="https://github.com/Vitalii-Yemets/holdtotype/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
 </p>
 
@@ -32,21 +32,21 @@ Hold a hotkey — speak. Release — the transcribed text is pasted right where 
 
 ## 📸 Screenshots
 
-One build, seven designs. Every shot below is the same program with a different design picked in Settings — Editor is the default, dark grey with blue; Fluent follows the Windows 11 settings app; Studio is graphite with orange and nearly square corners; Soft and Document stand on light ground; Neon is violet with a pink-to-cyan gradient; Terminal is green on black with brackets around the buttons.
+Every shot below is the Editor design, the default: dark grey with a blue accent. Six more designs — Fluent, Studio, Soft, Document, Neon and Terminal — are picked in Settings and described under Features.
 
-| Status — Terminal | System — Editor |
+| Status | System |
 |---|---|
-| [![Status on the Terminal design](docs/shot-state-terminal.png)](docs/shot-state-terminal.png) | [![System on the Editor design](docs/shot-system-editor.png)](docs/shot-system-editor.png) |
-| **Help — Editor** | **Languages & models — Neon** |
-| [![The guide with its contents pinned to the right](docs/shot-help-editor.png)](docs/shot-help-editor.png) | [![A model per language](docs/shot-models-neon.png)](docs/shot-models-neon.png) |
-| **History — Soft** | **Post-processing — Document** |
-| [![History with its retention and its exclusions](docs/shot-history-soft.png)](docs/shot-history-soft.png) | [![The editor model and the prompt chain](docs/shot-post-paper.png)](docs/shot-post-paper.png) |
-| **Rules — Terminal** | **Controls & behaviour — Terminal** |
-| [![Dictionary, replacements and voice commands](docs/shot-rules-terminal.png)](docs/shot-rules-terminal.png) | [![The shortcut, insertion and the on-screen plate](docs/shot-dictation-terminal.png)](docs/shot-dictation-terminal.png) |
-| **Microphone — Soft** | **About — Document** |
-| [![Device, level meter and the microphone test](docs/shot-mic-soft.png)](docs/shot-mic-soft.png) | [![Version and every external dependency with its licence](docs/shot-about-paper.png)](docs/shot-about-paper.png) |
-| **Contacts — Neon** | **Installer** |
-| [![Mail, repository and issues](docs/shot-contacts-neon.png)](docs/shot-contacts-neon.png) | [![The installer](docs/setup.png)](docs/setup.png) |
+| [![Status: is everything ready, at a glance](docs/shot-state.png)](docs/shot-state.png) | [![System: language, design, updates, maintenance and the recognition server](docs/shot-system.png)](docs/shot-system.png) |
+| **Languages & models** | **Rules** |
+| [![A model per language](docs/shot-models.png)](docs/shot-models.png) | [![Dictionary, replacements and voice commands](docs/shot-rules.png)](docs/shot-rules.png) |
+| **Controls & behaviour** | **Post-processing** |
+| [![The shortcut, insertion and the on-screen plate](docs/shot-dictation.png)](docs/shot-dictation.png) | [![The editor model and the prompt chain](docs/shot-post.png)](docs/shot-post.png) |
+| **Microphone** | **History** |
+| [![Device, level meter and the microphone test](docs/shot-mic.png)](docs/shot-mic.png) | [![History with its retention and its exclusions](docs/shot-history.png)](docs/shot-history.png) |
+| **Help** | **About** |
+| [![The guide with its contents pinned to the right](docs/shot-help.png)](docs/shot-help.png) | [![Version and every external dependency with its licence](docs/shot-about.png)](docs/shot-about.png) |
+| **Contacts** | **Installer** |
+| [![Mail, repository and issues](docs/shot-contacts.png)](docs/shot-contacts.png) | [![The installer](docs/setup.png)](docs/setup.png) |
 
 ## ✨ Features
 
@@ -78,7 +78,7 @@ One build, seven designs. Every shot below is the same program with a different 
 - 🎚️ **Simple mode** — new installs fold away what is rarely touched, grouped by how risky and how frequent it is rather than by count: punctuation and the dictionary stay in sight, while replacements, voice commands and the prompt chain wait behind "N more settings". The programs history must never record from are never folded away. A SIMPLE/ALL switch in the title bar shows which view is on, and upgrades keep the full view.
 - ⏯️ **Hold or toggle, with a pause** — hold the keys as before, or press once to start and once to stop; in toggle mode a second shortcut pauses and resumes the recording (the pill shows a pause sign and the meter stops), and the length limit does not run out while it is paused.
 - 🖥️ **One window, eleven sections** — a sidebar instead of tabs inside tabs, gathered in three groups: General (Status, System, Microphone, History), Speech processing (Controls & behaviour, Languages & models, Rules, Post-processing) and Info (Help, About, Contacts). The Status screen answers "is everything ready" at a glance — hotkey, microphone, engine and model, free memory, last dictation — and a status bar keeps that answer visible from every section.
-- 🖥️ **Tray application** — a status icon whose failure state carries a badge instead of yet another shade of grey, a quick menu that sizes itself to the language it is written in, walks with the arrow keys and closes on Escape, and comes back after Explorer restarts, a Pip-Boy-terminal-styled settings window that remembers its size.
+- 🖥️ **Tray application** — a status icon whose failure state carries a badge instead of yet another shade of grey, a quick menu that sizes itself to the language it is written in, walks with the arrow keys and closes on Escape, and comes back after Explorer restarts, a settings window in the design you picked that remembers its size.
 - 💾 **Portable** — the folder is self-contained: copy it to a USB stick and run on another PC; nothing is written to the registry.
 - 🛡️ **Private** — zero network requests while dictating; internet is only needed to download models. The one exception you create yourself: an external post-processing server, configured by hand in Settings, receives the recognized text (never the audio) — the page says so in plain words, asks before the address is applied, and keeps the API key encrypted with Windows DPAPI.
 
@@ -115,12 +115,12 @@ Download the archive from Releases (or build `dist/` yourself), copy the folder 
 
 ## 🎯 Usage
 
-1. Launch the app — a green microphone icon appears in the tray.
+1. Launch the app — a microphone icon appears in the tray.
 2. On the very first launch a five-step wizard opens: interface language, the language you will dictate in (it picks and downloads the model for you), the shortcut and microphone with a live level bar, a field to try a dictation into, and — last — starting with Windows. Skip it at any point — the app keeps running, but until a model is downloaded it cannot recognise anything, and the Status screen says exactly that. Run `holdtotype.exe -wizard` to see the wizard again.
 3. Place the cursor in any input field, **hold `Ctrl+Win`** (configurable), say a phrase, **release** — the text is inserted.
 4. Right-click the tray icon — the menu: enable/disable, settings, copy the last result, config, log, about, quit.
 
-Icon colors: green — ready, red — recording, orange — transcribing, grey — disabled/error.
+Icon colours: the accent of your design (blue on Editor) — ready, red — recording, orange — transcribing, grey — disabled/error.
 
 A full description of every feature lives in **Help** — sixteen sections written for people rather than for the interface, with mock-ups of the plate, the cards and the fields drawn inline. The contents stand in a column on the right that follows you as you read and highlights the section you are in; on a narrow window an icon in the corner widens the window to bring them back. The search in the header (Ctrl+K) reaches into the manual too — a word from it is found just like a setting.
 
