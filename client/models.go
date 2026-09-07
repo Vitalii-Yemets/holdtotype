@@ -438,20 +438,43 @@ func (a *App) startMultiDownload(key string, m *modelInfo) {
 	}()
 }
 
+// modelNeedMB is what is still left to fetch for a folder model: the full size
+// minus the files already on disk and the half-written .part next to them.
+// Without it a second attempt after a broken download asks for the whole size
+// again and is refused on a disk that has room for the remainder.
+func modelNeedMB(dir string, m *modelInfo) int {
+	need := m.SizeMB
+	for _, f := range m.Files {
+		p := filepath.Join(dir, f)
+		if fi, err := os.Stat(p); err == nil {
+			need -= int(fi.Size() / (1024 * 1024))
+			continue
+		}
+		if fi, err := os.Stat(p + ".part"); err == nil {
+			need -= int(fi.Size() / (1024 * 1024))
+		}
+	}
+	if need < 0 {
+		need = 0
+	}
+	return need
+}
+
 func (a *App) doMultiDownload(ctx context.Context, key string, m *modelInfo) error {
 	dir := filepath.Join("models", m.Dir)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return err
+		return uiErr("mkdir "+dir+": "+err.Error(), trf("err.model.dir", dir))
 	}
-	if free := freeDiskMB("models"); free >= 0 && free < m.SizeMB+256 {
-		return uiErr(fmt.Sprintf("not enough disk space: %d MB free, %d MB needed", free, m.SizeMB), trf("err.disk.space", free, m.SizeMB))
+	need := modelNeedMB(dir, m)
+	if free := freeDiskMB("models"); free >= 0 && free < need+256 {
+		return uiErr(fmt.Sprintf("not enough disk space: %d MB free, %d MB needed", free, need), trf("err.disk.space", free, need))
 	}
 	total := int64(m.SizeMB) * 1024 * 1024
 	var doneBytes int64
 	for _, f := range m.Files {
 		if sub := filepath.Dir(filepath.Join(dir, f)); sub != dir {
 			if err := os.MkdirAll(sub, 0o755); err != nil {
-				return err
+				return uiErr("mkdir "+sub+": "+err.Error(), trf("err.model.dir", sub))
 			}
 		}
 		written, err := downloadFile(ctx, m.BaseURL+f, filepath.Join(dir, f), func(n int64) {
@@ -466,7 +489,10 @@ func (a *App) doMultiDownload(ctx context.Context, key string, m *modelInfo) err
 			dlMu.Unlock()
 		})
 		if err != nil {
-			return fmt.Errorf("%s: %w", f, err)
+			if errors.Is(err, context.Canceled) {
+				return err
+			}
+			return uiErr(f+": "+logText(err), f+" — "+humanError(err))
 		}
 		if want := m.Hashes[f]; want != "" {
 			if verr := checksum.Verify(filepath.Join(dir, f), want); verr != nil {

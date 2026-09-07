@@ -67,10 +67,12 @@ const dom = new JSDOM(html, {
         week_apps: [{ app: "chrome.exe", count: 8 }, { app: "Telegram.exe", count: 4 }],
         badges: { mic: micBadge, models: "2", system: "" } });
     let modelStates = { base: "absent", small: "active", "medium-q5_0": "absent", "gigaam-v3": "absent", "moonshine-uk": "absent" };
+    const modelErrs = {};
     window.dlCalls = [];
     window.cancelCalls = [];
-    window.appModelDl = async (id) => { window.dlCalls.push(id); modelStates[id] = "downloading"; };
+    window.appModelDl = async (id) => { window.dlCalls.push(id); modelStates[id] = "downloading"; delete modelErrs[id]; };
     window.finishDl = (id) => { modelStates[id] = "installed"; };
+    window.failDl = (id, why) => { modelStates[id] = "absent"; modelErrs[id] = why; };
     window.setModelState = (id, st) => { modelStates[id] = st; };
     window.appModelCancel = async (id) => { window.cancelCalls.push(id); modelStates[id] = "absent"; return true; };
     window.unloadCalls = 0;
@@ -108,7 +110,7 @@ const dom = new JSDOM(html, {
     window.appModelLink = (id) => { window.linkOpens.push(id); };
     window.appModels = async () =>
       JSON.stringify([
-        { id: "base", name: "Base", desc: "fast", size: 142, state: modelStates.base, pct: 12, engine: "whisper", langs: "*", auto: true, translate: true, speed: 5, accuracy: 2 },
+        { id: "base", name: "Base", desc: "fast", size: 142, state: modelStates.base, err: modelErrs.base, pct: 12, engine: "whisper", langs: "*", auto: true, translate: true, speed: 5, accuracy: 2 },
         { id: "small", name: "Small", desc: "balanced", size: 466, ram: 921, state: modelStates.small, engine: "whisper", langs: "*", auto: true, translate: true, serves: ["auto"], loaded: true, speed: 3, accuracy: 3 },
         { id: "medium-q5_0", name: "Medium (q5)", desc: "recommended", size: 539, state: modelStates["medium-q5_0"], pct: 5, engine: "whisper", langs: "*", auto: true, translate: true, speed: 2, accuracy: 4 },
         { id: "gigaam-v3", name: "GigaAM v3", desc: "russian", size: 232, state: modelStates["gigaam-v3"], pct: 5, engine: "sherpa", langs: "ru", punct: true, serves: ["ru"], speed: 5, accuracy: 5 },
@@ -1024,6 +1026,7 @@ function check(name, actual, expected) {
   check("a download can be stopped", !!d.querySelector('#langlist button[data-a="cancel"][data-id="base"]'), true);
   d.querySelector('#langlist button[data-a="cancel"][data-id="base"]').click(); await sleep(250);
   check("stopping asks the program to stop", w.cancelCalls, ["base"]);
+  check("stopping puts the language back to the model it had", w.lastSaveForm.lang_models.ru, "small");
   const dlIcon = () => d.querySelector('#langlist button[data-a="dl"][data-id="base"]');
   check("a stopped download offers the arrow again", !!dlIcon(), true);
   const dlBefore = w.dlCalls.length;
@@ -1033,6 +1036,21 @@ function check(name, actual, expected) {
   check("and the language keeps its model", w.lastSaveForm.lang_models.ru, ruBefore);
   w.finishDl("base"); await sleep(1400);
   check("and the program says the model is ready", d.getElementById("st_saved").textContent, "Model downloaded — pick it to switch");
+
+  // a download that fails must leave its reason on the card and must not leave
+  // the language pointing at a model that never arrived
+  w.setModelState("base", "absent"); await w.refreshModels(); await sleep(120);
+  await pickAbsent();
+  d.querySelector(".modal .btn.yes").click(); await sleep(250);
+  check("agreeing pins the language while the download runs", w.lastSaveForm.lang_models.ru, "base");
+  w.failDl("base", "the disk is full"); await sleep(1400);
+  check("a failed download says why, in the toast", d.getElementById("st_saved").textContent, "the disk is full");
+  check("and the reason stays on the card", d.querySelector('#langlist .pcard[data-id="base"] .pdesc.perr').textContent, "the disk is full");
+  check("and the language goes back to the model it had", w.lastSaveForm.lang_models.ru, "small");
+  d.querySelector('#langlist .pcard[data-id="base"] input.psw').click(); await sleep(150);
+  d.querySelector(".modal .btn.yes").click(); await sleep(250);
+  w.finishDl("base"); await sleep(1400);
+  check("and a second try clears it", !d.querySelector('#langlist .pcard[data-id="base"] .pdesc.perr'), true);
 
   const activeDel = () => d.querySelector('#langlist .pcard[data-id="small"] button[data-a="del"]');
   check("the model in use can be removed too — that is the way out of a full disk", !!activeDel(), true);

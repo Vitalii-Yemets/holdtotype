@@ -1610,6 +1610,7 @@ button.mini.danger:hover{color:var(--dangerfg);border-color:var(--badline);backg
 .pinfo{flex:none;width:15px;height:15px;border:1px solid var(--line);border-radius:calc(var(--r) * .4);display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:400;font-style:normal;color:var(--green);cursor:help}
 .pcard .mbars{flex:none;width:190px;display:flex;flex-direction:column;gap:5px;padding-top:2px}
 .pcard .pdesc{color:var(--dim);font-size:12px}
+.pcard .pdesc.perr{color:var(--bad)}
 .pcard .pmeta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid var(--soft);padding-top:7px;color:var(--dim);font-size:11px}
 .pcard .pmt{border:1px solid var(--line);border-radius:calc(var(--r) * .4);padding:1px 8px;font-size:10px;letter-spacing:.06em;white-space:nowrap;color:var(--lbl,var(--dim));text-shadow:var(--lblglow,none)}
 .pcard .pram{white-space:nowrap}
@@ -3683,6 +3684,7 @@ function llmTestResult(out){
 let micChosen = "";
 let activeModelId = null;
 let pendingDl = null;
+let pendingAssign = null;
 async function refreshState(){
   const s = JSON.parse(await appState());
   const set = (id, v)=>{ const el = document.getElementById(id); if(el) el.textContent = v; };
@@ -4245,6 +4247,7 @@ async function assignModel(lang, id){
       return;
     }
     pendingDl = row.id;
+    pendingAssign = {lang: lang, id: row.id, had: Object.prototype.hasOwnProperty.call(langModels, lang), prev: langModels[lang]};
     await appModelDl(row.id);
   }
   langModels[lang] = id;
@@ -4320,6 +4323,7 @@ function buildPicker(lang){
     else act = (m.loaded ? '<button class="iconbtn" title="'+L.unload+'" data-a="unload" data-id="'+m.id+'">&#9167;</button>' : "")+
       '<button class="iconbtn danger" title="'+L.del+'" data-a="del" data-id="'+m.id+'" data-name="'+esc(m.name)+'">&#10005;</button>';
     const note = m.state === "absent" && m.manual ? '<span class="pdesc" style="color:var(--amber)">'+L.manualnote+'</span>' : "";
+    const errNote = m.state === "absent" && m.err ? '<span class="pdesc perr">'+esc(m.err)+'</span>' : "";
     const langNames = m.langs && m.langs !== "*" ? m.langs.split(",").map(c=>trLangName(c.trim())).join(", ") : "";
     const langChip = '<span class="pmt"'+(langNames && m.langs.includes(",") ? ' data-tip="'+esc(langNames)+'"' : '')+'>'+esc(langWord(m))+'</span>';
     const trNames = m.translate && m.trlangs ? m.trlangs.split(",").map(c=>trLangName(c.trim())).join(", ") : "";
@@ -4329,7 +4333,7 @@ function buildPicker(lang){
     const sw = '<input type="checkbox" class="psw"'+(cur?' checked':'')+((m.state === "absent" && m.manual)?' disabled':'')+' data-sw="'+m.id+'">';
     const info = m.desc ? '<span class="pinfo" data-tip="'+esc(m.desc)+'">i</span>' : "";
     card.innerHTML = '<span class="ptop">'+sw+'<span class="pname"><span class="pnm">'+esc(m.name)+'</span>'+chip+info+'</span>'+bars+'</span>'+
-      note+
+      note+errNote+
       '<span class="pmeta">'+meta+'<span class="pact">'+act+'</span></span>';
     pick.appendChild(card);
   });
@@ -4369,6 +4373,7 @@ function wireModelActions(root){
       else if(b.dataset.a === "cancel"){
         await appModelCancel(b.dataset.id);
         if(pendingDl === b.dataset.id) pendingDl = null;
+        await undoAssign(b.dataset.id);
       }
       else {
         const isActive = b.dataset.id === activeModelId;
@@ -4385,7 +4390,27 @@ function modelsSignature(rows){
   return rows.map(m=>[m.id, m.state, (m.serves||[]).join("+"), m.loaded?1:0, m.err||""].join(":")).join("|")
     + "@" + openLang + "@" + JSON.stringify(langModels) + "@" + curLang();
 }
+// undoAssign takes the language back to the model it had before. A failed
+// download must not leave the app pointing at a model that is not on disk:
+// that state stops recognition altogether and only says the model is missing.
+async function undoAssign(id, why){
+  const mine = pendingAssign && pendingAssign.id === id;
+  if(mine){
+    const a = pendingAssign;
+    pendingAssign = null;
+    if(langModels[a.lang] === a.id){
+      if(a.had) langModels[a.lang] = a.prev; else delete langModels[a.lang];
+      await doSave();
+      refreshModels();
+      refreshState();
+    }
+  }
+  // the reason goes up last: saving the rolled-back choice shows a line of its
+  // own, and the cause of the failure must be the one left on screen
+  if(why) toast(why, "error");
+}
 async function refreshModels(){
+
   const rows = JSON.parse(await appModels());
   modelRowsCache = rows;
   const activeRow = rows.find(m=>m.state==="active");
@@ -4394,8 +4419,8 @@ async function refreshModels(){
   if(pendingDl){
     const row = rows.find(m=>m.id===pendingDl);
     if(!row){ pendingDl = null; }
-    else if(row.state === "installed" || row.state === "active"){ pendingDl = null; toast(L.mdlready, "ok"); refreshState(); }
-    else if(row.state === "absent" && row.err){ pendingDl = null; toast(row.err, "error"); }
+    else if(row.state === "installed" || row.state === "active"){ pendingDl = null; pendingAssign = null; toast(L.mdlready, "ok"); refreshState(); }
+    else if(row.state === "absent" && row.err){ pendingDl = null; undoAssign(row.id, row.err); }
   }
   const el = document.getElementById("langlist");
   const sig = modelsSignature(rows);
