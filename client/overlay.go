@@ -48,6 +48,10 @@ const (
 	swHide           = 0
 	nullPen          = 8
 	lwaAlpha         = 2
+
+	swpNoSize     = 0x0001
+	swpNoMove     = 0x0002
+	swpNoActivate = 0x0010
 )
 
 var (
@@ -561,6 +565,16 @@ func startOverlayThread() {
 	}()
 }
 
+// overlayRaise puts the plate back on top of the topmost band. The window is
+// created with WS_EX_TOPMOST, but that only wins against ordinary windows:
+// another program that raises its own topmost window — a call, a player, a
+// full-screen app — ends up above the plate and hides it for the rest of the
+// dictation. Asking for HWND_TOPMOST again on every show, and once a second
+// while it is up, puts the plate back in front without taking the focus.
+func overlayRaise(hwnd uintptr) {
+	procSetWindowPos.Call(hwnd, ^uintptr(0), 0, 0, 0, 0, swpNoSize|swpNoMove|swpNoActivate)
+}
+
 func overlayWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 	switch msg {
 	case wmOvSet:
@@ -579,6 +593,7 @@ func overlayWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 			}
 			procSetTimer.Call(hwnd, ovTimerID, 33, 0)
 			procShowWindow.Call(hwnd, swShowNoActivate)
+			overlayRaise(hwnd)
 			procInvalidateRect.Call(hwnd, 0, 0)
 		}
 		return 0
@@ -593,6 +608,9 @@ func overlayWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 		flashEnd := ovFlashEnd
 		rec := ovRecorder
 		ovMu.Unlock()
+		if st != ovHidden && ovTick%30 == 0 {
+			overlayRaise(hwnd)
+		}
 		if st == ovRecording && rec != nil {
 			copy(ovHistory[:], ovHistory[1:])
 			ovHistory[len(ovHistory)-1] = rec.Level()
