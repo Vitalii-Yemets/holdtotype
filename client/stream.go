@@ -184,9 +184,6 @@ type streamResult struct {
 	Final   bool   `json:"is_final"`
 }
 
-// streamSession collects the text per segment: the online server closes a
-// segment on every pause and starts the next one empty, so the phrase is
-// the segments joined, not the last message.
 type streamSession struct {
 	conn    *websocket.Conn
 	wmu     sync.Mutex
@@ -271,8 +268,6 @@ func (ss *streamSession) push(pcm []byte) error {
 	return ss.conn.WriteMessage(websocket.BinaryMessage, floatBytes(pcm))
 }
 
-// finish tells the server the phrase is over and waits until the text stops
-// changing — the online server keeps decoding what it already has.
 func (ss *streamSession) finish(ctx context.Context) (string, error) {
 	ss.mu.Lock()
 	ss.closed = true

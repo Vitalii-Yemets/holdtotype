@@ -107,9 +107,6 @@ func (a *App) insertTarget() uintptr {
 
 var aimBusy atomic.Bool
 
-// aimPaste hides the settings window and waits for the next click: whatever
-// window is under the cursor gets the text. Esc calls it off. Nothing is
-// hooked — the mouse and the Escape key are only asked about their state.
 func (a *App) aimPaste(text string) string {
 	if strings.TrimSpace(text) == "" {
 		return listsAnswer(listsReply{Text: tr("hist.insert.gone")})

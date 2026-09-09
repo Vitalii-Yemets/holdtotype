@@ -354,8 +354,6 @@ func install(dir string, shortcut, autorun, touchAutorun, updates bool, modelID 
 	return warn, nil
 }
 
-// installedLook reads the skin and colour of the copy being updated, so the
-// installer wears the same clothes.
 func installedLook(dir string) (skin, colour string) {
 	skin, colour = theme.DefaultSkin, theme.DefaultPalette
 	if dir == "" {

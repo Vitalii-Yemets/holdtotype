@@ -55,7 +55,6 @@ func themePulse() float64 { return themeLook().Pulse }
 
 func themeCSSVars() string { return themeLook().CSSVars() }
 
-// colorref turns a #rrggbb string into the BGR value GDI wants.
 func colorref(hex string) uintptr {
 	r, g, b := theme.RGB(hex)
 	return uintptr(b)<<16 | uintptr(g)<<8 | uintptr(r)
@@ -149,7 +148,6 @@ func rebuildIcons(p theme.Palette) {
 	iconError = iconPNG(tile, off, bad)
 }
 
-// refreshWindowChrome repaints the frame of every window that is open right now.
 func refreshWindowChrome() {
 	for _, h := range liveWindows() {
 		refreshChrome(h)

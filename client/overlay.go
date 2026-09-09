@@ -197,7 +197,6 @@ func uiFontDPI(dpi int32) uintptr {
 	return f
 }
 
-// dropFontCache is called when the skin changes: the next paint asks for a new face.
 func dropFontCache() {
 	fontMu.Lock()
 	old := fontCache
@@ -316,9 +315,6 @@ func ovTextRoom(state int, width int32, dpi int32) int32 {
 	return right - px(44)
 }
 
-// measureLiveText answers how many wrapped rows the live phrase needs and
-// how tall a line is — the plate itself stays three lines and the surplus
-// slides up out of view.
 func measureLiveText(text string, width int32) (rows, lineH int32) {
 	dpi := overlayDPI()
 	hdc, _, _ := procGetDC.Call(0)
@@ -429,7 +425,6 @@ func resizeOverlay(hwnd uintptr, width int32) {
 	procSetWindowPos.Call(hwnd, 0, uintptr(x), uintptr(y), uintptr(width), uintptr(h), 0x0004|0x0010)
 }
 
-// overlayRegion is the rounded outline a design asks for, or zero when it wants square corners.
 func overlayRegion(w, h, dpi int32) uintptr {
 	if !themeRoundCorners() || w <= 0 || h <= 0 {
 		return 0
@@ -445,7 +440,6 @@ func overlayRegion(w, h, dpi int32) uintptr {
 	return rgn
 }
 
-// shapeOverlay cuts the plate to the outline of the chosen design.
 func shapeOverlay(hwnd uintptr, w, h int32) {
 	if hwnd == 0 {
 		return
@@ -565,12 +559,6 @@ func startOverlayThread() {
 	}()
 }
 
-// overlayRaise puts the plate back on top of the topmost band. The window is
-// created with WS_EX_TOPMOST, but that only wins against ordinary windows:
-// another program that raises its own topmost window — a call, a player, a
-// full-screen app — ends up above the plate and hides it for the rest of the
-// dictation. Asking for HWND_TOPMOST again on every show, and once a second
-// while it is up, puts the plate back in front without taking the focus.
 func overlayRaise(hwnd uintptr) {
 	procSetWindowPos.Call(hwnd, ^uintptr(0), 0, 0, 0, 0, swpNoSize|swpNoMove|swpNoActivate)
 }
@@ -826,16 +814,11 @@ func overlayRender(hwnd, hdc uintptr) {
 		txtRc.Bottom = txtRc.Top + lineH*rows
 		textFlags = 0x0010 | 0x8000
 	}
-	// the words keep the skin's own colour; what state the program is in is
-	// said by the dot, not by tinting the text
 	textCol, haloCol := colGreen, colGreenLo
 	if st == ovFlashErr {
 		textCol, haloCol = colBad, colBadDm
 	}
 	if live {
-		// the live text hangs under the control row, behind a divider: it
-		// appears with the first words, grows a line at a time up to three,
-		// and after that the older lines slide up out of view
 		lineH := ovLineH.Load()
 		liveRows := ovLiveRows.Load()
 		if lineH > 0 && liveRows > 0 && strings.TrimSpace(text) != "" {

@@ -4390,9 +4390,6 @@ function modelsSignature(rows){
   return rows.map(m=>[m.id, m.state, (m.serves||[]).join("+"), m.loaded?1:0, m.err||""].join(":")).join("|")
     + "@" + openLang + "@" + JSON.stringify(langModels) + "@" + curLang();
 }
-// undoAssign takes the language back to the model it had before. A failed
-// download must not leave the app pointing at a model that is not on disk:
-// that state stops recognition altogether and only says the model is missing.
 async function undoAssign(id, why){
   const mine = pendingAssign && pendingAssign.id === id;
   if(mine){
@@ -4405,8 +4402,6 @@ async function undoAssign(id, why){
       refreshState();
     }
   }
-  // the reason goes up last: saving the rolled-back choice shows a line of its
-  // own, and the cause of the failure must be the one left on screen
   if(why) toast(why, "error");
 }
 async function refreshModels(){

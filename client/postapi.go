@@ -21,8 +21,6 @@ func postAPIOn(cfg *Config) bool {
 	return cfg.PostEnabled && cfg.PostSource == "api" && strings.TrimSpace(cfg.PostAPIURL) != ""
 }
 
-// postReady says whether the prompt chain has anything to run on: the source
-// the user picked — the local model, or the external server.
 func postReady(cfg *Config) bool {
 	if !cfg.PostEnabled {
 		return false

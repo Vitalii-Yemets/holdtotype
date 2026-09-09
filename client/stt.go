@@ -155,9 +155,6 @@ func bestInstalledWhisper() *modelInfo {
 	return best
 }
 
-// applyPreset writes the paths the engines actually load, derived from the
-// language presets: the active model's own slot, and — when the active model
-// is not a whisper — the best installed whisper standing by for translation.
 func applyPreset(cfg *Config) bool {
 	m := activeModel(cfg)
 	if m == nil {

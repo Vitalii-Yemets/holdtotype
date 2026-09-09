@@ -177,9 +177,6 @@ var (
 	procDisplayConfigGetDeviceInfo  = user32.NewProc("DisplayConfigGetDeviceInfo")
 )
 
-// monitorNames asks Windows what the screens are actually called, keyed by the
-// device name the enumeration hands out (\\.\DISPLAY1 and friends). Screens
-// whose firmware keeps quiet simply stay out of the map.
 func monitorNames() map[string]string {
 	out := map[string]string{}
 	if procGetDisplayConfigBufferSizes.Find() != nil || procQueryDisplayConfig.Find() != nil || procDisplayConfigGetDeviceInfo.Find() != nil {
@@ -290,8 +287,6 @@ func monitorRectsForPoint(x, y int32) (work, screen rect) {
 	return wa, wa
 }
 
-// overlayArea answers where the plate lives: the chosen monitor's work area,
-// or the one under the anchor when the choice is "the screen with the cursor".
 func overlayArea() (work, screen rect) {
 	pick := overlayMonitorPick()
 	if overlayPosMode() != ovPosCaret && pick != "" && pick != "cursor" {

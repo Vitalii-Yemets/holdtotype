@@ -306,8 +306,6 @@ func (r *Recorder) Start(maxSeconds int) error {
 	return nil
 }
 
-// TakeFrom hands out the sound recorded since the given offset, so a live
-// recognizer can eat the phrase while it is still being spoken.
 func (r *Recorder) TakeFrom(offset int) ([]byte, int) {
 	r.mu.Lock()
 	defer r.mu.Unlock()

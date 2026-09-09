@@ -102,8 +102,6 @@ type App struct {
 	liveFed int
 }
 
-// liveStream feeds the microphone to the streaming recognizer while the
-// recording is still running, and paints what it hears on the plate.
 func (a *App) liveStream(gen int, cfg *Config) {
 	a.mu.Lock()
 	srv := a.srv
@@ -954,8 +952,6 @@ func (a *App) requestServerRestart() {
 	a.signalRetry()
 }
 
-// parkEngines unloads every running recognizer to give the memory back; the
-// next dictation press brings the engine up again.
 func (a *App) parkEngines() {
 	a.mu.Lock()
 	a.ready = false

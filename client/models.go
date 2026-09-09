@@ -438,10 +438,6 @@ func (a *App) startMultiDownload(key string, m *modelInfo) {
 	}()
 }
 
-// modelNeedMB is what is still left to fetch for a folder model: the full size
-// minus the files already on disk and the half-written .part next to them.
-// Without it a second attempt after a broken download asks for the whole size
-// again and is refused on a disk that has room for the remainder.
 func modelNeedMB(dir string, m *modelInfo) int {
 	need := m.SizeMB
 	for _, f := range m.Files {
@@ -931,8 +927,6 @@ type idleModel struct {
 	SizeMB int    `json:"size"`
 }
 
-// idleModels names what is downloaded but serves no language: the summary
-// shows them so the disk space has a face.
 func idleModels(cfg *Config) []idleModel {
 	busy := map[string]bool{}
 	for _, row := range assignedModelRows(cfg) {
@@ -1132,8 +1126,6 @@ func itoaSafe(n int) string {
 	return fmt.Sprintf("%d", n)
 }
 
-// loadedModelsLine names what actually sits in memory right now, so the
-// free-memory number next to it means something.
 func (a *App) loadedModelsLine() string {
 	var names []string
 	for p := range a.loadedModelPaths() {
@@ -1156,8 +1148,6 @@ func startOfDayMs() int64 {
 	return time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location()).UnixMilli()
 }
 
-// weekByApp counts where the week went: which programs took the dictations,
-// biggest first, so the summary can draw them.
 func weekByApp() []appShare {
 	since := time.Now().Add(-7 * 24 * time.Hour).UnixMilli()
 	counts := map[string]int{}
@@ -1191,7 +1181,6 @@ func weekByApp() []appShare {
 	return out
 }
 
-// installedDiskMB adds up what the downloaded models weigh.
 func installedDiskMB() int {
 	total := 0
 	for _, dir := range []string{"models"} {

@@ -46,10 +46,6 @@ func firstExisting(dir string, names ...string) string {
 	return ""
 }
 
-// sherpaModelArgs reads the folder layout and builds the model flags for
-// sherpa-server: a nemo transducer (encoder/decoder/joiner), a moonshine
-// model (encoder_model + merged decoder), a Qwen3-ASR folder (conv_frontend
-// + tokenizer) or a Canary (encoder/decoder without a joiner).
 func sherpaModelArgs(dir string) ([]string, error) {
 	if fe := firstExisting(dir, "conv_frontend.int8.onnx", "conv_frontend.onnx"); fe != "" {
 		pickQ := func(name string) string {

@@ -151,13 +151,8 @@ const (
 	wmChromeRefresh = 0x0400 + 110
 )
 
-// refreshChrome asks a window to redress itself on its own thread: touching
-// somebody else's window from here is what upsets the text services.
 var procImmDisableIME = imm32.NewProc("ImmDisableIME")
 
-// disableIMEHere keeps the text services away from the windows this thread is
-// about to create. Nothing here is typed through an input method, and letting
-// the services attach has been costing the session its ctfmon.
 func disableIMEHere() {
 	r, _, _ := procImmDisableIME.Call(0)
 	log.Printf("openSettings: input method services disabled for this thread (%d)", r)
@@ -184,10 +179,6 @@ func webViewClass(p *uint16) bool {
 	return windows.UTF16PtrToString(p) == "webview"
 }
 
-// dressNewWebViewWindow paints the WebView2 window dark the moment it is
-// created, on the thread that creates it: the class brush and the caption are
-// set before anything is drawn, so the window opens in place and in colour and
-// nobody has to move it about afterwards.
 var (
 	dressOnce sync.Once
 	dressCB   uintptr
@@ -274,10 +265,10 @@ func beginWindowResize(hwnd uintptr, edge uintptr) {
 
 func toggleMaximize(hwnd uintptr) bool {
 	if z, _, _ := procIsZoomed.Call(hwnd); z != 0 {
-		procShowWindow.Call(hwnd, 9) // SW_RESTORE
+		procShowWindow.Call(hwnd, 9)
 		return false
 	}
-	procShowWindow.Call(hwnd, 3) // SW_MAXIMIZE
+	procShowWindow.Call(hwnd, 3)
 	return true
 }
 
@@ -612,9 +603,6 @@ type openApp struct {
 	Title string `json:"title"`
 }
 
-// listOpenApps names the programs with a window on screen right now, one entry
-// per program: the file name is what the exclusion list matches on, the window
-// title is only there to tell two browsers apart.
 var (
 	appsMu   sync.Mutex
 	appsOnce sync.Once
@@ -714,8 +702,6 @@ func openSettingsInRunningInstance() bool {
 	return r != 0
 }
 
-// quitRunningInstance asks a running copy to close the way the tray menu does,
-// so the keyboard hook and the WebView are released instead of being torn off.
 func quitRunningInstance() bool {
 	cls, err := windows.UTF16PtrFromString(appid.Class("TrayWnd"))
 	if err != nil {

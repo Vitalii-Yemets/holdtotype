@@ -276,8 +276,6 @@ func fixConfigText(cfg *Config) bool {
 	return changed
 }
 
-// fileNamesSkin says whether the file on disk already speaks of a design of
-// its own — a file written before the split names only the colour.
 func fileNamesSkin(data []byte) bool {
 	var probe struct {
 		Skin *string `json:"skin"`
@@ -385,7 +383,6 @@ func loadConfig(path string) (*Config, error) {
 		cfg.HotkeyMode = hotkeyHold
 	}
 	if !fileNamesSkin(data) && cfg.Theme != "" && !theme.ValidColour(cfg.Theme) {
-		// older versions kept one value for both; split it
 		skin, colour := theme.Migrate(cfg.Theme)
 		cfg.Skin, cfg.Theme = skin, colour
 		log.Printf("appearance split into skin %s and colour %s", skin, colour)
@@ -551,8 +548,6 @@ func loadConfig(path string) (*Config, error) {
 	return cfg, nil
 }
 
-// backupConfig keeps the untouched file of the old version next to the
-// config, once per version — so any migration can be undone by hand.
 func backupConfig(path string, data []byte, ver int) {
 	bak := fmt.Sprintf("%s.v%d.bak", path, ver)
 	if _, err := os.Stat(bak); err == nil {
@@ -574,10 +569,6 @@ var translateLangOrder = []string{"de", "en", "es", "fr", "it", "pl", "uk", "ru"
 
 func translateLangCodes() []string { return translateLangOrder }
 
-// migrateToPresets rebuilds the two-slot world as language presets: the old
-// whisper slot becomes the universal model, and if a sherpa model stood in
-// its slot and was installed, its languages keep going to it — exactly what
-// the old routing did.
 func migrateToPresets(cfg *Config, data []byte) {
 	if cfg.LangModels == nil {
 		cfg.LangModels = map[string]string{}

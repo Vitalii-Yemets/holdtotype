@@ -377,9 +377,6 @@ func startHotkeyHook(combos []comboDef, onDown func(id string), onUp func(), onE
 	return h, <-errCh
 }
 
-// release takes the low-level keyboard hook back off the system. Windows cleans
-// it up on its own when the process ends, but a hook left hanging while the
-// text services rewire themselves is what makes ctfmon.exe fall over.
 func (h *hotkeyHook) release() {
 	if h == nil {
 		return
