@@ -31,7 +31,7 @@
 
 Hold a hotkey — speak. Release — the transcribed text is pasted right where your cursor is. Works in any Windows application: messengers, editors, browsers, IDEs. Audio and text never leave your computer — recognition and post-processing run locally on the CPU. (One deliberate exception exists: if you yourself point post-processing at an external OpenAI-compatible server in Settings, the recognized text — never the audio — goes there. It is off by default and loudly labeled.)
 
-If HoldToType earns a place on your machine, a ⭐ on this repository is what helps other people find it: the project runs no ads, no analytics and no marketing.
+If HoldToType earns a place on your machine, a ⭐ on this repository is what helps other people find it: the project runs no ads and no marketing, and the program sends nothing home.
 
 ## 📸 Screenshots
 
