@@ -11,6 +11,7 @@
 <p align="center">
   <b><a href="https://holdtotype.com">holdtotype.com</a></b> ·
   <a href="https://holdtotype.com/en/docs/">Docs</a> ·
+  <a href="https://holdtotype.com/en/compare/">Compare</a> ·
   <a href="https://holdtotype.com/en/releases/">Releases</a> ·
   <a href="https://holdtotype.com/en/roadmap/">Roadmap</a>
 </p>
@@ -29,6 +30,8 @@
 ---
 
 Hold a hotkey — speak. Release — the transcribed text is pasted right where your cursor is. Works in any Windows application: messengers, editors, browsers, IDEs. Audio and text never leave your computer — recognition and post-processing run locally on the CPU. (One deliberate exception exists: if you yourself point post-processing at an external OpenAI-compatible server in Settings, the recognized text — never the audio — goes there. It is off by default and loudly labeled.)
+
+If HoldToType earns a place on your machine, a ⭐ on this repository is what helps other people find it: the project runs no ads, no analytics and no marketing.
 
 ## 📸 Screenshots
 
@@ -93,6 +96,8 @@ Download `holdtotype-setup.exe` from [Releases](https://github.com/Vitalii-Yemet
 - can turn the update check on or off, and the answer is written into the app's settings;
 - creates a Start Menu shortcut and, optionally, autostart with Windows;
 - registers in "Apps & features".
+
+The builds are not code-signed yet, so on the first launch Windows shows its SmartScreen box with "unknown publisher". The [guide on the site](https://holdtotype.com/en/guides/smartscreen/) says what the box means, how to compare the file's SHA-256 with the one printed on the release, and how to run the file.
 
 Silent install: `holdtotype-setup.exe -silent -dir "C:\path" -model small` (model: `gigaam-v3|base|small|medium|turbo`, omit to skip; add `-no-updates` to turn the update check off).
 
@@ -172,6 +177,13 @@ On the plate the target language comes first and the rest follow in the settings
 An optional second layer: a local language model edits the transcribed text according to your prompts. Presets ship out of the box: "Cleanup" and "Business style". Checked prompts apply as a chain to every dictation; a prompt with its own hotkey applies alone, once.
 
 Models are picked via the Hugging Face search (GGUF format): every quant file shows its size and an estimated RAM requirement — a green/amber/red indicator relative to your RAM. Recommendations: 1.5–3B (Q4_K_M) — fast; 7–9B — smarter but takes seconds per pass on CPU.
+
+## 📚 Read more on the site
+
+- [Which speech model to choose for your language](https://holdtotype.com/en/docs/models/): the safe default, what each model is good at, and how much disk it takes.
+- Side by side with [Wispr Flow](https://holdtotype.com/en/compare/wispr-flow/), [Windows voice typing (Win+H)](https://holdtotype.com/en/compare/windows-voice-typing/), [Handy](https://holdtotype.com/en/compare/handy/), [Dragon Professional](https://holdtotype.com/en/compare/dragon/) and [OpenWhispr](https://holdtotype.com/en/compare/openwhispr/); the [overview](https://holdtotype.com/en/compare/) puts them in one table.
+- [Dictation in VS Code, the terminal and over SSH](https://holdtotype.com/en/for/vscode-terminal/) and [typing by voice when typing hurts](https://holdtotype.com/en/for/accessibility/).
+- Guides: [how to dictate offline on Windows 11](https://holdtotype.com/en/guides/offline-dictation-windows-11/), [Whisper, Parakeet or Nemotron: which speech model for dictation](https://holdtotype.com/en/guides/whisper-parakeet-nemotron/), [why Windows warns before the first launch, and how to check the file](https://holdtotype.com/en/guides/smartscreen/).
 
 ## 🔨 Building from source
 
