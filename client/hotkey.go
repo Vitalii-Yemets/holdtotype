@@ -512,6 +512,9 @@ func (h *hotkeyHook) keyEvent(vk uint32, down bool) {
 		}
 	}
 	if !h.active && fire == nil {
+		if h.matchedCombo() != "" {
+			h.dropReleased(vk)
+		}
 		if !h.armed {
 			if h.matchedCombo() == "" {
 				h.armed = true
@@ -525,4 +528,24 @@ func (h *hotkeyHook) keyEvent(vk uint32, down bool) {
 	}
 	h.mu.Unlock()
 	h.post(fire)
+}
+
+func isModifier(vk uint32) bool {
+	switch vk {
+	case 0x10, 0x11, 0x12, 0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0x5B, 0x5C:
+		return true
+	}
+	return false
+}
+
+func (h *hotkeyHook) dropReleased(current uint32) {
+	for vk := range h.pressed {
+		if vk == current || !isModifier(vk) {
+			continue
+		}
+		if s, _, _ := procGetAsyncKeyState.Call(uintptr(vk)); s&0x8000 == 0 {
+			delete(h.pressed, vk)
+			log.Printf("hotkey: key 0x%02X was released unseen, forgotten", vk)
+		}
+	}
 }
