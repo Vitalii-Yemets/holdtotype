@@ -38,6 +38,16 @@ var (
 	procSHBrowseForFolderW   = shell32.NewProc("SHBrowseForFolderW")
 	procSHGetPathFromIDListW = shell32.NewProc("SHGetPathFromIDListW")
 	procCoTaskMemFree        = ole32.NewProc("CoTaskMemFree")
+
+	shcore                = windows.NewLazySystemDLL("shcore.dll")
+	procGetDpiForMonitor  = shcore.NewProc("GetDpiForMonitor")
+	procGetDpiForWindow   = user32.NewProc("GetDpiForWindow")
+	procCallWindowProcW   = user32.NewProc("CallWindowProcW")
+	procGetCursorPos      = user32.NewProc("GetCursorPos")
+	procMonitorFromPoint  = user32.NewProc("MonitorFromPoint")
+	procMonitorFromWindow = user32.NewProc("MonitorFromWindow")
+	procMonitorFromRect   = user32.NewProc("MonitorFromRect")
+	procGetMonitorInfoW   = user32.NewProc("GetMonitorInfoW")
 )
 
 type browseInfoW struct {
@@ -154,14 +164,127 @@ func hideWebViewWindowEarly(title string, l theme.Look) func() {
 	return func() { close(done) }
 }
 
-func revealWindowCentered(hwnd uintptr, w, h int) {
+const winDIPW int32 = 560
+
+var (
+	winDIPH    int32 = 560
+	fitOldProc uintptr
+	fitProcCB  uintptr
+)
+
+type monInfo struct {
+	Size    uint32
+	Monitor winRect
+	Work    winRect
+	Flags   uint32
+}
+
+func scaleDIP(v, dpi int32) int32 { return (v*dpi + 95) / 96 }
+
+func windowDPI(hwnd uintptr) int32 {
+	if procGetDpiForWindow.Find() == nil {
+		if d, _, _ := procGetDpiForWindow.Call(hwnd); d >= 72 {
+			return int32(d)
+		}
+	}
+	return 96
+}
+
+func monitorDPI(mon uintptr) int32 {
+	if mon != 0 && procGetDpiForMonitor.Find() == nil {
+		var dx, dy uint32
+		if r, _, _ := procGetDpiForMonitor.Call(mon, 0, uintptr(unsafe.Pointer(&dx)), uintptr(unsafe.Pointer(&dy))); r == 0 && dx >= 72 {
+			return int32(dx)
+		}
+	}
+	return 96
+}
+
+func workArea(mon uintptr) winRect {
+	if mon != 0 {
+		mi := monInfo{Size: uint32(unsafe.Sizeof(monInfo{}))}
+		if r, _, _ := procGetMonitorInfoW.Call(mon, uintptr(unsafe.Pointer(&mi))); r != 0 {
+			return mi.Work
+		}
+	}
 	var wa winRect
 	procSystemParametersInfoW.Call(0x30, 0, uintptr(unsafe.Pointer(&wa)), 0)
-	x := wa.Left + (wa.Right-wa.Left-int32(w))/2
-	y := wa.Top + (wa.Bottom-wa.Top-int32(h))/2
+	return wa
+}
+
+func cursorMonitor() uintptr {
+	var pt struct{ X, Y int32 }
+	procGetCursorPos.Call(uintptr(unsafe.Pointer(&pt)))
+	mon, _, _ := procMonitorFromPoint.Call(uintptr(uint32(pt.X))|uintptr(uint32(pt.Y))<<32, 2)
+	return mon
+}
+
+func windowSize(dpi int32, work winRect) (int32, int32) {
+	w, h := scaleDIP(winDIPW, dpi), scaleDIP(winDIPH, dpi)
+	if mw := work.Right - work.Left; w > mw {
+		w = mw
+	}
+	if mh := work.Bottom - work.Top; h > mh {
+		h = mh
+	}
+	return w, h
+}
+
+func setWindowRect(hwnd uintptr, x, y, w, h int32) {
 	procSetWindowPos.Call(hwnd, 0, uintptr(uint32(x)), uintptr(uint32(y)), uintptr(w), uintptr(h), 0x0004|0x0010)
+}
+
+func sizeForDPI(hwnd uintptr) {
+	dpi := windowDPI(hwnd)
+	procSetWindowPos.Call(hwnd, 0, 0, 0, uintptr(scaleDIP(winDIPW, dpi)), uintptr(scaleDIP(winDIPH, dpi)), 0x0002|0x0004|0x0010)
+}
+
+func followDPI(hwnd uintptr) {
+	fitProcCB = windows.NewCallback(fitProc)
+	const gwlpWndproc = ^uintptr(3)
+	fitOldProc, _, _ = procSetWindowLongPtrW.Call(hwnd, gwlpWndproc, fitProcCB)
+}
+
+func fitProc(hwnd, msg, wp, lp uintptr) uintptr {
+	if msg == 0x02E0 && lp != 0 {
+		s := (*winRect)(unsafe.Pointer(lp))
+		mon, _, _ := procMonitorFromRect.Call(lp, 2)
+		w, h := windowSize(int32(wp&0xFFFF), workArea(mon))
+		setWindowRect(hwnd, s.Left, s.Top, w, h)
+		return 0
+	}
+	r, _, _ := procCallWindowProcW.Call(fitOldProc, hwnd, msg, wp, lp)
+	return r
+}
+
+func revealWindowCentered(hwnd uintptr) {
+	mon := cursorMonitor()
+	work := workArea(mon)
+	for _, dpi := range []int32{monitorDPI(mon), 0} {
+		if dpi == 0 {
+			dpi = windowDPI(hwnd)
+		}
+		w, h := windowSize(dpi, work)
+		setWindowRect(hwnd, work.Left+(work.Right-work.Left-w)/2, work.Top+(work.Bottom-work.Top-h)/2, w, h)
+	}
 	procShowWindow.Call(hwnd, 5)
 	procSetForegroundWnd.Call(hwnd)
+}
+
+func fitWindow(hwnd uintptr) {
+	var rc winRect
+	procGetWindowRect.Call(hwnd, uintptr(unsafe.Pointer(&rc)))
+	mon, _, _ := procMonitorFromWindow.Call(hwnd, 2)
+	work := workArea(mon)
+	w, h := windowSize(windowDPI(hwnd), work)
+	y := rc.Top
+	if y+h > work.Bottom {
+		y = work.Bottom - h
+	}
+	if y < work.Top {
+		y = work.Top
+	}
+	setWindowRect(hwnd, rc.Left, y, w, h)
 }
 
 func makeBorderless(hwnd uintptr) {

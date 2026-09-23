@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"sync/atomic"
 	"time"
 
 	webview "github.com/jchv/go-webview2"
@@ -413,17 +412,39 @@ func main() {
 	setClientBackground(hwnd, look.Palette)
 	applyCaption(hwnd, look)
 	makeBorderless(hwnd)
-	var shown int32
-	reveal := func() {
-		if !atomic.CompareAndSwapInt32(&shown, 0, 1) {
-			return
-		}
-		w.Dispatch(func() { revealWindowCentered(hwnd, 560, 560) })
+	followDPI(hwnd)
+	sizeForDPI(hwnd)
+	shown := false
+	reveal := func(h int) {
+		w.Dispatch(func() {
+			if h > 0 {
+				winDIPH = int32(h)
+			}
+			if shown {
+				if h > 0 {
+					fitWindow(hwnd)
+				}
+				return
+			}
+			shown = true
+			revealWindowCentered(hwnd)
+		})
 	}
-	_ = w.Bind("appReady", reveal)
+	_ = w.Bind("appReady", func(h int) { reveal(h) })
+	_ = w.Bind("appFit", func(h int) {
+		w.Dispatch(func() {
+			if h <= 0 {
+				return
+			}
+			winDIPH = int32(h)
+			if shown {
+				fitWindow(hwnd)
+			}
+		})
+	})
 	go func() {
 		time.Sleep(3 * time.Second)
-		reveal()
+		reveal(0)
 	}()
 
 	installedDir := ""

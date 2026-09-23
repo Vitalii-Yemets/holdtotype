@@ -20,12 +20,12 @@ button.cap{width:36px;height:30px;background:none;border:1px solid var(--line);b
 button.cap:hover{color:var(--green);border-color:var(--dim)}
 button.cap.close:hover{color:var(--bad);border-color:var(--badline)}
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:1px solid var(--green);outline-offset:2px}
-.body{flex:1;padding:18px 22px;display:flex;flex-direction:column;gap:12px}
+.body{flex:1;min-height:0;overflow-y:auto;padding:18px 22px;display:flex;flex-direction:column;gap:12px}
 .tagline{color:var(--dim);font-size:13px;line-height:1.5}
 label.fld{color:var(--green);font-size:13px}
-input[type=text]{width:100%;padding:var(--fieldpad);border:1px solid var(--line);border-radius:var(--fieldr);background:var(--field);color:var(--green);font:inherit;outline:none}
+input[type=text]{width:100%;padding:var(--fieldpad);border:1px solid var(--line);border-radius:var(--fieldr);background:var(--field);color:var(--green);font:inherit;font-size:var(--ctlfs);line-height:1.2;outline:none}
 input[type=text]:focus{border-color:var(--dim);box-shadow:var(--glow)}
-select{padding:var(--fieldpad);border:1px solid var(--line);border-radius:var(--fieldr);background:var(--field);color:var(--green);font:inherit;outline:none;cursor:pointer;max-width:100%;color-scheme:var(--scheme,dark)}
+select{padding:var(--fieldpad);border:1px solid var(--line);border-radius:var(--fieldr);background:var(--field);color:var(--green);font:inherit;font-size:var(--ctlfs);line-height:1.2;outline:none;cursor:pointer;max-width:100%;color-scheme:var(--scheme,dark)}
 option{background:var(--bg);color:var(--green)}
 option:checked{background:linear-gradient(var(--on),var(--on));color:var(--green)}
 select,::picker(select){appearance:base-select}
@@ -47,11 +47,13 @@ button.ibtn:hover{color:var(--green);border-color:var(--dim);box-shadow:var(--gl
 .chk input:checked{border-color:var(--swonline);background:var(--swonbg)}
 .chk input:checked::after{left:17px;background:var(--swknob);box-shadow:var(--higlow)}
 .chk input:focus-visible{outline:1px solid var(--green);outline-offset:2px}
-button.btn{padding:11px 26px;border:1px solid var(--btnline);border-radius:var(--btnr);background:var(--btnbg);background-origin:border-box;color:var(--btnfg);font:inherit;cursor:pointer;letter-spacing:var(--ls);text-transform:var(--caps);font-size:13px}
+button.btn{padding:8px 18px;border:1px solid var(--btnline);border-radius:var(--btnr);background:var(--btnbg);background-origin:border-box;color:var(--btnfg);font:inherit;cursor:pointer;letter-spacing:var(--ls);text-transform:var(--caps);font-size:12px}
+button.btn::before{content:var(--btnbo);color:var(--faint)}
+button.btn::after{content:var(--btnbc);color:var(--faint)}
 button.btn.ghost{border-color:var(--btn2line);background:var(--btn2bg);color:var(--btn2fg);filter:none}
 button.btn.ghost:hover{color:var(--btn2fg);border-color:var(--dim);background:var(--btn2bgh)}
 .foot{gap:8px}
-button.btn:hover{filter:brightness(1.12);box-shadow:var(--glow)}
+button.btn:hover{background:var(--btnbgh);filter:brightness(1.06);box-shadow:var(--glow)}
 .bar{height:16px;border:1px solid var(--line);border-radius:var(--fieldr);background:var(--field);position:relative;overflow:hidden}
 .bar i{position:absolute;inset:0;width:0;background:linear-gradient(90deg,var(--on),var(--hi));box-shadow:var(--higlow);transition:width .2s}
 .plog{color:var(--dim);font-size:12px;min-height:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -60,7 +62,7 @@ button.btn:hover{filter:brightness(1.12);box-shadow:var(--glow)}
 .pathout{color:var(--dim);font-size:12px;user-select:text;word-break:break-all}
 .step{display:none;flex-direction:column;gap:12px}
 .step.on{display:flex}
-.foot{margin-top:auto;display:flex;justify-content:flex-end}
+.foot{margin-top:4px;display:flex;justify-content:flex-end}
 </style></head><body>
 <div class="header" onmousedown="if(event.button===0&&event.target.tagName!=='BUTTON')appDrag()">
  <div class="logo"><svg viewBox="0 0 64 64">
@@ -184,6 +186,24 @@ function setupDone(err, warn, dir){
   if(warn) document.getElementById("outwarn").textContent = warn === "cancelled" ? {{DLSTOPPED_JS}} : {{WARNMODEL_JS}};
   show("st-done");
 }
-setTimeout(()=>{ if(window.appReady) appReady(); }, 60);
+function fitHeight(){
+  const st = document.querySelector(".step.on");
+  if(!st) return 0;
+  const cs = getComputedStyle(document.querySelector(".body"));
+  return Math.ceil(document.querySelector(".header").getBoundingClientRect().height +
+    parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) + st.getBoundingClientRect().height) || 0;
+}
+let fitLast = 0;
+function fit(){
+  const h = fitHeight();
+  if(!h || h === fitLast) return;
+  fitLast = h;
+  if(window.appFit) appFit(h);
+}
+if(window.ResizeObserver){
+  const fitObs = new ResizeObserver(()=>fit());
+  document.querySelectorAll(".step").forEach(s=>fitObs.observe(s));
+}
+setTimeout(()=>{ fitLast = fitHeight(); if(window.appReady) appReady(fitLast); }, 60);
 </script>
 </body></html>`

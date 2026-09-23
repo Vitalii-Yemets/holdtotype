@@ -70,7 +70,8 @@ const dom = new JSDOM(html, {
     w.appBrowse = async () => "";
     w.appFinish = () => {};
     w.appDrag = () => {};
-    w.appReady = () => {};
+    w.readyCalls = 0;
+    w.appReady = () => { w.readyCalls++; };
   },
 });
 
@@ -85,6 +86,7 @@ const shown = (id) => d.getElementById(id).classList.contains("on");
 
   check("every placeholder is filled", leftovers, []);
   check("opens on the options step", shown("st-opts"), true);
+  check("the page runs to the end and asks to be shown", w.readyCalls, 1);
   check("the default folder is prefilled", d.getElementById("dir").value, "C:\\Programs\\HoldToType");
 
   d.getElementById("dir").value = "   ";
