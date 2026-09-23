@@ -1960,7 +1960,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
   </div>
   <div class="stkeys" id="state_keys">
    <span class="stcombo" id="state_hotkey"></span>
-   <button type="button" class="iconbtn stgo" data-goto="system" title="{{S_ST_HOTKEY_GO}}">&#8599;</button>
+   <button type="button" class="iconbtn stgo" data-goto="dictation" title="{{S_ST_HOTKEY_GO}}">&#8599;</button>
   </div>
   <button type="button" class="mini" id="state_enable" style="display:none">{{S_ST_ENABLE}}</button>
   <button type="button" class="mini danger" id="state_srv_go" style="display:none">{{S_SRV_DOWN_GO}}</button>
