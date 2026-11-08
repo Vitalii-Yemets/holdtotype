@@ -31,6 +31,7 @@ func init() {
 		"ov.quiet": "Zu leise, es war fast nichts zu hören", "ov.clipped": "Übersteuert — der Ton wurde abgeschnitten",
 		"ov.cmd.cancelled": "Per Sprache abgebrochen",
 		"ov.silence":       "Stille — nichts erkannt", "ov.server.loading": "Server lädt noch",
+		"ov.stop.silence":  "Bei Stille beendet",
 		"ov.tooshort":  "Zu kurz — Tasten länger halten",
 		"ov.cancelled": "Abgebrochen", "ov.editing": "Bearbeite: %s", "ov.translating": "Übersetze",
 		"ov.llm.needed": "Diese Sprache benötigt das LLM-Modul", "td.title": "Übersetzen nach:", "td.plain": "In die Ausgangssprache übersetzen",
@@ -131,6 +132,7 @@ func init() {
 		"ov.quiet": "Trop faible, presque rien n'a été entendu", "ov.clipped": "Saturation — le son a été écrêté",
 		"ov.cmd.cancelled": "Annulé à la voix",
 		"ov.silence":       "Silence — rien reconnu", "ov.server.loading": "Le serveur charge encore",
+		"ov.stop.silence":  "Arrêté sur un silence",
 		"ov.tooshort":  "Trop court — maintenez les touches plus longtemps",
 		"ov.cancelled": "Annulé", "ov.editing": "Édition : %s", "ov.translating": "Traduction",
 		"ov.llm.needed": "Cette langue nécessite le module LLM", "td.title": "Traduire vers :", "td.plain": "Traduire dans la langue source",
@@ -231,6 +233,7 @@ func init() {
 		"ov.quiet": "Demasiado bajo, casi no se oyó nada", "ov.clipped": "Saturación: el sonido se recortó",
 		"ov.cmd.cancelled": "Cancelado por voz",
 		"ov.silence":       "Silencio — nada reconocido", "ov.server.loading": "El servidor aún carga",
+		"ov.stop.silence":  "Detenido por silencio",
 		"ov.tooshort":  "Demasiado corto: mantén las teclas más tiempo",
 		"ov.cancelled": "Cancelado", "ov.editing": "Editando: %s", "ov.translating": "Traduciendo",
 		"ov.llm.needed": "Este idioma requiere el módulo LLM", "td.title": "Traducir a:", "td.plain": "Traducir al idioma de origen",
@@ -331,6 +334,7 @@ func init() {
 		"ov.quiet": "Troppo basso, non si è sentito quasi nulla", "ov.clipped": "Distorsione: il suono è stato tagliato",
 		"ov.cmd.cancelled": "Annullato a voce",
 		"ov.silence":       "Silenzio — nulla riconosciuto", "ov.server.loading": "Il server sta ancora caricando",
+		"ov.stop.silence":  "Fermato dal silenzio",
 		"ov.tooshort":  "Troppo breve — tieni premuti i tasti più a lungo",
 		"ov.cancelled": "Annullato", "ov.editing": "Modifica: %s", "ov.translating": "Traduzione",
 		"ov.llm.needed": "Questa lingua richiede il modulo LLM", "td.title": "Traduci in:", "td.plain": "Tradurre nella lingua di partenza",
@@ -431,6 +435,7 @@ func init() {
 		"ov.quiet": "Za cicho, prawie nic nie było słychać", "ov.clipped": "Przesterowanie — dźwięk został obcięty",
 		"ov.cmd.cancelled": "Anulowano głosem",
 		"ov.silence":       "Cisza — nic nie rozpoznano", "ov.server.loading": "Serwer wciąż się ładuje",
+		"ov.stop.silence":  "Zatrzymano po ciszy",
 		"ov.tooshort":  "Za krótko — przytrzymaj klawisze dłużej",
 		"ov.cancelled": "Anulowano", "ov.editing": "Edycja: %s", "ov.translating": "Tłumaczenie",
 		"ov.llm.needed": "Ten język wymaga modułu LLM", "td.title": "Tłumacz na:", "td.plain": "Przetłumacz na język źródłowy",
@@ -750,6 +755,9 @@ func init() {
 		"S_STATE_MEM_SUB": "Modelle bleiben geladen, der erste Satz kommt ohne Verzögerung",
 		"S_HOTMODE":       "Modus", "S_HOTMODE_HOLD": "halten", "S_HOTMODE_TOGGLE": "umschalten",
 		"S_SUB_HOTMODE": "Tasten halten oder einmal drücken zum Starten und noch einmal zum Beenden",
+		"S_SILENCE":     "Bei Stille beenden", "S_SILENCE_MS": "Pause vor dem Beenden, ms",
+		"S_SUB_SILENCE": "Modus „umschalten“: sobald Sie etwas gesagt haben, beendet eine Pause die Aufnahme, als hätten Sie die Tasten erneut gedrückt",
+		"S_SUB_SILENCE_MS": "wie lange Sie schweigen dürfen; vor Ihren ersten Worten endet die Aufnahme nie",
 		"S_SUB_MINMS":   "ignoriert versehentliche Tastendrücke",
 		"S_SUB_ENTER":   "schickt die Nachricht sofort ab",
 		"S_SUB_CLIP":    "Bilder und Dateien kommen unverändert zurück",
@@ -922,6 +930,7 @@ func init() {
 			"<table class=\"hopt\">" +
 			"<tr><td>Tastenkürzel</td><td>Drücken Sie „Ändern…“ und halten Sie, was Ihnen bequem ist. Die App fängt diese Kombination im ganzen System ab, nehmen Sie also keine, die schon belegt ist, etwa Strg+C. Am seltensten belegt sind Kombinationen mit der Windows-Taste.</td></tr>" +
 			"<tr><td>Modus</td><td>Bei „halten“ wird aufgenommen, solange die Tasten gedrückt sind: Loslassen, und der Satz geht in die Verarbeitung. Bei „umschalten“ startet der erste Druck die Aufnahme, der zweite beendet sie. Der zweite Modus eignet sich für lange Monologe, wenn die Hand vom Halten der Tasten müde wird.</td></tr>" +
+			"<tr><td>Bei Stille beenden</td><td>Nur im Modus „umschalten“. Sobald Sie etwas gesagt haben, beendet eine Pause von der Länge, die unter „Pause vor dem Beenden, ms“ eingestellt ist, die Aufnahme von selbst, als hätten Sie das Tastenkürzel erneut gedrückt, und die Leiste zeigt „Bei Stille beendet“. Vor Ihren ersten Worten endet die Aufnahme nie, Sie können also nach dem Drücken in Ruhe Ihre Gedanken sammeln; sagen Sie gar nichts, beendet sie trotzdem die Grenze „Max. Aufnahme, s“. Ist „Enter nach dem Einfügen drücken (Auto-Senden)“ eingeschaltet, schickt eine Pause die Nachricht ab: Wählen Sie dann eine längere Pause.</td></tr>" +
 			"<tr><td>Min. Aufnahme, ms</td><td>Wie kurz ein Druck sein muss, um als versehentlich zu gelten. Berühren Sie die Tasten nur für einen Sekundenbruchteil, bleibt die App still, statt einen Wortfetzen einzufügen.</td></tr>" +
 			"<tr><td>Max. Aufnahme, s</td><td>Eine Absicherung gegen eine vergessene Taste: Die Aufnahme bricht von selbst ab, statt eine halbe Stunde lang ins Leere aufzunehmen.</td></tr>" +
 			"</table>" +
@@ -1307,6 +1316,9 @@ func init() {
 		"S_STATE_MEM_SUB": "les modèles restent chargés, la première phrase part sans délai",
 		"S_HOTMODE":       "Mode", "S_HOTMODE_HOLD": "maintenir", "S_HOTMODE_TOGGLE": "bascule",
 		"S_SUB_HOTMODE": "maintenez les touches, ou appuyez une fois pour lancer et une fois pour arrêter",
+		"S_SILENCE":     "Arrêter sur un silence", "S_SILENCE_MS": "Pause avant l'arrêt, ms",
+		"S_SUB_SILENCE": "mode « bascule » : une fois que vous avez parlé, une pause termine l'enregistrement comme si vous appuyiez de nouveau sur les touches",
+		"S_SUB_SILENCE_MS": "durée de silence tolérée ; l'enregistrement ne s'arrête jamais avant vos premiers mots",
 		"S_SUB_MINMS":   "ignore les appuis accidentels",
 		"S_SUB_ENTER":   "envoie le message aussitôt",
 		"S_SUB_CLIP":    "les images et les fichiers reviennent tels quels",
@@ -1479,6 +1491,7 @@ func init() {
 			"<table class=\"hopt\">" +
 			"<tr><td>Raccourci clavier</td><td>Appuyez sur « Changer… » et maintenez ce qui vous convient. L'application intercepte cette combinaison dans tout le système, donc n'en prenez pas une déjà utilisée, comme Ctrl+C. Les combinaisons avec la touche Windows sont les moins souvent prises.</td></tr>" +
 			"<tr><td>Mode</td><td>Avec « maintenir », l'enregistrement dure tant que les touches sont enfoncées : vous relâchez, et la phrase part au traitement. Avec « bascule », le premier appui lance l'enregistrement et le second l'arrête. Le second mode convient aux longs monologues, quand la main se fatigue de tenir les touches.</td></tr>" +
+			"<tr><td>Arrêter sur un silence</td><td>Uniquement en mode « bascule ». Une fois que vous avez dit quelque chose, une pause de la durée réglée dans « Pause avant l'arrêt, ms » termine l'enregistrement d'elle-même, comme si vous aviez appuyé de nouveau sur le raccourci, et le bandeau affiche « Arrêté sur un silence ». L'enregistrement ne s'arrête jamais avant vos premiers mots : vous pouvez donc rassembler vos idées après avoir appuyé ; si vous ne dites rien du tout, la limite « Enreg. max, s » y met fin quand même. Avec « Appuyer Entrée après insertion (envoi auto) » activé, une pause envoie le message : choisissez alors une pause plus longue.</td></tr>" +
 			"<tr><td>Enreg. min, ms</td><td>La durée en dessous de laquelle un appui compte comme accidentel. Effleurez les touches une fraction de seconde, et l'application reste muette au lieu d'insérer un bout de mot.</td></tr>" +
 			"<tr><td>Enreg. max, s</td><td>Une sécurité contre une touche oubliée : l'enregistrement s'arrête tout seul au lieu d'enregistrer dans le vide pendant une demi-heure.</td></tr>" +
 			"</table>" +
@@ -1864,6 +1877,9 @@ func init() {
 		"S_STATE_MEM_SUB": "los modelos siguen cargados, la primera frase no espera",
 		"S_HOTMODE":       "Modo", "S_HOTMODE_HOLD": "mantener", "S_HOTMODE_TOGGLE": "alternar",
 		"S_SUB_HOTMODE": "mantén las teclas, o pulsa una vez para empezar y otra para parar",
+		"S_SILENCE":     "Detener por silencio", "S_SILENCE_MS": "Pausa antes de detener, ms",
+		"S_SUB_SILENCE": "modo «alternar»: cuando ya has hablado, una pausa termina la grabación como si pulsaras las teclas otra vez",
+		"S_SUB_SILENCE_MS": "cuánto puedes estar en silencio; nunca se detiene antes de tus primeras palabras",
 		"S_SUB_MINMS":   "ignora pulsaciones accidentales",
 		"S_SUB_ENTER":   "envía el mensaje enseguida",
 		"S_SUB_CLIP":    "las imágenes y los archivos vuelven tal como estaban",
@@ -2036,6 +2052,7 @@ func init() {
 			"<table class=\"hopt\">" +
 			"<tr><td>Atajo de teclado</td><td>Pulsa «Cambiar…» y mantén la combinación que te resulte cómoda. La aplicación captura esa combinación en todo el sistema, así que no elijas una que ya esté ocupada, como Ctrl+C. Las combinaciones con la tecla Windows son las que menos suelen estar ocupadas.</td></tr>" +
 			"<tr><td>Modo</td><td>Con «mantener», graba mientras tienes pulsadas las teclas: las sueltas y la frase pasa a procesarse. Con «alternar», la primera pulsación empieza la grabación y la segunda la detiene. El segundo modo va bien para monólogos largos, cuando la mano se cansa de mantener las teclas.</td></tr>" +
+			"<tr><td>Detener por silencio</td><td>Solo en el modo «alternar». Cuando ya has dicho algo, una pausa tan larga como la fijada en «Pausa antes de detener, ms» termina la grabación por sí sola, como si pulsaras el atajo otra vez, y la barra muestra «Detenido por silencio». Nunca se detiene antes de tus primeras palabras, así que tras pulsar puedes ordenar tus ideas con calma; si no dices nada, el límite «Grab. máx, s» la termina igualmente. Con «Pulsar Enter tras insertar (envío auto)» activado, una pausa envía el mensaje, así que elige una pausa más larga.</td></tr>" +
 			"<tr><td>Grab. mín, ms</td><td>Por debajo de qué duración una pulsación cuenta como accidental. Si rozas las teclas una fracción de segundo, la aplicación no hace nada en vez de insertar un trozo de palabra.</td></tr>" +
 			"<tr><td>Grab. máx, s</td><td>Una protección contra una tecla olvidada: la grabación se corta sola en vez de seguir grabando a la nada durante media hora.</td></tr>" +
 			"</table>" +
@@ -2421,6 +2438,9 @@ func init() {
 		"S_STATE_MEM_SUB": "i modelli restano caricati, la prima frase non aspetta",
 		"S_HOTMODE":       "Modo", "S_HOTMODE_HOLD": "tenere premuto", "S_HOTMODE_TOGGLE": "interruttore",
 		"S_SUB_HOTMODE": "tieni premuti i tasti, oppure premi una volta per iniziare e una per fermare",
+		"S_SILENCE":     "Ferma al silenzio", "S_SILENCE_MS": "Pausa prima di fermare, ms",
+		"S_SUB_SILENCE": "modo «interruttore»: quando hai già parlato, una pausa chiude la registrazione come se premessi di nuovo i tasti",
+		"S_SUB_SILENCE_MS": "quanto puoi restare in silenzio; non si ferma mai prima delle tue prime parole",
 		"S_SUB_MINMS":   "ignora le pressioni accidentali",
 		"S_SUB_ENTER":   "invia subito il messaggio",
 		"S_SUB_CLIP":    "immagini e file tornano come erano",
@@ -2593,6 +2613,7 @@ func init() {
 			"<table class=\"hopt\">" +
 			"<tr><td>Scorciatoia da tastiera</td><td>Premi «Cambia…» e tieni premuta la combinazione che ti è comoda. L'app intercetta questa combinazione in tutto il sistema, quindi non sceglierne una già occupata, come Ctrl+C. Le combinazioni con il tasto Windows sono quelle occupate più di rado.</td></tr>" +
 			"<tr><td>Modo</td><td>Con «tenere premuto» registra finché tieni premuti i tasti: li rilasci e la frase passa all'elaborazione. Con «interruttore» la prima pressione avvia la registrazione e la seconda la ferma. Il secondo modo è comodo per i monologhi lunghi, quando la mano si stanca di tenere i tasti.</td></tr>" +
+			"<tr><td>Ferma al silenzio</td><td>Solo in modo «interruttore». Quando hai già detto qualcosa, una pausa lunga quanto quella impostata in «Pausa prima di fermare, ms» chiude la registrazione da sola, come se premessi di nuovo la scorciatoia, e la barra mostra «Fermato dal silenzio». Non si ferma mai prima delle tue prime parole, quindi dopo aver premuto puoi raccogliere le idee con calma; se non dici niente, il limite «Registrazione max, s» la chiude comunque. Con «Premi Invio dopo l'inserimento (invio auto)» attivo, una pausa invia il messaggio, quindi scegli una pausa più lunga.</td></tr>" +
 			"<tr><td>Registrazione min, ms</td><td>Sotto quale durata una pressione conta come accidentale. Se sfiori i tasti per una frazione di secondo, l'app non fa nulla invece di inserire un pezzo di parola.</td></tr>" +
 			"<tr><td>Registrazione max, s</td><td>Una protezione contro un tasto dimenticato: la registrazione si interrompe da sola invece di registrare il vuoto per mezz'ora.</td></tr>" +
 			"</table>" +
@@ -2978,6 +2999,9 @@ func init() {
 		"S_STATE_MEM_SUB": "modele zostają w pamięci, pierwsze zdanie nie czeka",
 		"S_HOTMODE":       "Tryb", "S_HOTMODE_HOLD": "przytrzymanie", "S_HOTMODE_TOGGLE": "przełącznik",
 		"S_SUB_HOTMODE": "trzymaj klawisze albo naciśnij raz, by zacząć, i raz, by skończyć",
+		"S_SILENCE":     "Zatrzymuj po ciszy", "S_SILENCE_MS": "Pauza przed zatrzymaniem, ms",
+		"S_SUB_SILENCE": "tryb „przełącznik”: gdy już coś powiesz, pauza kończy nagranie, jakbyś znów nacisnął klawisze",
+		"S_SUB_SILENCE_MS": "jak długo możesz milczeć; przed twoimi pierwszymi słowami nagranie nigdy się nie zatrzyma",
 		"S_SUB_MINMS":   "pomija przypadkowe naciśnięcia",
 		"S_SUB_ENTER":   "od razu wysyła wiadomość",
 		"S_SUB_CLIP":    "obrazy i pliki wracają bez zmian",
@@ -3150,6 +3174,7 @@ func init() {
 			"<table class=\"hopt\">" +
 			"<tr><td>Skrót klawiszowy</td><td>Naciśnij „Zmień…” i przytrzymaj to, co ci wygodne. Aplikacja przechwytuje tę kombinację w całym systemie, więc nie wybieraj zajętej, na przykład Ctrl+C. Najrzadziej zajęte są kombinacje z klawiszem Windows.</td></tr>" +
 			"<tr><td>Tryb</td><td>W trybie „przytrzymanie” nagrywa, dopóki klawisze są wciśnięte: puszczasz je i zdanie idzie do przetworzenia. W trybie „przełącznik” pierwsze naciśnięcie włącza nagrywanie, a drugie je wyłącza. Drugi tryb jest wygodny przy długich monologach, gdy ręka męczy się od trzymania klawiszy.</td></tr>" +
+			"<tr><td>Zatrzymuj po ciszy</td><td>Tylko w trybie „przełącznik”. Gdy już coś powiesz, pauza tak długa jak ustawiona w „Pauza przed zatrzymaniem, ms” sama kończy nagranie, jakbyś znów nacisnął skrót, a pasek pokazuje „Zatrzymano po ciszy”. Przed twoimi pierwszymi słowami nagranie nigdy się nie zatrzyma, więc po naciśnięciu możesz spokojnie zebrać myśli; jeśli nic nie powiesz, i tak zakończy je limit „Maks. nagranie, s”. Gdy włączone jest „Naciśnij Enter po wstawieniu (auto-wysyłka)”, pauza wysyła wiadomość, więc wybierz dłuższą pauzę.</td></tr>" +
 			"<tr><td>Min. nagranie, ms</td><td>Jak krótkie naciśnięcie uznać za przypadkowe. Trącisz klawisze na ułamek sekundy, a aplikacja nic nie zrobi, zamiast wstawiać skrawek słowa.</td></tr>" +
 			"<tr><td>Maks. nagranie, s</td><td>Zabezpieczenie przed zapomnianym klawiszem: nagranie samo się urwie i nie będzie przez pół godziny nagrywać w próżnię.</td></tr>" +
 			"</table>" +
@@ -3336,6 +3361,7 @@ func init() {
 		"ov.quiet": "Надто тихо, майже нічого не чути", "ov.clipped": "Перевантаження — звук обрізано",
 		"ov.cmd.cancelled": "Скасовано голосом",
 		"ov.silence":       "Тиша — нічого не розпізнано", "ov.server.loading": "Сервер ще завантажується",
+		"ov.stop.silence":  "Зупинено через тишу",
 		"ov.tooshort":  "Занадто коротко — тримайте клавіші довше",
 		"ov.cancelled": "Скасовано", "ov.editing": "Редагую: %s", "ov.translating": "Перекладаю",
 		"ov.llm.needed": "Ця мова потребує LLM-модуль", "td.title": "Перекласти на:", "td.plain": "Перекласти мовою вихідного мовлення",
@@ -3660,6 +3686,9 @@ func init() {
 		"S_STATE_MEM_SUB": "моделі лишаються в пам'яті, перша фраза йде без затримки",
 		"S_HOTMODE":       "Режим", "S_HOTMODE_HOLD": "утримання", "S_HOTMODE_TOGGLE": "перемикач",
 		"S_SUB_HOTMODE": "тримайте клавіші або натисніть раз, щоб почати, і раз, щоб зупинити",
+		"S_SILENCE":     "Зупинка через тишу", "S_SILENCE_MS": "Пауза до зупинки, мс",
+		"S_SUB_SILENCE": "режим «перемикач»: коли ви вже щось сказали, пауза завершує запис, ніби ви знову натиснули клавіші",
+		"S_SUB_SILENCE_MS": "скільки можна мовчати; до ваших перших слів запис не зупиниться",
 		"S_SUB_MINMS":   "відсікає випадкові натискання",
 		"S_SUB_ENTER":   "надсилає повідомлення одразу",
 		"S_SUB_CLIP":    "зображення й файли повертаються як були",
@@ -3808,6 +3837,7 @@ func init() {
 			"<table class=\"hopt\">" +
 			"<tr><td>Сполучення клавіш</td><td>Натисніть «Змінити…» і затисніть те, що вам зручно. Застосунок перехоплює це сполучення в усій системі, тому не беріть зайняте, наприклад Ctrl+C. Найрідше зайняті сполучення з клавішею Windows.</td></tr>" +
 			"<tr><td>Режим</td><td>У режимі «утримання» запис іде, поки клавіші затиснуті: відпустили, і фраза пішла в роботу. У режимі «перемикач» перше натискання вмикає запис, а друге вимикає. Другий режим зручний для довгих монологів, коли рука втомлюється тримати клавіші.</td></tr>" +
+			"<tr><td>Зупинка через тишу</td><td>Лише в режимі «перемикач». Коли ви вже щось сказали, пауза тієї довжини, що задана в «Пауза до зупинки, мс», сама завершує запис, ніби ви знову натиснули сполучення клавіш, а на смужці з'являється «Зупинено через тишу». До ваших перших слів запис не зупиниться, тож після натискання можна спокійно зібратися з думками; якщо ви нічого не скажете, запис усе одно завершить межа «Макс. запис, с». Якщо увімкнено «Enter після вставлення (автовідправлення)», пауза надішле повідомлення, тому виберіть довшу паузу.</td></tr>" +
 			"<tr><td>Мін. запис, мс</td><td>Наскільки коротке натискання вважати випадковим. Зачепили клавіші на частку секунди, і застосунок промовчить, замість того щоб вставляти уривок слова.</td></tr>" +
 			"<tr><td>Макс. запис, с</td><td>Страховка від забутої клавіші: запис обірветься сам і не писатиме в порожнечу пів години.</td></tr>" +
 			"</table>" +

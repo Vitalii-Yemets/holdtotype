@@ -19,6 +19,8 @@ const cfg = {
   skin: "terminal",
   theme: "green",
   hotkey_mode: "hold",
+  silence_stop: false,
+  silence_stop_ms: 2000,
   language: "ru",
   model: "models/ggml-large-v3-turbo-q5_0.bin",
   lang_models: { auto: "large-v3-turbo-q5_0", ru: "gigaam-v3" },

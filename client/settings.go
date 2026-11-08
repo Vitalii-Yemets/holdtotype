@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"holdtotype/internal/audiolevel"
 	"holdtotype/internal/commands"
 	"holdtotype/internal/ovplace"
 	"holdtotype/internal/preset"
@@ -132,6 +133,8 @@ type settingsForm struct {
 	MicDeviceName    string `json:"mic_device_name"`
 	Punctuation      string `json:"punctuation"`
 	HotkeyMode       string `json:"hotkey_mode"`
+	SilenceStop      bool   `json:"silence_stop"`
+	SilenceStopMs    int    `json:"silence_stop_ms"`
 	UILevel          string `json:"ui_level"`
 	Skin             string `json:"skin"`
 	Theme            string `json:"theme"`
@@ -810,6 +813,10 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	if validHotkeyMode(f.HotkeyMode) {
 		c.HotkeyMode = f.HotkeyMode
 	}
+	c.SilenceStop = f.SilenceStop
+	if audiolevel.ValidPauseMs(f.SilenceStopMs) {
+		c.SilenceStopMs = f.SilenceStopMs
+	}
 	if validUILevel(f.UILevel) {
 		c.UILevel = f.UILevel
 	}
@@ -1004,6 +1011,8 @@ func settingsHTML(cfg *Config, tab string) string {
 		"mic_device":              cfg.MicDevice,
 		"punctuation":             cfg.Punctuation,
 		"hotkey_mode":             cfg.HotkeyMode,
+		"silence_stop":            cfg.SilenceStop,
+		"silence_stop_ms":         cfg.SilenceStopMs,
 		"ui_level":                cfg.UILevel,
 		"skin":                    cfg.Skin,
 		"theme":                   cfg.Theme,
@@ -2037,6 +2046,9 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
    <button type="button" class="hotkey-val" id="hotkey" onclick="appCapture()" title="{{S_CHANGE}}"></button></div>
   <div class="row"><label>{{S_HOTMODE}}<span class="sub">{{S_SUB_HOTMODE}}</span></label>
    <select id="hotkey_mode"><option value="hold">{{S_HOTMODE_HOLD}}</option><option value="toggle">{{S_HOTMODE_TOGGLE}}</option></select></div>
+  <div class="row"><label>{{S_SILENCE}}<span class="sub">{{S_SUB_SILENCE}}</span></label><input type="checkbox" id="silence_stop"></div>
+  <div class="row"><label>{{S_SILENCE_MS}}<span class="sub">{{S_SUB_SILENCE_MS}}</span></label>
+   <select id="silence_stop_ms"><option value="1000">1000 ms</option><option value="1500">1500 ms</option><option value="2000">2000 ms</option><option value="2500">2500 ms</option><option value="3000">3000 ms</option><option value="4000">4000 ms</option><option value="5000">5000 ms</option></select></div>
   <div class="row" data-adv><label>{{S_MINMS}}<span class="sub">{{S_SUB_MINMS}}</span></label><select id="min_record_ms"><option value="0">0 ms</option><option value="100">100 ms</option><option value="150">150 ms</option><option value="200">200 ms</option><option value="300">300 ms</option><option value="500">500 ms</option><option value="750">750 ms</option><option value="1000">1000 ms</option></select></div>
   <div class="row" data-adv><label>{{S_MAXSEC}}</label><select id="max_record_seconds"><option value="30">30 s</option><option value="60">60 s</option><option value="120">120 s</option><option value="180">180 s</option><option value="300">300 s</option></select></div>
  </div>
@@ -2481,7 +2493,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
 <script>
 window.onerror = function(m, s, l, c){ if(window.appJSError) appJSError(String(m) + " @line " + l + ":" + c); };
 const CFG = {{CFG}};
-const bools = ["beep","auto_enter","restore_clipboard","overlay","overlay_text","type_mode","server_autostart","check_updates","history"];
+const bools = ["beep","auto_enter","restore_clipboard","overlay","overlay_text","type_mode","silence_stop","server_autostart","check_updates","history"];
 const texts = ["history_skip","post_api_model"];
 let exeStored = CFG.server_exe || "";
 let remoteURL = (CFG.server_url || "").trim();
@@ -2493,7 +2505,7 @@ let whisperNow = false;
 let postURL = (CFG.post_api_url || "").trim();
 let postEnabled = CFG.post_enabled !== false;
 let postSource = CFG.post_source === "api" ? "api" : "local";
-const nums  = ["threads","min_record_ms","max_record_seconds","translate_ask_seconds","server_port","paste_delay_ms","history_max","post_api_timeout_s"];
+const nums  = ["threads","min_record_ms","max_record_seconds","silence_stop_ms","translate_ask_seconds","server_port","paste_delay_ms","history_max","post_api_timeout_s"];
 const sels  = ["ui_language","language","sound_theme","translate_target","translate_ask","hotkey_mode","theme","skin"];
 const trAll = ["de","en","es","fr","it","pl","uk","ru"];
 const L = {{L_JSON}};
@@ -4520,7 +4532,7 @@ function toast(msg, severity){
   toast._t = setTimeout(()=>{ t.textContent = ""; t.className = "stsaved"; }, (severity === "error" || severity === "warn") ? 6000 : 2200);
 }
 
-const numSels = ["threads","min_record_ms","max_record_seconds","translate_ask_seconds","paste_delay_ms"];
+const numSels = ["threads","min_record_ms","max_record_seconds","silence_stop_ms","translate_ask_seconds","paste_delay_ms"];
 function load(){
   document.getElementById("punctuation").value = CFG.punctuation || "model";
   document.getElementById("punctuation").addEventListener("change", updatePostWarn);
@@ -4567,6 +4579,8 @@ function load(){
     });
   });
   document.getElementById("language").addEventListener("change", ()=>{ syncTrControls(); });
+  document.getElementById("hotkey_mode").addEventListener("change", syncSilenceRows);
+  document.getElementById("silence_stop").addEventListener("change", syncSilenceRows);
   initDict();
   document.getElementById("mic_device").onchange = applyMic;
   document.getElementById("mic_refresh").onclick = refreshMics;
@@ -4600,6 +4614,19 @@ function load(){
     el.value = v;
   });
   syncTrControls();
+  syncSilenceRows();
+}
+function syncSilenceRows(){
+  const mode = document.getElementById("hotkey_mode");
+  const sw = document.getElementById("silence_stop");
+  const ms = document.getElementById("silence_stop_ms");
+  if(!mode || !sw || !ms) return;
+  const toggle = mode.value === "toggle";
+  [[sw, !toggle], [ms, !toggle || !sw.checked]].forEach(([el, off])=>{
+    const r = el.closest(".row");
+    if(r) r.classList.toggle("dimmed", off);
+    el.disabled = off;
+  });
 }
 async function runPostTest(btn, url, model, timeout, key){
   const was = btn.textContent;

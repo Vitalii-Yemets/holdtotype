@@ -497,7 +497,7 @@ function check(name, actual, expected) {
   d.querySelector(".modal .btn.yes").click(); await sleep(400);
   check("after clearing the list says it is empty", d.querySelector("#histbody .histempty").textContent, "No history yet");
   const everySetting = [
-    "hotkey", "min_record_ms", "max_record_seconds", "auto_enter", "restore_clipboard",
+    "hotkey", "silence_stop", "silence_stop_ms", "min_record_ms", "max_record_seconds", "auto_enter", "restore_clipboard",
     "type_mode", "overlay", "overlay_position", "overlay_text", "mic_device", "mic_bar", "beep", "sound_theme",
     "langlist", "munload", "language", "threads", "punctuation", "dictbody", "profbody",
     "tr_default", "translate_target", "translate_ask", "translate_ask_seconds",
@@ -650,6 +650,26 @@ function check(name, actual, expected) {
   check("the plate starts at the bottom of the screen", d.getElementById("ovmini").style.top, "85%");
   check("the screen is drawn as a monitor with a stand", [!!d.querySelector("#ovscheme .ovcase"), !!d.querySelector("#ovscheme .ovneck"), !!d.querySelector("#ovscheme .ovbase")], [true, true, true]);
   check("the pause option is gone", [!!d.getElementById("pause_hotkey"), !!d.getElementById("pause_clear")], [false, false]);
+  const silSw = d.getElementById("silence_stop"), silMs = d.getElementById("silence_stop_ms"), hkMode = d.getElementById("hotkey_mode");
+  const silState = () => [silSw.closest(".row").className.includes("dimmed"), silMs.closest(".row").className.includes("dimmed"), silSw.disabled, silMs.disabled];
+  check("in hold mode stop on silence is dimmed and out of reach", silState(), [true, true, true, true]);
+  check("the pause before stopping offers one to five seconds", [...silMs.options].map((o) => o.value), ["1000", "1500", "2000", "2500", "3000", "4000", "5000"]);
+  check("and starts at two seconds", silMs.value, "2000");
+  hkMode.value = "toggle"; hkMode.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
+  check("toggle mode wakes the switch while the pause waits for it", silState(), [false, true, false, true]);
+  check("and the mode is saved", w.lastSaveForm.hotkey_mode, "toggle");
+  silSw.checked = true; silSw.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
+  check("turning stop on silence on is saved", w.lastSaveForm.silence_stop, true);
+  check("and the pause can be chosen", [silMs.disabled, silMs.closest(".row").className.includes("dimmed")], [false, false]);
+  silMs.value = "3000"; silMs.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
+  check("the chosen pause is saved as a number", w.lastSaveForm.silence_stop_ms, 3000);
+  hkMode.value = "hold"; hkMode.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
+  check("back in hold mode both rows step aside", silState(), [true, true, true, true]);
+  check("and keep their values", [w.lastSaveForm.hotkey_mode, w.lastSaveForm.silence_stop, w.lastSaveForm.silence_stop_ms], ["hold", true, 3000]);
+  const silFind = d.getElementById("omni");
+  silFind.value = "S_SILENCE"; silFind.dispatchEvent(new w.Event("input")); await sleep(120);
+  check("the search still reaches the dimmed rows", [shown("dictation"), silSw.closest(".row").classList.contains("hit"), w.searchMatches("s_silence").filter((el) => el.closest("#p-dictation")).length], [true, true, 2]);
+  silFind.value = ""; silFind.dispatchEvent(new w.Event("input")); await sleep(60);
   d.querySelector('#ovscheme .ovzone[data-pos="top-right"]').click(); await sleep(300);
   check("clicking a place moves the plate and saves itself", w.lastSaveForm.overlay_position, "top-right");
   check("the miniature follows the chosen place", d.getElementById("ovmini").style.left, "88%");

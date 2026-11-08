@@ -178,6 +178,7 @@ var msgs = map[string]map[string]string{
 		"ov.quiet": "Слишком тихо, почти ничего не слышно", "ov.clipped": "Перегруз — звук обрезан",
 		"ov.cmd.cancelled":       "Отменено голосом",
 		"ov.silence":             "Тишина — текст не распознан",
+		"ov.stop.silence":        "Остановлено по тишине",
 		"ov.tooshort":            "Слишком коротко — держите клавиши дольше",
 		"ov.notranslate":         "Активная модель не переводит — вставлен исходный текст",
 		"ov.engine.fallback":     "Второй движок не поднялся — распознаю текущим",
@@ -358,6 +359,7 @@ var msgs = map[string]map[string]string{
 		"ov.quiet": "Too quiet, almost nothing was heard", "ov.clipped": "Clipping — the sound was cut off",
 		"ov.cmd.cancelled":       "Cancelled by voice",
 		"ov.silence":             "Silence — nothing recognized",
+		"ov.stop.silence":        "Stopped on silence",
 		"ov.tooshort":            "Too short — hold the keys longer",
 		"ov.notranslate":         "The active model cannot translate — inserted as recognized",
 		"ov.engine.fallback":     "The other engine did not start — using the current one",
@@ -590,6 +592,10 @@ var settingsStrings = map[string]map[string]string{
 		"S_HOTMODE_HOLD":   "удержание",
 		"S_HOTMODE_TOGGLE": "фиксация",
 		"S_SUB_HOTMODE":    "удерживать клавиши или включать и выключать нажатием",
+		"S_SILENCE":        "Остановка по тишине",
+		"S_SUB_SILENCE":    "режим «фиксация»: когда вы уже что-то сказали, пауза завершает запись, как будто вы снова нажали клавиши",
+		"S_SILENCE_MS":     "Пауза до остановки, мс",
+		"S_SUB_SILENCE_MS": "сколько можно молчать; до ваших первых слов запись не остановится",
 		"S_GRP_GENERAL":    "Общее",
 		"S_GRP_SPEECH":     "Обработка речи",
 		"S_GRP_INFO":       "Сведения",
@@ -1005,6 +1011,7 @@ var settingsStrings = map[string]map[string]string{
 			"<table class=\"hopt\">" +
 			"<tr><td>Сочетание клавиш</td><td>Нажмите «Изменить» и зажмите то, что вам удобно. Приложение перехватывает это сочетание во всей системе, поэтому не берите занятое — Ctrl+C, например. Реже всего заняты сочетания с клавишей Windows.</td></tr>" +
 			"<tr><td>Режим</td><td>«Удержание» — пишет, пока клавиши зажаты: отпустили, и фраза пошла в работу. «Фиксация» — первое нажатие включает запись, второе выключает. Второй режим удобен для длинных монологов, когда держать клавиши устаёт рука.</td></tr>" +
+			"<tr><td>Остановка по тишине</td><td>Только в режиме «фиксация». Когда вы уже что-то сказали, пауза той длины, что задана в «Пауза до остановки, мс», сама завершает запись, как будто вы снова нажали сочетание клавиш, а на плашке появляется «Остановлено по тишине». До ваших первых слов запись не остановится, так что после нажатия можно спокойно собраться с мыслями; если вы не скажете ничего, запись всё равно закончится по пределу «Максимальная запись, сек». Если включено «Нажимать Enter после вставки (автоотправка)», пауза отправит сообщение, поэтому выберите паузу подлиннее.</td></tr>" +
 			"<tr><td>Минимальная запись</td><td>Насколько короткое нажатие считать случайным. Задели клавиши на долю секунды — приложение промолчит, вместо того чтобы вставлять обрывок слова.</td></tr>" +
 			"<tr><td>Максимальная запись</td><td>Страховка от забытой клавиши: запись оборвётся сама и не будет писать в пустоту полчаса.</td></tr>" +
 			"</table>" +
@@ -1273,6 +1280,10 @@ var settingsStrings = map[string]map[string]string{
 		"S_HOTMODE_HOLD":   "hold",
 		"S_HOTMODE_TOGGLE": "toggle",
 		"S_SUB_HOTMODE":    "hold the keys, or press once to start and once to stop",
+		"S_SILENCE":        "Stop on silence",
+		"S_SUB_SILENCE":    "toggle mode: once you have spoken, a pause ends the recording as if you pressed the keys again",
+		"S_SILENCE_MS":     "Pause before stopping, ms",
+		"S_SUB_SILENCE_MS": "how long you may stay silent; it never stops before your first words",
 		"S_GRP_GENERAL":    "General",
 		"S_GRP_SPEECH":     "Speech processing",
 		"S_GRP_INFO":       "Info",
@@ -1688,6 +1699,7 @@ var settingsStrings = map[string]map[string]string{
 			"<table class=\"hopt\">" +
 			"<tr><td>Keyboard shortcut</td><td>Press “Change…” and hold whatever is comfortable for you. The app captures this combination across the whole system, so do not pick one that is already taken, such as Ctrl+C. Combinations with the Windows key are the least likely to be taken.</td></tr>" +
 			"<tr><td>Mode</td><td>With “hold”, it records while the keys are held down: let go, and the phrase goes off to be processed. With “toggle”, the first press starts recording and the second stops it. The second mode suits long monologues, when your hand gets tired of holding the keys.</td></tr>" +
+			"<tr><td>Stop on silence</td><td>Only in “toggle” mode. Once you have said something, a pause as long as the one set in “Pause before stopping, ms” ends the recording by itself, as if you had pressed the shortcut again, and the plate says “Stopped on silence”. It never stops before your first words, so you can gather your thoughts after pressing; if you say nothing at all, the “Max recording, s” limit still ends it. With “Press Enter after paste (auto-submit)” on, a pause sends the message, so pick a longer pause.</td></tr>" +
 			"<tr><td>Min recording, ms</td><td>How short a press counts as accidental. Brush the keys for a split second, and the app stays quiet instead of inserting a scrap of a word.</td></tr>" +
 			"<tr><td>Max recording, s</td><td>A safeguard against a forgotten key: the recording stops by itself instead of recording into the void for half an hour.</td></tr>" +
 			"</table>" +
