@@ -1291,7 +1291,7 @@ func init() {
 		"S_POSTAPI_WARN": "⚠ Le texte reconnu de vos dictées partira vers cette adresse. Le son ne part jamais. La clé est stockée chiffrée.",
 		"S_POSTAPI_ASK": "Envoyer le texte reconnu à %s ? Le son reste sur cet ordinateur, mais le texte le quittera.",
 		"S_POSTAPI_BADGE": "serveur externe",
-		"S_NOT_INSTALLED": "non installÃ©",
+		"S_NOT_INSTALLED": "non installé",
 		"S_NAV_STATE": "État", "S_NAV_DICT": "Commandes et comportement", "S_NAV_MIC": "Microphone", "S_NAV_MODELS": "Langues et modèles",
 		"S_NAV_TEXT": "Règles", "S_NAV_TR": "Traduction", "S_NAV_SYSTEM": "Système", "S_NAV_ABOUT": "À propos",
 		"S_STATE_HINT": "maintenez et parlez — le texte arrive là où se trouve le curseur",
