@@ -1732,7 +1732,11 @@ func (a *App) undoLast(ctx context.Context, cfg *Config) {
 	now := time.Now()
 	wnd, _, _ := procGetForegroundWindow.Call()
 	if ok, reason := commands.CanUndo(rec, now, wnd, focusOf(wnd), hook.Typed(), hook.Clicked()); !ok {
-		log.Printf("undo: not done, %s", reason)
+		if rec != nil {
+			log.Printf("undo: not done, %s (keys +%d, clicks +%d, %.1fs after insertion)", reason, hook.Typed()-rec.Typed, hook.Clicked()-rec.Clicked, now.Sub(rec.At).Seconds())
+		} else {
+			log.Printf("undo: not done, %s", reason)
+		}
 		if cfg.Overlay {
 			overlaySet(ovFlashErr, tr("ov.undo."+reason))
 		}
