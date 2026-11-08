@@ -108,7 +108,6 @@ func (s *Store) Clear() error {
 	return s.save()
 }
 
-// Delete drops a single entry, found by the moment it was written.
 func (s *Store) Delete(at int64) error {
 	s.mu.Lock()
 	kept := s.items[:0]
@@ -129,7 +128,6 @@ func (s *Store) Count() int {
 	return len(s.items)
 }
 
-// Stats counts the dictations and their characters since the given moment.
 func (s *Store) Stats(sinceMs int64) (count, chars int) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
