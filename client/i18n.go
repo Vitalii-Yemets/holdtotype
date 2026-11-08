@@ -177,6 +177,10 @@ var msgs = map[string]map[string]string{
 		"mic.check.quiet": "Слишком тихо: пик %.0f дБ — прибавьте громкость микрофона в Windows или сядьте ближе", "mic.check.clipped": "Перегруз: обрезано %.1f%% отсчётов — убавьте громкость микрофона", "mic.check.silent": "Речи не слышно — проверьте, тот ли выбран микрофон и не выключен ли он",
 		"ov.quiet": "Слишком тихо, почти ничего не слышно", "ov.clipped": "Перегруз — звук обрезан",
 		"ov.cmd.cancelled":       "Отменено голосом",
+		"ov.undo.done": "Стёрто: %d симв.", "ov.undo.none": "Нечего стирать", "ov.undo.typed": "Не стёрто: вы печатали или щёлкали после вставки",
+		"ov.undo.window": "Не стёрто: другое окно", "ov.undo.sent": "Не стёрто: текст уже отправлен по Enter", "ov.undo.old": "Не стёрто: вставлено слишком давно",
+		"ov.undo.breaks": "Не стёрто: в тексте были переносы строк", "ov.undo.long": "Не стёрто: текст слишком длинный", "ov.undo.moved": "Стирание прервано: окно сменилось",
+		"ov.shape.next": "Следующая фраза: %s", "cmd.heading": "заголовок", "cmd.list": "список", "cmd.capital": "с заглавной", "cmd.quotes": "в кавычках", "cmd.nostop": "без точки",
 		"ov.silence":             "Тишина — текст не распознан",
 		"ov.stop.silence":        "Остановлено по тишине",
 		"ov.tooshort":            "Слишком коротко — держите клавиши дольше",
@@ -358,6 +362,10 @@ var msgs = map[string]map[string]string{
 		"mic.check.quiet": "Too quiet: peak %.0f dB — raise the microphone level in Windows or sit closer", "mic.check.clipped": "Clipping: %.1f%% of samples cut off — lower the microphone level", "mic.check.silent": "No speech heard — check that the right microphone is picked and not muted",
 		"ov.quiet": "Too quiet, almost nothing was heard", "ov.clipped": "Clipping — the sound was cut off",
 		"ov.cmd.cancelled":       "Cancelled by voice",
+		"ov.undo.done": "Erased: %d characters", "ov.undo.none": "Nothing to erase", "ov.undo.typed": "Not erased: you typed or clicked since",
+		"ov.undo.window": "Not erased: a different window", "ov.undo.sent": "Not erased: it was already sent with Enter", "ov.undo.old": "Not erased: inserted too long ago",
+		"ov.undo.breaks": "Not erased: the text had line breaks", "ov.undo.long": "Not erased: the text is too long", "ov.undo.moved": "Erasing stopped: the window changed",
+		"ov.shape.next": "Next phrase: %s", "cmd.heading": "heading", "cmd.list": "list", "cmd.capital": "capital letter", "cmd.quotes": "in quotes", "cmd.nostop": "no full stop",
 		"ov.silence":             "Silence — nothing recognized",
 		"ov.stop.silence":        "Stopped on silence",
 		"ov.tooshort":            "Too short — hold the keys longer",
@@ -528,18 +536,25 @@ var settingsStrings = map[string]map[string]string{
 		"S_UNIT_HOUR":       "часов",
 		"S_UNIT_DAY":        "дней",
 		"S_HIST_FIND": "Найти в истории…", "S_HIST_EMPTY": "Истории пока нет", "S_HIST_ASK": "Удалить всю историю диктовок?",
-		"S_SEC_CMD": "Голосовые команды", "S_CMD_HINT": "Сказанное вслух превращается в перенос строки, знак или отмену вместо того, чтобы попасть в текст. Проверяются целыми словами, применяются сверху вниз, уже после замен.",
+		"S_SEC_CMD": "Голосовые команды", "S_CMD_HINT": "Сказанное вслух превращается в перенос строки, знак, отмену, стирание последней вставки или оформление фразы вместо того, чтобы попасть в текст. Проверяются целыми словами, применяются сверху вниз, уже после замен; команды оформления работают в конце диктовки.",
 		"S_CMD_ADD": "Добавить команду", "S_CMD_PRESET": "Добавить стандартные", "S_CMD_PH": "фраза, которую вы произнесёте",
 		"S_CMD_NEWLINE": "перенос строки", "S_CMD_PARAGRAPH": "новый абзац", "S_CMD_TEXT": "подставить текст", "S_CMD_CANCEL": "отменить диктовку",
 		"S_CMD_TEXT_PH": "что подставить", "S_CMD_EMPTY": "Команд пока нет", "S_CMD_DEL": "Удалить команду",
 		"S_CMD_P_NEWLINE": "новая строка", "S_CMD_P_PARAGRAPH": "новый абзац", "S_CMD_P_CANCEL": "отмена",
+		"S_CMD_UNDO": "стереть последнюю вставку", "S_CMD_HEADING": "сделать заголовком", "S_CMD_LIST": "сделать списком",
+		"S_CMD_CAPITAL": "первая буква заглавная", "S_CMD_QUOTES": "взять в кавычки", "S_CMD_NOSTOP": "убрать точку в конце",
+		"S_CMD_HEADING_PH": "знак перед заголовком, например #", "S_CMD_LIST_PH": "слова перед последним пунктом, например и", "S_CMD_QUOTES_PH": "открывающая и закрывающая кавычки, например «»",
+		"S_CMD_END_NOTE": "Скажите в конце диктовки; сказанная отдельно, команда оформит следующую.",
+		"S_CMD_UNDO_NOTE": "Скажите отдельно. Стирает последнюю вставку, если вы с тех пор ничего не печатали и не щёлкали, а окно то же; текст, который уже был в окне, не трогается никогда.",
+		"S_CMD_P_UNDO": "удали это", "S_CMD_P_HEADING": "как заголовок", "S_CMD_P_LIST": "как список", "S_CMD_P_CAPITAL": "с большой буквы",
+		"S_CMD_P_QUOTES": "в кавычках", "S_CMD_P_NOSTOP": "без точки", "S_CMD_P_AND": "и", "S_CMD_P_MARKS": "«»",
 		"S_SEC_REPLACE": "Замены после распознавания", "S_REPLACE_HINT": "Что услышано неправильно, заменяется на правильное — сразу после распознавания, до промптов и перевода. Порядок сверху вниз.",
 		"S_REPL_WHOLE_FULL": "Только целые слова", "S_REPL_CASE_FULL": "Учитывать регистр", "S_CMD_ACTION": "Действие",
 		"S_FM_ADD": "Добавить",
 		"S_TIP_REPL_LANG": "Правило работает, только когда диктовка идёт на выбранном языке. «все языки» — работает всегда.",
 		"S_TIP_REPL_CASE": "Большие и маленькие буквы различаются: «гит» и «Гит» — разные слова. Выключено — регистр не важен.",
 		"S_TIP_REPL_WHOLE": "Замена срабатывает, только если текст стоит отдельным словом. Выключено — ищется и внутри других слов: «кот» найдётся в «котлета».",
-		"S_TIP_CMD_ACTION": "Что произойдёт, когда вы произнесёте фразу: перенос строки, новый абзац, подстановка своего текста или отмена диктовки.",
+		"S_TIP_CMD_ACTION": "Что произойдёт, когда вы произнесёте фразу: перенос строки, новый абзац, подстановка своего текста, отмена диктовки, стирание последней вставки или оформление фразы — заголовком, списком, с заглавной буквы, в кавычках или без точки.",
 		"S_LIST_FILTER_PH": "найти…",
 		"S_REPL_DEL": "Удалить замену",
 		"S_LIST_NOTHING": "Ничего не найдено: «%s»",
@@ -1071,13 +1086,20 @@ var settingsStrings = map[string]map[string]string{
 			"<p class=\"hsub\">Замены после распознавания</p>" +
 			"<p>Тоже список слов, но работает иначе: это уже не подсказка, а гарантия. Что встретилось слева — станет тем, что справа. У каждой замены три переключателя: <b>только целые слова</b> (тогда «код» не тронет «кодировку» — обычно это и нужно), <b>учитывать регистр</b> (тогда «Го» и «го» считаются разными) и <b>язык</b> (замена сработает только когда вы диктуете на нём).</p>" +
 			"<p class=\"hsub\">Голосовые команды</p>" +
-			"<p>Фразы, которые не попадают в текст, а выполняют действие. Работают, только если фраза сказана отдельно и целиком: те же слова в середине предложения командой не считаются.</p>" +
+			"<p>Фразы, которые не попадают в текст, а выполняют действие. Перенос строки, новый абзац и своя команда находятся целыми словами в любом месте фразы. Отмена и команды оформления работают только в конце диктовки, стирание — только если сказано отдельно. Команда оформления, сказанная отдельно, применяется к следующей диктовке, и плашка показывает «Следующая фраза: …».</p>" +
 			"<ul>" +
 			"<li><b>«новая строка»</b> — перевести строку;</li>" +
 			"<li><b>«новый абзац»</b> — оставить пустую строку между абзацами;</li>" +
 			"<li><b>«отмена»</b> — выбросить фразу и ничего не вставлять;</li>" +
+			"<li><b>«удали это»</b> — стереть то, что программа вставила последним;</li>" +
+			"<li><b>«как заголовок»</b> — поставить перед фразой знак, по умолчанию #, а после неё пустую строку;</li>" +
+			"<li><b>«как список»</b> — разбить фразу по запятым, точкам с запятой и союзу «и» на строки с дефисом в начале;</li>" +
+			"<li><b>«с большой буквы»</b> — начать фразу с заглавной буквы;</li>" +
+			"<li><b>«в кавычках»</b> — взять фразу в кавычки;</li>" +
+			"<li><b>«без точки»</b> — убрать точку в конце;</li>" +
 			"<li><b>своя команда</b> — вставить заготовку: подпись, адрес, дежурный ответ.</li>" +
 			"</ul>" +
+			"<p>Стирание убирает только то, что последним вставила сама программа, и только если с тех пор ничего не печатали и не щёлкали, окно то же, в тексте не было переносов строк, он не ушёл по Enter и прошло не больше пяти минут. Текст, который уже был в окне, не трогается никогда.</p>" +
 			"<p class=\"wh\" id=\"s-post\">Вкладка «Постобработка»</p>" +
 			"<p>Постобработка — это вторая модель, которая переписывает распознанный текст по вашему указанию. Например: «убери слова-паразиты и повторы», «сделай из этого деловое письмо», «переведи в список». Указание пишется обычными словами и называется промптом.</p>" +
 			"<p>По умолчанию она выключена, и вот почему: это единственный шаг, который заметно замедляет диктовку. Вместо секунды-двух вставка займёт несколько секунд, а на слабой машине и десяток.</p>" +
@@ -1216,18 +1238,25 @@ var settingsStrings = map[string]map[string]string{
 		"S_UNIT_HOUR":       "hours",
 		"S_UNIT_DAY":        "days",
 		"S_HIST_FIND": "Search the history…", "S_HIST_EMPTY": "No history yet", "S_HIST_ASK": "Delete the whole dictation history?",
-		"S_SEC_CMD": "Voice commands", "S_CMD_HINT": "What you say turns into a line break, a symbol or a cancel instead of landing in the text. Matched as whole words, applied top to bottom, after the replacements.",
+		"S_SEC_CMD": "Voice commands", "S_CMD_HINT": "What you say turns into a line break, a symbol, a cancel, erasing the last insertion or a shape for the phrase instead of landing in the text. Matched as whole words, applied top to bottom, after the replacements; shaping commands work at the end of the dictation.",
 		"S_CMD_ADD": "Add a command", "S_CMD_PRESET": "Add the usual ones", "S_CMD_PH": "the phrase you will say",
 		"S_CMD_NEWLINE": "line break", "S_CMD_PARAGRAPH": "new paragraph", "S_CMD_TEXT": "insert text", "S_CMD_CANCEL": "cancel the dictation",
 		"S_CMD_TEXT_PH": "what to insert", "S_CMD_EMPTY": "No commands yet", "S_CMD_DEL": "Delete the command",
 		"S_CMD_P_NEWLINE": "new line", "S_CMD_P_PARAGRAPH": "new paragraph", "S_CMD_P_CANCEL": "cancel",
+		"S_CMD_UNDO": "erase the last insertion", "S_CMD_HEADING": "make a heading", "S_CMD_LIST": "make a list",
+		"S_CMD_CAPITAL": "capital first letter", "S_CMD_QUOTES": "wrap in quotes", "S_CMD_NOSTOP": "drop the full stop",
+		"S_CMD_HEADING_PH": "mark before the heading, e.g. #", "S_CMD_LIST_PH": "words that join the last item, e.g. and", "S_CMD_QUOTES_PH": "opening and closing marks, e.g. “”",
+		"S_CMD_END_NOTE": "Say it at the end of the dictation; said on its own, it shapes the next one.",
+		"S_CMD_UNDO_NOTE": "Say it on its own. Erases what was inserted last if you have not typed or clicked since and the window is the same; text that was already there is never touched.",
+		"S_CMD_P_UNDO": "delete that", "S_CMD_P_HEADING": "as a heading", "S_CMD_P_LIST": "as a list", "S_CMD_P_CAPITAL": "with a capital",
+		"S_CMD_P_QUOTES": "in quotes", "S_CMD_P_NOSTOP": "no full stop", "S_CMD_P_AND": "and", "S_CMD_P_MARKS": "“”",
 		"S_SEC_REPLACE": "Replacements after recognition", "S_REPLACE_HINT": "What was misheard becomes what you meant — right after recognition, before the prompts. Applied from top to bottom.",
 		"S_REPL_WHOLE_FULL": "Whole words only", "S_REPL_CASE_FULL": "Match letter case", "S_CMD_ACTION": "Action",
 		"S_FM_ADD": "Add",
 		"S_TIP_REPL_LANG": "The rule fires only when you dictate in the chosen language. “all languages” — it always fires.",
 		"S_TIP_REPL_CASE": "Capital and small letters matter: “git” and “Git” are different words. Off — case is ignored.",
 		"S_TIP_REPL_WHOLE": "The replacement fires only when the text stands as a separate word. Off — it also matches inside other words: “cat” would match “catalog”.",
-		"S_TIP_CMD_ACTION": "What happens when you say the phrase: a line break, a new paragraph, your own text, or cancelling the dictation.",
+		"S_TIP_CMD_ACTION": "What happens when you say the phrase: a line break, a new paragraph, your own text, cancelling the dictation, erasing the last insertion, or shaping the phrase as a heading, a list, with a capital, in quotes or without the full stop.",
 		"S_LIST_FILTER_PH": "find…",
 		"S_REPL_DEL": "Delete the replacement",
 		"S_LIST_NOTHING": "Nothing found: “%s”",
@@ -1759,13 +1788,20 @@ var settingsStrings = map[string]map[string]string{
 			"<p class=\"hsub\">Replacements after recognition</p>" +
 			"<p>Also a list of words, but it works differently: this is no longer a hint but a guarantee. Whatever appears on the left becomes what is on the right. Each replacement has three settings: <b>Whole words only</b> (then “cat” will not touch “catalog”, which is usually what you want), <b>Match letter case</b> (then “Go” and “go” count as different words) and <b>Rule language</b> (the replacement fires only when you dictate in that language).</p>" +
 			"<p class=\"hsub\">Voice commands</p>" +
-			"<p>Phrases that do not go into the text but perform an action. They work only when the phrase is said on its own and in full: the same words in the middle of a sentence do not count as a command.</p>" +
+			"<p>Phrases that do not go into the text but perform an action. A line break, a new paragraph and your own text are found as whole words anywhere in the phrase. Cancelling and the shaping commands work only at the end of the dictation, erasing only when said on its own. A shaping command said on its own applies to the next dictation, and the plate shows “Next phrase: …”.</p>" +
 			"<ul>" +
 			"<li><b>“new line”</b>: start a new line;</li>" +
 			"<li><b>“new paragraph”</b>: leave an empty line between paragraphs;</li>" +
 			"<li><b>“cancel”</b>: throw the phrase away and insert nothing;</li>" +
+			"<li><b>“delete that”</b>: erase what the program inserted last;</li>" +
+			"<li><b>“as a heading”</b>: put a mark before the phrase, # by default, and an empty line after it;</li>" +
+			"<li><b>“as a list”</b>: split the phrase at commas, semicolons and the word “and” into lines that start with a dash;</li>" +
+			"<li><b>“with a capital”</b>: start the phrase with a capital letter;</li>" +
+			"<li><b>“in quotes”</b>: wrap the phrase in quotation marks;</li>" +
+			"<li><b>“no full stop”</b>: drop the full stop at the end;</li>" +
 			"<li><b>your own command</b>: insert a ready-made piece of text, such as a signature, an address or a standard reply.</li>" +
 			"</ul>" +
+			"<p>Erasing removes only what the program itself inserted last, and only if nothing has been typed or clicked since, the window is the same, the text had no line breaks and was not sent with Enter, and no more than five minutes have passed. Text that was already in the window is never touched.</p>" +
 			"<p class=\"wh\" id=\"s-post\">The “Post-processing” tab</p>" +
 			"<p>Post-processing is a second model that rewrites the recognized text according to your instruction. For example: “remove filler words and repetitions”, “turn this into a business email”, “make it a list”. The instruction is written in ordinary words and is called a prompt.</p>" +
 			"<p>It is off by default, and here is why: it is the only step that noticeably slows dictation down. Instead of a second or two, insertion takes several seconds, and on a weak machine as many as ten.</p>" +

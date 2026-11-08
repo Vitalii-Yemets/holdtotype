@@ -926,23 +926,60 @@ function check(name, actual, expected) {
   check("the add dialog offers the usual ones as a third button", d.getElementById("fm_extra").textContent, "Add the usual ones");
   check("and grows wider to fit three buttons", d.querySelector(".modal").className.includes("wide"), true);
   d.getElementById("fm_extra").click(); await sleep(300);
-  check("the usual commands can be added in one click", d.querySelectorAll("#cmdbody .cmdchip").length, 3);
+  check("the usual commands can be added in one click", d.querySelectorAll("#cmdbody .cmdchip").length, 9);
   check("and the dialog closes itself", !!d.querySelector(".modal-bg"), false);
-  check("they carry the phrases of this language", w.lastSaveForm.commands.map((c) => c.phrase), ["new line", "new paragraph", "cancel"]);
-  check("and the actions that go with them", w.lastSaveForm.commands.map((c) => c.action), ["newline", "paragraph", "cancel"]);
+  check("they carry the phrases of this language", w.lastSaveForm.commands.map((c) => c.phrase),
+    ["new line", "new paragraph", "cancel", "delete that", "as a heading", "as a list", "with a capital", "in quotes", "no full stop"]);
+  check("and the actions that go with them", w.lastSaveForm.commands.map((c) => c.action),
+    ["newline", "paragraph", "cancel", "undo", "heading", "list", "capital", "quotes", "nostop"]);
+  check("the shaping ones come with their parameters", w.lastSaveForm.commands.map((c) => c.text), ["", "", "", "", "# ", "and", "", "“”", ""]);
+  check("a chip shows the parameter after the action", [...d.querySelectorAll("#cmdbody .cpmeta")].slice(3, 8).map((m) => m.textContent),
+    ["/ erase the last insertion", "/ make a heading · # ", "/ make a list · and", "/ capital first letter", "/ wrap in quotes · “”"]);
   d.getElementById("cmd_add").click(); await sleep(120);
   d.getElementById("fm_extra").click(); await sleep(300);
-  check("adding them twice changes nothing", d.querySelectorAll("#cmdbody .cmdchip").length, 3);
+  check("adding them twice changes nothing", d.querySelectorAll("#cmdbody .cmdchip").length, 9);
   d.querySelector("#cmdbody .cmdchip .redit").click(); await sleep(120);
-  check("a command with no text keeps its field hidden", d.querySelector(".modal .ctext").closest(".fmrow").style.display, "none");
+  const crow = () => d.querySelector(".modal .ctext").closest(".fmrow").style.display;
+  const cph = () => d.querySelector(".modal .ctext").placeholder;
+  const cnote = () => d.getElementById("cmd_note").textContent;
+  check("a command with no text keeps its field hidden", crow(), "none");
   const cact = d.querySelector(".modal .caction");
-  cact.value = "text"; cact.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(60);
-  check("choosing insert-text reveals the field", d.querySelector(".modal .ctext").closest(".fmrow").style.display, "");
+  check("the action list offers ten actions", [...cact.options].map((o) => o.textContent),
+    ["line break", "new paragraph", "insert text", "cancel the dictation", "erase the last insertion", "make a heading", "make a list", "capital first letter", "wrap in quotes", "drop the full stop"]);
+  check("a line break carries no note", cnote(), "");
+  const pickAct = async (v) => {
+    const s = d.querySelector(".modal .caction");
+    s.value = v; s.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(60);
+  };
+  await pickAct("undo");
+  check("erasing keeps the field hidden", crow(), "none");
+  check("and says when it works", cnote(), "Say it on its own. Erases what was inserted last if you have not typed or clicked since and the window is the same; text that was already there is never touched.");
+  await pickAct("heading");
+  check("a heading reveals the field with its own hint", [crow(), cph()], ["", "mark before the heading, e.g. #"]);
+  check("and a shaping command says where to say it", cnote(), "Say it at the end of the dictation; said on its own, it shapes the next one.");
+  await pickAct("list");
+  check("a list asks for the joining words", [crow(), cph()], ["", "words that join the last item, e.g. and"]);
+  await pickAct("quotes");
+  check("quotes ask for the marks", [crow(), cph()], ["", "opening and closing marks, e.g. “”"]);
+  await pickAct("nostop");
+  check("dropping the full stop needs no field", [crow(), cnote()], ["none", "Say it at the end of the dictation; said on its own, it shapes the next one."]);
+  await pickAct("text");
+  check("choosing insert-text reveals the field", [crow(), cph(), cnote()], ["", "what to insert", ""]);
   d.querySelector(".modal .ctext").value = ":)";
   d.querySelector(".modal .btn.yes").click(); await sleep(300);
   check("the action is saved with its text", [w.lastSaveForm.commands[0].action, w.lastSaveForm.commands[0].text], ["text", ":)"]);
   d.querySelectorAll("#cmdbody .rdel")[0].click(); await sleep(300);
-  check("a command can be deleted", w.lastSaveForm.commands.length, 2);
+  check("a command can be deleted", w.lastSaveForm.commands.length, 8);
+  d.querySelectorAll("#cmdbody .cmdchip .redit")[4].click(); await sleep(120);
+  check("a list opens with its joining word", d.querySelector(".modal .ctext").value, "and");
+  await pickAct("quotes");
+  check("another action does not inherit it", d.querySelector(".modal .ctext").value, "");
+  await pickAct("list");
+  check("and coming back brings it back", d.querySelector(".modal .ctext").value, "and");
+  d.querySelector(".modal .ctext").value = "and, or";
+  d.querySelector(".modal .btn.yes").click(); await sleep(300);
+  check("a list is saved with its parameter", [w.lastSaveForm.commands[4].action, w.lastSaveForm.commands[4].text], ["list", "and, or"]);
+  check("and its chip shows it", d.querySelectorAll("#cmdbody .cpmeta")[4].textContent, "/ make a list · and, or");
 
   check("the file buttons are gone", [!!d.getElementById("lists_export"), !!d.getElementById("lists_import")], [false, false]);
   const cfilter = d.getElementById("cmd_filter");
@@ -952,7 +989,7 @@ function check(name, actual, expected) {
   cfilter.value = "zzz"; cfilter.dispatchEvent(new w.Event("input", { bubbles: true })); await sleep(80);
   check("a fruitless search says so with the words used", d.querySelector("#cmdbody .ruleempty").textContent, "Nothing found: “zzz”");
   d.getElementById("cmd_filter_clear").click(); await sleep(80);
-  check("the cross brings every chip back", d.querySelectorAll("#cmdbody .cmdchip").length, 2);
+  check("the cross brings every chip back", d.querySelectorAll("#cmdbody .cmdchip").length, 8);
   check("and the not-found note is gone", !!d.querySelector("#cmdbody .ruleempty"), false);
 
   const pb = d.getElementById("profbody");

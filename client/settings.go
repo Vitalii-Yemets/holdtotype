@@ -1111,6 +1111,10 @@ func settingsHTML(cfg *Config, tab string) string {
 		"cmdnewline": "S_CMD_NEWLINE", "cmdparagraph": "S_CMD_PARAGRAPH", "cmdtext": "S_CMD_TEXT", "cmdcancel": "S_CMD_CANCEL",
 		"cmdtextph":   "S_CMD_TEXT_PH",
 		"cmdpnewline": "S_CMD_P_NEWLINE", "cmdpparagraph": "S_CMD_P_PARAGRAPH", "cmdpcancel": "S_CMD_P_CANCEL", "cmdpreset": "S_CMD_PRESET",
+		"cmdundo": "S_CMD_UNDO", "cmdheading": "S_CMD_HEADING", "cmdlist": "S_CMD_LIST", "cmdcapital": "S_CMD_CAPITAL", "cmdquotes": "S_CMD_QUOTES", "cmdnostop": "S_CMD_NOSTOP",
+		"cmdheadingph": "S_CMD_HEADING_PH", "cmdlistph": "S_CMD_LIST_PH", "cmdquotesph": "S_CMD_QUOTES_PH", "cmdendnote": "S_CMD_END_NOTE", "cmdundonote": "S_CMD_UNDO_NOTE",
+		"cmdpundo": "S_CMD_P_UNDO", "cmdpheading": "S_CMD_P_HEADING", "cmdplist": "S_CMD_P_LIST", "cmdpcapital": "S_CMD_P_CAPITAL", "cmdpquotes": "S_CMD_P_QUOTES", "cmdpnostop": "S_CMD_P_NOSTOP",
+		"cmdpand": "S_CMD_P_AND", "cmdpmarks": "S_CMD_P_MARKS",
 		"unitmin": "S_UNIT_MIN", "unithour": "S_UNIT_HOUR", "unitday": "S_UNIT_DAY",
 		"depwhisper": "S_DEP_WHISPER", "depllama": "S_DEP_LLAMA", "depsherpa": "S_DEP_SHERPA", "depggml": "S_DEP_GGML",
 		"deponnx": "S_DEP_ONNX", "depwebview": "S_DEP_WEBVIEW", "depwv2rt": "S_DEP_WV2RT", "depmalgo": "S_DEP_MALGO",
@@ -1253,6 +1257,8 @@ button.cap.close:hover{background:var(--badbg);color:var(--bad);border-color:var
 .note.bad:empty{display:none}
 .note.ok{font-size:11px;color:var(--green);line-height:1.5;padding:2px 0 6px}
 .note.ok:empty{display:none}
+.note.dim{font-size:11px;color:var(--dim);line-height:1.5;padding:2px 0 6px}
+.note.dim:empty{display:none}
 .omni{margin-left:auto;display:flex;align-items:center;gap:8px;flex:0 1 auto;min-width:0;width:min(320px,38%);border:1px solid var(--line);border-radius:calc(var(--r) * .7);background:var(--panel);padding:4px 9px}
 .omni:focus-within{border-color:var(--dim);box-shadow:var(--glow)}
 .omni input[type=text]{flex:1;min-width:0;width:auto;background:none;border:0;box-shadow:none;outline:none;color:var(--green);font:inherit;font-size:11.5px;padding:0;user-select:text;-webkit-user-select:text}
@@ -5645,8 +5651,14 @@ function listChip(text, meta, onEdit, onDel){
   chip.appendChild(del);
   return chip;
 }
+const cmdActions = ["newline", "paragraph", "text", "cancel", "undo", "heading", "list", "capital", "quotes", "nostop"];
+const cmdShapes = ["heading", "list", "capital", "quotes", "nostop"];
+const cmdParamPh = {text: "cmdtextph", heading: "cmdheadingph", list: "cmdlistph", quotes: "cmdquotesph"};
 function cmdActionLabel(a){
-  return a === "paragraph" ? L.cmdparagraph : a === "text" ? L.cmdtext : a === "cancel" ? L.cmdcancel : L.cmdnewline;
+  return L["cmd" + (cmdActions.includes(a) ? a : "newline")];
+}
+function cmdNote(a){
+  return a === "undo" ? L.cmdundonote : cmdShapes.includes(a) ? L.cmdendnote : "";
 }
 async function editCmd(i){
   const c = i >= 0 ? {...cmds[i]} : {id: "c" + Date.now(), phrase: "", action: "newline", text: ""};
@@ -5654,21 +5666,38 @@ async function editCmd(i){
   phrase.type = "text"; phrase.className = "cphrase"; phrase.value = c.phrase || ""; phrase.placeholder = L.cmdph;
   const act = document.createElement("select");
   act.className = "caction";
-  ruleOpts(act, [["newline", L.cmdnewline], ["paragraph", L.cmdparagraph], ["text", L.cmdtext], ["cancel", L.cmdcancel]], c.action || "newline");
+  ruleOpts(act, cmdActions.map(a=>[a, cmdActionLabel(a)]), c.action || "newline");
   const txt = document.createElement("input");
-  txt.type = "text"; txt.className = "ctext"; txt.value = c.text || ""; txt.placeholder = L.cmdtextph;
+  txt.type = "text"; txt.className = "ctext"; txt.value = c.text || "";
   const txtRow = fmRow(clearWrap(txt));
-  txtRow.style.display = (c.action === "text") ? "" : "none";
-  act.onchange = ()=>{ txtRow.style.display = (act.value === "text") ? "" : "none"; };
+  const note = document.createElement("div");
+  note.className = "note dim"; note.id = "cmd_note";
+  const kept = {[act.value]: txt.value};
+  let was = act.value;
+  const sync = ()=>{
+    const ph = cmdParamPh[act.value];
+    txtRow.style.display = ph ? "" : "none";
+    txt.placeholder = ph ? L[ph] : "";
+    note.textContent = cmdNote(act.value);
+  };
+  act.onchange = ()=>{
+    kept[was] = txt.value;
+    was = act.value;
+    txt.value = kept[was] || "";
+    txt.dispatchEvent(new Event("input", {bubbles: true}));
+    sync();
+  };
+  sync();
   const ok = await formModal(i >= 0 ? L.fmsave : L.fmadd, body=>{
     body.appendChild(fmRow(act, L.cmdaction, L.tipcmdaction));
     body.appendChild(fmRow(clearWrap(phrase)));
     body.appendChild(txtRow);
+    body.appendChild(note);
   }, i >= 0 ? null : {text: L.cmdpreset, onClick: addPresetCmds}, i >= 0 ? L.fmtcmdedit : L.fmtcmdadd);
   if(!ok) return;
   c.phrase = phrase.value.trim();
   c.action = act.value;
-  c.text = act.value === "text" ? txt.value : "";
+  c.text = cmdParamPh[act.value] ? txt.value : "";
   if(!c.phrase) return;
   if(i >= 0) cmds[i] = c; else cmds.push(c);
   renderCmds();
@@ -5688,7 +5717,7 @@ function renderCmds(){
   const q = cmdFilterVal();
   let shown = 0;
   cmds.forEach((c, i)=>{
-    const meta = cmdActionLabel(c.action) + (c.action === "text" && c.text ? " · " + c.text : "");
+    const meta = cmdActionLabel(c.action) + (cmdParamPh[c.action] && c.text ? " · " + c.text : "");
     if(q && !((c.phrase || "") + " " + meta).toLowerCase().includes(q)) return;
     shown++;
     body.appendChild(listChip(c.phrase || "—", meta,
@@ -5699,9 +5728,13 @@ function renderCmds(){
 }
 function addPresetCmds(){
   const known = cmds.map(c=>(c.phrase || "").toLowerCase());
-  [["newline", L.cmdpnewline], ["paragraph", L.cmdpparagraph], ["cancel", L.cmdpcancel]].forEach(([action, phrase], n)=>{
+  [
+    ["newline", L.cmdpnewline], ["paragraph", L.cmdpparagraph], ["cancel", L.cmdpcancel], ["undo", L.cmdpundo],
+    ["heading", L.cmdpheading, "# "], ["list", L.cmdplist, L.cmdpand], ["capital", L.cmdpcapital],
+    ["quotes", L.cmdpquotes, L.cmdpmarks], ["nostop", L.cmdpnostop]
+  ].forEach(([action, phrase, text], n)=>{
     if(!phrase || known.includes(phrase.toLowerCase())) return;
-    cmds.push({id: "c" + Date.now() + n, phrase: phrase, action: action, text: ""});
+    cmds.push({id: "c" + Date.now() + n, phrase: phrase, action: action, text: text || ""});
   });
   renderCmds();
   applyNow();

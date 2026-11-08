@@ -30,6 +30,10 @@ func init() {
 		"mic.check.quiet": "Zu leise: Spitze %.0f dB — Mikrofonpegel in Windows anheben oder näher sitzen", "mic.check.clipped": "Übersteuert: %.1f%% der Abtastwerte abgeschnitten — Mikrofonpegel senken", "mic.check.silent": "Keine Sprache gehört — prüfen Sie, ob das richtige Mikrofon gewählt und nicht stumm ist",
 		"ov.quiet": "Zu leise, es war fast nichts zu hören", "ov.clipped": "Übersteuert — der Ton wurde abgeschnitten",
 		"ov.cmd.cancelled": "Per Sprache abgebrochen",
+		"ov.undo.done": "Gelöscht: %d Zeichen", "ov.undo.none": "Nichts zu löschen", "ov.undo.typed": "Nicht gelöscht: seitdem wurde getippt oder geklickt",
+		"ov.undo.window": "Nicht gelöscht: ein anderes Fenster", "ov.undo.sent": "Nicht gelöscht: schon mit Enter gesendet", "ov.undo.old": "Nicht gelöscht: die Einfügung ist zu alt",
+		"ov.undo.breaks": "Nicht gelöscht: der Text hatte Zeilenumbrüche", "ov.undo.long": "Nicht gelöscht: der Text ist zu lang", "ov.undo.moved": "Löschen abgebrochen: das Fenster hat gewechselt",
+		"ov.shape.next": "Nächste Phrase: %s", "cmd.heading": "Überschrift", "cmd.list": "Liste", "cmd.capital": "großgeschrieben", "cmd.quotes": "in Anführungszeichen", "cmd.nostop": "ohne Punkt",
 		"ov.silence":       "Stille — nichts erkannt", "ov.server.loading": "Server lädt noch",
 		"ov.stop.silence":  "Bei Stille beendet",
 		"ov.tooshort":  "Zu kurz — Tasten länger halten",
@@ -131,6 +135,10 @@ func init() {
 		"mic.check.quiet": "Trop faible : crête %.0f dB — montez le niveau du micro dans Windows ou rapprochez-vous", "mic.check.clipped": "Saturation : %.1f%% des échantillons écrêtés — baissez le niveau du micro", "mic.check.silent": "Aucune parole entendue — vérifiez que le bon micro est choisi et qu'il n'est pas coupé",
 		"ov.quiet": "Trop faible, presque rien n'a été entendu", "ov.clipped": "Saturation — le son a été écrêté",
 		"ov.cmd.cancelled": "Annulé à la voix",
+		"ov.undo.done": "Effacé : %d caractères", "ov.undo.none": "Rien à effacer", "ov.undo.typed": "Non effacé : vous avez tapé ou cliqué depuis",
+		"ov.undo.window": "Non effacé : une autre fenêtre", "ov.undo.sent": "Non effacé : déjà envoyé avec Entrée", "ov.undo.old": "Non effacé : inséré il y a trop longtemps",
+		"ov.undo.breaks": "Non effacé : le texte contenait des sauts de ligne", "ov.undo.long": "Non effacé : le texte est trop long", "ov.undo.moved": "Effacement interrompu : la fenêtre a changé",
+		"ov.shape.next": "Phrase suivante : %s", "cmd.heading": "titre", "cmd.list": "liste", "cmd.capital": "majuscule", "cmd.quotes": "entre guillemets", "cmd.nostop": "sans point",
 		"ov.silence":       "Silence — rien reconnu", "ov.server.loading": "Le serveur charge encore",
 		"ov.stop.silence":  "Arrêté sur un silence",
 		"ov.tooshort":  "Trop court — maintenez les touches plus longtemps",
@@ -232,6 +240,10 @@ func init() {
 		"mic.check.quiet": "Demasiado bajo: pico %.0f dB — sube el nivel del micrófono en Windows o acércate", "mic.check.clipped": "Saturación: %.1f%% de muestras recortadas — baja el nivel del micrófono", "mic.check.silent": "No se oye voz — comprueba que el micrófono elegido es el correcto y no está silenciado",
 		"ov.quiet": "Demasiado bajo, casi no se oyó nada", "ov.clipped": "Saturación: el sonido se recortó",
 		"ov.cmd.cancelled": "Cancelado por voz",
+		"ov.undo.done": "Borrado: %d caracteres", "ov.undo.none": "Nada que borrar", "ov.undo.typed": "No se borró: escribiste o hiciste clic después",
+		"ov.undo.window": "No se borró: otra ventana", "ov.undo.sent": "No se borró: ya se envió con Enter", "ov.undo.old": "No se borró: se insertó hace demasiado",
+		"ov.undo.breaks": "No se borró: el texto tenía saltos de línea", "ov.undo.long": "No se borró: el texto es demasiado largo", "ov.undo.moved": "Borrado interrumpido: la ventana cambió",
+		"ov.shape.next": "Siguiente frase: %s", "cmd.heading": "título", "cmd.list": "lista", "cmd.capital": "mayúscula", "cmd.quotes": "entre comillas", "cmd.nostop": "sin punto",
 		"ov.silence":       "Silencio — nada reconocido", "ov.server.loading": "El servidor aún carga",
 		"ov.stop.silence":  "Detenido por silencio",
 		"ov.tooshort":  "Demasiado corto: mantén las teclas más tiempo",
@@ -333,6 +345,10 @@ func init() {
 		"mic.check.quiet": "Troppo basso: picco %.0f dB — alza il livello del microfono in Windows o avvicinati", "mic.check.clipped": "Distorsione: %.1f%% dei campioni tagliati — abbassa il livello del microfono", "mic.check.silent": "Nessuna voce sentita — controlla che sia scelto il microfono giusto e non sia muto",
 		"ov.quiet": "Troppo basso, non si è sentito quasi nulla", "ov.clipped": "Distorsione: il suono è stato tagliato",
 		"ov.cmd.cancelled": "Annullato a voce",
+		"ov.undo.done": "Cancellati: %d caratteri", "ov.undo.none": "Niente da cancellare", "ov.undo.typed": "Non cancellato: hai scritto o cliccato nel frattempo",
+		"ov.undo.window": "Non cancellato: un'altra finestra", "ov.undo.sent": "Non cancellato: già inviato con Invio", "ov.undo.old": "Non cancellato: inserito troppo tempo fa",
+		"ov.undo.breaks": "Non cancellato: il testo andava a capo", "ov.undo.long": "Non cancellato: il testo è troppo lungo", "ov.undo.moved": "Cancellazione interrotta: la finestra è cambiata",
+		"ov.shape.next": "Prossima frase: %s", "cmd.heading": "titolo", "cmd.list": "elenco", "cmd.capital": "maiuscola", "cmd.quotes": "tra virgolette", "cmd.nostop": "senza punto",
 		"ov.silence":       "Silenzio — nulla riconosciuto", "ov.server.loading": "Il server sta ancora caricando",
 		"ov.stop.silence":  "Fermato dal silenzio",
 		"ov.tooshort":  "Troppo breve — tieni premuti i tasti più a lungo",
@@ -434,6 +450,10 @@ func init() {
 		"mic.check.quiet": "Za cicho: szczyt %.0f dB — podnieś poziom mikrofonu w Windows albo usiądź bliżej", "mic.check.clipped": "Przesterowanie: obcięto %.1f%% próbek — zmniejsz poziom mikrofonu", "mic.check.silent": "Nie słychać mowy — sprawdź, czy wybrany jest właściwy mikrofon i czy nie jest wyciszony",
 		"ov.quiet": "Za cicho, prawie nic nie było słychać", "ov.clipped": "Przesterowanie — dźwięk został obcięty",
 		"ov.cmd.cancelled": "Anulowano głosem",
+		"ov.undo.done": "Usunięto: %d znaków", "ov.undo.none": "Nie ma czego usunąć", "ov.undo.typed": "Nie usunięto: od tamtej pory coś wpisano lub kliknięto",
+		"ov.undo.window": "Nie usunięto: inne okno", "ov.undo.sent": "Nie usunięto: już wysłano Enterem", "ov.undo.old": "Nie usunięto: wstawiono zbyt dawno",
+		"ov.undo.breaks": "Nie usunięto: tekst miał złamania wiersza", "ov.undo.long": "Nie usunięto: tekst jest za długi", "ov.undo.moved": "Usuwanie przerwane: okno się zmieniło",
+		"ov.shape.next": "Następna fraza: %s", "cmd.heading": "nagłówek", "cmd.list": "lista", "cmd.capital": "wielka litera", "cmd.quotes": "w cudzysłowie", "cmd.nostop": "bez kropki",
 		"ov.silence":       "Cisza — nic nie rozpoznano", "ov.server.loading": "Serwer wciąż się ładuje",
 		"ov.stop.silence":  "Zatrzymano po ciszy",
 		"ov.tooshort":  "Za krótko — przytrzymaj klawisze dłużej",
@@ -538,18 +558,25 @@ func init() {
 		"S_UNIT_HOUR": "Stunden",
 		"S_UNIT_DAY": "Tage",
 		"S_HIST_FIND": "Im Verlauf suchen…", "S_HIST_EMPTY": "Noch kein Verlauf", "S_HIST_ASK": "Den gesamten Diktatverlauf löschen?",
-		"S_SEC_CMD": "Sprachbefehle", "S_CMD_HINT": "Gesagtes wird zu einem Zeilenumbruch, einem Zeichen oder einem Abbruch, statt im Text zu landen. Als ganze Wörter erkannt, von oben nach unten angewendet, nach den Ersetzungen.",
+		"S_SEC_CMD": "Sprachbefehle", "S_CMD_HINT": "Gesagtes wird zu einem Zeilenumbruch, einem Zeichen, einem Abbruch, dem Löschen der letzten Einfügung oder einer Form für die Phrase, statt im Text zu landen. Als ganze Wörter erkannt, von oben nach unten angewendet, nach den Ersetzungen; Formbefehle wirken am Ende des Diktats.",
 		"S_CMD_ADD": "Befehl hinzufügen", "S_CMD_PRESET": "Übliche hinzufügen", "S_CMD_PH": "die Phrase, die Sie sagen werden",
 		"S_CMD_NEWLINE": "Zeilenumbruch", "S_CMD_PARAGRAPH": "neuer Absatz", "S_CMD_TEXT": "Text einfügen", "S_CMD_CANCEL": "Diktat abbrechen",
 		"S_CMD_TEXT_PH": "was einfügen", "S_CMD_EMPTY": "Noch keine Befehle", "S_CMD_DEL": "Befehl löschen",
 		"S_CMD_P_NEWLINE": "neue Zeile", "S_CMD_P_PARAGRAPH": "neuer Absatz", "S_CMD_P_CANCEL": "abbrechen",
+		"S_CMD_UNDO": "letzte Einfügung löschen", "S_CMD_HEADING": "als Überschrift setzen", "S_CMD_LIST": "als Liste setzen",
+		"S_CMD_CAPITAL": "großer Anfangsbuchstabe", "S_CMD_QUOTES": "in Anführungszeichen setzen", "S_CMD_NOSTOP": "Schlusspunkt weglassen",
+		"S_CMD_HEADING_PH": "Zeichen vor der Überschrift, z. B. #", "S_CMD_LIST_PH": "Wörter vor dem letzten Eintrag, z. B. und", "S_CMD_QUOTES_PH": "öffnendes und schließendes Zeichen, z. B. „“",
+		"S_CMD_END_NOTE": "Am Ende des Diktats sagen; allein gesagt, formt der Befehl das nächste.",
+		"S_CMD_UNDO_NOTE": "Allein sagen. Löscht die letzte Einfügung, wenn Sie seitdem nichts getippt oder geklickt haben und das Fenster dasselbe ist; Text, der schon dort stand, wird nie angefasst.",
+		"S_CMD_P_UNDO": "lösch das", "S_CMD_P_HEADING": "als Überschrift", "S_CMD_P_LIST": "als Liste", "S_CMD_P_CAPITAL": "großgeschrieben",
+		"S_CMD_P_QUOTES": "in Anführungszeichen", "S_CMD_P_NOSTOP": "ohne Punkt", "S_CMD_P_AND": "und", "S_CMD_P_MARKS": "„“",
 		"S_SEC_REPLACE": "Ersetzungen nach der Erkennung", "S_REPLACE_HINT": "Falsch Gehörtes wird zu dem, was gemeint war — direkt nach der Erkennung, vor den Prompts. Von oben nach unten angewendet.",
 		"S_REPL_WHOLE_FULL": "Nur ganze Wörter", "S_REPL_CASE_FULL": "Groß-/Kleinschreibung beachten", "S_CMD_ACTION": "Aktion",
 		"S_FM_ADD": "Hinzufügen",
 		"S_TIP_REPL_LANG": "Die Regel greift nur, wenn Sie in der gewählten Sprache diktieren. „alle Sprachen“ — sie greift immer.",
 		"S_TIP_REPL_CASE": "Groß- und Kleinbuchstaben zählen: „git“ und „Git“ sind verschiedene Wörter. Aus — die Schreibung ist egal.",
 		"S_TIP_REPL_WHOLE": "Die Ersetzung greift nur, wenn der Text als eigenes Wort steht. Aus — sie trifft auch innerhalb anderer Wörter.",
-		"S_TIP_CMD_ACTION": "Was passiert, wenn Sie die Phrase sagen: Zeilenumbruch, neuer Absatz, eigener Text oder Abbruch des Diktats.",
+		"S_TIP_CMD_ACTION": "Was passiert, wenn Sie die Phrase sagen: Zeilenumbruch, neuer Absatz, eigener Text, Abbruch des Diktats, Löschen der letzten Einfügung oder eine Form für die Phrase — Überschrift, Liste, großer Anfangsbuchstabe, Anführungszeichen oder ohne Schlusspunkt.",
 		"S_LIST_FILTER_PH": "suchen…",
 		"S_REPL_DEL": "Ersetzung löschen",
 		"S_LIST_NOTHING": "Nichts gefunden: „%s“",
@@ -990,13 +1017,20 @@ func init() {
 			"<p class=\"hsub\">Ersetzungen nach der Erkennung</p>" +
 			"<p>Auch eine Liste von Wörtern, aber sie arbeitet anders: Das ist kein Hinweis mehr, sondern eine Garantie. Was links steht, wird zu dem, was rechts steht. Jede Ersetzung hat drei Schalter: <b>Nur ganze Wörter</b> (dann rührt „Bahn“ das Wort „Bahnhof“ nicht an, und meist ist genau das gewollt), <b>Groß-/Kleinschreibung beachten</b> (dann gelten „Go“ und „go“ als verschiedene Wörter) und <b>Sprache der Regel</b> (die Ersetzung greift nur, wenn Sie in dieser Sprache diktieren).</p>" +
 			"<p class=\"hsub\">Sprachbefehle</p>" +
-			"<p>Wendungen, die nicht im Text landen, sondern eine Aktion auslösen. Sie wirken nur, wenn die Wendung für sich allein und vollständig gesagt wird: Dieselben Worte mitten im Satz zählen nicht als Befehl.</p>" +
+			"<p>Wendungen, die nicht im Text landen, sondern eine Aktion auslösen. Zeilenumbruch, neuer Absatz und eigener Text werden als ganze Wörter an jeder Stelle des Satzes erkannt. Der Abbruch und die Formbefehle wirken nur am Ende des Diktats, das Löschen nur, wenn es allein gesagt wird. Ein Formbefehl, allein gesagt, gilt für das nächste Diktat, und die Leiste zeigt „Nächste Phrase: …“.</p>" +
 			"<ul>" +
 			"<li><b>„neue Zeile“</b>: in eine neue Zeile wechseln;</li>" +
 			"<li><b>„neuer Absatz“</b>: eine Leerzeile zwischen Absätzen lassen;</li>" +
 			"<li><b>„abbrechen“</b>: den Satz verwerfen und nichts einfügen;</li>" +
+			"<li><b>„lösch das“</b>: löschen, was das Programm zuletzt eingefügt hat;</li>" +
+			"<li><b>„als Überschrift“</b>: ein Zeichen vor den Satz setzen, standardmäßig #, und danach eine Leerzeile;</li>" +
+			"<li><b>„als Liste“</b>: den Satz an Kommas, Semikolons und am Wort „und“ in Zeilen mit einem Strich am Anfang teilen;</li>" +
+			"<li><b>„großgeschrieben“</b>: den Satz mit einem Großbuchstaben beginnen;</li>" +
+			"<li><b>„in Anführungszeichen“</b>: den Satz in Anführungszeichen setzen;</li>" +
+			"<li><b>„ohne Punkt“</b>: den Punkt am Ende weglassen;</li>" +
 			"<li><b>eigener Befehl</b>: einen vorbereiteten Text einfügen, etwa eine Signatur, eine Adresse oder eine Standardantwort.</li>" +
 			"</ul>" +
+			"<p>Das Löschen entfernt nur, was das Programm selbst zuletzt eingefügt hat, und nur, wenn seitdem nichts getippt oder geklickt wurde, das Fenster dasselbe ist, der Text keine Zeilenumbrüche hatte, nicht mit Enter gesendet wurde und höchstens fünf Minuten alt ist. Text, der schon im Fenster stand, wird nie angefasst.</p>" +
 			"<p class=\"wh\" id=\"s-post\">Die Registerkarte „Nachbearbeitung“</p>" +
 			"<p>Die Nachbearbeitung ist ein zweites Modell, das den erkannten Text nach Ihrer Anweisung umschreibt. Zum Beispiel: „entferne Füllwörter und Wiederholungen“, „mach daraus eine geschäftliche E-Mail“, „mach daraus eine Liste“. Die Anweisung wird in gewöhnlichen Worten geschrieben und heißt Prompt.</p>" +
 			"<p>Standardmäßig ist sie ausgeschaltet, und zwar aus diesem Grund: Sie ist der einzige Schritt, der das Diktat spürbar verlangsamt. Statt ein, zwei Sekunden dauert das Einfügen mehrere Sekunden, auf einem schwachen Rechner auch zehn.</p>" +
@@ -1099,18 +1133,25 @@ func init() {
 		"S_UNIT_HOUR": "heures",
 		"S_UNIT_DAY": "jours",
 		"S_HIST_FIND": "Chercher dans l'historique…", "S_HIST_EMPTY": "Pas encore d'historique", "S_HIST_ASK": "Supprimer tout l'historique des dictées ?",
-		"S_SEC_CMD": "Commandes vocales", "S_CMD_HINT": "Ce que vous dites devient un saut de ligne, un signe ou une annulation au lieu d'atterrir dans le texte. Reconnues en mots entiers, appliquées de haut en bas, après les remplacements.",
+		"S_SEC_CMD": "Commandes vocales", "S_CMD_HINT": "Ce que vous dites devient un saut de ligne, un signe, une annulation, l'effacement de la dernière insertion ou une mise en forme de la phrase au lieu d'atterrir dans le texte. Reconnues en mots entiers, appliquées de haut en bas, après les remplacements ; les commandes de mise en forme agissent à la fin de la dictée.",
 		"S_CMD_ADD": "Ajouter une commande", "S_CMD_PRESET": "Ajouter les habituelles", "S_CMD_PH": "la phrase que vous direz",
 		"S_CMD_NEWLINE": "saut de ligne", "S_CMD_PARAGRAPH": "nouveau paragraphe", "S_CMD_TEXT": "insérer du texte", "S_CMD_CANCEL": "annuler la dictée",
 		"S_CMD_TEXT_PH": "quoi insérer", "S_CMD_EMPTY": "Aucune commande pour l'instant", "S_CMD_DEL": "Supprimer la commande",
 		"S_CMD_P_NEWLINE": "nouvelle ligne", "S_CMD_P_PARAGRAPH": "nouveau paragraphe", "S_CMD_P_CANCEL": "annuler",
+		"S_CMD_UNDO": "effacer la dernière insertion", "S_CMD_HEADING": "mettre en titre", "S_CMD_LIST": "mettre en liste",
+		"S_CMD_CAPITAL": "majuscule initiale", "S_CMD_QUOTES": "mettre entre guillemets", "S_CMD_NOSTOP": "retirer le point final",
+		"S_CMD_HEADING_PH": "signe avant le titre, p. ex. #", "S_CMD_LIST_PH": "mots qui joignent le dernier élément, p. ex. et", "S_CMD_QUOTES_PH": "signes d'ouverture et de fermeture, p. ex. « »",
+		"S_CMD_END_NOTE": "À dire à la fin de la dictée ; dite seule, elle met en forme la suivante.",
+		"S_CMD_UNDO_NOTE": "À dire seule. Efface la dernière insertion si vous n'avez ni tapé ni cliqué depuis et que la fenêtre est la même ; le texte déjà présent n'est jamais touché.",
+		"S_CMD_P_UNDO": "efface ça", "S_CMD_P_HEADING": "en titre", "S_CMD_P_LIST": "en liste", "S_CMD_P_CAPITAL": "avec majuscule",
+		"S_CMD_P_QUOTES": "entre guillemets", "S_CMD_P_NOSTOP": "sans point", "S_CMD_P_AND": "et", "S_CMD_P_MARKS": "«  »",
 		"S_SEC_REPLACE": "Remplacements après la reconnaissance", "S_REPLACE_HINT": "Ce qui a été mal entendu devient ce que vous vouliez dire — juste après la reconnaissance, avant les prompts. Appliqués de haut en bas.",
 		"S_REPL_WHOLE_FULL": "Mots entiers uniquement", "S_REPL_CASE_FULL": "Respecter la casse", "S_CMD_ACTION": "Action",
 		"S_FM_ADD": "Ajouter",
 		"S_TIP_REPL_LANG": "La règle ne s’applique que lorsque vous dictez dans la langue choisie. « toutes les langues » — elle s’applique toujours.",
 		"S_TIP_REPL_CASE": "Majuscules et minuscules comptent : « git » et « Git » sont des mots différents. Désactivé — la casse est ignorée.",
 		"S_TIP_REPL_WHOLE": "Le remplacement ne s’applique que si le texte forme un mot à part. Désactivé — il agit aussi à l’intérieur d’autres mots.",
-		"S_TIP_CMD_ACTION": "Ce qui se passe quand vous prononcez la phrase : saut de ligne, nouveau paragraphe, votre texte ou annulation de la dictée.",
+		"S_TIP_CMD_ACTION": "Ce qui se passe quand vous prononcez la phrase : saut de ligne, nouveau paragraphe, votre texte, annulation de la dictée, effacement de la dernière insertion ou mise en forme de la phrase — titre, liste, majuscule initiale, guillemets ou sans point final.",
 		"S_LIST_FILTER_PH": "rechercher…",
 		"S_REPL_DEL": "Supprimer le remplacement",
 		"S_LIST_NOTHING": "Rien trouvé : « %s »",
@@ -1551,13 +1592,20 @@ func init() {
 			"<p class=\"hsub\">Remplacements après la reconnaissance</p>" +
 			"<p>C'est aussi une liste de mots, mais elle fonctionne autrement : ce n'est plus un indice, c'est une garantie. Ce qui apparaît à gauche devient ce qui est à droite. Chaque remplacement a trois réglages : <b>Mots entiers uniquement</b> (alors « chat » ne touchera pas à « château », et c'est en général ce qu'on veut), <b>Respecter la casse</b> (alors « Pierre » et « pierre » comptent comme des mots différents) et <b>Langue de la règle</b> (le remplacement ne s'applique que lorsque vous dictez dans cette langue).</p>" +
 			"<p class=\"hsub\">Commandes vocales</p>" +
-			"<p>Des phrases qui n'arrivent pas dans le texte mais déclenchent une action. Elles ne fonctionnent que si la phrase est dite seule et en entier : les mêmes mots au milieu d'une phrase ne comptent pas comme une commande.</p>" +
+			"<p>Des phrases qui n'arrivent pas dans le texte mais déclenchent une action. Le saut de ligne, le nouveau paragraphe et votre propre texte sont reconnus en mots entiers à n'importe quel endroit de la phrase. L'annulation et les commandes de mise en forme n'agissent qu'à la fin de la dictée, l'effacement seulement s'il est dit seul. Une commande de mise en forme dite seule s'applique à la dictée suivante, et le bandeau affiche « Phrase suivante : … ».</p>" +
 			"<ul>" +
 			"<li><b>« nouvelle ligne »</b> : passer à la ligne ;</li>" +
 			"<li><b>« nouveau paragraphe »</b> : laisser une ligne vide entre les paragraphes ;</li>" +
 			"<li><b>« annuler »</b> : jeter la phrase et ne rien insérer ;</li>" +
+			"<li><b>« efface ça »</b> : effacer ce que le programme a inséré en dernier ;</li>" +
+			"<li><b>« en titre »</b> : placer un signe devant la phrase, # par défaut, et une ligne vide après ;</li>" +
+			"<li><b>« en liste »</b> : couper la phrase aux virgules, aux points-virgules et au mot « et » en lignes qui commencent par un tiret ;</li>" +
+			"<li><b>« avec majuscule »</b> : commencer la phrase par une majuscule ;</li>" +
+			"<li><b>« entre guillemets »</b> : mettre la phrase entre guillemets ;</li>" +
+			"<li><b>« sans point »</b> : retirer le point final ;</li>" +
 			"<li><b>votre propre commande</b> : insérer un texte tout prêt, comme une signature, une adresse ou une réponse type.</li>" +
 			"</ul>" +
+			"<p>L'effacement ne retire que ce que le programme lui-même a inséré en dernier, et seulement si rien n'a été tapé ni cliqué depuis, que la fenêtre est la même, que le texte n'avait pas de sauts de ligne, qu'il n'a pas été envoyé avec Entrée et qu'il date de moins de cinq minutes. Le texte déjà présent dans la fenêtre n'est jamais touché.</p>" +
 			"<p class=\"wh\" id=\"s-post\">L'onglet « Post-traitement »</p>" +
 			"<p>Le post-traitement, c'est un deuxième modèle qui réécrit le texte reconnu selon votre consigne. Par exemple : « retire les mots parasites et les répétitions », « fais-en un e-mail professionnel », « présente ça sous forme de liste ». La consigne s'écrit avec des mots ordinaires et s'appelle un prompt.</p>" +
 			"<p>Par défaut, il est désactivé, et voici pourquoi : c'est la seule étape qui ralentit nettement la dictée. Au lieu d'une ou deux secondes, l'insertion en prend plusieurs, et sur une machine modeste jusqu'à une dizaine.</p>" +
@@ -1660,18 +1708,25 @@ func init() {
 		"S_UNIT_HOUR": "horas",
 		"S_UNIT_DAY": "días",
 		"S_HIST_FIND": "Buscar en el historial…", "S_HIST_EMPTY": "Todavía no hay historial", "S_HIST_ASK": "¿Eliminar todo el historial de dictados?",
-		"S_SEC_CMD": "Comandos de voz", "S_CMD_HINT": "Lo que dices se convierte en un salto de línea, un signo o una cancelación en vez de acabar en el texto. Se buscan como palabras completas y se aplican de arriba abajo, después de los reemplazos.",
+		"S_SEC_CMD": "Comandos de voz", "S_CMD_HINT": "Lo que dices se convierte en un salto de línea, un signo, una cancelación, el borrado de la última inserción o una forma para la frase en vez de acabar en el texto. Se buscan como palabras completas y se aplican de arriba abajo, después de los reemplazos; los comandos de forma actúan al final del dictado.",
 		"S_CMD_ADD": "Añadir un comando", "S_CMD_PRESET": "Añadir los habituales", "S_CMD_PH": "la frase que dirás",
 		"S_CMD_NEWLINE": "salto de línea", "S_CMD_PARAGRAPH": "nuevo párrafo", "S_CMD_TEXT": "insertar texto", "S_CMD_CANCEL": "cancelar el dictado",
 		"S_CMD_TEXT_PH": "qué insertar", "S_CMD_EMPTY": "Todavía no hay comandos", "S_CMD_DEL": "Eliminar el comando",
 		"S_CMD_P_NEWLINE": "nueva línea", "S_CMD_P_PARAGRAPH": "nuevo párrafo", "S_CMD_P_CANCEL": "cancelar",
+		"S_CMD_UNDO": "borrar la última inserción", "S_CMD_HEADING": "convertir en título", "S_CMD_LIST": "convertir en lista",
+		"S_CMD_CAPITAL": "mayúscula inicial", "S_CMD_QUOTES": "poner entre comillas", "S_CMD_NOSTOP": "quitar el punto final",
+		"S_CMD_HEADING_PH": "signo antes del título, p. ej. #", "S_CMD_LIST_PH": "palabras que unen el último elemento, p. ej. y", "S_CMD_QUOTES_PH": "signos de apertura y cierre, p. ej. «»",
+		"S_CMD_END_NOTE": "Dilo al final del dictado; dicho solo, da forma al siguiente.",
+		"S_CMD_UNDO_NOTE": "Dilo solo. Borra lo último que se insertó si desde entonces no has escrito ni hecho clic y la ventana es la misma; el texto que ya estaba nunca se toca.",
+		"S_CMD_P_UNDO": "borra eso", "S_CMD_P_HEADING": "como título", "S_CMD_P_LIST": "como lista", "S_CMD_P_CAPITAL": "con mayúscula",
+		"S_CMD_P_QUOTES": "entre comillas", "S_CMD_P_NOSTOP": "sin punto", "S_CMD_P_AND": "y, e", "S_CMD_P_MARKS": "«»",
 		"S_SEC_REPLACE": "Reemplazos tras el reconocimiento", "S_REPLACE_HINT": "Lo que se oyó mal se convierte en lo que querías decir, justo tras el reconocimiento y antes de los prompts. Se aplican de arriba abajo.",
 		"S_REPL_WHOLE_FULL": "Solo palabras completas", "S_REPL_CASE_FULL": "Distinguir mayúsculas y minúsculas", "S_CMD_ACTION": "Acción",
 		"S_FM_ADD": "Añadir",
 		"S_TIP_REPL_LANG": "La regla solo actúa cuando dictas en el idioma elegido. «todos los idiomas» — actúa siempre.",
 		"S_TIP_REPL_CASE": "Las mayúsculas y minúsculas importan: «git» y «Git» son palabras distintas. Desactivado — se ignora.",
 		"S_TIP_REPL_WHOLE": "El reemplazo solo actúa si el texto forma una palabra aparte. Desactivado — también dentro de otras palabras.",
-		"S_TIP_CMD_ACTION": "Qué ocurre al decir la frase: salto de línea, nuevo párrafo, tu propio texto o cancelar el dictado.",
+		"S_TIP_CMD_ACTION": "Qué ocurre al decir la frase: salto de línea, nuevo párrafo, tu propio texto, cancelar el dictado, borrar la última inserción o dar forma a la frase: título, lista, mayúscula inicial, comillas o sin punto final.",
 		"S_LIST_FILTER_PH": "buscar…",
 		"S_REPL_DEL": "Eliminar el reemplazo",
 		"S_LIST_NOTHING": "No se encontró nada: «%s»",
@@ -2112,13 +2167,20 @@ func init() {
 			"<p class=\"hsub\">Reemplazos tras el reconocimiento</p>" +
 			"<p>También es una lista de palabras, pero funciona de otra manera: ya no es una pista, sino una garantía. Lo que aparezca a la izquierda se convertirá en lo de la derecha. Cada reemplazo tiene tres ajustes: <b>Solo palabras completas</b> (así «sol» no tocará «soldado», que normalmente es lo que quieres), <b>Distinguir mayúsculas y minúsculas</b> (así «León» y «león» cuentan como palabras distintas) e <b>Idioma de la regla</b> (el reemplazo solo actúa cuando dictas en ese idioma).</p>" +
 			"<p class=\"hsub\">Comandos de voz</p>" +
-			"<p>Frases que no entran en el texto, sino que ejecutan una acción. Solo funcionan si la frase se dice sola y entera: las mismas palabras en mitad de una oración no cuentan como comando.</p>" +
+			"<p>Frases que no entran en el texto, sino que ejecutan una acción. El salto de línea, el nuevo párrafo y tu propio texto se buscan como palabras completas en cualquier lugar de la frase. La cancelación y los comandos de forma solo actúan al final del dictado, y el borrado solo si se dice solo. Un comando de forma dicho solo se aplica al dictado siguiente, y la barra muestra «Siguiente frase: …».</p>" +
 			"<ul>" +
 			"<li><b>«nueva línea»</b>: saltar a la línea siguiente;</li>" +
 			"<li><b>«nuevo párrafo»</b>: dejar una línea en blanco entre párrafos;</li>" +
 			"<li><b>«cancelar»</b>: descartar la frase y no insertar nada;</li>" +
+			"<li><b>«borra eso»</b>: borrar lo último que insertó el programa;</li>" +
+			"<li><b>«como título»</b>: poner un signo delante de la frase, # por defecto, y una línea en blanco después;</li>" +
+			"<li><b>«como lista»</b>: dividir la frase por las comas, los puntos y coma y la palabra «y» en líneas que empiezan con un guion;</li>" +
+			"<li><b>«con mayúscula»</b>: empezar la frase con mayúscula;</li>" +
+			"<li><b>«entre comillas»</b>: poner la frase entre comillas;</li>" +
+			"<li><b>«sin punto»</b>: quitar el punto final;</li>" +
 			"<li><b>tu propio comando</b>: insertar un texto preparado, como una firma, una dirección o una respuesta habitual.</li>" +
 			"</ul>" +
+			"<p>El borrado solo quita lo último que insertó el propio programa, y solo si desde entonces no has escrito ni hecho clic, la ventana es la misma, el texto no tenía saltos de línea, no se envió con Enter y no han pasado más de cinco minutos. El texto que ya estaba en la ventana nunca se toca.</p>" +
 			"<p class=\"wh\" id=\"s-post\">La pestaña «Posprocesado»</p>" +
 			"<p>El posprocesado es un segundo modelo que reescribe el texto reconocido según tu instrucción. Por ejemplo: «quita las muletillas y las repeticiones», «convierte esto en un correo formal», «ponlo en forma de lista». La instrucción se escribe con palabras normales y se llama prompt.</p>" +
 			"<p>Por defecto está desactivado, y este es el motivo: es el único paso que ralentiza claramente el dictado. En lugar de uno o dos segundos, la inserción tardará varios, y en un equipo poco potente, hasta diez.</p>" +
@@ -2221,18 +2283,25 @@ func init() {
 		"S_UNIT_HOUR": "ore",
 		"S_UNIT_DAY": "giorni",
 		"S_HIST_FIND": "Cerca nella cronologia…", "S_HIST_EMPTY": "Ancora nessuna cronologia", "S_HIST_ASK": "Eliminare tutta la cronologia delle dettature?",
-		"S_SEC_CMD": "Comandi vocali", "S_CMD_HINT": "Ciò che dici diventa un a capo, un segno o un annullamento invece di finire nel testo. Riconosciuti come parole intere, applicati dall'alto in basso, dopo le sostituzioni.",
+		"S_SEC_CMD": "Comandi vocali", "S_CMD_HINT": "Ciò che dici diventa un a capo, un segno, un annullamento, la cancellazione dell'ultimo inserimento o una forma per la frase invece di finire nel testo. Riconosciuti come parole intere, applicati dall'alto in basso, dopo le sostituzioni; i comandi di forma agiscono alla fine della dettatura.",
 		"S_CMD_ADD": "Aggiungi un comando", "S_CMD_PRESET": "Aggiungi quelli soliti", "S_CMD_PH": "la frase che dirai",
 		"S_CMD_NEWLINE": "a capo", "S_CMD_PARAGRAPH": "nuovo paragrafo", "S_CMD_TEXT": "inserire testo", "S_CMD_CANCEL": "annullare la dettatura",
 		"S_CMD_TEXT_PH": "cosa inserire", "S_CMD_EMPTY": "Ancora nessun comando", "S_CMD_DEL": "Elimina il comando",
 		"S_CMD_P_NEWLINE": "nuova riga", "S_CMD_P_PARAGRAPH": "nuovo paragrafo", "S_CMD_P_CANCEL": "annulla",
+		"S_CMD_UNDO": "cancellare l'ultimo inserimento", "S_CMD_HEADING": "trasformare in titolo", "S_CMD_LIST": "trasformare in elenco",
+		"S_CMD_CAPITAL": "iniziale maiuscola", "S_CMD_QUOTES": "mettere tra virgolette", "S_CMD_NOSTOP": "togliere il punto finale",
+		"S_CMD_HEADING_PH": "segno prima del titolo, ad es. #", "S_CMD_LIST_PH": "parole che uniscono l'ultima voce, ad es. e", "S_CMD_QUOTES_PH": "segni di apertura e chiusura, ad es. «»",
+		"S_CMD_END_NOTE": "Dillo alla fine della dettatura; detto da solo, dà forma alla successiva.",
+		"S_CMD_UNDO_NOTE": "Dillo da solo. Cancella l'ultimo inserimento se da allora non hai scritto né cliccato e la finestra è la stessa; il testo che c'era già non viene mai toccato.",
+		"S_CMD_P_UNDO": "cancella questo", "S_CMD_P_HEADING": "come titolo", "S_CMD_P_LIST": "come elenco", "S_CMD_P_CAPITAL": "con maiuscola",
+		"S_CMD_P_QUOTES": "tra virgolette", "S_CMD_P_NOSTOP": "senza punto", "S_CMD_P_AND": "e, ed", "S_CMD_P_MARKS": "«»",
 		"S_SEC_REPLACE": "Sostituzioni dopo il riconoscimento", "S_REPLACE_HINT": "Ciò che è stato sentito male diventa ciò che intendevi — subito dopo il riconoscimento, prima dei prompt. Applicate dall'alto in basso.",
 		"S_REPL_WHOLE_FULL": "Solo parole intere", "S_REPL_CASE_FULL": "Distingui le maiuscole", "S_CMD_ACTION": "Azione",
 		"S_FM_ADD": "Aggiungi",
 		"S_TIP_REPL_LANG": "La regola agisce solo quando detti nella lingua scelta. «tutte le lingue» — agisce sempre.",
 		"S_TIP_REPL_CASE": "Maiuscole e minuscole contano: «git» e «Git» sono parole diverse. Disattivato — il caso è ignorato.",
 		"S_TIP_REPL_WHOLE": "La sostituzione agisce solo se il testo è una parola a sé. Disattivato — anche dentro altre parole.",
-		"S_TIP_CMD_ACTION": "Cosa succede quando pronunci la frase: a capo, nuovo paragrafo, un tuo testo o annullamento della dettatura.",
+		"S_TIP_CMD_ACTION": "Cosa succede quando pronunci la frase: a capo, nuovo paragrafo, un tuo testo, annullamento della dettatura, cancellazione dell'ultimo inserimento o una forma per la frase — titolo, elenco, iniziale maiuscola, virgolette o senza punto finale.",
 		"S_LIST_FILTER_PH": "cerca…",
 		"S_REPL_DEL": "Elimina la sostituzione",
 		"S_LIST_NOTHING": "Nessun risultato: «%s»",
@@ -2673,13 +2742,20 @@ func init() {
 			"<p class=\"hsub\">Sostituzioni dopo il riconoscimento</p>" +
 			"<p>Anche questo è un elenco di parole, ma funziona in un altro modo: non è più un suggerimento, è una garanzia. Quello che compare a sinistra diventa quello che c'è a destra. Ogni sostituzione ha tre impostazioni: <b>Solo parole intere</b> (così «pane» non toccherà «panettone», che di solito è proprio ciò che vuoi), <b>Distingui le maiuscole</b> (così «Rosa» e «rosa» contano come parole diverse) e <b>Lingua della regola</b> (la sostituzione scatta solo quando detti in quella lingua).</p>" +
 			"<p class=\"hsub\">Comandi vocali</p>" +
-			"<p>Frasi che non finiscono nel testo, ma eseguono un'azione. Funzionano solo se la frase è detta da sola e per intero: le stesse parole in mezzo a una frase non contano come comando.</p>" +
+			"<p>Frasi che non finiscono nel testo, ma eseguono un'azione. L'a capo, il nuovo paragrafo e un tuo testo vengono riconosciuti come parole intere in qualsiasi punto della frase. L'annullamento e i comandi di forma agiscono solo alla fine della dettatura, la cancellazione solo se detta da sola. Un comando di forma detto da solo vale per la dettatura successiva, e la barra mostra «Prossima frase: …».</p>" +
 			"<ul>" +
 			"<li><b>«nuova riga»</b>: andare a capo;</li>" +
 			"<li><b>«nuovo paragrafo»</b>: lasciare una riga vuota tra i paragrafi;</li>" +
 			"<li><b>«annulla»</b>: scartare la frase e non inserire nulla;</li>" +
+			"<li><b>«cancella questo»</b>: cancellare ciò che il programma ha inserito per ultimo;</li>" +
+			"<li><b>«come titolo»</b>: mettere un segno davanti alla frase, # di default, e una riga vuota dopo;</li>" +
+			"<li><b>«come elenco»</b>: dividere la frase alle virgole, ai punti e virgola e alla parola «e» in righe che iniziano con un trattino;</li>" +
+			"<li><b>«con maiuscola»</b>: iniziare la frase con la maiuscola;</li>" +
+			"<li><b>«tra virgolette»</b>: mettere la frase tra virgolette;</li>" +
+			"<li><b>«senza punto»</b>: togliere il punto finale;</li>" +
 			"<li><b>un tuo comando</b>: inserire un testo pronto, come una firma, un indirizzo o una risposta di rito.</li>" +
 			"</ul>" +
+			"<p>La cancellazione toglie solo ciò che il programma stesso ha inserito per ultimo, e solo se da allora non hai scritto né cliccato, la finestra è la stessa, il testo non andava a capo, non è stato inviato con Invio e non sono passati più di cinque minuti. Il testo che c'era già nella finestra non viene mai toccato.</p>" +
 			"<p class=\"wh\" id=\"s-post\">La scheda «Post-elaborazione»</p>" +
 			"<p>La post-elaborazione è un secondo modello che riscrive il testo riconosciuto secondo una tua istruzione. Per esempio: «togli gli intercalari e le ripetizioni», «trasformalo in un'e-mail formale», «mettilo sotto forma di elenco». L'istruzione si scrive con parole normali e si chiama prompt.</p>" +
 			"<p>Per impostazione predefinita è spenta, ed ecco perché: è l'unico passaggio che rallenta in modo evidente la dettatura. Invece di uno o due secondi, l'inserimento richiederà qualche secondo, e su un computer poco potente anche una decina.</p>" +
@@ -2782,18 +2858,25 @@ func init() {
 		"S_UNIT_HOUR": "godzin",
 		"S_UNIT_DAY": "dni",
 		"S_HIST_FIND": "Szukaj w historii…", "S_HIST_EMPTY": "Na razie brak historii", "S_HIST_ASK": "Usunąć całą historię dyktowań?",
-		"S_SEC_CMD": "Komendy głosowe", "S_CMD_HINT": "To, co powiesz, zamienia się w złamanie wiersza, znak albo anulowanie, zamiast trafić do tekstu. Rozpoznawane jako całe słowa, stosowane od góry do dołu, po zamianach.",
+		"S_SEC_CMD": "Komendy głosowe", "S_CMD_HINT": "To, co powiesz, zamienia się w złamanie wiersza, znak, anulowanie, usunięcie ostatniego wstawienia albo formatowanie frazy, zamiast trafić do tekstu. Rozpoznawane jako całe słowa, stosowane od góry do dołu, po zamianach; komendy formatowania działają na końcu dyktowania.",
 		"S_CMD_ADD": "Dodaj komendę", "S_CMD_PRESET": "Dodaj typowe", "S_CMD_PH": "fraza, którą wypowiesz",
 		"S_CMD_NEWLINE": "złamanie wiersza", "S_CMD_PARAGRAPH": "nowy akapit", "S_CMD_TEXT": "wstawić tekst", "S_CMD_CANCEL": "anulować dyktowanie",
 		"S_CMD_TEXT_PH": "co wstawić", "S_CMD_EMPTY": "Na razie brak komend", "S_CMD_DEL": "Usuń komendę",
 		"S_CMD_P_NEWLINE": "nowy wiersz", "S_CMD_P_PARAGRAPH": "nowy akapit", "S_CMD_P_CANCEL": "anuluj",
+		"S_CMD_UNDO": "usunąć ostatnie wstawienie", "S_CMD_HEADING": "zrobić nagłówek", "S_CMD_LIST": "zrobić listę",
+		"S_CMD_CAPITAL": "wielka pierwsza litera", "S_CMD_QUOTES": "ująć w cudzysłów", "S_CMD_NOSTOP": "usunąć kropkę na końcu",
+		"S_CMD_HEADING_PH": "znak przed nagłówkiem, np. #", "S_CMD_LIST_PH": "słowa łączące ostatni punkt, np. i", "S_CMD_QUOTES_PH": "znak otwierający i zamykający, np. „”",
+		"S_CMD_END_NOTE": "Powiedz na końcu dyktowania; powiedziana osobno, komenda sformatuje następne.",
+		"S_CMD_UNDO_NOTE": "Powiedz osobno. Usuwa ostatnie wstawienie, jeśli od tamtej pory nic nie wpisano ani nie kliknięto, a okno jest to samo; tekst, który już tam był, nigdy nie jest ruszany.",
+		"S_CMD_P_UNDO": "usuń to", "S_CMD_P_HEADING": "jako nagłówek", "S_CMD_P_LIST": "jako lista", "S_CMD_P_CAPITAL": "wielką literą",
+		"S_CMD_P_QUOTES": "w cudzysłowie", "S_CMD_P_NOSTOP": "bez kropki", "S_CMD_P_AND": "i, oraz", "S_CMD_P_MARKS": "„”",
 		"S_SEC_REPLACE": "Zamiany po rozpoznaniu", "S_REPLACE_HINT": "To, co zostało źle usłyszane, staje się tym, co miałeś na myśli — zaraz po rozpoznaniu, przed promptami. Stosowane od góry do dołu.",
 		"S_REPL_WHOLE_FULL": "Tylko całe słowa", "S_REPL_CASE_FULL": "Uwzględniaj wielkość liter", "S_CMD_ACTION": "Działanie",
 		"S_FM_ADD": "Dodaj",
 		"S_TIP_REPL_LANG": "Reguła działa tylko, gdy dyktujesz w wybranym języku. „wszystkie języki” — działa zawsze.",
 		"S_TIP_REPL_CASE": "Wielkość liter ma znaczenie: „git” i „Git” to różne słowa. Wyłączone — wielkość liter jest pomijana.",
 		"S_TIP_REPL_WHOLE": "Zamiana działa tylko, gdy tekst stoi jako osobne słowo. Wyłączone — trafia też wewnątrz innych słów.",
-		"S_TIP_CMD_ACTION": "Co się stanie, gdy wypowiesz frazę: nowa linia, nowy akapit, własny tekst albo anulowanie dyktowania.",
+		"S_TIP_CMD_ACTION": "Co się stanie, gdy wypowiesz frazę: nowa linia, nowy akapit, własny tekst, anulowanie dyktowania, usunięcie ostatniego wstawienia albo formatowanie frazy — nagłówek, lista, wielka litera, cudzysłów lub bez kropki.",
 		"S_LIST_FILTER_PH": "szukaj…",
 		"S_REPL_DEL": "Usuń zamianę",
 		"S_LIST_NOTHING": "Nic nie znaleziono: „%s”",
@@ -3234,13 +3317,20 @@ func init() {
 			"<p class=\"hsub\">Zamiany po rozpoznaniu</p>" +
 			"<p>To też lista słów, ale działa inaczej: to już nie podpowiedź, tylko gwarancja. To, co pojawi się po lewej, zmieni się w to, co po prawej. Każda zamiana ma trzy przełączniki: <b>Tylko całe słowa</b> (wtedy „kod” nie ruszy „kodowania”, i zwykle o to właśnie chodzi), <b>Uwzględniaj wielkość liter</b> (wtedy „Róża” i „róża” to różne słowa) i <b>Język reguły</b> (zamiana zadziała tylko wtedy, gdy dyktujesz w tym języku).</p>" +
 			"<p class=\"hsub\">Komendy głosowe</p>" +
-			"<p>Frazy, które nie trafiają do tekstu, tylko wykonują działanie. Działają tylko wtedy, gdy fraza jest wypowiedziana osobno i w całości: te same słowa w środku zdania nie są uznawane za komendę.</p>" +
+			"<p>Frazy, które nie trafiają do tekstu, tylko wykonują działanie. Złamanie wiersza, nowy akapit i własny tekst są rozpoznawane jako całe słowa w dowolnym miejscu zdania. Anulowanie i komendy formatowania działają tylko na końcu dyktowania, a usuwanie tylko wtedy, gdy powiesz je osobno. Komenda formatowania powiedziana osobno dotyczy następnego dyktowania, a pasek pokazuje „Następna fraza: …”.</p>" +
 			"<ul>" +
 			"<li><b>„nowy wiersz”</b>: przejść do nowego wiersza;</li>" +
 			"<li><b>„nowy akapit”</b>: zostawić pustą linię między akapitami;</li>" +
 			"<li><b>„anuluj”</b>: wyrzucić zdanie i niczego nie wstawiać;</li>" +
+			"<li><b>„usuń to”</b>: usunąć to, co program wstawił ostatnio;</li>" +
+			"<li><b>„jako nagłówek”</b>: postawić przed zdaniem znak, domyślnie #, a po nim pustą linię;</li>" +
+			"<li><b>„jako lista”</b>: podzielić zdanie na przecinkach, średnikach i słowie „i” na wiersze zaczynające się od myślnika;</li>" +
+			"<li><b>„wielką literą”</b>: zacząć zdanie wielką literą;</li>" +
+			"<li><b>„w cudzysłowie”</b>: ująć zdanie w cudzysłów;</li>" +
+			"<li><b>„bez kropki”</b>: usunąć kropkę na końcu;</li>" +
 			"<li><b>własna komenda</b>: wstawić gotowy fragment, na przykład podpis, adres albo standardową odpowiedź.</li>" +
 			"</ul>" +
+			"<p>Usuwanie zabiera tylko to, co sam program wstawił ostatnio, i tylko wtedy, gdy od tamtej pory nic nie wpisano ani nie kliknięto, okno jest to samo, tekst nie miał złamań wiersza, nie został wysłany Enterem i minęło najwyżej pięć minut. Tekstu, który już był w oknie, program nigdy nie rusza.</p>" +
 			"<p class=\"wh\" id=\"s-post\">Zakładka „Obróbka końcowa”</p>" +
 			"<p>Obróbka końcowa to drugi model, który przepisuje rozpoznany tekst według twojego polecenia. Na przykład: „usuń słowa-wypełniacze i powtórzenia”, „zrób z tego oficjalny e-mail”, „zamień to na listę”. Polecenie pisze się zwykłymi słowami i nazywa się promptem.</p>" +
 			"<p>Domyślnie jest wyłączona, i oto dlaczego: to jedyny krok, który wyraźnie spowalnia dyktowanie. Zamiast sekundy czy dwóch wstawianie zajmie kilka sekund, a na słabym komputerze nawet dziesięć.</p>" +
@@ -3360,6 +3450,10 @@ func init() {
 		"mic.check.quiet": "Надто тихо: пік %.0f дБ — додайте гучності мікрофона у Windows або сядьте ближче", "mic.check.clipped": "Перевантаження: обрізано %.1f%% відліків — зменште гучність мікрофона", "mic.check.silent": "Мовлення не чути — перевірте, чи вибрано той мікрофон і чи не вимкнений він",
 		"ov.quiet": "Надто тихо, майже нічого не чути", "ov.clipped": "Перевантаження — звук обрізано",
 		"ov.cmd.cancelled": "Скасовано голосом",
+		"ov.undo.done": "Стерто: %d символів", "ov.undo.none": "Нічого стирати", "ov.undo.typed": "Не стерто: ви друкували або клацали після вставки",
+		"ov.undo.window": "Не стерто: інше вікно", "ov.undo.sent": "Не стерто: текст уже надіслано через Enter", "ov.undo.old": "Не стерто: вставлено надто давно",
+		"ov.undo.breaks": "Не стерто: у тексті були перенесення рядків", "ov.undo.long": "Не стерто: текст надто довгий", "ov.undo.moved": "Стирання перервано: вікно змінилося",
+		"ov.shape.next": "Наступна фраза: %s", "cmd.heading": "заголовок", "cmd.list": "список", "cmd.capital": "з великої", "cmd.quotes": "в лапках", "cmd.nostop": "без крапки",
 		"ov.silence":       "Тиша — нічого не розпізнано", "ov.server.loading": "Сервер ще завантажується",
 		"ov.stop.silence":  "Зупинено через тишу",
 		"ov.tooshort":  "Занадто коротко — тримайте клавіші довше",
@@ -3464,18 +3558,25 @@ func init() {
 		"S_UNIT_HOUR": "годин",
 		"S_UNIT_DAY": "днів",
 		"S_HIST_FIND": "Знайти в історії…", "S_HIST_EMPTY": "Історії поки немає", "S_HIST_ASK": "Видалити всю історію диктувань?",
-		"S_SEC_CMD": "Голосові команди", "S_CMD_HINT": "Сказане перетворюється на перенесення рядка, знак або скасування замість того, щоб потрапити в текст. Шукаються цілими словами, застосовуються згори вниз, уже після замін.",
+		"S_SEC_CMD": "Голосові команди", "S_CMD_HINT": "Сказане перетворюється на перенесення рядка, знак, скасування, стирання останньої вставки або оформлення фрази замість того, щоб потрапити в текст. Шукаються цілими словами, застосовуються згори вниз, уже після замін; команди оформлення працюють у кінці диктування.",
 		"S_CMD_ADD": "Додати команду", "S_CMD_PRESET": "Додати звичайні", "S_CMD_PH": "фраза, яку ви промовите",
 		"S_CMD_NEWLINE": "перенесення рядка", "S_CMD_PARAGRAPH": "новий абзац", "S_CMD_TEXT": "підставити текст", "S_CMD_CANCEL": "скасувати диктування",
 		"S_CMD_TEXT_PH": "що підставити", "S_CMD_EMPTY": "Команд поки немає", "S_CMD_DEL": "Видалити команду",
 		"S_CMD_P_NEWLINE": "новий рядок", "S_CMD_P_PARAGRAPH": "новий абзац", "S_CMD_P_CANCEL": "скасувати",
+		"S_CMD_UNDO": "стерти останню вставку", "S_CMD_HEADING": "зробити заголовком", "S_CMD_LIST": "зробити списком",
+		"S_CMD_CAPITAL": "перша літера велика", "S_CMD_QUOTES": "взяти в лапки", "S_CMD_NOSTOP": "прибрати крапку в кінці",
+		"S_CMD_HEADING_PH": "знак перед заголовком, наприклад #", "S_CMD_LIST_PH": "слова перед останнім пунктом, наприклад і", "S_CMD_QUOTES_PH": "відкривальні й закривальні лапки, наприклад «»",
+		"S_CMD_END_NOTE": "Скажіть у кінці диктування; сказана окремо, команда оформить наступне.",
+		"S_CMD_UNDO_NOTE": "Скажіть окремо. Стирає останню вставку, якщо ви відтоді нічого не друкували й не клацали, а вікно те саме; текст, що вже був у вікні, не зачіпається ніколи.",
+		"S_CMD_P_UNDO": "видали це", "S_CMD_P_HEADING": "як заголовок", "S_CMD_P_LIST": "як список", "S_CMD_P_CAPITAL": "з великої літери",
+		"S_CMD_P_QUOTES": "в лапках", "S_CMD_P_NOSTOP": "без крапки", "S_CMD_P_AND": "і, й, та", "S_CMD_P_MARKS": "«»",
 		"S_SEC_REPLACE": "Заміни після розпізнавання", "S_REPLACE_HINT": "Те, що почулося неправильно, стає тим, що ви мали на увазі — одразу після розпізнавання, до промптів. Застосовуються згори вниз.",
 		"S_REPL_WHOLE_FULL": "Лише цілі слова", "S_REPL_CASE_FULL": "Враховувати регістр", "S_CMD_ACTION": "Дія",
 		"S_FM_ADD": "Додати",
 		"S_TIP_REPL_LANG": "Правило діє, лише коли диктування йде вибраною мовою. «всі мови» — діє завжди.",
 		"S_TIP_REPL_CASE": "Великі й малі літери різняться: «гіт» і «Гіт» — різні слова. Вимкнено — регістр не важливий.",
 		"S_TIP_REPL_WHOLE": "Заміна спрацьовує, лише якщо текст стоїть окремим словом. Вимкнено — шукається й усередині інших слів.",
-		"S_TIP_CMD_ACTION": "Що станеться, коли ви промовите фразу: перенесення рядка, новий абзац, підстановка свого тексту або скасування диктування.",
+		"S_TIP_CMD_ACTION": "Що станеться, коли ви промовите фразу: перенесення рядка, новий абзац, підстановка свого тексту, скасування диктування, стирання останньої вставки або оформлення фрази — заголовком, списком, з великої літери, в лапках чи без крапки.",
 		"S_LIST_FILTER_PH": "знайти…",
 		"S_REPL_DEL": "Видалити заміну",
 		"S_LIST_NOTHING": "Нічого не знайдено: «%s»",
@@ -3897,13 +3998,20 @@ func init() {
 			"<p class=\"hsub\">Заміни після розпізнавання</p>" +
 			"<p>Теж список слів, але працює він інакше: це вже не підказка, а гарантія. Те, що трапилося ліворуч, стане тим, що праворуч. Кожна заміна має три перемикачі: <b>Лише цілі слова</b> (тоді «код» не зачепить «кодування», і зазвичай саме це й потрібно), <b>Враховувати регістр</b> (тоді «Надія» і «надія» вважаються різними словами) і <b>Мова правила</b> (заміна спрацює лише тоді, коли ви диктуєте цією мовою).</p>" +
 			"<p class=\"hsub\">Голосові команди</p>" +
-			"<p>Фрази, які не потрапляють у текст, а виконують дію. Працюють, лише якщо фразу сказано окремо й повністю: ті самі слова посеред речення командою не вважаються.</p>" +
+			"<p>Фрази, які не потрапляють у текст, а виконують дію. Перенесення рядка, новий абзац і своя команда знаходяться цілими словами в будь-якому місці фрази. Скасування й команди оформлення працюють лише в кінці диктування, стирання — лише якщо сказати його окремо. Команда оформлення, сказана окремо, застосовується до наступного диктування, і смужка показує «Наступна фраза: …».</p>" +
 			"<ul>" +
 			"<li><b>«новий рядок»</b>: перейти на новий рядок;</li>" +
 			"<li><b>«новий абзац»</b>: залишити порожній рядок між абзацами;</li>" +
 			"<li><b>«скасувати»</b>: викинути фразу й нічого не вставляти;</li>" +
+			"<li><b>«видали це»</b>: стерти те, що програма вставила останнім;</li>" +
+			"<li><b>«як заголовок»</b>: поставити перед фразою знак, типово #, а після неї порожній рядок;</li>" +
+			"<li><b>«як список»</b>: розбити фразу за комами, крапками з комою й сполучником «і» на рядки з дефісом на початку;</li>" +
+			"<li><b>«з великої літери»</b>: почати фразу з великої літери;</li>" +
+			"<li><b>«в лапках»</b>: взяти фразу в лапки;</li>" +
+			"<li><b>«без крапки»</b>: прибрати крапку в кінці;</li>" +
 			"<li><b>своя команда</b>: вставити заготовку, наприклад підпис, адресу чи типову відповідь.</li>" +
 			"</ul>" +
+			"<p>Стирання прибирає лише те, що останнім вставила сама програма, і лише якщо відтоді нічого не друкували й не клацали, вікно те саме, у тексті не було перенесень рядків, його не надіслано через Enter і минуло не більше п'яти хвилин. Текст, який уже був у вікні, не зачіпається ніколи.</p>" +
 			"<p class=\"wh\" id=\"s-post\">Вкладка «Постобробка»</p>" +
 			"<p>Постобробку виконує друга модель: вона переписує розпізнаний текст за вашою вказівкою. Наприклад: «прибери слова-паразити й повтори», «зроби з цього діловий лист», «оформи це списком». Вказівку пишуть звичайними словами, і називається вона промптом.</p>" +
 			"<p>За замовчуванням постобробку вимкнено, і ось чому: це єдиний крок, який помітно сповільнює диктування. Замість секунди-двох вставлення забере кілька секунд, а на слабкій машині й цілий десяток.</p>" +
