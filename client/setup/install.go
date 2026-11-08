@@ -53,10 +53,11 @@ func existingInstall() string {
 }
 
 type modelOpt struct {
-	ID      string
-	Name    string
-	File    string
-	SizeMB  int
+	ID       string
+	Name     string
+	Engine   string
+	File     string
+	SizeMB   int
 	Dir      string
 	Files    []string
 	BaseURL  string
@@ -64,16 +65,28 @@ type modelOpt struct {
 	PresetID string
 }
 
+const (
+	engineWhisper = "whisper"
+	engineSherpa  = "sherpa"
+	engineStream  = "stream"
+)
+
 const whisperBaseURL = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/"
 
 var modelOpts = []modelOpt{
-	{ID: "gigaam-v3", Name: "GigaAM v3", SizeMB: 232, Dir: "gigaam-v3", Lang: "ru", PresetID: "gigaam-v3",
+	{ID: "nemotron", Name: "Nemotron 3.5", Engine: engineStream, SizeMB: 651, Dir: "nemotron-3.5", PresetID: "nemotron-3.5",
+		Files:   []string{"encoder.int8.onnx", "decoder.int8.onnx", "joiner.int8.onnx", "tokens.txt"},
+		BaseURL: "https://huggingface.co/Masterx/sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-560ms-2026-06-11/resolve/main/"},
+	{ID: "parakeet", Name: "Parakeet TDT 0.6B v3", Engine: engineSherpa, SizeMB: 670, Dir: "parakeet-v3", PresetID: "parakeet-v3",
+		Files:   []string{"encoder.int8.onnx", "decoder.int8.onnx", "joiner.int8.onnx", "tokens.txt"},
+		BaseURL: "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8/resolve/main/"},
+	{ID: "gigaam-v3", Name: "GigaAM v3", Engine: engineSherpa, SizeMB: 232, Dir: "gigaam-v3", Lang: "ru", PresetID: "gigaam-v3",
 		Files:   []string{"encoder.int8.onnx", "decoder.onnx", "joiner.onnx", "tokens.txt"},
 		BaseURL: "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-transducer-punct-giga-am-v3-russian-2025-12-16/resolve/main/"},
-	{ID: "base", Name: "Base", File: "ggml-base.bin", SizeMB: 142, BaseURL: whisperBaseURL, PresetID: "base"},
-	{ID: "small", Name: "Small", File: "ggml-small.bin", SizeMB: 466, BaseURL: whisperBaseURL, PresetID: "small"},
-	{ID: "medium", Name: "Medium (q5)", File: "ggml-medium-q5_0.bin", SizeMB: 539, BaseURL: whisperBaseURL, PresetID: "medium-q5_0"},
-	{ID: "turbo", Name: "Turbo (q5)", File: "ggml-large-v3-turbo-q5_0.bin", SizeMB: 574, BaseURL: whisperBaseURL, PresetID: "large-v3-turbo-q5_0"},
+	{ID: "base", Name: "Base", Engine: engineWhisper, File: "ggml-base.bin", SizeMB: 142, BaseURL: whisperBaseURL, PresetID: "base"},
+	{ID: "small", Name: "Small", Engine: engineWhisper, File: "ggml-small.bin", SizeMB: 466, BaseURL: whisperBaseURL, PresetID: "small"},
+	{ID: "medium", Name: "Medium (q5)", Engine: engineWhisper, File: "ggml-medium-q5_0.bin", SizeMB: 539, BaseURL: whisperBaseURL, PresetID: "medium-q5_0"},
+	{ID: "turbo", Name: "Turbo (q5)", Engine: engineWhisper, File: "ggml-large-v3-turbo-q5_0.bin", SizeMB: 574, BaseURL: whisperBaseURL, PresetID: "large-v3-turbo-q5_0"},
 }
 
 func modelByID(id string) *modelOpt {
@@ -193,14 +206,18 @@ func patchDefaultConfig(dir string, m *modelOpt, updates bool) error {
 		if prev, ok := cfg["lang_models"].(map[string]any); ok {
 			presets = prev
 		}
-		if m.Dir != "" {
+		switch m.Engine {
+		case engineStream:
+			cfg["stream_model"] = "models/" + m.Dir
+		case engineSherpa:
 			cfg["sherpa_model"] = "models/" + m.Dir
-			if m.Lang != "" {
-				cfg["language"] = m.Lang
-				presets[m.Lang] = m.PresetID
-			}
-		} else {
+		default:
 			cfg["model"] = "models/" + m.File
+		}
+		if m.Lang != "" {
+			cfg["language"] = m.Lang
+			presets[m.Lang] = m.PresetID
+		} else {
 			presets["auto"] = m.PresetID
 		}
 		cfg["lang_models"] = presets
