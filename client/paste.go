@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"log"
 	"strings"
@@ -267,17 +268,27 @@ func focusStillOn(expect uintptr) bool {
 	return false
 }
 
+const (
+	pasteModeType      = "type"
+	pasteModeClipboard = "clipboard"
+)
+
 func pasteText(cfg *Config, text string, expect uintptr) error {
+	_, err := pasteTextMode(cfg, text, expect)
+	return err
+}
+
+func pasteTextMode(cfg *Config, text string, expect uintptr) (string, error) {
 	waitModifiersReleased(3 * time.Second)
 	if cfg.PasteDelayMs > 0 {
 		time.Sleep(time.Duration(cfg.PasteDelayMs) * time.Millisecond)
 	}
 	if !focusStillOn(expect) {
-		return errFocusMoved
+		return "", errFocusMoved
 	}
 
 	if cfg.PasteMode == "type" {
-		return typeUnicode(text)
+		return pasteModeType, typeUnicode(text)
 	}
 
 	var snap []clipFormat
@@ -286,15 +297,15 @@ func pasteText(cfg *Config, text string, expect uintptr) error {
 		snap, complete = snapshotClipboard()
 		if !complete {
 			log.Printf("the clipboard cannot be preserved in full — typing character by character, leaving the clipboard alone")
-			return typeUnicode(text)
+			return pasteModeType, typeUnicode(text)
 		}
 	}
 	if err := setClipboardText(text); err != nil {
-		return err
+		return pasteModeClipboard, err
 	}
 	time.Sleep(50 * time.Millisecond)
 	if err := sendCtrlV(); err != nil {
-		return err
+		return pasteModeClipboard, err
 	}
 	if cfg.RestoreClipboard && len(snap) > 0 {
 		time.Sleep(400 * time.Millisecond)
@@ -302,5 +313,29 @@ func pasteText(cfg *Config, text string, expect uintptr) error {
 			_ = restoreClipboard(snap)
 		}
 	}
-	return nil
+	return pasteModeClipboard, nil
+}
+
+func eraseChars(ctx context.Context, n int, wnd uintptr) (int, error) {
+	const chunk = 32
+	done := 0
+	for done < n {
+		if err := ctx.Err(); err != nil {
+			return done, err
+		}
+		if !focusStillOn(wnd) {
+			return done, errFocusMoved
+		}
+		k := min(chunk, n-done)
+		events := make([]inputEvent, 0, 2*k)
+		for i := 0; i < k; i++ {
+			events = append(events, keyEvent(0x08, false), keyEvent(0x08, true))
+		}
+		if err := sendInputs(events); err != nil {
+			return done, err
+		}
+		done += k
+		time.Sleep(5 * time.Millisecond)
+	}
+	return done, nil
 }

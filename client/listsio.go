@@ -165,6 +165,7 @@ func (a *App) aimWatch(text string, settings uintptr) {
 			}
 			time.Sleep(220 * time.Millisecond)
 			cfg := a.snapshot()
+			a.clearUndo()
 			if err := pasteText(cfg, text, target); err != nil {
 				log.Printf("history: aimed pasting: %v", err)
 				_ = setClipboardText(text)
@@ -203,6 +204,7 @@ func (a *App) insertFromHistory(text string) string {
 		return listsAnswer(listsReply{Text: tr("hist.insert.nowin")})
 	}
 	cfg := a.snapshot()
+	a.clearUndo()
 	if err := pasteText(cfg, text, wnd); err != nil {
 		log.Printf("history: pasting: %v", err)
 		return listsAnswer(listsReply{Text: humanError(err)})

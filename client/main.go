@@ -11,6 +11,7 @@ import (
 	"holdtotype/internal/profiles"
 	"holdtotype/internal/replace"
 	"holdtotype/internal/segments"
+	"holdtotype/internal/textshape"
 	"unsafe"
 
 	"context"
@@ -98,6 +99,9 @@ type App struct {
 	lastWnd      uintptr
 	settingsPrev uintptr
 	lastProcess  string
+	lastIns      *insertion
+	armedShapes  []commands.Command
+	armedAt      time.Time
 	postErr      string
 	postErrProf  string
 	postErrAt    time.Time
@@ -565,6 +569,8 @@ func main() {
 			cmd := commands.Apply(cfg.Commands, after)
 			log.Printf("replcheck: %d commands in the config, fired %v, cancelled=%v", len(cfg.Commands), cmd.Applied, cmd.Cancelled)
 			log.Printf("replcheck: result: %q", cmd.Text)
+			shaped := shapeText(cfg, cfg.Language, cmd.Text, cmd.Shapes)
+			log.Printf("replcheck: undo=%v shapes=%v shaped=%q", cmd.Undo, shapeActions(cmd.Shapes), shaped)
 			return
 		}
 		if arg == "-modelcheck" {
@@ -748,6 +754,18 @@ func main() {
 				log.Printf("testpaste: target captured, pasting in 6 seconds")
 				time.Sleep(6 * time.Second)
 				app.insertResult(context.Background(), app.snapshot(), time.Now(), text, "", tw, false)
+			}()
+		}
+		if arg == "-testundo" && i+1 < len(args) {
+			text := args[i+1]
+			go func() {
+				time.Sleep(5 * time.Second)
+				tw, _, _ := procGetForegroundWindow.Call()
+				log.Printf("testundo: target captured, pasting now, undo in 3 seconds")
+				app.insertResult(context.Background(), app.snapshot(), time.Now(), text, "", tw, false)
+				time.Sleep(3 * time.Second)
+				log.Printf("testundo: running the undo command")
+				app.undoLast(context.Background(), app.snapshot())
 			}()
 		}
 	}
@@ -1073,6 +1091,7 @@ func (a *App) worker() {
 }
 
 func (a *App) handleCancel() {
+	a.disarmShapes()
 	switch a.state.Load() {
 	case stRecording:
 		a.mu.Lock()
@@ -1483,15 +1502,26 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 		log.Printf("replacements: %d → %d characters", len([]rune(text)), len([]rune(fixed)))
 		text = fixed
 	}
+	var shapes []commands.Command
 	if cmd := commands.Apply(cfg.Commands, text); len(cmd.Applied) > 0 {
 		log.Printf("commands %v: %d → %d characters (cancelled=%v)", cmd.Applied, len([]rune(text)), len([]rune(cmd.Text)), cmd.Cancelled)
 		if cmd.Cancelled {
+			a.disarmShapes()
 			if cfg.Overlay {
 				overlaySet(ovFlashErr, tr("ov.cmd.cancelled"))
 			}
 			return
 		}
+		if cmd.Undo {
+			a.undoLast(ctx, cfg)
+			return
+		}
+		if len(cmd.Shapes) > 0 && (strings.TrimSpace(cmd.Text) == "" || onlyNoise.MatchString(cmd.Text)) {
+			a.armShapes(cfg, cmd.Shapes)
+			return
+		}
 		text = cmd.Text
+		shapes = cmd.Shapes
 	}
 	if text == "" || onlyNoise.MatchString(text) {
 		log.Printf("empty result (%d characters), nothing to paste", len([]rune(text)))
@@ -1539,10 +1569,218 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 		}
 	}
 
-	if cfg.Punctuation == punctOff {
-		text = stripPunctuation(text)
+	if shapes = a.takeArmedShapes(shapes); len(shapes) > 0 {
+		log.Printf("shapes: %s", strings.Join(shapeActions(shapes), ", "))
+	}
+	text = shapeText(cfg, outLang, text, shapes)
+	if strings.TrimSpace(text) == "" {
+		log.Printf("empty result after shaping, nothing to paste")
+		return
 	}
 	a.insertResult(ctx, cfg, start, text, skipped, targetWnd, liveSess != nil)
+}
+
+const shapeArmTTL = 60 * time.Second
+
+func shapeText(cfg *Config, lang, text string, shapes []commands.Command) string {
+	if len(shapes) > 0 {
+		return commands.Shape(text, shapes, commands.ShapeOptions{Lang: lang, StripPunct: cfg.Punctuation == punctOff})
+	}
+	if cfg.Punctuation == punctOff {
+		return textshape.StripPunctuation(text)
+	}
+	return text
+}
+
+func shapeActions(shapes []commands.Command) []string {
+	out := make([]string, 0, len(shapes))
+	for _, s := range shapes {
+		out = append(out, s.Action)
+	}
+	return out
+}
+
+func shapeLabel(action string) string {
+	key := "cmd." + action
+	if s := tr(key); s != key {
+		return s
+	}
+	return action
+}
+
+func (a *App) armShapes(cfg *Config, shapes []commands.Command) {
+	a.mu.Lock()
+	var armed []commands.Command
+	if len(a.armedShapes) > 0 && time.Since(a.armedAt) <= shapeArmTTL {
+		for _, old := range a.armedShapes {
+			kept := true
+			for _, s := range shapes {
+				if s.Action == old.Action {
+					kept = false
+				}
+			}
+			if kept {
+				armed = append(armed, old)
+			}
+		}
+	}
+	armed = append(armed, shapes...)
+	a.armedShapes = armed
+	a.armedAt = time.Now()
+	a.mu.Unlock()
+	names := shapeActions(armed)
+	log.Printf("shapes armed: %s", strings.Join(names, ", "))
+	if cfg.Overlay {
+		labels := make([]string, len(names))
+		for i, n := range names {
+			labels[i] = shapeLabel(n)
+		}
+		overlaySet(ovFlashOK, trf("ov.shape.next", strings.Join(labels, ", ")))
+	}
+}
+
+func (a *App) takeArmedShapes(shapes []commands.Command) []commands.Command {
+	a.mu.Lock()
+	armed, at := a.armedShapes, a.armedAt
+	a.armedShapes = nil
+	a.mu.Unlock()
+	if len(armed) == 0 {
+		return shapes
+	}
+	if time.Since(at) > shapeArmTTL {
+		log.Printf("shapes: the armed ones expired, not applied")
+		return shapes
+	}
+	return append(append([]commands.Command{}, armed...), shapes...)
+}
+
+func (a *App) disarmShapes() {
+	a.mu.Lock()
+	had := len(a.armedShapes) > 0
+	a.armedShapes = nil
+	a.mu.Unlock()
+	if had {
+		log.Printf("shapes: the armed ones were dropped")
+	}
+}
+
+type insertion struct {
+	commands.UndoRecord
+	histAt int64
+}
+
+func (a *App) clearUndo() {
+	a.mu.Lock()
+	a.lastIns = nil
+	a.mu.Unlock()
+}
+
+func focusOf(wnd uintptr) uintptr {
+	if wnd == 0 {
+		return 0
+	}
+	tid, _, _ := procGetWindowThreadPID.Call(wnd, 0)
+	if tid == 0 {
+		return 0
+	}
+	var gui guiThreadInfo
+	gui.Size = uint32(unsafe.Sizeof(gui))
+	if ok, _, _ := procGetGUIThreadInfo.Call(tid, uintptr(unsafe.Pointer(&gui))); ok == 0 {
+		return 0
+	}
+	return gui.Focus
+}
+
+func (a *App) recordInsertion(text string, wnd uintptr, mode string, enterSent bool, histAt int64) {
+	if wnd == 0 || wnd == 1 {
+		wnd, _, _ = procGetForegroundWindow.Call()
+	}
+	if wnd == 0 {
+		a.clearUndo()
+		return
+	}
+	a.mu.Lock()
+	hook := a.hook
+	a.mu.Unlock()
+	ins := &insertion{
+		UndoRecord: commands.UndoRecord{
+			Text:      text,
+			Wnd:       wnd,
+			Focus:     focusOf(wnd),
+			At:        time.Now(),
+			Typed:     hook.Typed(),
+			Clicked:   hook.Clicked(),
+			EnterSent: enterSent,
+			Mode:      mode,
+		},
+		histAt: histAt,
+	}
+	a.mu.Lock()
+	a.lastIns = ins
+	a.mu.Unlock()
+}
+
+func (a *App) undoLast(ctx context.Context, cfg *Config) {
+	a.mu.Lock()
+	ins := a.lastIns
+	hook := a.hook
+	a.mu.Unlock()
+	var rec *commands.UndoRecord
+	if ins != nil {
+		rec = &ins.UndoRecord
+	}
+	now := time.Now()
+	wnd, _, _ := procGetForegroundWindow.Call()
+	if ok, reason := commands.CanUndo(rec, now, wnd, focusOf(wnd), hook.Typed(), hook.Clicked()); !ok {
+		log.Printf("undo: not done, %s", reason)
+		if cfg.Overlay {
+			overlaySet(ovFlashErr, tr("ov.undo."+reason))
+		}
+		return
+	}
+	age := now.Sub(rec.At)
+	waitModifiersReleased(3 * time.Second)
+	n := commands.Backspaces(rec.Text)
+	done, err := eraseChars(ctx, n, rec.Wnd)
+	if err != nil {
+		a.mu.Lock()
+		if a.lastIns == ins {
+			a.lastIns = nil
+		}
+		a.mu.Unlock()
+		switch {
+		case errors.Is(err, errFocusMoved):
+			log.Printf("undo: erasing stopped after %d of %d, the window changed", done, n)
+			if cfg.Overlay {
+				overlaySet(ovFlashErr, tr("ov.undo.moved"))
+			}
+		case errors.Is(err, context.Canceled):
+			log.Printf("undo: erasing cancelled by the user after %d of %d", done, n)
+			if cfg.Overlay {
+				overlaySet(ovFlashErr, tr("ov.cancelled"))
+			}
+		default:
+			log.Printf("undo: erasing stopped after %d of %d: %v", done, n, err)
+			if cfg.Overlay {
+				overlaySet(ovFlashErr, tr("ov.err.paste"))
+			}
+		}
+		return
+	}
+	a.mu.Lock()
+	if a.lastIns == ins {
+		a.lastIns = nil
+	}
+	a.mu.Unlock()
+	if ins.histAt != 0 {
+		if herr := histStore.Delete(ins.histAt); herr != nil {
+			log.Printf("history: %v", herr)
+		}
+	}
+	log.Printf("undo: erased %d characters in %s (%s, %.1fs after insertion)", n, processNameOf(rec.Wnd), rec.Mode, age.Seconds())
+	if cfg.Overlay {
+		overlaySet(ovFlashOK, trf("ov.undo.done", n))
+	}
 }
 
 func (a *App) insertResult(ctx context.Context, cfg *Config, start time.Time, text, skipped string, targetWnd uintptr, liveShown bool) {
@@ -1552,9 +1790,10 @@ func (a *App) insertResult(ctx context.Context, cfg *Config, start time.Time, te
 	a.lastWnd = targetWnd
 	a.lastTarget = windowTitle(targetWnd)
 	a.lastProcess = processNameOf(targetWnd)
+	a.lastIns = nil
 	targetApp := a.lastProcess
 	a.mu.Unlock()
-	a.rememberDictation(cfg, text, targetApp)
+	histAt := a.rememberDictation(cfg, text, targetApp)
 
 	allowEnter := cfg.AutoEnter && skipped == ""
 	expect := targetWnd
@@ -1594,7 +1833,8 @@ func (a *App) insertResult(ctx context.Context, cfg *Config, start time.Time, te
 		log.Printf("paste cancelled by the user before it started")
 		return
 	}
-	if err := pasteText(cfg, text, expect); err != nil {
+	mode, err := pasteTextMode(cfg, text, expect)
+	if err != nil {
 		playCue(cfg.Beep, cfg.SoundTheme, cueError)
 		if errors.Is(err, errFocusMoved) {
 			log.Printf("paste cancelled: the input window changed, the text is kept")
@@ -1610,16 +1850,21 @@ func (a *App) insertResult(ctx context.Context, cfg *Config, start time.Time, te
 		}
 		return
 	}
+	enterSent := false
 	if allowEnter && ctx.Err() == nil {
 		time.Sleep(150 * time.Millisecond)
 		if ctx.Err() != nil {
 			log.Printf("auto-enter cancelled by the user")
 		} else if !focusStillOn(expect) {
 			log.Printf("auto-enter cancelled: the input window changed after pasting")
-		} else if err := pressEnter(); err != nil {
-			log.Printf("auto-enter: %v", err)
+		} else {
+			enterSent = true
+			if err := pressEnter(); err != nil {
+				log.Printf("auto-enter: %v", err)
+			}
 		}
 	}
+	a.recordInsertion(text, expect, mode, enterSent, histAt)
 	log.Printf("done in %.1fs: %d characters", time.Since(start).Seconds(), len([]rune(text)))
 	if cfg.Overlay {
 		switch {
@@ -1641,14 +1886,14 @@ func oneLine(s string) string {
 
 var histStore = history.Open(appid.HistoryFile)
 
-func (a *App) rememberDictation(cfg *Config, text, app string) {
+func (a *App) rememberDictation(cfg *Config, text, app string) int64 {
 	if !cfg.HistoryOn || strings.TrimSpace(text) == "" {
-		return
+		return 0
 	}
 	if skip := strings.TrimSpace(cfg.HistorySkip); skip != "" && app != "" {
 		if _, hit := apprules.Find([]apprules.Rule{{Match: skip}}, app); hit {
 			log.Printf("history: %s is on the exclusion list, not recording", app)
-			return
+			return 0
 		}
 	}
 	now := time.Now()
@@ -1656,6 +1901,7 @@ func (a *App) rememberDictation(cfg *Config, text, app string) {
 	if err := histStore.Add(item, now.UnixMilli(), cfg.HistoryKeepMin, cfg.HistoryMax); err != nil {
 		log.Printf("history: %v", err)
 	}
+	return item.At
 }
 
 func (a *App) changeHotkey() {
@@ -1846,16 +2092,6 @@ func punctChain(cfg *Config, chain []*Profile) []*Profile {
 	}
 	head := &Profile{ID: "punct", Name: strS("S_PUNCT"), Prompt: tr("punct.prompt")}
 	return append([]*Profile{head}, chain...)
-}
-
-var punctMarks = []string{".", ",", "!", "?", ";", ":", "…", "—", "–"}
-
-func stripPunctuation(text string) string {
-	for _, m := range punctMarks {
-		text = strings.ReplaceAll(text, m, "")
-	}
-	text = strings.Join(strings.Fields(text), " ")
-	return strings.ToLower(strings.TrimSpace(text))
 }
 
 func (a *App) micCheck() string {

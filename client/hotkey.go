@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	"holdtotype/internal/commands"
 	"holdtotype/internal/evqueue"
 
 	"fmt"
@@ -11,21 +12,38 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"unsafe"
 )
 
 const (
 	whKeyboardLL = 13
+	whMouseLL    = 14
 	wmKeyDown    = 0x0100
 	wmKeyUp      = 0x0101
 	wmSysKeyDown = 0x0104
 	wmSysKeyUp   = 0x0105
+
+	wmLButtonDown = 0x0201
+	wmRButtonDown = 0x0204
+	wmMButtonDown = 0x0207
+	wmXButtonDown = 0x020B
+	llmhfInjected = 0x1
 )
 
 type kbdllHookStruct struct {
 	VkCode    uint32
 	ScanCode  uint32
+	Flags     uint32
+	Time      uint32
+	ExtraInfo uintptr
+}
+
+type msllHookStruct struct {
+	PtX       int32
+	PtY       int32
+	MouseData uint32
 	Flags     uint32
 	Time      uint32
 	ExtraInfo uintptr
@@ -251,7 +269,24 @@ type hotkeyHook struct {
 	onEsc    func() bool
 	capture  *captureSession
 	handle   uintptr
+	mouse    uintptr
 	q        *evqueue.Queue[func()]
+	typed    atomic.Uint64
+	clicked  atomic.Uint64
+}
+
+func (h *hotkeyHook) Typed() uint64 {
+	if h == nil {
+		return 0
+	}
+	return h.typed.Load()
+}
+
+func (h *hotkeyHook) Clicked() uint64 {
+	if h == nil {
+		return 0
+	}
+	return h.clicked.Load()
 }
 
 func (h *hotkeyHook) post(fn func()) {
@@ -365,8 +400,14 @@ func startHotkeyHook(combos []comboDef, onDown func(id string), onUp func(), onE
 			errCh <- fmt.Errorf("SetWindowsHookEx: %v", callErr)
 			return
 		}
+		mcb := syscall.NewCallback(h.mouseProc)
+		mouse, _, mouseErr := procSetWindowsHookExW.Call(whMouseLL, mcb, 0, 0)
+		if mouse == 0 {
+			log.Printf("the mouse hook was not installed, clicks are not counted: %v", mouseErr)
+		}
 		h.mu.Lock()
 		h.handle = hook
+		h.mouse = mouse
 		h.mu.Unlock()
 		errCh <- nil
 		var m msgStruct
@@ -382,9 +423,12 @@ func (h *hotkeyHook) release() {
 		return
 	}
 	h.mu.Lock()
-	hook := h.handle
-	h.handle = 0
+	hook, mouse := h.handle, h.mouse
+	h.handle, h.mouse = 0, 0
 	h.mu.Unlock()
+	if mouse != 0 {
+		procUnhookWindowsHookEx.Call(mouse)
+	}
 	if hook != 0 {
 		procUnhookWindowsHookEx.Call(hook)
 	}
@@ -495,12 +539,29 @@ func (h *hotkeyHook) hookProc(nCode, wParam, lParam uintptr) uintptr {
 	return r
 }
 
+func (h *hotkeyHook) mouseProc(nCode, wParam, lParam uintptr) uintptr {
+	if int32(nCode) == 0 {
+		switch wParam {
+		case wmLButtonDown, wmRButtonDown, wmMButtonDown, wmXButtonDown:
+			m := (*msllHookStruct)(unsafe.Pointer(lParam))
+			if m.Flags&llmhfInjected == 0 {
+				h.clicked.Add(1)
+			}
+		}
+	}
+	r, _, _ := procCallNextHookEx.Call(0, nCode, wParam, lParam)
+	return r
+}
+
 func (h *hotkeyHook) keyEvent(vk uint32, down bool) {
 	h.mu.Lock()
 	if down {
 		h.pressed[vk] = true
 	} else {
 		delete(h.pressed, vk)
+	}
+	if commands.CountsAsTyping(vk, down, h.matchedCombo() != "") {
+		h.typed.Add(1)
 	}
 	var fire func()
 	if h.active {
