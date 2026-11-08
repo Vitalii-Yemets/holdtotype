@@ -1556,119 +1556,245 @@ var settingsStrings = map[string]map[string]string{
 			"<li><b>Hugging Face</b> — the catalog models are downloaded from.</li>" +
 			"</ul>" +
 			"<p>Logs never exceed ~2 MB on disk.</p>",
-		"S_HELP_HTML": "<p class=\"wh\">How it works</p>" +
-			"<p>Hold the shortcut — recording starts (the overlay at the bottom of the screen shows your voice level). Release — the audio is transcribed, optionally translated and run through prompts, and the final text is inserted at the cursor. The ✕ on the overlay cancels at any stage.</p>" +
-			"<p>Full pipeline: <b>record → recognise (GigaAM for Russian, Whisper for the rest) → translate (if enabled) → prompts (LLM) → paste</b>. Every stage is visible on the overlay.</p>" +
-			"<p class=\"wh\">First run</p>" +
-			"<p>The very first launch opens a five-step wizard: the interface language, the language you will dictate in (it picks and downloads the model for you), the shortcut and microphone with a live level bar, a field to try a dictation into, and — last — starting with Windows. You can skip it and everything still works; <b>{exe} -wizard</b> brings it back. Upgrades never see it.</p>" +
-			"<p class=\"wh\">Overlay</p>" +
-			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\"></span><span>Speak…</span><span class=\"mock-bars\"><i style=\"height:6px\"></i><i style=\"height:13px\"></i><i style=\"height:9px\"></i><i style=\"height:16px\"></i><i style=\"height:7px\"></i><i style=\"height:12px\"></i><i style=\"height:5px\"></i></span><span class=\"mock-x\">✕</span></div></div>" +
+		"S_HELP_HTML": "<p class=\"wh\" id=\"s-what\">What this is</p>" +
+			"<p>You speak, and the words appear where the cursor is blinking. As if you had typed them, only faster.</p>" +
+			"<p class=\"hdim\">Here is how it looks. You click in a field where you would normally type: an email, a chat, a search box, a document. You hold down two keys and say a phrase in your normal voice. You let go. A second later the phrase is in the field. There is nothing to switch to and nothing to copy: the app works on top of any program and waits for its keys in the background.</p>" +
+			"<p class=\"hdim\">All the work is done by your computer. Your voice is not saved: it lives in memory for a few seconds, turns into text and is gone. The app goes online on only two occasions: when you download a recognition model and when it checks whether a new version is out. The check can be turned off, and then it needs no network at all.</p>" +
+			"<p class=\"hdim\">You will see the word “model” a lot below. It is simply a file that knows how to make sense of speech. It is downloaded once and kept in a folder next to the app; the bigger it is, the better it hears and the slower it works.</p>" +
+			"<p class=\"wh\" id=\"s-flow\">What happens when you let go of the keys</p>" +
+			"<div class=\"hflow\">" +
+			"<span>recording</span><em>→</em><span>recognition</span><em>→</em><span>replacements</span><em>→</em><span>commands</span><em>→</em><span>translation</span><em>→</em><span>editing</span><em>→</em><span>insertion</span>" +
+			"</div>" +
+			"<p>It usually takes a second or two, and there is no need to know the steps. But if the text ever comes out differently from what you expected, this chain makes it easy to see which step changed it.</p>" +
 			"<ul>" +
-			"<li><b>Speak…</b> — recording: a red dot and live voice-level bars.</li>" +
-			"<li><b>Transcribing…</b> — Whisper is processing; while translating — \"Translating\", while running prompts — \"Editing: name (1/2)\".</li>" +
-			"<li><b>Inserted: N chars</b> — done; on errors or silence a short reason is shown.</li>" +
-			"<li>The ✕ on the right cancels at any stage; the overlay never steals input focus. The plate and its animation can be turned off in the Dictation section.</li>" +
-			"<li>Where the plate appears — bottom of the screen, top, or at the cursor — and whether it shows the recognised text itself instead of a character count, is set on the Dictation section.</li>" +
-			"<li>While the plate is asking something its top line says so — \"Waiting for your answer\" — and the dot stops pulsing. Every answer carries a number: 1…9 pick one, Enter takes the highlighted one, Esc cancels everything; the keys are spelled out at the right of the same row. Ten seconds before the recording limit an amber countdown runs on the plate.</li>" +
-			"<li>The title bar carries three buttons: hide to the tray, fill the screen and close. The same button brings a filled window back to the size it had, and the size you set with the mouse is remembered — filling the screen does not replace it. The window never goes below 760×500, where the rows and cards stop fitting.</li>" +
-			"<li>Long names — a device, a model, a file — are cut with an ellipsis on the Status cards so the cards line up; the whole name appears as a hint if the pointer rests on the card. The hints are drawn in the colours of the current skin, not the system ones.</li>" +
-			"<li>The look comes from two lists in the System section. Design sets the shape, the colours, the corners, the halo and the character of the motion; there are seven — Editor (the default: dark grey with blue), Fluent (like the Windows 11 settings), Studio (graphite with orange, nearly square), Soft (light lilac, rounded), Document (paper with blue), Neon (violet with a pink-to-cyan gradient) and Terminal (green on black, brackets around the buttons). All seven are set in one face, IBM Plex Mono. Colour is offered to Terminal alone and changes nothing but the colour of the window, the plate and the tray icon: green, amber, blue, pink. The other designs bring their own colours. The choice applies at once, with no restart.</li>" +
+			"<li><b>Recording.</b> While the keys are held, the app listens to the microphone. It ignores a press that is too short, so a key you brush by accident does not start a dictation.</li>" +
+			"<li><b>Recognition.</b> Your voice becomes letters. A model does this. Russian is usually handled by GigaAM, other languages by Whisper; these are just names, and you do not have to pick them by hand.</li>" +
+			"<li><b>Replacements.</b> Your personal list of “heard → meant”. If the model keeps writing “git hub” instead of “GitHub”, you fix it once, and from then on it is corrected by itself.</li>" +
+			"<li><b>Commands.</b> A few phrases work like buttons. Say “new line” and the text moves to a new line, while the words themselves never reach the field.</li>" +
+			"<li><b>Translation.</b> If you turned it on, you speak one language and the text lands in another.</li>" +
+			"<li><b>Editing.</b> An optional step. A second model tidies up the text: it removes the “um”s and “you know”s, puts in the commas, makes the wording businesslike.</li>" +
+			"<li><b>Insertion.</b> The text lands in the field. Whatever was on your clipboard before the dictation is put back.</li>" +
 			"</ul>" +
-			"<p class=\"wh\">The translation question</p>" +
-			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Transcribing…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span>Translate to:</span><span class=\"mock-btn on mock-cd\">EN</span><span class=\"mock-btn\">DE</span><span class=\"mock-btn\">Translate into the source language</span></div></div>" +
-			"<p>The plate itself asks, on a second line, the moment you let the shortcut go — in the \"always ask\" and \"ask with a countdown\" modes. The buttons come from \"Languages in the dialog\"; the target language is highlighted. With a countdown, a line under that button shrinks: when it runs out, the highlighted language is used. <b>Translate into the source language</b> inserts the text in the language you spoke; the ✕ on the plate cancels the whole operation. The keyboard works too: Enter takes the highlighted answer, 1…9 pick a button by number, Esc cancels.</p>" +
-			"<p class=\"wh\">Safe insertion</p>" +
-			"<div class=\"mock\"><div class=\"mock-pill\"><span class=\"mock-dot\" style=\"background:#ffb347;box-shadow:0 0 8px rgba(255,179,71,.8)\"></span><span>Transcribing…</span><span class=\"mock-x\">✕</span></div><div class=\"mock-ask\"><span style=\"color:var(--amber)\">Focus changed — insert?</span><span class=\"mock-btn on mock-cd\">Insert here</span><span class=\"mock-btn\">Copy</span></div></div>" +
+			"<p class=\"hdim\">While all this is going on, a narrow plate at the bottom of the screen shows the name of the current step. It tells you at a glance that the app is busy, not frozen.</p>" +
+			"<p class=\"wh\" id=\"s-first\">First run</p>" +
+			"<p>The first time it starts, the app asks five questions. It takes a minute, and then you can dictate.</p>" +
 			"<ul>" +
-			"<li>The target window is captured the moment you press the hotkey. If focus changed while the speech was being processed, nothing is pasted — the plate asks on its second line: <b>Insert here</b> (into the current window), <b>Copy</b> (to the clipboard) or <b>Keep it</b>. Say nothing and after 30 seconds it picks Keep it by itself: nothing is inserted anywhere, and the text stays in Last Result and on the clipboard.</li>" +
-			"<li>Enter after paste is pressed only when the target window has not changed.</li>" +
-			"<li><b>Last Result</b> — the final text of every dictation is kept in memory until the next one; the tray menu has \"Copy last result\". A failed paste or focus change never loses a dictation.</li>" +
+			"<li><b>Which language to talk to you in.</b> The language of the settings window. Usually already guessed from Windows.</li>" +
+			"<li><b>Which language you will dictate in.</b> The most important question: from your answer the app finds and downloads a suitable model by itself. The file weighs from 150 MB to a gigabyte and downloads in the background, with the progress shown.</li>" +
+			"<li><b>Which keys start it.</b> Just press whatever is comfortable to hold with one hand. By default it is Ctrl and the Windows key.</li>" +
+			"<li><b>Which microphone to listen to.</b> A live level bar sits next to it. Say something: if it does not move, the wrong microphone is selected.</li>" +
+			"<li><b>Try it.</b> A field where you can dictate a test phrase and make sure everything works.</li>" +
 			"</ul>" +
-			"<p class=\"wh\">Checking the microphone</p>" +
-			"<p>The Test button on the Microphone section records three seconds and takes them apart: peak level in decibels, how much of the recording actually holds speech, and how many samples were clipped. The answer comes in words: sounds good, too quiet — raise the level in Windows, clipping — lower it, no speech heard — is the right microphone picked. The same numbers are measured after every dictation and written to the log; when recognition comes back empty the plate names the reason — too quiet, clipping or silence — instead of just saying it heard nothing.</p>" +
-			"<p class=\"wh\">Pasting from the history</p>" +
-			"<p>Every entry in the history has a Paste button: it brings back the window you opened the settings from and pastes the text there, like an ordinary dictation. When there is nowhere to go back to, the text simply lands on the clipboard and the program says so.</p>" +
-			"<p class=\"wh\">The lists in one file</p>" +
-			"<p>Replacements and voice commands can be saved into a single .json file and loaded on another computer — the buttons under the command list on the Text section. Loading overwrites nothing: only the lines that are not there yet are added, and the program says how many were added and how many were skipped.</p>" +
-			"<p class=\"wh\">File integrity</p>" +
-			"<p>Every model in the catalog has a known SHA-256 reference hash. After a download the file is compared against it: no match — the file is deleted and the download can be repeated. The Check button on the Models section compares the models already installed the same way, and when the program updates itself the downloaded installer is checked too — a foreign file will not be started.</p>" +
-			"<p class=\"wh\">History of dictations</p>" +
-			"<p>The History section in the left column keeps what you dictated: text only, on this computer only, audio is never kept. It is off by default and turns on with one switch in the same place. Entries are kept for a set number of days and up to a set count, older ones drop out on their own; \"Never record from these programs\" lists, separated by commas, the ones nothing should be saved from — password managers, banking apps. Search covers both the text and the program name, the button next to an entry puts it on the clipboard, and Clear removes everything at once along with the <b>{app}-history.json</b> file.</p>" +
-			"<p class=\"wh\">Voice commands</p>" +
-			"<p>Under the replacements on the Text section there is a list of commands: what you say turns into an action instead of words. \"New line\" and \"new paragraph\" put in a break — models never do; \"cancel\" throws the whole dictation away and inserts nothing; \"insert text\" drops in anything you like, an emoticon included. The button next to the list fills it with the usual phrases in the language of the interface. Commands are matched as whole words and run after the replacements, so the prompts and the translation already get the finished text. Spare spaces around the breaks are cleaned up. The field below tries both replacements and commands on any phrase: a break shows as ⏎.</p>" +
-			"<p class=\"wh\">Replacements after recognition</p>" +
-			"<p>On the Text section you can list what the model mishears and what it should become: \"git hub\" → GitHub, surnames, in-house terms. Replacements run right after recognition, before the prompts, so the editor already gets the right words. Translation into English happens inside recognition, so replacements see the translated text. By default they match whole words and ignore case; the two switches next to each row change that. Rules apply from top to bottom. The field at the bottom tries them on any phrase without dictating.</p>" +
-			"<p class=\"wh\">Rules per application</p>" +
-			"<p>On the Dictation section you can set rules for particular programs: what to insert with (the clipboard or character by character), whether to press Enter, how long to wait before inserting and which prompts to apply. A program is named by its file — <b>chrome.exe</b>; one rule can list several, separated by commas, and a trailing asterisk catches every name with that beginning. The first matching rule wins; with no rules, or none that match, everything works as in the general settings. The button next to the list fills in the program you last inserted into.</p>" +
-			"<p class=\"wh\">The main settings</p>" +
+			"<p class=\"hdim\">You can skip any step and come back to it later: all of it is in the settings. If you want to go through the wizard again, start the app with <code>-wizard</code> added. It does not show up again after an update.</p>" +
+			"<p class=\"wh\" id=\"s-overlay\">The plate at the bottom of the screen</p>" +
+			"<div class=\"hshot\">" +
+			"<div class=\"hpill\"><span class=\"hdot\"></span><span>Speak…</span><span class=\"hbars\"><i style=\"height:6px\"></i><i style=\"height:13px\"></i><i style=\"height:9px\"></i><i style=\"height:16px\"></i><i style=\"height:7px\"></i><i style=\"height:12px\"></i></span><span>✕</span></div>" +
+			"<div class=\"hcap\">this is how the app shows that it hears you</div>" +
+			"</div>" +
+			"<p>While you dictate, this is the only thing on the screen. The plate is small, does not grab the mouse and does not get in the way of your work: it simply tells you what is happening to your phrase right now.</p>" +
 			"<ul>" +
-			"<li><b>Keyboard shortcut</b> — the main dictation hotkey. Any combination can be captured; left/right modifiers are distinguished. Dictation, translation and profile hotkeys must be unique — a duplicate blocks saving.</li>" +
-			"<li><b>UI language</b> — switches instantly; \"Same as system\" follows Windows.</li>" +
-			"<li><b>Recognition language</b> — a hint for Whisper; \"auto\" detects the language from speech.</li>" +
-			"<li><b>Sound</b> — start/stop recording cues: several themes plus Windows system sounds, ▶ previews.</li>" +
-			"<li><b>Enter after paste</b> — automatically sends the dictated text (handy in messengers).</li>" +
-			"<li><b>Restore clipboard</b> — puts the previous clipboard content back in full after pasting, including images, files and rich text. When the content cannot be snapshotted, the clipboard is left untouched and the text is typed character by character.</li>" +
-			"<li><b>Overlay and animation</b> — the status indicator at the bottom of the screen; animation can be turned off.</li>" +
-			"<li><b>Type mode</b> — inserts text by simulating keystrokes instead of Ctrl+V, for fields where clipboard paste does not work.</li>" +
+			"<li><b>“Speak…”</b> Recording is on. The bars next to it jump in time with your voice. If they lie still, you cannot be heard, and there is no point in going on.</li>" +
+			"<li><b>“Transcribing…”</b> You let go of the keys, and the model is at work. Usually a second or two. The very first dictation after startup takes longer: that is when the model is being loaded into memory.</li>" +
+			"<li><b>“Translating…”</b> Translation is in progress.</li>" +
+			"<li><b>“Editing: Cleanup (1/2)”</b> The second model is editing the text. You can see which instruction is being carried out and how many there are in total.</li>" +
+			"<li><b>“Inserted: 128 chars”</b> Done, the text is already in the field. The plate fades out by itself after a couple of seconds.</li>" +
+			"<li><b>The cross.</b> Changed your mind? Click it at any step. The recording is thrown away, and nothing reaches the field.</li>" +
 			"</ul>" +
-			"<p class=\"wh\">Recognition</p>" +
-			"<div class=\"mock\"><div class=\"mock-row\"><b>Auto-detect</b><span style=\"margin-left:auto\">Turbo (q5)</span></div>" +
-			"<div class=\"mock-row\"><b>Russian</b><span style=\"margin-left:auto\">GigaAM v3</span></div>" +
-			"<div class=\"mock-row\"><span class=\"mock-note\">English · as Auto-detect — Turbo (q5)</span><span style=\"margin-left:auto\">▼</span></div></div>" +
+			"<p class=\"hdim\">The plate can be turned off, put in any corner, tied to the cursor, or simply dragged with the mouse to where it is out of the way. That is on the “Controls & behaviour” tab.</p>" +
+			"<p class=\"wh\" id=\"s-state\">The “Status” screen</p>" +
+			"<p>This screen answers one question: can you dictate right now? If not, it tells you why and gives you a button that takes you to where it gets fixed.</p>" +
+			"<div class=\"hshot\">" +
+			"<div class=\"hcard\"><span class=\"hled\"></span><div class=\"ht\"><b>Ready to dictate</b><span>hold it and speak — the text lands where the cursor is</span></div><span class=\"hkey\">ctrl</span><span style=\"color:var(--dim)\">+</span><span class=\"hkey\">win</span></div>" +
+			"<div class=\"hcap\">the green square means the app is listening for its keys</div>" +
+			"</div>" +
+			"<p>The top card comes in three kinds. <b>Green</b>: all is well, with a reminder of the keys next to it. <b>Yellow</b>: you switched the app off from the tray icon next to the clock, and the keys do nothing until you press “Switch on” right there on the card. <b>Red</b>: the settings contradict each other. Recognition on another computer is chosen, but no address is given.</p>" +
+			"<p>Below it is what you will usually just glance at:</p>" +
 			"<ul>" +
-			"<li><b>Which model serves which language</b> — the Languages & models tab is a list of languages. Click one — the models that can serve it unfold below: the assigned and the recommended first, the missing ones with a size and a download arrow. A click on a card is the choice; a missing model downloads itself and takes over once ready. Languages without a model of their own inherit the Auto-detect one and are drawn dim.</li>" +
-			"<li><b>The catalogue</b> — Whisper: Base (fast, for weak PCs), Small (the balance), Medium and Turbo (more accurate and slower; “q5” is the quantized cut: a bit smaller and faster with almost no quality loss), and they also translate to English; GigaAM v3 is sharper on Russian and punctuates itself; Parakeet v3 covers 25 European languages; Nemotron 3.5 types as you speak. Downloads come from the official Hugging Face repositories, every file checked against its reference hash.</li>" +
-			"<li><b>Your own model</b> — a Whisper single ggml-*.bin file or a sherpa-onnx model folder (encoder.onnx, decoder.onnx, tokens.txt) will do. Put it into the models folder next to the app and restart it — the model appears in the choice for matching languages; its powers are unknown, so it is shown honestly, without bars.</li>" +
-			"<li>whisper-server keeps the model in memory between phrases — the first dictation after startup is slower (loading), afterwards recognition takes 1–3 seconds.</li>" +
-			"<li><b>Dictionary</b> — comma-separated terms, names and abbreviations. A hint for Whisper's \"ear\" so rare words are recognized correctly; not commands.</li>" +
-			"<li><b>Microphone and speed</b> — microphone selection with a live level meter (speak and the bar moves, so you know the device is heard), CPU threads (more = faster transcription), minimum recording length (filters accidental presses), maximum length (auto-stop). If the chosen device is unplugged the app falls back to the system default; a recording with no speech is never sent for recognition — it reports \"Silence\" instead.</li>" +
-			"<li><b>Server</b> — whisper-server starts automatically and runs locally. You can change the port or point to an external server URL — then the local one is not used.</li>" +
-			"<li><b>Translation</b> — all translation is done by Whisper: to English via its native translate mode, to other languages <b>experimentally</b>, by forcing the output language (quality depends on the language pair; major languages work best). The Turbo model is not trained for translation — the settings show a warning when it is active. \"Always translate to the target language\" makes every main-hotkey dictation translate to the chosen target with no questions. With the checkbox off, the ask mode applies: always or with a timeout — a language dialog appears before transcription and the target is used when time runs out. The separate translation hotkey translates once without affecting normal dictation. Settings that do not apply in the current mode are greyed out automatically.</li>" +
+			"<li><b>This week.</b> A pie chart: which programs your dictations went to and how many characters you dictated.</li>" +
+			"<li><b>Version.</b> The build number and a check button. If a newer one is out, the app tells you right here.</li>" +
+			"<li><b>Memory.</b> How much of it is free, which model is sitting in it now, and how much all the models take up on disk. The “Unload” button frees the memory at once, for example before a heavy game.</li>" +
+			"<li><b>Quick settings.</b> Five cards with the things you use most: microphone, language, plate, sound, start with Windows. They show how things are set right now, and the arrow takes you to the tab where that is changed. There are deliberately no switches here, so nothing gets flipped in passing.</li>" +
+			"<li><b>Models.</b> What is installed, what is working right now, which languages each one is responsible for, and what is just sitting on disk.</li>" +
 			"</ul>" +
-			"<p class=\"wh\">Post-processing (LLM)</p>" +
-			"<p>An optional second layer: a local language model (llama.cpp) edits the transcribed text according to your prompts — removes filler words, changes style, formats. Fully offline, CPU only.</p>" +
-			"<div class=\"mock\"><div class=\"mock-row\" style=\"color:var(--dim)\">▸ Qwen/Qwen2.5-3B-Instruct-GGUF<span style=\"margin-left:auto;color:var(--faint)\">2024-09-20</span><span>↓303k</span><span>↗</span></div>" +
-			"<div class=\"mock-row\" style=\"padding-left:18px\">q4_k_m.gguf<span style=\"margin-left:auto\">1.9 GB</span><span style=\"color:var(--green)\">● ≈3.7 GB</span><span style=\"color:var(--dim)\">⭳</span></div>" +
-			"<div class=\"mock-row\" style=\"padding-left:18px\">q8_0.gguf<span style=\"margin-left:auto\">3.6 GB</span><span style=\"color:var(--amber)\">● ≈8.2 GB</span><span style=\"color:var(--dim)\">⭳</span></div></div>" +
+			"<p class=\"wh\" id=\"s-system\">The “System” tab</p>" +
+			"<p>How the app looks, how it gets along with Windows, and a few service buttons. In everyday life you come here about once a year.</p>" +
+			"<p class=\"hsub\">How the app looks</p>" +
+			"<p>Three rows: interface language, design and colour. They have no effect on how the app works.</p>" +
+			"<table class=\"hopt\">" +
+			"<tr><td>UI language</td><td>The language of the settings window and of the captions on the plate. It has nothing to do with the dictation language: the window can be in English while you speak German.</td></tr>" +
+			"<tr><td>Design</td><td>The overall look. There are seven: “Editor” (the default: dark grey with blue), “Fluent” (like Windows 11 Settings), “Studio” (graphite with orange, almost no rounded corners), “Soft” (light lilac, rounded), “Document” (paper with blue), “Neon” (purple with a pink-to-turquoise gradient) and “Terminal” (green letters on black, brackets around the buttons). All seven use one font, IBM Plex Mono.</td></tr>" +
+			"<tr><td>Colour</td><td>A tint for “Terminal” only: green, amber, blue, pink. The plate and the tray icon take the same colour. The other designs have colours of their own, and the row is hidden.</td></tr>" +
+			"</table>" +
+			"<p class=\"hsub\">Startup and updates</p>" +
+			"<p>This is where you decide whether the app starts with the system and whether it keeps an eye out for new versions.</p>" +
+			"<table class=\"hopt\">" +
+			"<tr><td>Start with Windows</td><td>The app starts when you sign in and waits for your keys. It is an ordinary entry in the startup list, the same kind you could add there yourself.</td></tr>" +
+			"<tr><td>Check on startup</td><td>Once, at startup, the app asks whether a newer version is out. Apart from downloading models, it never goes online. Turn this off, and you will find out about new versions on your own.</td></tr>" +
+			"<tr><td>Updates</td><td>The button checks right now. If there is a newer version, the app downloads it and installs it over the current one: settings, models and history stay where they are.</td></tr>" +
+			"</table>" +
+			"<p class=\"hsub\">Service</p>" +
+			"<p>Three buttons for when something has gone wrong.</p>" +
+			"<table class=\"hopt\">" +
+			"<tr><td>Log</td><td>Opens the file where the app writes down what it did: which model started, how long recognition took, where an error happened. The reason is usually written in words, not codes. The file does not keep growing: old entries are overwritten by new ones.</td></tr>" +
+			"<tr><td>Re-read config.json</td><td>All the settings live in one text file next to the app. If you edited it by hand or brought it from another computer, this button picks up the changes without a restart.</td></tr>" +
+			"<tr><td>Reset the settings</td><td>Puts everything back the way it was after installation. Downloaded models and history stay where they are: only the settings are wiped.</td></tr>" +
+			"</table>" +
+			"<p class=\"hsub\">Where recognition runs</p>" +
+			"<p>Speech is handled by a separate small program. Normally it sits next to the app and starts by itself, and you do not need to think about it. But it can also live on another computer: for example, a home machine with a powerful graphics card, while you dictate from a light laptop. You choose with the switch on the cards.</p>" +
+			"<div class=\"hshot\">" +
+			"<div class=\"hcard\" style=\"border-color:var(--hi);box-shadow:var(--higlow)\"><span class=\"hsw on\"><i></i></span><div class=\"ht\"><b>On this computer</b><span>CPU threads 4 · autostart on · port 8910 · whisper-server.exe next to the app</span></div><button class=\"hbtn\">Edit</button></div>" +
+			"<div class=\"hcap\">the chosen card is highlighted, and the other one is dimmed meanwhile</div>" +
+			"</div>" +
+			"<p>The “Edit” button opens a window with four settings. They all come with default values, and you can almost always leave them alone.</p>" +
+			"<table class=\"hopt\">" +
+			"<tr><td>CPU threads</td><td>How many processor cores to give to recognition. More cores means faster, but only up to a point: beyond it there is no gain, and other programs start to lag.</td></tr>" +
+			"<tr><td>Start whisper-server automatically</td><td>The app starts the recognizer by itself. There is only one reason to turn this off: you start it by hand and do not want the app to interfere.</td></tr>" +
+			"<tr><td>Port</td><td>The number the app uses to talk to the recognizer inside your own computer. It is not visible from outside. Change it only if another program has taken this number.</td></tr>" +
+			"<tr><td>whisper-server path</td><td>Where the recognizer lives. It is filled in for you. Type your own only if you deliberately put it somewhere else: otherwise, once you move the folder, dictation will no longer start.</td></tr>" +
+			"</table>" +
+			"<p>The second card has a single setting: the address of the computer on the network, for example <code>http://192.168.1.50:8080</code>. Keep in mind that in this setup your recorded voice goes to that machine, and over a plain address it travels unencrypted. That is fine on a home network, but better not to work like this over the internet.</p>" +
+			"<div class=\"hbad\">If “On another computer” is chosen but no address is filled in, and Whisper serves your language, dictation will not work. The app tells you so with a red card on “Status”, a red mark next to “System” and a line at the bottom of the window.</div>" +
+			"<p class=\"wh\" id=\"s-mic\">The “Microphone” tab</p>" +
+			"<p>More than half of all failed dictations come down not to the model or the settings but to the microphone: the wrong one is being listened to, or you can barely be heard. This tab has everything you need to check that in half a minute.</p>" +
+			"<table class=\"hopt\">" +
+			"<tr><td>Microphone</td><td>Which device to listen to. The “System default” option means “whatever is selected in Windows”, which is handy if you switch between a headset and no headset: the app follows the system by itself.</td></tr>" +
+			"<tr><td>Refresh list</td><td>Needed if you plugged in a headset after the app had started: the list is read again.</td></tr>" +
+			"<tr><td>Input level</td><td>A live bar. Say something, and the bars should move noticeably. If they do not, the microphone is muted in Windows or the wrong one is selected.</td></tr>" +
+			"<tr><td>Check the microphone</td><td>Three seconds of recording and a verdict in plain words: is it loud enough, is there clipping (when the sound crackles because the microphone is too close), and can speech be heard at all.</td></tr>" +
+			"<tr><td>Recording sound cues</td><td>A short sound at the start and at the end of recording. Especially useful if you turned the plate off: then at least you can hear that recording has started.</td></tr>" +
+			"<tr><td>Cue sound</td><td>Which sound exactly: Windows voice, chime, marimba and a few more. The button next to it plays the selected one, so you do not have to guess from the name.</td></tr>" +
+			"</table>" +
+			"<p class=\"wh\" id=\"s-hist\">The “History” tab</p>" +
+			"<p>The history is a list of what you have dictated. Text only: your voice is never saved, anywhere. It is off by default, and that is deliberate: dictations often contain personal things.</p>" +
+			"<p>It is worth turning on if you have ever been in one of these situations: you pasted text into the wrong window and it was lost; you need to repeat a long phrase; you want to find what you dictated yesterday and send it again.</p>" +
+			"<div class=\"hshot\">" +
+			"<div class=\"hrow\"><label>How long to keep</label><span class=\"hnum\"><span class=\"hfld\">7</span><span class=\"hspin\"><i>▲</i><i>▼</i></span></span><span class=\"hfld\">days</span></div>" +
+			"<div class=\"hrow\"><label>How many entries to keep</label><span class=\"hnum\"><span class=\"hfld\">200</span><span class=\"hspin\"><i>▲</i><i>▼</i></span></span></div>" +
+			"<div class=\"hcap\">the period can be set in minutes, hours or days, with any number</div>" +
+			"</div>" +
+			"<table class=\"hopt\">" +
+			"<tr><td>Keep a history of dictations</td><td>The main switch. Turn it off, and new entries stop appearing while the old ones are erased.</td></tr>" +
+			"<tr><td>How long to keep</td><td>How long before an entry disappears by itself. You can set five minutes if you only need the history for when something lands in the wrong place, or thirty days.</td></tr>" +
+			"<tr><td>How many entries to keep</td><td>A second limit, by count. It works together with the first: whichever is reached first applies. With “7 days and no more than 50”, the fifty-first entry pushes out the oldest one, even if the week is not over yet.</td></tr>" +
+			"<tr><td>Never record from these programs</td><td>A list of exceptions. Whatever you dictate into these windows (a bank, a password manager, a work chat) stays out of the history, while dictation itself works as usual. You can pick a program from the list of open windows instead of hunting for its file name.</td></tr>" +
+			"</table>" +
+			"<p>You can do four things with each entry. <b>Copy</b>: the text goes to the clipboard. <b>Paste</b>: the app asks you to show it where. Click the field you want in any program, and the text lands there. <b>Delete</b>: removes that one entry. <b>Search</b>: looks both in the text and in the program name. The “Clear” button wipes everything at once, so it asks for confirmation.</p>" +
+			"<p class=\"hdim\">On the right of each entry it says when the entry will disappear, such as “till Sep 7”, and on the last day this label turns yellow.</p>" +
+			"<p class=\"wh\" id=\"s-dict\">The “Controls & behaviour” tab</p>" +
+			"<p>How dictation starts and how the text gets into the field. You come here when something does not work the way you want: the keys are awkward, the text does not appear, Enter gets pressed by itself.</p>" +
+			"<p class=\"hsub\">Keys</p>" +
+			"<table class=\"hopt\">" +
+			"<tr><td>Keyboard shortcut</td><td>Press “Change…” and hold whatever is comfortable for you. The app captures this combination across the whole system, so do not pick one that is already taken, such as Ctrl+C. Combinations with the Windows key are the least likely to be taken.</td></tr>" +
+			"<tr><td>Mode</td><td>With “hold”, it records while the keys are held down: let go, and the phrase goes off to be processed. With “toggle”, the first press starts recording and the second stops it. The second mode suits long monologues, when your hand gets tired of holding the keys.</td></tr>" +
+			"<tr><td>Min recording, ms</td><td>How short a press counts as accidental. Brush the keys for a split second, and the app stays quiet instead of inserting a scrap of a word.</td></tr>" +
+			"<tr><td>Max recording, s</td><td>A safeguard against a forgotten key: the recording stops by itself instead of recording into the void for half an hour.</td></tr>" +
+			"</table>" +
+			"<p class=\"hsub\">How the text is inserted</p>" +
+			"<table class=\"hopt\">" +
+			"<tr><td>Press Enter after paste (auto-submit)</td><td>The text is not just inserted but sent right away: the message goes out, the search runs. In a messenger this saves you a keystroke; in an email or a document it will almost certainly get in the way.</td></tr>" +
+			"<tr><td>Restore clipboard after paste</td><td>Insertion goes through the clipboard, and the app puts back whatever was there: a picture, a file, a copied piece of text. Leave it on if you often copy things and do not want to lose them.</td></tr>" +
+			"<tr><td>Insert character-by-character instead of the clipboard</td><td>Instead of pasting the text in one piece, the app types it out as if you were typing. It is slower, but it helps where pasting from the clipboard is blocked: some banking forms, terminals, old programs.</td></tr>" +
+			"<tr><td>Delay before inserting</td><td>A short pause before the text is handed to the window. Rarely needed: sometimes a program is not ready to take the text in time, and the start of the phrase gets lost.</td></tr>" +
+			"</table>" +
+			"<p class=\"hsub\">On-screen overlay</p>" +
+			"<p>This is where you decide whether to show the plate at all, and where exactly.</p>" +
+			"<table class=\"hopt\">" +
+			"<tr><td>Show the plate</td><td>Turn it off if it gets in the way or the sound cues are enough for you.</td></tr>" +
+			"<tr><td>Where to show the plate</td><td>A diagram of the screen with nine spots: click the corner where the plate will not be in the way.</td></tr>" +
+			"<tr><td>At the cursor</td><td>The plate appears next to where you are dictating. If the program does not report where the cursor is, it appears next to the mouse pointer.</td></tr>" +
+			"<tr><td>Your own spot</td><td>You can simply drag the plate with the mouse, and it remembers the spot.</td></tr>" +
+			"<tr><td>Screen</td><td>Which monitor to show it on, if you have more than one.</td></tr>" +
+			"<tr><td>Show the recognised text</td><td>After insertion the plate shows the phrase itself rather than the number of characters. Handy for checking, but anyone looking at your screen will see the phrase too.</td></tr>" +
+			"</table>" +
+			"<p class=\"wh\" id=\"s-models\">The “Languages & models” tab</p>" +
+			"<p>Here you say which language you will dictate in, and the app decides what to recognize it with. There are several models: some are fast, some are accurate, some know rare languages.</p>" +
+			"<table class=\"hopt\">" +
+			"<tr><td>Source speech language</td><td>The language you speak. If you speak several, choose “Auto-detect”: the model works it out by itself, though a little more slowly and a little less accurately than when the language is named outright.</td></tr>" +
+			"<tr><td>Which model serves which language</td><td>Click a language, and a list of the models that know it unfolds, with ratings for speed and accuracy and the file size. This way one language can keep a fast model while another gets an accurate one. The separate “Auto-detect” row is shared: its model serves every language that has no model of its own, and those languages are greyed out in the list. It is also the one that works out which language is being spoken when no source speech language is set.</td></tr>" +
+			"</table>" +
+			"<div class=\"hshot\">" +
+			"<div class=\"hrow\"><label>Russian<span class=\"hs\">GigaAM v3 · accuracy 5 of 5 · speed 5 of 5 · 232 MB</span></label><span class=\"hchip\"><i></i>active</span></div>" +
+			"<div class=\"hrow\"><label>English<span class=\"hs\">as Auto-detect · Whisper Medium</span></label><button class=\"hbtn\">Pick</button></div>" +
+			"<div class=\"hcap\">you can see which model handles a language and what it costs in speed and disk space</div>" +
+			"</div>" +
+			"<p class=\"hsub\">Translation</p>" +
+			"<p>Some models can do more than write down what you said: they can translate it straight away. You speak one language, and the text lands in the field in another. Whisper does the translating: into English with its own built-in translation task, into other languages by being told that the output language is the language of the speech; for distant language pairs the quality is uneven. If the chosen model cannot translate, an orange line appears next to the switch: if Whisper is installed, the plate offers to translate with it; otherwise the text stays in the source speech language.</p>" +
+			"<table class=\"hopt\">" +
+			"<tr><td>Change the text output language</td><td>Turns translation on.</td></tr>" +
+			"<tr><td>Default text output language</td><td>Which language to translate into if you did not pick another one during the dictation itself.</td></tr>" +
+			"<tr><td>Ask for the text output language</td><td>You can skip the question and always translate into the default language. You can be asked every time: after a dictation, buttons with languages appear on the plate. Or you can be asked with a timeout: the same buttons, but if you do not press one in time, the default language is used.</td></tr>" +
+			"<tr><td>Languages in the dialog</td><td>Which languages to offer as these buttons. Keep the two or three you really use, or choosing will take longer than speaking.</td></tr>" +
+			"</table>" +
+			"<p class=\"hsub\">Models on disk</p>" +
+			"<table class=\"hopt\">" +
+			"<tr><td>Your own model</td><td>If you have a model of your own, put it into the models folder and restart the app: it appears in the lists for the languages it understands. The button next to it opens the right folder, so you do not have to look for it in File Explorer.</td></tr>" +
+			"<tr><td>Unload from memory</td><td>While the app is running, the model takes up RAM. This button frees it at once, for example before a heavy game. The next dictation loads the model again, and the first phrase takes longer than usual.</td></tr>" +
+			"<tr><td>Check installed models</td><td>Compares the downloaded files with their reference. Useful if the connection dropped during a download and you suspect a file got damaged.</td></tr>" +
+			"</table>" +
+			"<p class=\"wh\" id=\"s-rules\">The “Rules” tab</p>" +
+			"<p>Three lists that fix the text automatically, before it even reaches the window. All three are optional: the app works perfectly well without them.</p>" +
+			"<p class=\"hsub\">Punctuation and capitals</p>" +
+			"<p>Where the full stops, commas and capital letters in the text come from. There are three options: <b>from the model</b> (the model puts them in as it heard them; fast and usually enough), <b>by the editor model</b> (a second model adds the marks; neater, but every dictation takes a few seconds longer) and <b>strip</b> (the text comes out as one run with no marks; rarely needed, for a search box, say).</p>" +
+			"<p class=\"hsub\">Dictionary</p>" +
+			"<p>A list of words the model usually does not know: surnames, company names, professional terms. It is not an order to write them this way but a hint: when it hears something similar, the model is more likely to choose your version.</p>" +
+			"<div class=\"hshot\">" +
+			"<div class=\"hchips\"><span class=\"hchip\">GitHub</span><span class=\"hchip\">Docker</span><span class=\"hchip\">Kubernetes</span><span class=\"hchip\">HoldToType</span></div>" +
+			"<div class=\"hcap\">words are added one at a time and live as separate cards</div>" +
+			"</div>" +
+			"<p class=\"hdim\">The dictionary is read by Whisper models. It has no effect on Russian speech recognized by GigaAM, where hints work differently. The default set of words follows the language until you write your own.</p>" +
+			"<p class=\"hsub\">Replacements after recognition</p>" +
+			"<p>Also a list of words, but it works differently: this is no longer a hint but a guarantee. Whatever appears on the left becomes what is on the right. Each replacement has three settings: <b>Whole words only</b> (then “cat” will not touch “catalog”, which is usually what you want), <b>Match letter case</b> (then “Go” and “go” count as different words) and <b>Rule language</b> (the replacement fires only when you dictate in that language).</p>" +
+			"<p class=\"hsub\">Voice commands</p>" +
+			"<p>Phrases that do not go into the text but perform an action. They work only when the phrase is said on its own and in full: the same words in the middle of a sentence do not count as a command.</p>" +
 			"<ul>" +
-			"<li><b>Models</b> — installed LLM editing models; the radio selects the active one (applied at once), ✕ deletes (the active one too — post-processing then turns off). Download progress shows here as well.</li>" +
-			"<li><b>Finding a model</b> — GGUF models on Hugging Face by name (e.g. \"qwen2.5 instruct\"). Each repository shows its last update date, download count and a ↗ link to the model page; clicking a row expands its quant files. The ● ≈N GB indicator is compared against the <b>free</b> RAM (shown above the list).</li>" +
-			"<li><b>Picking a quant:</b> the number is bits per weight (Q4 — the sweet spot, Q8 — nearly uncompressed, Q3 — saves RAM at a quality cost); K_M beats K_S; IQ4 is the newer generation, better than classic quants at the same size. The ● ≈N GB indicator estimates the RAM needed (file plus context headroom): green fits, amber is tight, red won't fit.</li>" +
-			"<li>A 1.5–3B model gives fast editing; 7–9B is noticeably smarter but each pass takes seconds on CPU. llama-server starts on first use and keeps the model warm in memory.</li>" +
+			"<li><b>“new line”</b>: start a new line;</li>" +
+			"<li><b>“new paragraph”</b>: leave an empty line between paragraphs;</li>" +
+			"<li><b>“cancel”</b>: throw the phrase away and insert nothing;</li>" +
+			"<li><b>your own command</b>: insert a ready-made piece of text, such as a signature, an address or a standard reply.</li>" +
 			"</ul>" +
-			"<p class=\"wh\">Prompts</p>" +
-			"<div class=\"mock\"><div class=\"mock-row\"><span class=\"mock-cb on\">✓</span><b>Cleanup</b><span class=\"mock-note\">—</span><span style=\"margin-left:auto;color:var(--dim)\">✎ ✕</span></div>" +
-			"<div class=\"mock-row\"><span class=\"mock-cb\"></span><b>Business style</b><span class=\"mock-note\">ctrl+alt+f</span><span style=\"margin-left:auto;color:var(--dim)\">✎ ✕</span></div></div>" +
+			"<p class=\"wh\" id=\"s-post\">The “Post-processing” tab</p>" +
+			"<p>Post-processing is a second model that rewrites the recognized text according to your instruction. For example: “remove filler words and repetitions”, “turn this into a business email”, “make it a list”. The instruction is written in ordinary words and is called a prompt.</p>" +
+			"<p>It is off by default, and here is why: it is the only step that noticeably slows dictation down. Instead of a second or two, insertion takes several seconds, and on a weak machine as many as ten.</p>" +
+			"<table class=\"hopt\">" +
+			"<tr><td>Turn on post-processing</td><td>The main switch. While it is off, nothing else on the tab works, and the text is inserted as it was recognized.</td></tr>" +
+			"<tr><td>Model · Local</td><td>An editor that runs on your computer. Nothing leaves it, but it needs memory: such models weigh a gigabyte or more. Next to it is a catalog where a model is chosen and downloaded in one click.</td></tr>" +
+			"<tr><td>Model · External server</td><td>Instead of your own model, the text is sent to an outside service: OpenAI, Groq or a server of your own. Faster and smarter, but the text leaves your computer. The access key is stored encrypted, and the “Test connection” button checks that the address and the key work.</td></tr>" +
+			"<tr><td>Prompts</td><td>Your instructions to the editor. The checked ones are applied in turn, from top to bottom: first, say, the cleanup, then the business style. If nothing is checked, post-processing does nothing, and the app warns you about it with a yellow line.</td></tr>" +
+			"</table>" +
+			"<div class=\"hwarn\">Your voice never goes to an external server, only the recognized text. But that text does leave, so turn this on knowingly.</div>" +
+			"<p>Each prompt has a <b>name</b> (that is how it shows on the plate while it works), the <b>instruction text</b> in ordinary words, an optional <b>shortcut of its own</b> (dictating with it runs the phrase through this prompt alone, skipping the others) and a <b>test</b>: a field where you can type a phrase and see what comes out, without dictating anything.</p>" +
+			"<p class=\"wh\" id=\"s-about\">“About” and “Contacts”</p>" +
+			"<p>The “About” tab has a short account of what this is and how it is built, and a list of all the third-party libraries the app is made from, with their licences. The names are clickable and lead to the pages of those projects. There is also a link to the repository, where the source code and all the versions live.</p>" +
+			"<p>“Contacts” has three cards: email, the repository, and a page for bugs and ideas. Clicking the email address opens your mail program with the recipient already filled in, and the icon next to it simply copies the address.</p>" +
+			"<p class=\"wh\" id=\"s-files\">What is in the app folder</p>" +
+			"<p>The app is portable: everything it owns lives in one folder and never spreads anywhere else.</p>" +
+			"<table class=\"hopt\">" +
+			"<tr><td>config.json</td><td>All your settings in one text file. You can copy it to another computer so you do not have to set things up again.</td></tr>" +
+			"<tr><td>holdtotype.log</td><td>The log. The first place to look if the app behaves strangely.</td></tr>" +
+			"<tr><td>holdtotype-history.json</td><td>The dictation history, if you turned it on. Plain text: you can simply delete the file if you want.</td></tr>" +
+			"<tr><td>models</td><td>The folder with the downloaded models, the heaviest part at several gigabytes. It too can be moved to another computer so you do not have to download everything again.</td></tr>" +
+			"<tr><td>whisper-server, sherpa-server, llama-server</td><td>The small programs that run the models. Without them a model is just a file with nothing to read it.</td></tr>" +
+			"</table>" +
+			"<p class=\"wh\" id=\"s-privacy\">What goes online and what does not</p>" +
 			"<ul>" +
-			"<li>A prompt is an instruction for the editing model. Presets ship out of the box: \"Cleanup\" (removes fillers, repetitions and false starts, fixes punctuation) and \"Business style\" (rewrites politely and formally); add your own freely.</li>" +
-			"<li>Checked prompts apply to every dictation in order, top to bottom (as a chain: the output of one feeds the next); nothing checked — text is inserted as transcribed.</li>" +
-			"<li>The ✎ pencil opens the prompt editor: name, text and a test field that runs a sample through the live model right from Settings. Drag a prompt by the handle on the left to change the order.</li>" +
-			"<li>Tip: small models work much better with \"input → output\" examples inside the prompt — all presets are written that way.</li>" +
-			"<li>If a profile fails (the model did not respond), the text is inserted without it: the overlay shows \"Inserted without the … profile\" and Enter after paste is not pressed in that case.</li>" +
+			"<li><b>Your voice</b> is neither saved nor sent anywhere, unless you yourself turned on recognition on another computer.</li>" +
+			"<li><b>The text</b> does not leave the machine, unless you yourself turned on an external post-processing server.</li>" +
+			"<li><b>The history</b> is a file next to the app and is cleaned up on the schedule you set.</li>" +
+			"<li><b>The network</b> is needed twice: to download a model and to check for an update. The second can be turned off.</li>" +
+			"<li><b>The key</b> for an external service is stored encrypted by Windows and never gets into the log.</li>" +
 			"</ul>" +
-			"<p class=\"wh\">Dependencies</p>" +
-			"<ul>" +
-			"<li>Prompts require the editing model to be installed; translation does not depend on it — Whisper does it entirely.</li>" +
-			"<li>The editing model loads into memory on first use and stays warm; large models are noticeably slower on CPU.</li>" +
-			"<li>Check the memory indicator before downloading: a \"tight\" model can slow down the whole system.</li>" +
-			"<li>Greyed-out controls indicate settings that do not participate in the current mode.</li>" +
-			"</ul>" +
-			"<p class=\"wh\">Install and portability</p>" +
-			"<ul>" +
-			"<li><b>{setup}</b> — the installer: no admin rights needed, Start Menu shortcut, optional autostart, clean removal via \"Apps & features\".</li>" +
-			"<li>The installer downloads nothing by default: the wizard picks and fetches the model on first run. If a model is picked anyway — GigaAM v3 for Russian, Whisper for every other language — the download can be stopped with a button and the installation still finishes. The update-check switch sits there too, and the answer is written into the app's settings.</li>" +
-			"<li><b>Portable</b> — just copy the whole folder with the exe (to a USB stick, another PC): settings, models and the log live next to the exe and travel with it. Nothing is written to the registry.</li>" +
-			"<li>On first run without a recognition model the app opens the model catalog itself and waits for the download.</li>" +
-			"<li>Requirements: Windows 10/11 x64, a CPU with AVX2 (~2013+), WebView2 Runtime for the settings window (included in Windows 11).</li>" +
-			"</ul>" +
-			"<p class=\"wh\">Tray and files</p>" +
-			"<div class=\"mock\" style=\"max-width:290px\"><div class=\"mock-mi dim\">{app} — Ready…</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Settings…</div><div class=\"mock-mi\">Disable</div><div class=\"mock-mi\">Copy last result</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Open config.json</div><div class=\"mock-mi\">Open log</div><div class=\"mock-mi\">About</div><hr class=\"mock-sep\"><div class=\"mock-mi\">Quit</div></div>" +
-			"<ul>" +
-			"<li>Left-click the tray icon — settings; right-click — the menu. Icon colors: green — ready, red — recording, orange — transcribing, grey — disabled or error.</li>" +
-			"<li><b>config.json</b> — all settings; edits made by hand apply through <b>Re-read</b> in the System section. The log and <b>Reset the settings</b> live there too: a reset puts everything back to factory and leaves models, history and prompts alone.</li>" +
-			"<li><b>{log}</b> — the log, automatically capped at ~2 MB.</li>" +
-			"<li><b>models/</b> — downloaded Whisper and LLM models.</li>" +
-			"</ul>",
+			"<p class=\"wh\" id=\"s-trouble\">If something goes wrong</p>" +
+			"<table class=\"hopt\">" +
+			"<tr><td>The text does not appear in the field</td><td>The program does not accept pasting from the clipboard. Turn on “Insert character-by-character instead of the clipboard” on the “Controls & behaviour” tab, or add a short delay before inserting.</td></tr>" +
+			"<tr><td>Dictation does not start</td><td>The keyboard shortcut is taken by another program. Set a different one, preferably with the Windows key: those are taken less often.</td></tr>" +
+			"<tr><td>Only silence was recorded</td><td>The wrong microphone, or it is muted. Open the “Microphone” tab, look at the level bar and press “Check the microphone”.</td></tr>" +
+			"<tr><td>The first phrase takes very long</td><td>That is by design: the model is loaded into memory the first time it is used. After that, recognition takes seconds.</td></tr>" +
+			"<tr><td>It says “Recognition is unavailable”</td><td>Recognition on another computer is chosen, but no address is set. Enter the address or go back to “On this computer”.</td></tr>" +
+			"<tr><td>Post-processing changes nothing</td><td>No prompt is checked, no model is chosen, or the external server is not answering. The reason is written on the tab itself, next to the switch.</td></tr>" +
+			"<tr><td>The text is odd, words are replaced</td><td>Look in “Rules”: most likely a replacement or a voice command fired.</td></tr>" +
+			"<tr><td>None of the above</td><td>“System” → “Open the log”. The app writes everything about itself there, and the reason is usually spelled out in words.</td></tr>" +
+			"</table>" +
+			"<p class=\"hdim\" style=\"margin-top:16px\">Did not find an answer? Write an email from the “Contacts” tab or open an issue in the repository. The author reads both.</p>",
 		"S_WIZ_HELLO":      "Two minutes to set up",
 		"S_WIZ_HELLO_TEXT": "{app} turns your voice into text right at the caret: hold the shortcut, say a phrase, let go — the text is there. Everything runs on your machine; the audio never leaves it.",
 		"S_WIZ_LATER":      "Everything we pick now can be changed later in the settings.",
