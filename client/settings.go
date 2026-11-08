@@ -1032,6 +1032,10 @@ func settingsHTML(cfg *Config, tab string) string {
 		"_tab":                    tab,
 		"_cpus":                   runtime.NumCPU(),
 		"_wizard":                 !cfg.WizardDone,
+		"_rec_models":             recommendedModels(),
+		"_default_model":          defaultPresetModel,
+		"_legacy_model":           legacyDefaultModel,
+		"_ui_lang":                lang(),
 	}
 	cfgJSON, _ := json.Marshal(cfgMap)
 
@@ -1045,7 +1049,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"fitok": "S_FIT_OK", "fitwarn": "S_FIT_WARN", "fitbad": "S_FIT_BAD",
 		"ram": "S_RAM", "ramavail": "S_RAM_AVAIL", "ramof": "S_RAM_OF", "hfph": "S_HF_PH", "nollm": "S_NO_LLM",
 		"upd": "S_UPDATED", "pedit": "S_PROF_EDIT", "pclose": "S_PROF_CLOSE",
-		"confirmdel": "S_CONFIRM_DEL", "delactive": "S_DEL_ACTIVE", "wizneedmodel": "S_WIZ_NEED_MODEL",
+		"confirmdel": "S_CONFIRM_DEL", "delactive": "S_DEL_ACTIVE",
 		"free": "S_FREE", "updnone": "S_UPD_NONE",
 		"skinterminal": "S_SKIN_TERMINAL", "skinname": "S_SKIN",
 		"wndmax": "S_WND_MAX", "wndrestore": "S_WND_RESTORE", "wndmin": "S_WND_MIN", "wndclose": "S_WND_CLOSE",
@@ -1059,7 +1063,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"asauto": "S_AS_AUTO", "recchip": "S_REC_CHIP",
 		"backauto": "S_BACK_AUTO", "langsc": "S_LANGS_COUNT", "langsq": "S_LANGS_UNKNOWN",
 		"tren": "S_TR_EN", "translist": "S_TR_LIST", "dlgoing": "S_DL_GOING",
-		"trunavail": "S_TR_UNAVAIL", "trstandin": "S_TR_STANDIN", "trlockmsg": "S_TR_LOCK", "trlockok": "S_TR_LOCK_OK", "tronedlg": "S_TR_ONE", "trmodeldlg": "S_TR_NOMODEL", "trconfirm": "S_TR_CONFIRM", "fmsave": "S_DICT_SAVE",
+		"trunavail": "S_TR_UNAVAIL", "trgetw": "S_TR_GET_WHISPER", "trstandin": "S_TR_STANDIN", "trlockmsg": "S_TR_LOCK", "trlockok": "S_TR_LOCK_OK", "tronedlg": "S_TR_ONE", "trmodeldlg": "S_TR_NOMODEL", "trconfirm": "S_TR_CONFIRM", "fmsave": "S_DICT_SAVE",
 		"srcused": "S_SRC_USED", "hfgo": "S_HF_GO",
 		"notforlang": "S_NOT_FOR_LANG", "notinstalled": "S_NOT_INSTALLED",
 		"manualnote": "S_MANUAL_NOTE", "manuallink": "S_MANUAL_LINK",
@@ -1133,6 +1137,8 @@ func settingsHTML(cfg *Config, tab string) string {
 		"tipcmdaction": "S_TIP_CMD_ACTION",
 		"wiznext": "S_WIZ_NEXT", "wizfinish": "S_WIZ_FINISH", "wizwait": "S_WIZ_WAIT",
 		"wizheard": "S_WIZ_HEARD", "wizhave": "S_WIZ_HAVE", "wiztry": "S_WIZ_TRY_TEXT",
+		"wizpicked": "S_WIZ_PICKED", "wizdlbg": "S_WIZ_DL_BG", "wizdlfail": "S_WIZ_DL_FAIL", "wizretry": "S_WIZ_RETRY",
+		"wiztrydl": "S_WIZ_TRY_DL", "wiztryload": "S_WIZ_TRY_LOAD", "wiztrylive": "S_WIZ_TRY_LIVE",
 		"updavail": "S_UPD_AVAIL", "updgo": "S_UPD_GO", "upderr": "S_UPD_ERR", "upddl": "S_UPD_DL",
 	} {
 		lMap[jsKey] = str(sKey)
@@ -1268,6 +1274,7 @@ button.cap.close:hover{background:var(--badbg);color:var(--bad);border-color:var
 .wizkey{appearance:none;font:inherit;color:var(--keyfg);border:1px solid var(--keyline);background:var(--keybg);border-radius:var(--keyr);padding:4px 11px;letter-spacing:1px;text-shadow:var(--glow);white-space:nowrap;cursor:pointer}
 .wizkey:hover{border-color:var(--dim);box-shadow:var(--glow)}
 .wizplan{display:flex;flex-direction:column;gap:4px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel);padding:10px 12px;min-height:38px}
+.wizmname{font-size:13.5px;font-weight:var(--wb);letter-spacing:1px;color:var(--green)}
 .wizbar{height:14px;border:1px solid var(--line);border-radius:var(--cardr);background:var(--panel);position:relative;overflow:hidden;flex:1;min-width:150px;max-width:430px}
 .wizbar i{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,var(--faint),var(--hi));box-shadow:var(--higlow);transition:width .15s linear}
 .wizlvl{display:flex;align-items:flex-end;gap:2px;height:10px}
@@ -1394,6 +1401,8 @@ button.btn.ghost:hover{color:var(--green);border-color:var(--dim);background:non
 .row label{flex:1;min-width:100px;color:var(--green)}
 .row label .sub{display:block;font-size:10.5px;color:var(--dim);margin-top:2px;letter-spacing:0}
 .row label .sub.warn{color:var(--amber)}
+.trgetw{flex-basis:100%;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.trgetw .note{padding:0}
 .row select{flex:0 1 auto;min-width:0;max-width:100%}
 .row input[type=text]{flex:0 1 auto;min-width:0}
 .row .hint{font-size:11px;color:var(--dim)}
@@ -2108,7 +2117,8 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
     <option value="it">Italiano</option><option value="pl">Polski</option>
     <option value="uk">Українська</option><option value="ru">Русский</option>
    </select></div>
-  <div class="row"><label>{{S_TR_DEFAULT}}<span class="sub warn" id="tr_unavail" style="display:none"></span></label><input type="checkbox" id="tr_default"></div>
+  <div class="row"><label>{{S_TR_DEFAULT}}<span class="sub warn" id="tr_unavail" style="display:none"></span></label><input type="checkbox" id="tr_default">
+   <div class="trgetw" id="tr_getw" style="display:none"><button type="button" class="mini" id="tr_getw_btn"></button><span class="note bad" id="tr_getw_err"></span></div></div>
   <div class="row"><label>{{S_TR_TARGET}}<span class="sub">{{S_SUB_TRTARGET}}</span></label>
    <select id="translate_target">
     <option value="de">Deutsch</option><option value="en">English</option>
@@ -2409,7 +2419,22 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
   <div class="wizstep on" id="wz0">
    <div class="wizh">{{S_WIZ_HELLO}}</div>
    <div class="wiztext">{{S_WIZ_HELLO_TEXT}}</div>
-   <div class="wizrow"><label for="wiz_ui">{{S_UILANG}}</label>
+   <div class="wizrow"><label for="wiz_lang">{{S_RECLANG}}</label>
+    <select id="wiz_lang">
+     <option value="de">Deutsch</option><option value="en">English</option>
+     <option value="es">Español</option><option value="fr">Français</option>
+     <option value="it">Italiano</option><option value="pl">Polski</option>
+     <option value="uk">Українська</option><option value="ru">Русский</option>
+     <option value="auto">{{S_RECAUTO}}</option>
+    </select></div>
+   <div class="wiztext">{{S_WIZ_MODEL_TEXT}}</div>
+   <div class="wizplan" id="wiz_plan"><div class="wizmname" id="wiz_mname"></div><div class="wiztext" id="wiz_mdesc"></div><div class="wizout" id="wiz_mpick"></div></div>
+   <div class="wizrow" id="wiz_dlrow" style="display:none"><span class="wizbar"><i id="wiz_dlbar"></i></span><span class="mpct" id="wiz_dlpct"></span></div>
+   <div class="wizrow"><span class="wizout" id="wiz_dlout"></span>
+    <button type="button" class="btn" id="wiz_retry" style="display:none">{{S_WIZ_RETRY}}</button>
+    <button type="button" class="btn ghost" id="wiz_dl_skip" style="display:none">{{S_WIZ_SKIP_DL}}</button></div>
+   <div class="wiztext" id="wiz_skipnote" style="display:none">{{S_WIZ_SKIP_NOTE}}</div>
+   <div class="wizrow" id="wiz_uirow" style="display:none"><label for="wiz_ui">{{S_UILANG}}</label>
     <select id="wiz_ui">
      <option value="auto">{{S_AUTO}}</option>
      <option value="en">English</option>
@@ -2424,41 +2449,21 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
    <div class="wiztext">{{S_WIZ_LATER}}</div>
   </div>
   <div class="wizstep" id="wz1">
-   <div class="wizh">{{S_WIZ_T_MODEL}}</div>
-   <div class="wiztext">{{S_WIZ_MODEL_TEXT}}</div>
-   <div class="wizrow"><label for="wiz_lang">{{S_RECLANG}}</label>
-    <select id="wiz_lang">
-     <option value="de">Deutsch</option><option value="en">English</option>
-     <option value="es">Español</option><option value="fr">Français</option>
-     <option value="it">Italiano</option><option value="pl">Polski</option>
-     <option value="uk">Українська</option><option value="ru">Русский</option>
-     <option value="auto">{{S_RECAUTO}}</option>
-    </select></div>
-   <div class="wizplan" id="wiz_plan"></div>
-   <div class="wizrow" id="wiz_dlrow" style="display:none"><span class="wizbar"><i id="wiz_dlbar"></i></span><span class="mpct" id="wiz_dlpct"></span></div>
-   <div class="wizrow"><button type="button" class="btn" id="wiz_dl">{{S_DL}}</button>
-    <button type="button" class="btn ghost" id="wiz_dl_skip">{{S_WIZ_SKIP_DL}}</button>
-    <span class="wizout" id="wiz_dlout"></span></div>
-   <div class="wiztext" id="wiz_skipnote" style="display:none">{{S_WIZ_SKIP_NOTE}}</div>
-  </div>
-  <div class="wizstep" id="wz2">
-   <div class="wizh">{{S_WIZ_T_INPUT}}</div>
+   <div class="wizh">{{S_WIZ_T_TRY}}</div>
    <div class="wiztext">{{S_WIZ_INPUT_TEXT}}</div>
    <div class="wizrow"><label>{{S_HOTKEY}}</label>
     <button type="button" class="wizkey" id="wiz_hot" title="{{S_CHANGE}}">—</button></div>
    <div class="wizrow"><label for="wiz_mic">{{S_MIC}}</label><select id="wiz_mic"></select></div>
    <div class="wizrow"><span class="wizlvl" id="wiz_micbar"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><span class="wizout" id="wiz_michint"></span></div>
-  </div>
-  <div class="wizstep" id="wz3">
-   <div class="wizh">{{S_WIZ_T_TRY}}</div>
    <div class="wiztext" id="wiz_trytext"></div>
    <textarea class="wiztry" id="wiz_try" placeholder="{{S_WIZ_TRY_PH}}"></textarea>
    <div class="wizout" id="wiz_tryout"></div>
   </div>
-  <div class="wizstep" id="wz4">
+  <div class="wizstep" id="wz2">
    <div class="wizbig">&#10003;</div>
    <div class="wizh">{{S_WIZ_T_DONE}}</div>
    <div class="wiztext">{{S_WIZ_DONE_TEXT}}</div>
+   <div class="wiztext" id="wiz_donedl" style="display:none">{{S_WIZ_DONE_DL}}</div>
    <div class="row" style="max-width:430px"><label class="lbl" for="wiz_auto">{{S_AUTORUN}}<span class="sub">{{S_AUTORUN_SUB}}</span></label><input type="checkbox" id="wiz_auto"></div>
   </div>
  </div>
@@ -4205,7 +4210,10 @@ function initStateScreen(){
   refreshState();
 }
 let langModels = Object.assign({}, CFG.lang_models || {});
+const DEFAULT_MODEL = CFG._default_model || "nemotron-3.5";
 let modelRowsCache = [];
+const TR_GETW = "medium-q5_0";
+let trGetwAsked = false;
 const presetLangs = [["auto", ""], ["de", "Deutsch"], ["en", "English"], ["es", "Español"], ["fr", "Français"], ["it", "Italiano"], ["pl", "Polski"], ["uk", "Українська"], ["ru", "Русский"]];
 function rowById(id){ return modelRowsCache.find(m=>m.id===id) || null; }
 function eligibleFor(m, lang){
@@ -4219,7 +4227,7 @@ function effectiveFor(lang){
     const uni = langModels["auto"];
     if(uni && rowById(uni)) return uni;
   }
-  return "medium-q5_0";
+  return DEFAULT_MODEL;
 }
 function curLang(){
   const el = document.getElementById("language");
@@ -4255,7 +4263,7 @@ async function assignModel(lang, id){
   refreshModels();
 }
 let openLang = null;
-const REC_MODEL = {auto: "large-v3-turbo-q5_0", ru: "gigaam-v3", en: "medium-q5_0", uk: "parakeet-v3", de: "parakeet-v3", fr: "parakeet-v3", es: "parakeet-v3", it: "parakeet-v3", pl: "parakeet-v3"};
+const REC_MODEL = CFG._rec_models || {};
 function langWord(m){
   if(m.custom) return L.langsq;
   if(m.langs === "*") return L.langsc.replace("%d", "99");
@@ -4520,6 +4528,7 @@ function load(){
   const trd = document.getElementById("tr_default");
   trd.checked = translateDefault || (CFG.translate_ask || "never") !== "never";
   trd.onchange = ()=>{ syncTrControls(); };
+  document.getElementById("tr_getw_btn").onclick = trGetWhisper;
   const askSel = document.getElementById("translate_ask");
   let askPrev = askSel.value;
   askSel.addEventListener("change", async e=>{
@@ -4814,9 +4823,13 @@ function applyPostState(){
   postSyncing = false;
 }
 function trWhisperFallback(){
-  if(!modelRowsCache.length) return null;
-  return modelRowsCache.find(m=>m.engine === "whisper" && m.translate && !m.custom &&
-    (m.state === "active" || m.state === "installed")) || null;
+  let best = null;
+  modelRowsCache.forEach(m=>{
+    if(m.engine !== "whisper" || !m.translate || m.custom) return;
+    if(m.state !== "active" && m.state !== "installed") return;
+    if(!best || (m.accuracy || 0) > (best.accuracy || 0)) best = m;
+  });
+  return best;
 }
 function trMuteRow(){
   if(!modelRowsCache.length) return null;
@@ -4833,6 +4846,14 @@ function trTargetsFor(){
   const m = rowById(effectiveFor(curLang()));
   if(!m || !m.translate) return trWhisperFallback() ? trAll.slice() : [];
   return m.trlangs ? m.trlangs.split(",") : trAll.slice();
+}
+async function trGetWhisper(){
+  const get = rowById(TR_GETW);
+  if(!get || get.state !== "absent") return;
+  trGetwAsked = true;
+  document.getElementById("tr_getw").style.display = "none";
+  await appModelDl(TR_GETW);
+  await refreshModels();
 }
 function syncTrControls(){
   const sw = document.getElementById("tr_default");
@@ -4860,14 +4881,27 @@ function syncTrControls(){
     document.getElementById("tl_"+l).disabled = !on || na || (mode === "never" && l !== tgt);
   });
   const un = document.getElementById("tr_unavail");
+  const get = rowById(TR_GETW);
+  const going = !!get && get.state === "downloading";
   if(un){
-    const mute = (sw.checked || bad) ? trMuteRow() : null;
+    const mute = (sw.checked || bad || trGetwAsked) ? trMuteRow() : null;
     const stand = mute ? trWhisperFallback() : null;
     un.style.display = mute ? "" : "none";
     if(mute){
       un.textContent = stand
         ? L.trstandin.replace("%s", mute.name).replace("%s", stand.name)
-        : L.trunavail.replace("%s", mute.name);
+        : going
+          ? "⇩ " + L.dlgoing + " " + get.name + " · " + (get.pct > 0 ? get.pct + "%" : "…")
+          : L.trunavail.replace("%s", mute.name);
+    }
+  }
+  const gw = document.getElementById("tr_getw");
+  if(gw){
+    const offer = !!bad && !!get && !get.manual && get.state === "absent";
+    gw.style.display = offer ? "" : "none";
+    if(offer){
+      document.getElementById("tr_getw_btn").textContent = L.trgetw.replace("%s", get.name).replace("%d", String(get.size || 0));
+      document.getElementById("tr_getw_err").textContent = get.err || "";
     }
   }
   const dimRow = (el, dim)=>{ const r = el && el.closest(".row"); if(r) r.classList.toggle("dimmed", dim); };
@@ -5052,8 +5086,8 @@ function searchSettings(q){
 function searchStep(delta){
   if(hits.length) showHit(hitAt + delta);
 }
-const WIZ_N = 5;
-let wizOn = false, wizStep = 0, wizBase = 0, wizPlan = [], wizDlIds = [], wizSkippedDl = false;
+const WIZ_N = 3;
+let wizOn = false, wizStep = 0, wizBase = 0, wizModel = "", wizDlId = "", wizSkippedDl = false, wizSeq = 0, wizAutoTouched = false;
 function wizEl(id){ return document.getElementById(id); }
 function wizShow(n){
   wizStep = Math.max(0, Math.min(WIZ_N - 1, n));
@@ -5066,124 +5100,141 @@ function wizShow(n){
     dots.appendChild(d);
   }
   wizEl("wiz_back").style.display = wizStep ? "" : "none";
-  wizSyncNav();
   wizEl("wiz_skip").style.display = wizStep === WIZ_N - 1 ? "none" : "";
   wizEl("wiz_next").textContent = wizStep === WIZ_N - 1 ? L.wizfinish : L.wiznext;
   wizEl("wizbody").scrollTop = 0;
-  if(wizStep === 1) wizAdvise();
-  if(wizStep === 2) wizInput();
-  if(wizStep === 3) wizTry();
-  if(wizStep === 4) wizDone();
+  if(wizStep === 0) wizLangStep(false);
+  if(wizStep === 1) wizTry();
+  if(wizStep === 2) wizDone();
 }
-async function wizAdvise(){
+function wizRecFor(lang){ return REC_MODEL[lang] || DEFAULT_MODEL; }
+function wizLangName(){
+  const sel = wizEl("wiz_lang");
+  const opt = sel.options[sel.selectedIndex];
+  return opt ? opt.textContent : sel.value;
+}
+function wizCard(row){
+  wizEl("wiz_mname").textContent = row ? row.name + (row.size ? " · " + row.size + " MB" : "") : wizModel;
+  wizEl("wiz_mdesc").textContent = row ? row.desc || "" : "";
+  wizEl("wiz_mpick").textContent = L.wizpicked.replace("%s", wizLangName());
+}
+function wizUIRow(lang){
+  const ui = CFG._ui_lang || CFG.ui_language || "en";
+  wizEl("wiz_uirow").style.display = ui === lang ? "none" : "";
+}
+async function wizLangStep(changed){
+  const seq = ++wizSeq;
+  const lang = wizEl("wiz_lang").value || "auto";
+  wizModel = wizRecFor(lang);
+  wizUIRow(lang);
   const rows = JSON.parse(await appModels());
-  const m = rows.find(r=>r.id === "medium-q5_0");
-  wizPlan = m ? [{id: m.id, name: m.name, size: m.size, installed: m.state !== "absent"}] : [];
-  const box = wizEl("wiz_plan");
-  box.innerHTML = "";
-  wizPlan.forEach(p=>{
-    const row = document.createElement("div");
-    row.className = "advrow";
-    row.innerHTML = '<span class="advrole">'+L.advprimary+'</span>'+
-      '<span class="advname">'+esc(p.name)+'<span class="advwhy">'+L.advrolemain+'</span></span>'+
-      '<span class="advstate'+(p.installed ? " ok" : "")+'">'+(p.installed ? L.advhave : (p.size ? p.size+" MB" : ""))+'</span>';
-    box.appendChild(row);
-  });
-  const missing = wizPlan.filter(p=>!p.installed);
-  const btn = wizEl("wiz_dl");
-  const out = wizEl("wiz_dlout");
-  btn.style.display = missing.length ? "" : "none";
-  btn.textContent = L.dl + (missing.length && missing[0].size ? " · " + missing[0].size + " MB" : "");
-  wizEl("wiz_dl_skip").style.display = missing.length ? "" : "none";
-  wizEl("wiz_skipnote").style.display = wizSkippedDl ? "" : "none";
-  wizEl("wiz_dlrow").style.display = "none";
-  out.textContent = missing.length ? "" : L.wizhave;
-  out.classList.toggle("ok", !missing.length);
-  wizDlIds = [];
-  wizSyncNav();
-}
-async function wizApplyModel(){
-  refreshModels();
-  wizSyncNav();
-}
-function wizSyncNav(){
-  const next = wizEl("wiz_next");
-  if(!next) return;
-  const waiting = wizStep === 1 && !wizSkippedDl && (wizDlIds.length > 0 || !wizPlan.some(p=>p.installed));
-  next.disabled = waiting;
-  next.title = waiting ? L.wizneedmodel : "";
-}
-async function wizDownload(){
-  const missing = wizPlan.filter(p=>!p.installed);
-  if(!missing.length) return;
-  wizEl("wiz_dl").style.display = "none";
-  wizEl("wiz_dlrow").style.display = "";
-  wizEl("wiz_dlout").textContent = "";
-  wizDlIds = missing.map(p=>p.id);
-  wizSyncNav();
-  for(const p of missing) await appModelDl(p.id);
-}
-async function wizPollDl(){
-  if(!wizDlIds.length) return;
-  const rows = JSON.parse(await appModels());
-  let sum = 0, done = 0, err = "";
-  wizDlIds.forEach(id=>{
-    const row = rows.find(m=>m.id === id);
-    if(!row) return;
-    if(row.state === "downloading"){ sum += row.pct; return; }
-    if(row.state === "absent"){ if(row.err) err = row.err; return; }
-    sum += 100;
-    done++;
-  });
-  const pct = Math.round(sum / wizDlIds.length);
-  wizEl("wiz_dlbar").style.width = pct + "%";
-  wizEl("wiz_dlpct").textContent = pct + "%";
-  if(err){
-    wizDlIds = [];
-    wizEl("wiz_dlrow").style.display = "none";
-    wizEl("wiz_dl").style.display = "";
-    const out = wizEl("wiz_dlout");
-    out.textContent = err;
-    out.classList.remove("ok");
-    wizSyncNav();
+  if(seq !== wizSeq) return;
+  const row = rows.find(r=>r.id === wizModel) || null;
+  wizCard(row);
+  const uni = langModels.auto && rows.some(r=>r.id === langModels.auto) ? langModels.auto : DEFAULT_MODEL;
+  let save = changed;
+  if(row && wizModel !== uni && langModels[lang] !== wizModel){
+    langModels[lang] = wizModel;
+    save = true;
+  }
+  if(save){
+    await refreshMics();
+    await doSave();
+  }
+  if(seq !== wizSeq || !row) return;
+  if(row.state === "downloading"){
+    wizDlId = row.id;
+    wizPaintDl(row);
     return;
   }
-  if(done === wizDlIds.length){
-    wizDlIds = [];
-    wizPlan = wizPlan.map(p=>({...p, installed: true}));
-    wizEl("wiz_dlrow").style.display = "none";
-    const out = wizEl("wiz_dlout");
-    out.textContent = L.wizhave;
-    out.classList.add("ok");
-    await wizApplyModel();
+  if(row.state !== "absent" || row.manual || wizSkippedDl){
+    wizPaintDl(wizSkippedDl ? {...row, err: ""} : row);
+    return;
   }
+  wizStartDl(row.id);
 }
-function wizInput(){
+async function wizStartDl(id){
+  wizSkippedDl = false;
+  wizDlId = id;
+  wizPaintDl({id: id, state: "downloading", pct: 0});
+  await appModelDl(id);
+}
+function wizPaintDl(row){
+  const st = row ? row.state : "absent";
+  const have = st === "installed" || st === "active";
+  const going = st === "downloading";
+  const err = !have && !going && row && row.err ? row.err : "";
+  const pct = going ? Math.max(0, Math.min(100, row.pct || 0)) : 0;
+  wizEl("wiz_dlrow").style.display = going ? "" : "none";
+  wizEl("wiz_dlbar").style.width = pct + "%";
+  wizEl("wiz_dlpct").textContent = pct + "%";
+  const retry = wizEl("wiz_retry");
+  retry.style.display = have || going ? "none" : "";
+  retry.textContent = err ? L.wizretry : L.dl;
+  wizEl("wiz_dl_skip").style.display = going ? "" : "none";
+  wizEl("wiz_skipnote").style.display = have || going ? "none" : "";
+  const out = wizEl("wiz_dlout");
+  out.textContent = have ? L.wizhave : going ? L.wizdlbg : err ? L.wizdlfail.replace("%s", err) : "";
+  out.classList.toggle("ok", have);
+}
+async function wizPollDl(){
+  const id = wizDlId;
+  const rows = JSON.parse(await appModels());
+  if(!id || id !== wizDlId) return;
+  const row = rows.find(m=>m.id === id);
+  if(!row) return;
+  if(row.state !== "downloading"){
+    wizDlId = "";
+    refreshModels();
+  }
+  if(wizStep === 0 && id === wizModel) wizPaintDl(row);
+}
+async function wizTry(){
   wizEl("wiz_hot").textContent = CFG.hotkey || L.nohot;
   const src = wizEl("mic_device"), dst = wizEl("wiz_mic");
   dst.innerHTML = src.innerHTML;
   dst.value = src.value;
-}
-async function wizTry(){
-  const s = JSON.parse(await appState());
-  wizBase = s.last_at || 0;
-  wizEl("wiz_trytext").textContent = L.wiztry.replace("%s", CFG.hotkey || L.nohot);
   const out = wizEl("wiz_tryout");
   out.textContent = L.wizwait;
   out.classList.remove("ok");
   const ta = wizEl("wiz_try");
   ta.value = "";
   setTimeout(()=>ta.focus(), 60);
+  const s = JSON.parse(await appState());
+  wizBase = s.last_at || 0;
+  await wizTryStatus(s);
+}
+async function wizTryStatus(s){
+  const rows = JSON.parse(await appModels());
+  const rec = rows.find(r=>r.id === wizModel);
+  const busy = rows.some(r=>r.state === "downloading");
+  let text;
+  if(rec && rec.state === "downloading") text = L.wiztrydl.replace("%d", String(rec.pct || 0)).replace("%%", "%");
+  else if(s.backend_err && !busy) text = s.backend_err;
+  else if(!s.ready) text = L.wiztryload;
+  else {
+    text = L.wiztry.replace("%s", CFG.hotkey || L.nohot);
+    const act = rows.find(r=>r.state === "active");
+    if(act && act.engine === "stream") text += " " + L.wiztrylive.replace("%s", act.name);
+  }
+  if(wizStep === 1) wizEl("wiz_trytext").textContent = text;
 }
 async function wizPollTry(){
   const s = JSON.parse(await appState());
+  await wizTryStatus(s);
   if(!s.last_at || s.last_at <= wizBase) return;
   const out = wizEl("wiz_tryout");
   out.textContent = L.wizheard + " " + s.last;
   out.classList.add("ok");
 }
 async function wizDone(){
-  wizEl("wiz_auto").checked = true;
+  if(!wizAutoTouched) wizEl("wiz_auto").checked = !!(await appAutorun());
+  await wizPollDone();
+}
+async function wizPollDone(){
+  const rows = JSON.parse(await appModels());
+  const rec = rows.find(r=>r.id === wizModel);
+  wizEl("wiz_donedl").style.display = rec && rec.state === "downloading" ? "" : "none";
 }
 async function wizFinish(){
   const on = await appSetAutorun(wizEl("wiz_auto").checked);
@@ -5205,21 +5256,30 @@ function initWizard(){
   wizEl("wiz_next").onclick = ()=>{ if(wizStep === WIZ_N - 1) wizFinish(); else wizShow(wizStep + 1); };
   wizEl("wiz_back").onclick = ()=>wizShow(wizStep - 1);
   wizEl("wiz_skip").onclick = wizSkip;
-  wizEl("wiz_dl").onclick = wizDownload;
-  wizEl("wiz_dl_skip").onclick = ()=>{
+  wizEl("wiz_retry").onclick = ()=>{ if(wizModel) wizStartDl(wizModel); };
+  wizEl("wiz_dl_skip").onclick = async ()=>{
     wizSkippedDl = true;
-    wizEl("wiz_skipnote").style.display = "";
-    wizSyncNav();
+    const id = wizDlId;
+    wizDlId = "";
+    if(id) await appModelCancel(id);
+    wizPaintDl({id: id || wizModel, state: "absent"});
   };
+  wizEl("wiz_auto").onchange = ()=>{ wizAutoTouched = true; };
   wizEl("wiz_hot").onclick = ()=>appCapture();
   wizEl("wiz_ui").onchange = ()=>{
     wizEl("ui_language").value = wizEl("wiz_ui").value;
     doSave();
   };
-  wizEl("wiz_lang").onchange = ()=>{
-    wizEl("language").value = wizEl("wiz_lang").value;
-    doSave();
-    wizAdvise();
+  wizEl("wiz_lang").onchange = async ()=>{
+    const lang = wizEl("wiz_lang").value || "auto";
+    if(wizDlId && wizDlId !== wizRecFor(lang)){
+      const id = wizDlId;
+      wizDlId = "";
+      await appModelCancel(id);
+    }
+    wizSkippedDl = false;
+    wizEl("language").value = lang;
+    await wizLangStep(true);
   };
   wizEl("wiz_mic").onchange = async ()=>{
     const src = wizEl("mic_device"), dst = wizEl("wiz_mic");
@@ -5232,15 +5292,16 @@ function initWizard(){
     if(e.button === 0) appDrag();
   });
   setInterval(async ()=>{
-    if(!wizOn || wizStep !== 2) return;
+    if(!wizOn || wizStep !== 1) return;
     const lvl = await appMicLevel();
     paintMeter(wizEl("wiz_micbar"), lvl);
     wizEl("wiz_michint").textContent = lvl > 0.02 ? "" : L.micquiet;
   }, 120);
   setInterval(()=>{
     if(!wizOn) return;
-    if(wizDlIds.length) wizPollDl();
-    if(wizStep === 3) wizPollTry();
+    if(wizDlId) wizPollDl();
+    if(wizStep === 1) wizPollTry();
+    if(wizStep === 2) wizPollDone();
   }, 800);
 }
 function keepMinutes(){
@@ -6009,6 +6070,9 @@ async function initAutorun(){
 }
 function wizStart(){
   wizOn = true;
+  wizDlId = "";
+  wizSkippedDl = false;
+  wizAutoTouched = false;
   wizEl("wiz").classList.add("on");
   wizEl("wiz_ui").value = CFG.ui_language || "auto";
   wizEl("wiz_lang").value = CFG.language || "auto";

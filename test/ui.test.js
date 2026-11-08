@@ -45,12 +45,16 @@ const dom = new JSDOM(html, {
     window.appRetryBackend = async () => { window.retryCalls++; backendErr = ""; };
     window.autorunCalls = [];
     window.wizardDone = 0;
-    window.appAutorun = async () => window.autorunCalls.length > 0 && window.autorunCalls[window.autorunCalls.length - 1];
-    window.appSetAutorun = async (on) => { window.autorunCalls.push(on); return on; };
+    let autorunNow = false;
+    window.setAutorunNow = (v) => { autorunNow = v; };
+    window.appAutorun = async () => autorunNow;
+    window.appSetAutorun = async (on) => { window.autorunCalls.push(on); autorunNow = on; return on; };
+    let engineReady = true;
+    window.setReady = (v) => { engineReady = v; };
     window.appWizardDone = async () => { window.wizardDone++; };
     window.appState = async () =>
       JSON.stringify({ hotkey: "ctrl+win", mic: "Realtek", engine: "sherpa · gigaam-v3", llm: "model.gguf",
-        ram: "8000 MB free", last: "hello", last_meta: "just now · 5 characters", ready: true, status: "Ready",
+        ram: "8000 MB free", last: "hello", last_meta: "just now · 5 characters", ready: engineReady, status: "Ready",
         status_line: "Ready · gigaam-v3 + ggml-small.bin · 7.8 GB free",
         active_model: "GigaAM v3", active_state: ruState, active_lang: "RU",
         assigned: [
@@ -66,8 +70,10 @@ const dom = new JSDOM(html, {
         week_count: 12, week_chars: 3400, today_count: 4,
         week_apps: [{ app: "chrome.exe", count: 8 }, { app: "Telegram.exe", count: 4 }],
         badges: { mic: micBadge, models: "2", system: "" } });
-    let modelStates = { base: "absent", small: "active", "medium-q5_0": "absent", "gigaam-v3": "absent", "moonshine-uk": "absent" };
+    let modelStates = { base: "absent", small: "active", "medium-q5_0": "absent", "gigaam-v3": "absent", "nemotron-3.5": "absent", "moonshine-uk": "absent" };
     const modelErrs = {};
+    const modelPcts = {};
+    window.setDlPct = (id, pct) => { modelPcts[id] = pct; };
     window.dlCalls = [];
     window.cancelCalls = [];
     window.appModelDl = async (id) => { window.dlCalls.push(id); modelStates[id] = "downloading"; delete modelErrs[id]; };
@@ -112,8 +118,9 @@ const dom = new JSDOM(html, {
       JSON.stringify([
         { id: "base", name: "Base", desc: "fast", size: 142, state: modelStates.base, err: modelErrs.base, pct: 12, engine: "whisper", langs: "*", auto: true, translate: true, speed: 5, accuracy: 2 },
         { id: "small", name: "Small", desc: "balanced", size: 466, ram: 921, state: modelStates.small, engine: "whisper", langs: "*", auto: true, translate: true, serves: ["auto"], loaded: true, speed: 3, accuracy: 3 },
-        { id: "medium-q5_0", name: "Medium (q5)", desc: "recommended", size: 539, state: modelStates["medium-q5_0"], pct: 5, engine: "whisper", langs: "*", auto: true, translate: true, speed: 2, accuracy: 4 },
-        { id: "gigaam-v3", name: "GigaAM v3", desc: "russian", size: 232, state: modelStates["gigaam-v3"], pct: 5, engine: "sherpa", langs: "ru", punct: true, serves: ["ru"], speed: 5, accuracy: 5 },
+        { id: "medium-q5_0", name: "Medium (q5)", desc: "recommended", size: 539, state: modelStates["medium-q5_0"], err: modelErrs["medium-q5_0"], pct: 5, engine: "whisper", langs: "*", auto: true, translate: true, speed: 2, accuracy: 4 },
+        { id: "gigaam-v3", name: "GigaAM v3", desc: "russian", size: 232, state: modelStates["gigaam-v3"], err: modelErrs["gigaam-v3"], pct: modelPcts["gigaam-v3"] || 5, engine: "sherpa", langs: "ru", punct: true, serves: ["ru"], speed: 5, accuracy: 5 },
+        { id: "nemotron-3.5", name: "Nemotron 3.5", desc: "streaming", size: 651, state: modelStates["nemotron-3.5"], err: modelErrs["nemotron-3.5"], pct: modelPcts["nemotron-3.5"] || 0, engine: "stream", langs: "ar,bg,cs,da,de,el,en,es,et,fi,fr,he,hi,hr,hu,it,ja,ko,lt,lv,mt,nb,nl,nn,pl,pt,ro,ru,sk,sl,sv,th,tr,uk,vi,zh", auto: true, punct: true, speed: 3, accuracy: 5 },
         { id: "moonshine-uk", name: "Moonshine Base uk", desc: "ukrainian", size: 135, state: modelStates["moonshine-uk"], engine: "sherpa", langs: "uk", manual: true, link: "https://example.com/moonshine", speed: 5, accuracy: 3 },
         { id: "local:my-model", name: "my-model", desc: "found in the models folder", size: 900, state: "installed", engine: "whisper", langs: "*", custom: true },
       ]);
@@ -507,20 +514,21 @@ function check(name, actual, expected) {
   check("no old library, filters or advisor are left", [d.getElementById("models"), d.getElementById("presets"), d.getElementById("mlang"), d.getElementById("mfind"), d.getElementById("advisor")].filter(Boolean).length, 0);
   check("a language with its own model is bright and names it", !rowFor("ru").className.includes("dim") && rowFor("ru").querySelector(".lmodel").textContent === "GigaAM v3", true);
   check("a language without its own model is dim", rowFor("de").className.includes("dim"), true);
-  check("and says honestly whom it follows", rowFor("de").querySelector(".lmodel").textContent, "as Auto-detect · Medium (q5)");
+  check("and says honestly whom it follows", rowFor("de").querySelector(".lmodel").textContent, "as Auto-detect · Nemotron 3.5");
   check("no picker is open before a click", d.querySelectorAll("#langlist .lpick").length, 0);
   rowFor("ru").click(); await sleep(120);
   check("clicking a language unfolds the choice under it", d.querySelectorAll("#langlist .lpick").length, 1);
   const cards = () => [...d.querySelectorAll("#langlist .lpick .pcard")];
-  check("only models that serve this language are offered", cards().map(c=>c.dataset.id).sort().join("+"), "base+gigaam-v3+local:my-model+medium-q5_0+small");
+  check("only models that serve this language are offered", cards().map(c=>c.dataset.id).sort().join("+"), "base+gigaam-v3+local:my-model+medium-q5_0+nemotron-3.5+small");
   check("no radio buttons anywhere in the choice", d.querySelectorAll('#langlist input[type="radio"]').length, 0);
   const ruOrder = cards().map(c=>c.dataset.id).join("+");
   check("the assigned model wears the mark", d.querySelector('#langlist .pcard[data-id="gigaam-v3"]').className.includes("cur"), true);
   check("no chip claims assignment — the switch says it", d.querySelector('#langlist .pcard[data-id="gigaam-v3"] .pchip').textContent, "recommended");
+  check("only the model the rule picks for the language wears the chip", cards().filter(c => c.querySelector(".pchip")).map(c => c.dataset.id), ["gigaam-v3"]);
   check("the model story hides behind an info badge", d.querySelector('#langlist .pcard[data-id="gigaam-v3"] .pinfo').dataset.tip, "russian");
   check("and is no longer printed on the card", d.querySelector('#langlist .pcard[data-id="gigaam-v3"] .ptop').textContent.includes("russian"), false);
   check("every catalog model carries the badge", cards().filter(c => c.dataset.id !== "local:my-model").every(c => c.querySelector(".pinfo")), true);
-  check("every known model measures itself in two bars", d.querySelectorAll("#langlist .mbar").length, 8);
+  check("every known model measures itself in two bars", d.querySelectorAll("#langlist .mbar").length, 10);
   check("the bars are filled to the model, not all alike", [...d.querySelector('#langlist .pcard[data-id="base"]').querySelectorAll(".mtrack i")].map(i=>i.style.width), ["40%", "100%"]);
   check("a hand-copied model shows no bars — its powers are unknown", d.querySelector('#langlist .pcard[data-id="local:my-model"]').querySelectorAll(".mbar").length, 0);
   check("and admits its languages are unknown", d.querySelector('#langlist .pcard[data-id="local:my-model"] .pmeta').textContent.includes("languages: unknown"), true);
@@ -551,7 +559,7 @@ function check(name, actual, expected) {
   await flick("small");
   check("choosing again is one flick of the switch", w.lastSaveForm.lang_models.ru, "small");
   const swFor = (id) => d.querySelector('#langlist .pcard[data-id="'+id+'"] input.psw');
-  check("every model card carries a switch", d.querySelectorAll('#langlist .pcard input.psw').length, 5);
+  check("every model card carries a switch", d.querySelectorAll('#langlist .pcard input.psw').length, 6);
   check("the chosen card's switch is on and the others are off", [swFor("small").checked, swFor("base").checked, swFor("local:my-model").checked], [true, false, false]);
   swFor("local:my-model").checked = true; swFor("local:my-model").dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(200);
   check("a switch turned on is the choice too", w.lastSaveForm.lang_models.ru, "local:my-model");
@@ -822,6 +830,31 @@ function check(name, actual, expected) {
   await w.refreshModels(); await sleep(200);
   check("with no Whisper left there is nothing to stand in, and the switch locks", trd.disabled, true);
   check("and the reason names the mute model", d.getElementById("tr_unavail").textContent.includes("GigaAM v3"), true);
+  const getw = () => d.getElementById("tr_getw");
+  const getwBtn = d.getElementById("tr_getw_btn");
+  const getwErr = d.getElementById("tr_getw_err");
+  check("with no Whisper installed the note offers to download Medium",
+    [getw().style.display, getwBtn.textContent], ["", "Download Medium (q5) for translation (539 MB)"]);
+  const dlKeep = w.dlCalls.length;
+  getwBtn.click(); await sleep(200);
+  check("the offer downloads Whisper Medium", w.dlCalls.slice(dlKeep), ["medium-q5_0"]);
+  check("while it downloads the note shows the progress and the button steps aside",
+    [unav().textContent.includes("Medium (q5)"), unav().textContent.includes("5%"), getw().style.display], [true, true, "none"]);
+  w.failDl("medium-q5_0", "network is down"); await sleep(1100);
+  check("a failed download brings the button back with the reason beside it",
+    [getw().style.display, getwErr.textContent, trd.disabled], ["", "network is down", true]);
+  getwBtn.click(); await sleep(200);
+  check("so it can be tried again", w.dlCalls.slice(dlKeep), ["medium-q5_0", "medium-q5_0"]);
+  w.finishDl("medium-q5_0"); await sleep(1100);
+  check("once Medium is in, the switch unlocks", trd.disabled, false);
+  check("and the amber line names Medium as the stand-in",
+    [unav().style.display, unav().textContent.includes("GigaAM v3"), unav().textContent.includes("Medium (q5)"), getw().style.display],
+    ["", true, true, "none"]);
+  w.setModelState("base", "installed"); await w.refreshModels(); await sleep(150);
+  check("with two Whispers in, the more accurate one stands in, as the app will use it",
+    [unav().textContent.includes("Medium (q5)"), unav().textContent.includes("Base")], [true, false]);
+  w.dlCalls.splice(dlKeep);
+  w.setModelState("base", "absent"); w.setModelState("medium-q5_0", "absent");
   w.setModelState("small", "active"); await w.refreshModels(); await sleep(200);
   check("bringing a translating model back unlocks the switch", trd.disabled, false);
   const ssw = d.querySelector('#langlist .pcard[data-id="small"] input.psw');
@@ -1301,57 +1334,106 @@ function check(name, actual, expected) {
   w.wizStart(); await sleep(150);
   check("the wizard covers the window", d.getElementById("wiz").classList.contains("on"), true);
   check("the wizard opens on the welcome step", d.getElementById("wz0").classList.contains("on"), true);
-  check("the wizard walks five steps", d.querySelectorAll("#wizdots i").length, 5);
+  check("the wizard walks three steps", d.querySelectorAll("#wizdots i").length, 3);
   check("there is no way back from the first step", d.getElementById("wiz_back").style.display, "none");
-  check("the interface language is offered right away", d.getElementById("wiz_ui").value, "en");
-
-  d.getElementById("wiz_next").click(); await sleep(250);
-  check("the second step is the model", d.getElementById("wz1").classList.contains("on"), true);
-  check("the wizard proposes the default model, Whisper Medium", d.querySelectorAll("#wiz_plan .advrow").length, 1);
-  check("and names it", d.querySelector("#wiz_plan .advname").textContent.includes("Medium"), true);
-  check("the download button carries the size", d.getElementById("wiz_dl").textContent.includes("539 MB"), true);
-  check("the download can be put off", d.getElementById("wiz_dl_skip").style.display, "");
-  const wizDlBefore = w.dlCalls.length;
-  d.getElementById("wiz_dl").click(); await sleep(200);
-  check("the wizard downloads what the plan is missing", w.dlCalls.length > wizDlBefore, true);
+  check("the dictation language starts from the settings", d.getElementById("wiz_lang").value, "ru");
+  check("Russian gets GigaAM, with its size", d.getElementById("wiz_mname").textContent, "GigaAM v3 · 232 MB");
+  check("the card describes the model", d.getElementById("wiz_mdesc").textContent, "russian");
+  check("and says what it was chosen for", d.getElementById("wiz_mpick").textContent, "Chosen for Русский");
+  check("the download starts by itself", w.dlCalls[w.dlCalls.length - 1], "gigaam-v3");
+  check("there is no download button to press", !!d.getElementById("wiz_dl"), false);
   check("the wizard shows the download running", d.getElementById("wiz_dlrow").style.display, "");
-  check("the wizard does not let you walk past a download", d.getElementById("wiz_next").disabled, true);
-  w.finishDl("medium-q5_0"); await sleep(1200);
-  check("a finished download opens the way on", d.getElementById("wiz_next").disabled, false);
+  check("and says it runs in the background", d.getElementById("wiz_dlout").textContent, "Downloading in the background, you can go on");
+  check("the download can be put off", d.getElementById("wiz_dl_skip").style.display, "");
+  check("a running download does not hold the way on", d.getElementById("wiz_next").disabled, false);
+  check("the interface language is offered when it differs from the dictation language", d.getElementById("wiz_uirow").style.display, "");
+  check("the interface language is offered right away", d.getElementById("wiz_ui").value, "en");
+  w.setDlPct("gigaam-v3", 40); await sleep(1000);
+  check("the bar follows the download", [d.getElementById("wiz_dlpct").textContent, d.getElementById("wiz_dlbar").style.width], ["40%", "40%"]);
+  w.failDl("gigaam-v3", "the disk is full"); await sleep(1000);
+  check("a failed download says why", d.getElementById("wiz_dlout").textContent, "The download stopped: the disk is full");
+  check("and offers to try again", [d.getElementById("wiz_retry").style.display, d.getElementById("wiz_retry").textContent], ["", "Try again"]);
+  check("and warns that dictation needs a model", d.getElementById("wiz_skipnote").style.display, "");
+  check("a failed download takes the bar away", d.getElementById("wiz_dlrow").style.display, "none");
+  check("a failed download does not hold the way on either", d.getElementById("wiz_next").disabled, false);
+  const dlRetry = w.dlCalls.length;
+  d.getElementById("wiz_retry").click(); await sleep(150);
+  check("trying again downloads again", [w.dlCalls.length, w.dlCalls[w.dlCalls.length - 1]], [dlRetry + 1, "gigaam-v3"]);
+  check("and the bar is back", d.getElementById("wiz_dlrow").style.display, "");
+  const cancelLang = w.cancelCalls.length;
+  const wizLang = d.getElementById("wiz_lang");
+  wizLang.value = "en"; wizLang.dispatchEvent(new w.Event("change")); await sleep(300);
+  check("another language stops the download it no longer needs", w.cancelCalls.slice(cancelLang), ["gigaam-v3"]);
+  check("English gets Nemotron", d.getElementById("wiz_mname").textContent, "Nemotron 3.5 · 651 MB");
+  check("chosen for English", d.getElementById("wiz_mpick").textContent, "Chosen for English");
+  check("and its download starts at once", w.dlCalls[w.dlCalls.length - 1], "nemotron-3.5");
+  check("the new language is saved", w.lastSaveForm.language, "en");
+  check("the interface language row hides when it matches", d.getElementById("wiz_uirow").style.display, "none");
 
   d.getElementById("wiz_next").click(); await sleep(300);
-  check("the third step names the shortcut", d.getElementById("wiz_hot").textContent, "ctrl+win");
-  check("the third step offers the microphones", d.getElementById("wiz_mic").options.length, 3);
+  check("the second step is the try-out", d.getElementById("wz1").classList.contains("on"), true);
+  check("the try-out names the shortcut", d.getElementById("wiz_hot").textContent, "ctrl+win");
+  check("the try-out offers the microphones", d.getElementById("wiz_mic").options.length, 3);
   await sleep(300);
   check("the wizard meter follows the microphone", meterMoves(d, "wiz_micbar"), true);
-
-  d.getElementById("wiz_next").click(); await sleep(250);
-  check("the fourth step waits for a phrase", d.getElementById("wiz_tryout").textContent, "Waiting for the first phrase…");
-  check("the fourth step offers a place to dictate into", !!d.getElementById("wiz_try"), true);
+  w.setDlPct("nemotron-3.5", 30); await sleep(1000);
+  check("the try-out waits for the model", d.getElementById("wiz_trytext").textContent, "The model is still downloading (30%). The field comes alive as soon as it is ready.");
+  check("the try-out waits for a phrase", d.getElementById("wiz_tryout").textContent, "Waiting for the first phrase…");
+  check("the try-out offers a place to dictate into", !!d.getElementById("wiz_try"), true);
+  check("the try-out does not hold the way on", d.getElementById("wiz_next").disabled, false);
+  w.setReady(false); w.finishDl("nemotron-3.5"); await sleep(1000);
+  check("a downloaded model is loaded first", d.getElementById("wiz_trytext").textContent, "Loading the model…");
+  w.setReady(true); await sleep(1000);
+  check("a ready engine asks for a phrase", d.getElementById("wiz_trytext").textContent, "Put the caret in the field below, hold ctrl+win, say a phrase and let go.");
+  w.setModelState("small", "installed"); w.setModelState("nemotron-3.5", "active"); await sleep(1000);
+  check("a streaming model promises live text on the plate", d.getElementById("wiz_trytext").textContent.endsWith(" With Nemotron 3.5 the words appear on the plate while you are still speaking."), true);
   w.setLastAt(1700000000000); await sleep(1000);
   check("the wizard repeats what it heard", d.getElementById("wiz_tryout").textContent, "Heard: hello");
 
-  d.getElementById("wiz_next").click(); await sleep(250);
+  d.getElementById("wiz_next").click(); await sleep(300);
   check("the last step offers to start with Windows", !!d.getElementById("wiz_auto"), true);
+  check("the box starts from what the installer chose, not forced on", d.getElementById("wiz_auto").checked, false);
+  check("a finished download leaves no download note", d.getElementById("wiz_donedl").style.display, "none");
   check("the last button finishes instead of going on", d.getElementById("wiz_next").textContent, "Finish");
   check("there is nothing left to skip", d.getElementById("wiz_skip").style.display, "none");
-  d.getElementById("wiz_auto").checked = true;
+  w.setAutorunNow(true);
+  d.getElementById("wiz_back").click(); await sleep(300);
+  d.getElementById("wiz_next").click(); await sleep(300);
+  check("an installer that chose autostart leaves the box on", d.getElementById("wiz_auto").checked, true);
+  const autorunBeforeFinish = w.autorunCalls.length;
   d.getElementById("wiz_next").click(); await sleep(250);
   check("finishing hides the wizard", d.getElementById("wiz").classList.contains("on"), false);
   check("finishing is remembered", w.wizardDone, 1);
-  check("the autostart answer is passed on", w.autorunCalls[w.autorunCalls.length - 1], true);
+  check("the autostart answer is passed on", [w.autorunCalls.length, w.autorunCalls[w.autorunCalls.length - 1]], [autorunBeforeFinish + 1, true]);
   check("finishing lands on the status screen", shown("state"), true);
+  w.setModelState("nemotron-3.5", "installed"); w.setModelState("small", "active");
 
-  w.setModelState("medium-q5_0", "absent");
-  w.wizStart(); await sleep(150);
-  d.getElementById("wiz_next").click(); await sleep(250);
-  check("the model step blocks again while nothing is installed", d.getElementById("wiz_next").disabled, true);
-  d.getElementById("wiz_dl_skip").click(); await sleep(100);
-  check("skipping the download opens the way on", d.getElementById("wiz_next").disabled, false);
+  w.wizStart(); await sleep(250);
+  check("a second run opens on the language step", d.getElementById("wz0").classList.contains("on"), true);
+  check("and starts the Russian model again", w.dlCalls[w.dlCalls.length - 1], "gigaam-v3");
+  const dlSecond = w.dlCalls.length;
+  d.getElementById("wiz_next").click(); await sleep(1000);
+  check("the try-out says the model is still on its way", d.getElementById("wiz_trytext").textContent.startsWith("The model is still downloading ("), true);
+  d.getElementById("wiz_next").click(); await sleep(300);
+  check("the last step says the model is still downloading", d.getElementById("wiz_donedl").style.display, "");
+  d.getElementById("wiz_back").click(); await sleep(150);
+  d.getElementById("wiz_back").click(); await sleep(300);
+  check("coming back does not start a second download", w.dlCalls.length, dlSecond);
+  check("and shows the one that runs", d.getElementById("wiz_dlrow").style.display, "");
+  const cancelLater = w.cancelCalls.length;
+  d.getElementById("wiz_dl_skip").click(); await sleep(150);
+  check("download later stops the download", w.cancelCalls.slice(cancelLater), ["gigaam-v3"]);
   check("and warns that dictation needs a model", d.getElementById("wiz_skipnote").style.display, "");
+  check("putting the download off takes the bar away", d.getElementById("wiz_dlrow").style.display, "none");
+  check("putting the download off keeps the way on open", d.getElementById("wiz_next").disabled, false);
+  check("the download can still be started by hand", [d.getElementById("wiz_retry").style.display, d.getElementById("wiz_retry").textContent], ["", "Download"]);
+  d.getElementById("wiz_retry").click(); await sleep(150);
+  check("and that starts it", [w.dlCalls.length, w.dlCalls[w.dlCalls.length - 1]], [dlSecond + 1, "gigaam-v3"]);
+  const cancelSkip = w.cancelCalls.length;
   d.getElementById("wiz_skip").click(); await sleep(250);
   check("skipping closes the wizard too", d.getElementById("wiz").classList.contains("on"), false);
   check("skipping is remembered, so it does not ask again", w.wizardDone, 2);
+  check("skipping leaves the running download alone", w.cancelCalls.length, cancelSkip);
 
   const styleAt = html.indexOf("<style>");
   const css = html.slice(html.indexOf("}", html.indexOf(":root{", styleAt)), html.indexOf("</style>"));

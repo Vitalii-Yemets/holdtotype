@@ -508,6 +508,7 @@ func init() {
 		"S_SRCLANG_SUB": "Sie sprechen sie; sie bestimmt das Erkennungsmodell",
 		"S_TR_LANGS_SUB": "diese Sprachen werden beim Einfügen zu Schaltflächen auf der Leiste",
 		"S_TR_UNAVAIL": "%s kann nicht übersetzen — der Text bleibt in der Ausgangssprache",
+		"S_TR_GET_WHISPER": "%s für die Übersetzung laden (%d MB)",
 		"S_TR_STANDIN": "%s kann nicht übersetzen — die Leiste bietet stattdessen %s an",
 		"S_TR_LOCK": "%s kann nicht aus der Liste entfernt werden — sie ist die Standardsprache der Textausgabe. Wählen Sie eine andere Standardsprache, dann lässt sich %s ausschließen.",
 		"S_TR_LOCK_OK": "Verstanden",
@@ -579,7 +580,7 @@ func init() {
 		"S_OVERLAY": "Leiste anzeigen", "S_OVERLAY_SUB": "während des Diktats zeigt der Bildschirm, dass aufgenommen wird", "S_TYPEMODE": "Zeichenweise Eingabe (für Felder ohne Einfügen)",
 		"S_RECLANG": "Sprache der Rede", "S_RECAUTO": "Automatisch",
 		"S_DL": "Laden", "S_DEL": "Löschen",
-		"S_M_BASE": "schnell, für schwache PCs", "S_M_SMALL": "ausgewogen", "S_M_MED": "genauer, empfohlen", "S_M_TURBO": "beste Genauigkeit auf CPU", "S_M_PARAKEET": "25 europäische Sprachen, setzt Satzzeichen selbst",
+		"S_M_BASE": "schnell, für schwache PCs", "S_M_SMALL": "ausgewogen", "S_M_MED": "Whisper für jede Sprache; das Modell, das übersetzt", "S_M_TURBO": "beste Genauigkeit auf CPU", "S_M_GIGAAM": "genauer auf Russisch, setzt Satzzeichen selbst", "S_M_PARAKEET": "25 europäische Sprachen, setzt Satzzeichen selbst",
 		"S_THREADS":  "CPU-Threads", "S_MINMS": "Min. Aufnahme, ms", "S_MAXSEC": "Max. Aufnahme, s",
 		"S_AUTOSTART": "whisper-server automatisch starten", "S_PORT": "Port", "S_SERVEREXE": "Pfad zu whisper-server", "S_SERVEREXE_SUB": "wird automatisch ausgefüllt; nur ändern, wenn der Server woanders liegt", "S_EXE_RESET": "Zurücksetzen", "S_EXE_WARN": "Die App findet whisper-server neben sich. Mit einem handgeschriebenen Pfad startet die Erkennung nach dem Verschieben des Ordners nicht mehr. Ändern?", "S_RESET_ALL": "Einstellungen zurücksetzen", "S_RESET_ALL_SUB": "alles außer Modellen und Verlauf auf Werkszustand", "S_RESET_ALL_BTN": "Zurücksetzen", "S_RESET_ALL_ASK": "Alle Einstellungen auf Werkszustand? Modelle, Verlauf und Prompts bleiben erhalten.", "S_RELOAD_CFG": "config.json neu einlesen", "S_RELOAD_CFG_SUB": "falls Sie die Datei von Hand bearbeitet haben", "S_RELOAD_CFG_BTN": "Neu einlesen", "S_UPD_FOUND": "Version %s ist da", "S_THEME": "Farbe", "S_THEME_SUB": "Farbe von Fenster, Leiste und Symbol im Infobereich", "S_THEME_GREEN": "Grün", "S_THEME_AMBER": "Bernstein", "S_THEME_BLUE": "Blau", "S_THEME_PINK": "Rosa", "S_THEME_EDITOR": "Editor", "S_THEME_NEON": "Neon", "S_WND_MAX": "Bildschirm füllen", "S_WND_RESTORE": "Vorherige Größe", "S_WND_MIN": "In den Infobereich", "S_WND_CLOSE": "Fenster schließen", "S_SKIN": "Design", "S_SKIN_SUB": "Schrift, Form, Effekte und Bewegung", "S_SKIN_TERMINAL": "Terminal", "S_SKIN_SOFT": "Sanft", "S_SKIN_PAPER": "Dokument", "S_SKIN_FLUENT": "Fluent", "S_SKIN_STUDIO": "Studio",
 		"S_SERVERURL": "Externer Server (URL)", "S_URLHINT": "Falls gesetzt, wird kein lokaler Server gestartet",
@@ -687,7 +688,7 @@ func init() {
 		"S_STATE_LOADED": "Gerade im Speicher",
 		"S_STATE_LOADED_SUB": "Modelle entladen sich nach Leerlauf selbst",
 		"S_STATE_WEEK": "Diese Woche",
-		"S_ST_SUMMARY": "Übersicht", "S_ST_OVERLAY": "Anzeige auf dem Bildschirm", "S_ST_BEEP": "Tonsignal", "S_ST_AUTORUN": "Start mit Windows", "S_ST_POST": "Nachbearbeitung", "S_ST_LOCAL": "lokal", "S_ST_CHECKED": "geprüft %s", "S_ST_GB": "%s GB", "S_ST_ON_M": "an", "S_ST_OFF_M": "aus", "S_ST_MIC_OK": "Signal ist in Ordnung", "S_ST_MIC_BAD": "das Mikrofon schweigt", "S_ST_CHECK": "Prüfen", "S_ST_RECOG": "erkannt von %s", "S_ST_VER": "Version %s", "S_ST_LATEST": "aktuell", "S_ST_OUTDATED": "veraltet", "S_ST_UPD_OK": "Sie haben die neueste Version", "S_ST_UPD_DL": "Update wird geladen…",
+		"S_ST_SUMMARY": "Übersicht", "S_ST_OVERLAY": "Leiste auf dem Bildschirm", "S_ST_BEEP": "Tonsignal", "S_ST_AUTORUN": "Start mit Windows", "S_ST_POST": "Nachbearbeitung", "S_ST_LOCAL": "lokal", "S_ST_CHECKED": "geprüft %s", "S_ST_GB": "%s GB", "S_ST_ON_M": "an", "S_ST_OFF_M": "aus", "S_ST_MIC_OK": "Signal ist in Ordnung", "S_ST_MIC_BAD": "das Mikrofon schweigt", "S_ST_CHECK": "Prüfen", "S_ST_RECOG": "erkannt von %s", "S_ST_VER": "Version %s", "S_ST_LATEST": "aktuell", "S_ST_OUTDATED": "veraltet", "S_ST_UPD_OK": "Sie haben die neueste Version", "S_ST_UPD_DL": "Update wird geladen…",
 		"S_ST_QUICK": "Schnelleinstellungen",
 		"S_ST_MODELS": "Modelle",
 		"S_ST_USAGE": "Diese Woche",
@@ -780,7 +781,6 @@ func init() {
 		"S_UPDATED":     "Modell zuletzt aktualisiert", "S_PROF_EDIT": "Bearbeiten", "S_PROF_CLOSE": "Einklappen",
 		"S_CONFIRM_DEL": "Modell „%s“ löschen? Es kann erneut geladen werden.", "S_FREE": "frei",
 		"S_DEL_ACTIVE":     "Das aktive Modell „%s“ löschen? Die Erkennung hält an, bis Sie ein anderes wählen — herunterladen können Sie es gleich hier.",
-		"S_WIZ_NEED_MODEL": "Laden Sie zuerst ein Modell — ohne Modell gibt es nichts zu erkennen",
 		"S_REMOTE_WARN":    "Audio wird an diesen Server gesendet. Der lokale Modus ist aus.",
 		"S_REMOTE_ASK":     "Audio wird nicht mehr auf diesem Rechner verarbeitet, sondern an %s gesendet. Fernmodus einschalten?",
 		"S_REMOTE_BADGE":   "EXTERN",
@@ -806,7 +806,7 @@ func init() {
 			"<p>Meist dauert das ein bis zwei Sekunden, und die einzelnen Schritte muss man nicht kennen. Kommt der Text aber einmal anders heraus als erwartet, sieht man an dieser Kette leicht, welcher Schritt ihn verändert hat.</p>" +
 			"<ul>" +
 			"<li><b>Aufnahme.</b> Solange die Tasten gedrückt sind, hört die App auf das Mikrofon. Einen zu kurzen Druck überhört sie, damit eine versehentlich berührte Taste kein Diktat startet.</li>" +
-			"<li><b>Erkennung.</b> Die Stimme wird zu Buchstaben. Das übernimmt ein Modell. Russisch erledigt meist GigaAM, die anderen Sprachen Whisper; das sind nur Namen, von Hand auswählen müssen Sie sie nicht.</li>" +
+			"<li><b>Erkennung.</b> Die Stimme wird zu Buchstaben. Das übernimmt ein Modell. Russisch erledigt meist GigaAM, Polnisch Parakeet, die meisten anderen Sprachen Nemotron, und Whisper übernimmt die übrigen Sprachen und die Übersetzung; das sind nur Namen, von Hand auswählen müssen Sie sie nicht.</li>" +
 			"<li><b>Ersetzungen.</b> Ihre persönliche Liste „gehört → gemeint“. Schreibt das Modell hartnäckig „git hub“ statt „GitHub“, korrigieren Sie das einmal, und danach wird es von selbst berichtigt.</li>" +
 			"<li><b>Befehle.</b> Ein paar Wendungen wirken wie Schaltflächen. Sagen Sie „neue Zeile“, springt der Text in eine neue Zeile, und die Worte selbst landen nicht im Feld.</li>" +
 			"<li><b>Übersetzung.</b> Wenn Sie sie eingeschaltet haben, sprechen Sie in einer Sprache, und der Text erscheint in einer anderen.</li>" +
@@ -815,15 +815,13 @@ func init() {
 			"</ul>" +
 			"<p class=\"hdim\">Während all das läuft, ist unten auf dem Bildschirm eine schmale Leiste mit dem Namen des aktuellen Schritts zu sehen. An ihr erkennen Sie sofort: Die App arbeitet, sie hängt nicht.</p>" +
 			"<p class=\"wh\" id=\"s-first\">Der erste Start</p>" +
-			"<p>Beim ersten Start stellt die App fünf Fragen. Das dauert eine Minute, danach können Sie diktieren.</p>" +
+			"<p>Beim ersten Start führt die App Sie durch drei Schritte. Das dauert eine Minute, danach können Sie diktieren.</p>" +
 			"<ul>" +
-			"<li><b>In welcher Sprache wir mit Ihnen sprechen.</b> Die Sprache des Einstellungsfensters. Meist schon anhand von Windows erraten.</li>" +
-			"<li><b>In welcher Sprache Sie diktieren werden.</b> Die wichtigste Frage: Passend zur Antwort sucht die App selbst ein geeignetes Modell und lädt es herunter. Die Datei ist zwischen 150 MB und einem Gigabyte groß und lädt im Hintergrund, der Fortschritt ist zu sehen.</li>" +
-			"<li><b>Mit welchen Tasten es losgeht.</b> Drücken Sie einfach, was sich bequem mit einer Hand halten lässt. Standardmäßig sind das Strg und die Windows-Taste.</li>" +
-			"<li><b>Auf welches Mikrofon die App hören soll.</b> Daneben läuft ein Pegelbalken live mit. Sagen Sie etwas: Bewegt er sich nicht, ist das falsche Mikrofon gewählt.</li>" +
-			"<li><b>Ausprobieren.</b> Ein Feld, in das Sie einen Probesatz diktieren und sich überzeugen können, dass alles funktioniert.</li>" +
+			"<li><b>In welcher Sprache Sie diktieren werden.</b> Die wichtigste Frage: Passend zur Antwort wählt die App selbst ein geeignetes Modell und lädt es im Hintergrund herunter, der Fortschritt ist zu sehen. Weicht diese Sprache von der Sprache des Fensters ab, erscheint gleich darunter eine Zeile, in der Sie auch die Sprache der Oberfläche wechseln können.</li>" +
+			"<li><b>Ausprobieren.</b> Das Tastenkürzel (standardmäßig Strg und die Windows-Taste; zum Ändern drücken Sie, was sich bequem mit einer Hand halten lässt), das Mikrofon mit einem live mitlaufenden Pegelbalken und ein Feld, in das Sie einen Probesatz diktieren. Bewegt sich der Balken beim Sprechen nicht, ist das falsche Mikrofon gewählt. Das Feld wird lebendig, sobald das Modell bereitsteht.</li>" +
+			"<li><b>Fertig.</b> Der Schalter „Mit Windows starten“, und der Assistent ist abgeschlossen.</li>" +
 			"</ul>" +
-			"<p class=\"hdim\">Jeden Schritt können Sie überspringen und später nachholen: All das steht auch in den Einstellungen. Wollen Sie den Assistenten noch einmal durchlaufen, starten Sie die App mit dem Zusatz <code>-wizard</code>. Nach einem Update erscheint er nicht mehr.</p>" +
+			"<p class=\"hdim\">Jeden Schritt können Sie überspringen und später nachholen: All das steht auch in den Einstellungen. Das Modell lädt im Hintergrund weiter, auch wenn Sie schon weitergehen oder den Assistenten beenden, bevor es fertig ist. Wollen Sie den Assistenten noch einmal durchlaufen, starten Sie die App mit dem Zusatz <code>-wizard</code>. Nach einem Update erscheint er nicht mehr.</p>" +
 			"<p class=\"wh\" id=\"s-overlay\">Die Leiste unten am Bildschirm</p>" +
 			"<div class=\"hshot\">" +
 			"<div class=\"hpill\"><span class=\"hdot\"></span><span>Sprechen…</span><span class=\"hbars\"><i style=\"height:6px\"></i><i style=\"height:13px\"></i><i style=\"height:9px\"></i><i style=\"height:16px\"></i><i style=\"height:7px\"></i><i style=\"height:12px\"></i></span><span>✕</span></div>" +
@@ -952,7 +950,7 @@ func init() {
 			"</table>" +
 			"<div class=\"hshot\">" +
 			"<div class=\"hrow\"><label>Russisch<span class=\"hs\">GigaAM v3 · Genauigkeit 5 von 5 · Tempo 5 von 5 · 232 MB</span></label><span class=\"hchip\"><i></i>aktiv</span></div>" +
-			"<div class=\"hrow\"><label>English<span class=\"hs\">wie automatische Erkennung · Whisper Medium</span></label><button class=\"hbtn\">Auswählen</button></div>" +
+			"<div class=\"hrow\"><label>English<span class=\"hs\">wie automatische Erkennung · Nemotron 3.5</span></label><button class=\"hbtn\">Auswählen</button></div>" +
 			"<div class=\"hcap\">zu sehen ist, welches Modell eine Sprache bedient und was das an Tempo und Speicherplatz kostet</div>" +
 			"</div>" +
 			"<p class=\"hsub\">Übersetzung</p>" +
@@ -979,7 +977,7 @@ func init() {
 			"<div class=\"hchips\"><span class=\"hchip\">GitHub</span><span class=\"hchip\">Docker</span><span class=\"hchip\">Kubernetes</span><span class=\"hchip\">HoldToType</span></div>" +
 			"<div class=\"hcap\">Wörter werden einzeln hinzugefügt und stehen als eigene Karten da</div>" +
 			"</div>" +
-			"<p class=\"hdim\">Das Wörterbuch lesen die Whisper-Modelle. Auf russische Sprache, die GigaAM erkennt, wirkt es nicht, dort funktionieren Hinweise anders. Der Standardsatz an Wörtern wechselt mit der Sprache, bis Sie eigene eintragen.</p>" +
+			"<p class=\"hdim\">Das Wörterbuch lesen nur die Whisper-Modelle. Nemotron, Parakeet, GigaAM und die übrigen Modelle nehmen überhaupt keine Hinweise an: Für sie ist die Liste der Ersetzungen weiter unten das Werkzeug. Der Standardsatz an Wörtern wechselt mit der Sprache, bis Sie eigene eintragen.</p>" +
 			"<p class=\"hsub\">Ersetzungen nach der Erkennung</p>" +
 			"<p>Auch eine Liste von Wörtern, aber sie arbeitet anders: Das ist kein Hinweis mehr, sondern eine Garantie. Was links steht, wird zu dem, was rechts steht. Jede Ersetzung hat drei Schalter: <b>Nur ganze Wörter</b> (dann rührt „Bahn“ das Wort „Bahnhof“ nicht an, und meist ist genau das gewollt), <b>Groß-/Kleinschreibung beachten</b> (dann gelten „Go“ und „go“ als verschiedene Wörter) und <b>Sprache der Regel</b> (die Ersetzung greift nur, wenn Sie in dieser Sprache diktieren).</p>" +
 			"<p class=\"hsub\">Sprachbefehle</p>" +
@@ -1036,9 +1034,15 @@ func init() {
 		"S_WIZ_HELLO":      "Zwei Minuten Einrichtung",
 		"S_WIZ_HELLO_TEXT": "{app} macht aus Ihrer Stimme Text direkt an der Eingabemarke: Tastenkürzel halten, Satz sprechen, loslassen — der Text steht da. Alles läuft auf Ihrem Rechner, der Ton verlässt ihn nie.",
 		"S_WIZ_LATER":      "Alles, was wir jetzt wählen, lässt sich später in den Einstellungen ändern.",
-		"S_WIZ_T_MODEL":    "Sprache und Modell",
-		"S_WIZ_MODEL_TEXT": "Sagen Sie mir, in welcher Sprache Sie diktieren, das Modell suche ich aus. Russisch übernimmt GigaAM, alle anderen Sprachen Whisper.",
-		"S_WIZ_T_INPUT":    "Tastenkürzel und Mikrofon",
+		"S_WIZ_MODEL_TEXT": "Das Modell für Ihre Sprache wird für Sie ausgewählt und im Hintergrund geladen.",
+		"S_WIZ_PICKED":     "Ausgewählt für: %s",
+		"S_WIZ_DL_BG":      "Wird im Hintergrund geladen, Sie können weitermachen",
+		"S_WIZ_DL_FAIL":    "Das Laden wurde unterbrochen: %s",
+		"S_WIZ_RETRY":      "Erneut versuchen",
+		"S_WIZ_TRY_DL":     "Das Modell wird noch geladen (%d%%). Das Feld funktioniert, sobald es bereit ist.",
+		"S_WIZ_TRY_LOAD":   "Das Modell wird geladen…",
+		"S_WIZ_TRY_LIVE":   "Mit %s erscheinen die Wörter in der Leiste, während Sie noch sprechen.",
+		"S_WIZ_DONE_DL":    "Das Modell wird noch geladen. Das Diktieren funktioniert von selbst, sobald es da ist.",
 		"S_WIZ_INPUT_TEXT": "Diese Tastenkombination halten Sie beim Sprechen. Sagen Sie etwas und prüfen Sie, ob sich der Pegelbalken bewegt.",
 		"S_WIZ_T_TRY":      "Ausprobieren",
 		"S_WIZ_TRY_PH":     "hier erscheint der Text",
@@ -1059,9 +1063,10 @@ func init() {
 		"S_TITLE": "{app} — Réglages", "S_DICT_HINT": "Termes, noms et abréviations séparés par des virgules — un indice pour l'oreille, pas des commandes. Cela vaut pour Whisper ; le russe via GigaAM l'ignore. Le jeu par défaut suit la langue de reconnaissance jusqu'à ce que vous écriviez le vôtre.",
 		"S_TR_DEFAULT": "Changer la langue de sortie du texte", "S_TR_TARGET": "Langue de sortie du texte par défaut", "S_TR_ASK": "Demander la langue de sortie du texte", "S_TR_ASK_NEVER": "Ne pas demander — traduire aussitôt",
 		"S_SRCLANG_SUB": "vous la parlez ; elle détermine le modèle de reconnaissance",
-		"S_TR_LANGS_SUB": "ces langues deviennent des boutons sur la plaque à l’insertion",
+		"S_TR_LANGS_SUB": "ces langues deviennent des boutons sur le bandeau à l’insertion",
 		"S_TR_UNAVAIL": "%s ne sait pas traduire — le texte restera dans la langue source",
-		"S_TR_STANDIN": "%s ne sait pas traduire — la plaque proposera %s à la place",
+		"S_TR_GET_WHISPER": "Télécharger %s pour la traduction (%d Mo)",
+		"S_TR_STANDIN": "%s ne sait pas traduire — le bandeau proposera %s à la place",
 		"S_TR_LOCK": "%s ne peut pas être retirée de la liste — c’est la langue de sortie du texte par défaut. Choisissez une autre langue par défaut, et %s pourra être exclue.",
 		"S_TR_LOCK_OK": "Compris",
 		"S_TR_ONE": "Plusieurs langues sont cochées, mais sans question la traduction ira toujours vers une seule — %s (langue de sortie par défaut). Les autres restent cochées mais sont désactivées.",
@@ -1109,8 +1114,8 @@ func init() {
 		"S_DICT_ADD": "Ajouter un mot", "S_FM_T_DICT_ADD": "Ajout d'un mot", "S_DICT_EMPTY": "Pas encore de mots",
 		"S_DICT_ADD_PH": "un mot, ou plusieurs séparés par des virgules",
 		"S_DICT_NOMODEL": "Le modèle actuel %s ne prend pas en charge le dictionnaire — seuls les modèles Whisper le lisent.",
-		"S_OV_FREE": "Place à vous", "S_OV_FREE_SUB": "la plaque se déplace où vous voulez",
-		"S_OVPOS_DRAG_SUB": "faites glisser la plaque à la souris — elle va où vous voulez",
+		"S_OV_FREE": "Place à vous", "S_OV_FREE_SUB": "le bandeau se déplace où vous voulez",
+		"S_OVPOS_DRAG_SUB": "faites glisser le bandeau à la souris — il va où vous voulez",
 		"S_OVMON_N": "Écran %d",
 		"S_POST_ENABLE": "Activer le post-traitement",
 		"S_API_SUM_URL": "adresse", "S_API_SUM_MODEL": "modèle", "S_API_SUM_KEY": "clé", "S_API_SUM_TIMEOUT": "attente",
@@ -1132,7 +1137,7 @@ func init() {
 		"S_OVERLAY": "Afficher le bandeau", "S_OVERLAY_SUB": "pendant la dictée, l’écran montre que l’enregistrement est en cours", "S_TYPEMODE": "Saisie caractère par caractère",
 		"S_RECLANG": "Langue de la parole", "S_RECAUTO": "Auto",
 		"S_DL": "Télécharger", "S_DEL": "Supprimer",
-		"S_M_BASE": "rapide, PC modestes", "S_M_SMALL": "équilibré", "S_M_MED": "plus précis, recommandé", "S_M_TURBO": "précision max sur CPU", "S_M_PARAKEET": "25 langues européennes, ponctue d'elle-même",
+		"S_M_BASE": "rapide, PC modestes", "S_M_SMALL": "équilibré", "S_M_MED": "Whisper pour toutes les langues ; celui qui traduit", "S_M_TURBO": "précision max sur CPU", "S_M_GIGAAM": "plus précis en russe, ponctue de lui-même", "S_M_PARAKEET": "25 langues européennes, ponctue d'elle-même",
 		"S_THREADS":  "Threads CPU", "S_MINMS": "Enreg. min, ms", "S_MAXSEC": "Enreg. max, s",
 		"S_AUTOSTART": "Démarrer whisper-server automatiquement", "S_PORT": "Port", "S_SERVEREXE": "Chemin de whisper-server", "S_SERVEREXE_SUB": "rempli automatiquement ; à changer seulement si le serveur est ailleurs", "S_EXE_RESET": "Réinitialiser", "S_EXE_WARN": "L'application trouve whisper-server à côté d'elle. Avec un chemin écrit à la main, déplacer le dossier empêchera la reconnaissance de démarrer. Modifier ?", "S_RESET_ALL": "Réinitialiser les réglages", "S_RESET_ALL_SUB": "tout revient d'usine, sauf les modèles et l'historique", "S_RESET_ALL_BTN": "Réinitialiser", "S_RESET_ALL_ASK": "Remettre tous les réglages d'usine ? Les modèles, l'historique et les prompts restent en place.", "S_RELOAD_CFG": "Relire config.json", "S_RELOAD_CFG_SUB": "si vous avez modifié le fichier à la main", "S_RELOAD_CFG_BTN": "Relire", "S_UPD_FOUND": "La version %s est sortie", "S_THEME": "Couleur", "S_THEME_SUB": "la couleur de la fenêtre, du bandeau et de l'icône", "S_THEME_GREEN": "Vert", "S_THEME_AMBER": "Ambre", "S_THEME_BLUE": "Bleu", "S_THEME_PINK": "Rose", "S_THEME_EDITOR": "Éditeur", "S_THEME_NEON": "Néon", "S_WND_MAX": "Occuper l'écran", "S_WND_RESTORE": "Taille précédente", "S_WND_MIN": "Réduire dans la zone de notification", "S_WND_CLOSE": "Fermer la fenêtre", "S_SKIN": "Design", "S_SKIN_SUB": "police, formes, effets et animations", "S_SKIN_TERMINAL": "Terminal", "S_SKIN_SOFT": "Doux", "S_SKIN_PAPER": "Document", "S_SKIN_FLUENT": "Fluent", "S_SKIN_STUDIO": "Studio",
 		"S_SERVERURL": "Serveur externe (URL)", "S_URLHINT": "Si défini, le serveur local ne démarre pas",
@@ -1230,12 +1235,12 @@ func init() {
 		"S_M_MOONUK": "modèle ukrainien Moonshine : rapide et léger, sans ponctuation",
 		"S_M_LOCAL": "trouvé dans le dossier models ; propriétés inconnues, donc pas de barres",
 		"S_ALL_LANGS": "toutes les langues",
-		"S_OVPOS_SCHEME_SUB": "cliquez sur l’écran — la plaque s’y place",
-		"S_OVDRAG": "Glissez-la où vous voulez",
+		"S_OVPOS_SCHEME_SUB": "cliquez sur l’écran — le bandeau s’y place",
+		"S_OVDRAG": "Glissez-le où vous voulez",
 		"S_OVMON": "Écran",
-		"S_OVMON_SUB": "sur quel moniteur afficher la vignette",
+		"S_OVMON_SUB": "sur quel moniteur afficher le bandeau",
 		"S_OVMON_CURSOR": "L’écran avec le curseur",
-		"S_M_NEMOTRON": "écrit pendant que vous parlez : le texte apparaît sur la vignette en direct ; 40 langues, ponctue d’elle-même",
+		"S_M_NEMOTRON": "écrit pendant que vous parlez : le texte apparaît sur le bandeau en direct ; 40 langues, ponctue d’elle-même",
 		"S_M_TINY": "le plus petit et le plus rapide, pour les machines très modestes ; nettement moins précis",
 		"S_STATE_LOADED": "En mémoire en ce moment",
 		"S_STATE_LOADED_SUB": "les modèles se déchargent seuls après inactivité",
@@ -1317,7 +1322,7 @@ func init() {
 		"S_PUNCT":       "Ponctuation et majuscules", "S_SUB_PUNCT": "d'où viennent la ponctuation et les majuscules",
 		"S_PUNCT_MODEL": "du modèle", "S_PUNCT_LLM": "par le modèle d'édition", "S_PUNCT_OFF": "retirer",
 		"S_SUB_DICT": "Dictionnaire", "S_SUB_PROMPTS": "Prompts",
-		"S_SUB_TRTARGET": "le texte y est traduit ; le dialogue sur la plaque la propose en premier",
+		"S_SUB_TRTARGET": "le texte y est traduit ; le dialogue sur le bandeau la propose en premier",
 		"S_REMOTE_ABOUT": "Un serveur distant est configuré : l'audio y est envoyé, et la promesse ci-dessus ne tient pas tant qu'il est actif.",
 		"S_UPD":          "Mises à jour", "S_UPD_CHECK": "Rechercher des mises à jour", "S_UPD_AUTO": "Vérifier au démarrage",
 		"S_SUB_UPD":  "la seule requête réseau en dehors du téléchargement des modèles",
@@ -1333,7 +1338,6 @@ func init() {
 		"S_UPDATED":     "Dernière mise à jour du modèle", "S_PROF_EDIT": "Modifier", "S_PROF_CLOSE": "Replier",
 		"S_CONFIRM_DEL": "Supprimer le modèle « %s » ? Il pourra être téléchargé à nouveau.", "S_FREE": "libre",
 		"S_DEL_ACTIVE":     "Supprimer le modèle actif « %s » ? La reconnaissance s'arrête jusqu'à ce que vous en choisissiez un autre — vous pouvez le télécharger ici même.",
-		"S_WIZ_NEED_MODEL": "Téléchargez d'abord un modèle — sans lui il n'y a rien pour reconnaître",
 		"S_REMOTE_WARN":    "L'audio sera envoyé à ce serveur. Le mode local est désactivé.",
 		"S_REMOTE_ASK":     "L'audio ne sera plus traité sur cet ordinateur : il sera envoyé à %s. Activer le mode distant ?",
 		"S_REMOTE_BADGE":   "DISTANT",
@@ -1359,7 +1363,7 @@ func init() {
 			"<p>En général, cela prend une ou deux secondes, et il est inutile de connaître les étapes. Mais si un jour le texte ne sort pas comme vous l'attendiez, cette chaîne permet de voir facilement quelle étape l'a modifié.</p>" +
 			"<ul>" +
 			"<li><b>Enregistrement.</b> Tant que les touches sont maintenues, l'application écoute le microphone. Elle ignore un appui trop court, pour qu'une touche effleurée par erreur ne lance pas de dictée.</li>" +
-			"<li><b>Reconnaissance.</b> La voix devient des lettres. C'est le travail d'un modèle. Le russe est en général confié à GigaAM, les autres langues à Whisper ; ce ne sont que des noms, et vous n'avez pas à les choisir vous-même.</li>" +
+			"<li><b>Reconnaissance.</b> La voix devient des lettres. C'est le travail d'un modèle. Le russe est en général confié à GigaAM, le polonais à Parakeet, la plupart des autres langues à Nemotron, et Whisper prend en charge les langues restantes ainsi que la traduction ; ce ne sont que des noms, et vous n'avez pas à les choisir vous-même.</li>" +
 			"<li><b>Remplacements.</b> Votre liste personnelle « entendu → voulu ». Si le modèle s'obstine à écrire « git hub » au lieu de « GitHub », vous le corrigez une fois, et ensuite la correction se fait toute seule.</li>" +
 			"<li><b>Commandes.</b> Quelques phrases fonctionnent comme des boutons. Dites « nouvelle ligne », et le texte passe à la ligne, sans que ces mots eux-mêmes arrivent dans le champ.</li>" +
 			"<li><b>Traduction.</b> Si vous l'avez activée, vous parlez une langue et le texte arrive dans une autre.</li>" +
@@ -1368,15 +1372,13 @@ func init() {
 			"</ul>" +
 			"<p class=\"hdim\">Pendant tout ce temps, un bandeau étroit en bas de l'écran affiche le nom de l'étape en cours. Il vous montre d'un coup d'œil que l'application travaille et qu'elle n'est pas bloquée.</p>" +
 			"<p class=\"wh\" id=\"s-first\">Premier lancement</p>" +
-			"<p>Au premier démarrage, l'application pose cinq questions. Cela prend une minute, et ensuite vous pouvez dicter.</p>" +
+			"<p>Au premier démarrage, l'application vous guide en trois étapes. Cela prend une minute, et ensuite vous pouvez dicter.</p>" +
 			"<ul>" +
-			"<li><b>Dans quelle langue vous parler.</b> La langue de la fenêtre des réglages. En général, elle est déjà devinée d'après Windows.</li>" +
-			"<li><b>Dans quelle langue vous allez dicter.</b> La question la plus importante : d'après votre réponse, l'application trouve et télécharge elle-même un modèle adapté. Le fichier pèse de 150 Mo à un gigaoctet et se télécharge en arrière-plan, avec la progression affichée.</li>" +
-			"<li><b>Avec quelles touches démarrer.</b> Appuyez simplement sur ce qui est confortable à maintenir d'une main. Par défaut, c'est Ctrl et la touche Windows.</li>" +
-			"<li><b>Quel microphone écouter.</b> Une barre de niveau en direct se trouve à côté. Dites quelque chose : si elle ne bouge pas, ce n'est pas le bon microphone qui est choisi.</li>" +
-			"<li><b>Essai.</b> Un champ où vous pouvez dicter une phrase d'essai et vérifier que tout fonctionne.</li>" +
+			"<li><b>Dans quelle langue vous allez dicter.</b> La question la plus importante : d'après votre réponse, l'application choisit elle-même un modèle adapté et le télécharge en arrière-plan, avec la progression affichée. Si cette langue diffère de celle de la fenêtre, une ligne apparaît juste là pour changer aussi la langue de l'interface.</li>" +
+			"<li><b>Essai.</b> Le raccourci clavier (par défaut Ctrl et la touche Windows ; pour le changer, appuyez sur ce qui est confortable à maintenir d'une main), le microphone avec une barre de niveau en direct, et un champ où dicter une phrase d'essai. Si la barre ne bouge pas quand vous parlez, ce n'est pas le bon microphone qui est choisi. Le champ s'anime dès que le modèle est en place.</li>" +
+			"<li><b>C'est prêt.</b> L'interrupteur « Démarrer avec Windows », et l'assistant est terminé.</li>" +
 			"</ul>" +
-			"<p class=\"hdim\">Vous pouvez passer n'importe quelle étape et y revenir plus tard : tout cela se trouve aussi dans les réglages. Si vous voulez refaire l'assistant, lancez l'application en ajoutant <code>-wizard</code>. Après une mise à jour, il ne réapparaît pas.</p>" +
+			"<p class=\"hdim\">Vous pouvez passer n'importe quelle étape et y revenir plus tard : tout cela se trouve aussi dans les réglages. Le modèle continue de se télécharger en arrière-plan, même si vous passez à la suite ou terminez l'assistant avant la fin. Si vous voulez refaire l'assistant, lancez l'application en ajoutant <code>-wizard</code>. Après une mise à jour, il ne réapparaît pas.</p>" +
 			"<p class=\"wh\" id=\"s-overlay\">Le bandeau en bas de l'écran</p>" +
 			"<div class=\"hshot\">" +
 			"<div class=\"hpill\"><span class=\"hdot\"></span><span>Parlez…</span><span class=\"hbars\"><i style=\"height:6px\"></i><i style=\"height:13px\"></i><i style=\"height:9px\"></i><i style=\"height:16px\"></i><i style=\"height:7px\"></i><i style=\"height:12px\"></i></span><span>✕</span></div>" +
@@ -1505,7 +1507,7 @@ func init() {
 			"</table>" +
 			"<div class=\"hshot\">" +
 			"<div class=\"hrow\"><label>Russe<span class=\"hs\">GigaAM v3 · précision 5 sur 5 · vitesse 5 sur 5 · 232 Mo</span></label><span class=\"hchip\"><i></i>active</span></div>" +
-			"<div class=\"hrow\"><label>Anglais<span class=\"hs\">comme la détection automatique · Whisper Medium</span></label><button class=\"hbtn\">Choisir</button></div>" +
+			"<div class=\"hrow\"><label>Anglais<span class=\"hs\">comme la détection automatique · Nemotron 3.5</span></label><button class=\"hbtn\">Choisir</button></div>" +
 			"<div class=\"hcap\">on voit quel modèle s'occupe d'une langue et ce qu'il coûte en vitesse et en place sur le disque</div>" +
 			"</div>" +
 			"<p class=\"hsub\">Traduction</p>" +
@@ -1532,7 +1534,7 @@ func init() {
 			"<div class=\"hchips\"><span class=\"hchip\">GitHub</span><span class=\"hchip\">Docker</span><span class=\"hchip\">Kubernetes</span><span class=\"hchip\">HoldToType</span></div>" +
 			"<div class=\"hcap\">les mots s'ajoutent un par un et vivent sur des cartes séparées</div>" +
 			"</div>" +
-			"<p class=\"hdim\">Le dictionnaire est lu par les modèles Whisper. Il n'a pas d'effet sur le russe reconnu par GigaAM, où les indices fonctionnent autrement. Le jeu de mots par défaut suit la langue tant que vous n'écrivez pas le vôtre.</p>" +
+			"<p class=\"hdim\">Seuls les modèles Whisper lisent le dictionnaire. Nemotron, Parakeet, GigaAM et les autres modèles n'acceptent aucun indice : pour eux, l'outil, c'est la liste des remplacements plus bas. Le jeu de mots par défaut suit la langue tant que vous n'écrivez pas le vôtre.</p>" +
 			"<p class=\"hsub\">Remplacements après la reconnaissance</p>" +
 			"<p>C'est aussi une liste de mots, mais elle fonctionne autrement : ce n'est plus un indice, c'est une garantie. Ce qui apparaît à gauche devient ce qui est à droite. Chaque remplacement a trois réglages : <b>Mots entiers uniquement</b> (alors « chat » ne touchera pas à « château », et c'est en général ce qu'on veut), <b>Respecter la casse</b> (alors « Pierre » et « pierre » comptent comme des mots différents) et <b>Langue de la règle</b> (le remplacement ne s'applique que lorsque vous dictez dans cette langue).</p>" +
 			"<p class=\"hsub\">Commandes vocales</p>" +
@@ -1589,9 +1591,15 @@ func init() {
 		"S_WIZ_HELLO":      "Deux minutes de configuration",
 		"S_WIZ_HELLO_TEXT": "{app} transforme votre voix en texte à l'endroit du curseur : maintenez le raccourci, dites une phrase, relâchez — le texte est là. Tout tourne sur votre machine, le son n'en sort jamais.",
 		"S_WIZ_LATER":      "Tout ce que nous choisissons ici se modifie ensuite dans les paramètres.",
-		"S_WIZ_T_MODEL":    "Langue et modèle",
-		"S_WIZ_MODEL_TEXT": "Dites-moi dans quelle langue vous dicterez, je choisis le modèle. Le russe passe par GigaAM, toutes les autres langues par Whisper.",
-		"S_WIZ_T_INPUT":    "Raccourci et microphone",
+		"S_WIZ_MODEL_TEXT": "Le modèle adapté à votre langue est choisi pour vous et se télécharge en arrière-plan.",
+		"S_WIZ_PICKED":     "Choisi pour : %s",
+		"S_WIZ_DL_BG":      "Téléchargement en arrière-plan, vous pouvez continuer",
+		"S_WIZ_DL_FAIL":    "Le téléchargement s’est arrêté : %s",
+		"S_WIZ_RETRY":      "Réessayer",
+		"S_WIZ_TRY_DL":     "Le modèle est encore en cours de téléchargement (%d%%). Le champ fonctionnera dès qu’il sera prêt.",
+		"S_WIZ_TRY_LOAD":   "Chargement du modèle…",
+		"S_WIZ_TRY_LIVE":   "Avec %s, les mots s’affichent sur le bandeau pendant que vous parlez encore.",
+		"S_WIZ_DONE_DL":    "Le modèle est encore en cours de téléchargement. La dictée fonctionnera d’elle-même dès qu’il sera en place.",
 		"S_WIZ_INPUT_TEXT": "C'est la combinaison que vous maintiendrez en parlant. Dites quelque chose et vérifiez que la barre de niveau bouge.",
 		"S_WIZ_T_TRY":      "Essai",
 		"S_WIZ_TRY_PH":     "le texte apparaîtra ici",
@@ -1612,9 +1620,10 @@ func init() {
 		"S_TITLE": "{app} — Ajustes", "S_DICT_HINT": "Términos, nombres y abreviaturas separados por comas — una pista para el oído, no comandos. Vale para Whisper; el ruso a través de GigaAM lo ignora. El conjunto por defecto sigue al idioma de reconocimiento hasta que escribas el tuyo.",
 		"S_TR_DEFAULT": "Cambiar el idioma de salida del texto", "S_TR_TARGET": "Idioma de salida del texto por defecto", "S_TR_ASK": "Preguntar el idioma de salida del texto", "S_TR_ASK_NEVER": "No preguntar — traducir enseguida",
 		"S_SRCLANG_SUB": "usted lo habla; determina el modelo de reconocimiento",
-		"S_TR_LANGS_SUB": "estos idiomas serán botones en la placa al insertar",
+		"S_TR_LANGS_SUB": "estos idiomas serán botones en la barra al insertar",
 		"S_TR_UNAVAIL": "%s no sabe traducir — el texto se quedará en el idioma de origen",
-		"S_TR_STANDIN": "%s no sabe traducir — la placa ofrecerá %s en su lugar",
+		"S_TR_GET_WHISPER": "Descargar %s para traducir (%d MB)",
+		"S_TR_STANDIN": "%s no sabe traducir — la barra ofrecerá %s en su lugar",
 		"S_TR_LOCK": "%s no se puede quitar de la lista — es el idioma de salida del texto por defecto. Elija otro idioma por defecto y entonces %s podrá excluirse.",
 		"S_TR_LOCK_OK": "Entendido",
 		"S_TR_ONE": "Hay varios idiomas marcados, pero sin preguntar la traducción irá siempre a uno — %s (idioma de salida por defecto). Los demás quedan marcados pero deshabilitados.",
@@ -1662,8 +1671,8 @@ func init() {
 		"S_DICT_ADD": "Añadir una palabra", "S_FM_T_DICT_ADD": "Añadir una palabra", "S_DICT_EMPTY": "Aún no hay palabras",
 		"S_DICT_ADD_PH": "una palabra o varias separadas por comas",
 		"S_DICT_NOMODEL": "El modelo actual %s no admite el diccionario: solo los modelos Whisper lo leen.",
-		"S_OV_FREE": "Sitio propio", "S_OV_FREE_SUB": "la placa se puede arrastrar a cualquier parte",
-		"S_OVPOS_DRAG_SUB": "arrastra la placa con el ratón: se coloca donde quieras",
+		"S_OV_FREE": "Sitio propio", "S_OV_FREE_SUB": "la barra se puede arrastrar a cualquier parte",
+		"S_OVPOS_DRAG_SUB": "arrastra la barra con el ratón: se coloca donde quieras",
 		"S_OVMON_N": "Pantalla %d",
 		"S_POST_ENABLE": "Activar el posprocesado",
 		"S_API_SUM_URL": "dirección", "S_API_SUM_MODEL": "modelo", "S_API_SUM_KEY": "clave", "S_API_SUM_TIMEOUT": "espera",
@@ -1685,7 +1694,7 @@ func init() {
 		"S_OVERLAY": "Mostrar la barra", "S_OVERLAY_SUB": "durante el dictado la pantalla muestra que se está grabando", "S_TYPEMODE": "Escritura carácter a carácter",
 		"S_RECLANG": "Idioma del habla", "S_RECAUTO": "Auto",
 		"S_DL": "Descargar", "S_DEL": "Borrar",
-		"S_M_BASE": "rápido, PCs modestos", "S_M_SMALL": "equilibrado", "S_M_MED": "más preciso, recomendado", "S_M_TURBO": "máx. precisión en CPU", "S_M_PARAKEET": "25 idiomas europeos, puntúa por sí solo",
+		"S_M_BASE": "rápido, PCs modestos", "S_M_SMALL": "equilibrado", "S_M_MED": "Whisper para cualquier idioma; el que traduce", "S_M_TURBO": "máx. precisión en CPU", "S_M_GIGAAM": "más preciso en ruso, puntúa por sí solo", "S_M_PARAKEET": "25 idiomas europeos, puntúa por sí solo",
 		"S_THREADS":  "Hilos de CPU", "S_MINMS": "Grab. mín, ms", "S_MAXSEC": "Grab. máx, s",
 		"S_AUTOSTART": "Iniciar whisper-server automáticamente", "S_PORT": "Puerto", "S_SERVEREXE": "Ruta de whisper-server", "S_SERVEREXE_SUB": "se rellena solo; cámbiela únicamente si el servidor está en otro sitio", "S_EXE_RESET": "Restablecer", "S_EXE_WARN": "La aplicación encuentra whisper-server junto a ella. Con una ruta escrita a mano, al mover la carpeta el reconocimiento dejará de arrancar. ¿Cambiarla?", "S_RESET_ALL": "Restablecer los ajustes", "S_RESET_ALL_SUB": "todo vuelve de fábrica, salvo modelos e historial", "S_RESET_ALL_BTN": "Restablecer", "S_RESET_ALL_ASK": "¿Devolver todos los ajustes de fábrica? Los modelos, el historial y los prompts se quedan.", "S_RELOAD_CFG": "Releer config.json", "S_RELOAD_CFG_SUB": "si editó el archivo a mano", "S_RELOAD_CFG_BTN": "Releer", "S_UPD_FOUND": "Está la versión %s", "S_THEME": "Color", "S_THEME_SUB": "el color de la ventana, la barra y el icono", "S_THEME_GREEN": "Verde", "S_THEME_AMBER": "Ámbar", "S_THEME_BLUE": "Azul", "S_THEME_PINK": "Rosa", "S_THEME_EDITOR": "Editor", "S_THEME_NEON": "Neón", "S_WND_MAX": "Ocupar la pantalla", "S_WND_RESTORE": "Volver al tamaño anterior", "S_WND_MIN": "Ocultar en la bandeja", "S_WND_CLOSE": "Cerrar la ventana", "S_SKIN": "Diseño", "S_SKIN_SUB": "tipografía, formas, efectos y animación", "S_SKIN_TERMINAL": "Terminal", "S_SKIN_SOFT": "Suave", "S_SKIN_PAPER": "Documento", "S_SKIN_FLUENT": "Fluent", "S_SKIN_STUDIO": "Estudio",
 		"S_SERVERURL": "Servidor externo (URL)", "S_URLHINT": "Si se define, no se inicia el servidor local",
@@ -1783,17 +1792,17 @@ func init() {
 		"S_M_MOONUK": "modelo ucraniano Moonshine: rápido y ligero, sin puntuación",
 		"S_M_LOCAL": "encontrado en la carpeta models; propiedades desconocidas, por eso sin barras",
 		"S_ALL_LANGS": "todos los idiomas",
-		"S_OVPOS_SCHEME_SUB": "haz clic en la pantalla: la placa se coloca ahí",
-		"S_OVDRAG": "Arrástrela a donde quiera",
+		"S_OVPOS_SCHEME_SUB": "haz clic en la pantalla: la barra se coloca ahí",
+		"S_OVDRAG": "Arrástrala a donde quieras",
 		"S_OVMON": "Pantalla",
-		"S_OVMON_SUB": "en qué monitor mostrar la placa",
+		"S_OVMON_SUB": "en qué monitor mostrar la barra",
 		"S_OVMON_CURSOR": "La pantalla con el cursor",
-		"S_M_NEMOTRON": "escribe mientras habla: el texto aparece en la placa en directo; 40 idiomas, puntúa por sí solo",
+		"S_M_NEMOTRON": "escribe mientras hablas: el texto aparece en la barra en directo; 40 idiomas, puntúa por sí solo",
 		"S_M_TINY": "el más pequeño y rápido, para equipos muy modestos; bastante menos preciso",
 		"S_STATE_LOADED": "En memoria ahora mismo",
 		"S_STATE_LOADED_SUB": "los modelos se descargan solos tras la inactividad",
 		"S_STATE_WEEK": "Esta semana",
-		"S_ST_SUMMARY": "Resumen", "S_ST_OVERLAY": "Franja en pantalla", "S_ST_BEEP": "Señal sonora", "S_ST_AUTORUN": "Inicio con Windows", "S_ST_POST": "Posprocesado", "S_ST_LOCAL": "local", "S_ST_CHECKED": "comprobado %s", "S_ST_GB": "%s GB", "S_ST_ON_M": "activado", "S_ST_OFF_M": "desactivado", "S_ST_MIC_OK": "la señal es buena", "S_ST_MIC_BAD": "el micrófono no responde", "S_ST_CHECK": "Comprobar", "S_ST_RECOG": "reconocido por %s", "S_ST_VER": "Versión %s", "S_ST_LATEST": "la última", "S_ST_OUTDATED": "desactualizada", "S_ST_UPD_OK": "tiene la última versión", "S_ST_UPD_DL": "Descargando la actualización…",
+		"S_ST_SUMMARY": "Resumen", "S_ST_OVERLAY": "Barra en pantalla", "S_ST_BEEP": "Señal sonora", "S_ST_AUTORUN": "Inicio con Windows", "S_ST_POST": "Posprocesado", "S_ST_LOCAL": "local", "S_ST_CHECKED": "comprobado %s", "S_ST_GB": "%s GB", "S_ST_ON_M": "activado", "S_ST_OFF_M": "desactivado", "S_ST_MIC_OK": "la señal es buena", "S_ST_MIC_BAD": "el micrófono no responde", "S_ST_CHECK": "Comprobar", "S_ST_RECOG": "reconocido por %s", "S_ST_VER": "Versión %s", "S_ST_LATEST": "la última", "S_ST_OUTDATED": "desactualizada", "S_ST_UPD_OK": "tiene la última versión", "S_ST_UPD_DL": "Descargando la actualización…",
 		"S_ST_QUICK": "Ajustes rápidos",
 		"S_ST_MODELS": "Modelos",
 		"S_ST_USAGE": "Esta semana",
@@ -1870,7 +1879,7 @@ func init() {
 		"S_PUNCT":       "Puntuación y mayúsculas", "S_SUB_PUNCT": "de dónde salen la puntuación y las mayúsculas",
 		"S_PUNCT_MODEL": "del modelo", "S_PUNCT_LLM": "del modelo editor", "S_PUNCT_OFF": "quitar",
 		"S_SUB_DICT": "Diccionario", "S_SUB_PROMPTS": "Prompts",
-		"S_SUB_TRTARGET": "el texto se traduce a él; el diálogo en la placa lo ofrece primero",
+		"S_SUB_TRTARGET": "el texto se traduce a él; el diálogo en la barra lo ofrece primero",
 		"S_REMOTE_ABOUT": "Hay un servidor remoto configurado: el audio se envía allí y la promesa anterior no se cumple mientras esté activo.",
 		"S_UPD":          "Actualizaciones", "S_UPD_CHECK": "Buscar actualizaciones", "S_UPD_AUTO": "Comprobar al iniciar",
 		"S_SUB_UPD":  "la única petición de red aparte de la descarga de modelos",
@@ -1886,7 +1895,6 @@ func init() {
 		"S_UPDATED":     "Última actualización del modelo", "S_PROF_EDIT": "Editar", "S_PROF_CLOSE": "Plegar",
 		"S_CONFIRM_DEL": "¿Eliminar el modelo «%s»? Se puede descargar de nuevo.", "S_FREE": "libre",
 		"S_DEL_ACTIVE":     "¿Eliminar el modelo activo «%s»? El reconocimiento se detiene hasta que elijas otro, y puedes descargarlo aquí mismo.",
-		"S_WIZ_NEED_MODEL": "Descarga primero un modelo: sin él no hay con qué reconocer",
 		"S_REMOTE_WARN":    "El audio se enviará a este servidor. El modo local está desactivado.",
 		"S_REMOTE_ASK":     "El audio dejará de procesarse en este equipo y se enviará a %s. ¿Activar el modo remoto?",
 		"S_REMOTE_BADGE":   "REMOTO",
@@ -1912,7 +1920,7 @@ func init() {
 			"<p>Normalmente tarda uno o dos segundos, y no hace falta conocer los pasos. Pero si algún día el texto sale distinto de lo que esperabas, esta cadena te ayuda a ver qué paso lo cambió.</p>" +
 			"<ul>" +
 			"<li><b>Grabación.</b> Mientras mantienes las teclas, la aplicación escucha el micrófono. Ignora las pulsaciones demasiado cortas, para que una tecla rozada sin querer no empiece un dictado.</li>" +
-			"<li><b>Reconocimiento.</b> La voz se convierte en letras. De eso se encarga un modelo. Para el ruso suele trabajar GigaAM, y para los demás idiomas, Whisper. Son solo nombres: no hace falta elegirlos a mano.</li>" +
+			"<li><b>Reconocimiento.</b> La voz se convierte en letras. De eso se encarga un modelo. Para el ruso suele trabajar GigaAM; para el polaco, Parakeet; para la mayoría de los demás idiomas, Nemotron, y Whisper se ocupa de los idiomas restantes y de la traducción. Son solo nombres: no hace falta elegirlos a mano.</li>" +
 			"<li><b>Reemplazos.</b> Tu lista personal de «lo oído → lo correcto». Si el modelo se empeña en escribir «git hub» en vez de «GitHub», lo corriges una vez y a partir de ahí se arregla solo.</li>" +
 			"<li><b>Comandos.</b> Algunas frases funcionan como botones. Di «nueva línea» y el texto salta a una línea nueva, sin que esas palabras lleguen al campo.</li>" +
 			"<li><b>Traducción.</b> Si la activaste, hablas en un idioma y el texto llega en otro.</li>" +
@@ -1921,15 +1929,13 @@ func init() {
 			"</ul>" +
 			"<p class=\"hdim\">Mientras ocurre todo esto, abajo en la pantalla se ve una barra estrecha con el nombre del paso actual. Así sabes de un vistazo que la aplicación está trabajando y no colgada.</p>" +
 			"<p class=\"wh\" id=\"s-first\">El primer inicio</p>" +
-			"<p>La primera vez que se abre, la aplicación hace cinco preguntas. Lleva un minuto, y después ya puedes dictar.</p>" +
+			"<p>La primera vez que se abre, la aplicación te guía en tres pasos. Lleva un minuto, y después ya puedes dictar.</p>" +
 			"<ul>" +
-			"<li><b>En qué idioma hablarte.</b> El idioma de la ventana de ajustes. Normalmente ya se deduce de Windows.</li>" +
-			"<li><b>En qué idioma vas a dictar.</b> La pregunta más importante: según tu respuesta, la aplicación busca y descarga por sí sola un modelo adecuado. El archivo pesa entre 150 MB y 1 GB, se descarga en segundo plano y se ve el progreso.</li>" +
-			"<li><b>Con qué teclas empezar.</b> Pulsa simplemente lo que te resulte cómodo mantener con una mano. Por defecto son Ctrl y la tecla Windows.</li>" +
-			"<li><b>Qué micrófono escuchar.</b> Al lado hay un medidor de nivel en directo. Di algo: si no se mueve, está elegido el micrófono equivocado.</li>" +
-			"<li><b>Prueba.</b> Un campo donde puedes dictar una frase de prueba y comprobar que todo funciona.</li>" +
+			"<li><b>En qué idioma vas a dictar.</b> La pregunta más importante: según tu respuesta, la aplicación elige por sí sola un modelo adecuado y lo descarga en segundo plano, y se ve el progreso. Si ese idioma no coincide con el de la ventana, ahí mismo aparece una fila para cambiar también el idioma de la interfaz.</li>" +
+			"<li><b>Prueba.</b> El atajo de teclado (por defecto Ctrl y la tecla Windows; para cambiarlo, pulsa lo que te resulte cómodo mantener con una mano), el micrófono con un medidor de nivel en directo y un campo donde dictar una frase de prueba. Si el medidor no se mueve cuando hablas, está elegido el micrófono equivocado. El campo cobra vida en cuanto el modelo está listo.</li>" +
+			"<li><b>Listo.</b> El interruptor «Iniciar con Windows», y el asistente termina.</li>" +
 			"</ul>" +
-			"<p class=\"hdim\">Puedes saltarte cualquier paso y volver a él más tarde: todo está también en los ajustes. Si quieres repetir el asistente, abre la aplicación añadiendo <code>-wizard</code>. Después de una actualización no vuelve a aparecer.</p>" +
+			"<p class=\"hdim\">Puedes saltarte cualquier paso y volver a él más tarde: todo está también en los ajustes. El modelo sigue descargándose en segundo plano aunque pases al siguiente paso o termines el asistente antes de que acabe. Si quieres repetir el asistente, abre la aplicación añadiendo <code>-wizard</code>. Después de una actualización no vuelve a aparecer.</p>" +
 			"<p class=\"wh\" id=\"s-overlay\">La barra en la parte inferior de la pantalla</p>" +
 			"<div class=\"hshot\">" +
 			"<div class=\"hpill\"><span class=\"hdot\"></span><span>Hable…</span><span class=\"hbars\"><i style=\"height:6px\"></i><i style=\"height:13px\"></i><i style=\"height:9px\"></i><i style=\"height:16px\"></i><i style=\"height:7px\"></i><i style=\"height:12px\"></i></span><span>✕</span></div>" +
@@ -2058,7 +2064,7 @@ func init() {
 			"</table>" +
 			"<div class=\"hshot\">" +
 			"<div class=\"hrow\"><label>Ruso<span class=\"hs\">GigaAM v3 · precisión 5 de 5 · velocidad 5 de 5 · 232 MB</span></label><span class=\"hchip\"><i></i>activa</span></div>" +
-			"<div class=\"hrow\"><label>Inglés<span class=\"hs\">como la detección automática · Whisper Medium</span></label><button class=\"hbtn\">Elegir</button></div>" +
+			"<div class=\"hrow\"><label>Inglés<span class=\"hs\">como la detección automática · Nemotron 3.5</span></label><button class=\"hbtn\">Elegir</button></div>" +
 			"<div class=\"hcap\">se ve qué modelo se encarga de cada idioma y lo que cuesta en velocidad y en espacio en disco</div>" +
 			"</div>" +
 			"<p class=\"hsub\">Traducción</p>" +
@@ -2085,7 +2091,7 @@ func init() {
 			"<div class=\"hchips\"><span class=\"hchip\">GitHub</span><span class=\"hchip\">Docker</span><span class=\"hchip\">Kubernetes</span><span class=\"hchip\">HoldToType</span></div>" +
 			"<div class=\"hcap\">las palabras se añaden de una en una y viven como tarjetas separadas</div>" +
 			"</div>" +
-			"<p class=\"hdim\">El diccionario lo leen los modelos Whisper. No afecta al ruso reconocido con GigaAM, donde las pistas funcionan de otra manera. El conjunto de palabras por defecto cambia con el idioma hasta que escribas el tuyo.</p>" +
+			"<p class=\"hdim\">El diccionario solo lo leen los modelos Whisper. Nemotron, Parakeet, GigaAM y los demás modelos no aceptan pistas de ningún tipo: para ellos, la herramienta es la lista de reemplazos de más abajo. El conjunto de palabras por defecto cambia con el idioma hasta que escribas el tuyo.</p>" +
 			"<p class=\"hsub\">Reemplazos tras el reconocimiento</p>" +
 			"<p>También es una lista de palabras, pero funciona de otra manera: ya no es una pista, sino una garantía. Lo que aparezca a la izquierda se convertirá en lo de la derecha. Cada reemplazo tiene tres ajustes: <b>Solo palabras completas</b> (así «sol» no tocará «soldado», que normalmente es lo que quieres), <b>Distinguir mayúsculas y minúsculas</b> (así «León» y «león» cuentan como palabras distintas) e <b>Idioma de la regla</b> (el reemplazo solo actúa cuando dictas en ese idioma).</p>" +
 			"<p class=\"hsub\">Comandos de voz</p>" +
@@ -2142,9 +2148,15 @@ func init() {
 		"S_WIZ_HELLO":      "Dos minutos de configuración",
 		"S_WIZ_HELLO_TEXT": "{app} convierte tu voz en texto justo donde está el cursor: mantén la combinación, di una frase, suelta y el texto aparece. Todo se procesa en tu equipo; el audio nunca sale de él.",
 		"S_WIZ_LATER":      "Todo lo que elijamos ahora se puede cambiar después en los ajustes.",
-		"S_WIZ_T_MODEL":    "Idioma y modelo",
-		"S_WIZ_MODEL_TEXT": "Dime en qué idioma vas a dictar y yo elijo el modelo. El ruso lo reconoce GigaAM; el resto de idiomas, Whisper.",
-		"S_WIZ_T_INPUT":    "Atajo y micrófono",
+		"S_WIZ_MODEL_TEXT": "El modelo para tu idioma se elige por ti y se descarga en segundo plano.",
+		"S_WIZ_PICKED":     "Elegido para: %s",
+		"S_WIZ_DL_BG":      "Se descarga en segundo plano, puedes seguir",
+		"S_WIZ_DL_FAIL":    "La descarga se detuvo: %s",
+		"S_WIZ_RETRY":      "Volver a intentar",
+		"S_WIZ_TRY_DL":     "El modelo aún se está descargando (%d%%). El campo funcionará en cuanto esté listo.",
+		"S_WIZ_TRY_LOAD":   "Cargando el modelo…",
+		"S_WIZ_TRY_LIVE":   "Con %s las palabras aparecen en la barra mientras todavía hablas.",
+		"S_WIZ_DONE_DL":    "El modelo aún se está descargando. El dictado empezará a funcionar solo en cuanto esté listo.",
 		"S_WIZ_INPUT_TEXT": "Esta es la combinación que mantendrás pulsada al hablar. Di algo y comprueba que la barra de nivel se mueve.",
 		"S_WIZ_T_TRY":      "Prueba",
 		"S_WIZ_TRY_PH":     "el texto aparecerá aquí",
@@ -2165,9 +2177,10 @@ func init() {
 		"S_TITLE": "{app} — Impostazioni", "S_DICT_HINT": "Termini, nomi e abbreviazioni separati da virgole — un suggerimento per l'ascolto, non comandi. Vale per Whisper; il russo tramite GigaAM lo ignora. Il set predefinito segue la lingua di riconoscimento finché non scrivi il tuo.",
 		"S_TR_DEFAULT": "Cambiare la lingua di uscita del testo", "S_TR_TARGET": "Lingua di uscita del testo predefinita", "S_TR_ASK": "Chiedere la lingua di uscita del testo", "S_TR_ASK_NEVER": "Non chiedere — tradurre subito",
 		"S_SRCLANG_SUB": "la parlate voi; determina il modello di riconoscimento",
-		"S_TR_LANGS_SUB": "queste lingue diventano pulsanti sulla targa all’inserimento",
+		"S_TR_LANGS_SUB": "queste lingue diventano pulsanti sulla barra all’inserimento",
 		"S_TR_UNAVAIL": "%s non sa tradurre — il testo resterà nella lingua di partenza",
-		"S_TR_STANDIN": "%s non sa tradurre — la targhetta proporrà %s",
+		"S_TR_GET_WHISPER": "Scarica %s per la traduzione (%d MB)",
+		"S_TR_STANDIN": "%s non sa tradurre — la barra proporrà %s",
 		"S_TR_LOCK": "%s non può essere tolta dall’elenco — è la lingua di uscita del testo predefinita. Scegliete un’altra lingua predefinita e allora %s potrà essere esclusa.",
 		"S_TR_LOCK_OK": "Capito",
 		"S_TR_ONE": "Sono spuntate più lingue, ma senza domanda la traduzione andrà sempre in una sola — %s (lingua di uscita predefinita). Le altre restano spuntate ma disabilitate.",
@@ -2215,8 +2228,8 @@ func init() {
 		"S_DICT_ADD": "Aggiungi una parola", "S_FM_T_DICT_ADD": "Aggiunta di una parola", "S_DICT_EMPTY": "Ancora nessuna parola",
 		"S_DICT_ADD_PH": "una parola o più separate da virgole",
 		"S_DICT_NOMODEL": "Il modello attuale %s non supporta il dizionario: solo i modelli Whisper lo leggono.",
-		"S_OV_FREE": "Posto tuo", "S_OV_FREE_SUB": "la targhetta si può trascinare ovunque",
-		"S_OVPOS_DRAG_SUB": "trascina la targhetta con il mouse: va dove vuoi",
+		"S_OV_FREE": "Posto tuo", "S_OV_FREE_SUB": "la barra si può trascinare ovunque",
+		"S_OVPOS_DRAG_SUB": "trascina la barra con il mouse: va dove vuoi",
 		"S_OVMON_N": "Schermo %d",
 		"S_POST_ENABLE": "Attiva la post-elaborazione",
 		"S_API_SUM_URL": "indirizzo", "S_API_SUM_MODEL": "modello", "S_API_SUM_KEY": "chiave", "S_API_SUM_TIMEOUT": "attesa",
@@ -2238,7 +2251,7 @@ func init() {
 		"S_OVERLAY": "Mostra la barra", "S_OVERLAY_SUB": "durante la dettatura lo schermo mostra che è in corso la registrazione", "S_TYPEMODE": "Digitazione carattere per carattere",
 		"S_RECLANG": "Lingua del parlato", "S_RECAUTO": "Auto",
 		"S_DL": "Scarica", "S_DEL": "Elimina",
-		"S_M_BASE": "veloce, PC modesti", "S_M_SMALL": "bilanciato", "S_M_MED": "più preciso, consigliato", "S_M_TURBO": "massima precisione su CPU", "S_M_PARAKEET": "25 lingue europee, punteggia da sé",
+		"S_M_BASE": "veloce, PC modesti", "S_M_SMALL": "bilanciato", "S_M_MED": "Whisper per qualsiasi lingua; quello che traduce", "S_M_TURBO": "massima precisione su CPU", "S_M_GIGAAM": "più preciso in russo, punteggia da sé", "S_M_PARAKEET": "25 lingue europee, punteggia da sé",
 		"S_THREADS":  "Thread CPU", "S_MINMS": "Registrazione min, ms", "S_MAXSEC": "Registrazione max, s",
 		"S_AUTOSTART": "Avvia whisper-server automaticamente", "S_PORT": "Porta", "S_SERVEREXE": "Percorso whisper-server", "S_SERVEREXE_SUB": "si compila da sé; cambialo solo se il server sta altrove", "S_EXE_RESET": "Ripristina", "S_EXE_WARN": "L'app trova whisper-server accanto a sé. Con un percorso scritto a mano, spostando la cartella il riconoscimento non parte più. Cambiarlo?", "S_RESET_ALL": "Ripristina le impostazioni", "S_RESET_ALL_SUB": "tutto torna di fabbrica, tranne modelli e cronologia", "S_RESET_ALL_BTN": "Ripristina", "S_RESET_ALL_ASK": "Riportare tutte le impostazioni di fabbrica? Modelli, cronologia e prompt restano.", "S_RELOAD_CFG": "Rileggi config.json", "S_RELOAD_CFG_SUB": "se hai modificato il file a mano", "S_RELOAD_CFG_BTN": "Rileggi", "S_UPD_FOUND": "È uscita la versione %s", "S_THEME": "Colore", "S_THEME_SUB": "il colore della finestra, della barra e dell'icona", "S_THEME_GREEN": "Verde", "S_THEME_AMBER": "Ambra", "S_THEME_BLUE": "Blu", "S_THEME_PINK": "Rosa", "S_THEME_EDITOR": "Editor", "S_THEME_NEON": "Neon", "S_WND_MAX": "Riempi lo schermo", "S_WND_RESTORE": "Torna alla dimensione precedente", "S_WND_MIN": "Riduci nell'area di notifica", "S_WND_CLOSE": "Chiudi la finestra", "S_SKIN": "Design", "S_SKIN_SUB": "carattere, forme, effetti e movimento", "S_SKIN_TERMINAL": "Terminale", "S_SKIN_SOFT": "Morbido", "S_SKIN_PAPER": "Documento", "S_SKIN_FLUENT": "Fluent", "S_SKIN_STUDIO": "Studio",
 		"S_SERVERURL": "Server esterno (URL)", "S_URLHINT": "Se impostato, il server locale non parte",
@@ -2336,17 +2349,17 @@ func init() {
 		"S_M_MOONUK": "modello ucraino Moonshine: veloce e leggero, senza punteggiatura",
 		"S_M_LOCAL": "trovato nella cartella models; proprietà sconosciute, perciò niente barre",
 		"S_ALL_LANGS": "tutte le lingue",
-		"S_OVPOS_SCHEME_SUB": "fai clic sullo schermo: la targhetta va lì",
-		"S_OVDRAG": "Trascinatela dove volete",
+		"S_OVPOS_SCHEME_SUB": "fai clic sullo schermo: la barra va lì",
+		"S_OVDRAG": "Trascinala dove vuoi",
 		"S_OVMON": "Schermo",
-		"S_OVMON_SUB": "su quale monitor mostrare la targhetta",
+		"S_OVMON_SUB": "su quale monitor mostrare la barra",
 		"S_OVMON_CURSOR": "Lo schermo con il cursore",
-		"S_M_NEMOTRON": "scrive mentre parlate: il testo appare sulla targhetta in diretta; 40 lingue, punteggia da sé",
+		"S_M_NEMOTRON": "scrive mentre parli: il testo appare sulla barra in diretta; 40 lingue, punteggia da sé",
 		"S_M_TINY": "il più piccolo e veloce, per macchine molto modeste; sensibilmente meno preciso",
 		"S_STATE_LOADED": "In memoria in questo momento",
 		"S_STATE_LOADED_SUB": "i modelli si scaricano da soli dopo l’inattività",
 		"S_STATE_WEEK": "Questa settimana",
-		"S_ST_SUMMARY": "Riepilogo", "S_ST_OVERLAY": "Targhetta a schermo", "S_ST_BEEP": "Segnale acustico", "S_ST_AUTORUN": "Avvio con Windows", "S_ST_POST": "Post-elaborazione", "S_ST_LOCAL": "in locale", "S_ST_CHECKED": "verificato %s", "S_ST_GB": "%s GB", "S_ST_ON_M": "attivo", "S_ST_OFF_M": "spento", "S_ST_MIC_OK": "il segnale è buono", "S_ST_MIC_BAD": "il microfono non risponde", "S_ST_CHECK": "Controlla", "S_ST_RECOG": "riconosciuto da %s", "S_ST_VER": "Versione %s", "S_ST_LATEST": "l'ultima", "S_ST_OUTDATED": "non aggiornata", "S_ST_UPD_OK": "hai l'ultima versione", "S_ST_UPD_DL": "Scarico l'aggiornamento…",
+		"S_ST_SUMMARY": "Riepilogo", "S_ST_OVERLAY": "Barra a schermo", "S_ST_BEEP": "Segnale acustico", "S_ST_AUTORUN": "Avvio con Windows", "S_ST_POST": "Post-elaborazione", "S_ST_LOCAL": "in locale", "S_ST_CHECKED": "verificato %s", "S_ST_GB": "%s GB", "S_ST_ON_M": "attivo", "S_ST_OFF_M": "spento", "S_ST_MIC_OK": "il segnale è buono", "S_ST_MIC_BAD": "il microfono non risponde", "S_ST_CHECK": "Controlla", "S_ST_RECOG": "riconosciuto da %s", "S_ST_VER": "Versione %s", "S_ST_LATEST": "l'ultima", "S_ST_OUTDATED": "non aggiornata", "S_ST_UPD_OK": "hai l'ultima versione", "S_ST_UPD_DL": "Scarico l'aggiornamento…",
 		"S_ST_QUICK": "Impostazioni rapide",
 		"S_ST_MODELS": "Modelli",
 		"S_ST_USAGE": "Questa settimana",
@@ -2423,7 +2436,7 @@ func init() {
 		"S_PUNCT":       "Punteggiatura e maiuscole", "S_SUB_PUNCT": "da dove arrivano punteggiatura e maiuscole",
 		"S_PUNCT_MODEL": "dal modello", "S_PUNCT_LLM": "dal modello editor", "S_PUNCT_OFF": "togliere",
 		"S_SUB_DICT": "Dizionario", "S_SUB_PROMPTS": "Prompt",
-		"S_SUB_TRTARGET": "il testo viene tradotto in essa; il dialogo sulla targa la propone per prima",
+		"S_SUB_TRTARGET": "il testo viene tradotto in essa; il dialogo sulla barra la propone per prima",
 		"S_REMOTE_ABOUT": "È impostato un server remoto: l'audio viene inviato lì e la promessa qui sopra non vale finché è attivo.",
 		"S_UPD":          "Aggiornamenti", "S_UPD_CHECK": "Cerca aggiornamenti", "S_UPD_AUTO": "Controlla all'avvio",
 		"S_SUB_UPD":  "l'unica richiesta di rete oltre allo scaricamento dei modelli",
@@ -2439,7 +2452,6 @@ func init() {
 		"S_UPDATED":     "Ultimo aggiornamento del modello", "S_PROF_EDIT": "Modifica", "S_PROF_CLOSE": "Riduci",
 		"S_CONFIRM_DEL": "Eliminare il modello «%s»? Si potrà scaricare di nuovo.", "S_FREE": "liberi",
 		"S_DEL_ACTIVE":     "Eliminare il modello attivo «%s»? Il riconoscimento si ferma finché non ne scegli un altro, che puoi scaricare qui stesso.",
-		"S_WIZ_NEED_MODEL": "Scarica prima un modello: senza non c'è nulla con cui riconoscere",
 		"S_REMOTE_WARN":    "L'audio verrà inviato a questo server. La modalità locale è spenta.",
 		"S_REMOTE_ASK":     "L'audio non sarà più elaborato su questo computer e verrà inviato a %s. Attivare la modalità remota?",
 		"S_REMOTE_BADGE":   "REMOTO",
@@ -2465,7 +2477,7 @@ func init() {
 			"<p>Di solito ci vogliono uno o due secondi, e non c'è bisogno di conoscere i passaggi. Ma se un giorno il testo esce diverso da come te lo aspettavi, questa catena ti aiuta a capire chi l'ha cambiato.</p>" +
 			"<ul>" +
 			"<li><b>Registrazione.</b> Finché tieni premuti i tasti, l'app ascolta il microfono. Ignora le pressioni troppo brevi, così un tasto sfiorato per sbaglio non avvia una dettatura.</li>" +
-			"<li><b>Riconoscimento.</b> La voce diventa lettere. Se ne occupa un modello. Per il russo di solito lavora GigaAM, per le altre lingue Whisper; sono solo nomi, e non è necessario sceglierli a mano.</li>" +
+			"<li><b>Riconoscimento.</b> La voce diventa lettere. Se ne occupa un modello. Per il russo di solito lavora GigaAM, per il polacco Parakeet, per la maggior parte delle altre lingue Nemotron, e Whisper si occupa delle lingue restanti e della traduzione; sono solo nomi, e non è necessario sceglierli a mano.</li>" +
 			"<li><b>Sostituzioni.</b> Il tuo elenco personale «sentito → voluto». Se il modello si ostina a scrivere «git hub» invece di «GitHub», lo correggi una volta e da lì in poi si sistema da solo.</li>" +
 			"<li><b>Comandi.</b> Alcune frasi funzionano come pulsanti. Di' «nuova riga» e il testo va a capo, senza che quelle parole finiscano nel campo.</li>" +
 			"<li><b>Traduzione.</b> Se l'hai attivata, parli in una lingua e il testo arriva in un'altra.</li>" +
@@ -2474,15 +2486,13 @@ func init() {
 			"</ul>" +
 			"<p class=\"hdim\">Mentre succede tutto questo, in fondo allo schermo si vede una barra sottile con il nome del passaggio in corso. Così capisci subito che l'app è al lavoro e non bloccata.</p>" +
 			"<p class=\"wh\" id=\"s-first\">Il primo avvio</p>" +
-			"<p>Al primo avvio l'app fa cinque domande. Ci vuole un minuto, e poi puoi dettare.</p>" +
+			"<p>Al primo avvio l'app ti accompagna in tre passaggi. Ci vuole un minuto, e poi puoi dettare.</p>" +
 			"<ul>" +
-			"<li><b>In che lingua parlarti.</b> La lingua della finestra delle impostazioni. Di solito l'app la ricava già da Windows.</li>" +
-			"<li><b>In che lingua detterai.</b> La domanda più importante: in base alla risposta l'app trova e scarica da sola un modello adatto. Il file pesa da 150 MB a 1 GB, si scarica in background e l'avanzamento è visibile.</li>" +
-			"<li><b>Con quali tasti avviare.</b> Premi semplicemente quello che ti viene comodo tenere con una mano. Per impostazione predefinita sono Ctrl e il tasto Windows.</li>" +
-			"<li><b>Quale microfono ascoltare.</b> Accanto c'è un indicatore di livello dal vivo. Di' qualcosa: se non si muove, è scelto il microfono sbagliato.</li>" +
-			"<li><b>Prova.</b> Un campo dove puoi dettare una frase di prova e verificare che tutto funzioni.</li>" +
+			"<li><b>In che lingua detterai.</b> La domanda più importante: in base alla risposta l'app sceglie da sola un modello adatto e lo scarica in background, con l'avanzamento visibile. Se questa lingua è diversa da quella della finestra, lì stesso compare una riga per cambiare anche la lingua dell'interfaccia.</li>" +
+			"<li><b>Prova.</b> La scorciatoia da tastiera (per impostazione predefinita Ctrl e il tasto Windows; per cambiarla, premi quello che ti viene comodo tenere con una mano), il microfono con un indicatore di livello dal vivo e un campo dove dettare una frase di prova. Se l'indicatore non si muove mentre parli, è scelto il microfono sbagliato. Il campo si anima non appena il modello è pronto.</li>" +
+			"<li><b>Fatto.</b> L'interruttore «Avvia con Windows», e la procedura guidata è conclusa.</li>" +
 			"</ul>" +
-			"<p class=\"hdim\">Puoi saltare qualsiasi passaggio e tornarci più tardi: tutto si trova anche nelle impostazioni. Se vuoi rifare la procedura guidata, avvia l'app aggiungendo <code>-wizard</code>. Dopo un aggiornamento non ricompare.</p>" +
+			"<p class=\"hdim\">Puoi saltare qualsiasi passaggio e tornarci più tardi: tutto si trova anche nelle impostazioni. Il modello continua a scaricarsi in background anche se passi oltre o chiudi la procedura guidata prima che abbia finito. Se vuoi rifare la procedura guidata, avvia l'app aggiungendo <code>-wizard</code>. Dopo un aggiornamento non ricompare.</p>" +
 			"<p class=\"wh\" id=\"s-overlay\">La barra in fondo allo schermo</p>" +
 			"<div class=\"hshot\">" +
 			"<div class=\"hpill\"><span class=\"hdot\"></span><span>Parla…</span><span class=\"hbars\"><i style=\"height:6px\"></i><i style=\"height:13px\"></i><i style=\"height:9px\"></i><i style=\"height:16px\"></i><i style=\"height:7px\"></i><i style=\"height:12px\"></i></span><span>✕</span></div>" +
@@ -2611,7 +2621,7 @@ func init() {
 			"</table>" +
 			"<div class=\"hshot\">" +
 			"<div class=\"hrow\"><label>Russo<span class=\"hs\">GigaAM v3 · precisione 5 su 5 · velocità 5 su 5 · 232 MB</span></label><span class=\"hchip\"><i></i>attiva</span></div>" +
-			"<div class=\"hrow\"><label>Inglese<span class=\"hs\">come il rilevamento automatico · Whisper Medium</span></label><button class=\"hbtn\">Scegli</button></div>" +
+			"<div class=\"hrow\"><label>Inglese<span class=\"hs\">come il rilevamento automatico · Nemotron 3.5</span></label><button class=\"hbtn\">Scegli</button></div>" +
 			"<div class=\"hcap\">si vede quale modello si occupa di ogni lingua e quanto costa in velocità e spazio su disco</div>" +
 			"</div>" +
 			"<p class=\"hsub\">Traduzione</p>" +
@@ -2638,7 +2648,7 @@ func init() {
 			"<div class=\"hchips\"><span class=\"hchip\">GitHub</span><span class=\"hchip\">Docker</span><span class=\"hchip\">Kubernetes</span><span class=\"hchip\">HoldToType</span></div>" +
 			"<div class=\"hcap\">le parole si aggiungono una alla volta e restano come etichette separate</div>" +
 			"</div>" +
-			"<p class=\"hdim\">Il dizionario lo leggono i modelli Whisper. Non ha effetto sul russo riconosciuto con GigaAM, dove i suggerimenti funzionano in un altro modo. L'insieme di parole predefinito cambia insieme alla lingua, finché non scrivi il tuo.</p>" +
+			"<p class=\"hdim\">Il dizionario lo leggono solo i modelli Whisper. Nemotron, Parakeet, GigaAM e gli altri modelli non accettano suggerimenti di alcun tipo: per loro lo strumento è l'elenco delle sostituzioni più sotto. L'insieme di parole predefinito cambia insieme alla lingua, finché non scrivi il tuo.</p>" +
 			"<p class=\"hsub\">Sostituzioni dopo il riconoscimento</p>" +
 			"<p>Anche questo è un elenco di parole, ma funziona in un altro modo: non è più un suggerimento, è una garanzia. Quello che compare a sinistra diventa quello che c'è a destra. Ogni sostituzione ha tre impostazioni: <b>Solo parole intere</b> (così «pane» non toccherà «panettone», che di solito è proprio ciò che vuoi), <b>Distingui le maiuscole</b> (così «Rosa» e «rosa» contano come parole diverse) e <b>Lingua della regola</b> (la sostituzione scatta solo quando detti in quella lingua).</p>" +
 			"<p class=\"hsub\">Comandi vocali</p>" +
@@ -2695,9 +2705,15 @@ func init() {
 		"S_WIZ_HELLO":      "Due minuti di configurazione",
 		"S_WIZ_HELLO_TEXT": "{app} trasforma la voce in testo proprio dove si trova il cursore: tieni premuta la combinazione, pronuncia una frase, rilascia — il testo è lì. Tutto gira sul tuo computer, l'audio non esce mai.",
 		"S_WIZ_LATER":      "Tutto quello che scegliamo ora si può cambiare dopo nelle impostazioni.",
-		"S_WIZ_T_MODEL":    "Lingua e modello",
-		"S_WIZ_MODEL_TEXT": "Dimmi in che lingua detterai e il modello lo scelgo io. Il russo lo riconosce GigaAM, tutte le altre lingue Whisper.",
-		"S_WIZ_T_INPUT":    "Scorciatoia e microfono",
+		"S_WIZ_MODEL_TEXT": "Il modello per la tua lingua viene scelto per te e si scarica in background.",
+		"S_WIZ_PICKED":     "Scelto per: %s",
+		"S_WIZ_DL_BG":      "Si scarica in background, puoi andare avanti",
+		"S_WIZ_DL_FAIL":    "Il download si è interrotto: %s",
+		"S_WIZ_RETRY":      "Riprova",
+		"S_WIZ_TRY_DL":     "Il modello si sta ancora scaricando (%d%%). Il campo funzionerà appena sarà pronto.",
+		"S_WIZ_TRY_LOAD":   "Caricamento del modello…",
+		"S_WIZ_TRY_LIVE":   "Con %s le parole compaiono sulla barra mentre stai ancora parlando.",
+		"S_WIZ_DONE_DL":    "Il modello si sta ancora scaricando. La dettatura inizierà a funzionare da sola appena sarà pronto.",
 		"S_WIZ_INPUT_TEXT": "Questa è la combinazione da tenere premuta mentre parli. Di' qualcosa e controlla che la barra del livello si muova.",
 		"S_WIZ_T_TRY":      "Prova",
 		"S_WIZ_TRY_PH":     "il testo apparirà qui",
@@ -2718,9 +2734,10 @@ func init() {
 		"S_TITLE": "{app} — Ustawienia", "S_DICT_HINT": "Terminy, nazwy i skróty oddzielone przecinkami — podpowiedź dla słuchu, nie polecenia. Działa dla Whispera; rosyjska mowa przez GigaAM tego nie używa. Zestaw domyślny podąża za językiem rozpoznawania, dopóki nie wpiszesz własnego.",
 		"S_TR_DEFAULT": "Zmień język wyjściowego tekstu", "S_TR_TARGET": "Domyślny język wyjściowego tekstu", "S_TR_ASK": "Pytaj o język wyjściowego tekstu", "S_TR_ASK_NEVER": "Nie pytaj — tłumacz od razu",
 		"S_SRCLANG_SUB": "mówisz w nim; określa model rozpoznawania",
-		"S_TR_LANGS_SUB": "te języki będą przyciskami na plakietce przy wstawianiu",
+		"S_TR_LANGS_SUB": "te języki będą przyciskami na pasku przy wstawianiu",
 		"S_TR_UNAVAIL": "%s nie umie tłumaczyć — tekst zostanie w języku źródłowym",
-		"S_TR_STANDIN": "%s nie umie tłumaczyć — plakietka zaproponuje %s",
+		"S_TR_GET_WHISPER": "Pobierz %s do tłumaczenia (%d MB)",
+		"S_TR_STANDIN": "%s nie umie tłumaczyć — pasek zaproponuje %s",
 		"S_TR_LOCK": "%s nie można usunąć z listy — to domyślny język wyjściowego tekstu. Wybierz inny język domyślny, a wtedy %s będzie można wykluczyć.",
 		"S_TR_LOCK_OK": "Rozumiem",
 		"S_TR_ONE": "Zaznaczono kilka języków, ale bez pytania tłumaczenie zawsze pójdzie w jeden — %s (domyślny język wyjściowy). Pozostałe zostaną zaznaczone, ale wyłączone.",
@@ -2791,7 +2808,7 @@ func init() {
 		"S_OVERLAY": "Pokazuj pasek", "S_OVERLAY_SUB": "podczas dyktowania ekran pokazuje, że trwa nagrywanie", "S_TYPEMODE": "Wpisywanie znak po znaku",
 		"S_RECLANG": "Język mowy źródłowej", "S_RECAUTO": "Auto",
 		"S_DL": "Pobierz", "S_DEL": "Usuń",
-		"S_M_BASE": "szybki, słabe komputery", "S_M_SMALL": "zrównoważony", "S_M_MED": "dokładniejszy, polecany", "S_M_TURBO": "najlepsza dokładność na CPU", "S_M_PARAKEET": "25 języków europejskich, sama stawia interpunkcję",
+		"S_M_BASE": "szybki, słabe komputery", "S_M_SMALL": "zrównoważony", "S_M_MED": "Whisper dla każdego języka; ten, który tłumaczy", "S_M_TURBO": "najlepsza dokładność na CPU", "S_M_GIGAAM": "dokładniejszy po rosyjsku, sam stawia interpunkcję", "S_M_PARAKEET": "25 języków europejskich, sama stawia interpunkcję",
 		"S_THREADS":  "Wątki CPU", "S_MINMS": "Min. nagranie, ms", "S_MAXSEC": "Maks. nagranie, s",
 		"S_AUTOSTART": "Uruchamiaj whisper-server automatycznie", "S_PORT": "Port", "S_SERVEREXE": "Ścieżka whisper-server", "S_SERVEREXE_SUB": "wypełnia się sama; zmieniaj tylko, jeśli serwer leży gdzie indziej", "S_EXE_RESET": "Przywróć", "S_EXE_WARN": "Aplikacja znajduje whisper-server obok siebie. Przy ręcznie wpisanej ścieżce po przeniesieniu folderu rozpoznawanie przestanie się uruchamiać. Zmienić?", "S_RESET_ALL": "Przywróć ustawienia", "S_RESET_ALL_SUB": "wszystko wraca do fabrycznych, poza modelami i historią", "S_RESET_ALL_BTN": "Przywróć", "S_RESET_ALL_ASK": "Przywrócić wszystkie ustawienia fabryczne? Modele, historia i prompty zostają.", "S_RELOAD_CFG": "Wczytaj config.json ponownie", "S_RELOAD_CFG_SUB": "jeśli plik był zmieniany ręcznie", "S_RELOAD_CFG_BTN": "Wczytaj", "S_UPD_FOUND": "Jest wersja %s", "S_THEME": "Kolor", "S_THEME_SUB": "kolor okna, paska i ikony w zasobniku", "S_THEME_GREEN": "Zielony", "S_THEME_AMBER": "Bursztynowy", "S_THEME_BLUE": "Niebieski", "S_THEME_PINK": "Różowy", "S_THEME_EDITOR": "Edytor", "S_THEME_NEON": "Neon", "S_WND_MAX": "Na cały ekran", "S_WND_RESTORE": "Poprzedni rozmiar", "S_WND_MIN": "Ukryj w zasobniku", "S_WND_CLOSE": "Zamknij okno", "S_SKIN": "Wygląd", "S_SKIN_SUB": "krój pisma, kształty, efekty i animacja", "S_SKIN_TERMINAL": "Terminal", "S_SKIN_SOFT": "Miękki", "S_SKIN_PAPER": "Dokument", "S_SKIN_FLUENT": "Fluent", "S_SKIN_STUDIO": "Studio",
 		"S_SERVERURL": "Serwer zewnętrzny (URL)", "S_URLHINT": "Jeśli ustawiony, lokalny serwer nie startuje",
@@ -2892,9 +2909,9 @@ func init() {
 		"S_OVPOS_SCHEME_SUB": "kliknij ekran — pasek stanie w tym miejscu",
 		"S_OVDRAG": "Przeciągnij, gdzie chcesz",
 		"S_OVMON": "Ekran",
-		"S_OVMON_SUB": "na którym monitorze pokazywać plakietkę",
+		"S_OVMON_SUB": "na którym monitorze pokazywać pasek",
 		"S_OVMON_CURSOR": "Ekran z kursorem",
-		"S_M_NEMOTRON": "pisze w trakcie mowy: tekst pojawia się na plakietce na żywo; 40 języków, sama stawia interpunkcję",
+		"S_M_NEMOTRON": "pisze w trakcie mowy: tekst pojawia się na pasku na żywo; 40 języków, sama stawia interpunkcję",
 		"S_M_TINY": "najmniejszy i najszybszy, dla bardzo słabych komputerów; wyraźnie mniej dokładny",
 		"S_STATE_LOADED": "Teraz w pamięci",
 		"S_STATE_LOADED_SUB": "modele wyładowują się same po bezczynności",
@@ -2927,7 +2944,7 @@ func init() {
 		"S_WEEK_OTHER": "pozostałe",
 		"S_ST_NO_WEEK": "w tym tygodniu bez dyktowań",
 		"S_ST_AUTORUN_SUB": "aplikacja nie uruchomi się sama",
-		"S_ST_OVERLAY_SUB": "widoczna podczas nagrywania",
+		"S_ST_OVERLAY_SUB": "widoczny podczas nagrywania",
 		"S_REPL_LANG": "Język reguły",
 		"S_REPL_LANG_ALL": "wszystkie języki",
 		"S_M_CANARY": "angielski, niemiecki, hiszpański, francuski — i sam tłumaczy między nimi",
@@ -2976,7 +2993,7 @@ func init() {
 		"S_PUNCT":       "Znaki i wielkie litery", "S_SUB_PUNCT": "skąd biorą się znaki interpunkcyjne i wielkie litery",
 		"S_PUNCT_MODEL": "z modelu", "S_PUNCT_LLM": "od modelu redaktora", "S_PUNCT_OFF": "usuwać",
 		"S_SUB_DICT": "Słownik", "S_SUB_PROMPTS": "Prompty",
-		"S_SUB_TRTARGET": "na niego tłumaczony jest tekst; dialog na plakietce proponuje go pierwszy",
+		"S_SUB_TRTARGET": "na niego tłumaczony jest tekst; dialog na pasku proponuje go pierwszy",
 		"S_REMOTE_ABOUT": "Ustawiony jest serwer zdalny: dźwięk trafia do niego, a obietnica powyżej wtedy nie obowiązuje.",
 		"S_UPD":          "Aktualizacje", "S_UPD_CHECK": "Sprawdź aktualizacje", "S_UPD_AUTO": "Sprawdzaj przy starcie",
 		"S_SUB_UPD":  "jedyne zapytanie sieciowe poza pobieraniem modeli",
@@ -2992,7 +3009,6 @@ func init() {
 		"S_UPDATED":     "Ostatnia aktualizacja modelu", "S_PROF_EDIT": "Edytuj", "S_PROF_CLOSE": "Zwiń",
 		"S_CONFIRM_DEL": "Usunąć model „%s”? Będzie można pobrać go ponownie.", "S_FREE": "wolne",
 		"S_DEL_ACTIVE":     "Usunąć aktywny model „%s”? Rozpoznawanie zatrzyma się, dopóki nie wybierzesz innego — pobrać go można tutaj.",
-		"S_WIZ_NEED_MODEL": "Najpierw pobierz model — bez niego nie ma czym rozpoznawać",
 		"S_REMOTE_WARN":    "Dźwięk będzie wysyłany na ten serwer. Tryb lokalny jest wyłączony.",
 		"S_REMOTE_ASK":     "Dźwięk przestanie być przetwarzany na tym komputerze i będzie wysyłany na %s. Włączyć tryb zdalny?",
 		"S_REMOTE_BADGE":   "ZDALNY",
@@ -3018,7 +3034,7 @@ func init() {
 			"<p>Zwykle trwa to sekundę lub dwie i nie trzeba znać poszczególnych kroków. Ale jeśli tekst kiedyś wyjdzie inny, niż się spodziewasz, ten łańcuch łatwo pokaże, który krok go zmienił.</p>" +
 			"<ul>" +
 			"<li><b>Nagrywanie.</b> Dopóki klawisze są wciśnięte, aplikacja słucha mikrofonu. Zbyt krótkie naciśnięcie pomija, żeby przypadkiem trącony klawisz nie zaczynał dyktowania.</li>" +
-			"<li><b>Rozpoznawanie.</b> Głos zamienia się w litery. Zajmuje się tym model. Dla rosyjskiego zwykle działa GigaAM, dla pozostałych języków Whisper; to tylko nazwy i nie musisz ich wybierać ręcznie.</li>" +
+			"<li><b>Rozpoznawanie.</b> Głos zamienia się w litery. Zajmuje się tym model. Dla rosyjskiego zwykle działa GigaAM, dla polskiego Parakeet, dla większości pozostałych języków Nemotron, a Whisper zajmuje się resztą języków i tłumaczeniem; to tylko nazwy i nie musisz ich wybierać ręcznie.</li>" +
 			"<li><b>Zamiany.</b> Twoja osobista lista „usłyszane → poprawne”. Jeśli model uparcie pisze „git hub” zamiast „GitHub”, poprawiasz to raz i od tej pory poprawia się samo.</li>" +
 			"<li><b>Komendy.</b> Kilka fraz działa jak przyciski. Powiedz „nowy wiersz”, a tekst przejdzie do nowego wiersza, przy czym same te słowa nie trafią do pola.</li>" +
 			"<li><b>Tłumaczenie.</b> Jeśli jest włączone, mówisz w jednym języku, a tekst trafia do pola w innym.</li>" +
@@ -3027,15 +3043,13 @@ func init() {
 			"</ul>" +
 			"<p class=\"hdim\">Gdy to wszystko trwa, na dole ekranu widać wąski pasek z nazwą bieżącego kroku. Po nim od razu wiadomo, że aplikacja pracuje, a nie zawiesiła się.</p>" +
 			"<p class=\"wh\" id=\"s-first\">Pierwsze uruchomienie</p>" +
-			"<p>Przy pierwszym starcie aplikacja zadaje pięć pytań. To zajmie minutę, a potem możesz dyktować.</p>" +
+			"<p>Przy pierwszym starcie aplikacja prowadzi cię przez trzy kroki. To zajmie minutę, a potem możesz dyktować.</p>" +
 			"<ul>" +
-			"<li><b>W jakim języku z tobą rozmawiać.</b> Język okna ustawień. Zwykle jest już odgadnięty na podstawie Windows.</li>" +
-			"<li><b>W jakim języku będziesz dyktować.</b> Najważniejsze pytanie: na podstawie odpowiedzi aplikacja sama znajdzie i pobierze odpowiedni model. Plik waży od 150 MB do gigabajta, pobiera się w tle, a postęp jest widoczny.</li>" +
-			"<li><b>Jakimi klawiszami uruchamiać.</b> Po prostu naciśnij to, co wygodnie trzymać jedną ręką. Domyślnie to Ctrl i klawisz Windows.</li>" +
-			"<li><b>Którego mikrofonu słuchać.</b> Obok jest wskaźnik poziomu na żywo. Powiedz coś: jeśli się nie rusza, wybrany jest niewłaściwy mikrofon.</li>" +
-			"<li><b>Próba.</b> Pole, w którym możesz podyktować zdanie na próbę i upewnić się, że wszystko działa.</li>" +
+			"<li><b>W jakim języku będziesz dyktować.</b> Najważniejsze pytanie: na podstawie odpowiedzi aplikacja sama dobierze odpowiedni model i pobierze go w tle, a postęp jest widoczny. Jeśli ten język różni się od języka okna, od razu pojawi się wiersz, w którym możesz zmienić także język interfejsu.</li>" +
+			"<li><b>Próba.</b> Skrót klawiszowy (domyślnie Ctrl i klawisz Windows; żeby go zmienić, naciśnij to, co wygodnie trzymać jedną ręką), mikrofon ze wskaźnikiem poziomu na żywo i pole, w którym możesz podyktować zdanie na próbę. Jeśli wskaźnik nie rusza się, gdy mówisz, wybrany jest niewłaściwy mikrofon. Pole ożywa, gdy tylko model jest na miejscu.</li>" +
+			"<li><b>Gotowe.</b> Przełącznik „Uruchamiaj z Windows” i kreator jest zakończony.</li>" +
 			"</ul>" +
-			"<p class=\"hdim\">Każdy krok można pominąć i wrócić do niego później: wszystko to jest w ustawieniach. Jeśli zechcesz przejść kreator jeszcze raz, uruchom aplikację z parametrem <code>-wizard</code>. Po aktualizacji kreator już się nie pojawia.</p>" +
+			"<p class=\"hdim\">Każdy krok można pominąć i wrócić do niego później: wszystko to jest w ustawieniach. Model pobiera się dalej w tle, nawet jeśli przejdziesz dalej albo zakończysz kreator, zanim pobieranie się skończy. Jeśli zechcesz przejść kreator jeszcze raz, uruchom aplikację z parametrem <code>-wizard</code>. Po aktualizacji kreator już się nie pojawia.</p>" +
 			"<p class=\"wh\" id=\"s-overlay\">Pasek na dole ekranu</p>" +
 			"<div class=\"hshot\">" +
 			"<div class=\"hpill\"><span class=\"hdot\"></span><span>Mów…</span><span class=\"hbars\"><i style=\"height:6px\"></i><i style=\"height:13px\"></i><i style=\"height:9px\"></i><i style=\"height:16px\"></i><i style=\"height:7px\"></i><i style=\"height:12px\"></i></span><span>✕</span></div>" +
@@ -3164,7 +3178,7 @@ func init() {
 			"</table>" +
 			"<div class=\"hshot\">" +
 			"<div class=\"hrow\"><label>Rosyjski<span class=\"hs\">GigaAM v3 · dokładność 5 z 5 · szybkość 5 z 5 · 232 MB</span></label><span class=\"hchip\"><i></i>aktywna</span></div>" +
-			"<div class=\"hrow\"><label>Angielski<span class=\"hs\">jak automatyczne wykrywanie · Whisper Medium</span></label><button class=\"hbtn\">Dobierz</button></div>" +
+			"<div class=\"hrow\"><label>Angielski<span class=\"hs\">jak automatyczne wykrywanie · Nemotron 3.5</span></label><button class=\"hbtn\">Dobierz</button></div>" +
 			"<div class=\"hcap\">widać, który model obsługuje dany język i ile to kosztuje w szybkości i miejscu na dysku</div>" +
 			"</div>" +
 			"<p class=\"hsub\">Tłumaczenie</p>" +
@@ -3191,7 +3205,7 @@ func init() {
 			"<div class=\"hchips\"><span class=\"hchip\">GitHub</span><span class=\"hchip\">Docker</span><span class=\"hchip\">Kubernetes</span><span class=\"hchip\">HoldToType</span></div>" +
 			"<div class=\"hcap\">słowa dodaje się po jednym i każde ma własną kartę</div>" +
 			"</div>" +
-			"<p class=\"hdim\">Słownik czytają modele Whisper. Na rosyjską mowę rozpoznawaną przez GigaAM nie wpływa, bo tam podpowiedzi działają inaczej. Domyślny zestaw słów zmienia się razem z językiem, dopóki nie wpiszesz własnego.</p>" +
+			"<p class=\"hdim\">Słownik czytają tylko modele Whisper. Nemotron, Parakeet, GigaAM i pozostałe modele w ogóle nie przyjmują podpowiedzi: dla nich narzędziem jest lista zamian poniżej. Domyślny zestaw słów zmienia się razem z językiem, dopóki nie wpiszesz własnego.</p>" +
 			"<p class=\"hsub\">Zamiany po rozpoznaniu</p>" +
 			"<p>To też lista słów, ale działa inaczej: to już nie podpowiedź, tylko gwarancja. To, co pojawi się po lewej, zmieni się w to, co po prawej. Każda zamiana ma trzy przełączniki: <b>Tylko całe słowa</b> (wtedy „kod” nie ruszy „kodowania”, i zwykle o to właśnie chodzi), <b>Uwzględniaj wielkość liter</b> (wtedy „Róża” i „róża” to różne słowa) i <b>Język reguły</b> (zamiana zadziała tylko wtedy, gdy dyktujesz w tym języku).</p>" +
 			"<p class=\"hsub\">Komendy głosowe</p>" +
@@ -3248,9 +3262,15 @@ func init() {
 		"S_WIZ_HELLO":      "Dwie minuty na konfigurację",
 		"S_WIZ_HELLO_TEXT": "{app} zamienia głos w tekst dokładnie w miejscu kursora: przytrzymaj skrót, powiedz zdanie, puść — tekst jest na miejscu. Wszystko liczy się na twoim komputerze, dźwięk nigdzie nie wychodzi.",
 		"S_WIZ_LATER":      "Wszystko, co teraz wybierzemy, można później zmienić w ustawieniach.",
-		"S_WIZ_T_MODEL":    "Język i model",
-		"S_WIZ_MODEL_TEXT": "Powiedz, w jakim języku będziesz dyktować, a model dobiorę sam. Rosyjski rozpoznaje GigaAM, pozostałe języki — Whisper.",
-		"S_WIZ_T_INPUT":    "Skrót i mikrofon",
+		"S_WIZ_MODEL_TEXT": "Model dla twojego języka zostanie dobrany automatycznie i pobierze się w tle.",
+		"S_WIZ_PICKED":     "Dobrany dla języka: %s",
+		"S_WIZ_DL_BG":      "Pobiera się w tle, możesz iść dalej",
+		"S_WIZ_DL_FAIL":    "Pobieranie zostało przerwane: %s",
+		"S_WIZ_RETRY":      "Spróbuj ponownie",
+		"S_WIZ_TRY_DL":     "Model wciąż się pobiera (%d%%). Pole zacznie działać, gdy tylko będzie gotowy.",
+		"S_WIZ_TRY_LOAD":   "Wczytuję model…",
+		"S_WIZ_TRY_LIVE":   "Z modelem %s słowa pojawiają się na pasku, gdy jeszcze mówisz.",
+		"S_WIZ_DONE_DL":    "Model wciąż się pobiera. Dyktowanie zacznie działać samo, gdy tylko model będzie na miejscu.",
 		"S_WIZ_INPUT_TEXT": "Ten skrót będziesz trzymać podczas mówienia. Powiedz coś i sprawdź, czy pasek poziomu się rusza.",
 		"S_WIZ_T_TRY":      "Próba",
 		"S_WIZ_TRY_PH":     "tutaj pojawi się tekst",
@@ -3371,9 +3391,10 @@ func init() {
 		"S_TITLE": "{app} — налаштування", "S_DICT_HINT": "Терміни, імена та абревіатури через кому — підказка слуху, не команди. Працює для Whisper; російська мова через GigaAM це ігнорує. Типовий набір іде за мовою розпізнавання, доки ви не впишете своє.",
 		"S_TR_DEFAULT": "Змінити мову текстового виводу", "S_TR_TARGET": "Мова текстового виводу за замовчуванням", "S_TR_ASK": "Питати мову текстового виводу", "S_TR_ASK_NEVER": "Не питати — перекладати одразу",
 		"S_SRCLANG_SUB": "нею ви говорите; вона визначає модель розпізнавання",
-		"S_TR_LANGS_SUB": "ці мови будуть кнопками на плашці під час вставлення",
+		"S_TR_LANGS_SUB": "ці мови будуть кнопками на смужці під час вставлення",
 		"S_TR_UNAVAIL": "%s не вміє перекладати — текст залишиться мовою вихідного мовлення",
-		"S_TR_STANDIN": "%s не вміє перекладати — на плашці запропонує %s",
+		"S_TR_GET_WHISPER": "Завантажити %s для перекладу (%d МБ)",
+		"S_TR_STANDIN": "%s не вміє перекладати — на смужці запропонує %s",
 		"S_TR_LOCK": "%s не можна прибрати зі списку — це мова текстового виводу за замовчуванням. Виберіть іншу мову за замовчуванням, і тоді %s можна буде виключити.",
 		"S_TR_LOCK_OK": "Зрозуміло",
 		"S_TR_ONE": "Позначено кілька мов, але без запитання переклад завжди йтиме в одну — %s (мова виводу за замовчуванням). Решта залишаться позначеними, але вимкненими.",
@@ -3386,7 +3407,6 @@ func init() {
 		"S_PROF_EDIT": "Редагувати", "S_PROF_CLOSE": "Згорнути",
 		"S_CONFIRM_DEL": "Видалити модель «%s»? Її можна буде завантажити знову.", "S_FREE": "вільно",
 		"S_DEL_ACTIVE":     "Видалити активну модель «%s»? Розпізнавання зупиниться, доки ви не виберете іншу — завантажити її можна тут же.",
-		"S_WIZ_NEED_MODEL": "Спочатку завантажте модель — без неї немає чим розпізнавати",
 		"S_SUB_PROMPTS":    "Промпти",
 		"S_SUB_DICT":       "Словник", "S_UPD": "Оновлення", "S_UPD_CHECK": "Перевірити оновлення", "S_UPD_AUTO": "Перевіряти під час запуску",
 		"S_UPD_NONE": "Встановлено останню версію", "S_BADGE_MODELS": "Встановлені моделі", "S_BADGE_MISS": "Модель не завантажена", "S_BADGE_SYSTEM": "Попередження — потрібна увага", "S_BADGE_HIST": "Записів в історії", "S_LOG_OPEN": "Відкрити лог", "S_LOG": "Журнал роботи", "S_LOG_SUB": "усе, що застосунок пише про себе", "S_UPD_AVAIL": "Доступна версія %s.",
@@ -3442,8 +3462,8 @@ func init() {
 		"S_DICT_ADD": "Додати слово", "S_FM_T_DICT_ADD": "Додавання слова", "S_DICT_EMPTY": "Слів поки немає",
 		"S_DICT_ADD_PH": "слово або кілька через кому",
 		"S_DICT_NOMODEL": "Поточна модель %s не підтримує словник — його читають лише моделі Whisper.",
-		"S_OV_FREE": "Своє місце", "S_OV_FREE_SUB": "плашку можна перетягнути будь-куди",
-		"S_OVPOS_DRAG_SUB": "тягніть плашку мишею — вона стане будь-де",
+		"S_OV_FREE": "Своє місце", "S_OV_FREE_SUB": "смужку можна перетягнути будь-куди",
+		"S_OVPOS_DRAG_SUB": "тягніть смужку мишею — вона стане будь-де",
 		"S_OVMON_N": "Екран %d",
 		"S_POST_ENABLE": "Увімкнути постобробку",
 		"S_API_SUM_URL": "адреса", "S_API_SUM_MODEL": "модель", "S_API_SUM_KEY": "ключ", "S_API_SUM_TIMEOUT": "очікування",
@@ -3465,7 +3485,7 @@ func init() {
 		"S_OVERLAY": "Показувати смужку", "S_OVERLAY_SUB": "під час диктування на екрані видно, що триває запис", "S_TYPEMODE": "Посимвольне введення (для полів без вставлення)",
 		"S_RECLANG": "Мова вихідного мовлення", "S_RECAUTO": "Автовизначення",
 		"S_DL": "Завантажити", "S_DEL": "Видалити",
-		"S_M_BASE": "швидка, для слабких ПК", "S_M_SMALL": "баланс швидкості й точності", "S_M_MED": "точніша, рекомендуємо", "S_M_TURBO": "максимум точності на CPU", "S_M_PARAKEET": "25 європейських мов, сама ставить розділові знаки",
+		"S_M_BASE": "швидка, для слабких ПК", "S_M_SMALL": "баланс швидкості й точності", "S_M_MED": "Whisper для будь-якої мови; та, що перекладає", "S_M_TURBO": "максимум точності на CPU", "S_M_GIGAAM": "точніша російською, сама ставить розділові знаки", "S_M_PARAKEET": "25 європейських мов, сама ставить розділові знаки",
 		"S_MIC_CHECK": "Перевірити мікрофон", "S_MIC_CHECK_SUB": "три секунди запису та розбір: гучність, перевантаження, чи є мовлення", "S_MIC_CHECKING": "Перевіряю…",
 		"S_MCHECK": "Перевірити встановлені моделі", "S_MCHECK_SUB": "звіряє файли моделей з еталонними хешами", "S_MCHECK_GO": "Перевірити", "S_MCHECK_RUN": "Перевіряю…",
 		"S_HIST_INSERT": "Вставити",
@@ -3568,17 +3588,17 @@ func init() {
 		"S_M_MOONUK": "українська модель Moonshine: швидка й легка, без розділових знаків",
 		"S_M_LOCAL": "знайдена в теці models; характеристики невідомі, тому смужок немає",
 		"S_ALL_LANGS": "усі мови",
-		"S_OVPOS_SCHEME_SUB": "клацніть по екрану — плашка стане туди",
+		"S_OVPOS_SCHEME_SUB": "клацніть по екрану — смужка стане туди",
 		"S_OVDRAG": "Перетягніть, куди потрібно",
 		"S_OVMON": "Екран",
-		"S_OVMON_SUB": "на якому моніторі показувати плашку",
+		"S_OVMON_SUB": "на якому моніторі показувати смужку",
 		"S_OVMON_CURSOR": "Екран із курсором",
-		"S_M_NEMOTRON": "друкує під час мовлення: текст з’являється на плашці наживо; 40 мов, знаки сама",
+		"S_M_NEMOTRON": "друкує під час мовлення: текст з’являється на смужці наживо; 40 мов, знаки сама",
 		"S_M_TINY": "найменша і найшвидша, для дуже слабких машин; помітно менш точна",
 		"S_STATE_LOADED": "Зараз у пам’яті",
 		"S_STATE_LOADED_SUB": "моделі вивантажуються самі після простою",
 		"S_STATE_WEEK": "За тиждень",
-		"S_ST_SUMMARY": "Зведення", "S_ST_OVERLAY": "Плашка на екрані", "S_ST_BEEP": "Звуковий сигнал", "S_ST_AUTORUN": "Запуск із Windows", "S_ST_POST": "Постобробка", "S_ST_LOCAL": "локально", "S_ST_CHECKED": "перевірено %s", "S_ST_GB": "%s ГБ", "S_ST_ON_M": "увімкнений", "S_ST_OFF_M": "вимкнений", "S_ST_MIC_OK": "сигнал у нормі", "S_ST_MIC_BAD": "мікрофон не відповідає", "S_ST_CHECK": "Перевірити", "S_ST_RECOG": "розпізнає %s", "S_ST_VER": "Версія %s", "S_ST_LATEST": "остання", "S_ST_OUTDATED": "не остання", "S_ST_UPD_OK": "у вас остання версія", "S_ST_UPD_DL": "Завантажую оновлення…",
+		"S_ST_SUMMARY": "Зведення", "S_ST_OVERLAY": "Смужка на екрані", "S_ST_BEEP": "Звуковий сигнал", "S_ST_AUTORUN": "Запуск із Windows", "S_ST_POST": "Постобробка", "S_ST_LOCAL": "локально", "S_ST_CHECKED": "перевірено %s", "S_ST_GB": "%s ГБ", "S_ST_ON_M": "увімкнений", "S_ST_OFF_M": "вимкнений", "S_ST_MIC_OK": "сигнал у нормі", "S_ST_MIC_BAD": "мікрофон не відповідає", "S_ST_CHECK": "Перевірити", "S_ST_RECOG": "розпізнає %s", "S_ST_VER": "Версія %s", "S_ST_LATEST": "остання", "S_ST_OUTDATED": "не остання", "S_ST_UPD_OK": "у вас остання версія", "S_ST_UPD_DL": "Завантажую оновлення…",
 		"S_ST_QUICK": "Швидкі налаштування",
 		"S_ST_MODELS": "Моделі",
 		"S_ST_USAGE": "Використання за тиждень",
@@ -3649,7 +3669,7 @@ func init() {
 		"S_SEC_LLM":     "Модель-редактор",
 		"S_PUNCT":       "Розділові знаки й великі літери", "S_SUB_PUNCT": "звідки беруться розділові знаки й великі літери",
 		"S_PUNCT_MODEL": "від моделі", "S_PUNCT_LLM": "від моделі-редактора", "S_PUNCT_OFF": "прибирати",
-		"S_SUB_TRTARGET": "у неї перекладається текст; у діалозі на плашці вона запропонована першою",
+		"S_SUB_TRTARGET": "у неї перекладається текст; у діалозі на смужці вона запропонована першою",
 		"S_REMOTE_ABOUT": "Задано віддалений сервер: звук іде на нього, і обіцянка вище не діє, поки він увімкнений.",
 		"S_SUB_UPD":      "єдиний мережевий запит, окрім завантаження моделей",
 		"S_SEC_SERVICE":  "Службове", "S_SUB_AUTOSTART": "вимкніть, якщо запускаєте сервер самі",
@@ -3672,7 +3692,7 @@ func init() {
 			"<p>Зазвичай це секунда-дві, і розбиратися в кроках немає потреби. Але якщо текст колись вийде не таким, як ви чекали, за цим ланцюжком легко зрозуміти, що саме його змінило.</p>" +
 			"<ul>" +
 			"<li><b>Запис.</b> Поки клавіші затиснуті, застосунок слухає мікрофон. Надто коротке натискання він пропускає повз вуха, щоб випадково зачеплена клавіша не починала диктування.</li>" +
-			"<li><b>Розпізнавання.</b> Голос перетворюється на літери. Цим займається модель. Для російської зазвичай працює GigaAM, для інших мов Whisper; це просто назви, і вибирати їх вручну не обов'язково.</li>" +
+			"<li><b>Розпізнавання.</b> Голос перетворюється на літери. Цим займається модель. Для російської зазвичай працює GigaAM, для польської — Parakeet, для більшості інших мов — Nemotron, а Whisper бере на себе решту мов і переклад; це просто назви, і вибирати їх вручну не обов'язково.</li>" +
 			"<li><b>Заміни.</b> Ваш особистий список «почуто → треба». Якщо модель уперто пише «гіт хаб» замість «GitHub», ви виправляєте це один раз, і далі це виправляється автоматично.</li>" +
 			"<li><b>Команди.</b> Кілька фраз працюють як кнопки. Скажіть «новий рядок», і текст перейде на новий рядок, а самі ці слова в поле не потраплять.</li>" +
 			"<li><b>Переклад.</b> Якщо ви його ввімкнули, ви говорите однією мовою, а в поле потрапляє текст іншою.</li>" +
@@ -3681,15 +3701,13 @@ func init() {
 			"</ul>" +
 			"<p class=\"hdim\">Поки все це триває, унизу екрана видно вузьку смужку з назвою поточного кроку. З неї одразу зрозуміло, що застосунок зайнятий, а не завис.</p>" +
 			"<p class=\"wh\" id=\"s-first\">Перший запуск</p>" +
-			"<p>Під час першого запуску застосунок ставить п'ять запитань. Це забере хвилину, а після них можна диктувати.</p>" +
+			"<p>Під час першого запуску застосунок проводить вас через три кроки. Це забере хвилину, а після них можна диктувати.</p>" +
 			"<ul>" +
-			"<li><b>Якою мовою з вами говорити.</b> Мова вікна налаштувань. Зазвичай її вже вгадано за налаштуваннями Windows.</li>" +
-			"<li><b>Якою мовою ви диктуватимете.</b> Найважливіше запитання: за вашою відповіддю застосунок сам знайде й завантажить потрібну модель. Файл важить від 150 МБ до гігабайта, завантажується у фоні, і видно, скільки вже готово.</li>" +
-			"<li><b>Якими клавішами запускати.</b> Просто натисніть те, що вам зручно тримати однією рукою. За замовчуванням це Ctrl і клавіша Windows.</li>" +
-			"<li><b>Який мікрофон слухати.</b> Поруч живий індикатор рівня. Скажіть щось: якщо він не ворушиться, вибрано не той мікрофон.</li>" +
-			"<li><b>Проба.</b> Поле, де можна надиктувати пробну фразу й переконатися, що все працює.</li>" +
+			"<li><b>Якою мовою ви диктуватимете.</b> Найважливіше запитання: за вашою відповіддю застосунок сам підбере потрібну модель і завантажить її у фоні, і видно, скільки вже готово. Якщо ця мова відрізняється від мови вікна, тут же з'явиться рядок, де можна змінити й мову інтерфейсу.</li>" +
+			"<li><b>Проба.</b> Сполучення клавіш (за замовчуванням Ctrl і клавіша Windows; щоб змінити, натисніть те, що вам зручно тримати однією рукою), мікрофон із живим індикатором рівня і поле, куди можна надиктувати пробну фразу. Якщо під час мовлення індикатор не ворушиться, вибрано не той мікрофон. Поле оживає, щойно модель на місці.</li>" +
+			"<li><b>Готово.</b> Перемикач «Запускати разом із Windows» — і майстер завершено.</li>" +
 			"</ul>" +
-			"<p class=\"hdim\">Будь-який крок можна пропустити й повернутися до нього пізніше: усе це є в налаштуваннях. Якщо захочете пройти майстер наново, запустіть застосунок із ключем <code>-wizard</code>. Під час оновлення він більше не з'являється.</p>" +
+			"<p class=\"hdim\">Будь-який крок можна пропустити й повернутися до нього пізніше: усе це є в налаштуваннях. Модель докачується у фоні, навіть якщо ви пішли далі або завершили майстер раніше, ніж вона завантажилася. Якщо захочете пройти майстер наново, запустіть застосунок із ключем <code>-wizard</code>. Під час оновлення він більше не з'являється.</p>" +
 			"<p class=\"wh\" id=\"s-overlay\">Смужка внизу екрана</p>" +
 			"<div class=\"hshot\">" +
 			"<div class=\"hpill\"><span class=\"hdot\"></span><span>Говоріть…</span><span class=\"hbars\"><i style=\"height:6px\"></i><i style=\"height:13px\"></i><i style=\"height:9px\"></i><i style=\"height:16px\"></i><i style=\"height:7px\"></i><i style=\"height:12px\"></i></span><span>✕</span></div>" +
@@ -3818,7 +3836,7 @@ func init() {
 			"</table>" +
 			"<div class=\"hshot\">" +
 			"<div class=\"hrow\"><label>Російська<span class=\"hs\">GigaAM v3 · точність 5 з 5 · швидкість 5 з 5 · 232 МБ</span></label><span class=\"hchip\"><i></i>активна</span></div>" +
-			"<div class=\"hrow\"><label>Англійська<span class=\"hs\">як автовизначення · Whisper Medium</span></label><button class=\"hbtn\">Підібрати</button></div>" +
+			"<div class=\"hrow\"><label>Англійська<span class=\"hs\">як автовизначення · Nemotron 3.5</span></label><button class=\"hbtn\">Підібрати</button></div>" +
 			"<div class=\"hcap\">видно, яка модель веде мову і чого це коштує за швидкістю та місцем на диску</div>" +
 			"</div>" +
 			"<p class=\"hsub\">Переклад</p>" +
@@ -3845,7 +3863,7 @@ func init() {
 			"<div class=\"hchips\"><span class=\"hchip\">GitHub</span><span class=\"hchip\">Docker</span><span class=\"hchip\">Kubernetes</span><span class=\"hchip\">HoldToType</span></div>" +
 			"<div class=\"hcap\">слова додаються по одному й живуть окремими картками</div>" +
 			"</div>" +
-			"<p class=\"hdim\">Словник розуміють моделі Whisper. На російське мовлення, яке розпізнає GigaAM, він не впливає: там підказки влаштовані інакше. Стандартний набір слів змінюється разом із мовою, доки ви не впишете свій.</p>" +
+			"<p class=\"hdim\">Словник читають лише моделі Whisper. Nemotron, Parakeet, GigaAM та інші моделі підказок не приймають узагалі: для них інструмент — список замін нижче. Стандартний набір слів змінюється разом із мовою, доки ви не впишете свій.</p>" +
 			"<p class=\"hsub\">Заміни після розпізнавання</p>" +
 			"<p>Теж список слів, але працює він інакше: це вже не підказка, а гарантія. Те, що трапилося ліворуч, стане тим, що праворуч. Кожна заміна має три перемикачі: <b>Лише цілі слова</b> (тоді «код» не зачепить «кодування», і зазвичай саме це й потрібно), <b>Враховувати регістр</b> (тоді «Надія» і «надія» вважаються різними словами) і <b>Мова правила</b> (заміна спрацює лише тоді, коли ви диктуєте цією мовою).</p>" +
 			"<p class=\"hsub\">Голосові команди</p>" +
@@ -3902,9 +3920,15 @@ func init() {
 		"S_WIZ_HELLO":      "Дві хвилини на налаштування",
 		"S_WIZ_HELLO_TEXT": "{app} перетворює голос на текст просто в позиції курсора: затиснули сполучення клавіш, сказали фразу, відпустили — текст на місці. Усе рахується на вашому комп'ютері, звук нікуди не йде.",
 		"S_WIZ_LATER":      "Усе, що ми зараз оберемо, потім змінюється в налаштуваннях.",
-		"S_WIZ_T_MODEL":    "Мова і модель",
-		"S_WIZ_MODEL_TEXT": "Скажіть, якою мовою диктуватимете, — модель підберу сам. Російську розпізнає GigaAM, решту мов — Whisper.",
-		"S_WIZ_T_INPUT":    "Клавіші та мікрофон",
+		"S_WIZ_MODEL_TEXT": "Модель під вашу мову добирається сама й завантажується у фоні.",
+		"S_WIZ_PICKED":     "Дібрана для мови: %s",
+		"S_WIZ_DL_BG":      "Завантажується у фоні, можна йти далі",
+		"S_WIZ_DL_FAIL":    "Завантаження перервалося: %s",
+		"S_WIZ_RETRY":      "Спробувати знову",
+		"S_WIZ_TRY_DL":     "Модель ще завантажується (%d%%). Поле оживе, щойно вона буде готова.",
+		"S_WIZ_TRY_LOAD":   "Завантажую модель…",
+		"S_WIZ_TRY_LIVE":   "З моделлю %s слова з'являються на смужці, поки ви ще говорите.",
+		"S_WIZ_DONE_DL":    "Модель ще завантажується. Диктування запрацює саме, щойно модель буде на місці.",
 		"S_WIZ_INPUT_TEXT": "Це сполучення ви триматимете під час мовлення. Скажіть щось і перевірте, що смужка рівня рухається.",
 		"S_WIZ_T_TRY":      "Проба",
 		"S_WIZ_TRY_PH":     "текст з'явиться тут",

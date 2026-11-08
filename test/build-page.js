@@ -74,6 +74,10 @@ const cfg = {
   _tab: "general",
   _wizard: false,
   _cpus: 8,
+  _rec_models: { auto: "nemotron-3.5", de: "nemotron-3.5", en: "nemotron-3.5", es: "nemotron-3.5", fr: "nemotron-3.5", it: "nemotron-3.5", pl: "parakeet-v3", uk: "nemotron-3.5", ru: "gigaam-v3" },
+  _default_model: "nemotron-3.5",
+  _legacy_model: "medium-q5_0",
+  _ui_lang: "en",
 };
 
 const i18nSrc = fs.readFileSync(path.join(root, "client", "i18n.go"), "utf8");

@@ -467,6 +467,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_SRCLANG_SUB": "на нём вы говорите; он определяет модель распознавания",
 		"S_TR_LANGS_SUB": "эти языки будут кнопками на плашке при вставке",
 		"S_TR_UNAVAIL": "%s не умеет переводить — текст будет на языке исходной речи",
+		"S_TR_GET_WHISPER": "Скачать %s для перевода (%d МБ)",
 		"S_TR_STANDIN": "%s не умеет переводить — на плашке предложит перевести %s",
 		"S_TR_LOCK": "%s нельзя убрать из списка — он выбран языком текстового вывода по умолчанию. Выберите другой язык по умолчанию, и тогда %s можно будет исключить.",
 		"S_TR_LOCK_OK": "Понятно",
@@ -493,7 +494,6 @@ var settingsStrings = map[string]map[string]string{
 		"S_PROF_CLOSE":     "Свернуть",
 		"S_CONFIRM_DEL":    "Удалить модель «%s»? Её можно будет скачать заново.",
 		"S_DEL_ACTIVE":     "Удалить активную модель «%s»? Распознавание остановится, пока вы не выберете другую — скачать её можно тут же.",
-		"S_WIZ_NEED_MODEL": "Сначала скачайте модель — без неё распознавать нечем",
 		"S_FREE":           "свободно",
 		"S_SUB_PROMPTS":    "Промпты",
 		"S_SUB_DICT":       "Словарь",
@@ -577,7 +577,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_DEL":            "Удалить",
 		"S_M_BASE":         "быстрая, для слабых ПК",
 		"S_M_SMALL":        "баланс скорости и точности",
-		"S_M_MED":          "точнее, рекомендуем",
+		"S_M_MED":          "Whisper для любого языка; та, что переводит",
 		"S_M_TURBO":        "максимум точности на CPU",
 		"S_M_GIGAAM":       "точнее на русском, сама ставит знаки препинания",
 		"S_M_PARAKEET":     "25 европейских языков, сама ставит знаки препинания",
@@ -889,7 +889,7 @@ var settingsStrings = map[string]map[string]string{
 			"<p>Обычно это одна-две секунды, и разбираться в шагах незачем. Но если текст однажды выйдет не таким, как вы ожидали, по этой цепочке легко понять, кто его изменил.</p>" +
 			"<ul>" +
 			"<li><b>Запись.</b> Пока клавиши зажаты, приложение слушает микрофон. Слишком короткое нажатие оно пропускает мимо ушей, чтобы случайно задетая клавиша не начинала диктовку.</li>" +
-			"<li><b>Распознавание.</b> Голос превращается в буквы. Этим занимается модель. Для русского обычно работает GigaAM, для остальных языков — Whisper; это просто названия, выбирать их вручную не обязательно.</li>" +
+			"<li><b>Распознавание.</b> Голос превращается в буквы. Этим занимается модель. Для русского обычно работает GigaAM, для польского — Parakeet, для большинства остальных языков — Nemotron, а Whisper берёт на себя прочие языки и перевод; это просто названия, выбирать их вручную не обязательно.</li>" +
 			"<li><b>Замены.</b> Ваш личный список «услышано → надо». Если модель упорно пишет «гит хаб» вместо «GitHub», вы поправляете это один раз, и дальше оно исправляется само.</li>" +
 			"<li><b>Команды.</b> Несколько фраз работают как кнопки. Скажете «новая строка» — текст перейдёт на новую строку, а сами эти слова в поле не попадут.</li>" +
 			"<li><b>Перевод.</b> Если вы его включили, вы говорите по-русски, а в поле встаёт английский текст.</li>" +
@@ -898,15 +898,13 @@ var settingsStrings = map[string]map[string]string{
 			"</ul>" +
 			"<p class=\"hdim\">Пока всё это идёт, внизу экрана видна узкая плашка с подписью текущего шага. По ней сразу понятно: приложение занято, а не зависло.</p>" +
 			"<p class=\"wh\" id=\"s-first\">Первый запуск</p>" +
-			"<p>При первом старте приложение задаёт пять вопросов. Это займёт минуту, и после них можно диктовать.</p>" +
+			"<p>При первом старте приложение проводит вас через три шага. Это займёт минуту, и после них можно диктовать.</p>" +
 			"<ul>" +
-			"<li><b>На каком языке говорить с вами.</b> Язык окна настроек. Обычно уже угадан по Windows.</li>" +
-			"<li><b>На каком языке вы будете диктовать.</b> Самый важный вопрос: под ответ приложение само найдёт и скачает подходящую модель. Файл весит от 150 МБ до гигабайта, качается в фоне, прогресс виден.</li>" +
-			"<li><b>Какими клавишами запускать.</b> Просто нажмите то, что вам удобно держать одной рукой. По умолчанию это Ctrl и клавиша Windows.</li>" +
-			"<li><b>Какой микрофон слушать.</b> Рядом живая полоска. Скажите что-нибудь: если она не шевелится, выбран не тот микрофон.</li>" +
-			"<li><b>Проверка.</b> Поле, где можно надиктовать пробную фразу и убедиться, что всё работает.</li>" +
+			"<li><b>На каком языке вы будете диктовать.</b> Самый важный вопрос: под ответ приложение само подберёт подходящую модель и скачает её в фоне, прогресс виден. Если этот язык отличается от языка окна, тут же появится строка, где можно сменить и язык интерфейса.</li>" +
+			"<li><b>Проба.</b> Сочетание клавиш (по умолчанию Ctrl и клавиша Windows; чтобы сменить, нажмите то, что вам удобно держать одной рукой), микрофон с живой полоской уровня и поле, куда можно надиктовать пробную фразу. Если при речи полоска не шевелится, выбран не тот микрофон. Поле оживает, как только модель на месте.</li>" +
+			"<li><b>Готово.</b> Переключатель «Запускать вместе с Windows» — и мастер завершён.</li>" +
 			"</ul>" +
-			"<p class=\"hdim\">Любой шаг можно пропустить и вернуться к нему позже: всё это есть в настройках. Если захотите пройти мастер заново, запустите приложение с добавкой <code>-wizard</code>. При обновлении он больше не появляется.</p>" +
+			"<p class=\"hdim\">Любой шаг можно пропустить и вернуться к нему позже: всё это есть в настройках. Модель докачивается в фоне, даже если вы пошли дальше или завершили мастер раньше, чем она скачалась. Если захотите пройти мастер заново, запустите приложение с добавкой <code>-wizard</code>. При обновлении он больше не появляется.</p>" +
 			"<p class=\"wh\" id=\"s-overlay\">Плашка внизу экрана</p>" +
 			"<div class=\"hshot\">" +
 			"<div class=\"hpill\"><span class=\"hdot\"></span><span>Говорите…</span><span class=\"hbars\"><i style=\"height:6px\"></i><i style=\"height:13px\"></i><i style=\"height:9px\"></i><i style=\"height:16px\"></i><i style=\"height:7px\"></i><i style=\"height:12px\"></i></span><span>✕</span></div>" +
@@ -1035,7 +1033,7 @@ var settingsStrings = map[string]map[string]string{
 			"</table>" +
 			"<div class=\"hshot\">" +
 			"<div class=\"hrow\"><label>Русский<span class=\"hs\">GigaAM v3 · точность 5 из 5 · скорость 5 из 5 · 232 МБ</span></label><span class=\"hchip\"><i></i>активна</span></div>" +
-			"<div class=\"hrow\"><label>English<span class=\"hs\">как Автоопределение · Whisper Medium</span></label><button class=\"hbtn\">Выбрать</button></div>" +
+			"<div class=\"hrow\"><label>English<span class=\"hs\">как Автоопределение · Nemotron 3.5</span></label><button class=\"hbtn\">Выбрать</button></div>" +
 			"<div class=\"hcap\">видно, кто ведёт язык и чего это стоит по скорости и месту на диске</div>" +
 			"</div>" +
 			"<p class=\"hsub\">Перевод</p>" +
@@ -1062,7 +1060,7 @@ var settingsStrings = map[string]map[string]string{
 			"<div class=\"hchips\"><span class=\"hchip\">GitHub</span><span class=\"hchip\">Docker</span><span class=\"hchip\">Kubernetes</span><span class=\"hchip\">HoldToType</span></div>" +
 			"<div class=\"hcap\">слова добавляются по одному и живут отдельными карточками</div>" +
 			"</div>" +
-			"<p class=\"hdim\">Словарь понимают модели Whisper. На русскую речь через GigaAM он не влияет — там подсказки устроены иначе. Стандартный набор слов меняется вместе с языком, пока вы не впишете своё.</p>" +
+			"<p class=\"hdim\">Словарь читают только модели Whisper. Nemotron, Parakeet, GigaAM и остальные модели подсказок не принимают вовсе: для них инструмент — список замен ниже. Стандартный набор слов меняется вместе с языком, пока вы не впишете своё.</p>" +
 			"<p class=\"hsub\">Замены после распознавания</p>" +
 			"<p>Тоже список слов, но работает иначе: это уже не подсказка, а гарантия. Что встретилось слева — станет тем, что справа. У каждой замены три переключателя: <b>только целые слова</b> (тогда «код» не тронет «кодировку» — обычно это и нужно), <b>учитывать регистр</b> (тогда «Го» и «го» считаются разными) и <b>язык</b> (замена сработает только когда вы диктуете на нём).</p>" +
 			"<p class=\"hsub\">Голосовые команды</p>" +
@@ -1119,9 +1117,15 @@ var settingsStrings = map[string]map[string]string{
 		"S_WIZ_HELLO":      "Две минуты на настройку",
 		"S_WIZ_HELLO_TEXT": "{app} превращает голос в текст прямо в позиции курсора: зажали сочетание клавиш, сказали фразу, отпустили — текст на месте. Всё считается на вашем компьютере, звук никуда не уходит.",
 		"S_WIZ_LATER":      "Всё, что мы сейчас выберем, потом меняется в настройках.",
-		"S_WIZ_T_MODEL":    "Язык и модель",
-		"S_WIZ_MODEL_TEXT": "Скажите, на каком языке будете диктовать, — модель подберу сам. Русский распознаёт GigaAM, остальные языки — Whisper.",
-		"S_WIZ_T_INPUT":    "Клавиши и микрофон",
+		"S_WIZ_MODEL_TEXT": "Модель под ваш язык подбирается сама и скачивается в фоне.",
+		"S_WIZ_PICKED":     "Подобрана для языка: %s",
+		"S_WIZ_DL_BG":      "Скачивается в фоне, можно идти дальше",
+		"S_WIZ_DL_FAIL":    "Скачивание прервалось: %s",
+		"S_WIZ_RETRY":      "Попробовать снова",
+		"S_WIZ_TRY_DL":     "Модель ещё скачивается (%d%%). Поле оживёт, как только она будет готова.",
+		"S_WIZ_TRY_LOAD":   "Загружаю модель…",
+		"S_WIZ_TRY_LIVE":   "С моделью %s слова появляются на плашке, пока вы ещё говорите.",
+		"S_WIZ_DONE_DL":    "Модель ещё скачивается. Диктовка заработает сама, как только модель будет на месте.",
 		"S_WIZ_INPUT_TEXT": "Это сочетание вы будете держать во время речи. Скажите что-нибудь и проверьте, что полоска уровня шевелится.",
 		"S_WIZ_T_TRY":      "Проба",
 		"S_WIZ_TRY_PH":     "текст появится здесь",
@@ -1146,6 +1150,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_SRCLANG_SUB": "you speak it; it decides the recognition model",
 		"S_TR_LANGS_SUB": "these languages become buttons on the plate at insertion",
 		"S_TR_UNAVAIL": "%s cannot translate — the text will stay in the source language",
+		"S_TR_GET_WHISPER": "Download %s for translation (%d MB)",
 		"S_TR_STANDIN": "%s cannot translate — the plate will offer %s instead",
 		"S_TR_LOCK": "%s cannot be removed from the list — it is the default text output language. Pick another default language, and then %s can be excluded.",
 		"S_TR_LOCK_OK": "Got it",
@@ -1172,7 +1177,6 @@ var settingsStrings = map[string]map[string]string{
 		"S_PROF_CLOSE":     "Collapse",
 		"S_CONFIRM_DEL":    "Delete the \"%s\" model? It can be downloaded again.",
 		"S_DEL_ACTIVE":     "Delete the active model \"%s\"? Recognition stops until you pick another one — you can download it right here.",
-		"S_WIZ_NEED_MODEL": "Download a model first — without one there is nothing to recognise with",
 		"S_FREE":           "free",
 		"S_SUB_PROMPTS":    "Prompts",
 		"S_SUB_DICT":       "Dictionary",
@@ -1256,7 +1260,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_DEL":            "Delete",
 		"S_M_BASE":         "fast, for weak PCs",
 		"S_M_SMALL":        "balanced speed and accuracy",
-		"S_M_MED":          "more accurate, recommended",
+		"S_M_MED":          "Whisper for any language; the one that translates",
 		"S_M_TURBO":        "best accuracy on CPU",
 		"S_M_GIGAAM":       "more accurate in Russian, punctuates by itself",
 		"S_M_PARAKEET":     "25 European languages, punctuates by itself",
@@ -1568,7 +1572,7 @@ var settingsStrings = map[string]map[string]string{
 			"<p>It usually takes a second or two, and there is no need to know the steps. But if the text ever comes out differently from what you expected, this chain makes it easy to see which step changed it.</p>" +
 			"<ul>" +
 			"<li><b>Recording.</b> While the keys are held, the app listens to the microphone. It ignores a press that is too short, so a key you brush by accident does not start a dictation.</li>" +
-			"<li><b>Recognition.</b> Your voice becomes letters. A model does this. Russian is usually handled by GigaAM, other languages by Whisper; these are just names, and you do not have to pick them by hand.</li>" +
+			"<li><b>Recognition.</b> Your voice becomes letters. A model does this. Russian is usually handled by GigaAM, Polish by Parakeet, most other languages by Nemotron, and Whisper takes the remaining languages and the translation; these are just names, and you do not have to pick them by hand.</li>" +
 			"<li><b>Replacements.</b> Your personal list of “heard → meant”. If the model keeps writing “git hub” instead of “GitHub”, you fix it once, and from then on it is corrected by itself.</li>" +
 			"<li><b>Commands.</b> A few phrases work like buttons. Say “new line” and the text moves to a new line, while the words themselves never reach the field.</li>" +
 			"<li><b>Translation.</b> If you turned it on, you speak one language and the text lands in another.</li>" +
@@ -1577,15 +1581,13 @@ var settingsStrings = map[string]map[string]string{
 			"</ul>" +
 			"<p class=\"hdim\">While all this is going on, a narrow plate at the bottom of the screen shows the name of the current step. It tells you at a glance that the app is busy, not frozen.</p>" +
 			"<p class=\"wh\" id=\"s-first\">First run</p>" +
-			"<p>The first time it starts, the app asks five questions. It takes a minute, and then you can dictate.</p>" +
+			"<p>The first time it starts, the app takes you through three steps. It takes a minute, and then you can dictate.</p>" +
 			"<ul>" +
-			"<li><b>Which language to talk to you in.</b> The language of the settings window. Usually already guessed from Windows.</li>" +
-			"<li><b>Which language you will dictate in.</b> The most important question: from your answer the app finds and downloads a suitable model by itself. The file weighs from 150 MB to a gigabyte and downloads in the background, with the progress shown.</li>" +
-			"<li><b>Which keys start it.</b> Just press whatever is comfortable to hold with one hand. By default it is Ctrl and the Windows key.</li>" +
-			"<li><b>Which microphone to listen to.</b> A live level bar sits next to it. Say something: if it does not move, the wrong microphone is selected.</li>" +
-			"<li><b>Try it.</b> A field where you can dictate a test phrase and make sure everything works.</li>" +
+			"<li><b>Which language you will dictate in.</b> The most important question: from your answer the app picks a suitable model and downloads it in the background by itself, with the progress shown. If this language differs from the one the window speaks, a row for the UI language appears right there as well.</li>" +
+			"<li><b>Try it.</b> The keyboard shortcut (by default Ctrl and the Windows key; to change it, press whatever is comfortable to hold with one hand), the microphone with a live level bar, and a field to dictate a test phrase into. If the bar does not move when you speak, the wrong microphone is selected. The field comes alive as soon as the model is in place.</li>" +
+			"<li><b>All set.</b> The “Start with Windows” switch, and the wizard is done.</li>" +
 			"</ul>" +
-			"<p class=\"hdim\">You can skip any step and come back to it later: all of it is in the settings. If you want to go through the wizard again, start the app with <code>-wizard</code> added. It does not show up again after an update.</p>" +
+			"<p class=\"hdim\">You can skip any step and come back to it later: all of it is in the settings. The model keeps downloading in the background even if you move on or finish the wizard before it is done. If you want to go through the wizard again, start the app with <code>-wizard</code> added. It does not show up again after an update.</p>" +
 			"<p class=\"wh\" id=\"s-overlay\">The plate at the bottom of the screen</p>" +
 			"<div class=\"hshot\">" +
 			"<div class=\"hpill\"><span class=\"hdot\"></span><span>Speak…</span><span class=\"hbars\"><i style=\"height:6px\"></i><i style=\"height:13px\"></i><i style=\"height:9px\"></i><i style=\"height:16px\"></i><i style=\"height:7px\"></i><i style=\"height:12px\"></i></span><span>✕</span></div>" +
@@ -1714,7 +1716,7 @@ var settingsStrings = map[string]map[string]string{
 			"</table>" +
 			"<div class=\"hshot\">" +
 			"<div class=\"hrow\"><label>Russian<span class=\"hs\">GigaAM v3 · accuracy 5 of 5 · speed 5 of 5 · 232 MB</span></label><span class=\"hchip\"><i></i>active</span></div>" +
-			"<div class=\"hrow\"><label>English<span class=\"hs\">as Auto-detect · Whisper Medium</span></label><button class=\"hbtn\">Pick</button></div>" +
+			"<div class=\"hrow\"><label>English<span class=\"hs\">as Auto-detect · Nemotron 3.5</span></label><button class=\"hbtn\">Pick</button></div>" +
 			"<div class=\"hcap\">you can see which model handles a language and what it costs in speed and disk space</div>" +
 			"</div>" +
 			"<p class=\"hsub\">Translation</p>" +
@@ -1741,7 +1743,7 @@ var settingsStrings = map[string]map[string]string{
 			"<div class=\"hchips\"><span class=\"hchip\">GitHub</span><span class=\"hchip\">Docker</span><span class=\"hchip\">Kubernetes</span><span class=\"hchip\">HoldToType</span></div>" +
 			"<div class=\"hcap\">words are added one at a time and live as separate cards</div>" +
 			"</div>" +
-			"<p class=\"hdim\">The dictionary is read by Whisper models. It has no effect on Russian speech recognized by GigaAM, where hints work differently. The default set of words follows the language until you write your own.</p>" +
+			"<p class=\"hdim\">Only Whisper models read the dictionary. Nemotron, Parakeet, GigaAM and the other models do not take hints at all: for them, the tool is the replacements list below. The default set of words follows the language until you write your own.</p>" +
 			"<p class=\"hsub\">Replacements after recognition</p>" +
 			"<p>Also a list of words, but it works differently: this is no longer a hint but a guarantee. Whatever appears on the left becomes what is on the right. Each replacement has three settings: <b>Whole words only</b> (then “cat” will not touch “catalog”, which is usually what you want), <b>Match letter case</b> (then “Go” and “go” count as different words) and <b>Rule language</b> (the replacement fires only when you dictate in that language).</p>" +
 			"<p class=\"hsub\">Voice commands</p>" +
@@ -1798,9 +1800,15 @@ var settingsStrings = map[string]map[string]string{
 		"S_WIZ_HELLO":      "Two minutes to set up",
 		"S_WIZ_HELLO_TEXT": "{app} turns your voice into text right at the caret: hold the shortcut, say a phrase, let go — the text is there. Everything runs on your machine; the audio never leaves it.",
 		"S_WIZ_LATER":      "Everything we pick now can be changed later in the settings.",
-		"S_WIZ_T_MODEL":    "Language and model",
-		"S_WIZ_MODEL_TEXT": "Tell me the language you will dictate in and I will pick the model. Russian goes to GigaAM, every other language to Whisper.",
-		"S_WIZ_T_INPUT":    "Shortcut and microphone",
+		"S_WIZ_MODEL_TEXT": "The model for your language is chosen for you and downloads in the background.",
+		"S_WIZ_PICKED":     "Chosen for %s",
+		"S_WIZ_DL_BG":      "Downloading in the background, you can go on",
+		"S_WIZ_DL_FAIL":    "The download stopped: %s",
+		"S_WIZ_RETRY":      "Try again",
+		"S_WIZ_TRY_DL":     "The model is still downloading (%d%%). The field comes alive as soon as it is ready.",
+		"S_WIZ_TRY_LOAD":   "Loading the model…",
+		"S_WIZ_TRY_LIVE":   "With %s the words appear on the plate while you are still speaking.",
+		"S_WIZ_DONE_DL":    "The model is still downloading. Dictation starts working by itself once it is in place.",
 		"S_WIZ_INPUT_TEXT": "This is the combination you will hold while speaking. Say something and check that the level bar moves.",
 		"S_WIZ_T_TRY":      "Try it",
 		"S_WIZ_TRY_PH":     "the text will appear here",
