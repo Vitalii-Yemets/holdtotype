@@ -24,7 +24,7 @@ import (
 
 type Profile = profiles.Profile
 
-const configVersion = 5
+const configVersion = 6
 
 const (
 	hotkeyHold   = "hold"
@@ -372,6 +372,11 @@ func loadConfig(path string) (*Config, error) {
 	if cfg.LangModels == nil {
 		cfg.LangModels = map[string]string{}
 	}
+	if !firstRun && fileVer < 6 && cfg.LangModels["auto"] == "" {
+		cfg.LangModels["auto"] = legacyDefaultModel
+		log.Printf("config from an older version: the universal model stays %s, %s is the default only for new installs", legacyDefaultModel, defaultPresetModel)
+		migrated = true
+	}
 	if applyPreset(cfg) {
 		migrated = true
 	}
@@ -533,9 +538,13 @@ func loadConfig(path string) (*Config, error) {
 	cfg.TranslateAskLangs = langs
 	if firstRun {
 		if sys := systemLang(); sys != "" && sys != cfg.Language {
-			log.Printf("first run: recognition language taken from the system — %s", sys)
-			cfg.Language = sys
-			migrated = true
+			if id := cfg.LangModels[cfg.Language]; id != "" {
+				log.Printf("first run: recognition language %s kept — the installer gave it %s (the system language is %s)", cfg.Language, id, sys)
+			} else {
+				log.Printf("first run: recognition language taken from the system — %s", sys)
+				cfg.Language = sys
+				migrated = true
+			}
 		}
 	}
 	if migrated {
@@ -581,7 +590,7 @@ func migrateToPresets(cfg *Config, data []byte) {
 		}
 	}
 	if wID == "" {
-		wID = defaultPresetModel
+		wID = legacyDefaultModel
 	}
 	if cfg.LangModels["auto"] == "" {
 		cfg.LangModels["auto"] = wID

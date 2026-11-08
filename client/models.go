@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"holdtotype/internal/checksum"
+	"holdtotype/internal/preset"
 	"io"
 	"log"
 	"net/http"
@@ -100,7 +101,8 @@ var modelCatalog = []modelInfo{
 		},
 		BaseURL: "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8/resolve/main/"},
 	{ID: "nemotron-3.5", SizeMB: 651, NameKey: "Nemotron 3.5", DescKey: "S_M_NEMOTRON",
-		Engine: engineStream, Dir: "nemotron-3.5", Langs: "*", Auto: true, Punct: true,
+		Engine: engineStream, Dir: "nemotron-3.5", Auto: true, Punct: true,
+		Langs: "ar,bg,cs,da,de,el,en,es,et,fi,fr,he,hi,hr,hu,it,ja,ko,lt,lv,mt,nb,nl,nn,pl,pt,ro,ru,sk,sl,sv,th,tr,uk,vi,zh",
 		Speed: 3, Accuracy: 5,
 		Files: []string{"encoder.int8.onnx", "decoder.int8.onnx", "joiner.int8.onnx", "tokens.txt"},
 		Hashes: map[string]string{
@@ -140,7 +142,27 @@ var modelCatalog = []modelInfo{
 		LinkURL: "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-base-uk-quantized-2026-02-27.tar.bz2"},
 }
 
-const defaultPresetModel = "medium-q5_0"
+const (
+	defaultPresetModel = "nemotron-3.5"
+	legacyDefaultModel = "medium-q5_0"
+)
+
+var (
+	recSpecialModels  = map[string]string{"ru": "gigaam-v3", "pl": "parakeet-v3"}
+	recPreferredLangs = []string{"en", "es", "fr", "it", "pt", "nl", "de", "tr", "ru", "ar", "hi", "ja", "ko", "vi", "uk"}
+)
+
+func recommendedModelID(lang string) string {
+	return preset.Recommend(lang, recSpecialModels, recPreferredLangs, defaultPresetModel, legacyDefaultModel)
+}
+
+func recommendedModels() map[string]string {
+	out := map[string]string{"auto": recommendedModelID("auto")}
+	for _, l := range translateLangCodes() {
+		out[l] = recommendedModelID(l)
+	}
+	return out
+}
 
 const modelBaseURL = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/"
 

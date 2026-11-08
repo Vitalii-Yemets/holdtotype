@@ -87,3 +87,39 @@ func TestCleanDropsBrokenEntries(t *testing.T) {
 		t.Fatalf("ожидались две отброшенные записи, получено %v", dropped)
 	}
 }
+
+func TestRecommendFollowsTheRule(t *testing.T) {
+	special := map[string]string{"ru": "gigaam-v3", "pl": "parakeet-v3"}
+	well := []string{"en", "es", "fr", "it", "pt", "nl", "de", "tr", "ru", "ar", "hi", "ja", "ko", "vi", "uk"}
+	cases := []struct {
+		lang, want string
+	}{
+		{"ru", "gigaam-v3"},
+		{"pl", "parakeet-v3"},
+		{"en", "nemotron-3.5"},
+		{"de", "nemotron-3.5"},
+		{"fr", "nemotron-3.5"},
+		{"es", "nemotron-3.5"},
+		{"it", "nemotron-3.5"},
+		{"uk", "nemotron-3.5"},
+		{"auto", "nemotron-3.5"},
+		{"", "nemotron-3.5"},
+		{" EN ", "nemotron-3.5"},
+		{"cs", "medium-q5_0"},
+		{"xx", "medium-q5_0"},
+	}
+	for _, c := range cases {
+		if got := Recommend(c.lang, special, well, "nemotron-3.5", "medium-q5_0"); got != c.want {
+			t.Errorf("язык %q: получено %q, по правилу должно быть %q", c.lang, got, c.want)
+		}
+	}
+}
+
+func TestRecommendWithoutSpecialsOrTier(t *testing.T) {
+	if got := Recommend("ru", nil, nil, "nemotron-3.5", "medium-q5_0"); got != "medium-q5_0" {
+		t.Fatalf("получено %q, без особых назначений и списка язык уходит на запасную", got)
+	}
+	if got := Recommend("auto", nil, nil, "nemotron-3.5", "medium-q5_0"); got != "nemotron-3.5" {
+		t.Fatalf("получено %q, «определять сам» всегда берёт основную модель", got)
+	}
+}

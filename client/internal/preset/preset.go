@@ -69,3 +69,14 @@ func Clean(assign map[string]string, find func(string) *Model) (map[string]strin
 	}
 	return out, dropped
 }
+
+func Recommend(lang string, special map[string]string, well []string, preferred, fallback string) string {
+	lang = Norm(lang)
+	if id := special[lang]; id != "" {
+		return id
+	}
+	if lang == "auto" || Covers(well, lang) {
+		return preferred
+	}
+	return fallback
+}
