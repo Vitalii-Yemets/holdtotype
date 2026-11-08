@@ -1,6 +1,7 @@
 package main
 
 import (
+	"holdtotype/internal/audiolevel"
 	"holdtotype/internal/commands"
 	"holdtotype/internal/history"
 	"holdtotype/internal/mojibake"
@@ -93,6 +94,8 @@ type Config struct {
 	EngineIdleMin    int    `json:"engine_idle_minutes"`
 	Punctuation      string `json:"punctuation"`
 	HotkeyMode       string `json:"hotkey_mode"`
+	SilenceStop      bool   `json:"silence_stop"`
+	SilenceStopMs    int    `json:"silence_stop_ms"`
 	UILevel          string `json:"ui_level"`
 	Skin             string `json:"skin"`
 	Theme            string `json:"theme"`
@@ -208,6 +211,8 @@ func defaultConfig() *Config {
 		EngineIdleMin:    10,
 		Punctuation:      punctFromModel,
 		HotkeyMode:       hotkeyHold,
+		SilenceStop:      false,
+		SilenceStopMs:    audiolevel.DefaultPauseMs,
 		UILevel:          levelAll,
 		Skin:             theme.DefaultSkin,
 		Theme:            theme.DefaultPalette,
@@ -386,6 +391,9 @@ func loadConfig(path string) (*Config, error) {
 	}
 	if !validHotkeyMode(cfg.HotkeyMode) {
 		cfg.HotkeyMode = hotkeyHold
+	}
+	if !audiolevel.ValidPauseMs(cfg.SilenceStopMs) {
+		cfg.SilenceStopMs = audiolevel.DefaultPauseMs
 	}
 	if !fileNamesSkin(data) && cfg.Theme != "" && !theme.ValidColour(cfg.Theme) {
 		skin, colour := theme.Migrate(cfg.Theme)

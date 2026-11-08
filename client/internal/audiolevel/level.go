@@ -1,7 +1,5 @@
 package audiolevel
 
-// SilenceThreshold is the peak amplitude (0..1) below which a recording is
-// treated as silence and never sent to recognition.
 const SilenceThreshold = 0.012
 
 func Peak(pcm []byte) float64 {

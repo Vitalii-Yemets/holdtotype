@@ -14,6 +14,8 @@
   "engine_idle_minutes": 10,
   "punctuation": "model",
   "hotkey_mode": "hold",
+  "silence_stop": false,
+  "silence_stop_ms": 2000,
   "ui_level": "all",
   "skin": "editor",
   "theme": "green",

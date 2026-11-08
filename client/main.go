@@ -45,13 +45,24 @@ const (
 	evDone
 	evCancel
 	evMicLost
+	evSilence
 )
 
 type ptEvent struct {
 	kind    int
 	gen     int
 	profile string
+	cut     int
+	ep      *audiolevel.Endpoint
 }
+
+type stopReason int
+
+const (
+	stopKey stopReason = iota
+	stopLimit
+	stopSilence
+)
 
 type App struct {
 	mu         sync.Mutex
@@ -76,6 +87,9 @@ type App struct {
 	sessionProfile string
 	sessionCancel  context.CancelFunc
 	sessionTarget  uintptr
+	recCancel      context.CancelFunc
+	silenceEv      ptEvent
+	silenceStopAt  time.Time
 
 	lastResult   string
 	lastResultAt time.Time
@@ -1042,15 +1056,17 @@ func (a *App) worker() {
 				if a.snapshot().HotkeyMode == hotkeyToggle {
 					continue
 				}
-				a.handleStop(0)
+				a.handleStop(0, stopKey)
 			case evTimeout:
-				a.handleStop(ev.gen)
+				a.handleStop(ev.gen, stopLimit)
 			case evDone:
 				a.handleDone(ev.gen)
 			case evCancel:
 				a.handleCancel()
 			case evMicLost:
 				a.handleMicLost()
+			case evSilence:
+				a.handleSilence(ev)
 			}
 		}
 	}
@@ -1063,6 +1079,7 @@ func (a *App) handleCancel() {
 		rec := a.rec
 		a.mu.Unlock()
 		rec.Stop()
+		a.stopSilenceWatch()
 		a.dropLiveSession()
 		overlayClearDeadline()
 		a.gen++
@@ -1083,9 +1100,13 @@ func (a *App) handleCancel() {
 
 func (a *App) handleDown(profileID string) {
 	cfg := a.snapshot()
+	if cfg.HotkeyMode == hotkeyToggle && !a.silenceStopAt.IsZero() && time.Since(a.silenceStopAt) < time.Second {
+		log.Printf("press ignored: 1 s after a silence stop")
+		return
+	}
 	if a.state.Load() == stRecording && cfg.HotkeyMode == hotkeyToggle {
 		log.Printf("latched: the second press stops the recording")
-		a.handleStop(0)
+		a.handleStop(0, stopKey)
 		return
 	}
 	if a.state.Load() != stIdle {
@@ -1136,6 +1157,12 @@ func (a *App) handleDown(profileID string) {
 	if m := activeModel(cfg); m != nil && m.Engine == engineStream {
 		go a.liveStream(a.gen, cfg)
 	}
+	if cfg.HotkeyMode == hotkeyToggle && cfg.SilenceStop {
+		a.stopSilenceWatch()
+		ctx, cancel := context.WithCancel(context.Background())
+		a.recCancel = cancel
+		go a.watchSilence(ctx, a.gen, cfg, rec)
+	}
 
 	gen := a.gen
 	overlaySetDeadline(time.Now().Add(time.Duration(cfg.MaxRecordSeconds) * time.Second))
@@ -1144,20 +1171,26 @@ func (a *App) handleDown(profileID string) {
 	})
 }
 
-func (a *App) handleStop(expectGen int) {
+func (a *App) handleStop(expectGen int, why stopReason) {
 	if a.state.Load() != stRecording {
 		return
 	}
 	if expectGen != 0 && expectGen != a.gen {
 		return
 	}
-	if expectGen != 0 {
+	if why == stopLimit {
 		log.Printf("max_record_seconds=%d reached, stopping", a.sessionCfg.MaxRecordSeconds)
 	}
+	a.stopSilenceWatch()
 	a.mu.Lock()
 	rec := a.rec
 	a.mu.Unlock()
 	pcm := rec.Stop()
+	if why == stopSilence {
+		a.silenceStopAt = time.Now()
+		pcm = trimAfterSpeech(pcm, a.silenceEv)
+		a.silenceEv = ptEvent{}
+	}
 	overlayClearDeadline()
 	a.state.Store(stProcessing)
 	playCue(a.sessionCfg.Beep, a.sessionCfg.SoundTheme, cueStop)
@@ -1165,7 +1198,10 @@ func (a *App) handleStop(expectGen int) {
 	a.setStatus(tr("status.transcribing"))
 	if a.sessionCfg.Overlay {
 		procText := ""
-		if a.sessionProfile == "wtranslate" {
+		switch {
+		case why == stopSilence:
+			procText = tr("ov.stop.silence")
+		case a.sessionProfile == "wtranslate":
 			procText = tr("ov.translating")
 		}
 		overlaySet(ovProcessing, procText)
@@ -1173,6 +1209,77 @@ func (a *App) handleStop(expectGen int) {
 	ctx, cancel := context.WithCancel(context.Background())
 	a.sessionCancel = cancel
 	go a.process(ctx, pcm, a.gen, a.sessionCfg, a.sessionProfile, a.sessionTarget)
+}
+
+func (a *App) handleSilence(ev ptEvent) {
+	if a.state.Load() != stRecording || ev.gen != a.gen {
+		return
+	}
+	if c := a.sessionCfg; c == nil || c.HotkeyMode != hotkeyToggle || !c.SilenceStop {
+		return
+	}
+	a.silenceEv = ev
+	a.handleStop(ev.gen, stopSilence)
+}
+
+func (a *App) stopSilenceWatch() {
+	if a.recCancel != nil {
+		a.recCancel()
+		a.recCancel = nil
+	}
+}
+
+func (a *App) watchSilence(ctx context.Context, gen int, cfg *Config, rec *Recorder) {
+	pauseMs := cfg.SilenceStopMs
+	if !audiolevel.ValidPauseMs(pauseMs) {
+		pauseMs = audiolevel.DefaultPauseMs
+	}
+	guard := 300 * time.Millisecond
+	if cfg.Beep {
+		guard = 800 * time.Millisecond
+	}
+	ep := audiolevel.NewEndpoint(sampleRate, time.Duration(pauseMs)*time.Millisecond, guard)
+	log.Printf("stop on silence: on, pause %d ms", pauseMs)
+	unheard := func() {
+		if !ep.Heard() {
+			log.Printf("stop on silence: no speech heard (floor %.0f dB)", ep.Floor())
+		}
+	}
+	tick := time.NewTicker(100 * time.Millisecond)
+	defer tick.Stop()
+	offset := 0
+	for {
+		select {
+		case <-ctx.Done():
+			unheard()
+			return
+		case <-tick.C:
+		}
+		if a.state.Load() != stRecording {
+			unheard()
+			return
+		}
+		chunk, next := rec.TakeFrom(offset)
+		offset = next
+		if ep.Feed(chunk) {
+			a.post(ptEvent{kind: evSilence, gen: gen, cut: ep.SpeechEnd() + sampleRate*2*600/1000, ep: ep})
+			return
+		}
+	}
+}
+
+func trimAfterSpeech(pcm []byte, ev ptEvent) []byte {
+	perSec := float64(sampleRate * 2)
+	if ep := ev.ep; ep != nil {
+		log.Printf("stop on silence: %.1f s quiet after %.1f s of speech (floor %.0f dB, threshold %.0f dB), stopping",
+			float64(len(pcm)-ep.SpeechEnd())/perSec, float64(ep.SpeechMs())/1000, ep.Floor(), ep.Threshold())
+	}
+	cut := ev.cut &^ 1
+	if cut <= 0 || cut >= len(pcm) {
+		return pcm
+	}
+	log.Printf("stop on silence: %.1f s of trailing silence dropped", float64(len(pcm)-cut)/perSec)
+	return pcm[:cut]
 }
 
 func (a *App) handleDone(gen int) {
@@ -1851,7 +1958,9 @@ func (a *App) handleMicLost() {
 	a.mu.Unlock()
 	if a.state.Load() == stRecording && rec != nil {
 		rec.Stop()
+		a.stopSilenceWatch()
 		a.dropLiveSession()
+		overlayClearDeadline()
 		a.gen++
 		a.state.Store(stIdle)
 		log.Printf("microphone disconnected during the recording — recording aborted")
