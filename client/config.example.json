@@ -3,6 +3,7 @@
   "language": "ru",
   "model": "models/__MODEL__",
   "lang_models": { "auto": "nemotron-3.5" },
+  "lang_hotkeys": {},
   "threads": 4,
   "server_port": 8910,
   "server_autostart": true,

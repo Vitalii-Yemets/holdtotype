@@ -611,6 +611,7 @@ func init() {
 		"S_OVTEXT": "Erkannten Text anzeigen", "S_OVTEXT_SUB": "auf der Leiste nach dem Einfügen, statt der Zeichenzahl",
 		"S_OVERLAY": "Leiste anzeigen", "S_OVERLAY_SUB": "während des Diktats zeigt der Bildschirm, dass aufgenommen wird", "S_TYPEMODE": "Zeichenweise Eingabe (für Felder ohne Einfügen)",
 		"S_RECLANG": "Sprache der Rede", "S_RECAUTO": "Automatisch",
+		"S_LANG_KEY": "Eigenes Kürzel", "S_LANG_KEY_SET": "Zuweisen…", "S_LANG_KEY_CLEAR": "Kürzel entfernen", "S_LANG_KEY_HINT": "Halten Sie es gedrückt, um in dieser Sprache mit ihrem Modell zu diktieren. Das Hauptkürzel verwendet weiterhin die oben gewählte Sprache der Rede.",
 		"S_DL": "Laden", "S_DEL": "Löschen",
 		"S_M_BASE": "schnell, für schwache PCs", "S_M_SMALL": "ausgewogen", "S_M_MED": "Whisper für jede Sprache; das Modell, das übersetzt", "S_M_TURBO": "beste Genauigkeit auf CPU", "S_M_GIGAAM": "genauer auf Russisch, setzt Satzzeichen selbst", "S_M_PARAKEET": "25 europäische Sprachen, setzt Satzzeichen selbst",
 		"S_THREADS":  "CPU-Threads", "S_MINMS": "Min. Aufnahme, ms", "S_MAXSEC": "Max. Aufnahme, s",
@@ -955,7 +956,7 @@ func init() {
 			"<p>Wie das Diktat startet und wie der Text ins Feld kommt. Hierher kommt man, wenn etwas nicht so läuft, wie man möchte: Die Tasten sind unbequem, der Text erscheint nicht, Enter wird von selbst gedrückt.</p>" +
 			"<p class=\"hsub\">Tasten</p>" +
 			"<table class=\"hopt\">" +
-			"<tr><td>Tastenkürzel</td><td>Drücken Sie „Ändern…“ und halten Sie, was Ihnen bequem ist. Die App fängt diese Kombination im ganzen System ab, nehmen Sie also keine, die schon belegt ist, etwa Strg+C. Am seltensten belegt sind Kombinationen mit der Windows-Taste.</td></tr>" +
+			"<tr><td>Tastenkürzel</td><td>Drücken Sie „Ändern…“ und halten Sie, was Ihnen bequem ist. Die App fängt diese Kombination im ganzen System ab, nehmen Sie also keine, die schon belegt ist, etwa Strg+C. Am seltensten belegt sind Kombinationen mit der Windows-Taste. Eine Sprache kann auch ein eigenes Kürzel haben; es wird auf der Registerkarte „Sprachen & Modelle“ vergeben.</td></tr>" +
 			"<tr><td>Modus</td><td>Bei „halten“ wird aufgenommen, solange die Tasten gedrückt sind: Loslassen, und der Satz geht in die Verarbeitung. Bei „umschalten“ startet der erste Druck die Aufnahme, der zweite beendet sie. Der zweite Modus eignet sich für lange Monologe, wenn die Hand vom Halten der Tasten müde wird.</td></tr>" +
 			"<tr><td>Bei Stille beenden</td><td>Nur im Modus „umschalten“. Sobald Sie etwas gesagt haben, beendet eine Pause von der Länge, die unter „Pause vor dem Beenden, ms“ eingestellt ist, die Aufnahme von selbst, als hätten Sie das Tastenkürzel erneut gedrückt, und die Leiste zeigt „Bei Stille beendet“. Vor Ihren ersten Worten endet die Aufnahme nie, Sie können also nach dem Drücken in Ruhe Ihre Gedanken sammeln; sagen Sie gar nichts, beendet sie trotzdem die Grenze „Max. Aufnahme, s“. Ist „Enter nach dem Einfügen drücken (Auto-Senden)“ eingeschaltet, schickt eine Pause die Nachricht ab: Wählen Sie dann eine längere Pause.</td></tr>" +
 			"<tr><td>Min. Aufnahme, ms</td><td>Wie kurz ein Druck sein muss, um als versehentlich zu gelten. Berühren Sie die Tasten nur für einen Sekundenbruchteil, bleibt die App still, statt einen Wortfetzen einzufügen.</td></tr>" +
@@ -983,6 +984,7 @@ func init() {
 			"<table class=\"hopt\">" +
 			"<tr><td>Sprache der Rede</td><td>Die Sprache, in der Sie sprechen. Sprechen Sie mehrere, wählen Sie „Automatisch“: Das Modell findet es selbst heraus, wenn auch etwas langsamer und etwas ungenauer, als wenn die Sprache ausdrücklich genannt ist.</td></tr>" +
 			"<tr><td>Welches Modell für welche Sprache</td><td>Klicken Sie auf eine Sprache, und es öffnet sich eine Liste der Modelle, die sie beherrschen, mit einer Bewertung von Tempo und Genauigkeit und der Dateigröße. So kann eine Sprache ein schnelles Modell behalten, während eine andere ein genaues bekommt. Die gesonderte Zeile „Automatisch“ gilt für alle: Ihr Modell bedient jede Sprache, der kein eigenes zugewiesen ist, und diese Sprachen stehen grau in der Liste. Dasselbe Modell erkennt auch, welche Sprache gesprochen wird, wenn keine Sprache der Rede gesetzt ist.</td></tr>" +
+			"<tr><td>Eigenes Kürzel</td><td>In einer aufgeklappten Sprache gibt es Platz für eine eigene Tastenkombination. Halten Sie sie gedrückt, und das Diktat läuft in dieser Sprache mit ihrem Modell, ihren Ersetzungen und Regeln, egal was als Sprache der Rede eingestellt ist; das Hauptkürzel behält die oben gewählte Sprache. So diktieren Sie Englisch mit einer Kombination und Ihre eigene Sprache mit einer anderen, ohne die Einstellungen zu öffnen. Während der Aufnahme zeigt die Leiste den Sprachcode. Eine Kombination darf weder das Hauptkürzel noch das einer anderen Sprache wiederholen.</td></tr>" +
 			"</table>" +
 			"<div class=\"hshot\">" +
 			"<div class=\"hrow\"><label>Russisch<span class=\"hs\">GigaAM v3 · Genauigkeit 5 von 5 · Tempo 5 von 5 · 232 MB</span></label><span class=\"hchip\"><i></i>aktiv</span></div>" +
@@ -1186,6 +1188,7 @@ func init() {
 		"S_OVTEXT": "Afficher le texte reconnu", "S_OVTEXT_SUB": "sur le bandeau après l'insertion, au lieu du nombre de caractères",
 		"S_OVERLAY": "Afficher le bandeau", "S_OVERLAY_SUB": "pendant la dictée, l’écran montre que l’enregistrement est en cours", "S_TYPEMODE": "Saisie caractère par caractère",
 		"S_RECLANG": "Langue de la parole", "S_RECAUTO": "Auto",
+		"S_LANG_KEY": "Raccourci propre", "S_LANG_KEY_SET": "Attribuer…", "S_LANG_KEY_CLEAR": "Retirer le raccourci", "S_LANG_KEY_HINT": "Maintenez-le pour dicter dans cette langue avec son modèle. Le raccourci principal garde la langue de la parole choisie plus haut.",
 		"S_DL": "Télécharger", "S_DEL": "Supprimer",
 		"S_M_BASE": "rapide, PC modestes", "S_M_SMALL": "équilibré", "S_M_MED": "Whisper pour toutes les langues ; celui qui traduit", "S_M_TURBO": "précision max sur CPU", "S_M_GIGAAM": "plus précis en russe, ponctue de lui-même", "S_M_PARAKEET": "25 langues européennes, ponctue d'elle-même",
 		"S_THREADS":  "Threads CPU", "S_MINMS": "Enreg. min, ms", "S_MAXSEC": "Enreg. max, s",
@@ -1530,7 +1533,7 @@ func init() {
 			"<p>Comment la dictée démarre et comment le texte arrive dans le champ. On vient ici quand quelque chose ne marche pas comme on le voudrait : les touches sont peu pratiques, le texte n'apparaît pas, Entrée est pressée toute seule.</p>" +
 			"<p class=\"hsub\">Touches</p>" +
 			"<table class=\"hopt\">" +
-			"<tr><td>Raccourci clavier</td><td>Appuyez sur « Changer… » et maintenez ce qui vous convient. L'application intercepte cette combinaison dans tout le système, donc n'en prenez pas une déjà utilisée, comme Ctrl+C. Les combinaisons avec la touche Windows sont les moins souvent prises.</td></tr>" +
+			"<tr><td>Raccourci clavier</td><td>Appuyez sur « Changer… » et maintenez ce qui vous convient. L'application intercepte cette combinaison dans tout le système, donc n'en prenez pas une déjà utilisée, comme Ctrl+C. Les combinaisons avec la touche Windows sont les moins souvent prises. Une langue peut aussi avoir son propre raccourci, défini dans l’onglet « Langues et modèles ».</td></tr>" +
 			"<tr><td>Mode</td><td>Avec « maintenir », l'enregistrement dure tant que les touches sont enfoncées : vous relâchez, et la phrase part au traitement. Avec « bascule », le premier appui lance l'enregistrement et le second l'arrête. Le second mode convient aux longs monologues, quand la main se fatigue de tenir les touches.</td></tr>" +
 			"<tr><td>Arrêter sur un silence</td><td>Uniquement en mode « bascule ». Une fois que vous avez dit quelque chose, une pause de la durée réglée dans « Pause avant l'arrêt, ms » termine l'enregistrement d'elle-même, comme si vous aviez appuyé de nouveau sur le raccourci, et le bandeau affiche « Arrêté sur un silence ». L'enregistrement ne s'arrête jamais avant vos premiers mots : vous pouvez donc rassembler vos idées après avoir appuyé ; si vous ne dites rien du tout, la limite « Enreg. max, s » y met fin quand même. Avec « Appuyer Entrée après insertion (envoi auto) » activé, une pause envoie le message : choisissez alors une pause plus longue.</td></tr>" +
 			"<tr><td>Enreg. min, ms</td><td>La durée en dessous de laquelle un appui compte comme accidentel. Effleurez les touches une fraction de seconde, et l'application reste muette au lieu d'insérer un bout de mot.</td></tr>" +
@@ -1558,6 +1561,7 @@ func init() {
 			"<table class=\"hopt\">" +
 			"<tr><td>Langue de la parole</td><td>La langue dans laquelle vous parlez. Si vous en parlez plusieurs, choisissez « Auto » : le modèle s'y retrouve tout seul, un peu plus lentement et un peu moins précisément toutefois que lorsque la langue est nommée explicitement.</td></tr>" +
 			"<tr><td>Quel modèle pour quelle langue</td><td>Cliquez sur une langue : la liste des modèles qui la connaissent se déplie, avec une note de vitesse et de précision et la taille du fichier. Ainsi, une langue peut garder un modèle rapide pendant qu'une autre en reçoit un précis. La ligne « Auto », à part, est commune : son modèle sert toutes les langues qui n'ont pas le leur, et celles-ci apparaissent en gris dans la liste. C'est aussi ce modèle qui reconnaît la langue parlée quand aucune langue de la parole n'est définie.</td></tr>" +
+			"<tr><td>Raccourci propre</td><td>Dans une langue dépliée, il y a une place pour sa propre combinaison de touches. Maintenez-la, et la dictée se fait dans cette langue avec son modèle, ses remplacements et ses règles, quelle que soit la langue de la parole réglée ; le raccourci principal garde la langue choisie plus haut. C’est ainsi que l’on dicte l’anglais avec une combinaison et sa propre langue avec une autre, sans ouvrir les réglages. Pendant l’enregistrement, le bandeau affiche le code de la langue. Une combinaison ne peut pas répéter la principale ni celle d’une autre langue.</td></tr>" +
 			"</table>" +
 			"<div class=\"hshot\">" +
 			"<div class=\"hrow\"><label>Russe<span class=\"hs\">GigaAM v3 · précision 5 sur 5 · vitesse 5 sur 5 · 232 Mo</span></label><span class=\"hchip\"><i></i>active</span></div>" +
@@ -1761,6 +1765,7 @@ func init() {
 		"S_OVTEXT": "Mostrar el texto reconocido", "S_OVTEXT_SUB": "en la barra tras insertar, en vez del número de caracteres",
 		"S_OVERLAY": "Mostrar la barra", "S_OVERLAY_SUB": "durante el dictado la pantalla muestra que se está grabando", "S_TYPEMODE": "Escritura carácter a carácter",
 		"S_RECLANG": "Idioma del habla", "S_RECAUTO": "Auto",
+		"S_LANG_KEY": "Atajo propio", "S_LANG_KEY_SET": "Asignar…", "S_LANG_KEY_CLEAR": "Quitar el atajo", "S_LANG_KEY_HINT": "Manténgalo pulsado para dictar en este idioma con su modelo. El atajo principal sigue usando el idioma del habla elegido arriba.",
 		"S_DL": "Descargar", "S_DEL": "Borrar",
 		"S_M_BASE": "rápido, PCs modestos", "S_M_SMALL": "equilibrado", "S_M_MED": "Whisper para cualquier idioma; el que traduce", "S_M_TURBO": "máx. precisión en CPU", "S_M_GIGAAM": "más preciso en ruso, puntúa por sí solo", "S_M_PARAKEET": "25 idiomas europeos, puntúa por sí solo",
 		"S_THREADS":  "Hilos de CPU", "S_MINMS": "Grab. mín, ms", "S_MAXSEC": "Grab. máx, s",
@@ -2105,7 +2110,7 @@ func init() {
 			"<p>Cómo empieza el dictado y cómo llega el texto al campo. Se entra aquí cuando algo no funciona como te gustaría: las teclas son incómodas, el texto no aparece, Enter se pulsa solo.</p>" +
 			"<p class=\"hsub\">Teclas</p>" +
 			"<table class=\"hopt\">" +
-			"<tr><td>Atajo de teclado</td><td>Pulsa «Cambiar…» y mantén la combinación que te resulte cómoda. La aplicación captura esa combinación en todo el sistema, así que no elijas una que ya esté ocupada, como Ctrl+C. Las combinaciones con la tecla Windows son las que menos suelen estar ocupadas.</td></tr>" +
+			"<tr><td>Atajo de teclado</td><td>Pulsa «Cambiar…» y mantén la combinación que te resulte cómoda. La aplicación captura esa combinación en todo el sistema, así que no elijas una que ya esté ocupada, como Ctrl+C. Las combinaciones con la tecla Windows son las que menos suelen estar ocupadas. Un idioma también puede tener su propio atajo, que se asigna en la pestaña «Idiomas y modelos».</td></tr>" +
 			"<tr><td>Modo</td><td>Con «mantener», graba mientras tienes pulsadas las teclas: las sueltas y la frase pasa a procesarse. Con «alternar», la primera pulsación empieza la grabación y la segunda la detiene. El segundo modo va bien para monólogos largos, cuando la mano se cansa de mantener las teclas.</td></tr>" +
 			"<tr><td>Detener por silencio</td><td>Solo en el modo «alternar». Cuando ya has dicho algo, una pausa tan larga como la fijada en «Pausa antes de detener, ms» termina la grabación por sí sola, como si pulsaras el atajo otra vez, y la barra muestra «Detenido por silencio». Nunca se detiene antes de tus primeras palabras, así que tras pulsar puedes ordenar tus ideas con calma; si no dices nada, el límite «Grab. máx, s» la termina igualmente. Con «Pulsar Enter tras insertar (envío auto)» activado, una pausa envía el mensaje, así que elige una pausa más larga.</td></tr>" +
 			"<tr><td>Grab. mín, ms</td><td>Por debajo de qué duración una pulsación cuenta como accidental. Si rozas las teclas una fracción de segundo, la aplicación no hace nada en vez de insertar un trozo de palabra.</td></tr>" +
@@ -2133,6 +2138,7 @@ func init() {
 			"<table class=\"hopt\">" +
 			"<tr><td>Idioma del habla</td><td>El idioma en el que hablas. Si hablas varios, elige «Auto»: el modelo lo averigua solo, aunque algo más despacio y con algo menos de precisión que cuando el idioma se indica directamente.</td></tr>" +
 			"<tr><td>Qué modelo para qué idioma</td><td>Haz clic en un idioma y se despliega la lista de modelos que lo conocen, con una nota de velocidad y de precisión y el tamaño del archivo. Así, un idioma puede quedarse con un modelo rápido mientras otro recibe uno preciso. La fila aparte «Auto» es común: su modelo sirve a todos los idiomas que no tienen uno propio, y esos idiomas aparecen en gris en la lista. También es el que averigua qué idioma se habla cuando no está fijado el idioma del habla.</td></tr>" +
+			"<tr><td>Atajo propio</td><td>Dentro de un idioma desplegado hay sitio para su propia combinación de teclas. Manténgala pulsada y el dictado se hace en ese idioma con su modelo, sus reemplazos y sus reglas, diga lo que diga el idioma del habla; el atajo principal conserva el idioma elegido arriba. Así se dicta en inglés con una combinación y en el idioma propio con otra, sin abrir los ajustes. Mientras graba, la barra muestra el código del idioma. Una combinación no puede repetir la principal ni la de otro idioma.</td></tr>" +
 			"</table>" +
 			"<div class=\"hshot\">" +
 			"<div class=\"hrow\"><label>Ruso<span class=\"hs\">GigaAM v3 · precisión 5 de 5 · velocidad 5 de 5 · 232 MB</span></label><span class=\"hchip\"><i></i>activa</span></div>" +
@@ -2336,6 +2342,7 @@ func init() {
 		"S_OVTEXT": "Mostrare il testo riconosciuto", "S_OVTEXT_SUB": "sulla barra dopo l'inserimento, invece del numero di caratteri",
 		"S_OVERLAY": "Mostra la barra", "S_OVERLAY_SUB": "durante la dettatura lo schermo mostra che è in corso la registrazione", "S_TYPEMODE": "Digitazione carattere per carattere",
 		"S_RECLANG": "Lingua del parlato", "S_RECAUTO": "Auto",
+		"S_LANG_KEY": "Scorciatoia propria", "S_LANG_KEY_SET": "Assegna…", "S_LANG_KEY_CLEAR": "Rimuovi la scorciatoia", "S_LANG_KEY_HINT": "Tienila premuta per dettare in questa lingua con il suo modello. La scorciatoia principale continua a usare la lingua del parlato scelta sopra.",
 		"S_DL": "Scarica", "S_DEL": "Elimina",
 		"S_M_BASE": "veloce, PC modesti", "S_M_SMALL": "bilanciato", "S_M_MED": "Whisper per qualsiasi lingua; quello che traduce", "S_M_TURBO": "massima precisione su CPU", "S_M_GIGAAM": "più preciso in russo, punteggia da sé", "S_M_PARAKEET": "25 lingue europee, punteggia da sé",
 		"S_THREADS":  "Thread CPU", "S_MINMS": "Registrazione min, ms", "S_MAXSEC": "Registrazione max, s",
@@ -2680,7 +2687,7 @@ func init() {
 			"<p>Come parte la dettatura e come il testo arriva nel campo. Ci si viene quando qualcosa non va come vorresti: i tasti sono scomodi, il testo non compare, Invio si preme da solo.</p>" +
 			"<p class=\"hsub\">Tasti</p>" +
 			"<table class=\"hopt\">" +
-			"<tr><td>Scorciatoia da tastiera</td><td>Premi «Cambia…» e tieni premuta la combinazione che ti è comoda. L'app intercetta questa combinazione in tutto il sistema, quindi non sceglierne una già occupata, come Ctrl+C. Le combinazioni con il tasto Windows sono quelle occupate più di rado.</td></tr>" +
+			"<tr><td>Scorciatoia da tastiera</td><td>Premi «Cambia…» e tieni premuta la combinazione che ti è comoda. L'app intercetta questa combinazione in tutto il sistema, quindi non sceglierne una già occupata, come Ctrl+C. Le combinazioni con il tasto Windows sono quelle occupate più di rado. Una lingua può avere anche una scorciatoia propria, assegnata nella scheda «Lingue e modelli».</td></tr>" +
 			"<tr><td>Modo</td><td>Con «tenere premuto» registra finché tieni premuti i tasti: li rilasci e la frase passa all'elaborazione. Con «interruttore» la prima pressione avvia la registrazione e la seconda la ferma. Il secondo modo è comodo per i monologhi lunghi, quando la mano si stanca di tenere i tasti.</td></tr>" +
 			"<tr><td>Ferma al silenzio</td><td>Solo in modo «interruttore». Quando hai già detto qualcosa, una pausa lunga quanto quella impostata in «Pausa prima di fermare, ms» chiude la registrazione da sola, come se premessi di nuovo la scorciatoia, e la barra mostra «Fermato dal silenzio». Non si ferma mai prima delle tue prime parole, quindi dopo aver premuto puoi raccogliere le idee con calma; se non dici niente, il limite «Registrazione max, s» la chiude comunque. Con «Premi Invio dopo l'inserimento (invio auto)» attivo, una pausa invia il messaggio, quindi scegli una pausa più lunga.</td></tr>" +
 			"<tr><td>Registrazione min, ms</td><td>Sotto quale durata una pressione conta come accidentale. Se sfiori i tasti per una frazione di secondo, l'app non fa nulla invece di inserire un pezzo di parola.</td></tr>" +
@@ -2708,6 +2715,7 @@ func init() {
 			"<table class=\"hopt\">" +
 			"<tr><td>Lingua del parlato</td><td>La lingua in cui parli. Se ne parli più di una, scegli «Auto»: il modello la riconosce da solo, anche se un po' più lentamente e con un po' meno precisione rispetto a quando la lingua è indicata direttamente.</td></tr>" +
 			"<tr><td>Quale modello per quale lingua</td><td>Fai clic su una lingua e si apre l'elenco dei modelli che la conoscono, con una valutazione di velocità e precisione e la dimensione del file. Così una lingua può tenere un modello veloce mentre un'altra ne riceve uno preciso. La riga a parte «Auto» è comune: il suo modello serve tutte le lingue che non ne hanno uno proprio, e nell'elenco queste compaiono in grigio. È anche quella che capisce quale lingua si sta parlando quando la lingua del parlato non è impostata.</td></tr>" +
+			"<tr><td>Scorciatoia propria</td><td>Dentro una lingua aperta c’è posto per una combinazione di tasti tutta sua. Tienila premuta e la dettatura avviene in quella lingua con il suo modello, le sue sostituzioni e le sue regole, qualunque sia la lingua del parlato impostata; la scorciatoia principale mantiene la lingua scelta sopra. Così si detta in inglese con una combinazione e nella propria lingua con un’altra, senza aprire le impostazioni. Durante la registrazione la barra mostra il codice della lingua. Una combinazione non può ripetere quella principale né quella di un’altra lingua.</td></tr>" +
 			"</table>" +
 			"<div class=\"hshot\">" +
 			"<div class=\"hrow\"><label>Russo<span class=\"hs\">GigaAM v3 · precisione 5 su 5 · velocità 5 su 5 · 232 MB</span></label><span class=\"hchip\"><i></i>attiva</span></div>" +
@@ -2911,6 +2919,7 @@ func init() {
 		"S_OVTEXT": "Pokazywać rozpoznany tekst", "S_OVTEXT_SUB": "na pasku po wstawieniu, zamiast liczby znaków",
 		"S_OVERLAY": "Pokazuj pasek", "S_OVERLAY_SUB": "podczas dyktowania ekran pokazuje, że trwa nagrywanie", "S_TYPEMODE": "Wpisywanie znak po znaku",
 		"S_RECLANG": "Język mowy źródłowej", "S_RECAUTO": "Auto",
+		"S_LANG_KEY": "Własny skrót", "S_LANG_KEY_SET": "Przypisz…", "S_LANG_KEY_CLEAR": "Usuń skrót", "S_LANG_KEY_HINT": "Przytrzymaj go, aby dyktować w tym języku jego modelem. Główny skrót nadal używa języka mowy źródłowej wybranego wyżej.",
 		"S_DL": "Pobierz", "S_DEL": "Usuń",
 		"S_M_BASE": "szybki, słabe komputery", "S_M_SMALL": "zrównoważony", "S_M_MED": "Whisper dla każdego języka; ten, który tłumaczy", "S_M_TURBO": "najlepsza dokładność na CPU", "S_M_GIGAAM": "dokładniejszy po rosyjsku, sam stawia interpunkcję", "S_M_PARAKEET": "25 języków europejskich, sama stawia interpunkcję",
 		"S_THREADS":  "Wątki CPU", "S_MINMS": "Min. nagranie, ms", "S_MAXSEC": "Maks. nagranie, s",
@@ -3255,7 +3264,7 @@ func init() {
 			"<p>Jak uruchamia się dyktowanie i jak tekst trafia do pola. Zagląda się tu, gdy coś działa nie po twojej myśli: klawisze są niewygodne, tekst się nie wstawia, Enter naciska się sam.</p>" +
 			"<p class=\"hsub\">Klawisze</p>" +
 			"<table class=\"hopt\">" +
-			"<tr><td>Skrót klawiszowy</td><td>Naciśnij „Zmień…” i przytrzymaj to, co ci wygodne. Aplikacja przechwytuje tę kombinację w całym systemie, więc nie wybieraj zajętej, na przykład Ctrl+C. Najrzadziej zajęte są kombinacje z klawiszem Windows.</td></tr>" +
+			"<tr><td>Skrót klawiszowy</td><td>Naciśnij „Zmień…” i przytrzymaj to, co ci wygodne. Aplikacja przechwytuje tę kombinację w całym systemie, więc nie wybieraj zajętej, na przykład Ctrl+C. Najrzadziej zajęte są kombinacje z klawiszem Windows. Język może mieć też własny skrót, przypisywany w zakładce „Języki i modele”.</td></tr>" +
 			"<tr><td>Tryb</td><td>W trybie „przytrzymanie” nagrywa, dopóki klawisze są wciśnięte: puszczasz je i zdanie idzie do przetworzenia. W trybie „przełącznik” pierwsze naciśnięcie włącza nagrywanie, a drugie je wyłącza. Drugi tryb jest wygodny przy długich monologach, gdy ręka męczy się od trzymania klawiszy.</td></tr>" +
 			"<tr><td>Zatrzymuj po ciszy</td><td>Tylko w trybie „przełącznik”. Gdy już coś powiesz, pauza tak długa jak ustawiona w „Pauza przed zatrzymaniem, ms” sama kończy nagranie, jakbyś znów nacisnął skrót, a pasek pokazuje „Zatrzymano po ciszy”. Przed twoimi pierwszymi słowami nagranie nigdy się nie zatrzyma, więc po naciśnięciu możesz spokojnie zebrać myśli; jeśli nic nie powiesz, i tak zakończy je limit „Maks. nagranie, s”. Gdy włączone jest „Naciśnij Enter po wstawieniu (auto-wysyłka)”, pauza wysyła wiadomość, więc wybierz dłuższą pauzę.</td></tr>" +
 			"<tr><td>Min. nagranie, ms</td><td>Jak krótkie naciśnięcie uznać za przypadkowe. Trącisz klawisze na ułamek sekundy, a aplikacja nic nie zrobi, zamiast wstawiać skrawek słowa.</td></tr>" +
@@ -3283,6 +3292,7 @@ func init() {
 			"<table class=\"hopt\">" +
 			"<tr><td>Język mowy źródłowej</td><td>Język, w którym mówisz. Jeśli mówisz w kilku, wybierz „Auto”: model sam się zorientuje, choć trochę wolniej i trochę mniej dokładnie, niż gdy język jest podany wprost.</td></tr>" +
 			"<tr><td>Który model dla którego języka</td><td>Kliknij język, a rozwinie się lista modeli, które go znają, z oceną szybkości i dokładności oraz rozmiarem pliku. Tak jeden język może zachować szybki model, a inny dostać dokładny. Osobny wiersz „Auto” jest wspólny: jego model obsługuje wszystkie języki, którym nie wybrano własnego, i na liście są one szare. Ten sam model rozpoznaje też, w jakim języku mówisz, gdy język mowy źródłowej nie jest ustawiony.</td></tr>" +
+			"<tr><td>Własny skrót</td><td>W rozwiniętym języku jest miejsce na jego własną kombinację klawiszy. Przytrzymaj ją, a dyktowanie idzie w tym języku jego modelem, zamianami i regułami, niezależnie od ustawionego języka mowy źródłowej; główny skrót zachowuje język wybrany wyżej. Tak dyktuje się po angielsku jedną kombinacją, a we własnym języku inną, bez otwierania ustawień. Podczas nagrywania pasek pokazuje kod języka. Kombinacja nie może powtarzać głównej ani kombinacji innego języka.</td></tr>" +
 			"</table>" +
 			"<div class=\"hshot\">" +
 			"<div class=\"hrow\"><label>Rosyjski<span class=\"hs\">GigaAM v3 · dokładność 5 z 5 · szybkość 5 z 5 · 232 MB</span></label><span class=\"hchip\"><i></i>aktywna</span></div>" +
@@ -3611,6 +3621,7 @@ func init() {
 		"S_OVTEXT": "Показувати розпізнаний текст", "S_OVTEXT_SUB": "у смужці після вставки, замість кількості символів",
 		"S_OVERLAY": "Показувати смужку", "S_OVERLAY_SUB": "під час диктування на екрані видно, що триває запис", "S_TYPEMODE": "Посимвольне введення (для полів без вставлення)",
 		"S_RECLANG": "Мова вихідного мовлення", "S_RECAUTO": "Автовизначення",
+		"S_LANG_KEY": "Своє сполучення", "S_LANG_KEY_SET": "Призначити…", "S_LANG_KEY_CLEAR": "Прибрати сполучення", "S_LANG_KEY_HINT": "Утримуйте його, щоб диктувати цією мовою її моделлю. Основне сполучення й далі використовує мову вихідного мовлення, вибрану вище.",
 		"S_DL": "Завантажити", "S_DEL": "Видалити",
 		"S_M_BASE": "швидка, для слабких ПК", "S_M_SMALL": "баланс швидкості й точності", "S_M_MED": "Whisper для будь-якої мови; та, що перекладає", "S_M_TURBO": "максимум точності на CPU", "S_M_GIGAAM": "точніша російською, сама ставить розділові знаки", "S_M_PARAKEET": "25 європейських мов, сама ставить розділові знаки",
 		"S_MIC_CHECK": "Перевірити мікрофон", "S_MIC_CHECK_SUB": "три секунди запису та розбір: гучність, перевантаження, чи є мовлення", "S_MIC_CHECKING": "Перевіряю…",
@@ -3936,7 +3947,7 @@ func init() {
 			"<p>Як запускається диктування і як текст потрапляє в поле. Сюди заходять, коли щось працює не так, як хочеться: клавіші незручні, текст не вставляється, Enter натискається сам.</p>" +
 			"<p class=\"hsub\">Клавіші</p>" +
 			"<table class=\"hopt\">" +
-			"<tr><td>Сполучення клавіш</td><td>Натисніть «Змінити…» і затисніть те, що вам зручно. Застосунок перехоплює це сполучення в усій системі, тому не беріть зайняте, наприклад Ctrl+C. Найрідше зайняті сполучення з клавішею Windows.</td></tr>" +
+			"<tr><td>Сполучення клавіш</td><td>Натисніть «Змінити…» і затисніть те, що вам зручно. Застосунок перехоплює це сполучення в усій системі, тому не беріть зайняте, наприклад Ctrl+C. Найрідше зайняті сполучення з клавішею Windows. Мова може мати і своє сполучення — його призначають на вкладці «Мови і моделі».</td></tr>" +
 			"<tr><td>Режим</td><td>У режимі «утримання» запис іде, поки клавіші затиснуті: відпустили, і фраза пішла в роботу. У режимі «перемикач» перше натискання вмикає запис, а друге вимикає. Другий режим зручний для довгих монологів, коли рука втомлюється тримати клавіші.</td></tr>" +
 			"<tr><td>Зупинка через тишу</td><td>Лише в режимі «перемикач». Коли ви вже щось сказали, пауза тієї довжини, що задана в «Пауза до зупинки, мс», сама завершує запис, ніби ви знову натиснули сполучення клавіш, а на смужці з'являється «Зупинено через тишу». До ваших перших слів запис не зупиниться, тож після натискання можна спокійно зібратися з думками; якщо ви нічого не скажете, запис усе одно завершить межа «Макс. запис, с». Якщо увімкнено «Enter після вставлення (автовідправлення)», пауза надішле повідомлення, тому виберіть довшу паузу.</td></tr>" +
 			"<tr><td>Мін. запис, мс</td><td>Наскільки коротке натискання вважати випадковим. Зачепили клавіші на частку секунди, і застосунок промовчить, замість того щоб вставляти уривок слова.</td></tr>" +
@@ -3964,6 +3975,7 @@ func init() {
 			"<table class=\"hopt\">" +
 			"<tr><td>Мова вихідного мовлення</td><td>Мова, якою ви говорите. Якщо мов кілька, поставте «Автовизначення»: модель розбереться сама, хоча трохи повільніше й трохи менш точно, ніж коли мову названо прямо.</td></tr>" +
 			"<tr><td>Яка модель якій мові</td><td>Клацніть мову, і розгорнеться список моделей, які її знають, з оцінкою швидкості й точності та розміром файлу. Так одна мова може лишити собі швидку модель, а інша отримати точну. Окремий рядок «Автовизначення» спільний: його модель обслуговує всі мови, яким не вибрано власної, і в списку вони сірі. Вона ж визначає, якою мовою говорять, коли мову вихідного мовлення не задано.</td></tr>" +
+			"<tr><td>Своє сполучення</td><td>Усередині розгорнутої мови є місце для її власного сполучення клавіш. Утримуйте його — і диктування йде цією мовою з її моделлю, замінами й правилами, хоч би що стояло в мові вихідного мовлення; основне сполучення й далі використовує мову, вибрану вище. Так англійську диктують одним сполученням, а рідну мову іншим, не заходячи в налаштування. Поки триває запис, смужка показує код мови. Сполучення не може повторювати основне або сполучення іншої мови.</td></tr>" +
 			"</table>" +
 			"<div class=\"hshot\">" +
 			"<div class=\"hrow\"><label>Російська<span class=\"hs\">GigaAM v3 · точність 5 з 5 · швидкість 5 з 5 · 232 МБ</span></label><span class=\"hchip\"><i></i>активна</span></div>" +

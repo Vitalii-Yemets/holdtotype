@@ -24,6 +24,7 @@ const cfg = {
   language: "ru",
   model: "models/ggml-large-v3-turbo-q5_0.bin",
   lang_models: { auto: "large-v3-turbo-q5_0", ru: "gigaam-v3" },
+  lang_hotkeys: { en: "ctrl+alt+e" },
   beep: true,
   sound_theme: "speech",
   auto_enter: false,

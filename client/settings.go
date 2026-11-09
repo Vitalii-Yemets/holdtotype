@@ -114,6 +114,7 @@ type settingsForm struct {
 	TypeMode         bool              `json:"type_mode"`
 	Language         string            `json:"language"`
 	LangModels       map[string]string `json:"lang_models"`
+	LangHotkeys      map[string]string `json:"lang_hotkeys"`
 	Threads          int               `json:"threads"`
 	MinRecordMs      int    `json:"min_record_ms"`
 	PasteDelayMs     int    `json:"paste_delay_ms"`
@@ -713,7 +714,18 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	if _, err := parseHotkey(f.Hotkey); err != nil {
 		return saveResult{Severity: "error", Message: err.Error()}
 	}
-	combos := []string{f.Hotkey, f.TranslateHotkey}
+	langKeys := a.snapshot().LangHotkeys
+	if f.LangHotkeys != nil {
+		cleaned, dropped := hotkeys.CleanPerLang(f.LangHotkeys, validPresetLang, hotkeyParses)
+		if len(dropped) > 0 {
+			log.Printf("language shortcuts: dropped %s", strings.Join(dropped, ", "))
+		}
+		langKeys = cleaned
+	}
+	if langKeys == nil {
+		langKeys = map[string]string{}
+	}
+	combos := hotkeys.WithPerLang([]string{f.Hotkey, f.TranslateHotkey}, langKeys)
 	if dup := hotkeys.FindDuplicate(combos); dup != "" {
 		return saveResult{Severity: "error", Message: trf("err.hotkey.dup", dup)}
 	}
@@ -760,6 +772,7 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	if c.LangModels == nil {
 		c.LangModels = map[string]string{}
 	}
+	c.LangHotkeys = langKeys
 	modelChanged := false
 	if applyPreset(&c) {
 		modelChanged = true
@@ -1031,6 +1044,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"replacements":            cfg.Replacements,
 		"commands":                cfg.Commands,
 		"translate_hotkey":        cfg.TranslateHotkey,
+		"lang_hotkeys":            cfg.LangHotkeys,
 		"translate_target":        cfg.TranslateTarget,
 		"translate_ask":           cfg.TranslateAsk,
 		"translate_ask_seconds":   cfg.TranslateAskSeconds,
@@ -1069,6 +1083,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"micdefault": "S_MIC_DEFAULT", "micquiet": "S_MIC_QUIET", "get": "S_STATE_GET", "change": "S_CHANGE_MODEL",
 		"acc": "S_LIB_ACC", "spd": "S_LIB_SPD",
 		"recauto": "S_RECAUTO",
+		"langkey": "S_LANG_KEY", "langkeyset": "S_LANG_KEY_SET", "langkeyclear": "S_LANG_KEY_CLEAR", "langkeyhint": "S_LANG_KEY_HINT",
 		"asauto": "S_AS_AUTO", "recchip": "S_REC_CHIP",
 		"backauto": "S_BACK_AUTO", "langsc": "S_LANGS_COUNT", "langsq": "S_LANGS_UNKNOWN",
 		"tren": "S_TR_EN", "translist": "S_TR_LIST", "dlgoing": "S_DL_GOING",
@@ -1619,6 +1634,11 @@ button.mini.danger:hover{color:var(--dangerfg);border-color:var(--badline);backg
 .lrow .plang{flex:none;width:170px;font-weight:var(--wb)}
 .lrow .lmodel{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lrow .larr{flex:none;color:var(--faint);font-size:10px}
+.lrow .lkey{flex:none;font-size:11px;color:var(--keyfg);background:var(--keybg);border:1px solid var(--keyline);border-radius:var(--keyr);padding:2px 8px;letter-spacing:.6px;white-space:nowrap}
+.lkeyrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:3px 2px 9px;margin-bottom:7px;border-bottom:1px solid var(--soft)}
+.lkeyrow .lkeylbl{font-weight:var(--wb)}
+.lkeyrow .hotkey-val{font-size:12px;padding:5px 12px;min-width:0}
+.lkeyrow .hint{flex-basis:100%;margin:0}
 .lrow.dim .plang,.lrow.dim .lmodel{color:var(--dim);font-weight:400}
 .lrow.open{border-color:var(--dim);border-bottom:none;border-bottom-left-radius:0;border-bottom-right-radius:0;margin-bottom:0;background:var(--navon)}
 .lpick{border:1px solid var(--dim);border-top:none;border-radius:0 0 var(--r) var(--r);background:var(--navon);padding:9px 11px;margin:0 0 7px}
@@ -2526,6 +2546,7 @@ let profiles = (CFG.profiles || []).map(p=>Object.assign({}, p));
 let activeProfiles = (CFG.active_profiles || []).slice();
 let translateDefault = !!CFG.translate_default;
 let translateHotkey = CFG.translate_hotkey || "";
+let langKeys = Object.assign({}, CFG.lang_hotkeys || {});
 let expandedID = null;
 let captureFor = null;
 
@@ -3692,8 +3713,13 @@ function startMicMeter(){
 
 function comboCaptured(combo, warn){
   if(warn) toast(warn, "warn");
-  if(!captureFor) return;
+  const target = captureFor;
   captureFor = null;
+  if(!target) return;
+  if(String(target).startsWith("lang:")){
+    if(combo) setLangKey(target.slice(5), combo);
+    return;
+  }
   refreshLLM();
 }
 
@@ -4318,6 +4344,7 @@ function renderLangs(){
     const pct = m && m.state === "downloading" ? ' <span class="mpct" data-id="' + m.id + '">' + (m.pct > 0 ? m.pct + "%" : "…") + '</span>' : "";
     row.innerHTML = '<span class="plang">' + (lang === "auto" ? L.recauto : native) + '</span>' +
       '<span class="lmodel">' + (inherit ? L.asauto + ' · ' : '') + esc(m ? m.name : "—") + pct + '</span>' +
+      (langKeys[lang] ? '<span class="lkey">' + esc(langKeys[lang]) + '</span>' : '') +
       '<span class="larr">' + (openLang === lang ? "▲" : "▼") + '</span>';
     row.onclick = ()=>{ openLang = openLang === lang ? null : lang; renderLangs(); };
     box.appendChild(row);
@@ -4325,9 +4352,32 @@ function renderLangs(){
   });
   if(sc) sc.scrollTop = keepScroll;
 }
+function buildLangKeyRow(lang){
+  const key = langKeys[lang] || "";
+  const row = document.createElement("div");
+  row.className = "lkeyrow";
+  row.innerHTML = '<span class="lkeylbl">' + L.langkey + '</span>' +
+    '<button type="button" class="hotkey-val" data-k="cap">' + (key ? esc(key) : L.langkeyset) + '</button>' +
+    (key ? '<button type="button" class="iconbtn danger" data-k="clear" title="' + L.langkeyclear + '">&#10005;</button>' : '') +
+    '<span class="hint">' + L.langkeyhint + '</span>';
+  row.querySelector('[data-k="cap"]').onclick = (e)=>{ e.stopPropagation(); captureFor = "lang:" + lang; appCaptureCombo(); };
+  const clear = row.querySelector('[data-k="clear"]');
+  if(clear) clear.onclick = (e)=>{ e.stopPropagation(); setLangKey(lang, ""); };
+  return row;
+}
+async function setLangKey(lang, combo){
+  const prev = langKeys[lang];
+  if(combo) langKeys[lang] = combo; else delete langKeys[lang];
+  const r = await doSave();
+  if(r && r.severity === "error"){
+    if(prev) langKeys[lang] = prev; else delete langKeys[lang];
+  }
+  renderLangs();
+}
 function buildPicker(lang){
   const pick = document.createElement("div");
   pick.className = "lpick";
+  pick.appendChild(buildLangKeyRow(lang));
   const eff = effectiveFor(lang);
   const explicit = lang === "auto" || !!(langModels[lang] && rowById(langModels[lang]));
   const rec = REC_MODEL[lang];
@@ -4414,7 +4464,7 @@ function wireModelActions(root){
 }
 function modelsSignature(rows){
   return rows.map(m=>[m.id, m.state, (m.serves||[]).join("+"), m.loaded?1:0, m.err||""].join(":")).join("|")
-    + "@" + openLang + "@" + JSON.stringify(langModels) + "@" + curLang();
+    + "@" + openLang + "@" + JSON.stringify(langModels) + "@" + JSON.stringify(langKeys) + "@" + curLang();
 }
 async function undoAssign(id, why){
   const mine = pendingAssign && pendingAssign.id === id;
@@ -5008,6 +5058,7 @@ async function doSave(){
     mic_device_name: micSel.value ? micSel.options[micSel.selectedIndex].textContent : "",
     whisper_prompt: dictWords.join(", "),
     translate_hotkey: translateHotkey,
+    lang_hotkeys: langKeys,
     server_url: remoteURL,
     history_keep_min: keepMinutes(),
     stt_source: sttSource,
@@ -5028,10 +5079,11 @@ async function doSave(){
   if(!trOnNow) f.translate_ask = "never";
   const langChanged = f.ui_language !== (CFG.ui_language || "auto");
   const r = JSON.parse(await appSave(JSON.stringify(f)));
-  if(langChanged){ appReload(wizOn ? "wizard" : curTab); return; }
+  if(langChanged){ appReload(wizOn ? "wizard" : curTab); return null; }
   toast(r.message, r.severity);
   refreshModels();
   refreshState();
+  return r;
 }
 function equalizeEq(){
   const btns = [...document.querySelectorAll("button.mini.eq")];

@@ -4,6 +4,7 @@ import (
 	"holdtotype/internal/audiolevel"
 	"holdtotype/internal/commands"
 	"holdtotype/internal/history"
+	"holdtotype/internal/hotkeys"
 	"holdtotype/internal/mojibake"
 	"holdtotype/internal/ovplace"
 	"holdtotype/internal/preset"
@@ -77,6 +78,7 @@ type Config struct {
 	Language         string            `json:"language"`
 	Model            string            `json:"model"`
 	LangModels       map[string]string `json:"lang_models"`
+	LangHotkeys      map[string]string `json:"lang_hotkeys"`
 	Threads          int               `json:"threads"`
 	ServerPort       int               `json:"server_port"`
 	ServerAutostart  bool              `json:"server_autostart"`
@@ -197,6 +199,7 @@ func defaultConfig() *Config {
 		Language:         "ru",
 		Model:            "models/ggml-medium-q5_0.bin",
 		LangModels:       map[string]string{"auto": defaultPresetModel},
+		LangHotkeys:      map[string]string{},
 		Threads:          4,
 		ServerPort:       8910,
 		ServerAutostart:  true,
@@ -376,6 +379,18 @@ func loadConfig(path string) (*Config, error) {
 	}
 	if cfg.LangModels == nil {
 		cfg.LangModels = map[string]string{}
+	}
+	if cleaned, dropped := hotkeys.CleanPerLang(cfg.LangHotkeys, validPresetLang, hotkeyParses); len(dropped) > 0 {
+		log.Printf("language shortcuts: dropped %s", strings.Join(dropped, ", "))
+		cfg.LangHotkeys = cleaned
+		migrated = true
+	} else {
+		cfg.LangHotkeys = cleaned
+	}
+	if kept, clash := hotkeys.DropClashing(cfg.LangHotkeys, cfg.Hotkey, cfg.TranslateHotkey); len(clash) > 0 {
+		log.Printf("language shortcuts: %s repeat another shortcut and are dropped", strings.Join(clash, ", "))
+		cfg.LangHotkeys = kept
+		migrated = true
 	}
 	if !firstRun && fileVer < 6 && cfg.LangModels["auto"] == "" {
 		cfg.LangModels["auto"] = legacyDefaultModel
@@ -636,6 +651,15 @@ func fileSTTEngine(data []byte) string {
 func validTranslateLang(l string) bool {
 	_, ok := translateLangNames[l]
 	return ok
+}
+
+func validPresetLang(code string) bool {
+	return code == "auto" || validTranslateLang(code)
+}
+
+func hotkeyParses(combo string) bool {
+	_, err := parseHotkey(combo)
+	return err == nil
 }
 
 func profileByID(cfg *Config, id string) *Profile {

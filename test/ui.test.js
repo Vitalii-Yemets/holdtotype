@@ -181,6 +181,11 @@ const dom = new JSDOM(html, {
       micBadge = f.mic_device_name ? f.mic_device_name.split(" ")[0] : "Realtek";
       const message = Number(f.server_port) === 8910 ? "Saved" : "Restarting the recognizer…";
       window.lastSaveForm = f;
+      const keys = Object.values(f.lang_hotkeys || {});
+      if (keys.includes(f.hotkey) || new Set(keys).size !== keys.length) {
+        window.lastSave = { ok: false, severity: "error", message: "The \"" + f.hotkey + "\" shortcut is assigned twice" };
+        return JSON.stringify(window.lastSave);
+      }
       window.saveForms.push(f);
       window.lastSave = { ok: true, severity: "ok", message };
       return JSON.stringify(window.lastSave);
@@ -581,6 +586,30 @@ function check(name, actual, expected) {
   linkBtn.click(); await sleep(60);
   check("the link opens the model page", w.linkOpens, ["moonshine-uk"]);
   rowFor("ru").click(); await sleep(120);
+  check("a language without a shortcut shows no key chip", !!rowFor("ru").querySelector(".lkey"), false);
+  check("a language with a shortcut wears it as a chip", rowFor("en").querySelector(".lkey").textContent, "ctrl+alt+e");
+  const keyRow = () => d.querySelector("#langlist .lpick .lkeyrow");
+  check("the unfolded language offers a shortcut of its own", !!keyRow(), true);
+  check("without one, the button invites to assign", keyRow().querySelector('[data-k="cap"]').textContent, "Assign…");
+  check("and there is nothing to remove yet", !!keyRow().querySelector('[data-k="clear"]'), false);
+  const capBefore = w.captureCalls;
+  keyRow().querySelector('[data-k="cap"]').click(); await sleep(60);
+  check("the button asks the program to capture the keys", w.captureCalls, capBefore + 1);
+  w.comboCaptured("ctrl+alt+r", ""); await sleep(200);
+  check("the captured combination is saved for this language", w.lastSaveForm.lang_hotkeys.ru, "ctrl+alt+r");
+  check("while the other language keeps its own", w.lastSaveForm.lang_hotkeys.en, "ctrl+alt+e");
+  check("the row shows the new chip", rowFor("ru").querySelector(".lkey").textContent, "ctrl+alt+r");
+  check("the button now shows the combination", keyRow().querySelector('[data-k="cap"]').textContent, "ctrl+alt+r");
+  check("and a cross offers to remove it", !!keyRow().querySelector('[data-k="clear"]'), true);
+  keyRow().querySelector('[data-k="cap"]').click(); await sleep(60);
+  w.comboCaptured("ctrl+win", ""); await sleep(200);
+  check("a combination that repeats the main shortcut is refused", w.lastSave.severity, "error");
+  check("and the language keeps the one it had", rowFor("ru").querySelector(".lkey").textContent, "ctrl+alt+r");
+  keyRow().querySelector('[data-k="clear"]').click(); await sleep(200);
+  check("the cross removes the shortcut", "ru" in (w.lastSaveForm.lang_hotkeys || {}), false);
+  check("and the chip goes with it", !!rowFor("ru").querySelector(".lkey"), false);
+  check("the picker stays open through the change", !!d.querySelector("#langlist .lpick"), true);
+  check("a stray capture result touches nothing", (() => { const before = w.saveCalls; w.comboCaptured("ctrl+alt+z", ""); return w.saveCalls === before; })(), true);
   check("the mark carries both shapes", [d.querySelectorAll(".mk.mic").length, d.querySelectorAll(".mk.face").length], [2, 2]);
   w.applyThemeVars("soft");
   check("the soft design shows the microphone like the rest", [d.documentElement.style.getPropertyValue("--markmic"), d.documentElement.style.getPropertyValue("--markface")], ["block", "none"]);

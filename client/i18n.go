@@ -590,6 +590,10 @@ var settingsStrings = map[string]map[string]string{
 		"S_TYPEMODE":       "Вставлять посимвольно, а не через буфер",
 		"S_RECLANG":        "Язык исходной речи",
 		"S_RECAUTO":        "Автоопределение",
+		"S_LANG_KEY":       "Своё сочетание",
+		"S_LANG_KEY_SET":   "Назначить…",
+		"S_LANG_KEY_CLEAR": "Убрать сочетание",
+		"S_LANG_KEY_HINT":  "Удерживайте его, чтобы диктовать на этом языке его моделью. Основное сочетание по-прежнему использует язык исходной речи, выбранный выше.",
 		"S_DL":             "Скачать",
 		"S_DEL":            "Удалить",
 		"S_M_BASE":         "быстрая, для слабых ПК",
@@ -1024,7 +1028,7 @@ var settingsStrings = map[string]map[string]string{
 			"<p>Как запускается диктовка и как текст попадает в поле. Сюда заходят, когда что-то работает не так, как хочется: клавиши неудобные, текст не встаёт, Enter нажимается сам.</p>" +
 			"<p class=\"hsub\">Клавиши</p>" +
 			"<table class=\"hopt\">" +
-			"<tr><td>Сочетание клавиш</td><td>Нажмите «Изменить» и зажмите то, что вам удобно. Приложение перехватывает это сочетание во всей системе, поэтому не берите занятое — Ctrl+C, например. Реже всего заняты сочетания с клавишей Windows.</td></tr>" +
+			"<tr><td>Сочетание клавиш</td><td>Нажмите «Изменить» и зажмите то, что вам удобно. Приложение перехватывает это сочетание во всей системе, поэтому не берите занятое — Ctrl+C, например. Реже всего заняты сочетания с клавишей Windows. У языка может быть и своё сочетание — оно назначается на вкладке «Языки и модели».</td></tr>" +
 			"<tr><td>Режим</td><td>«Удержание» — пишет, пока клавиши зажаты: отпустили, и фраза пошла в работу. «Фиксация» — первое нажатие включает запись, второе выключает. Второй режим удобен для длинных монологов, когда держать клавиши устаёт рука.</td></tr>" +
 			"<tr><td>Остановка по тишине</td><td>Только в режиме «фиксация». Когда вы уже что-то сказали, пауза той длины, что задана в «Пауза до остановки, мс», сама завершает запись, как будто вы снова нажали сочетание клавиш, а на плашке появляется «Остановлено по тишине». До ваших первых слов запись не остановится, так что после нажатия можно спокойно собраться с мыслями; если вы не скажете ничего, запись всё равно закончится по пределу «Максимальная запись, сек». Если включено «Нажимать Enter после вставки (автоотправка)», пауза отправит сообщение, поэтому выберите паузу подлиннее.</td></tr>" +
 			"<tr><td>Минимальная запись</td><td>Насколько короткое нажатие считать случайным. Задели клавиши на долю секунды — приложение промолчит, вместо того чтобы вставлять обрывок слова.</td></tr>" +
@@ -1052,6 +1056,7 @@ var settingsStrings = map[string]map[string]string{
 			"<table class=\"hopt\">" +
 			"<tr><td>Язык исходной речи</td><td>Язык, на котором вы говорите. Если языков несколько, поставьте «Автоопределение»: модель разберётся сама, хотя чуть медленнее и чуть менее точно, чем когда язык назван прямо.</td></tr>" +
 			"<tr><td>Какая модель какому языку</td><td>Щёлкните по языку — раскроется список моделей, которые его знают, с оценкой скорости, точности и весом файла. Так можно оставить для русского быструю модель, а для английского выбрать точную. Отдельная строка «Автоопределение» — общая: её модель обслуживает все языки, которым своя не выбрана, и они стоят в списке серыми. Она же разбирает, на каком языке говорят, когда язык исходной речи не задан.</td></tr>" +
+			"<tr><td>Своё сочетание</td><td>Внутри раскрытого языка есть место для его собственного сочетания клавиш. Удерживайте его — и диктовка идёт на этом языке его моделью, заменами и правилами, что бы ни стояло в языке исходной речи; основное сочетание по-прежнему использует язык, выбранный выше. Так английский диктуют одним сочетанием, а родной язык другим, не заходя в настройки. Пока идёт запись, плашка показывает код языка. Сочетание не может повторять основное или сочетание другого языка.</td></tr>" +
 			"</table>" +
 			"<div class=\"hshot\">" +
 			"<div class=\"hrow\"><label>Русский<span class=\"hs\">GigaAM v3 · точность 5 из 5 · скорость 5 из 5 · 232 МБ</span></label><span class=\"hchip\"><i></i>активна</span></div>" +
@@ -1292,6 +1297,10 @@ var settingsStrings = map[string]map[string]string{
 		"S_TYPEMODE":       "Insert character-by-character instead of the clipboard",
 		"S_RECLANG":        "Source speech language",
 		"S_RECAUTO":        "Auto-detect",
+		"S_LANG_KEY":       "Own shortcut",
+		"S_LANG_KEY_SET":   "Assign…",
+		"S_LANG_KEY_CLEAR": "Remove the shortcut",
+		"S_LANG_KEY_HINT":  "Hold it to dictate in this language with its model. The main shortcut keeps the source speech language chosen above.",
 		"S_DL":             "Download",
 		"S_DEL":            "Delete",
 		"S_M_BASE":         "fast, for weak PCs",
@@ -1726,7 +1735,7 @@ var settingsStrings = map[string]map[string]string{
 			"<p>How dictation starts and how the text gets into the field. You come here when something does not work the way you want: the keys are awkward, the text does not appear, Enter gets pressed by itself.</p>" +
 			"<p class=\"hsub\">Keys</p>" +
 			"<table class=\"hopt\">" +
-			"<tr><td>Keyboard shortcut</td><td>Press “Change…” and hold whatever is comfortable for you. The app captures this combination across the whole system, so do not pick one that is already taken, such as Ctrl+C. Combinations with the Windows key are the least likely to be taken.</td></tr>" +
+			"<tr><td>Keyboard shortcut</td><td>Press “Change…” and hold whatever is comfortable for you. The app captures this combination across the whole system, so do not pick one that is already taken, such as Ctrl+C. Combinations with the Windows key are the least likely to be taken. A language can have a shortcut of its own, set on the “Languages & models” tab.</td></tr>" +
 			"<tr><td>Mode</td><td>With “hold”, it records while the keys are held down: let go, and the phrase goes off to be processed. With “toggle”, the first press starts recording and the second stops it. The second mode suits long monologues, when your hand gets tired of holding the keys.</td></tr>" +
 			"<tr><td>Stop on silence</td><td>Only in “toggle” mode. Once you have said something, a pause as long as the one set in “Pause before stopping, ms” ends the recording by itself, as if you had pressed the shortcut again, and the plate says “Stopped on silence”. It never stops before your first words, so you can gather your thoughts after pressing; if you say nothing at all, the “Max recording, s” limit still ends it. With “Press Enter after paste (auto-submit)” on, a pause sends the message, so pick a longer pause.</td></tr>" +
 			"<tr><td>Min recording, ms</td><td>How short a press counts as accidental. Brush the keys for a split second, and the app stays quiet instead of inserting a scrap of a word.</td></tr>" +
@@ -1754,6 +1763,7 @@ var settingsStrings = map[string]map[string]string{
 			"<table class=\"hopt\">" +
 			"<tr><td>Source speech language</td><td>The language you speak. If you speak several, choose “Auto-detect”: the model works it out by itself, though a little more slowly and a little less accurately than when the language is named outright.</td></tr>" +
 			"<tr><td>Which model serves which language</td><td>Click a language, and a list of the models that know it unfolds, with ratings for speed and accuracy and the file size. This way one language can keep a fast model while another gets an accurate one. The separate “Auto-detect” row is shared: its model serves every language that has no model of its own, and those languages are greyed out in the list. It is also the one that works out which language is being spoken when no source speech language is set.</td></tr>" +
+			"<tr><td>Own shortcut</td><td>Inside an unfolded language there is room for a combination of its own. Hold it, and the dictation is in this language with its model, replacements and rules, whatever the source speech language says; the main shortcut keeps the language chosen above. This is how you dictate in English with one combination and in your own language with another, without opening the settings. The plate shows the language code while it records. A combination cannot repeat the main one or another language’s.</td></tr>" +
 			"</table>" +
 			"<div class=\"hshot\">" +
 			"<div class=\"hrow\"><label>Russian<span class=\"hs\">GigaAM v3 · accuracy 5 of 5 · speed 5 of 5 · 232 MB</span></label><span class=\"hchip\"><i></i>active</span></div>" +

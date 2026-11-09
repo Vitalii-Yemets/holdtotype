@@ -12,3 +12,15 @@ func hotkeyWarning(combo string) string {
 	}
 	return trf("hk.taken", combo, tr("hk."+what))
 }
+
+const langProfilePrefix = "lang:"
+
+func langCombos(cfg *Config) []comboDef {
+	var combos []comboDef
+	for _, code := range hotkeys.Codes(cfg.LangHotkeys) {
+		if groups, err := parseHotkey(cfg.LangHotkeys[code]); err == nil {
+			combos = append(combos, comboDef{id: langProfilePrefix + code, groups: groups})
+		}
+	}
+	return combos
+}

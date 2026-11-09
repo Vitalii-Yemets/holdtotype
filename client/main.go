@@ -1057,6 +1057,7 @@ func buildCombos(cfg *Config) []comboDef {
 			combos = append(combos, comboDef{id: "wtranslate", groups: groups})
 		}
 	}
+	combos = append(combos, langCombos(cfg)...)
 	return combos
 }
 
@@ -1134,6 +1135,12 @@ func (a *App) handleDown(profileID string) {
 	if profileID == "main" {
 		profileID = ""
 	}
+	langKey := ""
+	if strings.HasPrefix(profileID, langProfilePrefix) {
+		langKey = strings.TrimPrefix(profileID, langProfilePrefix)
+		cfg.Language = langKey
+		profileID = ""
+	}
 	a.mu.Lock()
 	rec := a.rec
 	enabled, ready, capturing, backendErr := a.enabled, a.ready, a.capturing, a.backendErr
@@ -1169,9 +1176,16 @@ func (a *App) handleDown(profileID string) {
 	traySetIcon(trayRecording)
 	a.setStatus(tr("status.recording"))
 	playCue(cfg.Beep, cfg.SoundTheme, cueStart)
+	if langKey != "" {
+		log.Printf("language shortcut: this dictation is in %s", langKey)
+	}
 	if cfg.Overlay {
 		setOverlayPlacement(cfg)
-		overlaySet(ovRecording, tr("ov.speak"))
+		speak := tr("ov.speak")
+		if langKey != "" {
+			speak += " · " + strings.ToUpper(langLabel(langKey))
+		}
+		overlaySet(ovRecording, speak)
 	}
 	if m := activeModel(cfg); m != nil && m.Engine == engineStream {
 		go a.liveStream(a.gen, cfg)
