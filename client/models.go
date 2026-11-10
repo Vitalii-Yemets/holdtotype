@@ -847,6 +847,7 @@ type stateOut struct {
 	PostCount   int             `json:"post_installed"`
 	PostPrompts int             `json:"post_prompts"`
 	PostRemote  bool            `json:"post_remote"`
+	SubsTr      subTrState      `json:"subs_tr"`
 	UpdChecked  int64           `json:"upd_checked"`
 	UpdVersion  string          `json:"upd_version"`
 	Badges      struct {
@@ -1105,6 +1106,7 @@ func (a *App) stateSnapshot() string {
 		PostPrompts: len(cfg.ActiveProfiles),
 		PostRemote:  postAPIOn(cfg),
 		Subtitles:   a.subtitlesState(),
+		SubsTr:      subtitlesTranslator(cfg),
 	}
 	a.mu.Lock()
 	st.UpdVersion = a.updVer

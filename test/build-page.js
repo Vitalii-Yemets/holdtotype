@@ -30,6 +30,7 @@ const cfg = {
   subtitles_save: true,
   subtitles_lines: 3,
   subtitles_size: "m",
+  subtitles_translate: "",
   beep: true,
   sound_theme: "speech",
   auto_enter: false,

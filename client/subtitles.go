@@ -517,6 +517,16 @@ func translationTarget(cfg *Config, t *subTarget) string {
 	return to
 }
 
+type subTrState struct {
+	Kind string `json:"kind"`
+	Name string `json:"name"`
+}
+
+func subtitlesTranslator(cfg *Config) subTrState {
+	src := translationSource(cfg)
+	return subTrState{Kind: src.kind, Name: src.name}
+}
+
 func (r *subRun) syncTranslation(cfg *Config, t *subTarget) {
 	to := cfg.SubtitlesTranslate
 	r.trMu.Lock()

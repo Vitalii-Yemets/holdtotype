@@ -516,6 +516,14 @@ var settingsStrings = map[string]map[string]string{
 		"S_SUBS_M_WHISPER": "%s — модель Whisper: на процессоре ей нужно много секунд на каждую фразу, и текст будет сильно отставать от речи. Для субтитров лучше подходит потоковая или быстрая модель.",
 		"S_SUBS_GO_MODELS": "Открыть «Языки и модели»",
 		"S_SUBS_REMOTE": "Распознавание идёт на другом компьютере: каждая фраза отправляется на этот сервер.",
+		"S_SUBS_TR": "Перевод",
+		"S_SUBS_TR_SUB": "Каждая законченная строка повторяется под оригиналом на этом языке",
+		"S_SUBS_TR_OFF": "Выключен",
+		"S_SUBS_TR_LOCAL": "Переводит %s: перевод появляется под строкой, когда он готов.",
+		"S_SUBS_TR_API": "Переводит ваш сервер постобработки (%s): каждая строка отправляется на него.",
+		"S_SUBS_TR_NONE": "Модель-редактор не установлена, поэтому перевода не будет.",
+		"S_SUBS_TR_GO": "Открыть «Постобработку»",
+		"S_SUBS_TR_SAME": "Язык перевода совпадает с языком речи: переводить нечего.",
 		"S_SUBS_KEY": "Сочетание клавиш",
 		"S_SUBS_KEY_SUB": "Запускает и останавливает субтитры из любого окна",
 		"S_SUBS_SAVE": "Сохранять расшифровку",
@@ -523,6 +531,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_SUBS_FOLDER": "Папка расшифровок",
 		"S_SUBS_WINDOW": "Окно субтитров",
 		"S_SUBS_ROWS": "Строк текста",
+		"S_SUBS_ROWS_SUB": "С переводом окно становится вдвое выше",
 		"S_SUBS_SIZE": "Размер текста",
 		"S_SUBS_SIZE_S": "Мелкий",
 		"S_SUBS_SIZE_M": "Средний",
@@ -1182,6 +1191,7 @@ var settingsStrings = map[string]map[string]string{
 			"<table class=\"hopt\">" +
 			"<tr><td>Запустить субтитры</td><td>Запускает и останавливает их. Строка рядом говорит, что происходит: выключено, загружается модель, идёт прослушивание или распознавание перезапускается. То же делают меню в трее, своё сочетание клавиш и крестик на окне.</td></tr>" +
 			"<tr><td>Язык речи</td><td>Язык того, что вы слушаете, отдельно от языка диктовки. Модель — та, что этому языку дана на вкладке «Языки и модели». Потоковая модель пишет слова по ходу речи, остальные — каждую фразу после её конца. Модели Whisper на процессоре нужно много секунд на фразу, и её текст сильно отстаёт от речи; накопившиеся фразы уходят к ней вместе и выходят одной строкой.</td></tr>" +
+			"<tr><td>Перевод</td><td>Повторяет каждую законченную строку под оригиналом на выбранном языке, более тусклым цветом; окно для этого становится вдвое выше. Переводит модель-редактор: та, что установлена на вкладке «Постобработка», или ваш собственный сервер постобработки, если там выбран он, — тогда каждая законченная строка отправляется на этот сервер. Исходная строка никогда не ждёт перевода: она появляется сразу, а перевод встаёт под неё, когда готов. В расшифровку переводы тоже попадают, каждый со временем своей строки. Без модели-редактора перевода нет, и субтитры работают как раньше.</td></tr>" +
 			"<tr><td>Сочетание клавиш</td><td>Запускает и останавливает субтитры из любого окна. Диктовку оно не начинает и не может повторять другое сочетание.</td></tr>" +
 			"<tr><td>Сохранять расшифровку</td><td>Каждый запуск пишет текстовый файл в папку transcripts рядом с программой: первая строка с датой, языком и моделью, затем каждая готовая строка со временем, когда она началась. Пока первая строка не готова, ничего не пишется.</td></tr>" +
 			"<tr><td>Окно субтитров</td><td>Сколько строк текста оно показывает и насколько крупные буквы. Каждая готовая строка начинается с новой строки окна. Окно двигается мышью; место запоминается для каждого разрешения экрана, а «Вернуть на место по умолчанию» его забывает.</td></tr>" +
@@ -1203,7 +1213,7 @@ var settingsStrings = map[string]map[string]string{
 			"<p class=\"wh\" id=\"s-privacy\">Что уходит в интернет, а что нет</p>" +
 			"<ul>" +
 			"<li><b>Голос</b> не сохраняется и не отправляется — если вы сами не включили распознавание на другом компьютере.</li>" +
-			"<li><b>Субтитры</b> распознаются здесь же, как диктовка, а расшифровка остаётся в папке transcripts; при распознавании на другом компьютере фразы уходят на тот сервер.</li>" +
+			"<li><b>Субтитры</b> распознаются здесь же, как диктовка, а расшифровка остаётся в папке transcripts; при распознавании на другом компьютере фразы уходят на тот сервер; при переводе через ваш сервер постобработки туда же уходит каждая законченная строка.</li>" +
 			"<li><b>Текст</b> не покидает машину — если вы сами не включили внешний сервер постобработки.</li>" +
 			"<li><b>История</b> лежит файлом рядом с приложением и чистится по вашему сроку.</li>" +
 			"<li><b>Сеть</b> нужна дважды: скачать модель и проверить обновление. Вторую проверку можно выключить.</li>" +
@@ -1276,6 +1286,14 @@ var settingsStrings = map[string]map[string]string{
 		"S_SUBS_M_WHISPER": "%s is a Whisper model: on a processor it needs many seconds per phrase, so the text will lag well behind the speech. A streaming model or a fast one suits subtitles better.",
 		"S_SUBS_GO_MODELS": "Open “Languages & models”",
 		"S_SUBS_REMOTE": "Recognition runs on another computer: each phrase is sent to that server.",
+		"S_SUBS_TR": "Translation",
+		"S_SUBS_TR_SUB": "Each finished line is repeated under the original in this language",
+		"S_SUBS_TR_OFF": "Off",
+		"S_SUBS_TR_LOCAL": "%s translates: the translation appears under the line when it is ready.",
+		"S_SUBS_TR_API": "Your post-processing server (%s) translates: every line is sent to it.",
+		"S_SUBS_TR_NONE": "No editor model is installed, so there will be no translation.",
+		"S_SUBS_TR_GO": "Open “Post-processing”",
+		"S_SUBS_TR_SAME": "The translation language is the same as the speech language: there is nothing to translate.",
 		"S_SUBS_KEY": "Shortcut",
 		"S_SUBS_KEY_SUB": "Starts and stops subtitles from any window",
 		"S_SUBS_SAVE": "Save the transcript",
@@ -1283,6 +1301,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_SUBS_FOLDER": "Transcripts folder",
 		"S_SUBS_WINDOW": "Subtitles window",
 		"S_SUBS_ROWS": "Rows of text",
+		"S_SUBS_ROWS_SUB": "With translation the window is twice as tall",
 		"S_SUBS_SIZE": "Text size",
 		"S_SUBS_SIZE_S": "Small",
 		"S_SUBS_SIZE_M": "Medium",
@@ -1942,6 +1961,7 @@ var settingsStrings = map[string]map[string]string{
 			"<table class=\"hopt\">" +
 			"<tr><td>Start subtitles</td><td>Starts and stops them. The line beside it says what is going on: off, loading the model, listening, or recognition restarting. The tray menu, a shortcut of their own and the cross on the window do the same.</td></tr>" +
 			"<tr><td>Speech language</td><td>The language of what you listen to, separate from the language you dictate in. The model is the one the “Languages & models” tab gives that language. A streaming model writes the words as they are spoken; the others write each phrase after it ends. A Whisper model needs many seconds per phrase on a processor, so its text lags well behind the speech; phrases that pile up go to it together and come out as one line.</td></tr>" +
+			"<tr><td>Translation</td><td>Repeats each finished line under the original in the language you pick, in a dimmer colour; the window becomes twice as tall for it. The editor model does the translating: the one installed on the “Post-processing” tab, or your own post-processing server when that is the source chosen there, and then every finished line is sent to that server. The original line never waits for its translation: it appears at once, and the translation comes under it when it is ready. The transcript gets the translations too, each with the time of its line. Without an editor model there is no translation, and subtitles work as before.</td></tr>" +
 			"<tr><td>Shortcut</td><td>Starts and stops subtitles from any window. It never starts a dictation and cannot repeat another shortcut.</td></tr>" +
 			"<tr><td>Save the transcript</td><td>Every run writes a text file into the transcripts folder next to the program: a first line with the date, the language and the model, then each finished line with the time it began. Nothing is written until the first line is finished.</td></tr>" +
 			"<tr><td>Subtitles window</td><td>How many rows of text it shows and how large the letters are. Each finished line starts on a new row. Drag the window to move it; the place is remembered for each screen resolution, and “Back to the default place” forgets it.</td></tr>" +
@@ -1963,7 +1983,7 @@ var settingsStrings = map[string]map[string]string{
 			"<p class=\"wh\" id=\"s-privacy\">What goes online and what does not</p>" +
 			"<ul>" +
 			"<li><b>Your voice</b> is neither saved nor sent anywhere, unless you yourself turned on recognition on another computer.</li>" +
-			"<li><b>Subtitles</b> are recognized here, the same way as dictation, and the transcript stays in the transcripts folder; with recognition on another computer, the phrases go to that server.</li>" +
+			"<li><b>Subtitles</b> are recognized here, the same way as dictation, and the transcript stays in the transcripts folder; with recognition on another computer, the phrases go to that server; with translation through your own post-processing server, every finished line goes there too.</li>" +
 			"<li><b>The text</b> does not leave the machine, unless you yourself turned on an external post-processing server.</li>" +
 			"<li><b>The history</b> is a file next to the app and is cleaned up on the schedule you set.</li>" +
 			"<li><b>The network</b> is needed twice: to download a model and to check for an update. The second can be turned off.</li>" +

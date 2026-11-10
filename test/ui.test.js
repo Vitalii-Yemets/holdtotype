@@ -60,7 +60,7 @@ const dom = new JSDOM(html, {
     };
     window.removeLLMByHand = (f) => { llmState.installed = llmState.installed.filter(m => m.file !== f); };
     window.appState = async () =>
-      JSON.stringify({ ...postFields(), subtitles: window.subsState, hotkey: "ctrl+win", mic: "Realtek", engine: "sherpa · gigaam-v3", llm: "model.gguf",
+      JSON.stringify({ ...postFields(), subtitles: window.subsState, subs_tr: window.subsTr, hotkey: "ctrl+win", mic: "Realtek", engine: "sherpa · gigaam-v3", llm: "model.gguf",
         ram: "8000 MB free", last: "hello", last_meta: "just now · 5 characters", ready: engineReady, status: "Ready",
         status_line: "Ready · gigaam-v3 + ggml-small.bin · 7.8 GB free",
         active_model: "GigaAM v3", active_state: ruState, active_lang: "RU",
@@ -177,6 +177,7 @@ const dom = new JSDOM(html, {
     window.appCaptureCombo = () => { window.captureCalls++; };
     window.subsCalls = [];
     window.subsState = { phase: "off" };
+    window.subsTr = { kind: "local", name: "qwen2.5-1.5b-instruct-q4_k_m" };
     window.appSubtitles = (action) => {
       window.subsCalls.push(action);
       window.subsState = action === "start" ? { phase: "loading", mode: "live", model: "Nemotron 3.5", lang: "en" } : { phase: "off" };
@@ -1765,6 +1766,53 @@ function check(name, actual, expected) {
   sv("subs_hero_goto").click(); await sleep(150);
   check("the arrow opens the Subtitles tab", shown("subs"), true);
   check("the search finds the tab", w.searchMatches("s_subs_save").some((el) => el.closest("#p-subs")), true);
+
+  const trCard = sv("subs_tr_card");
+  const trLines = () => ["subs_tr_hint", "subs_tr_none_row", "subs_tr_same"].map((id) => sv(id).style.display !== "none");
+  const setTr = async (kind, name) => { w.subsTr = { kind, name }; await w.refreshState(); };
+  check("the translation card stands between the language card and the shortcut card", [trCard.previousElementSibling.contains(sv("subtitles_language")), trCard.nextElementSibling.contains(sv("subs_key"))], [true, true]);
+  check("the translation list is Off and the eight languages", [...sv("subtitles_translate").options].map((o) => o.value), ["", "de", "en", "es", "fr", "it", "pl", "uk", "ru"]);
+  check("the languages carry their own names in the order of the speech language list", [...sv("subtitles_translate").options].slice(1).map((o) => o.textContent), [...sv("subtitles_language").options].slice(1).map((o) => o.textContent));
+  check("the first option is Off", sv("subtitles_translate").options[0].textContent, "S_SUBS_TR_OFF");
+  check("the control carries the config", sv("subtitles_translate").value, "");
+  check("with translation off none of its lines shows", trLines(), [false, false, false]);
+  await change(sv("subtitles_translate"), "de");
+  check("choosing a language saves it", w.lastSaveForm.subtitles_translate, "de");
+  await setTr("local", "qwen2.5-1.5b-instruct-q4_k_m");
+  check("a local editor model names itself and nothing else shows", [trLines(), sv("subs_tr_hint").textContent], [[true, false, false], "qwen2.5-1.5b-instruct-q4_k_m translates: the translation appears under the line when it is ready."]);
+  await setTr("api", "gpt-4o-mini");
+  check("the user's server says every line goes to it", [trLines(), sv("subs_tr_hint").textContent], [[true, false, false], "Your post-processing server (gpt-4o-mini) translates: every line is sent to it."]);
+  await setTr("", "");
+  check("without a translator only the warning with its button shows", trLines(), [false, true, false]);
+  check("the warning is the no-model sentence", sv("subs_tr_none").textContent, "S_SUBS_TR_NONE");
+  check("the button carries its label", sv("subs_tr_go").textContent, "S_SUBS_TR_GO");
+  sv("subs_tr_go").click(); await sleep(150);
+  check("the button opens the Post-processing tab", shown("post"), true);
+  tab("subs"); await sleep(150);
+  check("coming back keeps the warning", trLines(), [false, true, false]);
+  await setTr("local", "qwen2.5-1.5b-instruct-q4_k_m");
+  check("a model that appears in the poll replaces the warning without reopening", [trLines(), sv("subs_tr_hint").textContent.startsWith("qwen2.5-1.5b-instruct-q4_k_m translates")], [[true, false, false], true]);
+  await setTr("", "");
+  check("and a model that disappears brings the warning back", trLines(), [false, true, false]);
+  await setTr("local", "qwen2.5-1.5b-instruct-q4_k_m");
+  await change(sv("subtitles_translate"), "en");
+  check("the speech language as the target shows only its note", trLines(), [false, false, true]);
+  await setTr("", "");
+  check("the note stays without a translator, nothing to translate anyway", trLines(), [false, false, true]);
+  await setTr("local", "qwen2.5-1.5b-instruct-q4_k_m");
+  await change(sv("subtitles_language"), "de");
+  check("another speech language brings the translator line back", trLines(), [true, false, false]);
+  await change(sv("subtitles_language"), "en");
+  check("and the same one the note", trLines(), [false, false, true]);
+  await change(sv("subtitles_translate"), "");
+  check("choosing Off saves an empty string", w.lastSaveForm.subtitles_translate, "");
+  check("and hides all three lines", trLines(), [false, false, false]);
+  check("leaving no divider under the row with nothing below it", sv("subtitles_translate").closest(".row").classList.contains("noline"), true);
+  await change(sv("subtitles_translate"), "de");
+  check("a line below brings the divider back", sv("subtitles_translate").closest(".row").classList.contains("noline"), false);
+  await change(sv("subtitles_translate"), "");
+  check("the search finds the translation row", w.searchMatches("s_subs_tr_sub").some((el) => el.closest("#subs_tr_card")), true);
+  check("the rows of text say the window doubles with translation", sv("subtitles_lines").closest(".row").querySelector(".sub").textContent, "S_SUBS_ROWS_SUB");
 
   const postCard = () => d.querySelectorAll("#state_models .stcard")[1];
   const postRow = () => [postCard().querySelector(".stnm").textContent, postCard().querySelector(".stnm .led").classList.contains("on")];

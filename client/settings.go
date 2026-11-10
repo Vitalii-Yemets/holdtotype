@@ -163,6 +163,8 @@ type settingsForm struct {
 	SubtitlesLines    *int                     `json:"subtitles_lines"`
 	SubtitlesSize     *string                  `json:"subtitles_size"`
 	SubtitlesXY       *map[string]ovplace.Frac `json:"subtitles_custom"`
+
+	SubtitlesTranslate *string `json:"subtitles_translate"`
 }
 
 func (a *App) openSettings(tab string) {
@@ -956,6 +958,9 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	if f.SubtitlesXY != nil {
 		c.SubtitlesXY = ovplace.CleanCustom(*f.SubtitlesXY)
 	}
+	if f.SubtitlesTranslate != nil && (*f.SubtitlesTranslate == "" || validTranslateLang(*f.SubtitlesTranslate)) {
+		c.SubtitlesTranslate = *f.SubtitlesTranslate
+	}
 	llmChanged := false
 	if f.LLMModelFile != "" && !strings.ContainsAny(f.LLMModelFile, "/\\") && strings.HasSuffix(f.LLMModelFile, ".gguf") {
 		if _, err := os.Stat(filepath.Join("models", f.LLMModelFile)); err == nil {
@@ -1093,6 +1098,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"subtitles_save":          cfg.SubtitlesSave,
 		"subtitles_lines":         cfg.SubtitlesLines,
 		"subtitles_size":          cfg.SubtitlesSize,
+		"subtitles_translate":     cfg.SubtitlesTranslate,
 		"translate_target":        cfg.TranslateTarget,
 		"translate_ask":           cfg.TranslateAsk,
 		"translate_ask_seconds":   cfg.TranslateAskSeconds,
@@ -1223,6 +1229,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"subsplacedone": "S_SUBS_PLACE_DONE",
 		"subson": "S_SUBS_ON", "subsherohint": "S_SUBS_HERO_HINT", "subsherolive": "S_SUBS_HERO_LIVE", "subsherophrases": "S_SUBS_HERO_PHRASES",
 		"subsherostart": "S_SUBS_HERO_START", "subsherostop": "S_SUBS_HERO_STOP",
+		"substrlocal": "S_SUBS_TR_LOCAL", "substrapi": "S_SUBS_TR_API",
 		"updatedto": "S_UPDATED_TO",
 	} {
 		lMap[jsKey] = str(sKey)
@@ -2396,6 +2403,20 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
    <button type="button" class="mini" id="subs_case_go">{{S_SUBS_GO_MODELS}}</button></div>
   <div class="hint" id="subs_remote" style="display:none">{{S_SUBS_REMOTE}}</div>
  </div>
+ <div class="card" id="subs_tr_card">
+  <div class="row"><label>{{S_SUBS_TR}}<span class="sub">{{S_SUBS_TR_SUB}}</span></label>
+   <select id="subtitles_translate">
+    <option value="">{{S_SUBS_TR_OFF}}</option>
+    <option value="de">Deutsch</option><option value="en">English</option>
+    <option value="es">Español</option><option value="fr">Français</option>
+    <option value="it">Italiano</option><option value="pl">Polski</option>
+    <option value="uk">Українська</option><option value="ru">Русский</option>
+   </select></div>
+  <div class="hint" id="subs_tr_hint" style="display:none"></div>
+  <div class="row noline" id="subs_tr_none_row" style="display:none"><label><span class="sub warn" id="subs_tr_none">{{S_SUBS_TR_NONE}}</span></label>
+   <button type="button" class="mini" id="subs_tr_go">{{S_SUBS_TR_GO}}</button></div>
+  <div class="hint" id="subs_tr_same" style="display:none">{{S_SUBS_TR_SAME}}</div>
+ </div>
  <div class="card">
   <div class="row"><label>{{S_SUBS_KEY}}<span class="sub">{{S_SUBS_KEY_SUB}}</span></label>
    <button type="button" class="hotkey-val" id="subs_key" title="{{S_CHANGE}}"></button>
@@ -2408,7 +2429,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
  </div>
  <div class="card">
   <label class="blklbl">{{S_SUBS_WINDOW}}</label>
-  <div class="row"><label>{{S_SUBS_ROWS}}</label>
+  <div class="row"><label>{{S_SUBS_ROWS}}<span class="sub">{{S_SUBS_ROWS_SUB}}</span></label>
    <select id="subtitles_lines"><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
   <div class="row"><label>{{S_SUBS_SIZE}}</label>
    <select id="subtitles_size"><option value="s">{{S_SUBS_SIZE_S}}</option><option value="m">{{S_SUBS_SIZE_M}}</option><option value="l">{{S_SUBS_SIZE_L}}</option></select></div>
@@ -2669,6 +2690,7 @@ let langKeys = Object.assign({}, CFG.lang_hotkeys || {});
 let subsKey = CFG.subtitles_hotkey || "";
 let subsRunning = false;
 let subsPlaceReset = false;
+let subsTr = null;
 let expandedID = null;
 let captureFor = null;
 
@@ -3964,6 +3986,27 @@ async function refreshSubsModel(){
   const remote = subsEl("subs_remote");
   if(remote) remote.style.display = info.remote && info.installed ? "" : "none";
 }
+function renderSubsTr(){
+  const sel = subsEl("subtitles_translate");
+  if(!sel) return;
+  const to = sel.value;
+  const lang = (subsEl("subtitles_language")||{}).value || "auto";
+  let hint = "", none = false, same = false;
+  if(to && to === lang) same = true;
+  else if(to && subsTr){
+    if(subsTr.kind === "api") hint = L.substrapi.replace("%s", ()=>subsTr.name || "");
+    else if(subsTr.kind === "local") hint = L.substrlocal.replace("%s", ()=>subsTr.name || "");
+    else none = true;
+  }
+  const h = subsEl("subs_tr_hint");
+  if(h){ h.textContent = hint; h.style.display = hint ? "" : "none"; }
+  const n = subsEl("subs_tr_none_row");
+  if(n) n.style.display = none ? "" : "none";
+  const s = subsEl("subs_tr_same");
+  if(s) s.style.display = same ? "" : "none";
+  const row = sel.closest(".row");
+  if(row) row.classList.toggle("noline", !hint && !none && !same);
+}
 function subsGotoModels(){
   const row = subsEl("subs_case_row");
   const lang = (row && row.dataset.lang) || "auto";
@@ -3980,8 +4023,13 @@ function initSubs(){
   subsEl("subtitles_save").checked = CFG.subtitles_save !== false;
   subsEl("subtitles_lines").value = String(CFG.subtitles_lines || 3);
   subsEl("subtitles_size").value = CFG.subtitles_size || "m";
+  const trSel = subsEl("subtitles_translate");
+  trSel.value = CFG.subtitles_translate || "";
   paintSubsKey();
   sel.addEventListener("change", refreshSubsModel);
+  sel.addEventListener("change", renderSubsTr);
+  trSel.addEventListener("change", renderSubsTr);
+  subsEl("subs_tr_go").onclick = ()=>show("post");
   subsEl("subs_go").onclick = ()=>subsToggle(subsEl("subs_go"));
   const heroGo = subsEl("subs_hero_go");
   if(heroGo) heroGo.onclick = ()=>subsToggle(heroGo);
@@ -3997,6 +4045,7 @@ function initSubs(){
   };
   subsEl("subs_case_go").onclick = subsGotoModels;
   refreshSubsModel();
+  renderSubsTr();
 }
 async function refreshState(){
   const s = JSON.parse(await appState());
@@ -4010,6 +4059,8 @@ async function refreshState(){
   showPostErr(s.post_err || "");
   renderSubsState(s);
   renderSubsHero(s);
+  subsTr = s.subs_tr || {kind: "", name: ""};
+  renderSubsTr();
 
   const hero = document.getElementById("state_hero");
   const off = s.enabled === false;
@@ -5342,7 +5393,8 @@ async function doSave(){
     subtitles_save: !!(subsEl("subtitles_save")||{}).checked,
     subtitles_lines: parseInt((subsEl("subtitles_lines")||{}).value) || 3,
     subtitles_size: (subsEl("subtitles_size")||{}).value || "m",
-    subtitles_custom: subsPlaceReset ? {} : null};
+    subtitles_custom: subsPlaceReset ? {} : null,
+    subtitles_translate: (subsEl("subtitles_translate")||{}).value || ""};
   subsPlaceReset = false;
   bools.forEach(k=>f[k]=document.getElementById(k).checked);
   texts.forEach(k=>f[k]=document.getElementById(k).value);
@@ -5383,7 +5435,7 @@ function show(p){
   if(p==="system") setTimeout(equalizeEq, 0);
   if(p==="state") refreshState();
   if(p==="history") refreshHistory();
-  if(p==="subs") refreshSubsModel();
+  if(p==="subs"){ refreshSubsModel(); renderSubsTr(); }
   if(p==="post") refreshLLM();
   document.querySelector(".content").scrollTop = 0;
   if(p==="help" && helpMark) helpMark();
