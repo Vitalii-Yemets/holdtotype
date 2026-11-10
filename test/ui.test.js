@@ -1687,8 +1687,13 @@ function check(name, actual, expected) {
   w.subsModels.fr.installed = true;
   await w.refreshModels(); await sleep(250);
   check("a refreshed model list reads the model again", [sv("subs_model").textContent, sv("subs_case_row").style.display], ["Canary 180M Flash will write it: the text appears after each phrase ends.", "none"]);
+  for (const id of w.eval("modelRowsCache.filter(m=>m.state==='downloading').map(m=>m.id)")) w.finishDl(id);
+  await w.refreshModels(); await sleep(1200);
+  check("no model list refresh is left running", w.eval("modelRowsCache.some(m=>m.state==='downloading') || !!pendingDl"), false);
+  tab("about"); await sleep(100);
   w.subsModels.fr.installed = false;
-  tab("models"); await sleep(100); tab("subs"); await sleep(250);
+  await sleep(1200);
+  tab("subs"); await sleep(250);
   check("coming back to the tab reads it again too", [sv("subs_model").style.display, sv("subs_case_row").style.display], ["none", ""]);
   await change(sv("subtitles_language"), "en");
   check("the search finds the tab", w.searchMatches("s_subs_save").some((el) => el.closest("#p-subs")), true);
