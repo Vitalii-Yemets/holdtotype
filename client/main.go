@@ -7,6 +7,7 @@ import (
 	"holdtotype/internal/commands"
 	"holdtotype/internal/evqueue"
 	"holdtotype/internal/history"
+	"holdtotype/internal/keymatch"
 	"holdtotype/internal/livetail"
 	"holdtotype/internal/profiles"
 	"holdtotype/internal/relaunch"
@@ -48,12 +49,16 @@ const (
 	evCancel
 	evMicLost
 	evSilence
+	evArm
+	evDisarm
+	evRetract
 )
 
 type ptEvent struct {
 	kind    int
 	gen     int
 	profile string
+	into    string
 	cut     int
 	ep      *audiolevel.Endpoint
 }
@@ -125,6 +130,9 @@ type App struct {
 	subBusy    atomic.Bool
 	subKeyHeld bool
 	subEnding  []*subRun
+
+	armedRec *Recorder
+	downGen  int
 }
 
 func (a *App) liveStream(gen int, cfg *Config) {
@@ -849,8 +857,20 @@ func (a *App) startCore() {
 		return
 	}
 	hook, err := startHotkeyHook(buildCombos(a.cfg),
-		func(id string) { a.post(ptEvent{kind: evDown, profile: id}) },
-		func() { a.post(ptEvent{kind: evUp}) },
+		func(e hotkeyEvent) {
+			switch e.kind {
+			case keymatch.Arm:
+				a.post(ptEvent{kind: evArm, profile: e.id})
+			case keymatch.Down:
+				a.post(ptEvent{kind: evDown, profile: e.id})
+			case keymatch.Up:
+				a.post(ptEvent{kind: evUp})
+			case keymatch.Disarm:
+				a.post(ptEvent{kind: evDisarm, profile: e.id})
+			case keymatch.Retract:
+				a.post(ptEvent{kind: evRetract, profile: e.id, into: e.into})
+			}
+		},
 		func() bool {
 			if a.state.Load() == stIdle {
 				return false
@@ -1115,13 +1135,26 @@ func (a *App) worker() {
 				break
 			}
 			switch ev.kind {
+			case evArm:
+				a.handleArm(ev.profile)
+			case evDisarm:
+				a.disarmRec()
+			case evRetract:
+				a.handleRetract(ev.profile, ev.into)
 			case evDown:
 				if ev.profile == subtitlesComboID {
+					a.downGen = 0
 					a.subKeyHeld = true
 					a.subtitlesKey()
 					continue
 				}
+				before := a.gen
 				a.handleDown(ev.profile)
+				a.downGen = 0
+				if a.gen != before && a.state.Load() == stRecording {
+					a.downGen = a.gen
+				}
+				a.disarmRec()
 			case evUp:
 				if a.subKeyHeld {
 					a.subKeyHeld = false
@@ -1144,6 +1177,52 @@ func (a *App) worker() {
 			}
 		}
 	}
+}
+
+func (a *App) handleArm(profileID string) {
+	if profileID == subtitlesComboID || a.state.Load() != stIdle {
+		return
+	}
+	a.mu.Lock()
+	rec := a.rec
+	ok := a.enabled && a.ready && !a.capturing && rec != nil
+	a.mu.Unlock()
+	if !ok {
+		return
+	}
+	a.armedRec = rec
+	rec.Arm()
+}
+
+func (a *App) disarmRec() {
+	if a.armedRec == nil {
+		return
+	}
+	a.armedRec.Disarm()
+	a.armedRec = nil
+}
+
+func (a *App) handleRetract(id, into string) {
+	gen := a.downGen
+	a.downGen = 0
+	if a.state.Load() != stRecording || gen == 0 || gen != a.gen {
+		return
+	}
+	a.mu.Lock()
+	rec := a.rec
+	a.mu.Unlock()
+	rec.Stop()
+	a.stopSilenceWatch()
+	a.dropLiveSession()
+	overlayClearDeadline()
+	a.gen++
+	a.state.Store(stIdle)
+	overlayHide()
+	if a.sessionCfg != nil && a.sessionCfg.Beep {
+		procPlaySoundW.Call(0, 0, 0)
+	}
+	log.Printf("shortcut: the press grew into %s, the recording %s had started is dropped", into, id)
+	a.refreshIdleUI()
 }
 
 func (a *App) handleCancel() {

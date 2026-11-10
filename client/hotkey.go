@@ -5,15 +5,16 @@ import (
 
 	"holdtotype/internal/commands"
 	"holdtotype/internal/evqueue"
+	"holdtotype/internal/keymatch"
 
 	"fmt"
 	"runtime"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"syscall"
+	"time"
 	"unsafe"
 )
 
@@ -256,23 +257,31 @@ const vkUp = 0x26
 
 const vkDown = 0x28
 
+const vkMask = 0xE8
+
+const (
+	hotkeySettle = 200 * time.Millisecond
+	hotkeyGrow   = 1000 * time.Millisecond
+)
+
+type hotkeyEvent struct {
+	kind keymatch.Kind
+	id   string
+	into string
+}
+
 type hotkeyHook struct {
-	mu       sync.Mutex
-	combos   []comboDef
-	pressed  map[uint32]bool
-	activeID string
-	active   bool
-	armed    bool
-	escFree  bool
-	onDown   func(id string)
-	onUp     func()
-	onEsc    func() bool
-	capture  *captureSession
-	handle   uintptr
-	mouse    uintptr
-	q        *evqueue.Queue[func()]
-	typed    atomic.Uint64
-	clicked  atomic.Uint64
+	mu      sync.Mutex
+	m       *keymatch.Matcher
+	escFree bool
+	onEvent func(hotkeyEvent)
+	onEsc   func() bool
+	capture *captureSession
+	handle  uintptr
+	mouse   uintptr
+	q       *evqueue.Queue[func()]
+	typed   atomic.Uint64
+	clicked atomic.Uint64
 }
 
 func (h *hotkeyHook) Typed() uint64 {
@@ -319,13 +328,7 @@ type captureSession struct {
 
 func (h *hotkeyHook) StartCapture(onUpdate func(string), onDone func(string, bool)) {
 	h.mu.Lock()
-	var fire func()
-	if h.active {
-		h.active = false
-		h.activeID = ""
-		fire = h.onUp
-	}
-	h.pressed = make(map[uint32]bool)
+	r := h.m.Reset()
 	h.capture = &captureSession{
 		pressed:  make(map[uint32]bool),
 		union:    make(map[uint32]bool),
@@ -333,15 +336,13 @@ func (h *hotkeyHook) StartCapture(onUpdate func(string), onDone func(string, boo
 		onDone:   onDone,
 	}
 	h.mu.Unlock()
-	h.post(fire)
+	h.deliver(r)
 }
 
 func (h *hotkeyHook) CancelCapture() {
 	h.mu.Lock()
 	h.capture = nil
-	h.pressed = make(map[uint32]bool)
-	h.active = false
-	h.activeID = ""
+	h.m.Reset()
 	h.mu.Unlock()
 }
 
@@ -364,9 +365,7 @@ func (h *hotkeyHook) captureEvent(vk uint32, down bool) bool {
 		_, escOnly := c.union[0x1B]
 		ok := combo != "" && !(escOnly && len(c.union) == 1)
 		h.capture = nil
-		h.pressed = make(map[uint32]bool)
-		h.active = false
-		h.activeID = ""
+		h.m.Reset()
 		fire = func() { c.onDone(combo, ok) }
 	} else if down {
 		live := comboString(c.union)
@@ -380,12 +379,10 @@ func (h *hotkeyHook) captureEvent(vk uint32, down bool) bool {
 	return true
 }
 
-func startHotkeyHook(combos []comboDef, onDown func(id string), onUp func(), onEsc func() bool) (*hotkeyHook, error) {
+func startHotkeyHook(combos []comboDef, onEvent func(hotkeyEvent), onEsc func() bool) (*hotkeyHook, error) {
 	h := &hotkeyHook{
-		pressed: make(map[uint32]bool),
-		armed:   true,
-		onDown:  onDown,
-		onUp:    onUp,
+		m:       keymatch.New(hotkeySettle, hotkeyGrow),
+		onEvent: onEvent,
 		onEsc:   onEsc,
 		q:       evqueue.New[func()](256),
 	}
@@ -434,15 +431,14 @@ func (h *hotkeyHook) release() {
 	}
 }
 
-func (h *hotkeyHook) setCombosLocked(combos []comboDef) {
-	sorted := make([]comboDef, len(combos))
-	copy(sorted, combos)
-	sort.SliceStable(sorted, func(i, j int) bool {
-		return len(sorted[i].groups) > len(sorted[j].groups)
-	})
-	h.combos = sorted
+func (h *hotkeyHook) setCombosLocked(combos []comboDef) keymatch.Result {
+	list := make([]keymatch.Combo, 0, len(combos))
+	for _, c := range combos {
+		list = append(list, keymatch.Combo{ID: c.id, Groups: c.groups})
+	}
+	r := h.m.SetCombos(list)
 	h.escFree = true
-	for _, c := range sorted {
+	for _, c := range combos {
 		for _, group := range c.groups {
 			for _, vk := range group {
 				if vk == vkEscape {
@@ -451,6 +447,7 @@ func (h *hotkeyHook) setCombosLocked(combos []comboDef) {
 			}
 		}
 	}
+	return r
 }
 
 func (h *hotkeyHook) escCancels() bool {
@@ -461,53 +458,51 @@ func (h *hotkeyHook) escCancels() bool {
 
 func (h *hotkeyHook) SetCombos(combos []comboDef) {
 	h.mu.Lock()
-	h.setCombosLocked(combos)
-	var fire func()
-	if h.active && h.matchedCombo() == "" {
-		h.active = false
-		h.activeID = ""
-		h.armed = false
-		fire = h.onUp
-	}
+	r := h.setCombosLocked(combos)
 	h.mu.Unlock()
-	h.post(fire)
+	h.deliver(r)
 }
 
-func (h *hotkeyHook) comboPressed(id string) bool {
-	for _, c := range h.combos {
-		if c.id == id {
-			return h.groupsPressed(c.groups)
-		}
+func (h *hotkeyHook) deliver(r keymatch.Result) {
+	for _, vk := range r.Forgotten {
+		log.Printf("hotkey: key 0x%02X was released unseen, forgotten", vk)
 	}
-	return false
-}
-
-func (h *hotkeyHook) matchedCombo() string {
-	for _, c := range h.combos {
-		if h.groupsPressed(c.groups) {
-			return c.id
-		}
-	}
-	return ""
-}
-
-func (h *hotkeyHook) groupsPressed(groups [][]uint32) bool {
-	if len(groups) == 0 {
-		return false
-	}
-	for _, group := range groups {
-		ok := false
-		for _, vk := range group {
-			if h.pressed[vk] {
-				ok = true
-				break
+	for i, e := range r.Events {
+		ev := hotkeyEvent{kind: e.Kind, id: e.ID}
+		if (e.Kind == keymatch.Disarm || e.Kind == keymatch.Retract) && i+1 < len(r.Events) {
+			if next := r.Events[i+1]; next.Kind == keymatch.Arm || next.Kind == keymatch.Down {
+				ev.into = next.ID
 			}
 		}
-		if !ok {
-			return false
+		if ev.kind == keymatch.Disarm && ev.into != "" {
+			log.Printf("shortcut: the press grew into %s before %s was started", ev.into, ev.id)
+		}
+		if on := h.onEvent; on != nil {
+			h.post(func() { on(ev) })
 		}
 	}
-	return true
+	if r.Mask {
+		h.post(func() {
+			if err := sendInputs([]inputEvent{keyEvent(vkMask, false), keyEvent(vkMask, true)}); err != nil {
+				log.Printf("hotkey: the mask key was not sent: %v", err)
+			}
+		})
+	}
+	if r.Wake > 0 {
+		time.AfterFunc(r.Wake, h.tick)
+	}
+}
+
+func (h *hotkeyHook) tick() {
+	h.mu.Lock()
+	r := h.m.Tick(time.Now())
+	h.mu.Unlock()
+	h.deliver(r)
+}
+
+func keyHeld(vk uint32) bool {
+	s, _, _ := procGetAsyncKeyState.Call(uintptr(vk))
+	return s&0x8000 != 0
 }
 
 func (h *hotkeyHook) hookProc(nCode, wParam, lParam uintptr) uintptr {
@@ -531,7 +526,9 @@ func (h *hotkeyHook) hookProc(nCode, wParam, lParam uintptr) uintptr {
 				if down && tmActive() && tmKey(k.VkCode) {
 					return 1
 				}
-				h.keyEvent(k.VkCode, down)
+				if h.keyEvent(k.VkCode, down) {
+					return 1
+				}
 			}
 		}
 	}
@@ -553,60 +550,13 @@ func (h *hotkeyHook) mouseProc(nCode, wParam, lParam uintptr) uintptr {
 	return r
 }
 
-func (h *hotkeyHook) keyEvent(vk uint32, down bool) {
+func (h *hotkeyHook) keyEvent(vk uint32, down bool) bool {
 	h.mu.Lock()
-	if down {
-		h.pressed[vk] = true
-	} else {
-		delete(h.pressed, vk)
-	}
-	if commands.CountsAsTyping(vk, down, h.matchedCombo() != "") {
+	r := h.m.Key(vk, down, time.Now(), keyHeld)
+	if commands.CountsAsTyping(vk, down, h.m.Matched()) {
 		h.typed.Add(1)
 	}
-	var fire func()
-	if h.active {
-		if !h.comboPressed(h.activeID) {
-			h.active = false
-			h.activeID = ""
-			h.armed = false
-			fire = h.onUp
-		}
-	}
-	if !h.active && fire == nil {
-		if h.matchedCombo() != "" {
-			h.dropReleased(vk)
-		}
-		if !h.armed {
-			if h.matchedCombo() == "" {
-				h.armed = true
-			}
-		} else if id := h.matchedCombo(); id != "" {
-			h.active = true
-			h.activeID = id
-			down := h.onDown
-			fire = func() { down(id) }
-		}
-	}
 	h.mu.Unlock()
-	h.post(fire)
-}
-
-func isModifier(vk uint32) bool {
-	switch vk {
-	case 0x10, 0x11, 0x12, 0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0x5B, 0x5C:
-		return true
-	}
-	return false
-}
-
-func (h *hotkeyHook) dropReleased(current uint32) {
-	for vk := range h.pressed {
-		if vk == current || !isModifier(vk) {
-			continue
-		}
-		if s, _, _ := procGetAsyncKeyState.Call(uintptr(vk)); s&0x8000 == 0 {
-			delete(h.pressed, vk)
-			log.Printf("hotkey: key 0x%02X was released unseen, forgotten", vk)
-		}
-	}
+	h.deliver(r)
+	return r.Swallow
 }

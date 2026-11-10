@@ -22,6 +22,12 @@ const defaultMaxSeconds = 600
 const monitorLinger = 2 * time.Second
 const micSilenceLimit = 1500 * time.Millisecond
 
+const (
+	preBufferMax = sampleRate * 2
+	armLimit     = 2 * time.Second
+	disarmLinger = 400 * time.Millisecond
+)
+
 type Recorder struct {
 	ctx    *malgo.AllocatedContext
 	device *malgo.Device
@@ -37,6 +43,9 @@ type Recorder struct {
 	started   bool
 	monitor   bool
 	monUntil  time.Time
+	armed     bool
+	armedAt   time.Time
+	pre       []byte
 	deviceID  string
 
 	done chan struct{}
@@ -146,6 +155,11 @@ func (r *Recorder) openDevice(deviceID string) error {
 				} else {
 					r.overflow = true
 				}
+			} else if r.armed {
+				r.pre = append(r.pre, in...)
+				if over := len(r.pre) - preBufferMax; over > 0 {
+					r.pre = r.pre[over:]
+				}
 			}
 			r.mu.Unlock()
 		},
@@ -200,6 +214,8 @@ func (r *Recorder) SetDevice(deviceID string) error {
 	wasMonitoring := r.monitor
 	if !same && !busy {
 		r.monitor = false
+		r.armed = false
+		r.pre = nil
 	}
 	r.mu.Unlock()
 	if same {
@@ -264,7 +280,7 @@ func (r *Recorder) stopDevice() {
 	r.devMu.Lock()
 	defer r.devMu.Unlock()
 	r.mu.Lock()
-	if !r.started || r.recording || r.monitor {
+	if !r.started || r.recording || r.monitor || r.armed {
 		r.mu.Unlock()
 		return
 	}
@@ -287,6 +303,13 @@ func (r *Recorder) Start(maxSeconds int) error {
 		maxSeconds = defaultMaxSeconds
 	}
 	r.buf = nil
+	kept := -1
+	if r.armed {
+		r.buf = r.pre
+		kept = len(r.pre)
+		r.armed = false
+		r.pre = nil
+	}
 	r.overflow = false
 	r.maxBytes = sampleRate * 2 * maxSeconds
 	r.recording = true
@@ -295,6 +318,9 @@ func (r *Recorder) Start(maxSeconds int) error {
 	r.lastData.Store(time.Now().UnixNano())
 	r.mu.Unlock()
 	r.resetPeak()
+	if kept >= 0 {
+		log.Printf("recording: %d ms kept from the moment of the press", kept/(sampleRate*2/1000))
+	}
 
 	if err := r.startDevice(); err != nil {
 		r.mu.Lock()
@@ -333,6 +359,41 @@ func (r *Recorder) Stop() []byte {
 	return pcm
 }
 
+func (r *Recorder) Arm() {
+	r.mu.Lock()
+	if r.recording {
+		r.mu.Unlock()
+		return
+	}
+	r.armed = true
+	r.armedAt = time.Now()
+	r.pre = nil
+	need := !r.started
+	r.mu.Unlock()
+	if !need {
+		return
+	}
+	if err := r.startDevice(); err != nil {
+		log.Printf("microphone did not open at the press: %v", err)
+		r.mu.Lock()
+		r.armed = false
+		r.pre = nil
+		r.mu.Unlock()
+	}
+}
+
+func (r *Recorder) Disarm() {
+	r.mu.Lock()
+	if !r.armed {
+		r.mu.Unlock()
+		return
+	}
+	r.armed = false
+	r.pre = nil
+	r.mu.Unlock()
+	time.AfterFunc(disarmLinger, r.stopDevice)
+}
+
 func (r *Recorder) MonitorPing() {
 	r.mu.Lock()
 	r.monitor = true
@@ -364,9 +425,17 @@ func (r *Recorder) watchMonitor() {
 		if expired {
 			r.monitor = false
 		}
+		stale := r.armed && time.Since(r.armedAt) > armLimit
+		if stale {
+			r.armed = false
+			r.pre = nil
+		}
 		recording, paused := r.recording, r.paused
 		r.mu.Unlock()
-		if expired {
+		if stale {
+			log.Printf("microphone: the press did not become a recording within 2 s, closed")
+		}
+		if expired || stale {
 			r.stopDevice()
 		}
 		if recording && !paused && !r.lost.Load() {
@@ -390,6 +459,8 @@ func (r *Recorder) Close() {
 	r.device = nil
 	r.recording = false
 	r.monitor = false
+	r.armed = false
+	r.pre = nil
 	r.started = false
 	r.mu.Unlock()
 	if dev != nil {
