@@ -15,6 +15,7 @@ import (
 	"holdtotype/internal/appver"
 
 	"holdtotype/internal/appid"
+	"holdtotype/internal/relaunch"
 )
 
 const updateLatestURL = appid.LatestAPI
@@ -125,12 +126,16 @@ func downloadSetup(url, digest string, progress func(pct int)) (string, error) {
 	return dst, nil
 }
 
-func launchUpdater(setupPath string) error {
+var updatedNotice relaunch.Notice
+
+func launchUpdater(setupPath, tab string) error {
 	exe, err := os.Executable()
 	if err != nil {
 		return err
 	}
-	cmd := exec.Command(setupPath, "-update", "-dir", filepath.Dir(exe))
+	args := relaunch.SetupArgs(filepath.Dir(exe), tab)
+	log.Printf("update: starting the installer with %q", args)
+	cmd := exec.Command(setupPath, args...)
 	return cmd.Start()
 }
 

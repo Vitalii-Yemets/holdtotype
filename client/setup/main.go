@@ -15,6 +15,7 @@ import (
 
 	"holdtotype/internal/appid"
 	"holdtotype/internal/plexfont"
+	"holdtotype/internal/relaunch"
 	"holdtotype/internal/theme"
 )
 
@@ -369,7 +370,7 @@ func main() {
 			os.Exit(1)
 		}
 		exe := filepath.Join(dir, exeName)
-		cmd := exec.Command(exe)
+		cmd := exec.Command(exe, relaunch.AppArgs(relaunch.TabArg(args))...)
 		cmd.Dir = dir
 		_ = cmd.Start()
 		return

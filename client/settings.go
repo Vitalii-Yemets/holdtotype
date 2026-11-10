@@ -444,7 +444,7 @@ func (a *App) settingsThread(tab string, attempt int) {
 			out, _ := json.Marshal(map[string]any{"current": appVersion, "latest": tag, "newer": newer})
 			return string(out)
 		})
-		_ = w.Bind("appDoUpdate", func() {
+		_ = w.Bind("appDoUpdate", func(tab string) {
 			a.mu.Lock()
 			uurl, udig := a.updURL, a.updDigest
 			a.mu.Unlock()
@@ -456,7 +456,7 @@ func (a *App) settingsThread(tab string, attempt int) {
 					w.Dispatch(func() { w.Eval(fmt.Sprintf("updProgress(%d)", pct)) })
 				})
 				if err == nil {
-					err = launchUpdater(path)
+					err = launchUpdater(path, tab)
 				}
 				if err != nil {
 					enc, _ := json.Marshal(humanError(err))
@@ -1101,6 +1101,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"profiles":                cfg.Profiles,
 		"_version":                appVersion,
 		"_tab":                    tab,
+		"_updated":                updatedNotice.Take(),
 		"_cpus":                   runtime.NumCPU(),
 		"_wizard":                 !cfg.WizardDone,
 		"_rec_models":             recommendedModels(),
@@ -1222,6 +1223,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"subsplacedone": "S_SUBS_PLACE_DONE",
 		"subson": "S_SUBS_ON", "subsherohint": "S_SUBS_HERO_HINT", "subsherolive": "S_SUBS_HERO_LIVE", "subsherophrases": "S_SUBS_HERO_PHRASES",
 		"subsherostart": "S_SUBS_HERO_START", "subsherostop": "S_SUBS_HERO_STOP",
+		"updatedto": "S_UPDATED_TO",
 	} {
 		lMap[jsKey] = str(sKey)
 	}
@@ -3682,7 +3684,7 @@ function updShow(latest, newer){
     const b = document.createElement("button");
     b.className = "mini";
     b.textContent = L.updgo;
-    b.onclick = ()=>{ out.textContent = L.upddl; appDoUpdate(); };
+    b.onclick = ()=>{ out.textContent = L.upddl; appDoUpdate(curTab); };
     out.appendChild(b);
   } else {
     out.textContent = L.updnone;
@@ -4489,7 +4491,7 @@ function initStateScreen(){
     if(updBtn.dataset.busy) return;
     if(updBtn.dataset.mode === "update"){
       stateUpdNote(L.stupddl, "");
-      appDoUpdate();
+      appDoUpdate(curTab);
       return;
     }
     updBtn.dataset.busy = "1";
@@ -4834,14 +4836,14 @@ function askConfirm(text, okText, cancelText, title){
     no.focus();
   });
 }
-function toast(msg, severity){
+function toast(msg, severity, ms){
   if(!msg) return;
   const t = document.getElementById("st_saved");
   if(!t) return;
   t.textContent = msg;
   t.className = "stsaved" + (severity === "error" ? " bad" : severity === "warn" ? " warn" : "");
   clearTimeout(toast._t);
-  toast._t = setTimeout(()=>{ t.textContent = ""; t.className = "stsaved"; }, (severity === "error" || severity === "warn") ? 6000 : 2200);
+  toast._t = setTimeout(()=>{ t.textContent = ""; t.className = "stsaved"; }, ms || ((severity === "error" || severity === "warn") ? 6000 : 2200));
 }
 
 const numSels = ["threads","min_record_ms","max_record_seconds","silence_stop_ms","translate_ask_seconds","paste_delay_ms"];
@@ -6532,6 +6534,7 @@ load();
 const tabAlias = {general:"state", rec:"models", proc:"text", server:"system", about:"about", state:"state", dictation:"dictation", history:"history", mic:"mic", models:"models", text:"text", translate:"dictation", system:"system", post:"post", subs:"subs", subtitles:"subs", help:"help", contacts:"contacts"};
 show(tabAlias[CFG._tab] || "state");
 if(CFG._wizard || CFG._tab === "wizard") wizStart();
+if(CFG._updated) toast(L.updatedto.replace("%s", CFG._updated), "ok", 8000);
 setTimeout(()=>{ if(window.appReady) appReady(); }, 400);
 </script>
 </body></html>`

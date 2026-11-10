@@ -9,6 +9,7 @@ import (
 	"holdtotype/internal/history"
 	"holdtotype/internal/livetail"
 	"holdtotype/internal/profiles"
+	"holdtotype/internal/relaunch"
 	"holdtotype/internal/replace"
 	"holdtotype/internal/segments"
 	"holdtotype/internal/textshape"
@@ -764,6 +765,10 @@ func main() {
 	go cleanupStaleParts()
 	go app.sweepIdleEngine()
 	args := os.Args[1:]
+	if relaunch.Updated(args) {
+		log.Printf("started after an update to %s", appVersion)
+		updatedNotice.Set(appVersion)
+	}
 	for i, arg := range args {
 		if arg == "-settings" {
 			tab := "proc"

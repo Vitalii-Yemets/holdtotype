@@ -158,10 +158,12 @@ const dom = new JSDOM(html, {
       "appLLMDlFile", "appLLMTest", "appHFPage", "appHFHome", "appRepoLink",
       "appAuthorLink", "appReload", "appDepLink",
       "appPreviewSound", "appMin", "appClose",
-      "appDoUpdate", "appReady", "appJSError",
+      "appReady", "appJSError",
     ]) {
       window[name] = () => {};
     }
+    window.updTabs = [];
+    window.appDoUpdate = (tab) => { window.updTabs.push(tab); };
     window.widthCalls = [];
     window.appWindowWidth = async (w) => { window.widthCalls.push(w); return JSON.stringify({ prev: 700, width: w }); };
     window.mailOpens = 0;
@@ -276,6 +278,7 @@ function check(name, actual, expected) {
   await sleep(500);
 
   check("page script executed", d.getElementById("ver").textContent, "0.0.0-test");
+  check("an ordinary start says nothing about an update", d.getElementById("st_saved").textContent.includes("Updated"), false);
 
   const tab = (p) => d.querySelector(`.nav[data-p="${p}"]`).click();
   const shown = (p) => d.getElementById(`p-${p}`).classList.contains("active");
@@ -1793,6 +1796,33 @@ function check(name, actual, expected) {
   postSwitch.checked = true; postSwitch.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(400);
   await w.refreshState(); await sleep(60);
   check("and on again after the next one", [postCard().querySelector(".sthead .stbdg").textContent, postRow()], ["on", ["keep", true]]);
+
+  tab("about"); await sleep(60);
+  w.updShow("9.9.9", true);
+  d.querySelector("#upd_out button").click(); await sleep(30);
+  check("the update button on About tells the app which tab it was pressed on", w.updTabs.slice(-1), ["about"]);
+  tab("state"); await sleep(60);
+  sv("state_upd_btn").dataset.mode = "update";
+  sv("state_upd_btn").click(); await sleep(30);
+  check("and the one on the Status tab does too", w.updTabs.slice(-1), ["state"]);
+
+  const appFns = Object.keys(w).filter((k) => /^app[A-Z]/.test(k));
+  const updatedHtml = html.replace('"_tab":"general"', '"_tab":"post","_updated":"9.9.9"');
+  check("the page for an updated start is built", updatedHtml !== html, true);
+  const dom2 = new JSDOM(updatedHtml, { runScripts: "dangerously", beforeParse(win) {
+    for (const k of appFns) win[k] = w[k];
+    win.appState = w.appState;
+  } });
+  const errors2 = [];
+  dom2.window.addEventListener("error", (e) => errors2.push(e.message));
+  await sleep(600);
+  const d2 = dom2.window.document;
+  check("after an update the window opens on the tab it was closed on", d2.getElementById("p-post").classList.contains("active"), true);
+  check("and says once that the program was updated, and to which version", [d2.getElementById("st_saved").textContent, d2.getElementById("st_saved").className], ["Updated to version 9.9.9", "stsaved"]);
+  await sleep(2600);
+  check("the notice stays longer than an ordinary one", d2.getElementById("st_saved").textContent, "Updated to version 9.9.9");
+  check("the updated page has no errors", errors2, []);
+  dom2.window.close();
 
   check("no page errors", errors, []);
 
