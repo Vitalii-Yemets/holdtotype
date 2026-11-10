@@ -47,5 +47,11 @@
   "llm_port": 8911,
   "llm_exe": "llama-server.exe",
   "llm_model": "models/qwen2.5-1.5b-instruct-q4_k_m.gguf",
+  "subtitles_language": "auto",
+  "subtitles_hotkey": "",
+  "subtitles_save": true,
+  "subtitles_lines": 3,
+  "subtitles_size": "m",
+  "subtitles_custom": {},
   "wizard_done": false
 }

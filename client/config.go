@@ -149,6 +149,13 @@ type Config struct {
 	Commands            []commands.Command `json:"commands"`
 	WizardDone          bool               `json:"wizard_done"`
 
+	SubtitlesLanguage string                  `json:"subtitles_language"`
+	SubtitlesHotkey   string                  `json:"subtitles_hotkey"`
+	SubtitlesSave     bool                    `json:"subtitles_save"`
+	SubtitlesLines    int                     `json:"subtitles_lines"`
+	SubtitlesSize     string                  `json:"subtitles_size"`
+	SubtitlesXY       map[string]ovplace.Frac `json:"subtitles_custom"`
+
 	CanaryTarget string `json:"-"`
 }
 
@@ -241,6 +248,11 @@ func defaultConfig() *Config {
 		HistoryDays:      history.DefaultKeepDays,
 		HistoryKeepMin:   history.DefaultKeepMinutes,
 		HistoryMax:       history.DefaultMax,
+
+		SubtitlesLanguage: "auto",
+		SubtitlesSave:     true,
+		SubtitlesLines:    defaultSubtitlesLines,
+		SubtitlesSize:     "m",
 	}
 }
 
@@ -390,6 +402,9 @@ func loadConfig(path string) (*Config, error) {
 	if kept, clash := hotkeys.DropClashing(cfg.LangHotkeys, cfg.Hotkey, cfg.TranslateHotkey); len(clash) > 0 {
 		log.Printf("language shortcuts: %s repeat another shortcut and are dropped", strings.Join(clash, ", "))
 		cfg.LangHotkeys = kept
+		migrated = true
+	}
+	if cleanSubtitles(cfg) {
 		migrated = true
 	}
 	if !firstRun && fileVer < 6 && cfg.LangModels["auto"] == "" {
@@ -655,6 +670,53 @@ func validTranslateLang(l string) bool {
 
 func validPresetLang(code string) bool {
 	return code == "auto" || validTranslateLang(code)
+}
+
+const (
+	defaultSubtitlesLines = 3
+	minSubtitlesLines     = 2
+	maxSubtitlesLines     = 5
+)
+
+func validSubtitlesSize(v string) bool { return v == "s" || v == "m" || v == "l" }
+
+func subtitlesHotkeyClash(cfg *Config) bool {
+	sub := strings.ToLower(strings.TrimSpace(cfg.SubtitlesHotkey))
+	if sub == "" {
+		return false
+	}
+	for _, c := range hotkeys.WithPerLang([]string{cfg.Hotkey, cfg.TranslateHotkey}, cfg.LangHotkeys) {
+		if strings.ToLower(strings.TrimSpace(c)) == sub {
+			return true
+		}
+	}
+	return false
+}
+
+func cleanSubtitles(cfg *Config) bool {
+	changed := false
+	if !validPresetLang(cfg.SubtitlesLanguage) {
+		cfg.SubtitlesLanguage = "auto"
+	}
+	if cfg.SubtitlesLines < minSubtitlesLines || cfg.SubtitlesLines > maxSubtitlesLines {
+		cfg.SubtitlesLines = defaultSubtitlesLines
+	}
+	if !validSubtitlesSize(cfg.SubtitlesSize) {
+		cfg.SubtitlesSize = "m"
+	}
+	cfg.SubtitlesXY = ovplace.CleanCustom(cfg.SubtitlesXY)
+	cfg.SubtitlesHotkey = strings.TrimSpace(cfg.SubtitlesHotkey)
+	if cfg.SubtitlesHotkey != "" && !hotkeyParses(cfg.SubtitlesHotkey) {
+		log.Printf("subtitles: the shortcut %q cannot be read and is dropped", cfg.SubtitlesHotkey)
+		cfg.SubtitlesHotkey = ""
+		changed = true
+	}
+	if subtitlesHotkeyClash(cfg) {
+		log.Printf("subtitles: the shortcut %s repeats another shortcut and is dropped", cfg.SubtitlesHotkey)
+		cfg.SubtitlesHotkey = ""
+		changed = true
+	}
+	return changed
 }
 
 func hotkeyParses(combo string) bool {
