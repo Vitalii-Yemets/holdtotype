@@ -170,31 +170,3 @@ func TestTranscriptFormatting(t *testing.T) {
 		t.Fatalf("entry %q", got)
 	}
 }
-
-func TestBacklogDropsTheOldest(t *testing.T) {
-	b := NewBacklog(3)
-	for i := 0; i < 3; i++ {
-		if d := b.Push(Phrase{Start: int64(i)}); len(d) != 0 {
-			t.Fatalf("dropped while not full: %d", len(d))
-		}
-	}
-	d := b.Push(Phrase{Start: 3})
-	if len(d) != 1 || d[0].Start != 0 {
-		t.Fatalf("dropped %+v", d)
-	}
-	d = b.PushFront(Phrase{Start: 9})
-	if len(d) != 1 || d[0].Start != 1 {
-		t.Fatalf("push front dropped %+v", d)
-	}
-	var order []int64
-	for {
-		p, ok := b.Pop()
-		if !ok {
-			break
-		}
-		order = append(order, p.Start)
-	}
-	if len(order) != 3 || order[0] != 9 || order[1] != 2 || order[2] != 3 {
-		t.Fatalf("order %v", order)
-	}
-}

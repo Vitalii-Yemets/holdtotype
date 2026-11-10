@@ -1,53 +1,80 @@
 package subtitles
 
+import "time"
+
+const (
+	BacklogLimit = 60 * time.Second
+	JoinLimit    = 25 * time.Second
+)
+
 type Backlog struct {
+	rate  int
 	max   int
+	bytes int
 	items []Phrase
 }
 
-func NewBacklog(max int) *Backlog {
-	if max < 1 {
-		max = 1
+func NewBacklog(rate int, limit time.Duration) *Backlog {
+	if rate <= 0 {
+		rate = 16000
 	}
-	return &Backlog{max: max}
+	return &Backlog{rate: rate, max: durationBytes(limit, rate)}
+}
+
+func durationBytes(d time.Duration, rate int) int {
+	return int(int64(d)*int64(rate)/int64(time.Second)) * 2
 }
 
 func (b *Backlog) Push(p Phrase) []Phrase {
 	b.items = append(b.items, p)
-	over := len(b.items) - b.max
-	if over <= 0 {
-		return nil
+	b.bytes += len(p.PCM)
+	var dropped []Phrase
+	for b.bytes > b.max && len(b.items) > 1 {
+		dropped = append(dropped, b.items[0])
+		b.bytes -= len(b.items[0].PCM)
+		b.items[0] = Phrase{}
+		b.items = b.items[1:]
 	}
-	dropped := append([]Phrase(nil), b.items[:over]...)
-	n := copy(b.items, b.items[over:])
-	for i := n; i < len(b.items); i++ {
+	return dropped
+}
+
+func (b *Backlog) Take(limit time.Duration) (Phrase, int) {
+	if len(b.items) == 0 {
+		return Phrase{}, 0
+	}
+	room := durationBytes(limit, b.rate)
+	n, size := 1, len(b.items[0].PCM)
+	for n < len(b.items) && size+len(b.items[n].PCM) <= room {
+		size += len(b.items[n].PCM)
+		n++
+	}
+	first := b.items[0]
+	out := Phrase{Start: first.Start, At: first.At, Cut: b.items[n-1].Cut}
+	if n == 1 {
+		out.PCM = first.PCM
+		out.Speech = first.Speech
+	} else {
+		out.PCM = make([]byte, 0, size)
+		for _, p := range b.items[:n] {
+			out.PCM = append(out.PCM, p.PCM...)
+			out.Speech += p.Speech
+		}
+	}
+	for i := 0; i < n; i++ {
 		b.items[i] = Phrase{}
 	}
-	b.items = b.items[:n]
-	return dropped
-}
-
-func (b *Backlog) PushFront(p Phrase) []Phrase {
-	b.items = append([]Phrase{p}, b.items...)
-	over := len(b.items) - b.max
-	if over <= 0 {
-		return nil
-	}
-	dropped := append([]Phrase(nil), b.items[1:1+over]...)
-	b.items = append(b.items[:1], b.items[1+over:]...)
-	return dropped
-}
-
-func (b *Backlog) Pop() (Phrase, bool) {
-	if len(b.items) == 0 {
-		return Phrase{}, false
-	}
-	p := b.items[0]
-	b.items[0] = Phrase{}
-	b.items = b.items[1:]
-	return p, true
+	b.items = b.items[n:]
+	b.bytes -= size
+	return out, n
 }
 
 func (b *Backlog) Len() int { return len(b.items) }
 
-func (b *Backlog) Clear() { b.items = nil }
+func (b *Backlog) Waiting() time.Duration {
+	return SamplesDuration(int64(b.bytes/2), b.rate)
+}
+
+func (b *Backlog) Clear() {
+	b.items = nil
+	b.bytes = 0
+}

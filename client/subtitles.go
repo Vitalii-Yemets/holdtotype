@@ -24,7 +24,6 @@ const (
 	modeLive    = "live"
 	modePhrases = "phrases"
 
-	subQueueMax      = 3
 	subPrimaryWait   = 30 * time.Second
 	subDictationWait = 20 * time.Second
 	subPhraseTimeout = 2 * time.Minute
@@ -460,7 +459,7 @@ func newSubPipe(r *subRun, t *subTarget) *subPipe {
 		p.gate = subtitles.NewGate(sampleRate)
 	} else {
 		p.seg = subtitles.NewSegmenter(sampleRate)
-		p.q = subtitles.NewBacklog(subQueueMax)
+		p.q = subtitles.NewBacklog(sampleRate, subtitles.BacklogLimit)
 	}
 	p.wg.Add(2)
 	go func() {
@@ -694,9 +693,12 @@ func (p *subPipe) enqueue(ph subtitles.Phrase) {
 func (p *subPipe) nextPhrase() (subtitles.Phrase, bool) {
 	for {
 		p.qmu.Lock()
-		ph, ok := p.q.Pop()
+		ph, n := p.q.Take(subtitles.JoinLimit)
 		p.qmu.Unlock()
-		if ok {
+		if n > 1 {
+			log.Printf("subtitles: %d waiting phrases go as one request (%.1f s)", n, ph.Duration(sampleRate).Seconds())
+		}
+		if n > 0 {
 			return ph, true
 		}
 		if p.draining.Load() {
