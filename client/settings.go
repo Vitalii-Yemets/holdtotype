@@ -1220,6 +1220,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"subsrestart": "S_SUBS_RESTARTING", "subsstart": "S_SUBS_START", "subsstop": "S_SUBS_STOP",
 		"subsmlive": "S_SUBS_M_LIVE", "subsmphrases": "S_SUBS_M_PHRASES", "subsmabsent": "S_SUBS_M_ABSENT", "subsmwhisper": "S_SUBS_M_WHISPER",
 		"subsplacedone": "S_SUBS_PLACE_DONE",
+		"subson": "S_SUBS_ON", "subsherohint": "S_SUBS_HERO_HINT", "subsherolive": "S_SUBS_HERO_LIVE", "subsherophrases": "S_SUBS_HERO_PHRASES",
 	} {
 		lMap[jsKey] = str(sKey)
 	}
@@ -1396,6 +1397,7 @@ button.btn.ghost:hover{color:var(--green);border-color:var(--dim);background:non
 .sthero>.mini{align-self:center}
 .sthero.warn{border-color:var(--amber)}
 .sthero.bad{border-color:var(--bad)}
+.sthero+.sthero{margin-top:12px}
 .sthero.bad .sthbig{color:var(--bad);text-shadow:var(--badglow)}
 .sthero.bad .sthsub{color:var(--bad)}
 .sthtxt{flex:1;min-width:0}
@@ -2061,6 +2063,18 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
   </div>
   <button type="button" class="mini" id="state_enable" style="display:none">{{S_ST_ENABLE}}</button>
   <button type="button" class="mini danger" id="state_srv_go" style="display:none">{{S_SRV_DOWN_GO}}</button>
+ </div>
+ <div class="sthero" id="subs_hero" data-phase="off">
+  <i class="led" id="subs_hero_led"></i>
+  <div class="sthtxt">
+   <div class="sthbig" id="subs_hero_title">{{S_SUBS_OFF}}</div>
+   <div class="sthsub" id="subs_hero_sub">{{S_SUBS_HERO_HINT}}</div>
+  </div>
+  <div class="stkeys" id="subs_hero_keys">
+   <span class="stcombo" id="subs_hero_combo" style="display:none"></span>
+   <button type="button" class="mini small" id="subs_hero_go">{{S_SUBS_START}}</button>
+   <button type="button" class="iconbtn stgo" id="subs_hero_goto" data-goto="subs" title="{{S_ST_GOTO}}">&#8599;</button>
+  </div>
  </div>
  <div class="stalerts" id="state_alerts"></div>
  <div class="stplate stusage" id="state_usage"></div>
@@ -3842,6 +3856,55 @@ function paintSubsKey(){
   const clear = subsEl("subs_key_clear");
   if(btn) btn.textContent = subsKey || L.langkeyset;
   if(clear) clear.style.display = subsKey ? "" : "none";
+  paintSubsHeroKey();
+}
+function paintSubsHeroKey(){
+  const box = subsEl("subs_hero_combo");
+  if(!box) return;
+  if(box.dataset.combo !== subsKey){
+    box.dataset.combo = subsKey;
+    box.innerHTML = "";
+    subsKey.split("+").filter(Boolean).forEach((part, idx)=>{
+      if(idx){
+        const plus = document.createElement("span");
+        plus.className = "stplus";
+        plus.textContent = "+";
+        box.appendChild(plus);
+      }
+      const key = document.createElement("span");
+      key.className = "herokey";
+      key.textContent = part.trim();
+      box.appendChild(key);
+    });
+  }
+  box.style.display = subsKey ? "" : "none";
+}
+function renderSubsHero(s){
+  const box = subsEl("subs_hero");
+  if(!box) return;
+  const st = (s && s.subtitles) || {phase: "off"};
+  const phase = st.phase || "off";
+  const busy = phase === "loading" || phase === "restarting";
+  box.dataset.phase = phase;
+  const led = subsEl("subs_hero_led");
+  if(led){ led.classList.toggle("on", phase === "listening"); led.classList.toggle("warn", busy); }
+  let title = L.subsoff;
+  if(phase === "loading") title = L.subsloading.replace("%s", st.model || "");
+  else if(phase === "restarting") title = L.subsrestart;
+  else if(phase === "listening") title = L.subson;
+  const sub = phase === "off" ? L.subsherohint : (st.mode === "live" ? L.subsherolive : L.subsherophrases).replace("%s", st.model || "");
+  const t = subsEl("subs_hero_title");
+  if(t) t.textContent = title;
+  const h = subsEl("subs_hero_sub");
+  if(h) h.textContent = sub;
+  const go = subsEl("subs_hero_go");
+  if(go) go.textContent = phase === "off" ? L.subsstart : L.subsstop;
+  paintSubsHeroKey();
+}
+async function subsToggle(btn){
+  btn.disabled = true;
+  await appSubtitles(subsRunning ? "stop" : "start");
+  setTimeout(async ()=>{ await refreshState(); btn.disabled = false; }, 400);
 }
 async function setSubsKey(combo){
   const prev = subsKey;
@@ -3901,12 +3964,9 @@ function initSubs(){
   subsEl("subtitles_size").value = CFG.subtitles_size || "m";
   paintSubsKey();
   sel.addEventListener("change", refreshSubsModel);
-  subsEl("subs_go").onclick = async ()=>{
-    const go = subsEl("subs_go");
-    go.disabled = true;
-    await appSubtitles(subsRunning ? "stop" : "start");
-    setTimeout(async ()=>{ await refreshState(); go.disabled = false; }, 400);
-  };
+  subsEl("subs_go").onclick = ()=>subsToggle(subsEl("subs_go"));
+  const heroGo = subsEl("subs_hero_go");
+  if(heroGo) heroGo.onclick = ()=>subsToggle(heroGo);
   subsEl("subs_key").onclick = ()=>{ captureFor = "subs"; appCaptureCombo(); };
   subsEl("subs_key_clear").onclick = ()=>setSubsKey("");
   subsEl("subs_folder").onclick = ()=>appOpenTranscripts();
@@ -3929,6 +3989,7 @@ async function refreshState(){
   };
   showPostErr(s.post_err || "");
   renderSubsState(s);
+  renderSubsHero(s);
 
   const hero = document.getElementById("state_hero");
   const off = s.enabled === false;

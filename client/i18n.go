@@ -491,6 +491,10 @@ var msgs = map[string]map[string]string{
 
 var settingsStrings = map[string]map[string]string{
 	"ru": {
+		"S_SUBS_ON": "Субтитры идут",
+		"S_SUBS_HERO_HINT": "запустите — и то, что звучит на компьютере, появится текстом в окне поверх остальных",
+		"S_SUBS_HERO_LIVE": "%s · слова по ходу речи",
+		"S_SUBS_HERO_PHRASES": "%s · текст после каждой фразы",
 		"S_NAV_SUBS": "Субтитры",
 		"S_SUBS_HINT": "Приложение записывает то, что звучит на компьютере, — звонок, видео — и показывает слова в окне поверх остальных.",
 		"S_SUBS_NOTICE": "Собеседники должны знать, что их речь записывается текстом.",
@@ -1007,6 +1011,7 @@ var settingsStrings = map[string]map[string]string{
 			"<p>Верхняя карточка бывает трёх видов. <b>Зелёная</b> — всё в порядке, рядом напоминание про клавиши. <b>Жёлтая</b> — вы выключили приложение через значок у часов, клавиши не работают, пока не нажмёте «Включить» тут же на карточке. <b>Красная</b> — настройки противоречат друг другу: выбрано распознавание на другом компьютере, а адрес не указан.</p>" +
 			"<p>Ниже — то, на что обычно смотрят мельком:</p>" +
 			"<ul>" +
+			"<li><b>Субтитры.</b> Карточка сразу под верхней: выключены ли субтитры, загружают модель, идут или перезапускаются, с моделью и тем, как приходит текст, их сочетание клавиш, если оно задано, кнопка, которая их запускает или останавливает, и стрелка на вкладку «Субтитры».</li>" +
 			"<li><b>Использование за неделю.</b> Круговая диаграмма: в какие программы уходили ваши диктовки и сколько знаков вы наговорили.</li>" +
 			"<li><b>Версия.</b> Номер сборки и кнопка проверки. Если вышла новее, приложение скажет об этом здесь же.</li>" +
 			"<li><b>Память.</b> Сколько её свободно, какая модель сейчас в ней сидит и сколько все модели весят на диске. Кнопка «Выгрузить» освобождает память немедленно — например, перед тяжёлой игрой.</li>" +
@@ -1243,6 +1248,10 @@ var settingsStrings = map[string]map[string]string{
 		"S_MODEL_READY":    "Модель загружена — выберите её, чтобы переключиться",
 	},
 	"en": {
+		"S_SUBS_ON": "Subtitles are on",
+		"S_SUBS_HERO_HINT": "start them — what the computer plays appears as text in a window on top of the others",
+		"S_SUBS_HERO_LIVE": "%s · words as they are spoken",
+		"S_SUBS_HERO_PHRASES": "%s · text after each phrase",
 		"S_NAV_SUBS": "Subtitles",
 		"S_SUBS_HINT": "The app writes down what the computer plays — a call, a video — and shows the words in a window on top of the others.",
 		"S_SUBS_NOTICE": "The people you talk to should know they are being transcribed.",
@@ -1759,6 +1768,7 @@ var settingsStrings = map[string]map[string]string{
 			"<p>The top card comes in three kinds. <b>Green</b>: all is well, with a reminder of the keys next to it. <b>Yellow</b>: you switched the app off from the tray icon next to the clock, and the keys do nothing until you press “Switch on” right there on the card. <b>Red</b>: the settings contradict each other. Recognition on another computer is chosen, but no address is given.</p>" +
 			"<p>Below it is what you will usually just glance at:</p>" +
 			"<ul>" +
+			"<li><b>Subtitles.</b> The card right under the top one: whether subtitles are off, loading their model, running or restarting, with the model and how the text arrives, their shortcut when one is set, a button that starts or stops them, and an arrow to the “Subtitles” tab.</li>" +
 			"<li><b>This week.</b> A pie chart: which programs your dictations went to and how many characters you dictated.</li>" +
 			"<li><b>Version.</b> The build number and a check button. If a newer one is out, the app tells you right here.</li>" +
 			"<li><b>Memory.</b> How much of it is free, which model is sitting in it now, and how much all the models take up on disk. The “Unload” button frees the memory at once, for example before a heavy game.</li>" +

@@ -578,6 +578,10 @@ func init() {
 	}
 
 	settingsStrings["de"] = map[string]string{
+		"S_SUBS_ON": "Untertitel laufen",
+		"S_SUBS_HERO_HINT": "starten — was der Computer abspielt, erscheint als Text in einem Fenster über den anderen",
+		"S_SUBS_HERO_LIVE": "%s · Wörter schon beim Sprechen",
+		"S_SUBS_HERO_PHRASES": "%s · Text nach jedem Satz",
 		"S_NAV_SUBS": "Untertitel",
 		"S_SUBS_HINT": "Die App schreibt mit, was der Computer abspielt – ein Gespräch, ein Video – und zeigt die Worte in einem Fenster über allen anderen.",
 		"S_SUBS_NOTICE": "Ihre Gesprächspartner sollten wissen, dass ihre Worte mitgeschrieben werden.",
@@ -965,6 +969,7 @@ func init() {
 			"<p>Die obere Karte gibt es in drei Varianten. <b>Grün</b>: Alles ist in Ordnung, daneben steht eine Erinnerung an die Tasten. <b>Gelb</b>: Sie haben die App über das Symbol im Infobereich neben der Uhr ausgeschaltet, und die Tasten tun nichts, bis Sie direkt auf der Karte „Einschalten“ drücken. <b>Rot</b>: Die Einstellungen widersprechen sich. Die Erkennung auf einem anderen Rechner ist gewählt, aber keine Adresse angegeben.</p>" +
 			"<p>Darunter steht, worauf man meist nur kurz schaut:</p>" +
 			"<ul>" +
+			"<li><b>Untertitel.</b> Die Karte direkt unter der obersten: ob die Untertitel aus sind, ihr Modell laden, laufen oder neu starten, mit dem Modell und wie der Text kommt, ihr Tastenkürzel, wenn eines gesetzt ist, eine Schaltfläche, die sie startet oder beendet, und ein Pfeil zur Registerkarte „Untertitel“.</li>" +
 			"<li><b>Diese Woche.</b> Ein Kreisdiagramm: in welche Programme Ihre Diktate gingen und wie viele Zeichen Sie diktiert haben.</li>" +
 			"<li><b>Version.</b> Die Build-Nummer und eine Schaltfläche zum Prüfen. Ist eine neuere erschienen, sagt die App es gleich hier.</li>" +
 			"<li><b>Speicher.</b> Wie viel davon frei ist, welches Modell gerade darin sitzt und wie viel alle Modelle auf der Festplatte belegen. Die Schaltfläche „Entladen“ gibt den Speicher sofort frei, etwa vor einem anspruchsvollen Spiel.</li>" +
@@ -1200,6 +1205,10 @@ func init() {
 		"S_WIZ_TRY_TEXT":   "Setzen Sie die Eingabemarke ins Feld unten, halten Sie %s, sprechen Sie einen Satz und lassen Sie los.",
 	}
 	settingsStrings["fr"] = map[string]string{
+		"S_SUBS_ON": "Les sous-titres tournent",
+		"S_SUBS_HERO_HINT": "démarrez-les — ce que joue l'ordinateur apparaît en texte dans une fenêtre au-dessus des autres",
+		"S_SUBS_HERO_LIVE": "%s · les mots au fil de la parole",
+		"S_SUBS_HERO_PHRASES": "%s · le texte après chaque phrase",
 		"S_NAV_SUBS": "Sous-titres",
 		"S_SUBS_HINT": "L'application note ce que joue l'ordinateur – un appel, une vidéo – et affiche les mots dans une fenêtre au-dessus des autres.",
 		"S_SUBS_NOTICE": "Vos interlocuteurs doivent savoir que leurs paroles sont transcrites.",
@@ -1587,6 +1596,7 @@ func init() {
 			"<p>La carte du haut existe en trois versions. <b>Verte</b> : tout va bien, avec un rappel des touches à côté. <b>Jaune</b> : vous avez désactivé l'application depuis son icône dans la zone de notification, près de l'horloge, et les touches ne font rien tant que vous n'appuyez pas sur « Activer », directement sur la carte. <b>Rouge</b> : les réglages se contredisent. La reconnaissance sur un autre ordinateur est choisie, mais aucune adresse n'est indiquée.</p>" +
 			"<p>En dessous se trouve ce qu'on regarde d'habitude en passant :</p>" +
 			"<ul>" +
+			"<li><b>Sous-titres.</b> La carte juste sous celle du haut : si les sous-titres sont arrêtés, chargent leur modèle, tournent ou redémarrent, avec le modèle et la façon dont arrive le texte, leur raccourci s'il y en a un, un bouton qui les démarre ou les arrête, et une flèche vers l'onglet « Sous-titres ».</li>" +
 			"<li><b>Cette semaine.</b> Un graphique circulaire : vers quels programmes sont allées vos dictées et combien de caractères vous avez dictés.</li>" +
 			"<li><b>Version.</b> Le numéro de build et un bouton « Vérifier ». Si une version plus récente est sortie, l'application le dit ici même.</li>" +
 			"<li><b>Mémoire.</b> Combien il en reste de libre, quel modèle s'y trouve en ce moment et combien de place tous les modèles prennent sur le disque. Le bouton « Décharger » libère la mémoire immédiatement, par exemple avant un jeu gourmand.</li>" +
@@ -1822,6 +1832,10 @@ func init() {
 		"S_WIZ_TRY_TEXT":   "Placez le curseur dans le champ ci-dessous, maintenez %s, dites une phrase et relâchez.",
 	}
 	settingsStrings["es"] = map[string]string{
+		"S_SUBS_ON": "Los subtítulos están en marcha",
+		"S_SUBS_HERO_HINT": "inícialos — lo que suena en el ordenador aparece como texto en una ventana encima de las demás",
+		"S_SUBS_HERO_LIVE": "%s · palabras a medida que se dicen",
+		"S_SUBS_HERO_PHRASES": "%s · texto tras cada frase",
 		"S_NAV_SUBS": "Subtítulos",
 		"S_SUBS_HINT": "La aplicación transcribe lo que suena en el ordenador —una llamada, un vídeo— y muestra las palabras en una ventana encima de las demás.",
 		"S_SUBS_NOTICE": "Las personas con las que hablas deben saber que se transcribe lo que dicen.",
@@ -2209,6 +2223,7 @@ func init() {
 			"<p>La tarjeta de arriba puede ser de tres tipos. <b>Verde</b>: todo va bien, con un recordatorio de las teclas al lado. <b>Amarilla</b>: desactivaste la aplicación desde su icono en la bandeja, junto al reloj, y las teclas no hacen nada hasta que pulses «Activar» ahí mismo, en la tarjeta. <b>Roja</b>: los ajustes se contradicen. Está elegido el reconocimiento en otro ordenador, pero no se ha indicado ninguna dirección.</p>" +
 			"<p>Debajo está lo que normalmente se mira de pasada:</p>" +
 			"<ul>" +
+			"<li><b>Subtítulos.</b> La tarjeta justo debajo de la primera: si los subtítulos están apagados, cargando su modelo, en marcha o reiniciándose, con el modelo y cómo llega el texto, su atajo si hay uno, un botón que los inicia o los detiene y una flecha a la pestaña «Subtítulos».</li>" +
 			"<li><b>Esta semana.</b> Un gráfico circular: a qué programas fueron tus dictados y cuántos caracteres dictaste.</li>" +
 			"<li><b>Versión.</b> El número de compilación y el botón «Comprobar». Si ha salido una más nueva, la aplicación te lo dice aquí mismo.</li>" +
 			"<li><b>Memoria.</b> Cuánta queda libre, qué modelo está cargado en ella ahora y cuánto ocupan todos los modelos en el disco. El botón «Liberar» vacía la memoria al momento, por ejemplo antes de un juego exigente.</li>" +
@@ -2444,6 +2459,10 @@ func init() {
 		"S_WIZ_TRY_TEXT":   "Coloca el cursor en el campo de abajo, mantén %s, di una frase y suelta.",
 	}
 	settingsStrings["it"] = map[string]string{
+		"S_SUBS_ON": "I sottotitoli sono attivi",
+		"S_SUBS_HERO_HINT": "avviali — ciò che riproduce il computer appare come testo in una finestra sopra le altre",
+		"S_SUBS_HERO_LIVE": "%s · parole mentre vengono dette",
+		"S_SUBS_HERO_PHRASES": "%s · testo dopo ogni frase",
 		"S_NAV_SUBS": "Sottotitoli",
 		"S_SUBS_HINT": "L'app trascrive ciò che il computer riproduce — una chiamata, un video — e mostra le parole in una finestra sopra le altre.",
 		"S_SUBS_NOTICE": "Le persone con cui parli devono sapere che le loro parole vengono trascritte.",
@@ -2831,6 +2850,7 @@ func init() {
 			"<p>Il riquadro in alto può essere di tre tipi. <b>Verde</b>: va tutto bene, e accanto c'è un promemoria dei tasti. <b>Giallo</b>: hai spento l'app dalla sua icona nell'area di notifica, vicino all'orologio, e i tasti non fanno nulla finché non premi «Accendi» lì stesso, nel riquadro. <b>Rosso</b>: le impostazioni si contraddicono. È scelto il riconoscimento su un altro computer, ma l'indirizzo non è indicato.</p>" +
 			"<p>Più sotto c'è quello che di solito si guarda di sfuggita:</p>" +
 			"<ul>" +
+			"<li><b>Sottotitoli.</b> Il riquadro subito sotto quello in alto: se i sottotitoli sono spenti, stanno caricando il modello, sono attivi o si stanno riavviando, con il modello e come arriva il testo, la loro scorciatoia se è impostata, un pulsante che li avvia o li ferma e una freccia verso la scheda «Sottotitoli».</li>" +
 			"<li><b>Questa settimana.</b> Un grafico a torta: in quali programmi sono finite le tue dettature e quanti caratteri hai dettato.</li>" +
 			"<li><b>Versione.</b> Il numero della build e il pulsante «Controlla». Se ne è uscita una più nuova, l'app te lo dice proprio qui.</li>" +
 			"<li><b>Memoria.</b> Quanta ne resta libera, quale modello c'è dentro adesso e quanto pesano tutti i modelli su disco. Il pulsante «Libera» svuota la memoria subito, per esempio prima di un gioco pesante.</li>" +
@@ -3066,6 +3086,10 @@ func init() {
 		"S_WIZ_TRY_TEXT":   "Metti il cursore nel campo qui sotto, tieni premuto %s, di' una frase e rilascia.",
 	}
 	settingsStrings["pl"] = map[string]string{
+		"S_SUBS_ON": "Napisy działają",
+		"S_SUBS_HERO_HINT": "włącz je — to, co odtwarza komputer, pojawi się jako tekst w oknie nad innymi",
+		"S_SUBS_HERO_LIVE": "%s · słowa w trakcie mówienia",
+		"S_SUBS_HERO_PHRASES": "%s · tekst po każdym zdaniu",
 		"S_NAV_SUBS": "Napisy",
 		"S_SUBS_HINT": "Aplikacja zapisuje to, co odtwarza komputer — rozmowę, film — i pokazuje słowa w oknie nad innymi.",
 		"S_SUBS_NOTICE": "Twoi rozmówcy powinni wiedzieć, że ich słowa są zapisywane.",
@@ -3453,6 +3477,7 @@ func init() {
 			"<p>Górna karta bywa trzech rodzajów. <b>Zielona</b>: wszystko w porządku, obok przypomnienie o klawiszach. <b>Żółta</b>: aplikację wyłączono przez ikonę w zasobniku obok zegara i klawisze nie działają, dopóki nie naciśniesz „Włącz” bezpośrednio na tej karcie. <b>Czerwona</b>: ustawienia sobie przeczą. Wybrano rozpoznawanie na innym komputerze, ale nie podano adresu.</p>" +
 			"<p>Niżej jest to, na co zwykle tylko się zerka:</p>" +
 			"<ul>" +
+			"<li><b>Napisy.</b> Karta tuż pod górną: czy napisy są wyłączone, wczytują model, działają czy uruchamiają się ponownie, z modelem i tym, jak przychodzi tekst, ich skrót, jeśli jest ustawiony, przycisk, który je włącza lub wyłącza, i strzałka do zakładki „Napisy”.</li>" +
 			"<li><b>W tym tygodniu.</b> Wykres kołowy: do jakich programów trafiały twoje dyktowania i ile znaków podyktowano.</li>" +
 			"<li><b>Wersja.</b> Numer kompilacji i przycisk sprawdzania. Jeśli wyszła nowsza, aplikacja powie o tym właśnie tutaj.</li>" +
 			"<li><b>Pamięć.</b> Ile jej jest wolnej, który model jest w niej teraz i ile wszystkie modele zajmują na dysku. Przycisk „Wyładuj” zwalnia pamięć od razu, na przykład przed wymagającą grą.</li>" +
@@ -3803,6 +3828,10 @@ func init() {
 		"srv.restarting":       "Перезапускаю розпізнавач із новими налаштуваннями…",
 	}
 	settingsStrings["uk"] = map[string]string{
+		"S_SUBS_ON": "Субтитри йдуть",
+		"S_SUBS_HERO_HINT": "запустіть — і те, що звучить на комп'ютері, з'явиться текстом у вікні поверх інших",
+		"S_SUBS_HERO_LIVE": "%s · слова під час мовлення",
+		"S_SUBS_HERO_PHRASES": "%s · текст після кожної фрази",
 		"S_NAV_SUBS": "Субтитри",
 		"S_SUBS_HINT": "Застосунок записує те, що звучить на комп'ютері, — дзвінок, відео — і показує слова у вікні поверх інших.",
 		"S_SUBS_NOTICE": "Співрозмовники мають знати, що їхнє мовлення записується текстом.",
@@ -4191,6 +4220,7 @@ func init() {
 			"<p>Верхня картка буває трьох видів. <b>Зелена</b>: усе гаразд, поруч нагадування про клавіші. <b>Жовта</b>: ви вимкнули застосунок через значок біля годинника, і клавіші не працюють, доки ви не натиснете «Увімкнути» тут же, на картці. <b>Червона</b>: налаштування суперечать одне одному. Вибрано розпізнавання на іншому комп'ютері, а адресу не вказано.</p>" +
 			"<p>Нижче те, на що зазвичай лише кидають оком:</p>" +
 			"<ul>" +
+			"<li><b>Субтитри.</b> Картка одразу під верхньою: чи вимкнені субтитри, завантажують модель, ідуть чи перезапускаються, з моделлю і тим, як приходить текст, їхнє сполучення клавіш, якщо його задано, кнопка, яка їх запускає або зупиняє, і стрілка на вкладку «Субтитри».</li>" +
 			"<li><b>Використання за тиждень.</b> Кругова діаграма: у які програми йшли ваші диктування і скільки знаків ви наговорили.</li>" +
 			"<li><b>Версія.</b> Номер збірки й кнопка перевірки. Якщо вийшла новіша, застосунок скаже про це тут же.</li>" +
 			"<li><b>Пам'ять.</b> Скільки її вільно, яка модель зараз у ній сидить і скільки всі моделі важать на диску. Кнопка «Вивантажити» звільняє пам'ять негайно, наприклад перед важкою грою.</li>" +
