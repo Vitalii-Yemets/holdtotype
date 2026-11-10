@@ -102,3 +102,14 @@ func (b *Board) Tail(maxRunes int) View {
 	}
 	return v
 }
+
+func (v View) Text() string {
+	parts := make([]string, 0, len(v.Lines)+1)
+	for _, ln := range v.Lines {
+		parts = append(parts, ln.Text)
+	}
+	if v.Live != "" {
+		parts = append(parts, v.Live)
+	}
+	return strings.Join(parts, "\n")
+}

@@ -601,15 +601,7 @@ func (d *swDemo) windowPhase() int {
 }
 
 func (d *swDemo) windowText() string {
-	v := d.board.Tail(swTextRunes)
-	parts := make([]string, 0, len(v.Lines)+1)
-	for _, ln := range v.Lines {
-		parts = append(parts, ln.Text)
-	}
-	if v.Live != "" {
-		parts = append(parts, v.Live)
-	}
-	return strings.Join(parts, " ")
+	return d.board.Tail(swTextRunes).Text()
 }
 
 var swDemoText = []string{

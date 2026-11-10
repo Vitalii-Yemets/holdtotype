@@ -240,15 +240,7 @@ func (r *subRun) setPhase(p int) { r.phase.Store(int32(p)) }
 func (r *subRun) windowPhase() int { return int(r.phase.Load()) }
 
 func (r *subRun) windowText() string {
-	v := r.board.Tail(swTextRunes)
-	parts := make([]string, 0, len(v.Lines)+1)
-	for _, ln := range v.Lines {
-		parts = append(parts, ln.Text)
-	}
-	if v.Live != "" {
-		parts = append(parts, v.Live)
-	}
-	return strings.Join(parts, " ")
+	return r.board.Tail(swTextRunes).Text()
 }
 
 func (r *subRun) fail(kind, msg string) {

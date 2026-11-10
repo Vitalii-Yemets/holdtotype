@@ -170,3 +170,20 @@ func TestTranscriptFormatting(t *testing.T) {
 		t.Fatalf("entry %q", got)
 	}
 }
+
+func TestViewTextPutsEachLineOnItsOwnRow(t *testing.T) {
+	b := NewBoard(10)
+	b.Add(time.Now(), "next to the cafeteria")
+	b.Add(time.Now(), "Tomorrow we will visit the old castle")
+	b.SetLive("Could you send me")
+	if got := b.Tail(500).Text(); got != "next to the cafeteria\nTomorrow we will visit the old castle\nCould you send me" {
+		t.Fatalf("text %q", got)
+	}
+	b.SetLive("")
+	if got := b.Tail(500).Text(); got != "next to the cafeteria\nTomorrow we will visit the old castle" {
+		t.Fatalf("text without live %q", got)
+	}
+	if got := NewBoard(3).Tail(100).Text(); got != "" {
+		t.Fatalf("empty board %q", got)
+	}
+}
