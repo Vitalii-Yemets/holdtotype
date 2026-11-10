@@ -4692,6 +4692,7 @@ async function refreshModels(){
     renderLangs();
   }
   syncTrControls();
+  refreshSubsModel();
   if(busy || pendingDl) setTimeout(refreshModels, 900);
 }
 function lockBg(){
@@ -5299,6 +5300,7 @@ function show(p){
   if(p==="system") setTimeout(equalizeEq, 0);
   if(p==="state") refreshState();
   if(p==="history") refreshHistory();
+  if(p==="subs") refreshSubsModel();
   document.querySelector(".content").scrollTop = 0;
   if(p==="help" && helpMark) helpMark();
 }

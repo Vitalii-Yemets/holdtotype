@@ -1682,6 +1682,15 @@ function check(name, actual, expected) {
   check("the cross removes the shortcut", [w.lastSaveForm.subtitles_hotkey, sv("subs_key").textContent], ["", "Assign…"]);
   sv("subs_folder").click(); await sleep(60);
   check("the folder button opens the transcripts", w.transcriptOpens, 1);
+  await change(sv("subtitles_language"), "fr");
+  check("before the model is installed the tab says so", sv("subs_case_row").style.display, "");
+  w.subsModels.fr.installed = true;
+  await w.refreshModels(); await sleep(250);
+  check("a refreshed model list reads the model again", [sv("subs_model").textContent, sv("subs_case_row").style.display], ["Canary 180M Flash will write it: the text appears after each phrase ends.", "none"]);
+  w.subsModels.fr.installed = false;
+  tab("models"); await sleep(100); tab("subs"); await sleep(250);
+  check("coming back to the tab reads it again too", [sv("subs_model").style.display, sv("subs_case_row").style.display], ["none", ""]);
+  await change(sv("subtitles_language"), "en");
   check("the search finds the tab", w.searchMatches("s_subs_save").some((el) => el.closest("#p-subs")), true);
 
   check("no page errors", errors, []);
