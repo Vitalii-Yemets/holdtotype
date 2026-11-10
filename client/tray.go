@@ -48,7 +48,12 @@ const (
 	cmdAbout
 	cmdQuit
 	cmdLastCopy
+	cmdSubStart
+	cmdSubStop
+	cmdSubToggle
 )
+
+var subCommands = map[string]uintptr{"start": cmdSubStart, "stop": cmdSubStop, "toggle": cmdSubToggle}
 
 var (
 	procShellNotifyIconW         = shell32.NewProc("Shell_NotifyIconW")
@@ -187,11 +192,21 @@ func trayWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 		procShellNotifyIconW.Call(nimModify, uintptr(unsafe.Pointer(&nid)))
 		return 0
 	case wmCommand:
-		if wParam&0xFFFF == cmdQuit && trayApp != nil {
+		if trayApp == nil {
+			return 0
+		}
+		switch wParam & 0xFFFF {
+		case cmdQuit:
 			go func() {
 				trayApp.onExit()
 				procPostMessageW.Call(hwnd, wmClose, 0, 0)
 			}()
+		case cmdSubStart:
+			go trayApp.subtitlesCommand("start")
+		case cmdSubStop:
+			go trayApp.subtitlesCommand("stop")
+		case cmdSubToggle:
+			go trayApp.subtitlesCommand("toggle")
 		}
 		return 0
 	case wmDestroy:

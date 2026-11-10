@@ -549,6 +549,10 @@ func main() {
 			log.Printf("routecheck: both engines stopped")
 			return
 		}
+		if arg == "-subcheck" {
+			runSubcheck(os.Args[1:][i+1:])
+			return
+		}
 		if arg == "-dialogs" {
 			cfg, _ := loadConfig("config.json")
 			if cfg != nil {
@@ -696,10 +700,26 @@ func main() {
 		}
 	}
 
-	for _, arg := range os.Args[1:] {
+	for i, arg := range os.Args[1:] {
 		if arg == "-quit" {
 			if quitRunningInstance() {
 				log.Printf("quit command sent to the running instance")
+			}
+			return
+		}
+		if arg == "-subtitles" {
+			action := ""
+			if rest := os.Args[1:][i+1:]; len(rest) > 0 {
+				action = rest[0]
+			}
+			if _, ok := subCommands[action]; !ok {
+				log.Printf("subtitles: use -subtitles start, stop or toggle")
+				return
+			}
+			if subtitlesInRunningInstance(action) {
+				log.Printf("subtitles: %s sent to the running instance", action)
+			} else {
+				log.Printf("subtitles: the app is not running")
 			}
 			return
 		}

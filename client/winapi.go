@@ -702,6 +702,23 @@ func openSettingsInRunningInstance() bool {
 	return r != 0
 }
 
+func subtitlesInRunningInstance(action string) bool {
+	id, ok := subCommands[action]
+	if !ok {
+		return false
+	}
+	cls, err := windows.UTF16PtrFromString(appid.Class("TrayWnd"))
+	if err != nil {
+		return false
+	}
+	hwnd, _, _ := procFindWindowW.Call(uintptr(unsafe.Pointer(cls)), 0)
+	if hwnd == 0 {
+		return false
+	}
+	r, _, _ := procPostMessageW.Call(hwnd, wmCommand, id, 0)
+	return r != 0
+}
+
 func quitRunningInstance() bool {
 	cls, err := windows.UTF16PtrFromString(appid.Class("TrayWnd"))
 	if err != nil {
