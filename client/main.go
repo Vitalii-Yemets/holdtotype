@@ -119,8 +119,11 @@ type App struct {
 	liveGen int
 	liveFed int
 
-	subMu sync.Mutex
-	sub   *subRun
+	subMu      sync.Mutex
+	sub        *subRun
+	subBusy    atomic.Bool
+	subKeyHeld bool
+	subEnding  []*subRun
 }
 
 func (a *App) liveStream(gen int, cfg *Config) {
@@ -551,6 +554,10 @@ func main() {
 		}
 		if arg == "-subcheck" {
 			runSubcheck(os.Args[1:][i+1:])
+			return
+		}
+		if arg == "-subwindow" {
+			runSubwindowDemo(os.Args[1:][i+1:])
 			return
 		}
 		if arg == "-dialogs" {
@@ -1087,6 +1094,11 @@ func buildCombos(cfg *Config) []comboDef {
 		}
 	}
 	combos = append(combos, langCombos(cfg)...)
+	if cfg.SubtitlesHotkey != "" {
+		if groups, err := parseHotkey(cfg.SubtitlesHotkey); err == nil {
+			combos = append(combos, comboDef{id: subtitlesComboID, groups: groups})
+		}
+	}
 	return combos
 }
 
@@ -1099,8 +1111,17 @@ func (a *App) worker() {
 			}
 			switch ev.kind {
 			case evDown:
+				if ev.profile == subtitlesComboID {
+					a.subKeyHeld = true
+					a.subtitlesKey()
+					continue
+				}
 				a.handleDown(ev.profile)
 			case evUp:
+				if a.subKeyHeld {
+					a.subKeyHeld = false
+					continue
+				}
 				if a.snapshot().HotkeyMode == hotkeyToggle {
 					continue
 				}
@@ -2089,7 +2110,7 @@ func (a *App) reloadConfig() {
 }
 
 func (a *App) onExit() {
-	a.stopSubtitles("the app is closing", subExitDrain)
+	a.closeSubtitles()
 	a.mu.Lock()
 	a.quitting = true
 	srv := a.srv

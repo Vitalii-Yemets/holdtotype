@@ -233,11 +233,16 @@ func trayShowMenu(hwnd uintptr) {
 	a.mu.Lock()
 	last := a.lastResult
 	a.mu.Unlock()
+	subText := tr("menu.sub.start")
+	if a.subtitlesRunning() {
+		subText = tr("menu.sub.stop")
+	}
 	items := []tmItem{
 		{text: status, id: cmdStatus, grayed: true},
 		{sep: true},
 		{text: tr("menu.settings"), id: cmdSettings},
 		{text: toggleText, id: cmdToggle},
+		{text: subText, id: cmdSubToggle},
 		{text: tr("menu.lastcopy"), id: cmdLastCopy, grayed: last == ""},
 		{sep: true},
 		{text: tr("menu.open.config"), id: cmdOpenConfig},
@@ -262,6 +267,8 @@ func trayShowMenu(hwnd uintptr) {
 		go a.openSettings("state")
 	case cmdToggle:
 		a.toggleEnabled()
+	case cmdSubToggle:
+		go a.subtitlesCommand("toggle")
 	case cmdOpenConfig:
 		shellOpen("config.json")
 	case cmdOpenLog:

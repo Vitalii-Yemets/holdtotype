@@ -15,6 +15,7 @@ import (
 
 	"holdtotype/internal/evqueue"
 	"holdtotype/internal/livetail"
+	"holdtotype/internal/ovplace"
 	"holdtotype/internal/replace"
 	"holdtotype/internal/segments"
 	"holdtotype/internal/subtitles"
@@ -40,6 +41,30 @@ const (
 )
 
 var errSubStopped = errors.New("subtitles are stopping")
+
+const subtitlesComboID = "subtitles"
+
+const (
+	subErrNoModel = "nomodel"
+	subErrEngine  = "engine"
+	subErrDevice  = "device"
+	subErrLost    = "lost"
+)
+
+type subError struct {
+	kind string
+	msg  string
+}
+
+func (e *subError) Error() string { return e.msg }
+
+func subErrorKind(err error) string {
+	var se *subError
+	if errors.As(err, &se) {
+		return se.kind
+	}
+	return subErrEngine
+}
 
 type subTarget struct {
 	lang   string
@@ -74,11 +99,11 @@ func resolveSubtitles(cfg *Config) (*subTarget, error) {
 	c.CanaryTarget = ""
 	m := activeModel(&c)
 	if m == nil {
-		return nil, fmt.Errorf("no model is chosen for the language %s", lang)
+		return nil, &subError{subErrNoModel, fmt.Sprintf("no model is chosen for the language %s", lang)}
 	}
 	external := m.Engine == engineWhisper && (c.SttSource == "remote" || !c.ServerAutostart)
 	if !external && !m.installed() {
-		return nil, fmt.Errorf("the model %s for the language %s is not installed", m.NameKey, lang)
+		return nil, &subError{subErrNoModel, fmt.Sprintf("the model %s for the language %s is not installed", m.NameKey, lang)}
 	}
 	mode := modePhrases
 	if m.Engine == engineStream {
@@ -135,6 +160,7 @@ type subRun struct {
 	mu        sync.Mutex
 	want      *subTarget
 	failMsg   string
+	failKind  string
 	engName   string
 	engPort   int
 	engShared bool
@@ -155,6 +181,8 @@ type subRun struct {
 	devBad    time.Time
 	devTried  time.Time
 	devLogged bool
+
+	phase atomic.Int32
 }
 
 func startSubtitlesRun(a *App, cfg *Config, opts subOptions) (*subRun, error) {
@@ -164,7 +192,7 @@ func startSubtitlesRun(a *App, cfg *Config, opts subOptions) (*subRun, error) {
 	}
 	lb, err := openLoopback()
 	if err != nil {
-		return nil, err
+		return nil, &subError{subErrDevice, err.Error()}
 	}
 	now := time.Now()
 	r := &subRun{
@@ -200,11 +228,34 @@ func (r *subRun) stop(why string, drain time.Duration) {
 	})
 }
 
-func (r *subRun) fail(msg string) {
+func (r *subRun) failure() string {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.failKind
+}
+
+func (r *subRun) setPhase(p int) { r.phase.Store(int32(p)) }
+
+func (r *subRun) windowPhase() int { return int(r.phase.Load()) }
+
+func (r *subRun) windowText() string {
+	v := r.board.Tail(swTextRunes)
+	parts := make([]string, 0, len(v.Lines)+1)
+	for _, ln := range v.Lines {
+		parts = append(parts, ln.Text)
+	}
+	if v.Live != "" {
+		parts = append(parts, v.Live)
+	}
+	return strings.Join(parts, " ")
+}
+
+func (r *subRun) fail(kind, msg string) {
 	r.mu.Lock()
 	first := r.failMsg == ""
 	if first {
 		r.failMsg = msg
+		r.failKind = kind
 	}
 	r.mu.Unlock()
 	if first {
@@ -308,7 +359,7 @@ func (r *subRun) checkDevice(now time.Time) {
 		log.Printf("subtitles: reopening the playback device: %v", err)
 	}
 	if now.Sub(r.devBad) >= subDeviceGiveUp {
-		r.fail(errNoPlayback.Error())
+		r.fail(subErrDevice, errNoPlayback.Error())
 	}
 }
 
@@ -497,10 +548,11 @@ func (p *subPipe) sleep(d time.Duration) bool {
 }
 
 func (p *subPipe) firstEngine() {
+	p.run.setPhase(subPhaseLoading)
 	rec, shared, err := p.acquire()
 	if err != nil {
 		if !p.stopped() {
-			p.run.fail(fmt.Sprintf("the engine did not start: %s", logText(err)))
+			p.run.fail(subErrorKind(err), fmt.Sprintf("the engine did not start: %s", logText(err)))
 		}
 		return
 	}
@@ -577,6 +629,7 @@ func (p *subPipe) install(rec recognizer, shared bool) {
 	close(p.readyCh)
 	p.mu.Unlock()
 	p.run.noteEngine(rec, shared, p.target)
+	p.run.setPhase(subPhaseListening)
 	how := "its own"
 	if shared {
 		how = "shared with dictation"
@@ -617,6 +670,7 @@ func (p *subPipe) lost(gen int, why string) {
 	p.rec = nil
 	p.readyCh = make(chan struct{})
 	p.mu.Unlock()
+	p.run.setPhase(subPhaseRestarting)
 	log.Printf("subtitles: the engine %s went away (%s), recovering", old.engine(), why)
 	go p.recover(old, shared)
 }
@@ -636,7 +690,7 @@ func (p *subPipe) recover(old recognizer, shared bool) {
 	}
 	p.recovered = recent
 	if len(p.recovered) >= subRecoverMax {
-		p.run.fail(fmt.Sprintf("the engine went away %d times in %.0f minutes", len(p.recovered)+1, subRecoverWindow.Minutes()))
+		p.run.fail(subErrLost, fmt.Sprintf("the engine went away %d times in %.0f minutes", len(p.recovered)+1, subRecoverWindow.Minutes()))
 		return
 	}
 	p.recovered = append(p.recovered, now)
@@ -646,7 +700,7 @@ func (p *subPipe) recover(old recognizer, shared bool) {
 	rec, sh, err := p.acquire()
 	if err != nil {
 		if !p.stopped() {
-			p.run.fail(fmt.Sprintf("the engine could not be brought back: %s", logText(err)))
+			p.run.fail(subErrEngine, fmt.Sprintf("the engine could not be brought back: %s", logText(err)))
 		}
 		return
 	}
@@ -812,7 +866,7 @@ func (p *subPipe) liveLoop() {
 		}
 		ss, isStream := rec.(*streamServer)
 		if !isStream {
-			p.run.fail("the engine for live subtitles is not a streaming engine")
+			p.run.fail(subErrEngine, "the engine for live subtitles is not a streaming engine")
 			return
 		}
 		sess, err := ss.openSegmentSession(context.Background(), p.onSegment)
@@ -905,6 +959,16 @@ func (p *subPipe) stop(drain time.Duration) {
 	}
 }
 
+func (a *App) subFlash(kind string) {
+	key := "sub.err." + kind
+	if _, ok := msgs["en"][key]; !ok {
+		key = "sub.err." + subErrEngine
+	}
+	if a.snapshot().Overlay {
+		overlaySet(ovFlashErr, tr(key))
+	}
+}
+
 func (a *App) startSubtitles() {
 	a.mu.Lock()
 	quitting := a.quitting
@@ -918,18 +982,66 @@ func (a *App) startSubtitles() {
 		log.Printf("subtitles: already running")
 		return
 	}
-	r, err := startSubtitlesRun(a, a.snapshot(), subOptions{onEnd: func(r *subRun) {
+	cfg := a.snapshot()
+	r, err := startSubtitlesRun(a, cfg, subOptions{onEnd: func(r *subRun) {
 		a.subMu.Lock()
 		if a.sub == r {
 			a.sub = nil
 		}
 		a.subMu.Unlock()
+		subWindowHide(r)
+		if kind := r.failure(); kind != "" {
+			a.subFlash(kind)
+		}
 	}})
 	if err != nil {
 		log.Printf("subtitles: did not start: %s", logText(err))
+		a.subFlash(subErrorKind(err))
 		return
 	}
 	a.sub = r
+	subWindowConfigure(cfg.SubtitlesLines, cfg.SubtitlesSize, cfg.SubtitlesXY)
+	subWindowShow(r, r.target().lang, func() {
+		a.stopSubtitles("closed from its window", subStopDrain)
+	}, a.saveSubtitlesPlace)
+}
+
+func (a *App) saveSubtitlesPlace(key string, f ovplace.Frac) {
+	a.mu.Lock()
+	c := *a.cfg
+	places := map[string]ovplace.Frac{}
+	for k, v := range c.SubtitlesXY {
+		places[k] = v
+	}
+	places[key] = f
+	c.SubtitlesXY = places
+	a.mu.Unlock()
+	if err := saveConfig("config.json", &c); err != nil {
+		log.Printf("subtitles: the window place was not saved: %v", err)
+		return
+	}
+	a.mu.Lock()
+	cur := *a.cfg
+	cur.SubtitlesXY = places
+	a.cfg = &cur
+	a.mu.Unlock()
+}
+
+func (a *App) subtitlesKey() {
+	if !a.subBusy.CompareAndSwap(false, true) {
+		log.Printf("subtitles: the shortcut came while subtitles are starting or stopping, ignored")
+		return
+	}
+	go func() {
+		defer a.subBusy.Store(false)
+		a.subtitlesCommand("toggle")
+	}()
+}
+
+func (a *App) subtitlesRunning() bool {
+	a.subMu.Lock()
+	defer a.subMu.Unlock()
+	return a.sub != nil
 }
 
 func (a *App) stopSubtitles(why string, drain time.Duration) bool {
@@ -940,13 +1052,42 @@ func (a *App) stopSubtitles(why string, drain time.Duration) bool {
 	if r == nil {
 		return false
 	}
+	subWindowHide(r)
+	a.subMu.Lock()
+	a.subEnding = append(a.subEnding, r)
+	a.subMu.Unlock()
 	r.stop(why, drain)
 	select {
 	case <-r.done():
 	case <-time.After(drain + 15*time.Second):
 		log.Printf("subtitles: the run did not finish in time")
 	}
+	a.subMu.Lock()
+	for i, x := range a.subEnding {
+		if x == r {
+			a.subEnding = append(a.subEnding[:i], a.subEnding[i+1:]...)
+			break
+		}
+	}
+	a.subMu.Unlock()
 	return true
+}
+
+func (a *App) closeSubtitles() {
+	a.stopSubtitles("the app is closing", subExitDrain)
+	a.subMu.Lock()
+	ending := append([]*subRun(nil), a.subEnding...)
+	a.subMu.Unlock()
+	deadline := time.After(subExitDrain + 2*time.Second)
+	for _, r := range ending {
+		r.stop("the app is closing", subExitDrain)
+		select {
+		case <-r.done():
+		case <-deadline:
+			log.Printf("subtitles: a stopping run did not finish before the exit")
+			return
+		}
+	}
 }
 
 func (a *App) subtitlesCommand(action string) {
@@ -971,13 +1112,16 @@ func (a *App) subtitlesConfigChanged() {
 	if r == nil {
 		return
 	}
-	t, err := resolveSubtitles(a.snapshot())
+	cfg := a.snapshot()
+	subWindowConfigure(cfg.SubtitlesLines, cfg.SubtitlesSize, cfg.SubtitlesXY)
+	t, err := resolveSubtitles(cfg)
 	if err != nil {
-		r.fail(fmt.Sprintf("the new settings leave subtitles without a model: %s", logText(err)))
+		r.fail(subErrorKind(err), fmt.Sprintf("the new settings leave subtitles without a model: %s", logText(err)))
 		return
 	}
 	if cur := r.target(); cur != nil && !cur.same(t) {
 		r.restart(t)
+		subWindowSetLang(r, t.lang)
 	}
 }
 

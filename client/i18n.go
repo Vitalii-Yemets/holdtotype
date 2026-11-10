@@ -98,6 +98,16 @@ func strS(key string) string {
 
 var msgs = map[string]map[string]string{
 	"ru": {
+		"menu.sub.start": "Запустить субтитры",
+		"menu.sub.stop": "Остановить субтитры",
+		"sub.title": "Субтитры",
+		"sub.loading": "Загружаю модель…",
+		"sub.listening": "Слушаю звук компьютера…",
+		"sub.restarting": "Распознавание перезапускается…",
+		"sub.err.nomodel": "Субтитры: для их языка не установлена модель",
+		"sub.err.engine": "Субтитры: движок распознавания не запустился",
+		"sub.err.device": "Субтитры: нет устройства воспроизведения, которое можно слушать",
+		"sub.err.lost": "Субтитры остановлены: движок распознавания раз за разом падал",
 		"app.name":              "{app}",
 		"already.running":       "Приложение уже запущено (иконка в трее).",
 		"err.title":             "{app} — ошибка",
@@ -283,6 +293,16 @@ var msgs = map[string]map[string]string{
 			"Логи: {log} (не больше ~2 МБ).",
 	},
 	"en": {
+		"menu.sub.start": "Start subtitles",
+		"menu.sub.stop": "Stop subtitles",
+		"sub.title": "Subtitles",
+		"sub.loading": "Loading the model…",
+		"sub.listening": "Listening to the computer's sound…",
+		"sub.restarting": "Recognition is restarting…",
+		"sub.err.nomodel": "Subtitles: no model is installed for their language",
+		"sub.err.engine": "Subtitles: the recognition engine did not start",
+		"sub.err.device": "Subtitles: there is no playback device to listen to",
+		"sub.err.lost": "Subtitles stopped: the recognition engine kept failing",
 		"app.name":              "{app}",
 		"already.running":       "The application is already running (tray icon).",
 		"err.title":             "{app} — error",
