@@ -302,13 +302,16 @@ func (h *hotkeyHook) post(fn func()) {
 	if fn == nil {
 		return
 	}
-	if !h.q.Push(fn) {
-		log.Printf("hotkey queue is full, event dropped (%d in total)", h.q.Dropped())
-	}
+	h.q.Push(fn)
 }
 
 func (h *hotkeyHook) dispatch() {
+	dropped := 0
 	for range h.q.Signal() {
+		if n := h.q.Dropped(); n > dropped {
+			log.Printf("hotkey queue is full, %d events dropped (%d in total)", n-dropped, n)
+			dropped = n
+		}
 		for {
 			fn, ok := h.q.Pop()
 			if !ok {
@@ -328,7 +331,7 @@ type captureSession struct {
 
 func (h *hotkeyHook) StartCapture(onUpdate func(string), onDone func(string, bool)) {
 	h.mu.Lock()
-	r := h.m.Reset()
+	h.deliverLocked(h.m.Reset())
 	h.capture = &captureSession{
 		pressed:  make(map[uint32]bool),
 		union:    make(map[uint32]bool),
@@ -336,7 +339,6 @@ func (h *hotkeyHook) StartCapture(onUpdate func(string), onDone func(string, boo
 		onDone:   onDone,
 	}
 	h.mu.Unlock()
-	h.deliver(r)
 }
 
 func (h *hotkeyHook) CancelCapture() {
@@ -374,8 +376,8 @@ func (h *hotkeyHook) captureEvent(vk uint32, down bool) bool {
 		}
 		fire = func() { c.onUpdate(live) }
 	}
-	h.mu.Unlock()
 	h.post(fire)
+	h.mu.Unlock()
 	return true
 }
 
@@ -458,14 +460,17 @@ func (h *hotkeyHook) escCancels() bool {
 
 func (h *hotkeyHook) SetCombos(combos []comboDef) {
 	h.mu.Lock()
-	r := h.setCombosLocked(combos)
+	h.deliverLocked(h.setCombosLocked(combos))
 	h.mu.Unlock()
-	h.deliver(r)
 }
 
-func (h *hotkeyHook) deliver(r keymatch.Result) {
-	for _, vk := range r.Forgotten {
-		log.Printf("hotkey: key 0x%02X was released unseen, forgotten", vk)
+func (h *hotkeyHook) deliverLocked(r keymatch.Result) {
+	if forgotten := r.Forgotten; len(forgotten) > 0 {
+		h.post(func() {
+			for _, vk := range forgotten {
+				log.Printf("hotkey: key 0x%02X was released unseen, forgotten", vk)
+			}
+		})
 	}
 	for i, e := range r.Events {
 		ev := hotkeyEvent{kind: e.Kind, id: e.ID}
@@ -475,7 +480,7 @@ func (h *hotkeyHook) deliver(r keymatch.Result) {
 			}
 		}
 		if ev.kind == keymatch.Disarm && ev.into != "" {
-			log.Printf("shortcut: the press grew into %s before %s was started", ev.into, ev.id)
+			h.post(func() { log.Printf("shortcut: the press grew into %s before %s was started", ev.into, ev.id) })
 		}
 		if on := h.onEvent; on != nil {
 			h.post(func() { on(ev) })
@@ -495,9 +500,8 @@ func (h *hotkeyHook) deliver(r keymatch.Result) {
 
 func (h *hotkeyHook) tick() {
 	h.mu.Lock()
-	r := h.m.Tick(time.Now())
+	h.deliverLocked(h.m.Tick(time.Now()))
 	h.mu.Unlock()
-	h.deliver(r)
 }
 
 func keyHeld(vk uint32) bool {
@@ -556,7 +560,7 @@ func (h *hotkeyHook) keyEvent(vk uint32, down bool) bool {
 	if commands.CountsAsTyping(vk, down, h.m.Matched()) {
 		h.typed.Add(1)
 	}
+	h.deliverLocked(r)
 	h.mu.Unlock()
-	h.deliver(r)
 	return r.Swallow
 }

@@ -52,7 +52,10 @@ const (
 	evArm
 	evDisarm
 	evRetract
+	evLatch
 )
+
+const latchWait = 800 * time.Millisecond
 
 type ptEvent struct {
 	kind    int
@@ -133,6 +136,9 @@ type App struct {
 
 	armedRec *Recorder
 	downGen  int
+	waitedID string
+	latchGen int
+	latchSeq int
 }
 
 func (a *App) liveStream(gen int, cfg *Config) {
@@ -1136,12 +1142,21 @@ func (a *App) worker() {
 			}
 			switch ev.kind {
 			case evArm:
+				a.waitedID = ev.profile
 				a.handleArm(ev.profile)
 			case evDisarm:
+				a.waitedID = ""
 				a.disarmRec()
 			case evRetract:
+				a.waitedID = ""
 				a.handleRetract(ev.profile, ev.into)
+			case evLatch:
+				if ev.gen == a.latchSeq {
+					a.latchStop()
+				}
 			case evDown:
+				waited := ev.profile == a.waitedID
+				a.waitedID = ""
 				if ev.profile == subtitlesComboID {
 					a.downGen = 0
 					a.subKeyHeld = true
@@ -1149,7 +1164,7 @@ func (a *App) worker() {
 					continue
 				}
 				before := a.gen
-				a.handleDown(ev.profile)
+				a.handleDown(ev.profile, waited)
 				a.downGen = 0
 				if a.gen != before && a.state.Load() == stRecording {
 					a.downGen = a.gen
@@ -1161,6 +1176,7 @@ func (a *App) worker() {
 					continue
 				}
 				if a.snapshot().HotkeyMode == hotkeyToggle {
+					a.latchStop()
 					continue
 				}
 				a.handleStop(0, stopKey)
@@ -1202,7 +1218,26 @@ func (a *App) disarmRec() {
 	a.armedRec = nil
 }
 
+func (a *App) latchStop() {
+	gen := a.latchGen
+	if gen == 0 {
+		return
+	}
+	a.latchGen = 0
+	if a.state.Load() != stRecording || gen != a.gen {
+		return
+	}
+	log.Printf("latched: the second press stops the recording")
+	a.handleStop(gen, stopKey)
+}
+
 func (a *App) handleRetract(id, into string) {
+	if a.latchGen != 0 {
+		a.latchGen = 0
+		a.downGen = 0
+		log.Printf("shortcut: the press grew into %s, the recording goes on", into)
+		return
+	}
 	gen := a.downGen
 	a.downGen = 0
 	if a.state.Load() != stRecording || gen == 0 || gen != a.gen {
@@ -1252,13 +1287,20 @@ func (a *App) handleCancel() {
 }
 
 
-func (a *App) handleDown(profileID string) {
+func (a *App) handleDown(profileID string, waited bool) {
 	cfg := a.snapshot()
 	if cfg.HotkeyMode == hotkeyToggle && !a.silenceStopAt.IsZero() && time.Since(a.silenceStopAt) < time.Second {
 		log.Printf("press ignored: 1 s after a silence stop")
 		return
 	}
 	if a.state.Load() == stRecording && cfg.HotkeyMode == hotkeyToggle {
+		if waited {
+			a.latchGen = a.gen
+			a.latchSeq++
+			seq := a.latchSeq
+			time.AfterFunc(latchWait, func() { a.post(ptEvent{kind: evLatch, gen: seq}) })
+			return
+		}
 		log.Printf("latched: the second press stops the recording")
 		a.handleStop(0, stopKey)
 		return
