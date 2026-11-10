@@ -1413,6 +1413,9 @@ button.btn.ghost:hover{color:var(--green);border-color:var(--dim);background:non
 .stcombo{display:flex;align-items:center;gap:6px}
 .stplus{color:var(--faint)}
 .iconbtn.stgo{font-size:13px;padding:2px 4px}
+#subs_hero_keys{flex-direction:column;align-items:flex-end;gap:10px}
+#subs_hero_keys>.stkrow{display:flex;align-items:center;gap:6px}
+#subs_hero_assign{font-size:14px;padding:5px 12px;min-width:0}
 .stalerts{display:flex;flex-direction:column;gap:6px}
 .stalerts:not(:empty){margin-top:12px}
 .stalert{display:flex;align-items:center;gap:10px;border:1px solid var(--amber);border-radius:var(--cardr);background:var(--field);padding:8px 12px;font-size:12px;color:var(--amber)}
@@ -1430,7 +1433,8 @@ button.btn.ghost:hover{color:var(--green);border-color:var(--dim);background:non
 .stpsub{color:var(--faint);font-size:10.5px;line-height:1.5;margin-top:2px}
 .stpsub.ok{color:var(--green)}
 .stpsub.bad{color:var(--bad)}
-.stplate>.mini{align-self:flex-end;margin-top:auto;height:22px;font-size:10.5px;padding:0 9px}
+.stplate>.mini{align-self:flex-end;margin-top:auto}
+.stplate>.mini,#subs_hero_go{height:22px;font-size:10.5px;padding:0 9px}
 .stgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .stcard{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:var(--cardr);background:var(--card);padding:10px 12px;min-width:0}
 .sthead{display:flex;align-items:center;gap:8px}
@@ -2074,9 +2078,12 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
    <div class="sthsub" id="subs_hero_sub">{{S_SUBS_HERO_HINT}}</div>
   </div>
   <div class="stkeys" id="subs_hero_keys">
-   <span class="stcombo" id="subs_hero_combo" style="display:none"></span>
-   <button type="button" class="mini small" id="subs_hero_go" title="{{S_SUBS_START}}">{{S_SUBS_HERO_START}}</button>
-   <button type="button" class="iconbtn stgo" id="subs_hero_goto" data-goto="subs" title="{{S_ST_GOTO}}">&#8599;</button>
+   <div class="stkrow">
+    <span class="stcombo" id="subs_hero_combo" style="display:none"></span>
+    <button type="button" class="hotkey-val" id="subs_hero_assign" title="{{S_CHANGE}}">{{S_LANG_KEY_SET}}</button>
+    <button type="button" class="iconbtn stgo" id="subs_hero_goto" data-goto="subs" title="{{S_ST_GOTO}}">&#8599;</button>
+   </div>
+   <button type="button" class="mini" id="subs_hero_go" title="{{S_SUBS_START}}">{{S_SUBS_HERO_START}}</button>
   </div>
  </div>
  <div class="stalerts" id="state_alerts"></div>
@@ -3882,6 +3889,8 @@ function paintSubsHeroKey(){
     });
   }
   box.style.display = subsKey ? "" : "none";
+  const assign = subsEl("subs_hero_assign");
+  if(assign){ assign.textContent = L.langkeyset; assign.style.display = subsKey ? "none" : ""; }
 }
 function renderSubsHero(s){
   const box = subsEl("subs_hero");
@@ -3976,6 +3985,8 @@ function initSubs(){
   subsEl("subs_go").onclick = ()=>subsToggle(subsEl("subs_go"));
   const heroGo = subsEl("subs_hero_go");
   if(heroGo) heroGo.onclick = ()=>subsToggle(heroGo);
+  const heroAssign = subsEl("subs_hero_assign");
+  if(heroAssign) heroAssign.onclick = ()=>{ captureFor = "subs"; appCaptureCombo(); };
   subsEl("subs_key").onclick = ()=>{ captureFor = "subs"; appCaptureCombo(); };
   subsEl("subs_key_clear").onclick = ()=>setSubsKey("");
   subsEl("subs_folder").onclick = ()=>appOpenTranscripts();

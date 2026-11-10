@@ -580,7 +580,7 @@ func init() {
 	settingsStrings["de"] = map[string]string{
 		"S_SUBS_ON": "Untertitel laufen",
 		"S_SUBS_HERO_HINT": "starten — Gespräch oder Video wird zu Text auf dem Bildschirm",
-		"S_SUBS_HERO_START": "Starten",
+		"S_SUBS_HERO_START": "Manuell starten",
 		"S_SUBS_HERO_STOP": "Beenden",
 		"S_UPDATED_TO": "Auf Version %s aktualisiert",
 		"S_SUBS_HERO_LIVE": "%s · Wörter schon beim Sprechen",
@@ -1210,7 +1210,7 @@ func init() {
 	settingsStrings["fr"] = map[string]string{
 		"S_SUBS_ON": "Les sous-titres tournent",
 		"S_SUBS_HERO_HINT": "démarrez-les — un appel ou une vidéo devient du texte à l'écran",
-		"S_SUBS_HERO_START": "Démarrer",
+		"S_SUBS_HERO_START": "Démarrer manuellement",
 		"S_SUBS_HERO_STOP": "Arrêter",
 		"S_UPDATED_TO": "Mis à jour vers la version %s",
 		"S_SUBS_HERO_LIVE": "%s · les mots au fil de la parole",
@@ -1840,7 +1840,7 @@ func init() {
 	settingsStrings["es"] = map[string]string{
 		"S_SUBS_ON": "Los subtítulos están en marcha",
 		"S_SUBS_HERO_HINT": "inícialos — una llamada o un vídeo se vuelven texto en pantalla",
-		"S_SUBS_HERO_START": "Iniciar",
+		"S_SUBS_HERO_START": "Iniciar manualmente",
 		"S_SUBS_HERO_STOP": "Detener",
 		"S_UPDATED_TO": "Actualizado a la versión %s",
 		"S_SUBS_HERO_LIVE": "%s · palabras a medida que se dicen",
@@ -2470,7 +2470,7 @@ func init() {
 	settingsStrings["it"] = map[string]string{
 		"S_SUBS_ON": "I sottotitoli sono attivi",
 		"S_SUBS_HERO_HINT": "avviali — una chiamata o un video diventano testo sullo schermo",
-		"S_SUBS_HERO_START": "Avvia",
+		"S_SUBS_HERO_START": "Avvia manualmente",
 		"S_SUBS_HERO_STOP": "Ferma",
 		"S_UPDATED_TO": "Aggiornato alla versione %s",
 		"S_SUBS_HERO_LIVE": "%s · parole mentre vengono dette",
@@ -3100,7 +3100,7 @@ func init() {
 	settingsStrings["pl"] = map[string]string{
 		"S_SUBS_ON": "Napisy działają",
 		"S_SUBS_HERO_HINT": "włącz je — rozmowa albo film zamienią się w tekst na ekranie",
-		"S_SUBS_HERO_START": "Włącz",
+		"S_SUBS_HERO_START": "Włącz ręcznie",
 		"S_SUBS_HERO_STOP": "Wyłącz",
 		"S_UPDATED_TO": "Zaktualizowano do wersji %s",
 		"S_SUBS_HERO_LIVE": "%s · słowa w trakcie mówienia",
@@ -3845,7 +3845,7 @@ func init() {
 	settingsStrings["uk"] = map[string]string{
 		"S_SUBS_ON": "Субтитри йдуть",
 		"S_SUBS_HERO_HINT": "запустіть — дзвінок чи відео стануть текстом на екрані",
-		"S_SUBS_HERO_START": "Запустити",
+		"S_SUBS_HERO_START": "Запустити вручну",
 		"S_SUBS_HERO_STOP": "Зупинити",
 		"S_UPDATED_TO": "Програму оновлено до версії %s",
 		"S_SUBS_HERO_LIVE": "%s · слова під час мовлення",

@@ -493,7 +493,7 @@ var settingsStrings = map[string]map[string]string{
 	"ru": {
 		"S_SUBS_ON": "Субтитры идут",
 		"S_SUBS_HERO_HINT": "запустите — звонок или видео станут текстом на экране",
-		"S_SUBS_HERO_START": "Запустить",
+		"S_SUBS_HERO_START": "Запустить вручную",
 		"S_SUBS_HERO_STOP": "Остановить",
 		"S_UPDATED_TO": "Программа обновлена до версии %s",
 		"S_SUBS_HERO_LIVE": "%s · слова по ходу речи",
@@ -1253,7 +1253,7 @@ var settingsStrings = map[string]map[string]string{
 	"en": {
 		"S_SUBS_ON": "Subtitles are on",
 		"S_SUBS_HERO_HINT": "start them — a call or a video becomes text on the screen",
-		"S_SUBS_HERO_START": "Start",
+		"S_SUBS_HERO_START": "Start manually",
 		"S_SUBS_HERO_STOP": "Stop",
 		"S_UPDATED_TO": "Updated to version %s",
 		"S_SUBS_HERO_LIVE": "%s · words as they are spoken",
