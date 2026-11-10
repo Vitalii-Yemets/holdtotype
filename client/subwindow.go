@@ -236,12 +236,10 @@ func swPlace() (work, screen rect) {
 	return monitorRectsForPoint(pt.X, pt.Y)
 }
 
-func swLayout(hwnd uintptr) {
-	wa, screen := swPlace()
-	dpi := dpiForPoint(wa.Left+(wa.Right-wa.Left)/2, wa.Top+(wa.Bottom-wa.Top)/2)
+func swMeasure(wa rect, dpi int32) (w, h, lineH int32) {
 	px := func(v int32) int32 { return scaleDPI(v, dpi) }
 	waW := wa.Right - wa.Left
-	w := waW * swShare / 100
+	w = waW * swShare / 100
 	if w < px(swMinW) {
 		w = px(swMinW)
 	}
@@ -251,21 +249,30 @@ func swLayout(hwnd uintptr) {
 	if w > waW {
 		w = waW
 	}
-	lineH := swMeasureLine(swTextFont(dpi))
+	lineH = swMeasureLine(swTextFont(dpi))
 	if lineH <= 0 {
 		lineH = px(24)
 	}
 	swMu.Lock()
 	rows := swRows
+	swMu.Unlock()
+	h = px(swHeaderDIP) + px(swPadTop) + rows*lineH + px(swPadBottom)
+	return w, h, lineH
+}
+
+func swLayout(hwnd uintptr) {
+	wa, screen := swPlace()
+	dpi := dpiForPoint(wa.Left+(wa.Right-wa.Left)/2, wa.Top+(wa.Bottom-wa.Top)/2)
+	w, h, lineH := swMeasure(wa, dpi)
+	swMu.Lock()
 	custom := swCustom
 	swMu.Unlock()
-	h := px(swHeaderDIP) + px(swPadTop) + rows*lineH + px(swPadBottom)
 	var x, y int32
 	if f, ok := custom[ovplace.ResKey(toPlace(screen))]; ok {
 		x, y = ovplace.Custom(f, toPlace(wa), w, h)
 	} else {
-		x = wa.Left + (waW-w)/2
-		y = wa.Bottom - px(swBottomGap) - h
+		x = wa.Left + (wa.Right-wa.Left-w)/2
+		y = wa.Bottom - scaleDPI(swBottomGap, dpi) - h
 		if y < wa.Top {
 			y = wa.Top
 		}
@@ -273,6 +280,35 @@ func swLayout(hwnd uintptr) {
 	swX, swY, swW, swH, swLineH, swDPI = x, y, w, h, lineH, dpi
 	procSetWindowPos.Call(hwnd, ^uintptr(0), uintptr(x), uintptr(y), uintptr(w), uintptr(h), swpNoActivate)
 	procSetWindowRgn.Call(hwnd, swRegion(w, h, dpi), 1)
+}
+
+func swRescale(hwnd uintptr) bool {
+	var pt point
+	procGetCursorPos.Call(uintptr(unsafe.Pointer(&pt)))
+	cx, cy := pt.X, pt.Y
+	if !swDragging {
+		cx, cy = swX+swW/2, swY+swH/2
+	}
+	dpi := dpiForPoint(cx, cy)
+	if dpi == swDPI || swW <= 0 || swH <= 0 {
+		return false
+	}
+	wa, _ := monitorRectsForPoint(cx, cy)
+	w, h, lineH := swMeasure(wa, dpi)
+	var x, y int32
+	if swDragging {
+		swDragDX = int32(int64(swDragDX) * int64(w) / int64(swW))
+		swDragDY = int32(int64(swDragDY) * int64(h) / int64(swH))
+		x, y = pt.X-swDragDX, pt.Y-swDragDY
+	} else {
+		x, y = cx-w/2, cy-h/2
+	}
+	log.Printf("subtitles: the window is on a screen at %d DPI now, %dx%d", dpi, w, h)
+	swX, swY, swW, swH, swLineH, swDPI = x, y, w, h, lineH, dpi
+	procSetWindowPos.Call(hwnd, ^uintptr(0), uintptr(x), uintptr(y), uintptr(w), uintptr(h), swpNoActivate)
+	procSetWindowRgn.Call(hwnd, swRegion(w, h, dpi), 1)
+	swRenderNow(hwnd)
+	return true
 }
 
 func swRegion(w, h, dpi int32) uintptr {
@@ -480,7 +516,12 @@ func subWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 	case wmSwSet:
 		swApplyState(hwnd)
 		return 0
-	case wmSwLayout, wmDpiChanged:
+	case wmDpiChanged:
+		if swShown {
+			swRescale(hwnd)
+		}
+		return 0
+	case wmSwLayout:
 		if swShown {
 			swLayout(hwnd)
 			swRenderNow(hwnd)
@@ -530,6 +571,9 @@ func subWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 		if swDragging {
 			var pt point
 			procGetCursorPos.Call(uintptr(unsafe.Pointer(&pt)))
+			if swRescale(hwnd) {
+				return 0
+			}
 			nx, ny := pt.X-swDragDX, pt.Y-swDragDY
 			if nx != swX || ny != swY {
 				swX, swY = nx, ny
