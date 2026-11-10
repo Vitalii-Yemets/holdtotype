@@ -100,13 +100,11 @@ func engineInstanceConfig(cfg *Config, engine, modelPath string) (*Config, error
 		}
 		port = &c.ServerPort
 	}
-	if !portFree(*port) {
-		p, err := freeLocalPort(cfg.ServerPort, cfg.SherpaPort, cfg.StreamPort, cfg.LLMPort)
-		if err != nil {
-			return nil, err
-		}
-		*port = p
+	p, err := freeLocalPort(cfg.ServerPort, cfg.SherpaPort, cfg.StreamPort, cfg.LLMPort)
+	if err != nil {
+		return nil, err
 	}
+	*port = p
 	return &c, nil
 }
 
