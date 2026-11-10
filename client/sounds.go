@@ -12,6 +12,8 @@ import (
 	"unsafe"
 
 	"golang.org/x/sys/windows"
+
+	"holdtotype/internal/subtitles"
 )
 
 var (
@@ -216,11 +218,14 @@ func playWav(wav []byte) {
 	if len(wav) == 0 {
 		return
 	}
+	length, _ := subtitles.WavDuration(wav)
+	cueMutes.Add(time.Now(), length)
 	procPlaySoundW.Call(uintptr(unsafe.Pointer(&wav[0])), 0, sndMemory|sndAsync|sndNoDefault)
 }
 
 func playTheme(theme string, kind int) {
 	if p := cueFilePath(theme, kind); p != nil {
+		cueMutes.Add(time.Now(), cueFileLength(theme, kind))
 		procPlaySoundW.Call(uintptr(unsafe.Pointer(p)), 0, sndFilename|sndAsync|sndNoDefault)
 		return
 	}
@@ -240,4 +245,26 @@ func previewTheme(theme string) {
 		time.Sleep(900 * time.Millisecond)
 		playTheme(theme, cueStop)
 	}()
+}
+
+var (
+	cueMutes   = subtitles.NewMutes(subtitles.MuteBefore, subtitles.MuteAfter)
+	cueLengths sync.Map
+)
+
+func cueFileLength(theme string, kind int) time.Duration {
+	key := fmt.Sprintf("%s/%d", theme, kind)
+	if v, ok := cueLengths.Load(key); ok {
+		return v.(time.Duration)
+	}
+	length := subtitles.CueGuess
+	if p := cueFilePath(theme, kind); p != nil {
+		if data, err := os.ReadFile(windows.UTF16PtrToString(p)); err == nil {
+			if d, ok := subtitles.WavDuration(data); ok {
+				length = d
+			}
+		}
+	}
+	cueLengths.Store(key, length)
+	return length
 }

@@ -147,6 +147,7 @@ type subRun struct {
 	fileErr  bool
 
 	skipped atomic.Int64
+	muted   atomic.Int64
 
 	liveMu   sync.Mutex
 	liveLast time.Time
@@ -246,6 +247,7 @@ func (r *subRun) loop(t *subTarget) {
 	defer tick.Stop()
 	dev := time.NewTicker(time.Second)
 	defer dev.Stop()
+	muting := false
 	for {
 		select {
 		case <-r.stopCh:
@@ -257,7 +259,17 @@ func (r *subRun) loop(t *subTarget) {
 			pipe.stop(subRestartDrain)
 			pipe = newSubPipe(r, next)
 		case <-tick.C:
-			out := r.pacer.Tick(time.Now(), r.cap.take())
+			now := time.Now()
+			chunk := r.cap.take()
+			n := cueMutes.Apply(chunk, now, sampleRate)
+			if n > 0 {
+				r.muted.Add(int64(n))
+				if !muting {
+					log.Printf("subtitles: the app's own sound is playing, it is silenced")
+				}
+			}
+			muting = n > 0
+			out := r.pacer.Tick(now, chunk)
 			if len(out) > 0 {
 				pipe.feed(out)
 			}
@@ -393,9 +405,9 @@ func (r *subRun) finish() {
 	if path == "" {
 		path = "none"
 	}
-	log.Printf("subtitles: summary: %.1f s captured, %.1f s of silence added, topping up paused %d time(s) after %.0f s of silence, %d line(s), %.1f s skipped, engine %s on port %d with %s (%s), %d device open(s), transcript %s",
+	log.Printf("subtitles: summary: %.1f s captured, %.1f s of silence added, topping up paused %d time(s) after %.0f s of silence, %d line(s), %.1f s skipped, %.1f s of the app's own sounds silenced, engine %s on port %d with %s (%s), %d device open(s), transcript %s",
 		r.pacer.Captured().Seconds(), r.pacer.Added().Seconds(), r.pacer.Pauses(), subtitles.SilenceLimit.Seconds(),
-		r.board.Count(), time.Duration(r.skipped.Load()).Seconds(), name, port, model, how, r.cap.opens.Load(), path)
+		r.board.Count(), time.Duration(r.skipped.Load()).Seconds(), float64(r.muted.Load())/sampleRate, name, port, model, how, r.cap.opens.Load(), path)
 	if r.opts.onEnd != nil {
 		r.opts.onEnd(r)
 	}
