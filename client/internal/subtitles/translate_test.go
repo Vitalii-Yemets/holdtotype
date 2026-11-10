@@ -44,15 +44,15 @@ func TestRowsWithoutTranslations(t *testing.T) {
 	b.Add(time.Now(), "one")
 	b.Add(time.Now(), "two")
 	want := []Row{{RowLine, "one"}, {RowLine, "two"}}
-	if got := b.Tail(500).Rows(); !reflect.DeepEqual(got, want) {
+	if got := b.Tail(500, false).Rows(); !reflect.DeepEqual(got, want) {
 		t.Fatalf("rows %+v", got)
 	}
 	b.SetLive("thr")
 	want = append(want, Row{RowLive, "thr"})
-	if got := b.Tail(500).Rows(); !reflect.DeepEqual(got, want) {
+	if got := b.Tail(500, false).Rows(); !reflect.DeepEqual(got, want) {
 		t.Fatalf("rows with live text %+v", got)
 	}
-	if got := NewBoard(3).Tail(100).Rows(); len(got) != 0 {
+	if got := NewBoard(3).Tail(100, false).Rows(); len(got) != 0 {
 		t.Fatalf("empty board %+v", got)
 	}
 }
@@ -71,7 +71,7 @@ func TestRowsPutEachTranslationUnderItsLine(t *testing.T) {
 		{RowLine, "three"}, {RowTranslation, "drei"},
 		{RowLive, "four"},
 	}
-	v := b.Tail(500)
+	v := b.Tail(500, true)
 	if got := v.Rows(); !reflect.DeepEqual(got, want) {
 		t.Fatalf("rows %+v", got)
 	}
@@ -86,16 +86,16 @@ func TestTailCountsTranslationsInItsBudget(t *testing.T) {
 	c := b.Add(time.Now(), "bbbbb")
 	b.SetTranslation(a.ID, "AAAAA")
 	b.SetTranslation(c.ID, "BBBBB")
-	v := b.Tail(15)
+	v := b.Tail(15, true)
 	if len(v.Lines) != 1 || v.Lines[0].Text != "bbbbb" || v.Lines[0].Tr != "BBBBB" {
 		t.Fatalf("tail %+v", v.Lines)
 	}
-	v = b.Tail(20)
+	v = b.Tail(20, true)
 	if len(v.Lines) != 2 {
 		t.Fatalf("tail %+v", v.Lines)
 	}
 	b.SetLive("live!")
-	if v = b.Tail(20); len(v.Lines) != 1 || v.Live != "live!" {
+	if v = b.Tail(20, true); len(v.Lines) != 1 || v.Live != "live!" {
 		t.Fatalf("tail with live text %+v", v)
 	}
 }
@@ -104,7 +104,7 @@ func TestTailCutsTheOriginalBeforeTheTranslation(t *testing.T) {
 	b := NewBoard(10)
 	ln := b.Add(time.Now(), strings.Repeat("word ", 10))
 	b.SetTranslation(ln.ID, "Wort Wort")
-	v := b.Tail(20)
+	v := b.Tail(20, true)
 	if len(v.Lines) != 1 || v.Lines[0].Tr != "Wort Wort" {
 		t.Fatalf("tail %+v", v.Lines)
 	}
@@ -112,7 +112,7 @@ func TestTailCutsTheOriginalBeforeTheTranslation(t *testing.T) {
 		t.Fatalf("cut %+v (%d runes)", v.Lines[0], n)
 	}
 	b.SetTranslation(ln.ID, strings.Repeat("Wort ", 10))
-	v = b.Tail(20)
+	v = b.Tail(20, true)
 	if len(v.Lines) != 1 || v.Lines[0].Text != "" || len([]rune(v.Lines[0].Tr)) > 20 {
 		t.Fatalf("an overlong translation %+v", v.Lines)
 	}
@@ -122,6 +122,29 @@ func TestTailCutsTheOriginalBeforeTheTranslation(t *testing.T) {
 	}
 	if v.Text() != "" {
 		t.Fatalf("text %q", v.Text())
+	}
+}
+
+func TestHiddenTranslationsTakeNoRoomAndComeBack(t *testing.T) {
+	b := NewBoard(10)
+	a := b.Add(time.Now(), "aaaaa")
+	c := b.Add(time.Now(), "bbbbb")
+	b.SetTranslation(a.ID, "AAAAA")
+	b.SetTranslation(c.ID, "BBBBB")
+	v := b.Tail(10, false)
+	if len(v.Lines) != 2 || v.Lines[0].Tr != "" || v.Lines[1].Tr != "" {
+		t.Fatalf("hidden translations %+v", v.Lines)
+	}
+	want := []Row{{RowLine, "aaaaa"}, {RowLine, "bbbbb"}}
+	if got := v.Rows(); !reflect.DeepEqual(got, want) {
+		t.Fatalf("rows with hidden translations %+v", got)
+	}
+	v = b.Tail(10, true)
+	if len(v.Lines) != 1 || v.Lines[0].Tr != "BBBBB" {
+		t.Fatalf("shown again %+v", v.Lines)
+	}
+	if lines := b.Lines(); lines[0].Tr != "AAAAA" || lines[1].Tr != "BBBBB" {
+		t.Fatalf("the board lost its translations %+v", lines)
 	}
 }
 

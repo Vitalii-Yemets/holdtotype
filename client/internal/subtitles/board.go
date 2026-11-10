@@ -106,7 +106,7 @@ func cutLine(ln Line, budget int) Line {
 	return ln
 }
 
-func (b *Board) Tail(maxRunes int) View {
+func (b *Board) Tail(maxRunes int, translations bool) View {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	var v View
@@ -121,6 +121,9 @@ func (b *Board) Tail(maxRunes int) View {
 	var picked []Line
 	for i := len(b.lines) - 1; i >= 0 && budget > 0; i-- {
 		ln := b.lines[i]
+		if !translations {
+			ln.Tr = ""
+		}
 		n := len([]rune(ln.Text)) + len([]rune(ln.Tr))
 		if n > budget {
 			if len(picked) == 0 {

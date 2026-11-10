@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"runtime"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -50,7 +51,8 @@ var swSizes = map[string]int32{"s": 15, "m": 19, "l": 25}
 
 type subWindowSource interface {
 	windowPhase() int
-	windowText() string
+	windowRows() []subtitles.Row
+	windowTranslated() bool
 }
 
 var (
@@ -76,7 +78,8 @@ var (
 	swW, swH    int32
 	swLineH     int32
 	swDPI       int32 = 96
-	swLastText  string
+	swLastRows  []subtitles.Row
+	swLaidTr    bool
 	swLastPhase = -1
 	swLastPaint time.Time
 	swTicks     int
@@ -236,7 +239,7 @@ func swPlace() (work, screen rect) {
 	return monitorRectsForPoint(pt.X, pt.Y)
 }
 
-func swMeasure(wa rect, dpi int32) (w, h, lineH int32) {
+func swMeasure(wa rect, dpi int32, translated bool) (w, h, lineH int32) {
 	px := func(v int32) int32 { return scaleDPI(v, dpi) }
 	waW := wa.Right - wa.Left
 	w = waW * swShare / 100
@@ -256,14 +259,25 @@ func swMeasure(wa rect, dpi int32) (w, h, lineH int32) {
 	swMu.Lock()
 	rows := swRows
 	swMu.Unlock()
+	if translated {
+		rows *= 2
+	}
 	h = px(swHeaderDIP) + px(swPadTop) + rows*lineH + px(swPadBottom)
 	return w, h, lineH
+}
+
+func swTranslatedNow() bool {
+	swMu.Lock()
+	src := swSrc
+	swMu.Unlock()
+	return src != nil && src.windowTranslated()
 }
 
 func swLayout(hwnd uintptr) {
 	wa, screen := swPlace()
 	dpi := dpiForPoint(wa.Left+(wa.Right-wa.Left)/2, wa.Top+(wa.Bottom-wa.Top)/2)
-	w, h, lineH := swMeasure(wa, dpi)
+	translated := swTranslatedNow()
+	w, h, lineH := swMeasure(wa, dpi, translated)
 	swMu.Lock()
 	custom := swCustom
 	swMu.Unlock()
@@ -278,6 +292,7 @@ func swLayout(hwnd uintptr) {
 		}
 	}
 	swX, swY, swW, swH, swLineH, swDPI = x, y, w, h, lineH, dpi
+	swLaidTr = translated
 	procSetWindowPos.Call(hwnd, ^uintptr(0), uintptr(x), uintptr(y), uintptr(w), uintptr(h), swpNoActivate)
 	procSetWindowRgn.Call(hwnd, swRegion(w, h, dpi), 1)
 }
@@ -294,7 +309,7 @@ func swRescale(hwnd uintptr) bool {
 		return false
 	}
 	wa, _ := monitorRectsForPoint(cx, cy)
-	w, h, lineH := swMeasure(wa, dpi)
+	w, h, lineH := swMeasure(wa, dpi, swLaidTr)
 	var x, y int32
 	if swDragging {
 		swDragDX = int32(int64(swDragDX) * int64(w) / int64(swW))
@@ -338,14 +353,14 @@ func swCursorClient(hwnd uintptr) (int32, int32) {
 	return pt.X, pt.Y
 }
 
-func swContent() (int, string, bool) {
+func swContent() (int, []subtitles.Row, bool) {
 	swMu.Lock()
 	src := swSrc
 	swMu.Unlock()
 	if src == nil {
-		return 0, "", false
+		return 0, nil, false
 	}
-	return src.windowPhase(), src.windowText(), true
+	return src.windowPhase(), src.windowRows(), true
 }
 
 func swApplyState(hwnd uintptr) {
@@ -358,7 +373,7 @@ func swApplyState(hwnd uintptr) {
 		procKillTimer.Call(hwnd, swTimerID)
 		procShowWindow.Call(hwnd, swHide)
 		swShown = false
-		swLastText, swLastPhase = "", -1
+		swLastRows, swLastPhase = nil, -1
 		return
 	}
 	if !swShown {
@@ -413,8 +428,8 @@ func swRender(hwnd, hdc uintptr) {
 	procGetClientRect.Call(hwnd, uintptr(unsafe.Pointer(&rc)))
 	dpi := swDPI
 	px := func(v int32) int32 { return scaleDPI(v, dpi) }
-	phase, text, _ := swContent()
-	swLastText, swLastPhase = text, phase
+	phase, rows, _ := swContent()
+	swLastRows, swLastPhase = rows, phase
 
 	fill := func(r rect, color uintptr) {
 		br, _, _ := procCreateSolidBrush.Call(color)
@@ -479,19 +494,37 @@ func swRender(hwnd, hdc uintptr) {
 	area := rect{Left: px(swPadX), Top: head + px(swPadTop), Right: rc.Right - px(swPadX), Bottom: rc.Bottom - px(swPadBottom)}
 	font := swTextFont(dpi)
 	procSelectObject.Call(hdc, font)
-	text = strings.TrimSpace(text)
-	if text == "" {
+	if !swHasText(rows) {
 		draw(swPhaseText(phase), rect{Left: area.Left, Top: area.Bottom - swLineH, Right: area.Right, Bottom: area.Bottom}, colGreenDm, 0x0020|0x0004|0x8000)
 		return
 	}
-	calc := rect{Right: area.Right - area.Left}
-	calc = draw(text, calc, colGreen, 0x0400|0x0010)
-	height := calc.Bottom - calc.Top
-	box := rect{Left: area.Left, Top: area.Bottom - height, Right: area.Right, Bottom: area.Bottom}
 	saved, _, _ := procSaveDC.Call(hdc)
 	procIntersectClipRect.Call(hdc, uintptr(area.Left), uintptr(area.Top), uintptr(area.Right), uintptr(area.Bottom))
-	draw(text, box, colGreen, 0x0010)
+	bottom := area.Bottom
+	for i := len(rows) - 1; i >= 0 && bottom > area.Top; i-- {
+		s := strings.TrimSpace(rows[i].Text)
+		if s == "" {
+			continue
+		}
+		color := colGreen
+		if rows[i].Kind == subtitles.RowTranslation {
+			color = colGreenDm
+		}
+		calc := draw(s, rect{Right: area.Right - area.Left}, color, 0x0400|0x0010)
+		height := calc.Bottom - calc.Top
+		draw(s, rect{Left: area.Left, Top: bottom - height, Right: area.Right, Bottom: bottom}, color, 0x0010)
+		bottom -= height
+	}
 	procRestoreDC.Call(hdc, saved)
+}
+
+func swHasText(rows []subtitles.Row) bool {
+	for _, r := range rows {
+		if strings.TrimSpace(r.Text) != "" {
+			return true
+		}
+	}
+	return false
 }
 
 func swSavePlace() {
@@ -535,10 +568,15 @@ func subWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 		if swTicks%30 == 0 {
 			overlayRaise(hwnd)
 		}
+		if !swDragging && swTranslatedNow() != swLaidTr {
+			swLayout(hwnd)
+			swRenderNow(hwnd)
+			return 0
+		}
 		x, y := swCursorClient(hwnd)
 		hover := swInClose(x, y)
-		phase, text, _ := swContent()
-		if hover != swHover || text != swLastText || phase != swLastPhase || time.Since(swLastPaint) > time.Second {
+		phase, rows, _ := swContent()
+		if hover != swHover || !slices.Equal(rows, swLastRows) || phase != swLastPhase || time.Since(swLastPaint) > time.Second {
 			swHover = hover
 			swRenderNow(hwnd)
 		}
@@ -633,9 +671,10 @@ func subWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 }
 
 type swDemo struct {
-	mu    sync.Mutex
-	phase int
-	board *subtitles.Board
+	mu        sync.Mutex
+	phase     int
+	board     *subtitles.Board
+	translate bool
 }
 
 func (d *swDemo) windowPhase() int {
@@ -644,8 +683,26 @@ func (d *swDemo) windowPhase() int {
 	return d.phase
 }
 
-func (d *swDemo) windowText() string {
-	return d.board.Tail(swTextRunes).Text()
+func (d *swDemo) windowRows() []subtitles.Row {
+	return d.board.Tail(swTextRunes, d.translate).Rows()
+}
+
+func (d *swDemo) windowTranslated() bool { return d.translate }
+
+var swDemoPairs = [][2]string{
+	{"Good morning everyone.", "Доброе утро всем."},
+	{"Thanks for joining the call today, I know it is early for some of you.", "Спасибо, что подключились, я знаю, что для некоторых из вас это рано."},
+	{"Let us start with a quick look at last week: the new build went out on Tuesday, and the feedback so far has been better than we expected, especially from the people who use the export every day.", "Начнём с короткого обзора прошлой недели: новая сборка вышла во вторник, и отзывы пока лучше, чем мы ожидали, особенно от тех, кто каждый день пользуется экспортом."},
+	{"Any questions so far?", "Пока есть вопросы?"},
+	{"If not, Anna will walk us through the plan for the next two weeks.", "Если нет, Анна расскажет нам о плане на следующие две недели."},
+}
+
+const swDemoTrDelay = 900 * time.Millisecond
+
+type swDemoTr struct {
+	id   int
+	text string
+	due  time.Time
 }
 
 var swDemoText = []string{
@@ -672,13 +729,26 @@ func runSubwindowDemo(args []string) {
 		subWindowConfigure(cfg.SubtitlesLines, cfg.SubtitlesSize, cfg.SubtitlesXY)
 		langCode = cfg.SubtitlesLanguage
 	}
-	demo := &swDemo{phase: subPhaseLoading, board: subtitles.NewBoard(subBoardKeep)}
+	translate := len(args) > 1 && strings.TrimSpace(args[1]) != ""
+	texts := swDemoText
+	if translate {
+		texts = make([]string, 0, len(swDemoPairs))
+		for _, p := range swDemoPairs {
+			texts = append(texts, p[0])
+		}
+	}
+	var pending []swDemoTr
+	demo := &swDemo{phase: subPhaseLoading, board: subtitles.NewBoard(subBoardKeep), translate: translate}
 	closed := make(chan struct{})
 	var once sync.Once
 	subWindowShow(demo, langCode, func() { once.Do(func() { close(closed) }) }, func(key string, f ovplace.Frac) {
 		log.Printf("subwindow: the place %s %.3f,%.3f is not saved by the demo", key, f.X, f.Y)
 	})
-	log.Printf("subwindow: showing the subtitles window for %d s", seconds)
+	if translate {
+		log.Printf("subwindow: showing the subtitles window with translations for %d s", seconds)
+	} else {
+		log.Printf("subwindow: showing the subtitles window for %d s", seconds)
+	}
 	end := time.After(time.Duration(seconds) * time.Second)
 	tick := time.NewTicker(220 * time.Millisecond)
 	defer tick.Stop()
@@ -707,13 +777,21 @@ loop:
 		if age < 3*time.Second {
 			continue
 		}
-		words := strings.Fields(swDemoText[sentence%len(swDemoText)])
+		for len(pending) > 0 && !time.Now().Before(pending[0].due) {
+			demo.board.SetTranslation(pending[0].id, pending[0].text)
+			pending = pending[1:]
+		}
+		n := sentence % len(texts)
+		words := strings.Fields(texts[n])
 		if word == 0 {
 			lineStart = time.Now()
 		}
 		word++
 		if word > len(words) {
-			demo.board.Add(lineStart, strings.Join(words, " "))
+			ln := demo.board.Add(lineStart, strings.Join(words, " "))
+			if translate {
+				pending = append(pending, swDemoTr{id: ln.ID, text: swDemoPairs[n][1], due: time.Now().Add(swDemoTrDelay)})
+			}
 			demo.board.SetLive("")
 			sentence++
 			word = 0

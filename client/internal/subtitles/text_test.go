@@ -34,7 +34,7 @@ func TestTailTakesTheNewestThatFit(t *testing.T) {
 	b.Add(now, "second line")
 	b.Add(now, "third")
 	b.SetLive("  live   words ")
-	v := b.Tail(26)
+	v := b.Tail(26, false)
 	if v.Live != "live words" {
 		t.Fatalf("live %q", v.Live)
 	}
@@ -47,7 +47,7 @@ func TestTailCutsAnOverlongNewestLine(t *testing.T) {
 	b := NewBoard(10)
 	b.Add(time.Now(), "older")
 	b.Add(time.Now(), strings.Repeat("word ", 20))
-	v := b.Tail(30)
+	v := b.Tail(30, false)
 	if len(v.Lines) != 1 {
 		t.Fatalf("tail %+v", v.Lines)
 	}
@@ -60,7 +60,7 @@ func TestTailCutsAnOverlongNewestLine(t *testing.T) {
 }
 
 func TestTailOfAnEmptyBoard(t *testing.T) {
-	v := NewBoard(3).Tail(100)
+	v := NewBoard(3).Tail(100, false)
 	if len(v.Lines) != 0 || v.Live != "" {
 		t.Fatalf("%+v", v)
 	}
@@ -176,14 +176,14 @@ func TestViewTextPutsEachLineOnItsOwnRow(t *testing.T) {
 	b.Add(time.Now(), "next to the cafeteria")
 	b.Add(time.Now(), "Tomorrow we will visit the old castle")
 	b.SetLive("Could you send me")
-	if got := b.Tail(500).Text(); got != "next to the cafeteria\nTomorrow we will visit the old castle\nCould you send me" {
+	if got := b.Tail(500, false).Text(); got != "next to the cafeteria\nTomorrow we will visit the old castle\nCould you send me" {
 		t.Fatalf("text %q", got)
 	}
 	b.SetLive("")
-	if got := b.Tail(500).Text(); got != "next to the cafeteria\nTomorrow we will visit the old castle" {
+	if got := b.Tail(500, false).Text(); got != "next to the cafeteria\nTomorrow we will visit the old castle" {
 		t.Fatalf("text without live %q", got)
 	}
-	if got := NewBoard(3).Tail(100).Text(); got != "" {
+	if got := NewBoard(3).Tail(100, false).Text(); got != "" {
 		t.Fatalf("empty board %q", got)
 	}
 }

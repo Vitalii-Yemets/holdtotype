@@ -184,6 +184,7 @@ type subRun struct {
 	trClosed bool
 	trSeen   string
 	trLang   string
+	trShown  atomic.Bool
 
 	skipped atomic.Int64
 	muted   atomic.Int64
@@ -223,6 +224,7 @@ func startSubtitlesRun(a *App, cfg *Config, opts subOptions) (*subRun, error) {
 	}
 	log.Printf("subtitles: started: language %s, model %s, mode %s", t.lang, t.name, t.mode)
 	r.syncTranslation(cfg, t)
+	r.refreshShown()
 	go r.loop(t)
 	return r, nil
 }
@@ -253,8 +255,15 @@ func (r *subRun) setPhase(p int) { r.phase.Store(int32(p)) }
 
 func (r *subRun) windowPhase() int { return int(r.phase.Load()) }
 
-func (r *subRun) windowText() string {
-	return r.board.Tail(swTextRunes).Text()
+func (r *subRun) windowRows() []subtitles.Row {
+	return r.board.Tail(swTextRunes, r.trShown.Load()).Rows()
+}
+
+func (r *subRun) windowTranslated() bool { return r.trShown.Load() }
+
+func (r *subRun) refreshShown() {
+	t := r.target()
+	r.trShown.Store(t != nil && translationTarget(r.app.snapshot(), t) != "")
 }
 
 func (r *subRun) fail(kind, msg string) {
@@ -332,6 +341,7 @@ func (r *subRun) loop(t *subTarget) {
 			}
 		case <-dev.C:
 			r.checkDevice(time.Now())
+			r.refreshShown()
 		}
 	}
 }
@@ -1470,6 +1480,7 @@ func (a *App) subtitlesConfigChanged() {
 		subWindowSetLang(r, t.lang)
 	}
 	r.syncTranslation(cfg, t)
+	r.refreshShown()
 }
 
 func runSubcheck(args []string) {
