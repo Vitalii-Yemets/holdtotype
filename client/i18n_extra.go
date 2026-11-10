@@ -579,7 +579,9 @@ func init() {
 
 	settingsStrings["de"] = map[string]string{
 		"S_SUBS_ON": "Untertitel laufen",
-		"S_SUBS_HERO_HINT": "starten — was der Computer abspielt, erscheint als Text in einem Fenster über den anderen",
+		"S_SUBS_HERO_HINT": "starten — Gespräch oder Video wird zu Text auf dem Bildschirm",
+		"S_SUBS_HERO_START": "Starten",
+		"S_SUBS_HERO_STOP": "Beenden",
 		"S_SUBS_HERO_LIVE": "%s · Wörter schon beim Sprechen",
 		"S_SUBS_HERO_PHRASES": "%s · Text nach jedem Satz",
 		"S_NAV_SUBS": "Untertitel",
@@ -1206,7 +1208,9 @@ func init() {
 	}
 	settingsStrings["fr"] = map[string]string{
 		"S_SUBS_ON": "Les sous-titres tournent",
-		"S_SUBS_HERO_HINT": "démarrez-les — ce que joue l'ordinateur apparaît en texte dans une fenêtre au-dessus des autres",
+		"S_SUBS_HERO_HINT": "démarrez-les — un appel ou une vidéo devient du texte à l'écran",
+		"S_SUBS_HERO_START": "Démarrer",
+		"S_SUBS_HERO_STOP": "Arrêter",
 		"S_SUBS_HERO_LIVE": "%s · les mots au fil de la parole",
 		"S_SUBS_HERO_PHRASES": "%s · le texte après chaque phrase",
 		"S_NAV_SUBS": "Sous-titres",
@@ -1833,7 +1837,9 @@ func init() {
 	}
 	settingsStrings["es"] = map[string]string{
 		"S_SUBS_ON": "Los subtítulos están en marcha",
-		"S_SUBS_HERO_HINT": "inícialos — lo que suena en el ordenador aparece como texto en una ventana encima de las demás",
+		"S_SUBS_HERO_HINT": "inícialos — una llamada o un vídeo se vuelven texto en pantalla",
+		"S_SUBS_HERO_START": "Iniciar",
+		"S_SUBS_HERO_STOP": "Detener",
 		"S_SUBS_HERO_LIVE": "%s · palabras a medida que se dicen",
 		"S_SUBS_HERO_PHRASES": "%s · texto tras cada frase",
 		"S_NAV_SUBS": "Subtítulos",
@@ -2460,7 +2466,9 @@ func init() {
 	}
 	settingsStrings["it"] = map[string]string{
 		"S_SUBS_ON": "I sottotitoli sono attivi",
-		"S_SUBS_HERO_HINT": "avviali — ciò che riproduce il computer appare come testo in una finestra sopra le altre",
+		"S_SUBS_HERO_HINT": "avviali — una chiamata o un video diventano testo sullo schermo",
+		"S_SUBS_HERO_START": "Avvia",
+		"S_SUBS_HERO_STOP": "Ferma",
 		"S_SUBS_HERO_LIVE": "%s · parole mentre vengono dette",
 		"S_SUBS_HERO_PHRASES": "%s · testo dopo ogni frase",
 		"S_NAV_SUBS": "Sottotitoli",
@@ -3087,7 +3095,9 @@ func init() {
 	}
 	settingsStrings["pl"] = map[string]string{
 		"S_SUBS_ON": "Napisy działają",
-		"S_SUBS_HERO_HINT": "włącz je — to, co odtwarza komputer, pojawi się jako tekst w oknie nad innymi",
+		"S_SUBS_HERO_HINT": "włącz je — rozmowa albo film zamienią się w tekst na ekranie",
+		"S_SUBS_HERO_START": "Włącz",
+		"S_SUBS_HERO_STOP": "Wyłącz",
 		"S_SUBS_HERO_LIVE": "%s · słowa w trakcie mówienia",
 		"S_SUBS_HERO_PHRASES": "%s · tekst po każdym zdaniu",
 		"S_NAV_SUBS": "Napisy",
@@ -3829,7 +3839,9 @@ func init() {
 	}
 	settingsStrings["uk"] = map[string]string{
 		"S_SUBS_ON": "Субтитри йдуть",
-		"S_SUBS_HERO_HINT": "запустіть — і те, що звучить на комп'ютері, з'явиться текстом у вікні поверх інших",
+		"S_SUBS_HERO_HINT": "запустіть — дзвінок чи відео стануть текстом на екрані",
+		"S_SUBS_HERO_START": "Запустити",
+		"S_SUBS_HERO_STOP": "Зупинити",
 		"S_SUBS_HERO_LIVE": "%s · слова під час мовлення",
 		"S_SUBS_HERO_PHRASES": "%s · текст після кожної фрази",
 		"S_NAV_SUBS": "Субтитри",

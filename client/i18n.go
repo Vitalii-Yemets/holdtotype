@@ -492,7 +492,9 @@ var msgs = map[string]map[string]string{
 var settingsStrings = map[string]map[string]string{
 	"ru": {
 		"S_SUBS_ON": "Субтитры идут",
-		"S_SUBS_HERO_HINT": "запустите — и то, что звучит на компьютере, появится текстом в окне поверх остальных",
+		"S_SUBS_HERO_HINT": "запустите — звонок или видео станут текстом на экране",
+		"S_SUBS_HERO_START": "Запустить",
+		"S_SUBS_HERO_STOP": "Остановить",
 		"S_SUBS_HERO_LIVE": "%s · слова по ходу речи",
 		"S_SUBS_HERO_PHRASES": "%s · текст после каждой фразы",
 		"S_NAV_SUBS": "Субтитры",
@@ -1249,7 +1251,9 @@ var settingsStrings = map[string]map[string]string{
 	},
 	"en": {
 		"S_SUBS_ON": "Subtitles are on",
-		"S_SUBS_HERO_HINT": "start them — what the computer plays appears as text in a window on top of the others",
+		"S_SUBS_HERO_HINT": "start them — a call or a video becomes text on the screen",
+		"S_SUBS_HERO_START": "Start",
+		"S_SUBS_HERO_STOP": "Stop",
 		"S_SUBS_HERO_LIVE": "%s · words as they are spoken",
 		"S_SUBS_HERO_PHRASES": "%s · text after each phrase",
 		"S_NAV_SUBS": "Subtitles",

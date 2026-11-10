@@ -1221,6 +1221,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"subsmlive": "S_SUBS_M_LIVE", "subsmphrases": "S_SUBS_M_PHRASES", "subsmabsent": "S_SUBS_M_ABSENT", "subsmwhisper": "S_SUBS_M_WHISPER",
 		"subsplacedone": "S_SUBS_PLACE_DONE",
 		"subson": "S_SUBS_ON", "subsherohint": "S_SUBS_HERO_HINT", "subsherolive": "S_SUBS_HERO_LIVE", "subsherophrases": "S_SUBS_HERO_PHRASES",
+		"subsherostart": "S_SUBS_HERO_START", "subsherostop": "S_SUBS_HERO_STOP",
 	} {
 		lMap[jsKey] = str(sKey)
 	}
@@ -2072,7 +2073,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
   </div>
   <div class="stkeys" id="subs_hero_keys">
    <span class="stcombo" id="subs_hero_combo" style="display:none"></span>
-   <button type="button" class="mini small" id="subs_hero_go">{{S_SUBS_START}}</button>
+   <button type="button" class="mini small" id="subs_hero_go" title="{{S_SUBS_START}}">{{S_SUBS_HERO_START}}</button>
    <button type="button" class="iconbtn stgo" id="subs_hero_goto" data-goto="subs" title="{{S_ST_GOTO}}">&#8599;</button>
   </div>
  </div>
@@ -3898,7 +3899,12 @@ function renderSubsHero(s){
   const h = subsEl("subs_hero_sub");
   if(h) h.textContent = sub;
   const go = subsEl("subs_hero_go");
-  if(go) go.textContent = phase === "off" ? L.subsstart : L.subsstop;
+  if(go){
+    const full = phase === "off" ? L.subsstart : L.subsstop;
+    go.textContent = phase === "off" ? L.subsherostart : L.subsherostop;
+    go.dataset.tip = full;
+    go.setAttribute("aria-label", full);
+  }
   paintSubsHeroKey();
 }
 async function subsToggle(btn){

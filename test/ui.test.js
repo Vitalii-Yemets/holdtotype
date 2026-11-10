@@ -1704,9 +1704,9 @@ function check(name, actual, expected) {
   const heroLed = () => [sv("subs_hero_led").classList.contains("on"), sv("subs_hero_led").classList.contains("warn")];
   w.subsState = { phase: "off" };
   await w.refreshState();
-  check("off: the card says so with a hint", [sv("subs_hero_title").textContent, sv("subs_hero_sub").textContent], ["Subtitles are off", "start them — what the computer plays appears as text in a window on top of the others"]);
+  check("off: the card says so with a hint", [sv("subs_hero_title").textContent, sv("subs_hero_sub").textContent], ["Subtitles are off", "start them — a call or a video becomes text on the screen"]);
   check("off: the lamp is dark", heroLed(), [false, false]);
-  check("off: the button offers to start", sv("subs_hero_go").textContent, "Start subtitles");
+  check("off: the button offers to start, short, with the full words as its hint", [sv("subs_hero_go").textContent, sv("subs_hero_go").dataset.tip], ["Start", "Start subtitles"]);
   w.subsState = { phase: "loading", mode: "live", model: "Nemotron 3.5", lang: "en" };
   await w.refreshState();
   check("loading: the tab's sentence and the model", [sv("subs_hero_title").textContent, sv("subs_hero_sub").textContent], ["Loading Nemotron 3.5…", "Nemotron 3.5 · words as they are spoken"]);
@@ -1715,7 +1715,7 @@ function check(name, actual, expected) {
   await w.refreshState();
   check("listening: on, with the model and the mode", [sv("subs_hero_title").textContent, sv("subs_hero_sub").textContent], ["Subtitles are on", "Nemotron 3.5 · words as they are spoken"]);
   check("listening: the lamp is lit", heroLed(), [true, false]);
-  check("listening: the button offers to stop", sv("subs_hero_go").textContent, "Stop subtitles");
+  check("listening: the button offers to stop, short, with the full words as its hint", [sv("subs_hero_go").textContent, sv("subs_hero_go").dataset.tip], ["Stop", "Stop subtitles"]);
   w.subsState = { phase: "restarting", mode: "phrases", model: "Parakeet TDT 0.6B v3", lang: "en" };
   await w.refreshState();
   check("restarting: the tab's sentence and phrase mode", [sv("subs_hero_title").textContent, sv("subs_hero_sub").textContent], ["Recognition is restarting…", "Parakeet TDT 0.6B v3 · text after each phrase"]);
@@ -1731,7 +1731,7 @@ function check(name, actual, expected) {
   const callsBefore = w.subsCalls.length;
   sv("subs_hero_go").click(); await sleep(700);
   check("the card's button starts subtitles", w.subsCalls.slice(callsBefore), ["start"]);
-  check("and then offers to stop them", sv("subs_hero_go").textContent, "Stop subtitles");
+  check("and then offers to stop them", sv("subs_hero_go").textContent, "Stop");
   sv("subs_hero_go").click(); await sleep(700);
   check("pressed again it stops them", w.subsCalls.slice(callsBefore), ["start", "stop"]);
   check("and the card says they are off", sv("subs_hero").dataset.phase, "off");
