@@ -118,6 +118,9 @@ type App struct {
 	live    *streamSession
 	liveGen int
 	liveFed int
+
+	subMu sync.Mutex
+	sub   *subRun
 }
 
 func (a *App) liveStream(gen int, cfg *Config) {
@@ -2062,9 +2065,11 @@ func (a *App) reloadConfig() {
 		a.refreshIdleUI()
 		log.Printf("config reloaded: hotkey=%s paste=%s", fresh.Hotkey, fresh.PasteMode)
 	}
+	a.subtitlesConfigChanged()
 }
 
 func (a *App) onExit() {
+	a.stopSubtitles("the app is closing", subExitDrain)
 	a.mu.Lock()
 	a.quitting = true
 	srv := a.srv

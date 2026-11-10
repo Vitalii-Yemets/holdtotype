@@ -315,6 +315,76 @@ func (ss *streamSession) close() {
 	_ = ss.conn.Close()
 }
 
+type segSession struct {
+	conn    *websocket.Conn
+	wmu     sync.Mutex
+	onSeg   func(seg int, text string, final bool)
+	readErr chan error
+	once    sync.Once
+}
+
+func (s *streamServer) openSegmentSession(ctx context.Context, onSeg func(seg int, text string, final bool)) (*segSession, error) {
+	if !s.alive() {
+		return nil, fmt.Errorf("the streaming recognizer is not running")
+	}
+	dialer := websocket.Dialer{HandshakeTimeout: 10 * time.Second}
+	conn, _, err := dialer.DialContext(ctx, "ws://"+s.addr, nil)
+	if err != nil {
+		return nil, fmt.Errorf("connecting to the streaming recognizer: %w", err)
+	}
+	ss := &segSession{conn: conn, onSeg: onSeg, readErr: make(chan error, 1)}
+	go ss.readLoop()
+	return ss, nil
+}
+
+func (ss *segSession) readLoop() {
+	for {
+		_, raw, err := ss.conn.ReadMessage()
+		if err != nil {
+			ss.readErr <- err
+			return
+		}
+		var res streamResult
+		if json.Unmarshal(raw, &res) != nil {
+			continue
+		}
+		if ss.onSeg != nil {
+			ss.onSeg(res.Segment, res.Text, res.Final)
+		}
+	}
+}
+
+func (ss *segSession) broken() <-chan error { return ss.readErr }
+
+func (ss *segSession) push(pcm []byte) error {
+	if len(pcm) < 2 {
+		return nil
+	}
+	ss.wmu.Lock()
+	defer ss.wmu.Unlock()
+	_ = ss.conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+	return ss.conn.WriteMessage(websocket.BinaryMessage, floatBytes(pcm))
+}
+
+func (ss *segSession) end() {
+	ss.wmu.Lock()
+	defer ss.wmu.Unlock()
+	_ = ss.conn.SetWriteDeadline(time.Now().Add(5 * time.Second))
+	_ = ss.conn.WriteMessage(websocket.BinaryMessage, floatBytes(make([]byte, sampleRate/2*2)))
+	_ = ss.conn.WriteMessage(websocket.TextMessage, []byte("Done"))
+}
+
+func (ss *segSession) close() {
+	ss.once.Do(func() {
+		ss.wmu.Lock()
+		_ = ss.conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
+		_ = ss.conn.WriteMessage(websocket.CloseMessage,
+			websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+		ss.wmu.Unlock()
+		_ = ss.conn.Close()
+	})
+}
+
 func (s *streamServer) transcribe(ctx context.Context, wav []byte, language, prompt string, translate bool) (string, error) {
 	if translate {
 		return "", uiErr("this streaming model cannot translate", tr("err.sherpa.translate"))

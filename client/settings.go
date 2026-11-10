@@ -725,7 +725,7 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	if langKeys == nil {
 		langKeys = map[string]string{}
 	}
-	combos := hotkeys.WithPerLang([]string{f.Hotkey, f.TranslateHotkey}, langKeys)
+	combos := hotkeys.WithPerLang([]string{f.Hotkey, f.TranslateHotkey, a.snapshot().SubtitlesHotkey}, langKeys)
 	if dup := hotkeys.FindDuplicate(combos); dup != "" {
 		return saveResult{Severity: "error", Message: trf("err.hotkey.dup", dup)}
 	}
@@ -979,6 +979,7 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	if serverChanged && !modelChanged {
 		a.requestServerRestart()
 	}
+	a.subtitlesConfigChanged()
 	if modelChanged {
 		return saveResult{OK: true, Severity: "ok", Message: tr("model.switching")}
 	}

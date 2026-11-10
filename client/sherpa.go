@@ -26,6 +26,7 @@ type sherpaServer struct {
 	addr    string
 	dir     string
 	tgt     string
+	src     string
 	cmd     *exec.Cmd
 	doneCh  chan struct{}
 	job     windows.Handle
@@ -165,6 +166,7 @@ func startSherpaServer(cfg *Config, logw io.Writer) (*sherpaServer, error) {
 				tgt = t
 			}
 			args = append(args, "--canary-src-lang="+src, "--canary-tgt-lang="+tgt, "--canary-use-pnc=true")
+			s.src = src
 			if tgt != src {
 				s.tgt = tgt
 				log.Printf("canary: translation %s → %s", src, tgt)

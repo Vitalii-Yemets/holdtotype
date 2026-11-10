@@ -30,6 +30,7 @@ type Phrase struct {
 	Start  int64
 	Speech time.Duration
 	Cut    bool
+	At     time.Time
 }
 
 func (p Phrase) Duration(rate int) time.Duration {
