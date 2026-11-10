@@ -262,25 +262,12 @@ func (a *App) engineFor(ctx context.Context, cfg *Config, want, wantModel string
 		a.alt.stop()
 		a.alt = nil
 	}
-	c := *cfg
-	if wantModel != "" && want == engineWhisper {
-		c.Model = wantModel
-	}
-	if want == engineSherpa {
-		if at := strings.Index(wantModel, "#"); at >= 0 {
-			c.SherpaModel = wantModel[:at]
-			c.CanaryTarget = wantModel[at+1:]
-		} else if wantModel != "" {
-			c.SherpaModel = wantModel
-		}
-	}
-	cfg = &c
-	log.Printf("starting the second engine %s for this dictation", want)
 	started := time.Now()
-	srv, err := startEngine(cfg, want, logFile)
+	srv, err := startEngineInstance(cfg, want, wantModel, logFile)
 	if err != nil {
 		return nil, err
 	}
+	log.Printf("starting the second engine %s on port %d for this dictation", want, recognizerPort(srv))
 	if err := waitReadyCtx(ctx, srv); err != nil {
 		srv.stop()
 		return nil, err
@@ -507,18 +494,37 @@ func main() {
 			app.srv = srv
 			app.ready = true
 			app.mu.Unlock()
-			log.Printf("routecheck: primary engine %s started", primary)
+			log.Printf("routecheck: primary engine %s started on port %d with model %s", primary, recognizerPort(srv), srv.model())
 
-			other := engineWhisper
+			other, otherModel := engineWhisper, ""
 			if primary == engineWhisper {
 				other = engineSherpa
 			}
-			alt, aerr := app.engineFor(context.Background(), cfg, other, "")
+			altCfg := cfg
+			if rest := os.Args[1:][i+1:]; len(rest) > 1 && rest[1] != "" {
+				c := *cfg
+				c.Language = rest[1]
+				m := activeModel(&c)
+				if m == nil {
+					log.Printf("routecheck: no model resolves for language %s", c.Language)
+					srv.stop()
+					return
+				}
+				other, otherModel = m.Engine, m.modelPath()
+				altCfg = &c
+				log.Printf("routecheck: language %s resolves to %s (engine %s)", c.Language, m.ID, m.Engine)
+			}
+			alt, aerr := app.engineFor(context.Background(), altCfg, other, otherModel)
 			if aerr != nil {
 				log.Printf("routecheck: second engine %s did not start: %s", other, logText(aerr))
 			} else {
-				log.Printf("routecheck: both engines alive — %s and %s", srv.engine(), alt.engine())
-				text, terr := alt.transcribe(context.Background(), mustReadWav(os.Args[1:], i), cfg.Language, cfg.WhisperPrompt, false)
+				if alt == srv {
+					log.Printf("routecheck: the primary engine serves this language too, no second engine")
+				} else {
+					log.Printf("routecheck: both engines alive — %s on port %d with model %s and %s on port %d with model %s",
+						srv.engine(), recognizerPort(srv), srv.model(), alt.engine(), recognizerPort(alt), alt.model())
+				}
+				text, terr := alt.transcribe(context.Background(), mustReadWav(os.Args[1:], i), altCfg.Language, altCfg.WhisperPrompt, false)
 				if terr != nil {
 					log.Printf("routecheck: the second engine did not recognize: %v", terr)
 				} else {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net"
 	"os"
@@ -12,7 +13,10 @@ import (
 	"holdtotype/internal/preset"
 )
 
-const portFreeWait = 2 * time.Second
+const (
+	portFreeWait  = 2 * time.Second
+	portProbeWait = 300 * time.Millisecond
+)
 
 const (
 	engineWhisper = "whisper"
@@ -31,13 +35,105 @@ type recognizer interface {
 	model() string
 }
 
+func portAnswers(port int) bool {
+	conn, err := net.DialTimeout("tcp", net.JoinHostPort("127.0.0.1", strconv.Itoa(port)), portProbeWait)
+	if err != nil {
+		return false
+	}
+	conn.Close()
+	return true
+}
+
 func portFree(port int) bool {
 	ln, err := net.Listen("tcp", net.JoinHostPort("127.0.0.1", strconv.Itoa(port)))
 	if err != nil {
 		return false
 	}
 	ln.Close()
-	return true
+	return !portAnswers(port)
+}
+
+func freeLocalPort(avoid ...int) (int, error) {
+	for attempt := 0; attempt < 20; attempt++ {
+		ln, err := net.Listen("tcp", "127.0.0.1:0")
+		if err != nil {
+			return 0, err
+		}
+		port := ln.Addr().(*net.TCPAddr).Port
+		ln.Close()
+		taken := portAnswers(port)
+		for _, p := range avoid {
+			if p == port {
+				taken = true
+			}
+		}
+		if !taken {
+			return port, nil
+		}
+	}
+	return 0, fmt.Errorf("no free port found on 127.0.0.1")
+}
+
+func engineInstanceConfig(cfg *Config, engine, modelPath string) (*Config, error) {
+	c := *cfg
+	var port *int
+	switch engine {
+	case engineSherpa:
+		if at := strings.Index(modelPath, "#"); at >= 0 {
+			c.SherpaModel = modelPath[:at]
+			c.CanaryTarget = modelPath[at+1:]
+		} else if modelPath != "" {
+			c.SherpaModel = modelPath
+		}
+		port = &c.SherpaPort
+	case engineStream:
+		if modelPath != "" {
+			c.StreamModel = modelPath
+		}
+		port = &c.StreamPort
+	default:
+		if modelPath != "" {
+			c.Model = modelPath
+		}
+		if c.SttSource == "remote" || !c.ServerAutostart {
+			return &c, nil
+		}
+		port = &c.ServerPort
+	}
+	if !portFree(*port) {
+		p, err := freeLocalPort(cfg.ServerPort, cfg.SherpaPort, cfg.StreamPort, cfg.LLMPort)
+		if err != nil {
+			return nil, err
+		}
+		*port = p
+	}
+	return &c, nil
+}
+
+func startEngineInstance(cfg *Config, engine, modelPath string, logw io.Writer) (recognizer, error) {
+	c, err := engineInstanceConfig(cfg, engine, modelPath)
+	if err != nil {
+		return nil, err
+	}
+	return startEngine(c, engine, logw)
+}
+
+func recognizerPort(r recognizer) int {
+	addr := ""
+	switch s := r.(type) {
+	case *whisperServer:
+		addr = s.hostPort()
+	case *sherpaServer:
+		addr = s.addr
+	case *streamServer:
+		addr = s.addr
+	}
+	_, p, err := net.SplitHostPort(addr)
+	if err != nil {
+		return 0
+	}
+	n, _ := strconv.Atoi(p)
+	return n
 }
 
 func waitPortFree(port int, timeout time.Duration) bool {
