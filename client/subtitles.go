@@ -40,6 +40,11 @@ const (
 	subBoardKeep     = 50
 	subRecoverWindow = 2 * time.Minute
 	subRecoverMax    = 3
+
+	subTranslateTimeout = 20 * time.Second
+	subTranslateStop    = 3 * time.Second
+	subTranslateTokens  = 256
+	subTranslateLogGap  = 10 * time.Second
 )
 
 var errSubStopped = errors.New("subtitles are stopping")
@@ -172,6 +177,13 @@ type subRun struct {
 	file     *os.File
 	filePath string
 	fileErr  bool
+	fileDone bool
+
+	trMu     sync.Mutex
+	tr       *subTranslator
+	trClosed bool
+	trSeen   string
+	trLang   string
 
 	skipped atomic.Int64
 	muted   atomic.Int64
@@ -210,6 +222,7 @@ func startSubtitlesRun(a *App, cfg *Config, opts subOptions) (*subRun, error) {
 		want:      t,
 	}
 	log.Printf("subtitles: started: language %s, model %s, mode %s", t.lang, t.name, t.mode)
+	r.syncTranslation(cfg, t)
 	go r.loop(t)
 	return r, nil
 }
@@ -387,12 +400,18 @@ func (r *subRun) finishLine(at time.Time, text string, t *subTarget) {
 	}
 	ln := r.board.Add(at, text)
 	log.Printf("subtitles: line %q", text)
+	to := translationTarget(cfg, t)
 	if cfg.SubtitlesSave {
-		r.write(ln, t)
+		r.write(ln, t, to)
+	}
+	if to != "" {
+		if w := r.translator(); w != nil {
+			w.push(ln, to)
+		}
 	}
 }
 
-func (r *subRun) write(ln subtitles.Line, t *subTarget) {
+func (r *subRun) write(ln subtitles.Line, t *subTarget, to string) {
 	r.fileMu.Lock()
 	defer r.fileMu.Unlock()
 	if r.fileErr {
@@ -411,7 +430,7 @@ func (r *subRun) write(ln subtitles.Line, t *subTarget) {
 			r.fileErr = true
 			return
 		}
-		if _, err := f.WriteString(subtitles.Opening(r.started, t.lang, t.name, "")); err != nil {
+		if _, err := f.WriteString(subtitles.Opening(r.started, t.lang, t.name, to)); err != nil {
 			log.Printf("subtitles: writing the transcript: %v", err)
 		}
 		r.file = f
@@ -428,12 +447,35 @@ func (r *subRun) write(ln subtitles.Line, t *subTarget) {
 	_ = r.file.Sync()
 }
 
+func (r *subRun) writeTranslation(at time.Time, text string) {
+	r.fileMu.Lock()
+	defer r.fileMu.Unlock()
+	if r.file == nil || r.fileErr || r.fileDone {
+		return
+	}
+	if _, err := r.file.WriteString(subtitles.TranslationEntry(at, text)); err != nil {
+		log.Printf("subtitles: writing the transcript: %v", err)
+		return
+	}
+	_ = r.file.Sync()
+}
+
 func (r *subRun) finish() {
 	r.cap.close()
+	r.trMu.Lock()
+	w := r.tr
+	r.trClosed = true
+	r.trMu.Unlock()
+	trSummary := ""
+	if w != nil {
+		w.stop()
+		trSummary = w.summary()
+	}
 	r.fileMu.Lock()
 	if r.file != nil {
 		_ = r.file.Close()
 	}
+	r.fileDone = true
 	path := r.filePath
 	r.fileMu.Unlock()
 	r.mu.Lock()
@@ -449,12 +491,308 @@ func (r *subRun) finish() {
 	if path == "" {
 		path = "none"
 	}
-	log.Printf("subtitles: summary: %.1f s captured, %.1f s of silence added, topping up paused %d time(s) after %.0f s of silence, %d line(s), %.1f s skipped, %.1f s of the app's own sounds silenced, engine %s on port %d with %s (%s), %d device open(s), transcript %s",
+	log.Printf("subtitles: summary: %.1f s captured, %.1f s of silence added, topping up paused %d time(s) after %.0f s of silence, %d line(s), %.1f s skipped, %.1f s of the app's own sounds silenced, engine %s on port %d with %s (%s), %d device open(s), transcript %s%s",
 		r.pacer.Captured().Seconds(), r.pacer.Added().Seconds(), r.pacer.Pauses(), subtitles.SilenceLimit.Seconds(),
-		r.board.Count(), time.Duration(r.skipped.Load()).Seconds(), float64(r.muted.Load())/sampleRate, name, port, model, how, r.cap.opens.Load(), path)
+		r.board.Count(), time.Duration(r.skipped.Load()).Seconds(), float64(r.muted.Load())/sampleRate, name, port, model, how, r.cap.opens.Load(), path, trSummary)
 	if r.opts.onEnd != nil {
 		r.opts.onEnd(r)
 	}
+}
+
+func translationTarget(cfg *Config, t *subTarget) string {
+	to := cfg.SubtitlesTranslate
+	if to == "" || to == t.lang || !translationSource(cfg).ok() {
+		return ""
+	}
+	return to
+}
+
+func (r *subRun) syncTranslation(cfg *Config, t *subTarget) {
+	to := cfg.SubtitlesTranslate
+	r.trMu.Lock()
+	prev, prevLang := r.trSeen, r.trLang
+	r.trSeen, r.trLang = to, t.lang
+	r.trMu.Unlock()
+	if to == prev && (to == "" || t.lang == prevLang) {
+		return
+	}
+	if to == "" {
+		log.Printf("subtitles: translation is off from now on")
+		return
+	}
+	name := subtitles.LanguageName(to)
+	if to == t.lang {
+		log.Printf("subtitles: translation into %s: the speech language is the same, nothing is translated", name)
+		return
+	}
+	src := translationSource(cfg)
+	if !src.ok() {
+		log.Printf("subtitles: translation into %s: no editor model is installed and no post-processing server is set, the lines stay untranslated", name)
+		return
+	}
+	log.Printf("subtitles: translation into %s by %s", name, src.label())
+	if r.translator() == nil || src.kind != editorLocal {
+		return
+	}
+	f := r.app.llmWarmUp()
+	go func() {
+		<-f.done
+		if f.err != nil {
+			log.Printf("subtitles: the editor model did not start: %s", logText(f.err))
+		}
+	}()
+}
+
+func (r *subRun) translator() *subTranslator {
+	r.trMu.Lock()
+	defer r.trMu.Unlock()
+	if r.tr == nil && !r.trClosed {
+		r.tr = newSubTranslator(r)
+	}
+	return r.tr
+}
+
+type logGap struct {
+	last  time.Time
+	quiet int
+}
+
+func (g *logGap) pass(now time.Time) (bool, int) {
+	if !g.last.IsZero() && now.Sub(g.last) < subTranslateLogGap {
+		g.quiet++
+		return false, 0
+	}
+	n := g.quiet
+	g.quiet = 0
+	g.last = now
+	return true, n
+}
+
+type subTranslator struct {
+	run    *subRun
+	ctx    context.Context
+	cancel context.CancelFunc
+	stopCh chan struct{}
+	exitCh chan struct{}
+	sig    chan struct{}
+
+	mu      sync.Mutex
+	q       *subtitles.TranslateQueue
+	closed  bool
+	target  string
+	used    string
+	failLog logGap
+	dropLog logGap
+	waitLog bool
+
+	translated atomic.Int64
+	same       atomic.Int64
+	failed     atomic.Int64
+	cut        atomic.Int64
+}
+
+func newSubTranslator(r *subRun) *subTranslator {
+	ctx, cancel := context.WithCancel(context.Background())
+	w := &subTranslator{
+		run:    r,
+		ctx:    ctx,
+		cancel: cancel,
+		stopCh: make(chan struct{}),
+		exitCh: make(chan struct{}),
+		sig:    make(chan struct{}, 1),
+		q:      subtitles.NewTranslateQueue(subtitles.TranslateWaiting, subtitles.TranslateMaxWait),
+	}
+	go w.loop()
+	return w
+}
+
+func (w *subTranslator) stopped() bool {
+	select {
+	case <-w.stopCh:
+		return true
+	default:
+		return false
+	}
+}
+
+func (w *subTranslator) push(ln subtitles.Line, to string) {
+	w.mu.Lock()
+	if w.closed {
+		w.mu.Unlock()
+		return
+	}
+	w.target = to
+	n := w.q.Push(subtitles.Pending{ID: ln.ID, At: ln.Start, Text: ln.Text, Target: to}, time.Now())
+	w.mu.Unlock()
+	if n > 0 {
+		w.noteDrop(fmt.Sprintf("translation falls behind, %d waiting line(s) left untranslated", n))
+	}
+	select {
+	case w.sig <- struct{}{}:
+	default:
+	}
+}
+
+func (w *subTranslator) noteDrop(msg string) {
+	w.mu.Lock()
+	ok, quiet := w.dropLog.pass(time.Now())
+	w.mu.Unlock()
+	if !ok {
+		return
+	}
+	if quiet > 0 {
+		msg += fmt.Sprintf(" (%d more such case(s) not logged)", quiet)
+	}
+	log.Printf("subtitles: %s", msg)
+}
+
+func (w *subTranslator) noteFail(err error) {
+	w.failed.Add(1)
+	w.mu.Lock()
+	ok, quiet := w.failLog.pass(time.Now())
+	w.mu.Unlock()
+	if !ok {
+		return
+	}
+	more := ""
+	if quiet > 0 {
+		more = fmt.Sprintf(" (%d more failure(s) not logged)", quiet)
+	}
+	log.Printf("subtitles: a line was not translated: %s%s", logText(err), more)
+}
+
+func (w *subTranslator) waitDictation() bool {
+	a := w.run.app
+	if a.state.Load() != stProcessing {
+		return !w.stopped()
+	}
+	if !w.waitLog {
+		w.waitLog = true
+		log.Printf("subtitles: a dictation is being processed, the translation waits")
+	}
+	deadline := time.Now().Add(subDictationWait)
+	for a.state.Load() == stProcessing && time.Now().Before(deadline) {
+		select {
+		case <-time.After(100 * time.Millisecond):
+		case <-w.stopCh:
+			return false
+		}
+	}
+	return !w.stopped()
+}
+
+func (w *subTranslator) loop() {
+	defer close(w.exitCh)
+	for {
+		select {
+		case <-w.sig:
+		case <-w.stopCh:
+			return
+		}
+		for {
+			if !w.waitDictation() {
+				return
+			}
+			w.mu.Lock()
+			p, ok, stale := w.q.Pop(time.Now())
+			w.mu.Unlock()
+			if stale > 0 {
+				w.noteDrop(fmt.Sprintf("%d line(s) waited more than %.0f s for translation and are left untranslated", stale, subtitles.TranslateMaxWait.Seconds()))
+			}
+			if !ok {
+				break
+			}
+			w.handle(p)
+			if w.stopped() {
+				return
+			}
+		}
+	}
+}
+
+func (w *subTranslator) handle(p subtitles.Pending) {
+	r := w.run
+	cfg := r.app.snapshot()
+	src := translationSource(cfg)
+	if !src.ok() {
+		w.noteFail(errNoEditor)
+		return
+	}
+	w.mu.Lock()
+	w.used = src.label()
+	w.mu.Unlock()
+	ctx, cancel := context.WithTimeout(w.ctx, subTranslateTimeout)
+	started := time.Now()
+	out, err := r.app.editorChat(ctx, cfg, src, subtitles.TranslatePrompt(p.Target), p.Text, subTranslateTokens)
+	cancel()
+	if err != nil {
+		if w.ctx.Err() != nil {
+			w.cut.Add(1)
+			return
+		}
+		if ctx.Err() == context.DeadlineExceeded {
+			err = fmt.Errorf("no answer within %.0f s (%s)", subTranslateTimeout.Seconds(), logText(err))
+		}
+		w.noteFail(err)
+		return
+	}
+	text, verdict := subtitles.CleanTranslation(p.Text, out)
+	switch verdict {
+	case subtitles.TrSame:
+		w.same.Add(1)
+		if r.opts.logLive {
+			log.Printf("subtitles: the translation is the same as the line, not shown")
+		}
+		return
+	case subtitles.TrEmpty:
+		w.noteFail(errors.New("the answer is empty"))
+		return
+	case subtitles.TrRamble:
+		w.noteFail(fmt.Errorf("an answer of %d characters for a line of %d is thrown away", len([]rune(out)), len([]rune(p.Text))))
+		return
+	}
+	r.board.SetTranslation(p.ID, text)
+	if r.app.snapshot().SubtitlesSave {
+		r.writeTranslation(p.At, text)
+	}
+	w.translated.Add(1)
+	if r.opts.logLive {
+		log.Printf("subtitles: translated in %.1f s: %q", time.Since(started).Seconds(), text)
+	}
+}
+
+func (w *subTranslator) stop() {
+	w.mu.Lock()
+	w.closed = true
+	w.q.Clear()
+	w.mu.Unlock()
+	close(w.stopCh)
+	select {
+	case <-w.exitCh:
+	case <-time.After(subTranslateStop):
+		log.Printf("subtitles: the translation in progress did not finish within %.0f s, it is cancelled", subTranslateStop.Seconds())
+		w.cancel()
+		select {
+		case <-w.exitCh:
+		case <-time.After(time.Second):
+		}
+	}
+	w.cancel()
+}
+
+func (w *subTranslator) summary() string {
+	w.mu.Lock()
+	c := w.q.Counts()
+	target, used := w.target, w.used
+	w.mu.Unlock()
+	if used == "" {
+		used = "none (no request sent)"
+	}
+	if target == "" {
+		target = "none"
+	}
+	return fmt.Sprintf(", translation into %s: %d translated, %d the same as the line, %d dropped, %d failed, by %s",
+		target, w.translated.Load(), w.same.Load(), c.Dropped()+int(w.cut.Load()), w.failed.Load(), used)
 }
 
 type subPipe struct {
@@ -1131,6 +1469,7 @@ func (a *App) subtitlesConfigChanged() {
 		r.restart(t)
 		subWindowSetLang(r, t.lang)
 	}
+	r.syncTranslation(cfg, t)
 }
 
 func runSubcheck(args []string) {
@@ -1152,6 +1491,13 @@ func runSubcheck(args []string) {
 		}
 		cfg.SubtitlesLanguage = args[1]
 	}
+	if len(args) > 2 {
+		if !validTranslateLang(args[2]) {
+			log.Printf("subcheck: unknown translation language %q", args[2])
+			return
+		}
+		cfg.SubtitlesTranslate = args[2]
+	}
 	app := &App{cfg: cfg, enabled: true, evq: evqueue.New[ptEvent](8)}
 	log.Printf("subcheck: listening to the computer's sound for %d s", seconds)
 	r, err := startSubtitlesRun(app, cfg, subOptions{logLive: true})
@@ -1165,6 +1511,7 @@ func runSubcheck(args []string) {
 	case <-r.done():
 	}
 	<-r.done()
+	app.llmShutdown()
 	log.Printf("subcheck: done")
 }
 

@@ -21,6 +21,21 @@ func postAPIOn(cfg *Config) bool {
 	return cfg.PostEnabled && cfg.PostSource == "api" && strings.TrimSpace(cfg.PostAPIURL) != ""
 }
 
+func postAPISet(cfg *Config) bool {
+	return cfg.PostSource == "api" && strings.TrimSpace(cfg.PostAPIURL) != ""
+}
+
+func postAPIName(cfg *Config) string {
+	if m := strings.TrimSpace(cfg.PostAPIModel); m != "" {
+		return m
+	}
+	raw := strings.TrimSpace(cfg.PostAPIURL)
+	if u, err := url.Parse(raw); err == nil && u.Host != "" {
+		return u.Host
+	}
+	return raw
+}
+
 func postReady(cfg *Config) bool {
 	if !cfg.PostEnabled {
 		return false
@@ -80,6 +95,12 @@ type chatRequest struct {
 	Model       string        `json:"model"`
 	Messages    []chatMessage `json:"messages"`
 	Temperature float64       `json:"temperature"`
+	MaxTokens   int           `json:"max_tokens,omitempty"`
+}
+
+type chatOptions struct {
+	maxTokens int
+	quiet     bool
 }
 
 type chatMessage struct {
@@ -99,6 +120,10 @@ type chatResponse struct {
 }
 
 func externalChat(ctx context.Context, cfg *Config, prompt, text string) (string, error) {
+	return externalChatWith(ctx, cfg, prompt, text, chatOptions{})
+}
+
+func externalChatWith(ctx context.Context, cfg *Config, prompt, text string, opts chatOptions) (string, error) {
 	base := strings.TrimRight(strings.TrimSpace(cfg.PostAPIURL), "/")
 	timeout := time.Duration(cfg.PostAPITimeout) * time.Second
 	if timeout <= 0 {
@@ -114,6 +139,7 @@ func externalChat(ctx context.Context, cfg *Config, prompt, text string) (string
 			{Role: "user", Content: text},
 		},
 		Temperature: 0.2,
+		MaxTokens:   opts.maxTokens,
 	})
 	if err != nil {
 		return "", err
@@ -150,6 +176,8 @@ func externalChat(ctx context.Context, cfg *Config, prompt, text string) (string
 	if len(parsed.Choices) == 0 {
 		return "", fmt.Errorf("empty answer from the post-processing server")
 	}
-	log.Printf("post-processing through the external server %s: %d → %d characters", base, len([]rune(text)), len([]rune(parsed.Choices[0].Message.Content)))
+	if !opts.quiet {
+		log.Printf("post-processing through the external server %s: %d → %d characters", base, len([]rune(text)), len([]rune(parsed.Choices[0].Message.Content)))
+	}
 	return parsed.Choices[0].Message.Content, nil
 }

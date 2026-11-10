@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -134,13 +135,17 @@ func (s *llamaServer) stop() {
 }
 
 func (s *llamaServer) chat(ctx context.Context, system, user string) (string, error) {
+	return s.chatWith(ctx, system, user, 2048)
+}
+
+func (s *llamaServer) chatWith(ctx context.Context, system, user string, maxTokens int) (string, error) {
 	payload := map[string]any{
 		"messages": []map[string]string{
 			{"role": "system", "content": system},
 			{"role": "user", "content": user},
 		},
 		"temperature": 0.2,
-		"max_tokens":  2048,
+		"max_tokens":  maxTokens,
 	}
 	body, _ := json.Marshal(payload)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, s.baseURL+"/v1/chat/completions", bytes.NewReader(body))
@@ -450,4 +455,108 @@ func (a *App) ensureLLM() (*llamaServer, error) {
 	a.mu.Unlock()
 	log.Printf("llama-server ready")
 	return llm, nil
+}
+
+type llmFlight struct {
+	done chan struct{}
+	srv  *llamaServer
+	err  error
+}
+
+var (
+	llmFlightMu  sync.Mutex
+	llmFlightCur *llmFlight
+)
+
+func (a *App) llmWarmUp() *llmFlight {
+	llmFlightMu.Lock()
+	defer llmFlightMu.Unlock()
+	if f := llmFlightCur; f != nil {
+		return f
+	}
+	f := &llmFlight{done: make(chan struct{})}
+	llmFlightCur = f
+	go func() {
+		f.srv, f.err = a.ensureLLM()
+		llmFlightMu.Lock()
+		llmFlightCur = nil
+		llmFlightMu.Unlock()
+		close(f.done)
+	}()
+	return f
+}
+
+func (a *App) llmWait(ctx context.Context) (*llamaServer, error) {
+	a.mu.Lock()
+	llm := a.llm
+	a.mu.Unlock()
+	if llm != nil && llm.alive() {
+		return llm, nil
+	}
+	f := a.llmWarmUp()
+	select {
+	case <-f.done:
+		return f.srv, f.err
+	case <-ctx.Done():
+		if ctx.Err() == context.DeadlineExceeded {
+			return nil, errors.New("the editor model is still starting")
+		}
+		return nil, ctx.Err()
+	}
+}
+
+const (
+	editorLocal = "local"
+	editorAPI   = "api"
+)
+
+type editorSource struct {
+	kind string
+	name string
+}
+
+func (s editorSource) ok() bool { return s.kind != "" }
+
+func (s editorSource) label() string {
+	switch s.kind {
+	case editorAPI:
+		return s.name + " (post-processing server)"
+	case editorLocal:
+		return s.name + " (local)"
+	}
+	return "none"
+}
+
+func llmName(cfg *Config) string {
+	base := filepath.Base(cfg.LLMModel)
+	if strings.EqualFold(filepath.Ext(base), ".gguf") {
+		base = base[:len(base)-len(".gguf")]
+	}
+	return base
+}
+
+func translationSource(cfg *Config) editorSource {
+	if postAPISet(cfg) {
+		return editorSource{kind: editorAPI, name: postAPIName(cfg)}
+	}
+	if llmInstalled(cfg) {
+		return editorSource{kind: editorLocal, name: llmName(cfg)}
+	}
+	return editorSource{}
+}
+
+var errNoEditor = errors.New("no editor model is installed and no post-processing server is set")
+
+func (a *App) editorChat(ctx context.Context, cfg *Config, src editorSource, system, user string, maxTokens int) (string, error) {
+	switch src.kind {
+	case editorAPI:
+		return externalChatWith(ctx, cfg, system, user, chatOptions{maxTokens: maxTokens, quiet: true})
+	case editorLocal:
+		llm, err := a.llmWait(ctx)
+		if err != nil {
+			return "", err
+		}
+		return llm.chatWith(ctx, system, user, maxTokens)
+	}
+	return "", errNoEditor
 }

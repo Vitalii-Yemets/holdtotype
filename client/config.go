@@ -156,6 +156,8 @@ type Config struct {
 	SubtitlesSize     string                  `json:"subtitles_size"`
 	SubtitlesXY       map[string]ovplace.Frac `json:"subtitles_custom"`
 
+	SubtitlesTranslate string `json:"subtitles_translate"`
+
 	CanaryTarget string `json:"-"`
 }
 
@@ -697,6 +699,9 @@ func cleanSubtitles(cfg *Config) bool {
 	changed := false
 	if !validPresetLang(cfg.SubtitlesLanguage) {
 		cfg.SubtitlesLanguage = "auto"
+	}
+	if !validTranslateLang(cfg.SubtitlesTranslate) {
+		cfg.SubtitlesTranslate = ""
 	}
 	if cfg.SubtitlesLines < minSubtitlesLines || cfg.SubtitlesLines > maxSubtitlesLines {
 		cfg.SubtitlesLines = defaultSubtitlesLines
