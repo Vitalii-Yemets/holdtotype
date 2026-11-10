@@ -1624,7 +1624,7 @@ function check(name, actual, expected) {
   await change(sv("subtitles_language"), "de");
   check("the speech language reaches the save form", w.lastSaveForm.subtitles_language, "de");
   check("a Whisper model gets its warning", sv("subs_case").textContent.startsWith("Whisper Medium (q5) is a Whisper model"), true);
-  check("next to the model line", [sv("subs_case_row").style.display, sv("subs_model").textContent], ["", "Whisper Medium (q5) will write it: each phrase appears a moment after it ends."]);
+  check("next to the model line", [sv("subs_case_row").style.display, sv("subs_model").textContent], ["", "Whisper Medium (q5) will write it: the text appears after each phrase ends."]);
   sv("subs_case_go").click(); await sleep(150);
   check("the button jumps to the language list", shown("models"), true);
   check("with that language unfolded", (d.querySelector("#langlist .lrow.open") || {dataset: {}}).dataset.lang, "de");

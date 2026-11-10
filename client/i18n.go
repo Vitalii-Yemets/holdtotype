@@ -504,7 +504,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_SUBS_LANG": "Язык речи",
 		"S_SUBS_LANG_SUB": "Язык того, что вы слушаете, отдельно от языка диктовки",
 		"S_SUBS_M_LIVE": "Писать будет %s: слова появляются по ходу речи.",
-		"S_SUBS_M_PHRASES": "Писать будет %s: каждая фраза появляется через мгновение после того, как закончилась.",
+		"S_SUBS_M_PHRASES": "Писать будет %s: текст появляется после того, как закончится каждая фраза.",
 		"S_SUBS_M_ABSENT": "Для этого языка выбрана модель %s, но она не установлена.",
 		"S_SUBS_M_WHISPER": "%s — модель Whisper: на процессоре ей нужно много секунд на каждую фразу, и текст будет сильно отставать от речи. Для субтитров лучше подходит потоковая или быстрая модель.",
 		"S_SUBS_GO_MODELS": "Открыть «Языки и модели»",
@@ -1173,7 +1173,7 @@ var settingsStrings = map[string]map[string]string{
 			"<p>Субтитры записывают то, что звучит на компьютере, — звонок, видео, лекцию — и показывают слова в небольшом окне поверх остальных окон. Это то же распознавание, что и для диктовки, только звук берётся из динамиков, а не с микрофона, и диктовка работает, пока идут субтитры. Звуки самого приложения не записываются.</p>" +
 			"<table class=\"hopt\">" +
 			"<tr><td>Запустить субтитры</td><td>Запускает и останавливает их. Строка рядом говорит, что происходит: выключено, загружается модель, идёт прослушивание или распознавание перезапускается. То же делают меню в трее, своё сочетание клавиш и крестик на окне.</td></tr>" +
-			"<tr><td>Язык речи</td><td>Язык того, что вы слушаете, отдельно от языка диктовки. Модель — та, что этому языку дана на вкладке «Языки и модели». Потоковая модель пишет слова по ходу речи, остальные — каждую фразу через мгновение после её конца. Модели Whisper на процессоре нужно много секунд на фразу, и её текст сильно отстаёт от речи; накопившиеся фразы уходят к ней вместе и выходят одной строкой.</td></tr>" +
+			"<tr><td>Язык речи</td><td>Язык того, что вы слушаете, отдельно от языка диктовки. Модель — та, что этому языку дана на вкладке «Языки и модели». Потоковая модель пишет слова по ходу речи, остальные — каждую фразу после её конца. Модели Whisper на процессоре нужно много секунд на фразу, и её текст сильно отстаёт от речи; накопившиеся фразы уходят к ней вместе и выходят одной строкой.</td></tr>" +
 			"<tr><td>Сочетание клавиш</td><td>Запускает и останавливает субтитры из любого окна. Диктовку оно не начинает и не может повторять другое сочетание.</td></tr>" +
 			"<tr><td>Сохранять расшифровку</td><td>Каждый запуск пишет текстовый файл в папку transcripts рядом с программой: первая строка с датой, языком и моделью, затем каждая готовая строка со временем, когда она началась. Пока первая строка не готова, ничего не пишется.</td></tr>" +
 			"<tr><td>Окно субтитров</td><td>Сколько строк текста оно показывает и насколько крупные буквы. Каждая готовая строка начинается с новой строки окна. Окно двигается мышью; место запоминается для каждого разрешения экрана, а «Вернуть на место по умолчанию» его забывает.</td></tr>" +
@@ -1256,7 +1256,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_SUBS_LANG": "Speech language",
 		"S_SUBS_LANG_SUB": "The language of what you listen to, separate from the dictation language",
 		"S_SUBS_M_LIVE": "%s will write it: the words appear as they are spoken.",
-		"S_SUBS_M_PHRASES": "%s will write it: each phrase appears a moment after it ends.",
+		"S_SUBS_M_PHRASES": "%s will write it: the text appears after each phrase ends.",
 		"S_SUBS_M_ABSENT": "%s is chosen for this language but is not installed.",
 		"S_SUBS_M_WHISPER": "%s is a Whisper model: on a processor it needs many seconds per phrase, so the text will lag well behind the speech. A streaming model or a fast one suits subtitles better.",
 		"S_SUBS_GO_MODELS": "Open “Languages & models”",
@@ -1925,7 +1925,7 @@ var settingsStrings = map[string]map[string]string{
 			"<p>Subtitles write down what the computer plays — a call, a video, a lecture — and show the words in a small window that stays on top of the other windows. It is the same recognition as for dictation, only the sound comes from the speakers instead of the microphone, and dictation keeps working while subtitles run. The app’s own cues are not written down.</p>" +
 			"<table class=\"hopt\">" +
 			"<tr><td>Start subtitles</td><td>Starts and stops them. The line beside it says what is going on: off, loading the model, listening, or recognition restarting. The tray menu, a shortcut of their own and the cross on the window do the same.</td></tr>" +
-			"<tr><td>Speech language</td><td>The language of what you listen to, separate from the language you dictate in. The model is the one the “Languages & models” tab gives that language. A streaming model writes the words as they are spoken; the others write each phrase a moment after it ends. A Whisper model needs many seconds per phrase on a processor, so its text lags well behind the speech; phrases that pile up go to it together and come out as one line.</td></tr>" +
+			"<tr><td>Speech language</td><td>The language of what you listen to, separate from the language you dictate in. The model is the one the “Languages & models” tab gives that language. A streaming model writes the words as they are spoken; the others write each phrase after it ends. A Whisper model needs many seconds per phrase on a processor, so its text lags well behind the speech; phrases that pile up go to it together and come out as one line.</td></tr>" +
 			"<tr><td>Shortcut</td><td>Starts and stops subtitles from any window. It never starts a dictation and cannot repeat another shortcut.</td></tr>" +
 			"<tr><td>Save the transcript</td><td>Every run writes a text file into the transcripts folder next to the program: a first line with the date, the language and the model, then each finished line with the time it began. Nothing is written until the first line is finished.</td></tr>" +
 			"<tr><td>Subtitles window</td><td>How many rows of text it shows and how large the letters are. Each finished line starts on a new row. Drag the window to move it; the place is remembered for each screen resolution, and “Back to the default place” forgets it.</td></tr>" +

@@ -591,7 +591,7 @@ func init() {
 		"S_SUBS_LANG": "Sprache der Rede",
 		"S_SUBS_LANG_SUB": "Die Sprache dessen, was Sie hören, getrennt von der Diktiersprache",
 		"S_SUBS_M_LIVE": "%s schreibt mit: Die Wörter erscheinen schon beim Sprechen.",
-		"S_SUBS_M_PHRASES": "%s schreibt mit: Jeder Satz erscheint kurz nachdem er zu Ende ist.",
+		"S_SUBS_M_PHRASES": "%s schreibt mit: Der Text erscheint, nachdem ein Satz zu Ende ist.",
 		"S_SUBS_M_ABSENT": "Für diese Sprache ist %s gewählt, aber nicht installiert.",
 		"S_SUBS_M_WHISPER": "%s ist ein Whisper-Modell: Auf dem Prozessor braucht es viele Sekunden pro Satz, der Text hinkt der Rede deutlich hinterher. Für Untertitel passt ein Streaming-Modell oder ein schnelles Modell besser.",
 		"S_SUBS_GO_MODELS": "„Sprachen & Modelle“ öffnen",
@@ -1131,7 +1131,7 @@ func init() {
 			"<p>Untertitel schreiben mit, was der Computer abspielt – ein Gespräch, ein Video, einen Vortrag – und zeigen die Worte in einem kleinen Fenster, das über allen anderen Fenstern bleibt. Es ist dieselbe Erkennung wie beim Diktieren, nur kommt der Ton aus den Lautsprechern statt vom Mikrofon, und das Diktieren funktioniert weiter, während Untertitel laufen. Die eigenen Töne der App werden nicht mitgeschrieben.</p>" +
 			"<table class=\"hopt\">" +
 			"<tr><td>Untertitel starten</td><td>Startet und beendet sie. Die Zeile daneben sagt, was gerade passiert: aus, Modell wird geladen, es wird zugehört oder die Erkennung startet neu. Dasselbe tun das Tray-Menü, ein eigenes Tastenkürzel und das Kreuz am Fenster.</td></tr>" +
-			"<tr><td>Sprache der Rede</td><td>Die Sprache dessen, was Sie hören, getrennt von der Diktiersprache. Das Modell ist das, das diese Sprache auf der Registerkarte „Sprachen & Modelle“ hat. Ein Streaming-Modell schreibt die Wörter schon beim Sprechen, die anderen jeden Satz kurz nach seinem Ende. Ein Whisper-Modell braucht auf dem Prozessor viele Sekunden pro Satz, sein Text hinkt der Rede deutlich hinterher; aufgestaute Sätze gehen gemeinsam an das Modell und kommen als eine Zeile heraus.</td></tr>" +
+			"<tr><td>Sprache der Rede</td><td>Die Sprache dessen, was Sie hören, getrennt von der Diktiersprache. Das Modell ist das, das diese Sprache auf der Registerkarte „Sprachen & Modelle“ hat. Ein Streaming-Modell schreibt die Wörter schon beim Sprechen, die anderen jeden Satz nach seinem Ende. Ein Whisper-Modell braucht auf dem Prozessor viele Sekunden pro Satz, sein Text hinkt der Rede deutlich hinterher; aufgestaute Sätze gehen gemeinsam an das Modell und kommen als eine Zeile heraus.</td></tr>" +
 			"<tr><td>Tastenkürzel</td><td>Startet und beendet die Untertitel aus jedem Fenster. Es startet nie ein Diktat und darf kein anderes Kürzel wiederholen.</td></tr>" +
 			"<tr><td>Mitschrift speichern</td><td>Jeder Durchlauf schreibt eine Textdatei in den Ordner transcripts neben dem Programm: eine erste Zeile mit Datum, Sprache und Modell, dann jede fertige Zeile mit der Uhrzeit, zu der sie begann. Bis die erste Zeile fertig ist, wird nichts geschrieben.</td></tr>" +
 			"<tr><td>Untertitelfenster</td><td>Wie viele Textzeilen es zeigt und wie groß die Schrift ist. Jede fertige Zeile beginnt in einer neuen Zeile des Fensters. Das Fenster lässt sich mit der Maus verschieben; der Platz wird für jede Bildschirmauflösung gemerkt, „Zurück an den Standardplatz“ vergisst ihn.</td></tr>" +
@@ -1213,7 +1213,7 @@ func init() {
 		"S_SUBS_LANG": "Langue parlée",
 		"S_SUBS_LANG_SUB": "La langue de ce que vous écoutez, distincte de la langue de dictée",
 		"S_SUBS_M_LIVE": "%s écrira : les mots apparaissent au fil de la parole.",
-		"S_SUBS_M_PHRASES": "%s écrira : chaque phrase apparaît un instant après sa fin.",
+		"S_SUBS_M_PHRASES": "%s écrira : le texte apparaît une fois chaque phrase terminée.",
 		"S_SUBS_M_ABSENT": "%s est choisi pour cette langue mais n'est pas installé.",
 		"S_SUBS_M_WHISPER": "%s est un modèle Whisper : sur un processeur il lui faut de nombreuses secondes par phrase, le texte aura donc un net retard sur la parole. Un modèle en streaming ou un modèle rapide convient mieux aux sous-titres.",
 		"S_SUBS_GO_MODELS": "Ouvrir « Langues et modèles »",
@@ -1753,7 +1753,7 @@ func init() {
 			"<p>Les sous-titres notent ce que joue l'ordinateur – un appel, une vidéo, un cours – et affichent les mots dans une petite fenêtre qui reste au-dessus des autres. C'est la même reconnaissance que pour la dictée, sauf que le son vient des haut-parleurs et non du micro, et la dictée continue de fonctionner pendant les sous-titres. Les sons de l'application elle-même ne sont pas notés.</p>" +
 			"<table class=\"hopt\">" +
 			"<tr><td>Démarrer les sous-titres</td><td>Les démarre et les arrête. La ligne à côté dit ce qui se passe : arrêtés, chargement du modèle, à l'écoute ou redémarrage de la reconnaissance. Le menu de la zone de notification, un raccourci à eux et la croix de la fenêtre font de même.</td></tr>" +
-			"<tr><td>Langue parlée</td><td>La langue de ce que vous écoutez, distincte de la langue de dictée. Le modèle est celui que l'onglet « Langues et modèles » donne à cette langue. Un modèle en streaming écrit les mots au fil de la parole, les autres chaque phrase un instant après sa fin. Un modèle Whisper a besoin de nombreuses secondes par phrase sur un processeur, son texte a donc un net retard sur la parole ; les phrases accumulées lui sont envoyées ensemble et ressortent en une seule ligne.</td></tr>" +
+			"<tr><td>Langue parlée</td><td>La langue de ce que vous écoutez, distincte de la langue de dictée. Le modèle est celui que l'onglet « Langues et modèles » donne à cette langue. Un modèle en streaming écrit les mots au fil de la parole, les autres chaque phrase une fois celle-ci terminée. Un modèle Whisper a besoin de nombreuses secondes par phrase sur un processeur, son texte a donc un net retard sur la parole ; les phrases accumulées lui sont envoyées ensemble et ressortent en une seule ligne.</td></tr>" +
 			"<tr><td>Raccourci clavier</td><td>Démarre et arrête les sous-titres depuis n'importe quelle fenêtre. Il ne lance jamais de dictée et ne peut pas reprendre un autre raccourci.</td></tr>" +
 			"<tr><td>Enregistrer la transcription</td><td>Chaque session écrit un fichier texte dans le dossier transcripts à côté du programme : une première ligne avec la date, la langue et le modèle, puis chaque ligne terminée avec l'heure à laquelle elle a commencé. Rien n'est écrit tant que la première ligne n'est pas terminée.</td></tr>" +
 			"<tr><td>Fenêtre des sous-titres</td><td>Combien de lignes de texte elle affiche et quelle taille ont les lettres. Chaque ligne terminée commence une nouvelle ligne de la fenêtre. La fenêtre se déplace à la souris ; l'emplacement est retenu pour chaque résolution d'écran, et « Remettre à l'emplacement par défaut » l'oublie.</td></tr>" +
@@ -1835,7 +1835,7 @@ func init() {
 		"S_SUBS_LANG": "Idioma del habla",
 		"S_SUBS_LANG_SUB": "El idioma de lo que escuchas, aparte del idioma de dictado",
 		"S_SUBS_M_LIVE": "Lo escribirá %s: las palabras aparecen a medida que se dicen.",
-		"S_SUBS_M_PHRASES": "Lo escribirá %s: cada frase aparece un momento después de terminar.",
+		"S_SUBS_M_PHRASES": "Lo escribirá %s: el texto aparece cuando termina cada frase.",
 		"S_SUBS_M_ABSENT": "Para este idioma está elegido %s, pero no está instalado.",
 		"S_SUBS_M_WHISPER": "%s es un modelo Whisper: en un procesador necesita muchos segundos por frase, así que el texto irá muy por detrás del habla. Para subtítulos va mejor un modelo de streaming o uno rápido.",
 		"S_SUBS_GO_MODELS": "Abrir «Idiomas y modelos»",
@@ -2375,7 +2375,7 @@ func init() {
 			"<p>Los subtítulos transcriben lo que suena en el ordenador —una llamada, un vídeo, una clase— y muestran las palabras en una ventana pequeña que se queda encima de las demás. Es el mismo reconocimiento que el del dictado, solo que el sonido sale de los altavoces y no del micrófono, y el dictado sigue funcionando mientras hay subtítulos. Los sonidos de la propia aplicación no se transcriben.</p>" +
 			"<table class=\"hopt\">" +
 			"<tr><td>Iniciar subtítulos</td><td>Los inicia y los detiene. La línea de al lado dice qué pasa: apagados, cargando el modelo, escuchando o reiniciando el reconocimiento. El menú de la bandeja, un atajo propio y la cruz de la ventana hacen lo mismo.</td></tr>" +
-			"<tr><td>Idioma del habla</td><td>El idioma de lo que escuchas, aparte del idioma de dictado. El modelo es el que la pestaña «Idiomas y modelos» da a ese idioma. Un modelo de streaming escribe las palabras a medida que se dicen; los demás, cada frase un momento después de terminar. Un modelo Whisper necesita muchos segundos por frase en un procesador, así que su texto va muy por detrás del habla; las frases acumuladas le llegan juntas y salen como una sola línea.</td></tr>" +
+			"<tr><td>Idioma del habla</td><td>El idioma de lo que escuchas, aparte del idioma de dictado. El modelo es el que la pestaña «Idiomas y modelos» da a ese idioma. Un modelo de streaming escribe las palabras a medida que se dicen; los demás, cada frase cuando termina. Un modelo Whisper necesita muchos segundos por frase en un procesador, así que su texto va muy por detrás del habla; las frases acumuladas le llegan juntas y salen como una sola línea.</td></tr>" +
 			"<tr><td>Atajo de teclado</td><td>Inicia y detiene los subtítulos desde cualquier ventana. Nunca empieza un dictado y no puede repetir otro atajo.</td></tr>" +
 			"<tr><td>Guardar la transcripción</td><td>Cada sesión escribe un archivo de texto en la carpeta transcripts junto al programa: una primera línea con la fecha, el idioma y el modelo, y luego cada línea terminada con la hora en que empezó. No se escribe nada hasta que la primera línea está terminada.</td></tr>" +
 			"<tr><td>Ventana de subtítulos</td><td>Cuántas filas de texto muestra y qué tamaño tienen las letras. Cada línea terminada empieza en una fila nueva. La ventana se mueve con el ratón; el lugar se recuerda para cada resolución de pantalla, y «Volver al lugar por defecto» lo olvida.</td></tr>" +
@@ -2457,7 +2457,7 @@ func init() {
 		"S_SUBS_LANG": "Lingua del parlato",
 		"S_SUBS_LANG_SUB": "La lingua di ciò che ascolti, distinta dalla lingua di dettatura",
 		"S_SUBS_M_LIVE": "Scriverà %s: le parole appaiono mentre vengono dette.",
-		"S_SUBS_M_PHRASES": "Scriverà %s: ogni frase appare un attimo dopo la sua fine.",
+		"S_SUBS_M_PHRASES": "Scriverà %s: il testo appare dopo la fine di ogni frase.",
 		"S_SUBS_M_ABSENT": "Per questa lingua è scelto %s, ma non è installato.",
 		"S_SUBS_M_WHISPER": "%s è un modello Whisper: sul processore gli servono molti secondi per frase, quindi il testo resterà molto indietro rispetto al parlato. Per i sottotitoli va meglio un modello in streaming o uno veloce.",
 		"S_SUBS_GO_MODELS": "Apri «Lingue e modelli»",
@@ -2997,7 +2997,7 @@ func init() {
 			"<p>I sottotitoli trascrivono ciò che il computer riproduce — una chiamata, un video, una lezione — e mostrano le parole in una piccola finestra che resta sopra le altre. È lo stesso riconoscimento della dettatura, solo che il suono arriva dagli altoparlanti invece che dal microfono, e la dettatura continua a funzionare mentre i sottotitoli sono attivi. I suoni dell'app stessa non vengono trascritti.</p>" +
 			"<table class=\"hopt\">" +
 			"<tr><td>Avvia i sottotitoli</td><td>Li avvia e li ferma. La riga accanto dice cosa succede: spenti, caricamento del modello, in ascolto o riconoscimento in riavvio. Lo stesso fanno il menu nell'area di notifica, una scorciatoia tutta loro e la croce sulla finestra.</td></tr>" +
-			"<tr><td>Lingua del parlato</td><td>La lingua di ciò che ascolti, distinta dalla lingua di dettatura. Il modello è quello che la scheda «Lingue e modelli» assegna a quella lingua. Un modello in streaming scrive le parole mentre vengono dette, gli altri ogni frase un attimo dopo la sua fine. Un modello Whisper sul processore ha bisogno di molti secondi per frase, quindi il suo testo resta molto indietro rispetto al parlato; le frasi accumulate gli arrivano insieme ed escono come una sola riga.</td></tr>" +
+			"<tr><td>Lingua del parlato</td><td>La lingua di ciò che ascolti, distinta dalla lingua di dettatura. Il modello è quello che la scheda «Lingue e modelli» assegna a quella lingua. Un modello in streaming scrive le parole mentre vengono dette, gli altri ogni frase dopo la sua fine. Un modello Whisper sul processore ha bisogno di molti secondi per frase, quindi il suo testo resta molto indietro rispetto al parlato; le frasi accumulate gli arrivano insieme ed escono come una sola riga.</td></tr>" +
 			"<tr><td>Scorciatoia da tastiera</td><td>Avvia e ferma i sottotitoli da qualsiasi finestra. Non avvia mai una dettatura e non può ripetere un'altra scorciatoia.</td></tr>" +
 			"<tr><td>Salva la trascrizione</td><td>Ogni sessione scrive un file di testo nella cartella transcripts accanto al programma: una prima riga con data, lingua e modello, poi ogni riga finita con l'ora in cui è cominciata. Finché la prima riga non è finita, non viene scritto nulla.</td></tr>" +
 			"<tr><td>Finestra dei sottotitoli</td><td>Quante righe di testo mostra e quanto sono grandi le lettere. Ogni riga finita comincia su una nuova riga della finestra. La finestra si sposta con il mouse; la posizione viene ricordata per ogni risoluzione dello schermo, e «Riporta alla posizione predefinita» la dimentica.</td></tr>" +
@@ -3079,7 +3079,7 @@ func init() {
 		"S_SUBS_LANG": "Język mowy",
 		"S_SUBS_LANG_SUB": "Język tego, czego słuchasz, osobno od języka dyktowania",
 		"S_SUBS_M_LIVE": "Pisać będzie %s: słowa pojawiają się w trakcie mówienia.",
-		"S_SUBS_M_PHRASES": "Pisać będzie %s: każde zdanie pojawia się chwilę po jego końcu.",
+		"S_SUBS_M_PHRASES": "Pisać będzie %s: tekst pojawia się po zakończeniu każdego zdania.",
 		"S_SUBS_M_ABSENT": "Dla tego języka wybrano %s, ale nie jest zainstalowany.",
 		"S_SUBS_M_WHISPER": "%s to model Whisper: na procesorze potrzebuje wielu sekund na każde zdanie, więc tekst będzie mocno spóźniony względem mowy. Do napisów lepiej nadaje się model strumieniowy albo szybki.",
 		"S_SUBS_GO_MODELS": "Otwórz „Języki i modele”",
@@ -3619,7 +3619,7 @@ func init() {
 			"<p>Napisy zapisują to, co odtwarza komputer — rozmowę, film, wykład — i pokazują słowa w małym oknie, które zostaje nad innymi oknami. To samo rozpoznawanie co przy dyktowaniu, tylko dźwięk pochodzi z głośników, a nie z mikrofonu, a dyktowanie działa dalej, gdy napisy są włączone. Własne dźwięki aplikacji nie są zapisywane.</p>" +
 			"<table class=\"hopt\">" +
 			"<tr><td>Włącz napisy</td><td>Włącza je i wyłącza. Wiersz obok mówi, co się dzieje: wyłączone, wczytywanie modelu, nasłuch albo ponowne uruchamianie rozpoznawania. To samo robią menu w zasobniku, własny skrót klawiszowy i krzyżyk na oknie.</td></tr>" +
-			"<tr><td>Język mowy</td><td>Język tego, czego słuchasz, osobno od języka dyktowania. Model to ten, który zakładka „Języki i modele” daje temu językowi. Model strumieniowy pisze słowa w trakcie mówienia, pozostałe każde zdanie chwilę po jego końcu. Model Whisper na procesorze potrzebuje wielu sekund na zdanie, więc jego tekst mocno spóźnia się względem mowy; zaległe zdania trafiają do niego razem i wychodzą jako jeden wiersz.</td></tr>" +
+			"<tr><td>Język mowy</td><td>Język tego, czego słuchasz, osobno od języka dyktowania. Model to ten, który zakładka „Języki i modele” daje temu językowi. Model strumieniowy pisze słowa w trakcie mówienia, pozostałe każde zdanie po jego końcu. Model Whisper na procesorze potrzebuje wielu sekund na zdanie, więc jego tekst mocno spóźnia się względem mowy; zaległe zdania trafiają do niego razem i wychodzą jako jeden wiersz.</td></tr>" +
 			"<tr><td>Skrót klawiszowy</td><td>Włącza i wyłącza napisy z każdego okna. Nigdy nie zaczyna dyktowania i nie może powtarzać innego skrótu.</td></tr>" +
 			"<tr><td>Zapisuj transkrypcję</td><td>Każde uruchomienie zapisuje plik tekstowy w folderze transcripts obok programu: pierwszy wiersz z datą, językiem i modelem, potem każdy gotowy wiersz z godziną, o której się zaczął. Dopóki pierwszy wiersz nie jest gotowy, nic nie jest zapisywane.</td></tr>" +
 			"<tr><td>Okno napisów</td><td>Ile wierszy tekstu pokazuje i jak duże są litery. Każdy gotowy wiersz zaczyna się w nowym wierszu okna. Okno przesuwa się myszą; miejsce jest zapamiętywane dla każdej rozdzielczości ekranu, a „Przywróć domyślne miejsce” je zapomina.</td></tr>" +
@@ -3816,7 +3816,7 @@ func init() {
 		"S_SUBS_LANG": "Мова мовлення",
 		"S_SUBS_LANG_SUB": "Мова того, що ви слухаєте, окремо від мови диктування",
 		"S_SUBS_M_LIVE": "Писатиме %s: слова з'являються під час мовлення.",
-		"S_SUBS_M_PHRASES": "Писатиме %s: кожна фраза з'являється за мить після того, як закінчилася.",
+		"S_SUBS_M_PHRASES": "Писатиме %s: текст з'являється після того, як закінчиться кожна фраза.",
 		"S_SUBS_M_ABSENT": "Для цієї мови вибрано модель %s, але її не встановлено.",
 		"S_SUBS_M_WHISPER": "%s — модель Whisper: на процесорі їй потрібно багато секунд на кожну фразу, і текст сильно відставатиме від мовлення. Для субтитрів краще підходить потокова або швидка модель.",
 		"S_SUBS_GO_MODELS": "Відкрити «Мови і моделі»",
@@ -4357,7 +4357,7 @@ func init() {
 			"<p>Субтитри записують те, що звучить на комп'ютері, — дзвінок, відео, лекцію — і показують слова в невеликому вікні поверх інших вікон. Це те саме розпізнавання, що й для диктування, тільки звук береться з динаміків, а не з мікрофона, і диктування працює, поки йдуть субтитри. Звуки самого застосунку не записуються.</p>" +
 			"<table class=\"hopt\">" +
 			"<tr><td>Запустити субтитри</td><td>Запускає і зупиняє їх. Рядок поруч каже, що відбувається: вимкнено, завантажується модель, триває прослуховування або розпізнавання перезапускається. Те саме роблять меню в треї, власне сполучення клавіш і хрестик на вікні.</td></tr>" +
-			"<tr><td>Мова мовлення</td><td>Мова того, що ви слухаєте, окремо від мови диктування. Модель — та, яку цій мові дано на вкладці «Мови і моделі». Потокова модель пише слова під час мовлення, решта — кожну фразу за мить після її кінця. Моделі Whisper на процесорі потрібно багато секунд на фразу, і її текст сильно відстає від мовлення; фрази, що накопичилися, йдуть до неї разом і виходять одним рядком.</td></tr>" +
+			"<tr><td>Мова мовлення</td><td>Мова того, що ви слухаєте, окремо від мови диктування. Модель — та, яку цій мові дано на вкладці «Мови і моделі». Потокова модель пише слова під час мовлення, решта — кожну фразу після її кінця. Моделі Whisper на процесорі потрібно багато секунд на фразу, і її текст сильно відстає від мовлення; фрази, що накопичилися, йдуть до неї разом і виходять одним рядком.</td></tr>" +
 			"<tr><td>Сполучення клавіш</td><td>Запускає і зупиняє субтитри з будь-якого вікна. Диктування воно не починає і не може повторювати інше сполучення.</td></tr>" +
 			"<tr><td>Зберігати розшифровку</td><td>Кожен запуск пише текстовий файл у теку transcripts поруч із програмою: перший рядок із датою, мовою і моделлю, далі кожен готовий рядок із часом, коли він почався. Поки перший рядок не готовий, нічого не пишеться.</td></tr>" +
 			"<tr><td>Вікно субтитрів</td><td>Скільки рядків тексту воно показує і наскільки великі літери. Кожен готовий рядок починається з нового рядка вікна. Вікно пересувається мишею; місце запам'ятовується для кожної роздільності екрана, а «Повернути на типове місце» його забуває.</td></tr>" +
