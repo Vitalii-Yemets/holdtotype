@@ -12,6 +12,7 @@ import (
 	"golang.org/x/sys/windows/registry"
 
 	"holdtotype/internal/appid"
+	"holdtotype/internal/uninst"
 )
 
 const (
@@ -53,10 +54,9 @@ func runUninstall(silent bool) {
 	if !silent {
 		delData = msgBoxYesNo(tr("un.title"), tr("un.data"))
 	}
-	files := []string{"whisper-server.exe", "llama-server.exe", "sherpa-server.exe", "sherpa-online-server.exe", "config.default.json", "README.md"}
-	if delData {
-		files = append(files, "config.json", appid.LogFile, appid.LogFile+".old", appid.HistoryFile)
-		_ = os.RemoveAll(filepath.Join(dir, "models"))
+	files, dirs := uninst.Plan(delData)
+	for _, sub := range dirs {
+		_ = os.RemoveAll(filepath.Join(dir, sub))
 	}
 	for _, f := range files {
 		_ = os.Remove(filepath.Join(dir, f))
