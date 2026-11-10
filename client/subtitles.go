@@ -430,6 +430,7 @@ type subPipe struct {
 	sess *segSession
 	lmu  sync.Mutex
 	live *subtitles.Live
+	gate *subtitles.Gate
 }
 
 func newSubPipe(r *subRun, t *subTarget) *subPipe {
@@ -444,6 +445,7 @@ func newSubPipe(r *subRun, t *subTarget) *subPipe {
 	}
 	if t.mode == modeLive {
 		p.live = subtitles.NewLive()
+		p.gate = subtitles.NewGate(sampleRate)
 	} else {
 		p.seg = subtitles.NewSegmenter(sampleRate)
 		p.q = subtitles.NewBacklog(subQueueMax)
@@ -642,6 +644,9 @@ func (p *subPipe) recover(old recognizer, shared bool) {
 
 func (p *subPipe) feed(pcm []byte) {
 	if p.target.mode == modeLive {
+		if pcm = p.gate.Pass(pcm); len(pcm) == 0 {
+			return
+		}
 		p.smu.Lock()
 		s := p.sess
 		p.smu.Unlock()
@@ -758,6 +763,9 @@ func (p *subPipe) phraseLoop() {
 }
 
 func (p *subPipe) onSegment(seg int, text string, final bool) {
+	if final {
+		p.gate.Final()
+	}
 	p.lmu.Lock()
 	out := p.live.Update(seg, text, final, time.Now())
 	cur, _ := p.live.Current()

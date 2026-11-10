@@ -98,6 +98,44 @@ func TestLiveSegmentsBecomeLines(t *testing.T) {
 	}
 }
 
+func TestAnEmptyFinalDoesNotCloseTheSegmentNumber(t *testing.T) {
+	l := NewLive()
+	t0 := time.Now()
+	var lines []Finished
+	step := func(seg int, text string, final bool, at time.Duration) {
+		lines = append(lines, l.Update(seg, text, final, t0.Add(at))...)
+	}
+	step(0, "first words", false, time.Second)
+	step(0, "first words here", true, 2*time.Second)
+	step(1, "", false, 3*time.Second)
+	step(1, "", true, 5*time.Second)
+	step(1, "second", false, 8*time.Second)
+	step(1, "second utterance", true, 9*time.Second)
+	if len(lines) != 2 {
+		t.Fatalf("got %d lines, want 2: %+v", len(lines), lines)
+	}
+	if lines[1].Text != "second utterance" || !lines[1].Start.Equal(t0.Add(8*time.Second)) {
+		t.Fatalf("second line %+v", lines[1])
+	}
+}
+
+func TestEmptyFinalsBeforeSpeechDoNotBlockIt(t *testing.T) {
+	l := NewLive()
+	t0 := time.Now()
+	var lines []Finished
+	for i := 0; i < 3; i++ {
+		lines = append(lines, l.Update(0, "", true, t0.Add(time.Duration(i)*time.Second))...)
+	}
+	lines = append(lines, l.Update(0, "hello", false, t0.Add(4*time.Second))...)
+	if text, _ := l.Current(); text != "hello" {
+		t.Fatalf("live text %q after empty finals", text)
+	}
+	lines = append(lines, l.Update(0, "hello world", true, t0.Add(5*time.Second))...)
+	if len(lines) != 1 || lines[0].Text != "hello world" {
+		t.Fatalf("lines %+v", lines)
+	}
+}
+
 func TestLiveFlushAfterABrokenConnection(t *testing.T) {
 	l := NewLive()
 	t0 := time.Now()

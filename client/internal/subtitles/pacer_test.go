@@ -114,3 +114,32 @@ func TestSilentCapturedStreamAlsoPauses(t *testing.T) {
 		t.Fatalf("%v added although the capture covered the time", p.Added())
 	}
 }
+
+func TestGatePassesUntilAFinal(t *testing.T) {
+	g := NewGate(rate)
+	if out := g.Pass(quiet(100)); len(out) != rate/10*2 {
+		t.Fatal("silence before any final was held back")
+	}
+	g.Final()
+	for i := 0; i < 30; i++ {
+		if out := g.Pass(quiet(100)); out != nil {
+			t.Fatal("silence after a final was passed on")
+		}
+	}
+	speech := tone(100, 0.3)
+	out := g.Pass(speech)
+	want := rate*200/1000*2 + len(speech)
+	if len(out) != want {
+		t.Fatalf("speech after the hold: %d bytes, want %d with the lead", len(out), want)
+	}
+	if !Silent(out[:len(out)-len(speech)]) || Silent(out[len(out)-len(speech):]) {
+		t.Fatal("the lead is not the quiet audio in front of the speech")
+	}
+	if g.Holding() {
+		t.Fatal("still holding after speech")
+	}
+	if out := g.Pass(quiet(100)); len(out) != rate/10*2 {
+		t.Fatal("silence during speech was held back")
+	}
+	near(t, "held ms", int(g.Held())*1000/rate, 2800, 1)
+}

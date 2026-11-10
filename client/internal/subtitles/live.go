@@ -45,9 +45,9 @@ func (l *Live) Update(seg int, text string, final bool, now time.Time) []Finishe
 func (l *Live) close(out []Finished) []Finished {
 	if l.text != "" {
 		out = append(out, Finished{Start: l.start, Text: l.text})
-	}
-	if l.cur > l.done {
-		l.done = l.cur
+		if l.cur > l.done {
+			l.done = l.cur
+		}
 	}
 	l.cur = -1
 	l.text = ""
