@@ -681,12 +681,12 @@ const (
 func validSubtitlesSize(v string) bool { return v == "s" || v == "m" || v == "l" }
 
 func subtitlesHotkeyClash(cfg *Config) bool {
-	sub := strings.ToLower(strings.TrimSpace(cfg.SubtitlesHotkey))
+	sub := strings.TrimSpace(cfg.SubtitlesHotkey)
 	if sub == "" {
 		return false
 	}
 	for _, c := range hotkeys.WithPerLang([]string{cfg.Hotkey, cfg.TranslateHotkey}, cfg.LangHotkeys) {
-		if strings.ToLower(strings.TrimSpace(c)) == sub {
+		if hotkeys.Same(c, sub) {
 			return true
 		}
 	}

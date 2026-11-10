@@ -1,11 +1,9 @@
 package hotkeys
 
-import "strings"
-
 func FindDuplicate(combos []string) string {
 	seen := map[string]bool{}
 	for _, c := range combos {
-		c = strings.ToLower(strings.TrimSpace(c))
+		c = Normalize(c)
 		if c == "" {
 			continue
 		}
@@ -15,4 +13,9 @@ func FindDuplicate(combos []string) string {
 		seen[c] = true
 	}
 	return ""
+}
+
+func Same(a, b string) bool {
+	n := Normalize(a)
+	return n != "" && n == Normalize(b)
 }
