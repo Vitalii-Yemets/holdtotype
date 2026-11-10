@@ -1,0 +1,162 @@
+package subtitles
+
+import (
+	"strings"
+	"testing"
+	"time"
+)
+
+func TestBoardNumbersLinesAndKeepsAFewInMemory(t *testing.T) {
+	b := NewBoard(3)
+	t0 := time.Date(2026, 11, 10, 14, 5, 41, 0, time.Local)
+	for i := 0; i < 5; i++ {
+		ln := b.Add(t0.Add(time.Duration(i)*time.Second), "line")
+		if ln.ID != i+1 {
+			t.Fatalf("line %d got id %d", i, ln.ID)
+		}
+	}
+	lines := b.Lines()
+	if len(lines) != 3 || lines[0].ID != 3 || lines[2].ID != 5 {
+		t.Fatalf("kept %+v", lines)
+	}
+	if b.Count() != 5 {
+		t.Fatalf("count %d", b.Count())
+	}
+	if !lines[0].Start.Equal(t0.Add(2 * time.Second)) {
+		t.Fatal("the start time of a line was lost")
+	}
+}
+
+func TestTailTakesTheNewestThatFit(t *testing.T) {
+	b := NewBoard(10)
+	now := time.Now()
+	b.Add(now, "first line here")
+	b.Add(now, "second line")
+	b.Add(now, "third")
+	b.SetLive("  live   words ")
+	v := b.Tail(26)
+	if v.Live != "live words" {
+		t.Fatalf("live %q", v.Live)
+	}
+	if len(v.Lines) != 2 || v.Lines[0].Text != "second line" || v.Lines[1].Text != "third" {
+		t.Fatalf("tail %+v", v.Lines)
+	}
+}
+
+func TestTailCutsAnOverlongNewestLine(t *testing.T) {
+	b := NewBoard(10)
+	b.Add(time.Now(), "older")
+	b.Add(time.Now(), strings.Repeat("word ", 20))
+	v := b.Tail(30)
+	if len(v.Lines) != 1 {
+		t.Fatalf("tail %+v", v.Lines)
+	}
+	if n := len([]rune(v.Lines[0].Text)); n > 30 || !strings.HasPrefix(v.Lines[0].Text, "…") {
+		t.Fatalf("cut line %q (%d runes)", v.Lines[0].Text, n)
+	}
+	if v.Lines[0].ID != 2 {
+		t.Fatal("the cut line lost its id")
+	}
+}
+
+func TestTailOfAnEmptyBoard(t *testing.T) {
+	v := NewBoard(3).Tail(100)
+	if len(v.Lines) != 0 || v.Live != "" {
+		t.Fatalf("%+v", v)
+	}
+}
+
+func TestLiveSegmentsBecomeLines(t *testing.T) {
+	l := NewLive()
+	t0 := time.Now()
+	if out := l.Update(0, "", false, t0); len(out) != 0 {
+		t.Fatal("an empty message finished something")
+	}
+	l.Update(0, "hello", false, t0.Add(time.Second))
+	l.Update(0, "hello there", false, t0.Add(2*time.Second))
+	text, start := l.Current()
+	if text != "hello there" || !start.Equal(t0.Add(time.Second)) {
+		t.Fatalf("current %q from %v", text, start.Sub(t0))
+	}
+	out := l.Update(0, "hello there friend", true, t0.Add(3*time.Second))
+	if len(out) != 1 || out[0].Text != "hello there friend" || !out[0].Start.Equal(t0.Add(time.Second)) {
+		t.Fatalf("final gave %+v", out)
+	}
+	if out := l.Update(0, "hello there friend", true, t0.Add(4*time.Second)); len(out) != 0 {
+		t.Fatal("a repeated final made a second line")
+	}
+	l.Update(1, "next", false, t0.Add(5*time.Second))
+	out = l.Update(2, "", false, t0.Add(6*time.Second))
+	if len(out) != 1 || out[0].Text != "next" {
+		t.Fatalf("a higher segment did not close the previous one: %+v", out)
+	}
+	if out := l.Update(1, "late", false, t0.Add(7*time.Second)); len(out) != 0 {
+		t.Fatal("a stale segment came back")
+	}
+	if text, _ := l.Current(); text != "" {
+		t.Fatalf("a stale segment became live text %q", text)
+	}
+}
+
+func TestLiveFlushAfterABrokenConnection(t *testing.T) {
+	l := NewLive()
+	t0 := time.Now()
+	l.Update(4, "half a sen", false, t0)
+	out := l.Flush()
+	if len(out) != 1 || out[0].Text != "half a sen" {
+		t.Fatalf("flush %+v", out)
+	}
+	l.Update(0, "new session", false, t0.Add(time.Second))
+	if text, _ := l.Current(); text != "new session" {
+		t.Fatalf("numbering did not restart: %q", text)
+	}
+}
+
+func TestTranscriptFormatting(t *testing.T) {
+	at := time.Date(2026, 11, 10, 14, 5, 33, 0, time.Local)
+	if got := FileName(at); got != "2026-11-10 14-05-33.txt" {
+		t.Fatalf("file name %q", got)
+	}
+	want := "HoldToType subtitles · 2026-11-10 14:05 · language: auto · model: Nemotron 3.5"
+	if got := Header(at, "auto", "Nemotron 3.5"); got != want {
+		t.Fatalf("header %q", got)
+	}
+	if got := Opening(at, "auto", "Nemotron 3.5"); got != want+"\r\n\r\n" {
+		t.Fatalf("opening %q", got)
+	}
+	line := at.Add(8 * time.Second)
+	if got := LineText(line, " two\nlines  here "); got != "[14:05:41] two lines here" {
+		t.Fatalf("line %q", got)
+	}
+	if got := Entry(line, "x"); got != "[14:05:41] x\r\n" {
+		t.Fatalf("entry %q", got)
+	}
+}
+
+func TestBacklogDropsTheOldest(t *testing.T) {
+	b := NewBacklog(3)
+	for i := 0; i < 3; i++ {
+		if d := b.Push(Phrase{Start: int64(i)}); len(d) != 0 {
+			t.Fatalf("dropped while not full: %d", len(d))
+		}
+	}
+	d := b.Push(Phrase{Start: 3})
+	if len(d) != 1 || d[0].Start != 0 {
+		t.Fatalf("dropped %+v", d)
+	}
+	d = b.PushFront(Phrase{Start: 9})
+	if len(d) != 1 || d[0].Start != 1 {
+		t.Fatalf("push front dropped %+v", d)
+	}
+	var order []int64
+	for {
+		p, ok := b.Pop()
+		if !ok {
+			break
+		}
+		order = append(order, p.Start)
+	}
+	if len(order) != 3 || order[0] != 9 || order[1] != 2 || order[2] != 3 {
+		t.Fatalf("order %v", order)
+	}
+}
