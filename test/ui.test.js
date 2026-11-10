@@ -52,8 +52,15 @@ const dom = new JSDOM(html, {
     let engineReady = true;
     window.setReady = (v) => { engineReady = v; };
     window.appWizardDone = async () => { window.wizardDone++; };
+    const postFields = () => {
+      const act = llmState.installed.find(m => m.active);
+      return { post_on: !window.lastSaveForm || window.lastSaveForm.post_enabled !== false,
+        post_model: act ? act.file.replace(/\.gguf$/, "") : "", post_size: act ? act.size : 0,
+        post_installed: llmState.installed.length, post_remote: false, post_prompts: 0 };
+    };
+    window.removeLLMByHand = (f) => { llmState.installed = llmState.installed.filter(m => m.file !== f); };
     window.appState = async () =>
-      JSON.stringify({ subtitles: window.subsState, hotkey: "ctrl+win", mic: "Realtek", engine: "sherpa · gigaam-v3", llm: "model.gguf",
+      JSON.stringify({ ...postFields(), subtitles: window.subsState, hotkey: "ctrl+win", mic: "Realtek", engine: "sherpa · gigaam-v3", llm: "model.gguf",
         ram: "8000 MB free", last: "hello", last_meta: "just now · 5 characters", ready: engineReady, status: "Ready",
         status_line: "Ready · gigaam-v3 + ggml-small.bin · 7.8 GB free",
         active_model: "GigaAM v3", active_state: ruState, active_lang: "RU",
@@ -133,8 +140,10 @@ const dom = new JSDOM(html, {
       window.llmUnloads++;
       llmState.installed.forEach(m => { m.loaded = false; });
     };
-    window.appLLMDel = async () => {
-      llmState = { installed: [], downloads: [], ram: 16384, ram_free: 9000 };
+    window.llmDeleted = [];
+    window.appLLMDel = async (f) => {
+      window.llmDeleted.push(f);
+      llmState = { installed: llmState.installed.filter(m => m.file !== f), downloads: [], ram: 16384, ram_free: 9000 };
       return "deleted";
     };
     window.appAdvise = async () => JSON.stringify({
@@ -1738,6 +1747,52 @@ function check(name, actual, expected) {
   sv("subs_hero_goto").click(); await sleep(150);
   check("the arrow opens the Subtitles tab", shown("subs"), true);
   check("the search finds the tab", w.searchMatches("s_subs_save").some((el) => el.closest("#p-subs")), true);
+
+  const postCard = () => d.querySelectorAll("#state_models .stcard")[1];
+  const postRow = () => [postCard().querySelector(".stnm").textContent, postCard().querySelector(".stnm .led").classList.contains("on")];
+  const lastSum = () => [...d.querySelectorAll("#llm_sum .sumv")][0].textContent;
+  llmState = { installed: [
+    { file: "Qwen2.5-3B-Instruct-IQ2_M.gguf", size: 1300, active: true, loaded: false },
+    { file: "other.gguf", size: 900, active: false, loaded: false },
+    { file: "third.gguf", size: 700, active: false, loaded: false },
+  ], downloads: [], ram: 16384, ram_free: 9000 };
+  tab("state"); await w.refreshState(); await sleep(60);
+  check("status: the editor model is named from the polled state", postRow(), ["Qwen2.5-3B-Instruct-IQ2_M", true]);
+  tab("post"); await sleep(200);
+  check("post-processing: showing the tab reads the models again", lastSum(), "Qwen2.5-3B-Instruct-IQ2_M.gguf");
+  d.getElementById("llm_catalog").click(); await sleep(200);
+  d.querySelector('#proc-models button[data-a="ldel"][data-f="other.gguf"]').click(); await sleep(150);
+  d.querySelector(".modal .btn.yes").click(); await sleep(250);
+  d.querySelector(".modal.llmcat .btn.ghost").click(); await sleep(200);
+  check("deleting a model that is not the chosen one deletes only that one", w.llmDeleted.slice(-1), ["other.gguf"]);
+  check("post-processing: the chosen model stays chosen", lastSum(), "Qwen2.5-3B-Instruct-IQ2_M.gguf");
+  await w.refreshState(); await sleep(60);
+  check("status: the chosen model stays named", postRow(), ["Qwen2.5-3B-Instruct-IQ2_M", true]);
+  d.querySelector("#llm_sum .sumacts .iconbtn.danger").click(); await sleep(150);
+  d.querySelector(".modal .btn.yes").click(); await sleep(250);
+  check("the cross in the summary deletes the chosen model", w.llmDeleted.slice(-1), ["Qwen2.5-3B-Instruct-IQ2_M.gguf"]);
+  check("post-processing: the summary no longer names it", lastSum(), "not picked");
+  await w.refreshState(); await sleep(60);
+  check("status: after the next poll, without a reload, the deleted model is gone", postRow(), ["model: not picked", false]);
+  check("status: no size is left of it", postCard().querySelector(".stwu").textContent, "local");
+  w.removeLLMByHand("third.gguf");
+  await w.refreshState(); await sleep(60);
+  check("status: with nothing left in the folder it says no model is installed", postRow(), ["model: not installed", false]);
+  tab("state"); await sleep(30);
+  tab("post"); await sleep(200);
+  check("post-processing: the summary says so too", lastSum(), "No models installed yet — find and download one in the search field below.");
+  tab("state"); await sleep(60);
+  check("status: the arrow to the Post-processing tab stays", !!postCard().querySelector(".iconbtn.stgo"), true);
+  postCard().querySelector(".iconbtn.stgo").click(); await sleep(150);
+  check("and opens it", shown("post"), true);
+  llmState = { installed: [{ file: "keep.gguf", size: 800, active: true, loaded: false }], downloads: [], ram: 16384, ram_free: 9000 };
+  const postSwitch = d.getElementById("post_enabled");
+  postSwitch.checked = false; postSwitch.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(400);
+  await w.refreshState(); await sleep(60);
+  check("status: post-processing turned off on its tab shows as off after the next poll", [postCard().querySelector(".sthead .stbdg").textContent, postRow()[0]], ["off", "keepnot started"]);
+  postSwitch.checked = true; postSwitch.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(400);
+  await w.refreshState(); await sleep(60);
+  check("and on again after the next one", [postCard().querySelector(".sthead .stbdg").textContent, postRow()], ["on", ["keep", true]]);
 
   check("no page errors", errors, []);
 

@@ -3300,6 +3300,7 @@ function openLLMCatalog(){
 async function refreshLLM(){
   const st = JSON.parse(await appLLM());
   const installed = st.installed || [];
+  if(selLLM !== null && !installed.find(m=>m.file === selLLM)) selLLM = null;
   if(selLLM === null){
     const act = installed.find(m=>m.active);
     if(act) selLLM = act.file;
@@ -4228,9 +4229,8 @@ function modelRow(name, note, badgeText, badgeCls, on){
 function renderStateModels(s){
   const box = document.getElementById("state_models");
   if(!box) return;
-  const postOn = CFG.post_enabled !== false;
-  const postModel = (CFG.llm_model || "").split(/[\\/]/).pop();
-  const sig = JSON.stringify([s.assigned, s.idle_models, s.active_model, postOn, s.post_model, s.post_size, s.post_prompts, s.post_remote]);
+  const postOn = s.post_on !== false;
+  const sig = JSON.stringify([s.assigned, s.idle_models, s.active_model, postOn, s.post_model, s.post_size, s.post_prompts, s.post_remote, s.post_installed, s.llm]);
   if(box.dataset.sig === sig) return;
   box.dataset.sig = sig;
   box.innerHTML = "";
@@ -4285,7 +4285,10 @@ function renderStateModels(s){
   marks.push(s.post_remote ? L.postapi : L.stlocal);
   if(s.post_size) marks.push(gbLabel(s.post_size));
   if(s.post_prompts) marks.push(L.llmsumcount + ": " + s.post_prompts);
-  post.appendChild(modelRow(s.post_model || postModel || s.llm, marks.join(" · "), postOn ? "" : L.stidle, postOn ? "" : "warn", postOn));
+  let postName = s.post_model;
+  if(!postName) postName = s.post_remote ? s.llm : L.llmsummodel + ": " + (s.post_installed ? L.llmnopick : L.notinstalled);
+  const postLive = postOn && !!(s.post_model || s.post_remote);
+  post.appendChild(modelRow(postName, marks.join(" · "), postOn ? "" : L.stidle, postOn ? "" : "warn", postLive));
   box.appendChild(post);
 }
 const PIE_FALLBACK = { hi: "#3cff6e", amber: "#ffb347", rec: "#ff5b4d", bg: "#0b0f0c", lbl: "#f2fff5", soft: "#12241a", faint: "#14803a" };
@@ -5368,6 +5371,7 @@ function show(p){
   if(p==="state") refreshState();
   if(p==="history") refreshHistory();
   if(p==="subs") refreshSubsModel();
+  if(p==="post") refreshLLM();
   document.querySelector(".content").scrollTop = 0;
   if(p==="help" && helpMark) helpMark();
 }

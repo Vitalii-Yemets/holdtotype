@@ -24,6 +24,7 @@ import (
 	"golang.org/x/sys/windows"
 
 	"holdtotype/internal/appid"
+	"holdtotype/internal/editormodel"
 )
 
 var llmAPIKey = func() string {
@@ -226,17 +227,8 @@ func (a *App) llmStatus() string {
 	a.mu.Unlock()
 	warm := llm != nil && llm.alive()
 	var installed []instRow
-	entries, _ := os.ReadDir("models")
-	for _, e := range entries {
-		name := e.Name()
-		if e.IsDir() || !strings.HasSuffix(name, ".gguf") || strings.HasPrefix(name, "mmproj-") {
-			continue
-		}
-		info, err := e.Info()
-		if err != nil {
-			continue
-		}
-		installed = append(installed, instRow{File: name, SizeMB: int(info.Size() / (1024 * 1024)), Active: name == activeFile, Loaded: warm && name == activeFile})
+	for _, f := range editormodel.List("models") {
+		installed = append(installed, instRow{File: f.Name, SizeMB: f.SizeMB, Active: f.Name == activeFile, Loaded: warm && f.Name == activeFile})
 	}
 	type dlRow struct {
 		File string `json:"file"`

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"holdtotype/internal/checksum"
+	"holdtotype/internal/editormodel"
 	"holdtotype/internal/preset"
 	"io"
 	"log"
@@ -840,8 +841,10 @@ type stateOut struct {
 	RAMFreeMB   int             `json:"ram_free_mb"`
 	RAMTotalMB  int             `json:"ram_mb"`
 	Idle        []idleModel     `json:"idle_models"`
+	PostOn      bool            `json:"post_on"`
 	PostModel   string          `json:"post_model"`
 	PostSizeMB  int             `json:"post_size"`
+	PostCount   int             `json:"post_installed"`
 	PostPrompts int             `json:"post_prompts"`
 	PostRemote  bool            `json:"post_remote"`
 	UpdChecked  int64           `json:"upd_checked"`
@@ -966,24 +969,12 @@ func idleModels(cfg *Config) []idleModel {
 	return out
 }
 
-func postModelName(cfg *Config) string {
-	name := filepath.Base(strings.TrimSpace(cfg.LLMModel))
-	if name == "." || name == string(filepath.Separator) {
-		return ""
+func postModelNow(cfg *Config) (string, int) {
+	f, ok := editormodel.Chosen(cfg.LLMModel)
+	if !ok {
+		return "", 0
 	}
-	return strings.TrimSuffix(name, ".gguf")
-}
-
-func postModelSizeMB(cfg *Config) int {
-	name := filepath.Base(strings.TrimSpace(cfg.LLMModel))
-	if name == "" {
-		return 0
-	}
-	info, err := os.Stat(filepath.Join("models", name))
-	if err != nil {
-		return 0
-	}
-	return int(info.Size() / (1024 * 1024))
+	return strings.TrimSuffix(f.Name, ".gguf"), f.SizeMB
 }
 
 func installedModelNames() []string {
@@ -1109,8 +1100,8 @@ func (a *App) stateSnapshot() string {
 		RAMFreeMB:   free,
 		RAMTotalMB:  total,
 		Idle:        idleModels(cfg),
-		PostModel:   postModelName(cfg),
-		PostSizeMB:  postModelSizeMB(cfg),
+		PostOn:      cfg.PostEnabled,
+		PostCount:   len(editormodel.List("models")),
 		PostPrompts: len(cfg.ActiveProfiles),
 		PostRemote:  postAPIOn(cfg),
 		Subtitles:   a.subtitlesState(),
@@ -1119,6 +1110,7 @@ func (a *App) stateSnapshot() string {
 	st.UpdVersion = a.updVer
 	st.UpdChecked = a.updChecked.UnixMilli()
 	a.mu.Unlock()
+	st.PostModel, st.PostSizeMB = postModelNow(cfg)
 	st.WeekCount, st.WeekChars = histStore.Stats(time.Now().Add(-7 * 24 * time.Hour).UnixMilli())
 	st.TodayCount, _ = histStore.Stats(startOfDayMs())
 	st.WeekApps = weekByApp()
