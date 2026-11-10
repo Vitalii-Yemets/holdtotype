@@ -156,6 +156,13 @@ type settingsForm struct {
 	Commands            []commands.Command `json:"commands"`
 	LLMModelFile        string             `json:"llm_model_file"`
 	Profiles            []Profile          `json:"profiles"`
+
+	SubtitlesLanguage *string                  `json:"subtitles_language"`
+	SubtitlesHotkey   *string                  `json:"subtitles_hotkey"`
+	SubtitlesSave     *bool                    `json:"subtitles_save"`
+	SubtitlesLines    *int                     `json:"subtitles_lines"`
+	SubtitlesSize     *string                  `json:"subtitles_size"`
+	SubtitlesXY       *map[string]ovplace.Frac `json:"subtitles_custom"`
 }
 
 func (a *App) openSettings(tab string) {
@@ -357,6 +364,18 @@ func (a *App) settingsThread(tab string, attempt int) {
 			if abs, err := filepath.Abs("models"); err == nil {
 				shellOpenURL(abs)
 			}
+		})
+		_ = w.Bind("appSubtitles", func(action string) {
+			if _, ok := subCommands[action]; ok {
+				log.Printf("settings: subtitles %s", action)
+				go a.subtitlesCommand(action)
+			}
+		})
+		_ = w.Bind("appSubtitlesModel", func(lang string) string {
+			return a.subtitlesModelInfo(lang)
+		})
+		_ = w.Bind("appOpenTranscripts", func() {
+			openTranscriptsFolder()
 		})
 		_ = w.Bind("appModelLink", func(id string) {
 			if m := findModel(id); m != nil && m.LinkURL != "" {
@@ -725,7 +744,14 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	if langKeys == nil {
 		langKeys = map[string]string{}
 	}
-	combos := hotkeys.WithPerLang([]string{f.Hotkey, f.TranslateHotkey, a.snapshot().SubtitlesHotkey}, langKeys)
+	subKey := a.snapshot().SubtitlesHotkey
+	if f.SubtitlesHotkey != nil {
+		subKey = strings.TrimSpace(*f.SubtitlesHotkey)
+		if subKey != "" && !hotkeyParses(subKey) {
+			return saveResult{Severity: "error", Message: trf("err.hotkey.cfg", subKey)}
+		}
+	}
+	combos := hotkeys.WithPerLang([]string{f.Hotkey, f.TranslateHotkey, subKey}, langKeys)
 	if dup := hotkeys.FindDuplicate(combos); dup != "" {
 		return saveResult{Severity: "error", Message: trf("err.hotkey.dup", dup)}
 	}
@@ -914,6 +940,22 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	if f.Commands != nil {
 		c.Commands = commands.Clean(f.Commands)
 	}
+	c.SubtitlesHotkey = subKey
+	if f.SubtitlesLanguage != nil && validPresetLang(*f.SubtitlesLanguage) {
+		c.SubtitlesLanguage = *f.SubtitlesLanguage
+	}
+	if f.SubtitlesSave != nil {
+		c.SubtitlesSave = *f.SubtitlesSave
+	}
+	if f.SubtitlesLines != nil && *f.SubtitlesLines >= minSubtitlesLines && *f.SubtitlesLines <= maxSubtitlesLines {
+		c.SubtitlesLines = *f.SubtitlesLines
+	}
+	if f.SubtitlesSize != nil && validSubtitlesSize(*f.SubtitlesSize) {
+		c.SubtitlesSize = *f.SubtitlesSize
+	}
+	if f.SubtitlesXY != nil {
+		c.SubtitlesXY = ovplace.CleanCustom(*f.SubtitlesXY)
+	}
 	llmChanged := false
 	if f.LLMModelFile != "" && !strings.ContainsAny(f.LLMModelFile, "/\\") && strings.HasSuffix(f.LLMModelFile, ".gguf") {
 		if _, err := os.Stat(filepath.Join("models", f.LLMModelFile)); err == nil {
@@ -1046,6 +1088,11 @@ func settingsHTML(cfg *Config, tab string) string {
 		"commands":                cfg.Commands,
 		"translate_hotkey":        cfg.TranslateHotkey,
 		"lang_hotkeys":            cfg.LangHotkeys,
+		"subtitles_language":      cfg.SubtitlesLanguage,
+		"subtitles_hotkey":        cfg.SubtitlesHotkey,
+		"subtitles_save":          cfg.SubtitlesSave,
+		"subtitles_lines":         cfg.SubtitlesLines,
+		"subtitles_size":          cfg.SubtitlesSize,
 		"translate_target":        cfg.TranslateTarget,
 		"translate_ask":           cfg.TranslateAsk,
 		"translate_ask_seconds":   cfg.TranslateAskSeconds,
@@ -1169,6 +1216,10 @@ func settingsHTML(cfg *Config, tab string) string {
 		"wizpicked": "S_WIZ_PICKED", "wizdlbg": "S_WIZ_DL_BG", "wizdlfail": "S_WIZ_DL_FAIL", "wizretry": "S_WIZ_RETRY",
 		"wiztrydl": "S_WIZ_TRY_DL", "wiztryload": "S_WIZ_TRY_LOAD", "wiztrylive": "S_WIZ_TRY_LIVE",
 		"updavail": "S_UPD_AVAIL", "updgo": "S_UPD_GO", "upderr": "S_UPD_ERR", "upddl": "S_UPD_DL",
+		"subsoff": "S_SUBS_OFF", "subsloading": "S_SUBS_LOADING", "subslive": "S_SUBS_LISTEN_LIVE", "subsphrases": "S_SUBS_LISTEN_PHRASES",
+		"subsrestart": "S_SUBS_RESTARTING", "subsstart": "S_SUBS_START", "subsstop": "S_SUBS_STOP",
+		"subsmlive": "S_SUBS_M_LIVE", "subsmphrases": "S_SUBS_M_PHRASES", "subsmabsent": "S_SUBS_M_ABSENT", "subsmwhisper": "S_SUBS_M_WHISPER",
+		"subsplacedone": "S_SUBS_PLACE_DONE",
 	} {
 		lMap[jsKey] = str(sKey)
 	}
@@ -1988,6 +2039,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
  <button class="nav" role="tab" aria-selected="false" data-p="models"><span class="nlabel">{{S_NAV_MODELS}}</span><span class="nbadge" id="badge_models"></span></button>
  <button class="nav" role="tab" aria-selected="false" data-p="text"><span class="nlabel">{{S_NAV_TEXT}}</span></button>
  <button class="nav" role="tab" aria-selected="false" data-p="post"><span class="nlabel">{{S_NAV_POST}}</span></button>
+ <button class="nav" role="tab" aria-selected="false" data-p="subs"><span class="nlabel">{{S_NAV_SUBS}}</span></button>
  <span class="ngrp">{{S_GRP_INFO}}</span>
  <button class="nav" role="tab" aria-selected="false" data-p="help"><span class="nlabel">{{S_NAV_HELP}}</span></button>
  <button class="nav" role="tab" aria-selected="false" data-p="about"><span class="nlabel">{{S_NAV_ABOUT}}</span></button>
@@ -2299,6 +2351,48 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
 </div>
 
 
+<div class="page" role="tabpanel" aria-hidden="true" id="p-subs">
+ <div class="card" id="subs_main">
+  <div class="row noline"><label class="blklbl"><span id="subs_state">{{S_SUBS_OFF}}</span></label>
+   <button type="button" class="mini pri" id="subs_go">{{S_SUBS_START}}</button></div>
+  <div class="hint">{{S_SUBS_HINT}}</div>
+  <div class="note warn" id="subs_notice">{{S_SUBS_NOTICE}}</div>
+ </div>
+ <div class="card">
+  <div class="row"><label>{{S_SUBS_LANG}}<span class="sub">{{S_SUBS_LANG_SUB}}</span></label>
+   <select id="subtitles_language">
+    <option value="auto">{{S_RECAUTO}}</option>
+    <option value="de">Deutsch</option><option value="en">English</option>
+    <option value="es">Español</option><option value="fr">Français</option>
+    <option value="it">Italiano</option><option value="pl">Polski</option>
+    <option value="uk">Українська</option><option value="ru">Русский</option>
+   </select></div>
+  <div class="hint" id="subs_model"></div>
+  <div class="row noline" id="subs_case_row" style="display:none"><label><span class="sub warn" id="subs_case"></span></label>
+   <button type="button" class="mini" id="subs_case_go">{{S_SUBS_GO_MODELS}}</button></div>
+  <div class="hint" id="subs_remote" style="display:none">{{S_SUBS_REMOTE}}</div>
+ </div>
+ <div class="card">
+  <div class="row"><label>{{S_SUBS_KEY}}<span class="sub">{{S_SUBS_KEY_SUB}}</span></label>
+   <button type="button" class="hotkey-val" id="subs_key" title="{{S_CHANGE}}"></button>
+   <button type="button" class="iconbtn danger" id="subs_key_clear" title="{{S_LANG_KEY_CLEAR}}">&#10005;</button></div>
+ </div>
+ <div class="card">
+  <div class="row"><label>{{S_SUBS_SAVE}}<span class="sub">{{S_SUBS_SAVE_SUB}}</span></label><input type="checkbox" id="subtitles_save"></div>
+  <div class="row"><label>{{S_SUBS_FOLDER}}<span class="sub"><span class="code">transcripts\</span></span></label>
+   <button type="button" class="mini" id="subs_folder">{{S_OPEN_FOLDER}}</button></div>
+ </div>
+ <div class="card">
+  <label class="blklbl">{{S_SUBS_WINDOW}}</label>
+  <div class="row"><label>{{S_SUBS_ROWS}}</label>
+   <select id="subtitles_lines"><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
+  <div class="row"><label>{{S_SUBS_SIZE}}</label>
+   <select id="subtitles_size"><option value="s">{{S_SUBS_SIZE_S}}</option><option value="m">{{S_SUBS_SIZE_M}}</option><option value="l">{{S_SUBS_SIZE_L}}</option></select></div>
+  <div class="row"><label>{{S_SUBS_PLACE}}<span class="sub">{{S_SUBS_PLACE_SUB}}</span></label>
+   <button type="button" class="mini" id="subs_place">{{S_SUBS_PLACE_BTN}}</button></div>
+ </div>
+</div>
+
 <div class="page" role="tabpanel" aria-hidden="true" id="p-system">
  <div class="card">
   <div class="grp">
@@ -2548,6 +2642,9 @@ let activeProfiles = (CFG.active_profiles || []).slice();
 let translateDefault = !!CFG.translate_default;
 let translateHotkey = CFG.translate_hotkey || "";
 let langKeys = Object.assign({}, CFG.lang_hotkeys || {});
+let subsKey = CFG.subtitles_hotkey || "";
+let subsRunning = false;
+let subsPlaceReset = false;
 let expandedID = null;
 let captureFor = null;
 
@@ -3717,6 +3814,10 @@ function comboCaptured(combo, warn){
   const target = captureFor;
   captureFor = null;
   if(!target) return;
+  if(target === "subs"){
+    if(combo) setSubsKey(combo);
+    return;
+  }
   if(String(target).startsWith("lang:")){
     if(combo) setLangKey(target.slice(5), combo);
     return;
@@ -3735,6 +3836,88 @@ let micChosen = "";
 let activeModelId = null;
 let pendingDl = null;
 let pendingAssign = null;
+function subsEl(id){ return document.getElementById(id); }
+function paintSubsKey(){
+  const btn = subsEl("subs_key");
+  const clear = subsEl("subs_key_clear");
+  if(btn) btn.textContent = subsKey || L.langkeyset;
+  if(clear) clear.style.display = subsKey ? "" : "none";
+}
+async function setSubsKey(combo){
+  const prev = subsKey;
+  subsKey = combo;
+  const r = await doSave();
+  if(r && r.severity === "error") subsKey = prev;
+  paintSubsKey();
+}
+function renderSubsState(s){
+  const st = (s && s.subtitles) || {phase: "off"};
+  subsRunning = !!st.phase && st.phase !== "off";
+  let text = L.subsoff;
+  if(st.phase === "loading") text = L.subsloading.replace("%s", st.model || "");
+  else if(st.phase === "restarting") text = L.subsrestart;
+  else if(st.phase === "listening") text = (st.mode === "live" ? L.subslive : L.subsphrases).replace("%s", st.model || "");
+  const line = subsEl("subs_state");
+  if(line){ line.textContent = text; line.dataset.phase = st.phase || "off"; }
+  const go = subsEl("subs_go");
+  if(go) go.textContent = subsRunning ? L.subsstop : L.subsstart;
+}
+async function refreshSubsModel(){
+  const sel = subsEl("subtitles_language");
+  if(!sel || !window.appSubtitlesModel) return;
+  const info = JSON.parse(await appSubtitlesModel(sel.value));
+  const name = info.name || "—";
+  let line = "";
+  let warn = "";
+  if(!info.name || !info.installed) warn = L.subsmabsent.replace("%s", name);
+  else {
+    line = (info.mode === "live" ? L.subsmlive : L.subsmphrases).replace("%s", name);
+    if(info.whisper && !info.remote) warn = L.subsmwhisper.replace("%s", name);
+  }
+  const model = subsEl("subs_model");
+  if(model){ model.textContent = line; model.style.display = line ? "" : "none"; }
+  const cas = subsEl("subs_case");
+  if(cas) cas.textContent = warn;
+  const row = subsEl("subs_case_row");
+  if(row){ row.style.display = warn ? "" : "none"; row.dataset.lang = info.lang || sel.value; }
+  const remote = subsEl("subs_remote");
+  if(remote) remote.style.display = info.remote && info.installed ? "" : "none";
+}
+function subsGotoModels(){
+  const row = subsEl("subs_case_row");
+  const lang = (row && row.dataset.lang) || "auto";
+  show("models");
+  openLang = lang;
+  renderLangs();
+  const target = document.querySelector('#langlist .lrow[data-lang="' + lang + '"]');
+  if(target && target.scrollIntoView) target.scrollIntoView({block: "center"});
+}
+function initSubs(){
+  const sel = subsEl("subtitles_language");
+  if(!sel) return;
+  sel.value = CFG.subtitles_language || "auto";
+  subsEl("subtitles_save").checked = CFG.subtitles_save !== false;
+  subsEl("subtitles_lines").value = String(CFG.subtitles_lines || 3);
+  subsEl("subtitles_size").value = CFG.subtitles_size || "m";
+  paintSubsKey();
+  sel.addEventListener("change", refreshSubsModel);
+  subsEl("subs_go").onclick = async ()=>{
+    const go = subsEl("subs_go");
+    go.disabled = true;
+    await appSubtitles(subsRunning ? "stop" : "start");
+    setTimeout(async ()=>{ await refreshState(); go.disabled = false; }, 400);
+  };
+  subsEl("subs_key").onclick = ()=>{ captureFor = "subs"; appCaptureCombo(); };
+  subsEl("subs_key_clear").onclick = ()=>setSubsKey("");
+  subsEl("subs_folder").onclick = ()=>appOpenTranscripts();
+  subsEl("subs_place").onclick = async ()=>{
+    subsPlaceReset = true;
+    const r = await doSave();
+    if(r && r.severity !== "error") toast(L.subsplacedone, "ok");
+  };
+  subsEl("subs_case_go").onclick = subsGotoModels;
+  refreshSubsModel();
+}
 async function refreshState(){
   const s = JSON.parse(await appState());
   const set = (id, v)=>{ const el = document.getElementById(id); if(el) el.textContent = v; };
@@ -3745,6 +3928,7 @@ async function refreshState(){
     el.classList.toggle("warn", !!warn);
   };
   showPostErr(s.post_err || "");
+  renderSubsState(s);
 
   const hero = document.getElementById("state_hero");
   const off = s.enabled === false;
@@ -5068,7 +5252,14 @@ async function doSave(){
     replacements: repls,
     commands: cmds,
     llm_model_file: selLLM||"",
-    profiles: profiles};
+    profiles: profiles,
+    subtitles_language: (subsEl("subtitles_language")||{}).value || "auto",
+    subtitles_hotkey: subsKey,
+    subtitles_save: !!(subsEl("subtitles_save")||{}).checked,
+    subtitles_lines: parseInt((subsEl("subtitles_lines")||{}).value) || 3,
+    subtitles_size: (subsEl("subtitles_size")||{}).value || "m",
+    subtitles_custom: subsPlaceReset ? {} : null};
+  subsPlaceReset = false;
   bools.forEach(k=>f[k]=document.getElementById(k).checked);
   texts.forEach(k=>f[k]=document.getElementById(k).value);
   f.server_exe = exeStored;
@@ -6225,6 +6416,7 @@ document.querySelector(".header").addEventListener("mousedown", e=>{
 load();
 (async ()=>{
   initStateScreen();
+  initSubs();
   initSrvCards();
   initContacts();
   renderDeps();
@@ -6264,7 +6456,7 @@ load();
   await refreshLLM();
   if(window.appReady) appReady();
 })();
-const tabAlias = {general:"state", rec:"models", proc:"text", server:"system", about:"about", state:"state", dictation:"dictation", history:"history", mic:"mic", models:"models", text:"text", translate:"dictation", system:"system", post:"post", help:"help", contacts:"contacts"};
+const tabAlias = {general:"state", rec:"models", proc:"text", server:"system", about:"about", state:"state", dictation:"dictation", history:"history", mic:"mic", models:"models", text:"text", translate:"dictation", system:"system", post:"post", subs:"subs", subtitles:"subs", help:"help", contacts:"contacts"};
 show(tabAlias[CFG._tab] || "state");
 if(CFG._wizard || CFG._tab === "wizard") wizStart();
 setTimeout(()=>{ if(window.appReady) appReady(); }, 400);

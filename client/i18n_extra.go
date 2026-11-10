@@ -113,7 +113,7 @@ func init() {
 		"lists.save.title":     "Wohin die Listen speichern",
 		"lists.open.title":     "Welche Datei laden",
 		"un.title":             "{app} — Deinstallation", "un.confirm": "{app} von diesem Rechner entfernen?",
-		"un.data": "Auch Einstellungen und geladene Modelle löschen?", "un.done": "{app} wurde entfernt.",
+		"un.data": "Auch Einstellungen, geladene Modelle und Untertitel-Mitschriften löschen?", "un.done": "{app} wurde entfernt.",
 		"srv.restarting": "Erkennung wird mit den neuen Einstellungen neu gestartet…",
 	}
 	msgs["fr"] = map[string]string{
@@ -228,7 +228,7 @@ func init() {
 		"lists.save.title":     "Où enregistrer les listes",
 		"lists.open.title":     "Quel fichier charger",
 		"un.title":             "{app} — Désinstallation", "un.confirm": "Supprimer {app} de cet ordinateur ?",
-		"un.data": "Supprimer aussi les réglages et les modèles téléchargés ?", "un.done": "{app} a été supprimé.",
+		"un.data": "Supprimer aussi les réglages, les modèles téléchargés et les transcriptions des sous-titres ?", "un.done": "{app} a été supprimé.",
 		"srv.restarting": "Redémarrage de la reconnaissance avec les nouveaux réglages…",
 	}
 	msgs["es"] = map[string]string{
@@ -343,7 +343,7 @@ func init() {
 		"lists.save.title":     "Dónde guardar las listas",
 		"lists.open.title":     "Qué archivo cargar",
 		"un.title":             "{app} — Desinstalación", "un.confirm": "¿Quitar {app} de este equipo?",
-		"un.data": "¿Borrar también los ajustes y los modelos descargados?", "un.done": "{app} se ha quitado.",
+		"un.data": "¿Borrar también los ajustes, los modelos descargados y las transcripciones de subtítulos?", "un.done": "{app} se ha quitado.",
 		"srv.restarting": "Reiniciando el reconocedor con los nuevos ajustes…",
 	}
 	msgs["it"] = map[string]string{
@@ -458,7 +458,7 @@ func init() {
 		"lists.save.title":     "Dove salvare le liste",
 		"lists.open.title":     "Quale file caricare",
 		"un.title":             "{app} — Disinstallazione", "un.confirm": "Rimuovere {app} da questo computer?",
-		"un.data": "Eliminare anche impostazioni e modelli scaricati?", "un.done": "{app} è stato rimosso.",
+		"un.data": "Eliminare anche impostazioni, modelli scaricati e trascrizioni dei sottotitoli?", "un.done": "{app} è stato rimosso.",
 		"srv.restarting": "Riavvio del riconoscitore con le nuove impostazioni…",
 	}
 	msgs["pl"] = map[string]string{
@@ -573,11 +573,44 @@ func init() {
 		"lists.save.title":     "Gdzie zapisać listy",
 		"lists.open.title":     "Który plik wczytać",
 		"un.title":             "{app} — Odinstalowanie", "un.confirm": "Usunąć {app} z tego komputera?",
-		"un.data": "Usunąć także ustawienia i pobrane modele?", "un.done": "{app} został usunięty.",
+		"un.data": "Usunąć także ustawienia, pobrane modele i transkrypcje napisów?", "un.done": "{app} został usunięty.",
 		"srv.restarting": "Ponowne uruchamianie rozpoznawania z nowymi ustawieniami…",
 	}
 
 	settingsStrings["de"] = map[string]string{
+		"S_NAV_SUBS": "Untertitel",
+		"S_SUBS_HINT": "Die App schreibt mit, was der Computer abspielt – ein Gespräch, ein Video – und zeigt die Worte in einem Fenster über allen anderen.",
+		"S_SUBS_NOTICE": "Ihre Gesprächspartner sollten wissen, dass ihre Worte mitgeschrieben werden.",
+		"S_SUBS_START": "Untertitel starten",
+		"S_SUBS_STOP": "Untertitel beenden",
+		"S_SUBS_OFF": "Untertitel sind aus",
+		"S_SUBS_LOADING": "%s wird geladen…",
+		"S_SUBS_LISTEN_LIVE": "Höre auf den Ton des Computers · %s, Wörter schon beim Sprechen",
+		"S_SUBS_LISTEN_PHRASES": "Höre auf den Ton des Computers · %s, Text nach jedem Satz",
+		"S_SUBS_RESTARTING": "Die Erkennung startet neu…",
+		"S_SUBS_LANG": "Sprache der Rede",
+		"S_SUBS_LANG_SUB": "Die Sprache dessen, was Sie hören, getrennt von der Diktiersprache",
+		"S_SUBS_M_LIVE": "%s schreibt mit: Die Wörter erscheinen schon beim Sprechen.",
+		"S_SUBS_M_PHRASES": "%s schreibt mit: Jeder Satz erscheint kurz nachdem er zu Ende ist.",
+		"S_SUBS_M_ABSENT": "Für diese Sprache ist %s gewählt, aber nicht installiert.",
+		"S_SUBS_M_WHISPER": "%s ist ein Whisper-Modell: Auf dem Prozessor braucht es viele Sekunden pro Satz, der Text hinkt der Rede deutlich hinterher. Für Untertitel passt ein Streaming-Modell oder ein schnelles Modell besser.",
+		"S_SUBS_GO_MODELS": "„Sprachen & Modelle“ öffnen",
+		"S_SUBS_REMOTE": "Die Erkennung läuft auf einem anderen Rechner: Jeder Satz wird an diesen Server gesendet.",
+		"S_SUBS_KEY": "Tastenkürzel",
+		"S_SUBS_KEY_SUB": "Startet und beendet die Untertitel aus jedem Fenster",
+		"S_SUBS_SAVE": "Mitschrift speichern",
+		"S_SUBS_SAVE_SUB": "Eine Textdatei pro Durchlauf im Ordner transcripts neben dem Programm",
+		"S_SUBS_FOLDER": "Ordner der Mitschriften",
+		"S_SUBS_WINDOW": "Untertitelfenster",
+		"S_SUBS_ROWS": "Textzeilen",
+		"S_SUBS_SIZE": "Textgröße",
+		"S_SUBS_SIZE_S": "Klein",
+		"S_SUBS_SIZE_M": "Mittel",
+		"S_SUBS_SIZE_L": "Groß",
+		"S_SUBS_PLACE": "Platz des Fensters",
+		"S_SUBS_PLACE_SUB": "Das Fenster lässt sich mit der Maus verschieben; der Platz wird für jede Bildschirmauflösung gemerkt",
+		"S_SUBS_PLACE_BTN": "Zurück an den Standardplatz",
+		"S_SUBS_PLACE_DONE": "Das Fenster kehrt an seinen Standardplatz zurück",
 		"S_TITLE": "{app} — Einstellungen", "S_DICT_HINT": "Begriffe, Namen und Abkürzungen, durch Kommas getrennt — ein Hinweis fürs Gehör, keine Befehle. Gilt für Whisper; russische Sprache über GigaAM ignoriert das. Der Standardsatz folgt der Erkennungssprache, bis Sie eigenes eintragen.",
 		"S_TR_DEFAULT": "Sprache der Textausgabe ändern", "S_TR_TARGET": "Standardsprache der Textausgabe", "S_TR_ASK": "Nach der Ausgabesprache fragen", "S_TR_ASK_NEVER": "Nicht fragen — sofort übersetzen",
 		"S_SRCLANG_SUB": "Sie sprechen sie; sie bestimmt das Erkennungsmodell",
@@ -1094,6 +1127,16 @@ func init() {
 			"</table>" +
 			"<div class=\"hwarn\">Die Stimme geht nie an einen externen Server, nur der erkannte Text. Aber der geht eben hin, also schalten Sie das bewusst ein.</div>" +
 			"<p>Jeder Prompt hat einen <b>Namen</b> (unter ihm erscheint er während der Arbeit auf der Leiste), den <b>Text der Anweisung</b> in gewöhnlichen Worten, ein optionales <b>eigenes Tastenkürzel</b> (ein Diktat damit schickt den Satz nur durch diesen Prompt und lässt die anderen aus) und einen <b>Test</b>: ein Feld, in das Sie einen Satz eintippen und sehen können, was herauskommt, ohne etwas zu diktieren.</p>" +
+			"<p class=\"wh\" id=\"s-subs\">Die Registerkarte „Untertitel“</p>" +
+			"<p>Untertitel schreiben mit, was der Computer abspielt – ein Gespräch, ein Video, einen Vortrag – und zeigen die Worte in einem kleinen Fenster, das über allen anderen Fenstern bleibt. Es ist dieselbe Erkennung wie beim Diktieren, nur kommt der Ton aus den Lautsprechern statt vom Mikrofon, und das Diktieren funktioniert weiter, während Untertitel laufen. Die eigenen Töne der App werden nicht mitgeschrieben.</p>" +
+			"<table class=\"hopt\">" +
+			"<tr><td>Untertitel starten</td><td>Startet und beendet sie. Die Zeile daneben sagt, was gerade passiert: aus, Modell wird geladen, es wird zugehört oder die Erkennung startet neu. Dasselbe tun das Tray-Menü, ein eigenes Tastenkürzel und das Kreuz am Fenster.</td></tr>" +
+			"<tr><td>Sprache der Rede</td><td>Die Sprache dessen, was Sie hören, getrennt von der Diktiersprache. Das Modell ist das, das diese Sprache auf der Registerkarte „Sprachen & Modelle“ hat. Ein Streaming-Modell schreibt die Wörter schon beim Sprechen, die anderen jeden Satz kurz nach seinem Ende. Ein Whisper-Modell braucht auf dem Prozessor viele Sekunden pro Satz, sein Text hinkt der Rede deutlich hinterher; aufgestaute Sätze gehen gemeinsam an das Modell und kommen als eine Zeile heraus.</td></tr>" +
+			"<tr><td>Tastenkürzel</td><td>Startet und beendet die Untertitel aus jedem Fenster. Es startet nie ein Diktat und darf kein anderes Kürzel wiederholen.</td></tr>" +
+			"<tr><td>Mitschrift speichern</td><td>Jeder Durchlauf schreibt eine Textdatei in den Ordner transcripts neben dem Programm: eine erste Zeile mit Datum, Sprache und Modell, dann jede fertige Zeile mit der Uhrzeit, zu der sie begann. Bis die erste Zeile fertig ist, wird nichts geschrieben.</td></tr>" +
+			"<tr><td>Untertitelfenster</td><td>Wie viele Textzeilen es zeigt und wie groß die Schrift ist. Jede fertige Zeile beginnt in einer neuen Zeile des Fensters. Das Fenster lässt sich mit der Maus verschieben; der Platz wird für jede Bildschirmauflösung gemerkt, „Zurück an den Standardplatz“ vergisst ihn.</td></tr>" +
+			"</table>" +
+			"<div class=\"hwarn\">Ihre Gesprächspartner sollten wissen, dass ihre Worte mitgeschrieben werden.</div>" +
 			"<p class=\"wh\" id=\"s-about\">„Über“ und „Kontakte“</p>" +
 			"<p>Auf der Registerkarte „Über“ stehen eine kurze Beschreibung, was das ist und wie es aufgebaut ist, und eine Liste aller fremden Bibliotheken, aus denen die App gebaut ist, mit ihren Lizenzen. Die Namen sind anklickbar und führen zu den Seiten dieser Projekte. Dort steht auch ein Link zum Repository, in dem der Quellcode und alle Versionen liegen.</p>" +
 			"<p>„Kontakte“ besteht aus drei Karten: E-Mail, Repository und eine Seite für Fehler und Ideen. Ein Klick auf die E-Mail-Adresse öffnet Ihr E-Mail-Programm mit bereits eingetragenem Empfänger, und das Symbol daneben kopiert die Adresse einfach.</p>" +
@@ -1104,11 +1147,13 @@ func init() {
 			"<tr><td>holdtotype.log</td><td>Das Protokoll. Der erste Ort, an dem Sie nachsehen sollten, wenn sich die App seltsam verhält.</td></tr>" +
 			"<tr><td>holdtotype-history.json</td><td>Der Diktatverlauf, falls Sie ihn eingeschaltet haben. Gewöhnlicher Text: Wenn Sie möchten, können Sie die Datei einfach löschen.</td></tr>" +
 			"<tr><td>models</td><td>Der Ordner mit den heruntergeladenen Modellen, der schwerste Teil, mehrere Gigabyte. Auch ihn können Sie auf einen anderen Rechner mitnehmen, um nicht alles neu herunterzuladen.</td></tr>" +
+			"<tr><td>transcripts</td><td>Die Mitschriften der Untertitel, eine Textdatei pro Durchlauf. Es sind Ihre Dokumente: Die Deinstallation entfernt sie nur, wenn Sie auch das Löschen von Einstellungen und Daten verlangen.</td></tr>" +
 			"<tr><td>whisper-server, sherpa-server, llama-server</td><td>Die kleinen Programme, die die Modelle ausführen. Ohne sie ist ein Modell nur eine Datei, die niemand lesen kann.</td></tr>" +
 			"</table>" +
 			"<p class=\"wh\" id=\"s-privacy\">Was ins Internet geht und was nicht</p>" +
 			"<ul>" +
 			"<li><b>Die Stimme</b> wird weder gespeichert noch gesendet, es sei denn, Sie haben selbst die Erkennung auf einem anderen Rechner eingeschaltet.</li>" +
+			"<li><b>Untertitel</b> werden hier erkannt, genau wie Diktate, und die Mitschrift bleibt im Ordner transcripts; bei Erkennung auf einem anderen Rechner gehen die Sätze an diesen Server.</li>" +
 			"<li><b>Der Text</b> verlässt den Rechner nicht, es sei denn, Sie haben selbst einen externen Server für die Nachbearbeitung eingeschaltet.</li>" +
 			"<li><b>Der Verlauf</b> liegt als Datei neben der App und wird nach der von Ihnen gesetzten Frist geleert.</li>" +
 			"<li><b>Das Netz</b> wird zweimal gebraucht: um ein Modell herunterzuladen und um nach einem Update zu sehen. Die zweite Prüfung lässt sich abschalten.</li>" +
@@ -1155,6 +1200,39 @@ func init() {
 		"S_WIZ_TRY_TEXT":   "Setzen Sie die Eingabemarke ins Feld unten, halten Sie %s, sprechen Sie einen Satz und lassen Sie los.",
 	}
 	settingsStrings["fr"] = map[string]string{
+		"S_NAV_SUBS": "Sous-titres",
+		"S_SUBS_HINT": "L'application note ce que joue l'ordinateur – un appel, une vidéo – et affiche les mots dans une fenêtre au-dessus des autres.",
+		"S_SUBS_NOTICE": "Vos interlocuteurs doivent savoir que leurs paroles sont transcrites.",
+		"S_SUBS_START": "Démarrer les sous-titres",
+		"S_SUBS_STOP": "Arrêter les sous-titres",
+		"S_SUBS_OFF": "Les sous-titres sont arrêtés",
+		"S_SUBS_LOADING": "Chargement de %s…",
+		"S_SUBS_LISTEN_LIVE": "À l'écoute du son de l'ordinateur · %s, les mots au fil de la parole",
+		"S_SUBS_LISTEN_PHRASES": "À l'écoute du son de l'ordinateur · %s, le texte après chaque phrase",
+		"S_SUBS_RESTARTING": "La reconnaissance redémarre…",
+		"S_SUBS_LANG": "Langue parlée",
+		"S_SUBS_LANG_SUB": "La langue de ce que vous écoutez, distincte de la langue de dictée",
+		"S_SUBS_M_LIVE": "%s écrira : les mots apparaissent au fil de la parole.",
+		"S_SUBS_M_PHRASES": "%s écrira : chaque phrase apparaît un instant après sa fin.",
+		"S_SUBS_M_ABSENT": "%s est choisi pour cette langue mais n'est pas installé.",
+		"S_SUBS_M_WHISPER": "%s est un modèle Whisper : sur un processeur il lui faut de nombreuses secondes par phrase, le texte aura donc un net retard sur la parole. Un modèle en streaming ou un modèle rapide convient mieux aux sous-titres.",
+		"S_SUBS_GO_MODELS": "Ouvrir « Langues et modèles »",
+		"S_SUBS_REMOTE": "La reconnaissance tourne sur un autre ordinateur : chaque phrase est envoyée à ce serveur.",
+		"S_SUBS_KEY": "Raccourci clavier",
+		"S_SUBS_KEY_SUB": "Démarre et arrête les sous-titres depuis n'importe quelle fenêtre",
+		"S_SUBS_SAVE": "Enregistrer la transcription",
+		"S_SUBS_SAVE_SUB": "Un fichier texte par session dans le dossier transcripts à côté du programme",
+		"S_SUBS_FOLDER": "Dossier des transcriptions",
+		"S_SUBS_WINDOW": "Fenêtre des sous-titres",
+		"S_SUBS_ROWS": "Lignes de texte",
+		"S_SUBS_SIZE": "Taille du texte",
+		"S_SUBS_SIZE_S": "Petite",
+		"S_SUBS_SIZE_M": "Moyenne",
+		"S_SUBS_SIZE_L": "Grande",
+		"S_SUBS_PLACE": "Emplacement de la fenêtre",
+		"S_SUBS_PLACE_SUB": "La fenêtre se déplace à la souris ; l'emplacement est retenu pour chaque résolution d'écran",
+		"S_SUBS_PLACE_BTN": "Remettre à l'emplacement par défaut",
+		"S_SUBS_PLACE_DONE": "La fenêtre retourne à son emplacement par défaut",
 		"S_TITLE": "{app} — Réglages", "S_DICT_HINT": "Termes, noms et abréviations séparés par des virgules — un indice pour l'oreille, pas des commandes. Cela vaut pour Whisper ; le russe via GigaAM l'ignore. Le jeu par défaut suit la langue de reconnaissance jusqu'à ce que vous écriviez le vôtre.",
 		"S_TR_DEFAULT": "Changer la langue de sortie du texte", "S_TR_TARGET": "Langue de sortie du texte par défaut", "S_TR_ASK": "Demander la langue de sortie du texte", "S_TR_ASK_NEVER": "Ne pas demander — traduire aussitôt",
 		"S_SRCLANG_SUB": "vous la parlez ; elle détermine le modèle de reconnaissance",
@@ -1671,6 +1749,16 @@ func init() {
 			"</table>" +
 			"<div class=\"hwarn\">La voix ne part jamais vers un serveur externe, seulement le texte reconnu. Mais ce texte, lui, part bel et bien : activez donc cette option en connaissance de cause.</div>" +
 			"<p>Chaque prompt a un <b>nom</b> (c'est sous ce nom qu'il apparaît sur le bandeau pendant qu'il travaille), un <b>texte de consigne</b> en mots ordinaires, un <b>raccourci propre</b> facultatif (dicter avec ce raccourci fait passer la phrase par ce seul prompt, sans les autres) et un <b>test</b> : un champ où vous pouvez taper une phrase et voir ce qui en sort, sans rien dicter.</p>" +
+			"<p class=\"wh\" id=\"s-subs\">L'onglet « Sous-titres »</p>" +
+			"<p>Les sous-titres notent ce que joue l'ordinateur – un appel, une vidéo, un cours – et affichent les mots dans une petite fenêtre qui reste au-dessus des autres. C'est la même reconnaissance que pour la dictée, sauf que le son vient des haut-parleurs et non du micro, et la dictée continue de fonctionner pendant les sous-titres. Les sons de l'application elle-même ne sont pas notés.</p>" +
+			"<table class=\"hopt\">" +
+			"<tr><td>Démarrer les sous-titres</td><td>Les démarre et les arrête. La ligne à côté dit ce qui se passe : arrêtés, chargement du modèle, à l'écoute ou redémarrage de la reconnaissance. Le menu de la zone de notification, un raccourci à eux et la croix de la fenêtre font de même.</td></tr>" +
+			"<tr><td>Langue parlée</td><td>La langue de ce que vous écoutez, distincte de la langue de dictée. Le modèle est celui que l'onglet « Langues et modèles » donne à cette langue. Un modèle en streaming écrit les mots au fil de la parole, les autres chaque phrase un instant après sa fin. Un modèle Whisper a besoin de nombreuses secondes par phrase sur un processeur, son texte a donc un net retard sur la parole ; les phrases accumulées lui sont envoyées ensemble et ressortent en une seule ligne.</td></tr>" +
+			"<tr><td>Raccourci clavier</td><td>Démarre et arrête les sous-titres depuis n'importe quelle fenêtre. Il ne lance jamais de dictée et ne peut pas reprendre un autre raccourci.</td></tr>" +
+			"<tr><td>Enregistrer la transcription</td><td>Chaque session écrit un fichier texte dans le dossier transcripts à côté du programme : une première ligne avec la date, la langue et le modèle, puis chaque ligne terminée avec l'heure à laquelle elle a commencé. Rien n'est écrit tant que la première ligne n'est pas terminée.</td></tr>" +
+			"<tr><td>Fenêtre des sous-titres</td><td>Combien de lignes de texte elle affiche et quelle taille ont les lettres. Chaque ligne terminée commence une nouvelle ligne de la fenêtre. La fenêtre se déplace à la souris ; l'emplacement est retenu pour chaque résolution d'écran, et « Remettre à l'emplacement par défaut » l'oublie.</td></tr>" +
+			"</table>" +
+			"<div class=\"hwarn\">Vos interlocuteurs doivent savoir que leurs paroles sont transcrites.</div>" +
 			"<p class=\"wh\" id=\"s-about\">« À propos » et « Contacts »</p>" +
 			"<p>L'onglet « À propos » contient un court texte sur ce qu'est l'application et comment elle est construite, ainsi que la liste de toutes les bibliothèques tierces dont elle est faite, avec leurs licences. Les noms sont cliquables et mènent aux pages de ces projets. On y trouve aussi un lien vers le dépôt, où se trouvent le code source et toutes les versions.</p>" +
 			"<p>« Contacts » propose trois cartes : l'e-mail, le dépôt et une page pour les bugs et les idées. Un clic sur l'adresse e-mail ouvre votre logiciel de messagerie avec le destinataire déjà rempli, et l'icône à côté copie simplement l'adresse.</p>" +
@@ -1681,11 +1769,13 @@ func init() {
 			"<tr><td>holdtotype.log</td><td>Le journal. Le premier endroit où regarder si l'application se comporte bizarrement.</td></tr>" +
 			"<tr><td>holdtotype-history.json</td><td>L'historique des dictées, si vous l'avez activé. Du texte ordinaire : si vous le souhaitez, vous pouvez simplement supprimer le fichier.</td></tr>" +
 			"<tr><td>models</td><td>Le dossier des modèles téléchargés, la partie la plus lourde : plusieurs gigaoctets. Lui aussi peut être déplacé sur un autre ordinateur, pour ne pas tout retélécharger.</td></tr>" +
+			"<tr><td>transcripts</td><td>Les transcriptions des sous-titres, un fichier texte par session. Ce sont vos documents : le désinstallateur ne les supprime que si vous lui demandez aussi d'effacer les réglages et les données.</td></tr>" +
 			"<tr><td>whisper-server, sherpa-server, llama-server</td><td>Les petits programmes qui font tourner les modèles. Sans eux, un modèle n'est qu'un fichier que rien ne sait lire.</td></tr>" +
 			"</table>" +
 			"<p class=\"wh\" id=\"s-privacy\">Ce qui part sur internet et ce qui n'y part pas</p>" +
 			"<ul>" +
 			"<li><b>La voix</b> n'est ni enregistrée ni envoyée, sauf si vous avez vous-même activé la reconnaissance sur un autre ordinateur.</li>" +
+			"<li><b>Les sous-titres</b> sont reconnus ici, comme la dictée, et la transcription reste dans le dossier transcripts ; avec la reconnaissance sur un autre ordinateur, les phrases partent vers ce serveur.</li>" +
 			"<li><b>Le texte</b> ne quitte pas la machine, sauf si vous avez vous-même activé un serveur externe de post-traitement.</li>" +
 			"<li><b>L'historique</b> est un fichier à côté de l'application et se vide selon la durée que vous avez choisie.</li>" +
 			"<li><b>Le réseau</b> sert deux fois : pour télécharger un modèle et pour vérifier les mises à jour. Cette vérification peut être désactivée.</li>" +
@@ -1732,6 +1822,39 @@ func init() {
 		"S_WIZ_TRY_TEXT":   "Placez le curseur dans le champ ci-dessous, maintenez %s, dites une phrase et relâchez.",
 	}
 	settingsStrings["es"] = map[string]string{
+		"S_NAV_SUBS": "Subtítulos",
+		"S_SUBS_HINT": "La aplicación transcribe lo que suena en el ordenador —una llamada, un vídeo— y muestra las palabras en una ventana encima de las demás.",
+		"S_SUBS_NOTICE": "Las personas con las que hablas deben saber que se transcribe lo que dicen.",
+		"S_SUBS_START": "Iniciar subtítulos",
+		"S_SUBS_STOP": "Detener subtítulos",
+		"S_SUBS_OFF": "Los subtítulos están apagados",
+		"S_SUBS_LOADING": "Cargando %s…",
+		"S_SUBS_LISTEN_LIVE": "Escuchando el sonido del ordenador · %s, palabras a medida que se dicen",
+		"S_SUBS_LISTEN_PHRASES": "Escuchando el sonido del ordenador · %s, texto tras cada frase",
+		"S_SUBS_RESTARTING": "El reconocimiento se está reiniciando…",
+		"S_SUBS_LANG": "Idioma del habla",
+		"S_SUBS_LANG_SUB": "El idioma de lo que escuchas, aparte del idioma de dictado",
+		"S_SUBS_M_LIVE": "Lo escribirá %s: las palabras aparecen a medida que se dicen.",
+		"S_SUBS_M_PHRASES": "Lo escribirá %s: cada frase aparece un momento después de terminar.",
+		"S_SUBS_M_ABSENT": "Para este idioma está elegido %s, pero no está instalado.",
+		"S_SUBS_M_WHISPER": "%s es un modelo Whisper: en un procesador necesita muchos segundos por frase, así que el texto irá muy por detrás del habla. Para subtítulos va mejor un modelo de streaming o uno rápido.",
+		"S_SUBS_GO_MODELS": "Abrir «Idiomas y modelos»",
+		"S_SUBS_REMOTE": "El reconocimiento se hace en otro ordenador: cada frase se envía a ese servidor.",
+		"S_SUBS_KEY": "Atajo de teclado",
+		"S_SUBS_KEY_SUB": "Inicia y detiene los subtítulos desde cualquier ventana",
+		"S_SUBS_SAVE": "Guardar la transcripción",
+		"S_SUBS_SAVE_SUB": "Un archivo de texto por sesión en la carpeta transcripts junto al programa",
+		"S_SUBS_FOLDER": "Carpeta de transcripciones",
+		"S_SUBS_WINDOW": "Ventana de subtítulos",
+		"S_SUBS_ROWS": "Filas de texto",
+		"S_SUBS_SIZE": "Tamaño del texto",
+		"S_SUBS_SIZE_S": "Pequeño",
+		"S_SUBS_SIZE_M": "Mediano",
+		"S_SUBS_SIZE_L": "Grande",
+		"S_SUBS_PLACE": "Lugar de la ventana",
+		"S_SUBS_PLACE_SUB": "La ventana se mueve con el ratón; el lugar se recuerda para cada resolución de pantalla",
+		"S_SUBS_PLACE_BTN": "Volver al lugar por defecto",
+		"S_SUBS_PLACE_DONE": "La ventana vuelve a su lugar por defecto",
 		"S_TITLE": "{app} — Ajustes", "S_DICT_HINT": "Términos, nombres y abreviaturas separados por comas — una pista para el oído, no comandos. Vale para Whisper; el ruso a través de GigaAM lo ignora. El conjunto por defecto sigue al idioma de reconocimiento hasta que escribas el tuyo.",
 		"S_TR_DEFAULT": "Cambiar el idioma de salida del texto", "S_TR_TARGET": "Idioma de salida del texto por defecto", "S_TR_ASK": "Preguntar el idioma de salida del texto", "S_TR_ASK_NEVER": "No preguntar — traducir enseguida",
 		"S_SRCLANG_SUB": "usted lo habla; determina el modelo de reconocimiento",
@@ -2248,6 +2371,16 @@ func init() {
 			"</table>" +
 			"<div class=\"hwarn\">La voz nunca va a un servidor externo, solo el texto reconocido. Pero ese texto sí sale, así que actívalo con conocimiento de causa.</div>" +
 			"<p>Cada prompt tiene un <b>nombre</b> (con él aparece en la barra mientras trabaja), el <b>texto de la instrucción</b> con palabras normales, un <b>atajo propio</b> opcional (al dictar con él, la frase pasa solo por este prompt, sin los demás) y una <b>prueba</b>: un campo donde puedes escribir una frase y ver qué sale, sin dictar nada.</p>" +
+			"<p class=\"wh\" id=\"s-subs\">La pestaña «Subtítulos»</p>" +
+			"<p>Los subtítulos transcriben lo que suena en el ordenador —una llamada, un vídeo, una clase— y muestran las palabras en una ventana pequeña que se queda encima de las demás. Es el mismo reconocimiento que el del dictado, solo que el sonido sale de los altavoces y no del micrófono, y el dictado sigue funcionando mientras hay subtítulos. Los sonidos de la propia aplicación no se transcriben.</p>" +
+			"<table class=\"hopt\">" +
+			"<tr><td>Iniciar subtítulos</td><td>Los inicia y los detiene. La línea de al lado dice qué pasa: apagados, cargando el modelo, escuchando o reiniciando el reconocimiento. El menú de la bandeja, un atajo propio y la cruz de la ventana hacen lo mismo.</td></tr>" +
+			"<tr><td>Idioma del habla</td><td>El idioma de lo que escuchas, aparte del idioma de dictado. El modelo es el que la pestaña «Idiomas y modelos» da a ese idioma. Un modelo de streaming escribe las palabras a medida que se dicen; los demás, cada frase un momento después de terminar. Un modelo Whisper necesita muchos segundos por frase en un procesador, así que su texto va muy por detrás del habla; las frases acumuladas le llegan juntas y salen como una sola línea.</td></tr>" +
+			"<tr><td>Atajo de teclado</td><td>Inicia y detiene los subtítulos desde cualquier ventana. Nunca empieza un dictado y no puede repetir otro atajo.</td></tr>" +
+			"<tr><td>Guardar la transcripción</td><td>Cada sesión escribe un archivo de texto en la carpeta transcripts junto al programa: una primera línea con la fecha, el idioma y el modelo, y luego cada línea terminada con la hora en que empezó. No se escribe nada hasta que la primera línea está terminada.</td></tr>" +
+			"<tr><td>Ventana de subtítulos</td><td>Cuántas filas de texto muestra y qué tamaño tienen las letras. Cada línea terminada empieza en una fila nueva. La ventana se mueve con el ratón; el lugar se recuerda para cada resolución de pantalla, y «Volver al lugar por defecto» lo olvida.</td></tr>" +
+			"</table>" +
+			"<div class=\"hwarn\">Las personas con las que hablas deben saber que se transcribe lo que dicen.</div>" +
 			"<p class=\"wh\" id=\"s-about\">«Acerca de» y «Contactos»</p>" +
 			"<p>La pestaña «Acerca de» tiene un breve texto sobre qué es la aplicación y cómo está hecha, y la lista de todas las bibliotecas de terceros con las que está construida, con sus licencias. Los nombres son enlaces y llevan a las páginas de esos proyectos. También hay un enlace al repositorio, donde están el código fuente y todas las versiones.</p>" +
 			"<p>«Contactos» tiene tres tarjetas: el correo, el repositorio y una página para fallos e ideas. Al hacer clic en la dirección de correo se abre tu programa de correo con el destinatario ya puesto, y el icono de al lado simplemente copia la dirección.</p>" +
@@ -2258,11 +2391,13 @@ func init() {
 			"<tr><td>holdtotype.log</td><td>El registro. Lo primero que conviene mirar si la aplicación se comporta de forma rara.</td></tr>" +
 			"<tr><td>holdtotype-history.json</td><td>El historial de dictados, si lo activaste. Texto normal: si quieres, puedes simplemente borrar el archivo.</td></tr>" +
 			"<tr><td>models</td><td>La carpeta con los modelos descargados, la parte más pesada: varios GB. También se puede llevar a otro ordenador para no tener que descargarlo todo otra vez.</td></tr>" +
+			"<tr><td>transcripts</td><td>Las transcripciones de los subtítulos, un archivo de texto por sesión. Son tus documentos: el desinstalador solo los borra si también le pides borrar los ajustes y los datos.</td></tr>" +
 			"<tr><td>whisper-server, sherpa-server, llama-server</td><td>Los pequeños programas que ejecutan los modelos. Sin ellos, un modelo es solo un archivo sin nada que lo lea.</td></tr>" +
 			"</table>" +
 			"<p class=\"wh\" id=\"s-privacy\">Qué sale a internet y qué no</p>" +
 			"<ul>" +
 			"<li><b>La voz</b> no se guarda ni se envía, salvo que tú mismo hayas activado el reconocimiento en otro ordenador.</li>" +
+			"<li><b>Los subtítulos</b> se reconocen aquí, igual que el dictado, y la transcripción se queda en la carpeta transcripts; con el reconocimiento en otro ordenador, las frases van a ese servidor.</li>" +
 			"<li><b>El texto</b> no sale del equipo, salvo que tú mismo hayas activado un servidor externo de posprocesado.</li>" +
 			"<li><b>El historial</b> es un archivo junto a la aplicación y se limpia según el plazo que tú fijes.</li>" +
 			"<li><b>La red</b> se necesita dos veces: para descargar un modelo y para comprobar si hay actualizaciones. La segunda se puede desactivar.</li>" +
@@ -2309,6 +2444,39 @@ func init() {
 		"S_WIZ_TRY_TEXT":   "Coloca el cursor en el campo de abajo, mantén %s, di una frase y suelta.",
 	}
 	settingsStrings["it"] = map[string]string{
+		"S_NAV_SUBS": "Sottotitoli",
+		"S_SUBS_HINT": "L'app trascrive ciò che il computer riproduce — una chiamata, un video — e mostra le parole in una finestra sopra le altre.",
+		"S_SUBS_NOTICE": "Le persone con cui parli devono sapere che le loro parole vengono trascritte.",
+		"S_SUBS_START": "Avvia i sottotitoli",
+		"S_SUBS_STOP": "Ferma i sottotitoli",
+		"S_SUBS_OFF": "I sottotitoli sono spenti",
+		"S_SUBS_LOADING": "Caricamento di %s…",
+		"S_SUBS_LISTEN_LIVE": "In ascolto del suono del computer · %s, parole mentre vengono dette",
+		"S_SUBS_LISTEN_PHRASES": "In ascolto del suono del computer · %s, testo dopo ogni frase",
+		"S_SUBS_RESTARTING": "Il riconoscimento si sta riavviando…",
+		"S_SUBS_LANG": "Lingua del parlato",
+		"S_SUBS_LANG_SUB": "La lingua di ciò che ascolti, distinta dalla lingua di dettatura",
+		"S_SUBS_M_LIVE": "Scriverà %s: le parole appaiono mentre vengono dette.",
+		"S_SUBS_M_PHRASES": "Scriverà %s: ogni frase appare un attimo dopo la sua fine.",
+		"S_SUBS_M_ABSENT": "Per questa lingua è scelto %s, ma non è installato.",
+		"S_SUBS_M_WHISPER": "%s è un modello Whisper: sul processore gli servono molti secondi per frase, quindi il testo resterà molto indietro rispetto al parlato. Per i sottotitoli va meglio un modello in streaming o uno veloce.",
+		"S_SUBS_GO_MODELS": "Apri «Lingue e modelli»",
+		"S_SUBS_REMOTE": "Il riconoscimento avviene su un altro computer: ogni frase viene inviata a quel server.",
+		"S_SUBS_KEY": "Scorciatoia da tastiera",
+		"S_SUBS_KEY_SUB": "Avvia e ferma i sottotitoli da qualsiasi finestra",
+		"S_SUBS_SAVE": "Salva la trascrizione",
+		"S_SUBS_SAVE_SUB": "Un file di testo per sessione nella cartella transcripts accanto al programma",
+		"S_SUBS_FOLDER": "Cartella delle trascrizioni",
+		"S_SUBS_WINDOW": "Finestra dei sottotitoli",
+		"S_SUBS_ROWS": "Righe di testo",
+		"S_SUBS_SIZE": "Dimensione del testo",
+		"S_SUBS_SIZE_S": "Piccolo",
+		"S_SUBS_SIZE_M": "Medio",
+		"S_SUBS_SIZE_L": "Grande",
+		"S_SUBS_PLACE": "Posizione della finestra",
+		"S_SUBS_PLACE_SUB": "La finestra si sposta con il mouse; la posizione viene ricordata per ogni risoluzione dello schermo",
+		"S_SUBS_PLACE_BTN": "Riporta alla posizione predefinita",
+		"S_SUBS_PLACE_DONE": "La finestra torna alla posizione predefinita",
 		"S_TITLE": "{app} — Impostazioni", "S_DICT_HINT": "Termini, nomi e abbreviazioni separati da virgole — un suggerimento per l'ascolto, non comandi. Vale per Whisper; il russo tramite GigaAM lo ignora. Il set predefinito segue la lingua di riconoscimento finché non scrivi il tuo.",
 		"S_TR_DEFAULT": "Cambiare la lingua di uscita del testo", "S_TR_TARGET": "Lingua di uscita del testo predefinita", "S_TR_ASK": "Chiedere la lingua di uscita del testo", "S_TR_ASK_NEVER": "Non chiedere — tradurre subito",
 		"S_SRCLANG_SUB": "la parlate voi; determina il modello di riconoscimento",
@@ -2825,6 +2993,16 @@ func init() {
 			"</table>" +
 			"<div class=\"hwarn\">La voce non va mai al server esterno, solo il testo riconosciuto. Ma quello sì che esce, quindi attivalo con cognizione di causa.</div>" +
 			"<p>Ogni prompt ha un <b>nome</b> (con quello compare sulla barra mentre lavora), il <b>testo dell'istruzione</b> in parole normali, una <b>scorciatoia propria</b> facoltativa (dettando con questa, la frase passa solo per questo prompt, saltando gli altri) e una <b>prova</b>: un campo dove puoi scrivere una frase e vedere che cosa ne esce, senza dettare nulla.</p>" +
+			"<p class=\"wh\" id=\"s-subs\">La scheda «Sottotitoli»</p>" +
+			"<p>I sottotitoli trascrivono ciò che il computer riproduce — una chiamata, un video, una lezione — e mostrano le parole in una piccola finestra che resta sopra le altre. È lo stesso riconoscimento della dettatura, solo che il suono arriva dagli altoparlanti invece che dal microfono, e la dettatura continua a funzionare mentre i sottotitoli sono attivi. I suoni dell'app stessa non vengono trascritti.</p>" +
+			"<table class=\"hopt\">" +
+			"<tr><td>Avvia i sottotitoli</td><td>Li avvia e li ferma. La riga accanto dice cosa succede: spenti, caricamento del modello, in ascolto o riconoscimento in riavvio. Lo stesso fanno il menu nell'area di notifica, una scorciatoia tutta loro e la croce sulla finestra.</td></tr>" +
+			"<tr><td>Lingua del parlato</td><td>La lingua di ciò che ascolti, distinta dalla lingua di dettatura. Il modello è quello che la scheda «Lingue e modelli» assegna a quella lingua. Un modello in streaming scrive le parole mentre vengono dette, gli altri ogni frase un attimo dopo la sua fine. Un modello Whisper sul processore ha bisogno di molti secondi per frase, quindi il suo testo resta molto indietro rispetto al parlato; le frasi accumulate gli arrivano insieme ed escono come una sola riga.</td></tr>" +
+			"<tr><td>Scorciatoia da tastiera</td><td>Avvia e ferma i sottotitoli da qualsiasi finestra. Non avvia mai una dettatura e non può ripetere un'altra scorciatoia.</td></tr>" +
+			"<tr><td>Salva la trascrizione</td><td>Ogni sessione scrive un file di testo nella cartella transcripts accanto al programma: una prima riga con data, lingua e modello, poi ogni riga finita con l'ora in cui è cominciata. Finché la prima riga non è finita, non viene scritto nulla.</td></tr>" +
+			"<tr><td>Finestra dei sottotitoli</td><td>Quante righe di testo mostra e quanto sono grandi le lettere. Ogni riga finita comincia su una nuova riga della finestra. La finestra si sposta con il mouse; la posizione viene ricordata per ogni risoluzione dello schermo, e «Riporta alla posizione predefinita» la dimentica.</td></tr>" +
+			"</table>" +
+			"<div class=\"hwarn\">Le persone con cui parli devono sapere che le loro parole vengono trascritte.</div>" +
 			"<p class=\"wh\" id=\"s-about\">«Informazioni» e «Contatti»</p>" +
 			"<p>Nella scheda «Informazioni» c'è un breve testo su che cos'è l'app e su come è fatta, e l'elenco di tutte le librerie di terzi con cui è costruita, con le loro licenze. I nomi sono cliccabili e portano alle pagine di quei progetti. C'è anche un link al repository, dove si trovano il codice sorgente e tutte le versioni.</p>" +
 			"<p>«Contatti» ha tre riquadri: l'e-mail, il repository e una pagina per bug e idee. Un clic sull'indirizzo e-mail apre il tuo programma di posta con il destinatario già compilato, e l'icona accanto copia semplicemente l'indirizzo.</p>" +
@@ -2835,11 +3013,13 @@ func init() {
 			"<tr><td>holdtotype.log</td><td>Il registro. Il primo posto da guardare se l'app si comporta in modo strano.</td></tr>" +
 			"<tr><td>holdtotype-history.json</td><td>La cronologia delle dettature, se l'hai attivata. Testo normale: se vuoi, puoi anche solo eliminare il file.</td></tr>" +
 			"<tr><td>models</td><td>La cartella con i modelli scaricati, la parte più pesante: qualche GB. Anche questa si può spostare su un altro computer, per non dover riscaricare tutto.</td></tr>" +
+			"<tr><td>transcripts</td><td>Le trascrizioni dei sottotitoli, un file di testo per sessione. Sono documenti tuoi: il programma di disinstallazione li elimina solo se gli chiedi di cancellare anche impostazioni e dati.</td></tr>" +
 			"<tr><td>whisper-server, sherpa-server, llama-server</td><td>I piccoli programmi che fanno girare i modelli. Senza di loro un modello è solo un file che nessuno sa leggere.</td></tr>" +
 			"</table>" +
 			"<p class=\"wh\" id=\"s-privacy\">Che cosa va su internet e che cosa no</p>" +
 			"<ul>" +
 			"<li><b>La voce</b> non viene salvata né inviata, a meno che tu stesso non abbia attivato il riconoscimento su un altro computer.</li>" +
+			"<li><b>I sottotitoli</b> vengono riconosciuti qui, come la dettatura, e la trascrizione resta nella cartella transcripts; con il riconoscimento su un altro computer, le frasi vanno a quel server.</li>" +
 			"<li><b>Il testo</b> non lascia il computer, a meno che tu stesso non abbia attivato un server esterno di post-elaborazione.</li>" +
 			"<li><b>La cronologia</b> è un file accanto all'app e si cancella secondo la durata che imposti tu.</li>" +
 			"<li><b>La rete</b> serve due volte: per scaricare un modello e per controllare gli aggiornamenti. Il secondo controllo si può disattivare.</li>" +
@@ -2886,6 +3066,39 @@ func init() {
 		"S_WIZ_TRY_TEXT":   "Metti il cursore nel campo qui sotto, tieni premuto %s, di' una frase e rilascia.",
 	}
 	settingsStrings["pl"] = map[string]string{
+		"S_NAV_SUBS": "Napisy",
+		"S_SUBS_HINT": "Aplikacja zapisuje to, co odtwarza komputer — rozmowę, film — i pokazuje słowa w oknie nad innymi.",
+		"S_SUBS_NOTICE": "Twoi rozmówcy powinni wiedzieć, że ich słowa są zapisywane.",
+		"S_SUBS_START": "Włącz napisy",
+		"S_SUBS_STOP": "Wyłącz napisy",
+		"S_SUBS_OFF": "Napisy są wyłączone",
+		"S_SUBS_LOADING": "Wczytuję %s…",
+		"S_SUBS_LISTEN_LIVE": "Słucham dźwięku komputera · %s, słowa w trakcie mówienia",
+		"S_SUBS_LISTEN_PHRASES": "Słucham dźwięku komputera · %s, tekst po każdym zdaniu",
+		"S_SUBS_RESTARTING": "Rozpoznawanie uruchamia się ponownie…",
+		"S_SUBS_LANG": "Język mowy",
+		"S_SUBS_LANG_SUB": "Język tego, czego słuchasz, osobno od języka dyktowania",
+		"S_SUBS_M_LIVE": "Pisać będzie %s: słowa pojawiają się w trakcie mówienia.",
+		"S_SUBS_M_PHRASES": "Pisać będzie %s: każde zdanie pojawia się chwilę po jego końcu.",
+		"S_SUBS_M_ABSENT": "Dla tego języka wybrano %s, ale nie jest zainstalowany.",
+		"S_SUBS_M_WHISPER": "%s to model Whisper: na procesorze potrzebuje wielu sekund na każde zdanie, więc tekst będzie mocno spóźniony względem mowy. Do napisów lepiej nadaje się model strumieniowy albo szybki.",
+		"S_SUBS_GO_MODELS": "Otwórz „Języki i modele”",
+		"S_SUBS_REMOTE": "Rozpoznawanie działa na innym komputerze: każde zdanie jest wysyłane na ten serwer.",
+		"S_SUBS_KEY": "Skrót klawiszowy",
+		"S_SUBS_KEY_SUB": "Włącza i wyłącza napisy z każdego okna",
+		"S_SUBS_SAVE": "Zapisuj transkrypcję",
+		"S_SUBS_SAVE_SUB": "Jeden plik tekstowy na każde uruchomienie w folderze transcripts obok programu",
+		"S_SUBS_FOLDER": "Folder transkrypcji",
+		"S_SUBS_WINDOW": "Okno napisów",
+		"S_SUBS_ROWS": "Wiersze tekstu",
+		"S_SUBS_SIZE": "Rozmiar tekstu",
+		"S_SUBS_SIZE_S": "Mały",
+		"S_SUBS_SIZE_M": "Średni",
+		"S_SUBS_SIZE_L": "Duży",
+		"S_SUBS_PLACE": "Miejsce okna",
+		"S_SUBS_PLACE_SUB": "Okno przesuwa się myszą; miejsce jest zapamiętywane dla każdej rozdzielczości ekranu",
+		"S_SUBS_PLACE_BTN": "Przywróć domyślne miejsce",
+		"S_SUBS_PLACE_DONE": "Okno wraca na domyślne miejsce",
 		"S_TITLE": "{app} — Ustawienia", "S_DICT_HINT": "Terminy, nazwy i skróty oddzielone przecinkami — podpowiedź dla słuchu, nie polecenia. Działa dla Whispera; rosyjska mowa przez GigaAM tego nie używa. Zestaw domyślny podąża za językiem rozpoznawania, dopóki nie wpiszesz własnego.",
 		"S_TR_DEFAULT": "Zmień język wyjściowego tekstu", "S_TR_TARGET": "Domyślny język wyjściowego tekstu", "S_TR_ASK": "Pytaj o język wyjściowego tekstu", "S_TR_ASK_NEVER": "Nie pytaj — tłumacz od razu",
 		"S_SRCLANG_SUB": "mówisz w nim; określa model rozpoznawania",
@@ -3402,6 +3615,16 @@ func init() {
 			"</table>" +
 			"<div class=\"hwarn\">Głos nigdy nie trafia na serwer zewnętrzny, tylko rozpoznany tekst. Ale ten tekst jednak wychodzi, więc włączaj to świadomie.</div>" +
 			"<p>Każdy prompt ma <b>nazwę</b> (pod tą nazwą widać go na pasku, gdy działa), <b>treść polecenia</b> zwykłymi słowami, opcjonalny <b>własny skrót klawiszowy</b> (dyktowanie z nim przepuści zdanie tylko przez ten prompt, z pominięciem pozostałych) i <b>test</b>: pole, w którym możesz wpisać zdanie i zobaczyć, co wyjdzie, niczego nie dyktując.</p>" +
+			"<p class=\"wh\" id=\"s-subs\">Zakładka „Napisy”</p>" +
+			"<p>Napisy zapisują to, co odtwarza komputer — rozmowę, film, wykład — i pokazują słowa w małym oknie, które zostaje nad innymi oknami. To samo rozpoznawanie co przy dyktowaniu, tylko dźwięk pochodzi z głośników, a nie z mikrofonu, a dyktowanie działa dalej, gdy napisy są włączone. Własne dźwięki aplikacji nie są zapisywane.</p>" +
+			"<table class=\"hopt\">" +
+			"<tr><td>Włącz napisy</td><td>Włącza je i wyłącza. Wiersz obok mówi, co się dzieje: wyłączone, wczytywanie modelu, nasłuch albo ponowne uruchamianie rozpoznawania. To samo robią menu w zasobniku, własny skrót klawiszowy i krzyżyk na oknie.</td></tr>" +
+			"<tr><td>Język mowy</td><td>Język tego, czego słuchasz, osobno od języka dyktowania. Model to ten, który zakładka „Języki i modele” daje temu językowi. Model strumieniowy pisze słowa w trakcie mówienia, pozostałe każde zdanie chwilę po jego końcu. Model Whisper na procesorze potrzebuje wielu sekund na zdanie, więc jego tekst mocno spóźnia się względem mowy; zaległe zdania trafiają do niego razem i wychodzą jako jeden wiersz.</td></tr>" +
+			"<tr><td>Skrót klawiszowy</td><td>Włącza i wyłącza napisy z każdego okna. Nigdy nie zaczyna dyktowania i nie może powtarzać innego skrótu.</td></tr>" +
+			"<tr><td>Zapisuj transkrypcję</td><td>Każde uruchomienie zapisuje plik tekstowy w folderze transcripts obok programu: pierwszy wiersz z datą, językiem i modelem, potem każdy gotowy wiersz z godziną, o której się zaczął. Dopóki pierwszy wiersz nie jest gotowy, nic nie jest zapisywane.</td></tr>" +
+			"<tr><td>Okno napisów</td><td>Ile wierszy tekstu pokazuje i jak duże są litery. Każdy gotowy wiersz zaczyna się w nowym wierszu okna. Okno przesuwa się myszą; miejsce jest zapamiętywane dla każdej rozdzielczości ekranu, a „Przywróć domyślne miejsce” je zapomina.</td></tr>" +
+			"</table>" +
+			"<div class=\"hwarn\">Twoi rozmówcy powinni wiedzieć, że ich słowa są zapisywane.</div>" +
 			"<p class=\"wh\" id=\"s-about\">„O programie” i „Kontakty”</p>" +
 			"<p>Na zakładce „O programie” jest krótki opis tego, czym jest aplikacja i jak jest zbudowana, oraz lista wszystkich zewnętrznych bibliotek, z których się składa, wraz z licencjami. Nazwy są klikalne i prowadzą do stron tych projektów. Jest tam też link do repozytorium, w którym leżą kod źródłowy i wszystkie wersje.</p>" +
 			"<p>„Kontakty” to trzy karty: e-mail, repozytorium i strona na błędy i pomysły. Kliknięcie adresu e-mail otworzy twój program pocztowy z wypełnionym już odbiorcą, a ikona obok po prostu skopiuje adres.</p>" +
@@ -3412,11 +3635,13 @@ func init() {
 			"<tr><td>holdtotype.log</td><td>Dziennik. Pierwsze miejsce, do którego warto zajrzeć, jeśli aplikacja zachowuje się dziwnie.</td></tr>" +
 			"<tr><td>holdtotype-history.json</td><td>Historia dyktowań, jeśli jest włączona. Zwykły tekst: w razie potrzeby plik można po prostu usunąć.</td></tr>" +
 			"<tr><td>models</td><td>Folder z pobranymi modelami, najcięższa część, kilka gigabajtów. Jego też można przenieść na inny komputer, żeby nie pobierać wszystkiego ponownie.</td></tr>" +
+			"<tr><td>transcripts</td><td>Transkrypcje napisów, jeden plik tekstowy na uruchomienie. To twoje dokumenty: deinstalator usuwa je tylko wtedy, gdy poprosisz także o usunięcie ustawień i danych.</td></tr>" +
 			"<tr><td>whisper-server, sherpa-server, llama-server</td><td>To właśnie te małe programy, które uruchamiają modele. Bez nich model jest tylko plikiem, którego nie ma czym odczytać.</td></tr>" +
 			"</table>" +
 			"<p class=\"wh\" id=\"s-privacy\">Co trafia do internetu, a co nie</p>" +
 			"<ul>" +
 			"<li><b>Głos</b> nie jest zapisywany ani wysyłany, chyba że świadomie włączysz rozpoznawanie na innym komputerze.</li>" +
+			"<li><b>Napisy</b> są rozpoznawane tutaj, tak samo jak dyktowanie, a transkrypcja zostaje w folderze transcripts; przy rozpoznawaniu na innym komputerze zdania trafiają na ten serwer.</li>" +
 			"<li><b>Tekst</b> nie opuszcza komputera, chyba że świadomie włączysz zewnętrzny serwer obróbki końcowej.</li>" +
 			"<li><b>Historia</b> leży w pliku obok aplikacji i jest czyszczona według ustawionego przez ciebie okresu.</li>" +
 			"<li><b>Sieć</b> jest potrzebna dwa razy: żeby pobrać model i sprawdzić aktualizację. Sprawdzanie aktualizacji można wyłączyć.</li>" +
@@ -3556,7 +3781,7 @@ func init() {
 		"lists.save.title":  "Куди зберегти списки",
 		"lists.open.title":  "Звідки завантажити списки",
 		"un.title":          "{app} — видалення", "un.confirm": "Видалити {app} з цього комп'ютера?",
-		"un.data": "Видалити також налаштування та завантажені моделі?", "un.done": "{app} видалено.",
+		"un.data": "Видалити також налаштування, завантажені моделі та розшифровки субтитрів?", "un.done": "{app} видалено.",
 		"model.switching": "Перемикаю модель — розпізнавач перезапускається…", "model.del.active": "Не можна видалити активну модель",
 		"model.del.ok":       "Модель видалено",
 		"about.text":         "{app} %s\n\nГолос → текст у позицію курсора.\nПоставте курсор у поле введення, утримуйте %s, скажіть фразу, відпустіть — текст вставиться сам.\n\nРозпізнавання: whisper.cpp, повністю локально й офлайн.\nМодель: %s (мова: %s)\n\nНалаштування: клік по іконці в треї або config.json.\nЛоги: {log} (макс. ~2 МБ).",
@@ -3578,6 +3803,39 @@ func init() {
 		"srv.restarting":       "Перезапускаю розпізнавач із новими налаштуваннями…",
 	}
 	settingsStrings["uk"] = map[string]string{
+		"S_NAV_SUBS": "Субтитри",
+		"S_SUBS_HINT": "Застосунок записує те, що звучить на комп'ютері, — дзвінок, відео — і показує слова у вікні поверх інших.",
+		"S_SUBS_NOTICE": "Співрозмовники мають знати, що їхнє мовлення записується текстом.",
+		"S_SUBS_START": "Запустити субтитри",
+		"S_SUBS_STOP": "Зупинити субтитри",
+		"S_SUBS_OFF": "Субтитри вимкнено",
+		"S_SUBS_LOADING": "Завантажую %s…",
+		"S_SUBS_LISTEN_LIVE": "Слухаю звук комп'ютера · %s, слова під час мовлення",
+		"S_SUBS_LISTEN_PHRASES": "Слухаю звук комп'ютера · %s, текст після кожної фрази",
+		"S_SUBS_RESTARTING": "Розпізнавання перезапускається…",
+		"S_SUBS_LANG": "Мова мовлення",
+		"S_SUBS_LANG_SUB": "Мова того, що ви слухаєте, окремо від мови диктування",
+		"S_SUBS_M_LIVE": "Писатиме %s: слова з'являються під час мовлення.",
+		"S_SUBS_M_PHRASES": "Писатиме %s: кожна фраза з'являється за мить після того, як закінчилася.",
+		"S_SUBS_M_ABSENT": "Для цієї мови вибрано модель %s, але її не встановлено.",
+		"S_SUBS_M_WHISPER": "%s — модель Whisper: на процесорі їй потрібно багато секунд на кожну фразу, і текст сильно відставатиме від мовлення. Для субтитрів краще підходить потокова або швидка модель.",
+		"S_SUBS_GO_MODELS": "Відкрити «Мови і моделі»",
+		"S_SUBS_REMOTE": "Розпізнавання йде на іншому комп'ютері: кожна фраза надсилається на цей сервер.",
+		"S_SUBS_KEY": "Сполучення клавіш",
+		"S_SUBS_KEY_SUB": "Запускає і зупиняє субтитри з будь-якого вікна",
+		"S_SUBS_SAVE": "Зберігати розшифровку",
+		"S_SUBS_SAVE_SUB": "Один текстовий файл на кожен запуск у теці transcripts поруч із програмою",
+		"S_SUBS_FOLDER": "Тека розшифровок",
+		"S_SUBS_WINDOW": "Вікно субтитрів",
+		"S_SUBS_ROWS": "Рядків тексту",
+		"S_SUBS_SIZE": "Розмір тексту",
+		"S_SUBS_SIZE_S": "Дрібний",
+		"S_SUBS_SIZE_M": "Середній",
+		"S_SUBS_SIZE_L": "Великий",
+		"S_SUBS_PLACE": "Місце вікна",
+		"S_SUBS_PLACE_SUB": "Вікно пересувається мишею; місце запам'ятовується для кожної роздільності екрана",
+		"S_SUBS_PLACE_BTN": "Повернути на типове місце",
+		"S_SUBS_PLACE_DONE": "Вікно повернеться на типове місце",
 		"S_TITLE": "{app} — налаштування", "S_DICT_HINT": "Терміни, імена та абревіатури через кому — підказка слуху, не команди. Працює для Whisper; російська мова через GigaAM це ігнорує. Типовий набір іде за мовою розпізнавання, доки ви не впишете своє.",
 		"S_TR_DEFAULT": "Змінити мову текстового виводу", "S_TR_TARGET": "Мова текстового виводу за замовчуванням", "S_TR_ASK": "Питати мову текстового виводу", "S_TR_ASK_NEVER": "Не питати — перекладати одразу",
 		"S_SRCLANG_SUB": "нею ви говорите; вона визначає модель розпізнавання",
@@ -4095,6 +4353,16 @@ func init() {
 			"</table>" +
 			"<div class=\"hwarn\">Голос на зовнішній сервер не йде ніколи, тільки розпізнаний текст. Але текст таки йде, тож вмикайте це свідомо.</div>" +
 			"<p>Кожен промпт має <b>назву</b> (під нею його видно на смужці під час роботи), <b>текст вказівки</b> звичайними словами, необов'язкове <b>власне сполучення клавіш</b> (диктування з ним прожене фразу лише через цей промпт, оминаючи решту) і <b>перевірку</b>: поле, де можна вписати фразу й подивитися, що вийде, нічого не диктуючи.</p>" +
+			"<p class=\"wh\" id=\"s-subs\">Вкладка «Субтитри»</p>" +
+			"<p>Субтитри записують те, що звучить на комп'ютері, — дзвінок, відео, лекцію — і показують слова в невеликому вікні поверх інших вікон. Це те саме розпізнавання, що й для диктування, тільки звук береться з динаміків, а не з мікрофона, і диктування працює, поки йдуть субтитри. Звуки самого застосунку не записуються.</p>" +
+			"<table class=\"hopt\">" +
+			"<tr><td>Запустити субтитри</td><td>Запускає і зупиняє їх. Рядок поруч каже, що відбувається: вимкнено, завантажується модель, триває прослуховування або розпізнавання перезапускається. Те саме роблять меню в треї, власне сполучення клавіш і хрестик на вікні.</td></tr>" +
+			"<tr><td>Мова мовлення</td><td>Мова того, що ви слухаєте, окремо від мови диктування. Модель — та, яку цій мові дано на вкладці «Мови і моделі». Потокова модель пише слова під час мовлення, решта — кожну фразу за мить після її кінця. Моделі Whisper на процесорі потрібно багато секунд на фразу, і її текст сильно відстає від мовлення; фрази, що накопичилися, йдуть до неї разом і виходять одним рядком.</td></tr>" +
+			"<tr><td>Сполучення клавіш</td><td>Запускає і зупиняє субтитри з будь-якого вікна. Диктування воно не починає і не може повторювати інше сполучення.</td></tr>" +
+			"<tr><td>Зберігати розшифровку</td><td>Кожен запуск пише текстовий файл у теку transcripts поруч із програмою: перший рядок із датою, мовою і моделлю, далі кожен готовий рядок із часом, коли він почався. Поки перший рядок не готовий, нічого не пишеться.</td></tr>" +
+			"<tr><td>Вікно субтитрів</td><td>Скільки рядків тексту воно показує і наскільки великі літери. Кожен готовий рядок починається з нового рядка вікна. Вікно пересувається мишею; місце запам'ятовується для кожної роздільності екрана, а «Повернути на типове місце» його забуває.</td></tr>" +
+			"</table>" +
+			"<div class=\"hwarn\">Співрозмовники мають знати, що їхнє мовлення записується текстом.</div>" +
 			"<p class=\"wh\" id=\"s-about\">«Про програму» і «Контакти»</p>" +
 			"<p>На вкладці «Про програму» є коротка розповідь про те, що це таке і як воно влаштоване, а також список усіх сторонніх бібліотек, з яких зібрано застосунок, з їхніми ліцензіями. Назви клікабельні й ведуть на сторінки цих проєктів. Там же є посилання на репозиторій, де лежать вихідний код і всі версії.</p>" +
 			"<p>Вкладка «Контакти» містить три картки: пошта, репозиторій і сторінка для помилок та ідей. Клацання по адресі пошти відкриє вашу поштову програму з уже заповненим одержувачем, а значок поруч просто скопіює адресу.</p>" +
@@ -4105,11 +4373,13 @@ func init() {
 			"<tr><td>holdtotype.log</td><td>Журнал роботи. Перше місце, куди варто зазирнути, якщо застосунок поводиться дивно.</td></tr>" +
 			"<tr><td>holdtotype-history.json</td><td>Історія диктувань, якщо ви її ввімкнули. Звичайний текст: за бажання файл можна просто видалити.</td></tr>" +
 			"<tr><td>models</td><td>Тека із завантаженими моделями, найважча частина, кілька гігабайтів. Її теж можна перенести на інший комп'ютер, щоб не завантажувати все заново.</td></tr>" +
+			"<tr><td>transcripts</td><td>Розшифровки субтитрів, по текстовому файлу на запуск. Це ваші документи: програма видалення стирає їх, тільки якщо ви попросите видалити й налаштування з даними.</td></tr>" +
 			"<tr><td>whisper-server, sherpa-server, llama-server</td><td>Ті самі маленькі програми, які запускають моделі. Без них модель лише файл, який нема чим прочитати.</td></tr>" +
 			"</table>" +
 			"<p class=\"wh\" id=\"s-privacy\">Що йде в інтернет, а що ні</p>" +
 			"<ul>" +
 			"<li><b>Голос</b> не зберігається й не надсилається, якщо ви самі не ввімкнули розпізнавання на іншому комп'ютері.</li>" +
+			"<li><b>Субтитри</b> розпізнаються тут же, як диктування, а розшифровка лишається в теці transcripts; при розпізнаванні на іншому комп'ютері фрази йдуть на той сервер.</li>" +
 			"<li><b>Текст</b> не покидає машину, якщо ви самі не ввімкнули зовнішній сервер постобробки.</li>" +
 			"<li><b>Історія</b> лежить файлом поруч із застосунком і очищується за строком, який ви задали.</li>" +
 			"<li><b>Мережа</b> потрібна двічі: щоб завантажити модель і перевірити оновлення. Перевірку оновлень можна вимкнути.</li>" +

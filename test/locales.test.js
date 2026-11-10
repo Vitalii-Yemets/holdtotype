@@ -80,6 +80,31 @@ for (const locale of Object.keys(SETTINGS_DEBT)) {
   check(`${locale} says everything the program can say`, missingMsgs, []);
 }
 
+function helpOf(locale) {
+  const block = settingsBlock(locale) || "";
+  const at = block.indexOf('"S_HELP_HTML":');
+  if (at < 0) return "";
+  const rest = block.slice(at);
+  const end = rest.search(/",\r?\n/);
+  return end < 0 ? rest : rest.slice(0, end);
+}
+function helpShape(locale) {
+  const h = helpOf(locale);
+  const count = (re) => (h.match(re) || []).length;
+  return {
+    sections: [...h.matchAll(/id=\\"(s-[a-z]+)\\"/g)].map((m) => m[1]),
+    subheads: count(/class=\\"hsub\\"/g),
+    rows: count(/<tr>/g),
+    items: count(/<li>/g),
+    warnings: count(/class=\\"hwarn\\"/g),
+  };
+}
+const enHelp = helpShape("en");
+check("the English help has the subtitles section after post-processing", enHelp.sections.indexOf("s-subs") === enHelp.sections.indexOf("s-post") + 1, true);
+for (const locale of Object.keys(SETTINGS_DEBT)) {
+  check(`${locale} help has the same shape as the English one`, helpShape(locale), enHelp);
+}
+
 if (failures.length) {
   console.error(`\n${failures.length} check(s) failed: ${failures.join(", ")}`);
   process.exit(1);

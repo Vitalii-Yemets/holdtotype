@@ -278,7 +278,7 @@ var msgs = map[string]map[string]string{
 		"lists.open.title":       "Откуда загрузить списки",
 		"un.title":               "{app} — удаление",
 		"un.confirm":             "Удалить {app} с этого компьютера?",
-		"un.data":                "Удалить также настройки и скачанные модели?",
+		"un.data":                "Удалить также настройки, скачанные модели и расшифровки субтитров?",
 		"un.done":                "{app} удалён.",
 		"model.switching":        "Переключаю модель — распознаватель перезапускается…",
 		"srv.restarting":         "Перезапускаю распознаватель с новыми настройками…",
@@ -473,7 +473,7 @@ var msgs = map[string]map[string]string{
 		"lists.open.title":       "Which file to load",
 		"un.title":               "{app} — Uninstall",
 		"un.confirm":             "Remove {app} from this computer?",
-		"un.data":                "Also delete settings and downloaded models?",
+		"un.data":                "Also delete settings, downloaded models and subtitle transcripts?",
 		"un.done":                "{app} has been removed.",
 		"model.switching":        "Switching model — the recognizer is restarting…",
 		"srv.restarting":         "Restarting the recognizer with the new settings…",
@@ -491,6 +491,39 @@ var msgs = map[string]map[string]string{
 
 var settingsStrings = map[string]map[string]string{
 	"ru": {
+		"S_NAV_SUBS": "Субтитры",
+		"S_SUBS_HINT": "Приложение записывает то, что звучит на компьютере, — звонок, видео — и показывает слова в окне поверх остальных.",
+		"S_SUBS_NOTICE": "Собеседники должны знать, что их речь записывается текстом.",
+		"S_SUBS_START": "Запустить субтитры",
+		"S_SUBS_STOP": "Остановить субтитры",
+		"S_SUBS_OFF": "Субтитры выключены",
+		"S_SUBS_LOADING": "Загружаю %s…",
+		"S_SUBS_LISTEN_LIVE": "Слушаю звук компьютера · %s, слова по ходу речи",
+		"S_SUBS_LISTEN_PHRASES": "Слушаю звук компьютера · %s, текст после каждой фразы",
+		"S_SUBS_RESTARTING": "Распознавание перезапускается…",
+		"S_SUBS_LANG": "Язык речи",
+		"S_SUBS_LANG_SUB": "Язык того, что вы слушаете, отдельно от языка диктовки",
+		"S_SUBS_M_LIVE": "Писать будет %s: слова появляются по ходу речи.",
+		"S_SUBS_M_PHRASES": "Писать будет %s: каждая фраза появляется через мгновение после того, как закончилась.",
+		"S_SUBS_M_ABSENT": "Для этого языка выбрана модель %s, но она не установлена.",
+		"S_SUBS_M_WHISPER": "%s — модель Whisper: на процессоре ей нужно много секунд на каждую фразу, и текст будет сильно отставать от речи. Для субтитров лучше подходит потоковая или быстрая модель.",
+		"S_SUBS_GO_MODELS": "Открыть «Языки и модели»",
+		"S_SUBS_REMOTE": "Распознавание идёт на другом компьютере: каждая фраза отправляется на этот сервер.",
+		"S_SUBS_KEY": "Сочетание клавиш",
+		"S_SUBS_KEY_SUB": "Запускает и останавливает субтитры из любого окна",
+		"S_SUBS_SAVE": "Сохранять расшифровку",
+		"S_SUBS_SAVE_SUB": "Один текстовый файл на каждый запуск в папке transcripts рядом с программой",
+		"S_SUBS_FOLDER": "Папка расшифровок",
+		"S_SUBS_WINDOW": "Окно субтитров",
+		"S_SUBS_ROWS": "Строк текста",
+		"S_SUBS_SIZE": "Размер текста",
+		"S_SUBS_SIZE_S": "Мелкий",
+		"S_SUBS_SIZE_M": "Средний",
+		"S_SUBS_SIZE_L": "Крупный",
+		"S_SUBS_PLACE": "Место окна",
+		"S_SUBS_PLACE_SUB": "Окно двигается мышью; место запоминается для каждого разрешения экрана",
+		"S_SUBS_PLACE_BTN": "Вернуть на место по умолчанию",
+		"S_SUBS_PLACE_DONE": "Окно вернётся на место по умолчанию",
 		"S_TITLE":          "{app} — настройки",
 		"S_TR_DEFAULT":     "Изменить язык текстового вывода",
 		"S_TR_TARGET":      "Язык текстового вывода по умолчанию",
@@ -1136,6 +1169,16 @@ var settingsStrings = map[string]map[string]string{
 			"</table>" +
 			"<div class=\"hwarn\">Голос на внешний сервер не уходит никогда — только распознанный текст. Но и он уходит, так что включайте это осознанно.</div>" +
 			"<p>У каждого промпта есть <b>название</b> (по нему он виден на плашке во время работы), <b>текст указания</b> обычными словами, необязательное <b>своё сочетание клавиш</b> — диктовка им прогонит фразу только через этот промпт, минуя остальные, — и <b>проверка</b>: поле, где можно вписать фразу и посмотреть, что получится, ничего не диктуя.</p>" +
+			"<p class=\"wh\" id=\"s-subs\">Вкладка «Субтитры»</p>" +
+			"<p>Субтитры записывают то, что звучит на компьютере, — звонок, видео, лекцию — и показывают слова в небольшом окне поверх остальных окон. Это то же распознавание, что и для диктовки, только звук берётся из динамиков, а не с микрофона, и диктовка работает, пока идут субтитры. Звуки самого приложения не записываются.</p>" +
+			"<table class=\"hopt\">" +
+			"<tr><td>Запустить субтитры</td><td>Запускает и останавливает их. Строка рядом говорит, что происходит: выключено, загружается модель, идёт прослушивание или распознавание перезапускается. То же делают меню в трее, своё сочетание клавиш и крестик на окне.</td></tr>" +
+			"<tr><td>Язык речи</td><td>Язык того, что вы слушаете, отдельно от языка диктовки. Модель — та, что этому языку дана на вкладке «Языки и модели». Потоковая модель пишет слова по ходу речи, остальные — каждую фразу через мгновение после её конца. Модели Whisper на процессоре нужно много секунд на фразу, и её текст сильно отстаёт от речи; накопившиеся фразы уходят к ней вместе и выходят одной строкой.</td></tr>" +
+			"<tr><td>Сочетание клавиш</td><td>Запускает и останавливает субтитры из любого окна. Диктовку оно не начинает и не может повторять другое сочетание.</td></tr>" +
+			"<tr><td>Сохранять расшифровку</td><td>Каждый запуск пишет текстовый файл в папку transcripts рядом с программой: первая строка с датой, языком и моделью, затем каждая готовая строка со временем, когда она началась. Пока первая строка не готова, ничего не пишется.</td></tr>" +
+			"<tr><td>Окно субтитров</td><td>Сколько строк текста оно показывает и насколько крупные буквы. Каждая готовая строка начинается с новой строки окна. Окно двигается мышью; место запоминается для каждого разрешения экрана, а «Вернуть на место по умолчанию» его забывает.</td></tr>" +
+			"</table>" +
+			"<div class=\"hwarn\">Собеседники должны знать, что их речь записывается текстом.</div>" +
 			"<p class=\"wh\" id=\"s-about\">«О программе» и «Контакты»</p>" +
 			"<p>На вкладке «О программе» — короткий рассказ, что это и как устроено, и список всех чужих библиотек, из которых собрано приложение, с их лицензиями. Названия кликабельны и ведут на страницы этих проектов. Там же ссылка на репозиторий, где лежат исходный код и все версии.</p>" +
 			"<p>«Контакты» — три карточки: почта, репозиторий и страница для ошибок и идей. Щелчок по адресу почты откроет вашу почтовую программу с уже заполненным получателем, а иконка рядом просто скопирует адрес.</p>" +
@@ -1146,11 +1189,13 @@ var settingsStrings = map[string]map[string]string{
 			"<tr><td>holdtotype.log</td><td>Журнал работы. Первое, куда стоит заглянуть, если приложение ведёт себя странно.</td></tr>" +
 			"<tr><td>holdtotype-history.json</td><td>История диктовок, если вы её включили. Обычный текст: при желании файл можно просто удалить.</td></tr>" +
 			"<tr><td>models</td><td>Папка со скачанными моделями — самая тяжёлая часть, несколько гигабайт. Её тоже можно перенести на другой компьютер, чтобы не качать заново.</td></tr>" +
+			"<tr><td>transcripts</td><td>Расшифровки субтитров, по текстовому файлу на запуск. Это ваши документы: программа удаления стирает их, только если вы попросите удалить и настройки с данными.</td></tr>" +
 			"<tr><td>whisper-server, sherpa-server, llama-server</td><td>Те самые маленькие программы, которые запускают модели. Без них модель — просто файл, читать его нечем.</td></tr>" +
 			"</table>" +
 			"<p class=\"wh\" id=\"s-privacy\">Что уходит в интернет, а что нет</p>" +
 			"<ul>" +
 			"<li><b>Голос</b> не сохраняется и не отправляется — если вы сами не включили распознавание на другом компьютере.</li>" +
+			"<li><b>Субтитры</b> распознаются здесь же, как диктовка, а расшифровка остаётся в папке transcripts; при распознавании на другом компьютере фразы уходят на тот сервер.</li>" +
 			"<li><b>Текст</b> не покидает машину — если вы сами не включили внешний сервер постобработки.</li>" +
 			"<li><b>История</b> лежит файлом рядом с приложением и чистится по вашему сроку.</li>" +
 			"<li><b>Сеть</b> нужна дважды: скачать модель и проверить обновление. Вторую проверку можно выключить.</li>" +
@@ -1198,6 +1243,39 @@ var settingsStrings = map[string]map[string]string{
 		"S_MODEL_READY":    "Модель загружена — выберите её, чтобы переключиться",
 	},
 	"en": {
+		"S_NAV_SUBS": "Subtitles",
+		"S_SUBS_HINT": "The app writes down what the computer plays — a call, a video — and shows the words in a window on top of the others.",
+		"S_SUBS_NOTICE": "The people you talk to should know they are being transcribed.",
+		"S_SUBS_START": "Start subtitles",
+		"S_SUBS_STOP": "Stop subtitles",
+		"S_SUBS_OFF": "Subtitles are off",
+		"S_SUBS_LOADING": "Loading %s…",
+		"S_SUBS_LISTEN_LIVE": "Listening to the computer's sound · %s, words as they are spoken",
+		"S_SUBS_LISTEN_PHRASES": "Listening to the computer's sound · %s, text after each phrase",
+		"S_SUBS_RESTARTING": "Recognition is restarting…",
+		"S_SUBS_LANG": "Speech language",
+		"S_SUBS_LANG_SUB": "The language of what you listen to, separate from the dictation language",
+		"S_SUBS_M_LIVE": "%s will write it: the words appear as they are spoken.",
+		"S_SUBS_M_PHRASES": "%s will write it: each phrase appears a moment after it ends.",
+		"S_SUBS_M_ABSENT": "%s is chosen for this language but is not installed.",
+		"S_SUBS_M_WHISPER": "%s is a Whisper model: on a processor it needs many seconds per phrase, so the text will lag well behind the speech. A streaming model or a fast one suits subtitles better.",
+		"S_SUBS_GO_MODELS": "Open “Languages & models”",
+		"S_SUBS_REMOTE": "Recognition runs on another computer: each phrase is sent to that server.",
+		"S_SUBS_KEY": "Shortcut",
+		"S_SUBS_KEY_SUB": "Starts and stops subtitles from any window",
+		"S_SUBS_SAVE": "Save the transcript",
+		"S_SUBS_SAVE_SUB": "One text file per run in the transcripts folder next to the program",
+		"S_SUBS_FOLDER": "Transcripts folder",
+		"S_SUBS_WINDOW": "Subtitles window",
+		"S_SUBS_ROWS": "Rows of text",
+		"S_SUBS_SIZE": "Text size",
+		"S_SUBS_SIZE_S": "Small",
+		"S_SUBS_SIZE_M": "Medium",
+		"S_SUBS_SIZE_L": "Large",
+		"S_SUBS_PLACE": "Window place",
+		"S_SUBS_PLACE_SUB": "Drag the window to move it; the place is remembered for each screen resolution",
+		"S_SUBS_PLACE_BTN": "Back to the default place",
+		"S_SUBS_PLACE_DONE": "The window goes back to its default place",
 		"S_TITLE":          "{app} — Settings",
 		"S_TR_DEFAULT":     "Change the text output language",
 		"S_TR_TARGET":      "Default text output language",
@@ -1843,6 +1921,16 @@ var settingsStrings = map[string]map[string]string{
 			"</table>" +
 			"<div class=\"hwarn\">Your voice never goes to an external server, only the recognized text. But that text does leave, so turn this on knowingly.</div>" +
 			"<p>Each prompt has a <b>name</b> (that is how it shows on the plate while it works), the <b>instruction text</b> in ordinary words, an optional <b>shortcut of its own</b> (dictating with it runs the phrase through this prompt alone, skipping the others) and a <b>test</b>: a field where you can type a phrase and see what comes out, without dictating anything.</p>" +
+			"<p class=\"wh\" id=\"s-subs\">The “Subtitles” tab</p>" +
+			"<p>Subtitles write down what the computer plays — a call, a video, a lecture — and show the words in a small window that stays on top of the other windows. It is the same recognition as for dictation, only the sound comes from the speakers instead of the microphone, and dictation keeps working while subtitles run. The app’s own cues are not written down.</p>" +
+			"<table class=\"hopt\">" +
+			"<tr><td>Start subtitles</td><td>Starts and stops them. The line beside it says what is going on: off, loading the model, listening, or recognition restarting. The tray menu, a shortcut of their own and the cross on the window do the same.</td></tr>" +
+			"<tr><td>Speech language</td><td>The language of what you listen to, separate from the language you dictate in. The model is the one the “Languages & models” tab gives that language. A streaming model writes the words as they are spoken; the others write each phrase a moment after it ends. A Whisper model needs many seconds per phrase on a processor, so its text lags well behind the speech; phrases that pile up go to it together and come out as one line.</td></tr>" +
+			"<tr><td>Shortcut</td><td>Starts and stops subtitles from any window. It never starts a dictation and cannot repeat another shortcut.</td></tr>" +
+			"<tr><td>Save the transcript</td><td>Every run writes a text file into the transcripts folder next to the program: a first line with the date, the language and the model, then each finished line with the time it began. Nothing is written until the first line is finished.</td></tr>" +
+			"<tr><td>Subtitles window</td><td>How many rows of text it shows and how large the letters are. Each finished line starts on a new row. Drag the window to move it; the place is remembered for each screen resolution, and “Back to the default place” forgets it.</td></tr>" +
+			"</table>" +
+			"<div class=\"hwarn\">The people you talk to should know they are being transcribed.</div>" +
 			"<p class=\"wh\" id=\"s-about\">“About” and “Contacts”</p>" +
 			"<p>The “About” tab has a short account of what this is and how it is built, and a list of all the third-party libraries the app is made from, with their licences. The names are clickable and lead to the pages of those projects. There is also a link to the repository, where the source code and all the versions live.</p>" +
 			"<p>“Contacts” has three cards: email, the repository, and a page for bugs and ideas. Clicking the email address opens your mail program with the recipient already filled in, and the icon next to it simply copies the address.</p>" +
@@ -1853,11 +1941,13 @@ var settingsStrings = map[string]map[string]string{
 			"<tr><td>holdtotype.log</td><td>The log. The first place to look if the app behaves strangely.</td></tr>" +
 			"<tr><td>holdtotype-history.json</td><td>The dictation history, if you turned it on. Plain text: you can simply delete the file if you want.</td></tr>" +
 			"<tr><td>models</td><td>The folder with the downloaded models, the heaviest part at several gigabytes. It too can be moved to another computer so you do not have to download everything again.</td></tr>" +
+			"<tr><td>transcripts</td><td>The subtitle transcripts, one text file per run. They are your documents: the uninstaller removes them only when you also ask it to delete settings and data.</td></tr>" +
 			"<tr><td>whisper-server, sherpa-server, llama-server</td><td>The small programs that run the models. Without them a model is just a file with nothing to read it.</td></tr>" +
 			"</table>" +
 			"<p class=\"wh\" id=\"s-privacy\">What goes online and what does not</p>" +
 			"<ul>" +
 			"<li><b>Your voice</b> is neither saved nor sent anywhere, unless you yourself turned on recognition on another computer.</li>" +
+			"<li><b>Subtitles</b> are recognized here, the same way as dictation, and the transcript stays in the transcripts folder; with recognition on another computer, the phrases go to that server.</li>" +
 			"<li><b>The text</b> does not leave the machine, unless you yourself turned on an external post-processing server.</li>" +
 			"<li><b>The history</b> is a file next to the app and is cleaned up on the schedule you set.</li>" +
 			"<li><b>The network</b> is needed twice: to download a model and to check for an update. The second can be turned off.</li>" +

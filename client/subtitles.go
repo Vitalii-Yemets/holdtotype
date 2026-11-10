@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -1165,4 +1166,78 @@ func runSubcheck(args []string) {
 	}
 	<-r.done()
 	log.Printf("subcheck: done")
+}
+
+type subModelInfo struct {
+	Lang      string `json:"lang"`
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	Engine    string `json:"engine"`
+	Mode      string `json:"mode"`
+	Installed bool   `json:"installed"`
+	Whisper   bool   `json:"whisper"`
+	Remote    bool   `json:"remote"`
+}
+
+func (a *App) subtitlesModelInfo(lang string) string {
+	cfg := a.snapshot()
+	if !validPresetLang(lang) {
+		lang = cfg.SubtitlesLanguage
+	}
+	c := *cfg
+	c.Language = lang
+	info := subModelInfo{Lang: lang}
+	if m := activeModel(&c); m != nil {
+		remote := m.Engine == engineWhisper && c.SttSource == "remote"
+		external := m.Engine == engineWhisper && (remote || !c.ServerAutostart)
+		info.ID = m.ID
+		info.Name = m.NameKey
+		info.Engine = m.Engine
+		info.Mode = modePhrases
+		if m.Engine == engineStream {
+			info.Mode = modeLive
+		}
+		info.Installed = external || m.installed()
+		info.Whisper = m.Engine == engineWhisper
+		info.Remote = remote
+	}
+	out, _ := json.Marshal(info)
+	return string(out)
+}
+
+func openTranscriptsFolder() {
+	if err := os.MkdirAll(subtitles.Folder, 0o755); err != nil {
+		log.Printf("subtitles: the transcript folder: %v", err)
+		return
+	}
+	if abs, err := filepath.Abs(subtitles.Folder); err == nil {
+		shellOpenURL(abs)
+	}
+}
+
+type subState struct {
+	Phase string `json:"phase"`
+	Mode  string `json:"mode"`
+	Model string `json:"model"`
+	Lang  string `json:"lang"`
+}
+
+func (a *App) subtitlesState() subState {
+	a.subMu.Lock()
+	r := a.sub
+	a.subMu.Unlock()
+	if r == nil {
+		return subState{Phase: "off"}
+	}
+	t := r.target()
+	st := subState{Mode: t.mode, Model: t.name, Lang: t.lang}
+	switch r.windowPhase() {
+	case subPhaseLoading:
+		st.Phase = "loading"
+	case subPhaseRestarting:
+		st.Phase = "restarting"
+	default:
+		st.Phase = "listening"
+	}
+	return st
 }

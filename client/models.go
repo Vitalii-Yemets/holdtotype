@@ -801,6 +801,7 @@ type widthResult struct {
 }
 
 type stateOut struct {
+	Subtitles subState `json:"subtitles"`
 	Hotkey   string `json:"hotkey"`
 	Mic      string `json:"mic"`
 	Engine   string `json:"engine"`
@@ -1112,6 +1113,7 @@ func (a *App) stateSnapshot() string {
 		PostSizeMB:  postModelSizeMB(cfg),
 		PostPrompts: len(cfg.ActiveProfiles),
 		PostRemote:  postAPIOn(cfg),
+		Subtitles:   a.subtitlesState(),
 	}
 	a.mu.Lock()
 	st.UpdVersion = a.updVer

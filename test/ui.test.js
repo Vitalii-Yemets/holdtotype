@@ -53,7 +53,7 @@ const dom = new JSDOM(html, {
     window.setReady = (v) => { engineReady = v; };
     window.appWizardDone = async () => { window.wizardDone++; };
     window.appState = async () =>
-      JSON.stringify({ hotkey: "ctrl+win", mic: "Realtek", engine: "sherpa · gigaam-v3", llm: "model.gguf",
+      JSON.stringify({ subtitles: window.subsState, hotkey: "ctrl+win", mic: "Realtek", engine: "sherpa · gigaam-v3", llm: "model.gguf",
         ram: "8000 MB free", last: "hello", last_meta: "just now · 5 characters", ready: engineReady, status: "Ready",
         status_line: "Ready · gigaam-v3 + ggml-small.bin · 7.8 GB free",
         active_model: "GigaAM v3", active_state: ruState, active_lang: "RU",
@@ -164,6 +164,21 @@ const dom = new JSDOM(html, {
     window.captureCalls = 0;
     window.appCapture = () => { window.captureCalls++; };
     window.appCaptureCombo = () => { window.captureCalls++; };
+    window.subsCalls = [];
+    window.subsState = { phase: "off" };
+    window.appSubtitles = (action) => {
+      window.subsCalls.push(action);
+      window.subsState = action === "start" ? { phase: "loading", mode: "live", model: "Nemotron 3.5", lang: "en" } : { phase: "off" };
+    };
+    window.subsModels = {
+      en: { lang: "en", id: "nemotron-3.5", name: "Nemotron 3.5", engine: "stream", mode: "live", installed: true, whisper: false, remote: false },
+      de: { lang: "de", id: "medium-q5_0", name: "Whisper Medium (q5)", engine: "whisper", mode: "phrases", installed: true, whisper: true, remote: false },
+      fr: { lang: "fr", id: "canary-180m", name: "Canary 180M Flash", engine: "sherpa", mode: "phrases", installed: false, whisper: false, remote: false },
+      es: { lang: "es", id: "medium-q5_0", name: "Whisper Medium (q5)", engine: "whisper", mode: "phrases", installed: true, whisper: true, remote: true },
+    };
+    window.appSubtitlesModel = async (lang) => JSON.stringify(window.subsModels[lang] || { lang, id: "parakeet-v3", name: "Parakeet TDT 0.6B v3", engine: "sherpa", mode: "phrases", installed: true, whisper: false, remote: false });
+    window.transcriptOpens = 0;
+    window.appOpenTranscripts = () => { window.transcriptOpens++; };
     window.dragCalls = 0;
     window.appDrag = () => { window.dragCalls++; };
     window.resizeCalls = 0;
@@ -182,6 +197,7 @@ const dom = new JSDOM(html, {
       const message = Number(f.server_port) === 8910 ? "Saved" : "Restarting the recognizer…";
       window.lastSaveForm = f;
       const keys = Object.values(f.lang_hotkeys || {});
+      if (f.subtitles_hotkey) keys.push(f.subtitles_hotkey);
       if (keys.includes(f.hotkey) || new Set(keys).size !== keys.length) {
         window.lastSave = { ok: false, severity: "error", message: "The \"" + f.hotkey + "\" shortcut is assigned twice" };
         return JSON.stringify(window.lastSave);
@@ -423,10 +439,10 @@ function check(name, actual, expected) {
   check("and it is marked as a warning", d.getElementById("st_saved").className, "stsaved warn");
   w.setHotkey("ctrl+win", "");
 
-  check("eleven sections in the sidebar", d.querySelectorAll(".nav").length, 11);
+  check("twelve sections in the sidebar", d.querySelectorAll(".nav").length, 12);
   check("in three groups", d.querySelectorAll(".ngrp").length, 3);
   check("in the agreed order", [...d.querySelectorAll(".nav")].map(b=>b.dataset.p),
-    ["state", "system", "mic", "history", "dictation", "models", "text", "post", "help", "about", "contacts"]);
+    ["state", "system", "mic", "history", "dictation", "models", "text", "post", "subs", "help", "about", "contacts"]);
   check("no mode switch in the header", !!d.querySelector(".lvlsw"), false);
   check("no disclosure buttons anywhere", d.querySelectorAll(".moreb").length, 0);
   check("nothing is folded away", d.querySelectorAll("[data-adv].hidden").length, 0);
@@ -1591,6 +1607,82 @@ function check(name, actual, expected) {
   check("no face is nailed to Consolas outside the skin", /font:[^;]*Consolas/.test(css), false);
   check("native dropdowns follow the skin", css.includes("color-scheme:var(--scheme,dark)"), true);
   check("and no dark scheme is nailed down", /color-scheme:s*dark/.test(css), false);
+
+  tab("subs"); await sleep(200);
+  const sv = (id) => d.getElementById(id);
+  const change = async (el, v) => { if (typeof v === "boolean") el.checked = v; else el.value = v; el.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(450); };
+  check("the subtitles tab opens", shown("subs"), true);
+  check("its name is in the sidebar", d.querySelector('.nav[data-p="subs"]').textContent, "S_NAV_SUBS");
+  check("the state line says they are off", [sv("subs_state").dataset.phase, sv("subs_state").textContent], ["off", "Subtitles are off"]);
+  check("the main button offers to start them", sv("subs_go").textContent, "Start subtitles");
+  check("and it is the main action of the section", sv("subs_go").classList.contains("pri"), true);
+  check("the people you talk to are mentioned", sv("subs_notice").textContent, "S_SUBS_NOTICE");
+  check("the controls carry the config", [sv("subtitles_language").value, sv("subtitles_save").checked, sv("subtitles_lines").value, sv("subtitles_size").value], ["en", true, "3", "m"]);
+  check("the language list matches the other ones", [...sv("subtitles_language").options].map(o=>o.value), [...sv("language").options].map(o=>o.value));
+  check("a streaming model says the words come as they are spoken", sv("subs_model").textContent, "Nemotron 3.5 will write it: the words appear as they are spoken.");
+  check("and nothing to warn about", sv("subs_case_row").style.display, "none");
+  await change(sv("subtitles_language"), "de");
+  check("the speech language reaches the save form", w.lastSaveForm.subtitles_language, "de");
+  check("a Whisper model gets its warning", sv("subs_case").textContent.startsWith("Whisper Medium (q5) is a Whisper model"), true);
+  check("next to the model line", [sv("subs_case_row").style.display, sv("subs_model").textContent], ["", "Whisper Medium (q5) will write it: each phrase appears a moment after it ends."]);
+  sv("subs_case_go").click(); await sleep(150);
+  check("the button jumps to the language list", shown("models"), true);
+  check("with that language unfolded", (d.querySelector("#langlist .lrow.open") || {dataset: {}}).dataset.lang, "de");
+  tab("subs"); await sleep(150);
+  await change(sv("subtitles_language"), "fr");
+  check("a model that is not installed says so", sv("subs_case").textContent, "Canary 180M Flash is chosen for this language but is not installed.");
+  check("and promises no mode", sv("subs_model").style.display, "none");
+  sv("subs_case_go").click(); await sleep(150);
+  check("its button unfolds that language too", [shown("models"), (d.querySelector("#langlist .lrow.open") || {dataset: {}}).dataset.lang], [true, "fr"]);
+  tab("subs"); await sleep(150);
+  await change(sv("subtitles_language"), "es");
+  check("with recognition elsewhere the phrases are said to go there", sv("subs_remote").style.display, "");
+  check("and the processor warning stays away", sv("subs_case_row").style.display, "none");
+  await change(sv("subtitles_language"), "en");
+  check("a local engine says nothing about a server", sv("subs_remote").style.display, "none");
+  await change(sv("subtitles_save"), false);
+  check("saving the transcript reaches the save form", w.lastSaveForm.subtitles_save, false);
+  await change(sv("subtitles_lines"), "5");
+  check("the rows reach the save form", w.lastSaveForm.subtitles_lines, 5);
+  await change(sv("subtitles_size"), "l");
+  check("the text size reaches the save form", w.lastSaveForm.subtitles_size, "l");
+  check("an ordinary save leaves the window place alone", w.lastSaveForm.subtitles_custom, null);
+  sv("subs_place").click(); await sleep(300);
+  check("the place button clears the saved places", w.lastSaveForm.subtitles_custom, {});
+  await change(sv("subtitles_save"), true);
+  check("and only that once", w.lastSaveForm.subtitles_custom, null);
+  sv("subs_go").click(); await sleep(700);
+  check("the button starts them when they are off", w.subsCalls, ["start"]);
+  check("the state line follows the poll", [sv("subs_state").dataset.phase, sv("subs_state").textContent], ["loading", "Loading Nemotron 3.5…"]);
+  check("and the button turns into stop", sv("subs_go").textContent, "Stop subtitles");
+  w.subsState = { phase: "listening", mode: "live", model: "Nemotron 3.5", lang: "en" };
+  await w.refreshState();
+  check("listening names the model and the mode", sv("subs_state").textContent, "Listening to the computer's sound · Nemotron 3.5, words as they are spoken");
+  w.subsState = { phase: "listening", mode: "phrases", model: "Parakeet TDT 0.6B v3", lang: "en" };
+  await w.refreshState();
+  check("phrase mode says the text comes after each phrase", sv("subs_state").textContent, "Listening to the computer's sound · Parakeet TDT 0.6B v3, text after each phrase");
+  w.subsState = { phase: "restarting", mode: "phrases", model: "Parakeet TDT 0.6B v3", lang: "en" };
+  await w.refreshState();
+  check("a restart is said in words", sv("subs_state").textContent, "Recognition is restarting…");
+  sv("subs_go").click(); await sleep(700);
+  check("the button stops them when they run", w.subsCalls, ["start", "stop"]);
+  check("and the line goes back to off", sv("subs_state").dataset.phase, "off");
+  check("without a shortcut the button invites to assign", [sv("subs_key").textContent, sv("subs_key_clear").style.display], ["Assign…", "none"]);
+  const capSubs = w.captureCalls;
+  sv("subs_key").click(); await sleep(60);
+  check("the shortcut button asks the program to capture keys", w.captureCalls, capSubs + 1);
+  w.comboCaptured("ctrl+alt+s", ""); await sleep(300);
+  check("the captured combination reaches the save form", w.lastSaveForm.subtitles_hotkey, "ctrl+alt+s");
+  check("the button shows it and a cross appears", [sv("subs_key").textContent, sv("subs_key_clear").style.display], ["ctrl+alt+s", ""]);
+  sv("subs_key").click(); await sleep(60);
+  w.comboCaptured("ctrl+alt+e", ""); await sleep(300);
+  check("a combination another shortcut has is refused", w.lastSave.severity, "error");
+  check("and the subtitles keep theirs", sv("subs_key").textContent, "ctrl+alt+s");
+  sv("subs_key_clear").click(); await sleep(300);
+  check("the cross removes the shortcut", [w.lastSaveForm.subtitles_hotkey, sv("subs_key").textContent], ["", "Assign…"]);
+  sv("subs_folder").click(); await sleep(60);
+  check("the folder button opens the transcripts", w.transcriptOpens, 1);
+  check("the search finds the tab", w.searchMatches("s_subs_save").some((el) => el.closest("#p-subs")), true);
 
   check("no page errors", errors, []);
 
