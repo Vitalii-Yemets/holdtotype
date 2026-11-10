@@ -504,6 +504,7 @@ func newSubPipe(r *subRun, t *subTarget) *subPipe {
 		p.gate = subtitles.NewGate(sampleRate)
 	} else {
 		p.seg = subtitles.NewSegmenter(sampleRate)
+		p.seg.StartAt(r.pacer.Fed())
 		p.q = subtitles.NewBacklog(sampleRate, subtitles.BacklogLimit)
 	}
 	p.wg.Add(2)

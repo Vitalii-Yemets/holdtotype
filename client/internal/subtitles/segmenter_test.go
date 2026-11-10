@@ -189,3 +189,13 @@ func TestQuietBackgroundRaisesNothing(t *testing.T) {
 		t.Fatalf("speech over a quiet hum gave %d phrases, want 1", len(got))
 	}
 }
+
+func TestASegmenterStartedLaterCountsFromItsStart(t *testing.T) {
+	s := NewSegmenter(rate)
+	s.StartAt(int64(rate) * 60)
+	got := feedAll(s, join(quiet(1000), tone(1000, 0.3), quiet(1000)), 3200)
+	if len(got) != 1 {
+		t.Fatalf("got %d phrases", len(got))
+	}
+	near(t, "start sample", int(got[0].Start), rate*61, rate*FrameMs/1000)
+}

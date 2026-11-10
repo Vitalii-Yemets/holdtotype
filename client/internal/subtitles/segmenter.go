@@ -321,3 +321,7 @@ func (s *Segmenter) cut(out []Phrase) []Phrase {
 	}
 	return out
 }
+
+func (s *Segmenter) StartAt(pos int64) {
+	s.pos = pos
+}
