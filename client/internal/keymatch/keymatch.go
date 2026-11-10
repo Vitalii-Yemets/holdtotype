@@ -138,9 +138,12 @@ func (m *Matcher) Key(vk uint32, down bool, now time.Time, held func(uint32) boo
 	}
 	ks := m.pressed[vk]
 	if ks != nil && ks.swallowed && now.Sub(ks.last) > StaleSwallowed {
-		delete(m.pressed, vk)
-		r.Forgotten = append(r.Forgotten, vk)
-		ks = nil
+		m.forgetReleased(vk, held, &r)
+		if !m.inActive(vk) {
+			delete(m.pressed, vk)
+			r.Forgotten = append(r.Forgotten, vk)
+			ks = nil
+		}
 	}
 	if ks != nil {
 		ks.last = now
@@ -206,23 +209,33 @@ func (m *Matcher) keyUp(vk uint32, r *Result) {
 	m.activeID = ""
 }
 
+func (m *Matcher) forgetReleased(current uint32, held func(uint32) bool, r *Result) {
+	m.forget(current, r, func(vk uint32, ks *keyState) bool {
+		return !ks.swallowed && held != nil && !held(vk)
+	})
+}
+
 func (m *Matcher) forgetStale(current uint32, now time.Time, held func(uint32) bool, r *Result) {
-	for vk, ks := range m.pressed {
-		if vk == current {
-			continue
-		}
-		gone := false
+	m.forget(current, r, func(vk uint32, ks *keyState) bool {
 		if ks.swallowed {
-			gone = now.Sub(ks.last) > StaleSwallowed
-		} else {
-			gone = held != nil && !held(vk)
+			return now.Sub(ks.last) > StaleSwallowed && !m.inActive(vk)
 		}
-		if gone {
-			delete(m.pressed, vk)
-			r.Forgotten = append(r.Forgotten, vk)
+		return held != nil && !held(vk)
+	})
+}
+
+func (m *Matcher) forget(current uint32, r *Result, gone func(uint32, *keyState) bool) {
+	var dropped []uint32
+	for vk, ks := range m.pressed {
+		if vk != current && gone(vk, ks) {
+			dropped = append(dropped, vk)
 		}
 	}
-	sort.Slice(r.Forgotten, func(i, j int) bool { return r.Forgotten[i] < r.Forgotten[j] })
+	sort.Slice(dropped, func(i, j int) bool { return dropped[i] < dropped[j] })
+	for _, vk := range dropped {
+		delete(m.pressed, vk)
+	}
+	r.Forgotten = append(r.Forgotten, dropped...)
 	if m.phase != idle {
 		if a := m.find(m.activeID); a == nil || !m.held(a) {
 			m.end(r)
@@ -230,9 +243,17 @@ func (m *Matcher) forgetStale(current uint32, now time.Time, held func(uint32) b
 	}
 }
 
+func (m *Matcher) inActive(vk uint32) bool {
+	if m.phase == idle {
+		return false
+	}
+	a := m.find(m.activeID)
+	return a != nil && contains(a, vk)
+}
+
 func (m *Matcher) fresh(vk uint32, ks *keyState, now time.Time, r *Result) {
-	l := m.longestHeld()
-	if l == nil || !contains(l, vk) {
+	l := m.longestHeldWith(vk)
+	if l == nil {
 		return
 	}
 	switch m.phase {
@@ -307,9 +328,9 @@ func (m *Matcher) find(id string) *Combo {
 	return nil
 }
 
-func (m *Matcher) longestHeld() *Combo {
+func (m *Matcher) longestHeldWith(vk uint32) *Combo {
 	for i := range m.combos {
-		if m.held(&m.combos[i]) {
+		if contains(&m.combos[i], vk) && m.held(&m.combos[i]) {
 			return &m.combos[i]
 		}
 	}

@@ -422,17 +422,22 @@ func TestStaleSwallowedKey(t *testing.T) {
 	r := newRig(t, mainCombo(), subsCombo())
 	r.down(lctrl, 0)
 	r.down(lwin, 0)
-	r.down(kz, 80)
-	r.up(lwin, 300)
-	r.up(lctrl, 310)
+	r.want("z", r.down(kz, 80), ev(Disarm, "main"), ev(Down, "subs"))
+	r.lose(lctrl)
+	r.lose(lwin)
 	r.lose(kz)
 	res := r.down(kz, 2080)
-	r.want("stale z alone", res)
-	r.swallow("stale z alone", res, false, false)
-	if !reflect.DeepEqual(res.Forgotten, []uint32{kz}) {
-		t.Errorf("forgotten %v, want z", res.Forgotten)
+	r.want("stale z alone after every release was lost", res, ev(Up, "subs"))
+	r.swallow("stale z alone after every release was lost", res, false, false)
+	if !reflect.DeepEqual(res.Forgotten, []uint32{lwin, lctrl, kz}) {
+		t.Errorf("forgotten %v, want win, ctrl, z", res.Forgotten)
 	}
-	r.up(kz, 2100)
+	if r.m.Matched() {
+		t.Errorf("nothing is held after the lost releases")
+	}
+	res = r.up(kz, 2100)
+	r.want("z up", res)
+	r.swallow("z up", res, false, false)
 
 	r = newRig(t, mainCombo(), subsCombo())
 	r.down(lctrl, 0)
@@ -455,6 +460,67 @@ func TestStaleSwallowedKey(t *testing.T) {
 		t.Errorf("a repeating swallowed key stays pressed")
 	}
 	r.want("f9 up", r.up(f9, 3600), ev(Up, "main"))
+}
+
+func TestHeldSwallowedKeyIsNotForgotten(t *testing.T) {
+	r := newRig(t, combo("main", gF9))
+	res := r.down(f9, 0)
+	r.want("f9", res, ev(Down, "main"))
+	r.swallow("f9", res, true, false)
+	r.want("x", r.down(kx, 500))
+	r.want("x up", r.up(kx, 600))
+	res = r.down(ke, 2600)
+	r.want("e long after the last f9 event", res)
+	if len(res.Forgotten) != 0 {
+		t.Errorf("forgotten %v, want none", res.Forgotten)
+	}
+	res = r.up(f9, 3000)
+	r.want("f9 up", res, ev(Up, "main"))
+	r.swallow("f9 up", res, true, false)
+
+	r = newRig(t, mainCombo(), combo("lang", gCtrl, gWin, gE))
+	r.down(lctrl, 0)
+	r.down(lwin, 0)
+	res = r.down(ke, 50)
+	r.want("e", res, ev(Disarm, "main"), ev(Down, "lang"))
+	r.swallow("e", res, true, true)
+	r.want("x", r.down(kx, 500))
+	r.want("x up", r.up(kx, 600))
+	r.want("f9 long after the last e event", r.down(f9, 2600))
+	r.want("f9 up", r.up(f9, 2700))
+	r.want("e repeat after the pause", r.down(ke, 2800))
+	r.want("e up", r.up(ke, 3000), ev(Up, "lang"))
+}
+
+func TestTapAfterTheWaitWithoutTick(t *testing.T) {
+	r := newRig(t, mainCombo(), subsCombo())
+	r.down(lctrl, 0)
+	r.down(lwin, 0)
+	r.want("win up at 250", r.up(lwin, 250), ev(Down, "main"), ev(Up, "main"))
+	r.want("tick", r.tick(300))
+}
+
+func TestLongestHeldWithThePressedKey(t *testing.T) {
+	other := combo("other", gAlt, gF9)
+	r := newRig(t, mainCombo(), subsCombo(), other)
+	r.down(lctrl, 0)
+	r.down(lwin, 0)
+	r.down(kz, 80)
+	r.want("z up", r.up(kz, 200), ev(Up, "subs"))
+	r.want("alt", r.down(lalt, 300))
+	res := r.down(f9, 310)
+	r.want("f9", res, ev(Down, "other"))
+	r.swallow("f9", res, true, true)
+	r.want("f9 up", r.up(f9, 400), ev(Up, "other"))
+
+	r = newRig(t, mainCombo(), other)
+	r.down(lctrl, 0)
+	r.want("ctrl win", r.down(lwin, 0), ev(Down, "main"))
+	r.want("alt", r.down(lalt, 100))
+	res = r.down(f9, 110)
+	r.want("f9 while main is held", res)
+	r.swallow("f9 while main is held", res, false, false)
+	r.want("win up", r.up(lwin, 200), ev(Up, "main"))
 }
 
 func TestReleasedUnseenKeyIsForgotten(t *testing.T) {
