@@ -33,6 +33,7 @@ const (
 	subExitDrain     = 3 * time.Second
 	subFailDrain     = 3 * time.Second
 	subLiveDrain     = 3 * time.Second
+	subPendingBytes  = 10 * sampleRate * 2
 	subDeviceGrace   = 3 * time.Second
 	subDeviceGiveUp  = 30 * time.Second
 	subBoardKeep     = 50
@@ -488,8 +489,9 @@ type subPipe struct {
 	draining atomic.Bool
 	waitLog  bool
 
-	smu  sync.Mutex
-	sess *segSession
+	smu     sync.Mutex
+	sess    *segSession
+	pending []byte
 	lmu  sync.Mutex
 	live *subtitles.Live
 	gate *subtitles.Gate
@@ -714,6 +716,13 @@ func (p *subPipe) feed(pcm []byte) {
 		}
 		p.smu.Lock()
 		s := p.sess
+		if s == nil {
+			p.pending = append(p.pending, pcm...)
+			if over := len(p.pending) - subPendingBytes; over > 0 {
+				n := copy(p.pending, p.pending[over:])
+				p.pending = p.pending[:n]
+			}
+		}
 		p.smu.Unlock()
 		if s != nil {
 			_ = s.push(pcm)
@@ -885,8 +894,13 @@ func (p *subPipe) liveLoop() {
 		fails = 0
 		p.smu.Lock()
 		p.sess = sess
+		kept := len(p.pending)
+		if kept > 0 {
+			_ = sess.push(p.pending)
+			p.pending = p.pending[:0]
+		}
 		p.smu.Unlock()
-		log.Printf("subtitles: the live stream is open")
+		log.Printf("subtitles: the live stream is open, %.1f s of sound kept while it opened", float64(kept)/(2*sampleRate))
 		var berr error
 		select {
 		case berr = <-sess.broken():

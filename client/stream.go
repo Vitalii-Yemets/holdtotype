@@ -90,6 +90,8 @@ func startStreamServer(cfg *Config, logw io.Writer) (*streamServer, error) {
 	args := append([]string{
 		"--port=" + strconv.Itoa(cfg.StreamPort),
 		"--num-threads=" + strconv.Itoa(cfg.SherpaThreads),
+		"--rule1-must-contain-nonsilence=true",
+		"--rule3-must-contain-nonsilence=true",
 	}, modelArgs...)
 	quiet := logfilter.New(logw,
 		"handle_read_frame error",
