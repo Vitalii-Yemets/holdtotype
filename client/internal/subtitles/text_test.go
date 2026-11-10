@@ -159,7 +159,7 @@ func TestTranscriptFormatting(t *testing.T) {
 	if got := Header(at, "auto", "Nemotron 3.5"); got != want {
 		t.Fatalf("header %q", got)
 	}
-	if got := Opening(at, "auto", "Nemotron 3.5"); got != want+"\r\n\r\n" {
+	if got := Opening(at, "auto", "Nemotron 3.5", ""); got != want+"\r\n\r\n" {
 		t.Fatalf("opening %q", got)
 	}
 	line := at.Add(8 * time.Second)

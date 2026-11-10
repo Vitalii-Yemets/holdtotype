@@ -411,7 +411,7 @@ func (r *subRun) write(ln subtitles.Line, t *subTarget) {
 			r.fileErr = true
 			return
 		}
-		if _, err := f.WriteString(subtitles.Opening(r.started, t.lang, t.name)); err != nil {
+		if _, err := f.WriteString(subtitles.Opening(r.started, t.lang, t.name, "")); err != nil {
 			log.Printf("subtitles: writing the transcript: %v", err)
 		}
 		r.file = f

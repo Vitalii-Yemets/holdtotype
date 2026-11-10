@@ -12,11 +12,23 @@ type Line struct {
 	ID    int
 	Start time.Time
 	Text  string
+	Tr    string
 }
 
 type View struct {
 	Lines []Line
 	Live  string
+}
+
+const (
+	RowLine = iota
+	RowTranslation
+	RowLive
+)
+
+type Row struct {
+	Kind int
+	Text string
 }
 
 type Board struct {
@@ -47,6 +59,18 @@ func (b *Board) Add(start time.Time, text string) Line {
 	return ln
 }
 
+func (b *Board) SetTranslation(id int, text string) bool {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	for i := len(b.lines) - 1; i >= 0; i-- {
+		if b.lines[i].ID == id {
+			b.lines[i].Tr = oneLine(text)
+			return true
+		}
+	}
+	return false
+}
+
 func (b *Board) SetLive(text string) {
 	b.mu.Lock()
 	b.live = strings.Join(strings.Fields(text), " ")
@@ -71,6 +95,17 @@ func (b *Board) Lines() []Line {
 	return append([]Line(nil), b.lines...)
 }
 
+func cutLine(ln Line, budget int) Line {
+	tr := len([]rune(ln.Tr))
+	if tr >= budget {
+		ln.Tr = livetail.Tail(ln.Tr, budget)
+		ln.Text = ""
+		return ln
+	}
+	ln.Text = livetail.Tail(ln.Text, budget-tr)
+	return ln
+}
+
 func (b *Board) Tail(maxRunes int) View {
 	b.mu.Lock()
 	defer b.mu.Unlock()
@@ -86,11 +121,10 @@ func (b *Board) Tail(maxRunes int) View {
 	var picked []Line
 	for i := len(b.lines) - 1; i >= 0 && budget > 0; i-- {
 		ln := b.lines[i]
-		n := len([]rune(ln.Text))
+		n := len([]rune(ln.Text)) + len([]rune(ln.Tr))
 		if n > budget {
 			if len(picked) == 0 {
-				ln.Text = livetail.Tail(ln.Text, budget)
-				picked = append(picked, ln)
+				picked = append(picked, cutLine(ln, budget))
 			}
 			break
 		}
@@ -106,10 +140,28 @@ func (b *Board) Tail(maxRunes int) View {
 func (v View) Text() string {
 	parts := make([]string, 0, len(v.Lines)+1)
 	for _, ln := range v.Lines {
-		parts = append(parts, ln.Text)
+		if ln.Text != "" {
+			parts = append(parts, ln.Text)
+		}
 	}
 	if v.Live != "" {
 		parts = append(parts, v.Live)
 	}
 	return strings.Join(parts, "\n")
+}
+
+func (v View) Rows() []Row {
+	rows := make([]Row, 0, 2*len(v.Lines)+1)
+	for _, ln := range v.Lines {
+		if ln.Text != "" {
+			rows = append(rows, Row{Kind: RowLine, Text: ln.Text})
+		}
+		if ln.Tr != "" {
+			rows = append(rows, Row{Kind: RowTranslation, Text: ln.Tr})
+		}
+	}
+	if v.Live != "" {
+		rows = append(rows, Row{Kind: RowLive, Text: v.Live})
+	}
+	return rows
 }
