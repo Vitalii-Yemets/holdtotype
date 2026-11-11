@@ -145,17 +145,73 @@ func engineGone(r recognizer) bool {
 
 type subOptions struct {
 	logLive bool
+	sound   subSound
 	onEnd   func(*subRun)
 }
+
+type subSound interface {
+	take() []byte
+	running() bool
+	reopen() error
+	close()
+	openCount() int32
+}
+
+func (l *loopback) openCount() int32 { return l.opens.Load() }
+
+type wavSound struct {
+	mu    sync.Mutex
+	pcm   []byte
+	start time.Time
+	pos   int
+}
+
+func openWavSound(path string) (*wavSound, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	pcm, err := subtitles.ParseWav(data, sampleRate)
+	if err != nil {
+		return nil, err
+	}
+	return &wavSound{pcm: pcm, start: time.Now()}, nil
+}
+
+func (w *wavSound) take() []byte {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	due := int(int64(time.Since(w.start)) * sampleRate / int64(time.Second) * 2)
+	if due <= w.pos {
+		return nil
+	}
+	out := make([]byte, due-w.pos)
+	if w.pos < len(w.pcm) {
+		copy(out, w.pcm[w.pos:min(due, len(w.pcm))])
+	}
+	w.pos = due
+	return out
+}
+
+func (w *wavSound) running() bool { return true }
+
+func (w *wavSound) reopen() error { return nil }
+
+func (w *wavSound) close() {}
+
+func (w *wavSound) openCount() int32 { return 0 }
+
+func (w *wavSound) seconds() float64 { return float64(len(w.pcm)) / (2 * sampleRate) }
 
 type subRun struct {
 	app     *App
 	opts    subOptions
 	started time.Time
 
-	cap   *loopback
-	pacer *subtitles.Pacer
-	board *subtitles.Board
+	cap      subSound
+	fromFile bool
+	pacer    *subtitles.Pacer
+	board    *subtitles.Board
 
 	stopCh    chan struct{}
 	stopOnce  sync.Once
@@ -213,9 +269,13 @@ func startSubtitlesRun(a *App, cfg *Config, opts subOptions) (*subRun, error) {
 	if err != nil {
 		return nil, err
 	}
-	lb, err := openLoopback()
-	if err != nil {
-		return nil, &subError{subErrDevice, err.Error()}
+	var lb subSound = opts.sound
+	if lb == nil {
+		dev, err := openLoopback()
+		if err != nil {
+			return nil, &subError{subErrDevice, err.Error()}
+		}
+		lb = dev
 	}
 	now := time.Now()
 	r := &subRun{
@@ -223,6 +283,7 @@ func startSubtitlesRun(a *App, cfg *Config, opts subOptions) (*subRun, error) {
 		opts:      opts,
 		started:   now,
 		cap:       lb,
+		fromFile:  opts.sound != nil,
 		pacer:     subtitles.NewPacer(sampleRate, now),
 		board:     subtitles.NewBoard(subBoardKeep),
 		phraser:   subtitles.NewPhraser(),
@@ -340,7 +401,10 @@ func (r *subRun) loop(t *subTarget) {
 		case <-tick.C:
 			now := time.Now()
 			chunk := r.cap.take()
-			n := cueMutes.Apply(chunk, now, sampleRate)
+			n := 0
+			if !r.fromFile {
+				n = cueMutes.Apply(chunk, now, sampleRate)
+			}
 			if n > 0 {
 				r.muted.Add(int64(n))
 				if !muting {
@@ -354,7 +418,9 @@ func (r *subRun) loop(t *subTarget) {
 			}
 			r.hear(pipe.target, func(ph *subtitles.Phraser, at time.Time) []subtitles.TextPhrase { return ph.Tick(at) })
 		case <-dev.C:
-			r.checkDevice(time.Now())
+			if !r.fromFile {
+				r.checkDevice(time.Now())
+			}
 			r.refreshShown()
 			r.syncCores()
 		}
@@ -588,7 +654,7 @@ func (r *subRun) finish() {
 	}
 	log.Printf("subtitles: summary: %.1f s captured, %.1f s of silence added, topping up paused %d time(s) after %.0f s of silence, %d line(s), %.1f s skipped, %.1f s of the app's own sounds silenced, engine %s on port %d with %s (%s), %d device open(s), transcript %s%s",
 		r.pacer.Captured().Seconds(), r.pacer.Added().Seconds(), r.pacer.Pauses(), subtitles.SilenceLimit.Seconds(),
-		r.board.Count(), time.Duration(r.skipped.Load()).Seconds(), float64(r.muted.Load())/sampleRate, name, port, model, how, r.cap.opens.Load(), path, trSummary)
+		r.board.Count(), time.Duration(r.skipped.Load()).Seconds(), float64(r.muted.Load())/sampleRate, name, port, model, how, r.cap.openCount(), path, trSummary)
 	if r.opts.onEnd != nil {
 		r.opts.onEnd(r)
 	}
@@ -1683,23 +1749,47 @@ func runSubcheck(args []string) {
 		log.Printf("config: %v", err)
 		return
 	}
-	if len(args) > 1 {
-		if !validPresetLang(args[1]) {
-			log.Printf("subcheck: unknown language %q", args[1])
-			return
+	var words []string
+	file := ""
+	for _, a := range args[min(1, len(args)):] {
+		if strings.HasSuffix(strings.ToLower(a), ".wav") {
+			file = a
+			continue
 		}
-		cfg.SubtitlesLanguage = args[1]
+		words = append(words, a)
 	}
-	if len(args) > 2 {
-		if !validTranslateLang(args[2]) {
-			log.Printf("subcheck: unknown translation language %q", args[2])
+	if len(words) > 0 {
+		if !validPresetLang(words[0]) {
+			log.Printf("subcheck: unknown language %q", words[0])
 			return
 		}
-		cfg.SubtitlesTranslate = args[2]
+		cfg.SubtitlesLanguage = words[0]
+	}
+	if len(words) > 1 {
+		switch to := words[1]; {
+		case to == "off" || to == "-":
+			cfg.SubtitlesTranslate = ""
+		case validTranslateLang(to):
+			cfg.SubtitlesTranslate = to
+		default:
+			log.Printf("subcheck: unknown translation language %q", to)
+			return
+		}
+	}
+	opts := subOptions{logLive: true}
+	if file != "" {
+		ws, werr := openWavSound(file)
+		if werr != nil {
+			log.Printf("subcheck: the file %s cannot be used: %v", file, werr)
+			return
+		}
+		opts.sound = ws
+		log.Printf("subcheck: playing %s (%.1f s of sound) for %d s, silence after its end", file, ws.seconds(), seconds)
+	} else {
+		log.Printf("subcheck: listening to the computer's sound for %d s", seconds)
 	}
 	app := &App{cfg: cfg, enabled: true, evq: evqueue.New[ptEvent](8)}
-	log.Printf("subcheck: listening to the computer's sound for %d s", seconds)
-	r, err := startSubtitlesRun(app, cfg, subOptions{logLive: true})
+	r, err := startSubtitlesRun(app, cfg, opts)
 	if err != nil {
 		log.Printf("subtitles: did not start: %s", logText(err))
 		return

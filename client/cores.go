@@ -117,9 +117,10 @@ type coreDivider struct {
 	closed  bool
 	asrPid  int
 	llmPid  int
+	offWhy  string
 }
 
-func (c *coreDivider) apply(want bool, threads, asr, llm int) {
+func (c *coreDivider) apply(want bool, off string, threads, asr, llm int) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.closed {
@@ -127,8 +128,13 @@ func (c *coreDivider) apply(want bool, threads, asr, llm int) {
 	}
 	if !want {
 		c.releaseLocked()
+		if off != "" && off != c.offWhy {
+			log.Printf("subtitles: cores are not divided: %s", off)
+		}
+		c.offWhy = off
 		return
 	}
+	c.offWhy = ""
 	if !c.read {
 		c.read = true
 		c.full = systemMask()
@@ -200,7 +206,13 @@ func (c *coreDivider) close() {
 func (r *subRun) syncCores() {
 	cfg := r.app.snapshot()
 	t := r.target()
-	want := t != nil && translationTarget(cfg, t) != "" && translationSource(cfg).kind == editorLocal
+	translating := t != nil && translationTarget(cfg, t) != ""
+	kind := translationSource(cfg).kind
+	want := translating && kind == editorLocal
+	off := ""
+	if translating && kind == editorAPI {
+		off = "the user's post-processing server translates"
+	}
 	r.mu.Lock()
 	asr := r.engPid
 	r.mu.Unlock()
@@ -210,5 +222,5 @@ func (r *subRun) syncCores() {
 		llm = s.pid()
 	}
 	r.app.mu.Unlock()
-	r.cores.apply(want, cfg.Threads, asr, llm)
+	r.cores.apply(want, off, cfg.Threads, asr, llm)
 }
