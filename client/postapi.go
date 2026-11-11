@@ -15,6 +15,9 @@ import (
 	"unsafe"
 
 	"golang.org/x/sys/windows"
+
+	"holdtotype/internal/chatstream"
+	"holdtotype/internal/subtitles"
 )
 
 func postAPIOn(cfg *Config) bool {
@@ -96,6 +99,7 @@ type chatRequest struct {
 	Messages    []chatMessage `json:"messages"`
 	Temperature float64       `json:"temperature"`
 	MaxTokens   int           `json:"max_tokens,omitempty"`
+	Stream      bool          `json:"stream,omitempty"`
 }
 
 type chatOptions struct {
@@ -180,4 +184,57 @@ func externalChatWith(ctx context.Context, cfg *Config, prompt, text string, opt
 		log.Printf("post-processing through the external server %s: %d → %d characters", base, len([]rune(text)), len([]rune(parsed.Choices[0].Message.Content)))
 	}
 	return parsed.Choices[0].Message.Content, nil
+}
+
+func externalChatStream(ctx context.Context, cfg *Config, msgs []subtitles.Message, maxTokens int, onText func(string)) (string, error) {
+	base := strings.TrimRight(strings.TrimSpace(cfg.PostAPIURL), "/")
+	timeout := time.Duration(cfg.PostAPITimeout) * time.Second
+	if timeout <= 0 {
+		timeout = 30 * time.Second
+	}
+	tctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+	conv := make([]chatMessage, len(msgs))
+	for i, m := range msgs {
+		conv[i] = chatMessage{Role: m.Role, Content: m.Content}
+	}
+	body, err := json.Marshal(chatRequest{
+		Model:       strings.TrimSpace(cfg.PostAPIModel),
+		Messages:    conv,
+		Temperature: 0.2,
+		MaxTokens:   maxTokens,
+		Stream:      true,
+	})
+	if err != nil {
+		return "", err
+	}
+	req, err := http.NewRequestWithContext(tctx, http.MethodPost, base+"/chat/completions", bytes.NewReader(body))
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "text/event-stream")
+	if key, kerr := unprotectKey(cfg.PostAPIKey); kerr != nil {
+		return "", fmt.Errorf("API key: %w", kerr)
+	} else if key != "" {
+		req.Header.Set("Authorization", "Bearer "+key)
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		raw, _ := io.ReadAll(io.LimitReader(resp.Body, 2048))
+		var parsed chatResponse
+		if json.Unmarshal(raw, &parsed) == nil && parsed.Error.Message != "" {
+			return "", fmt.Errorf("post-processing server: %s", parsed.Error.Message)
+		}
+		return "", fmt.Errorf("post-processing server: HTTP %d: %.200s", resp.StatusCode, strings.TrimSpace(string(raw)))
+	}
+	out, err := chatstream.Read(io.LimitReader(resp.Body, maxResponseBytes), onText)
+	if err != nil {
+		return out, fmt.Errorf("post-processing server: %w", err)
+	}
+	return out, nil
 }

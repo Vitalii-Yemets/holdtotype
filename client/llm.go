@@ -25,7 +25,9 @@ import (
 	"golang.org/x/sys/windows"
 
 	"holdtotype/internal/appid"
+	"holdtotype/internal/chatstream"
 	"holdtotype/internal/editormodel"
+	"holdtotype/internal/subtitles"
 )
 
 var llmAPIKey = func() string {
@@ -180,6 +182,40 @@ func (s *llamaServer) chatWith(ctx context.Context, system, user string, maxToke
 		return "", fmt.Errorf("llama-server: empty answer (%d): %.200s", resp.StatusCode, string(raw))
 	}
 	return parsed.Choices[0].Message.Content, nil
+}
+
+func (s *llamaServer) chatStream(ctx context.Context, msgs []subtitles.Message, maxTokens int, grammar string, onText func(string)) (string, error) {
+	payload := map[string]any{
+		"messages":    msgs,
+		"temperature": 0.2,
+		"max_tokens":  maxTokens,
+		"stream":      true,
+	}
+	if grammar != "" {
+		payload["grammar"] = grammar
+	}
+	body, _ := json.Marshal(payload)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, s.baseURL+"/v1/chat/completions", bytes.NewReader(body))
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "text/event-stream")
+	req.Header.Set("Authorization", "Bearer "+llmAPIKey)
+	resp, err := s.client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		raw, _ := io.ReadAll(io.LimitReader(resp.Body, 2048))
+		return "", fmt.Errorf("llama-server (%d): %.200s", resp.StatusCode, strings.TrimSpace(string(raw)))
+	}
+	out, err := chatstream.Read(io.LimitReader(resp.Body, maxResponseBytes), onText)
+	if err != nil {
+		return out, fmt.Errorf("llama-server: %w", err)
+	}
+	return out, nil
 }
 
 var (
@@ -560,6 +596,20 @@ func (a *App) editorChat(ctx context.Context, cfg *Config, src editorSource, sys
 			return "", err
 		}
 		return llm.chatWith(ctx, system, user, maxTokens, localGrammar)
+	}
+	return "", errNoEditor
+}
+
+func (a *App) editorStream(ctx context.Context, cfg *Config, src editorSource, msgs []subtitles.Message, maxTokens int, localGrammar string, onText func(string)) (string, error) {
+	switch src.kind {
+	case editorAPI:
+		return externalChatStream(ctx, cfg, msgs, maxTokens, onText)
+	case editorLocal:
+		llm, err := a.llmWait(ctx)
+		if err != nil {
+			return "", err
+		}
+		return llm.chatStream(ctx, msgs, maxTokens, localGrammar, onText)
 	}
 	return "", errNoEditor
 }

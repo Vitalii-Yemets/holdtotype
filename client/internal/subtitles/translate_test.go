@@ -440,3 +440,84 @@ func TestTranscriptWithTranslation(t *testing.T) {
 		t.Fatalf("translation entry %q", got)
 	}
 }
+
+func TestTranslateMessages(t *testing.T) {
+	sys := map[string]string{
+		"ru": "You translate live subtitles into Russian. Each message is a piece of speech, often only a part of a sentence. Reply with the Russian translation of that piece only.",
+		"en": "You translate live subtitles into English. Each message is a piece of speech, often only a part of a sentence. Reply with the English translation of that piece only.",
+	}
+	for code, want := range sys {
+		if got := TranslateSystem(code); got != want {
+			t.Errorf("system for %s: %q", code, got)
+		}
+	}
+	for _, code := range TranslateTargets {
+		m := TranslateMessages(code, "  the build went out\n on Tuesday ")
+		if len(m) != 8 {
+			t.Fatalf("%s: %d messages", code, len(m))
+		}
+		if m[0].Role != "system" || m[0].Content != TranslateSystem(code) || !strings.Contains(m[0].Content, LanguageName(code)) {
+			t.Errorf("%s: system %+v", code, m[0])
+		}
+		for i := 1; i < 7; i += 2 {
+			if m[i].Role != "user" || m[i+1].Role != "assistant" || m[i].Content == "" || m[i+1].Content == "" {
+				t.Errorf("%s: example turn %d: %+v %+v", code, i, m[i], m[i+1])
+			}
+		}
+		if m[7].Role != "user" || m[7].Content != "the build went out on Tuesday" {
+			t.Errorf("%s: the piece %+v", code, m[7])
+		}
+		if code != "en" && m[1].Content != "and then we went back to the office," {
+			t.Errorf("%s: the first example is not the English piece: %q", code, m[1].Content)
+		}
+	}
+	ru := TranslateMessages("ru", "x")
+	if ru[2].Content != "а потом мы вернулись в офис," || ru[4].Content != "поэтому второй тест занял почти три минуты" || ru[6].Content != "Так что если посмотреть на цифры, Windows Eleven" {
+		t.Errorf("russian answers %+v", ru)
+	}
+	en := TranslateMessages("en", "x")
+	wantEn := []Message{
+		{"user", "y luego volvimos a la oficina,"}, {"assistant", "and then we went back to the office,"},
+		{"user", "weshalb der zweite Test fast drei Minuten gedauert hat"}, {"assistant", "which is why the second test took almost three minutes"},
+		{"user", "Donc si vous regardez les chiffres ici, Windows Eleven est"}, {"assistant", "So if you look at the numbers here, Windows Eleven is"},
+	}
+	if !reflect.DeepEqual(en[1:7], wantEn) {
+		t.Errorf("english examples %+v", en[1:7])
+	}
+	for _, code := range []string{"", "auto", "xx", "DE", "zh"} {
+		if m := TranslateMessages(code, "hello"); m != nil {
+			t.Errorf("messages for an unknown code %q: %+v", code, m)
+		}
+		if TranslateSystem(code) != "" {
+			t.Errorf("system for an unknown code %q", code)
+		}
+	}
+}
+
+func TestTranslateTokens(t *testing.T) {
+	cases := map[int]int{0: 48, 1: 48, 8: 48, 9: 51, 15: 69, 18: 78, 30: 114, 45: 159, 46: 160, 200: 160}
+	for words, want := range cases {
+		if got := TranslateTokens(words); got != want {
+			t.Errorf("TranslateTokens(%d) = %d, want %d", words, got, want)
+		}
+	}
+}
+
+func TestStreamingText(t *testing.T) {
+	cases := map[string]string{
+		"":                         "",
+		"«Привет":                  "Привет",
+		"\"Hallo da":               "Hallo da",
+		"\" « Hallo":               "Hallo",
+		"\n\n  Так что   если":     "Так что если",
+		"Bonjour\nNote: French":    "Bonjour",
+		"„Guten Morgen“, sagte er": "Guten Morgen“, sagte er",
+		"\"":                       "",
+		"Ciao \"amici\"":           "Ciao \"amici\"",
+	}
+	for in, want := range cases {
+		if got := StreamingText(in); got != want {
+			t.Errorf("StreamingText(%q) = %q, want %q", in, got, want)
+		}
+	}
+}

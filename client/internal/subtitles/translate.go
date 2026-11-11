@@ -33,6 +33,91 @@ func TranslatePrompt(target string) string {
 		name + ", repeat it unchanged."
 }
 
+const (
+	TranslateTimeout   = 8 * time.Second
+	TranslateMinTokens = 48
+	TranslateMaxTokens = 160
+)
+
+type Message struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
+var shotSources = [3]string{
+	"and then we went back to the office,",
+	"which is why the second test took almost three minutes",
+	"So if you look at the numbers here, Windows Eleven is",
+}
+
+var shotSourcesForEnglish = [3]string{
+	"y luego volvimos a la oficina,",
+	"weshalb der zweite Test fast drei Minuten gedauert hat",
+	"Donc si vous regardez les chiffres ici, Windows Eleven est",
+}
+
+var shotAnswers = map[string][3]string{
+	"en": shotSources,
+	"ru": {"а потом мы вернулись в офис,", "поэтому второй тест занял почти три минуты", "Так что если посмотреть на цифры, Windows Eleven"},
+	"uk": {"а потім ми повернулися до офісу,", "тому другий тест тривав майже три хвилини", "Тож якщо подивитися на цифри, Windows Eleven"},
+	"de": {"und dann sind wir zurück ins Büro gegangen,", "weshalb der zweite Test fast drei Minuten gedauert hat", "Wenn man sich also die Zahlen hier ansieht, ist Windows Eleven"},
+	"fr": {"et ensuite nous sommes retournés au bureau,", "c'est pourquoi le deuxième test a pris presque trois minutes", "Donc si vous regardez les chiffres ici, Windows Eleven est"},
+	"es": {"y luego volvimos a la oficina,", "por eso la segunda prueba tardó casi tres minutos", "Así que si miran los números aquí, Windows Eleven es"},
+	"it": {"e poi siamo tornati in ufficio,", "ed è per questo che il secondo test ha richiesto quasi tre minuti", "Quindi, se guardate i numeri qui, Windows Eleven è"},
+	"pl": {"a potem wróciliśmy do biura,", "dlatego drugi test trwał prawie trzy minuty", "Więc jeśli spojrzycie na te liczby, Windows Eleven jest"},
+}
+
+func TranslateSystem(target string) string {
+	name := LanguageName(target)
+	if name == "" {
+		return ""
+	}
+	return "You translate live subtitles into " + name +
+		". Each message is a piece of speech, often only a part of a sentence. Reply with the " +
+		name + " translation of that piece only."
+}
+
+func TranslateMessages(target, text string) []Message {
+	system := TranslateSystem(target)
+	answers, ok := shotAnswers[target]
+	if system == "" || !ok {
+		return nil
+	}
+	sources := shotSources
+	if target == "en" {
+		sources = shotSourcesForEnglish
+	}
+	out := make([]Message, 0, 8)
+	out = append(out, Message{Role: "system", Content: system})
+	for i := range sources {
+		out = append(out, Message{Role: "user", Content: sources[i]}, Message{Role: "assistant", Content: answers[i]})
+	}
+	return append(out, Message{Role: "user", Content: oneLine(text)})
+}
+
+func TranslateTokens(words int) int {
+	n := 3*words + 24
+	if n < TranslateMinTokens {
+		return TranslateMinTokens
+	}
+	if n > TranslateMaxTokens {
+		return TranslateMaxTokens
+	}
+	return n
+}
+
+func StreamingText(sofar string) string {
+	line := firstLine(sofar)
+	for {
+		r := []rune(line)
+		if len(r) == 0 || !isQuote(r[0]) {
+			break
+		}
+		line = strings.TrimSpace(string(r[1:]))
+	}
+	return oneLine(line)
+}
+
 type Verdict string
 
 const (
