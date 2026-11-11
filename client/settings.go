@@ -2429,7 +2429,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
  </div>
  <div class="card">
   <label class="blklbl">{{S_SUBS_WINDOW}}</label>
-  <div class="row"><label>{{S_SUBS_ROWS}}<span class="sub">{{S_SUBS_ROWS_SUB}}</span></label>
+  <div class="row"><label>{{S_SUBS_ROWS}}</label>
    <select id="subtitles_lines"><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
   <div class="row"><label>{{S_SUBS_SIZE}}</label>
    <select id="subtitles_size"><option value="s">{{S_SUBS_SIZE_S}}</option><option value="m">{{S_SUBS_SIZE_M}}</option><option value="l">{{S_SUBS_SIZE_L}}</option></select></div>

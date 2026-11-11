@@ -604,10 +604,10 @@ func init() {
 		"S_SUBS_GO_MODELS": "„Sprachen & Modelle“ öffnen",
 		"S_SUBS_REMOTE": "Die Erkennung läuft auf einem anderen Rechner: Jeder Satz wird an diesen Server gesendet.",
 		"S_SUBS_TR": "Übersetzung",
-		"S_SUBS_TR_SUB": "Jede fertige Zeile wird in dieser Sprache unter dem Original wiederholt",
+		"S_SUBS_TR_SUB": "Das Fenster zeigt die Übersetzung statt des erkannten Textes",
 		"S_SUBS_TR_OFF": "Aus",
-		"S_SUBS_TR_LOCAL": "%s übersetzt: Die Übersetzung erscheint unter der Zeile, sobald sie fertig ist.",
-		"S_SUBS_TR_API": "Ihr Server für die Nachbearbeitung (%s) übersetzt: Jede Zeile wird an ihn gesendet.",
+		"S_SUBS_TR_LOCAL": "%s übersetzt: Die Übersetzung kommt Satzteil für Satzteil, einen Moment nach der Rede.",
+		"S_SUBS_TR_API": "Ihr Server für die Nachbearbeitung (%s) übersetzt: Jeder Satzteil wird an ihn gesendet, und die Übersetzung kommt Satzteil für Satzteil, einen Moment nach der Rede.",
 		"S_SUBS_TR_NONE": "Es ist kein Bearbeitungsmodell installiert, daher gibt es keine Übersetzung.",
 		"S_SUBS_TR_GO": "„Nachbearbeitung“ öffnen",
 		"S_SUBS_TR_SAME": "Die Übersetzungssprache ist dieselbe wie die Sprache der Rede: Es gibt nichts zu übersetzen.",
@@ -618,7 +618,6 @@ func init() {
 		"S_SUBS_FOLDER": "Ordner der Mitschriften",
 		"S_SUBS_WINDOW": "Untertitelfenster",
 		"S_SUBS_ROWS": "Textzeilen",
-		"S_SUBS_ROWS_SUB": "Mit Übersetzung wird das Fenster doppelt so hoch",
 		"S_SUBS_SIZE": "Textgröße",
 		"S_SUBS_SIZE_S": "Klein",
 		"S_SUBS_SIZE_M": "Mittel",
@@ -1149,7 +1148,7 @@ func init() {
 			"<table class=\"hopt\">" +
 			"<tr><td>Untertitel starten</td><td>Startet und beendet sie. Die Zeile daneben sagt, was gerade passiert: aus, Modell wird geladen, es wird zugehört oder die Erkennung startet neu. Dasselbe tun das Tray-Menü, ein eigenes Tastenkürzel und das Kreuz am Fenster.</td></tr>" +
 			"<tr><td>Sprache der Rede</td><td>Die Sprache dessen, was Sie hören, getrennt von der Diktiersprache. Das Modell ist das, das diese Sprache auf der Registerkarte „Sprachen & Modelle“ hat. Ein Streaming-Modell schreibt die Wörter schon beim Sprechen, die anderen jeden Satz nach seinem Ende. Ein Whisper-Modell braucht auf dem Prozessor viele Sekunden pro Satz, sein Text hinkt der Rede deutlich hinterher; aufgestaute Sätze gehen gemeinsam an das Modell und kommen als eine Zeile heraus.</td></tr>" +
-			"<tr><td>Übersetzung</td><td>Wiederholt jede fertige Zeile in der gewählten Sprache unter dem Original, in einer blasseren Farbe; das Fenster wird dafür doppelt so hoch. Übersetzt wird vom Bearbeitungsmodell: dem auf der Registerkarte „Nachbearbeitung“ installierten oder Ihrem eigenen Server für die Nachbearbeitung, wenn dort dieser gewählt ist – dann wird jede fertige Zeile an diesen Server gesendet. Ein kleines Modell übersetzt grob: Der Sinn kommt an, aber Wörter können danebenliegen; ein größeres Modell oder Ihr eigener Server übersetzt genauer. Die Originalzeile wartet nie auf ihre Übersetzung: Sie erscheint sofort, und die Übersetzung kommt darunter, sobald sie fertig ist. Auch die Mitschrift bekommt die Übersetzungen, jede mit der Zeit ihrer Zeile. Ohne Bearbeitungsmodell gibt es keine Übersetzung, und die Untertitel laufen wie bisher.</td></tr>" +
+			"<tr><td>Übersetzung</td><td>Zeigt im Fenster die Übersetzung statt des erkannten Textes, in der gewählten Sprache. Die Rede wird schon während des Sprechens in Satzteile geschnitten, und jeder Satzteil wird sofort übersetzt: Die Übersetzung erscheint einen Moment nach der Rede, Wort für Wort, so wie der erkannte Text, und das Fenster behält seine Textzeilen. Satzteile eines Redeabschnitts laufen als ein Absatz, nach einer Pause beginnt eine neue Zeile. Ein Satzteil, der nicht übersetzt werden konnte, wird so gezeigt, wie er gehört wurde, in einer blasseren Farbe. Übersetzt wird vom Bearbeitungsmodell: dem auf der Registerkarte „Nachbearbeitung“ installierten oder Ihrem eigenen Server für die Nachbearbeitung, wenn dort dieser gewählt ist – dann wird jeder Satzteil an diesen Server gesendet. Ein kleines Modell übersetzt grob: Der Sinn kommt an, aber Wörter können danebenliegen; ein größeres Modell oder Ihr eigener Server übersetzt genauer. Die Mitschrift bekommt jeden Satzteil und darunter seine Übersetzung. Ohne Bearbeitungsmodell gibt es keine Übersetzung, und die Untertitel laufen wie bisher.</td></tr>" +
 			"<tr><td>Tastenkürzel</td><td>Startet und beendet die Untertitel aus jedem Fenster. Es startet nie ein Diktat und darf kein anderes Kürzel wiederholen.</td></tr>" +
 			"<tr><td>Mitschrift speichern</td><td>Jeder Durchlauf schreibt eine Textdatei in den Ordner transcripts neben dem Programm: eine erste Zeile mit Datum, Sprache und Modell, dann jede fertige Zeile mit der Uhrzeit, zu der sie begann. Bis die erste Zeile fertig ist, wird nichts geschrieben.</td></tr>" +
 			"<tr><td>Untertitelfenster</td><td>Wie viele Textzeilen es zeigt und wie groß die Schrift ist. Jede fertige Zeile beginnt in einer neuen Zeile des Fensters. Das Fenster lässt sich mit der Maus verschieben; der Platz wird für jede Bildschirmauflösung gemerkt, „Zurück an den Standardplatz“ vergisst ihn.</td></tr>" +
@@ -1244,10 +1243,10 @@ func init() {
 		"S_SUBS_GO_MODELS": "Ouvrir « Langues et modèles »",
 		"S_SUBS_REMOTE": "La reconnaissance tourne sur un autre ordinateur : chaque phrase est envoyée à ce serveur.",
 		"S_SUBS_TR": "Traduction",
-		"S_SUBS_TR_SUB": "Chaque ligne terminée est répétée sous l'original dans cette langue",
+		"S_SUBS_TR_SUB": "La fenêtre affiche la traduction au lieu du texte reconnu",
 		"S_SUBS_TR_OFF": "Désactivée",
-		"S_SUBS_TR_LOCAL": "%s traduit : la traduction apparaît sous la ligne dès qu'elle est prête.",
-		"S_SUBS_TR_API": "Votre serveur de post-traitement (%s) traduit : chaque ligne lui est envoyée.",
+		"S_SUBS_TR_LOCAL": "%s traduit : la traduction arrive phrase par phrase, un instant après la parole.",
+		"S_SUBS_TR_API": "Votre serveur de post-traitement (%s) traduit : chaque phrase lui est envoyée, et la traduction arrive phrase par phrase, un instant après la parole.",
 		"S_SUBS_TR_NONE": "Aucun modèle d'édition n'est installé, il n'y aura donc pas de traduction.",
 		"S_SUBS_TR_GO": "Ouvrir « Post-traitement »",
 		"S_SUBS_TR_SAME": "La langue de traduction est la même que la langue parlée : il n'y a rien à traduire.",
@@ -1258,7 +1257,6 @@ func init() {
 		"S_SUBS_FOLDER": "Dossier des transcriptions",
 		"S_SUBS_WINDOW": "Fenêtre des sous-titres",
 		"S_SUBS_ROWS": "Lignes de texte",
-		"S_SUBS_ROWS_SUB": "Avec la traduction, la fenêtre est deux fois plus haute",
 		"S_SUBS_SIZE": "Taille du texte",
 		"S_SUBS_SIZE_S": "Petite",
 		"S_SUBS_SIZE_M": "Moyenne",
@@ -1789,7 +1787,7 @@ func init() {
 			"<table class=\"hopt\">" +
 			"<tr><td>Démarrer les sous-titres</td><td>Les démarre et les arrête. La ligne à côté dit ce qui se passe : arrêtés, chargement du modèle, à l'écoute ou redémarrage de la reconnaissance. Le menu de la zone de notification, un raccourci à eux et la croix de la fenêtre font de même.</td></tr>" +
 			"<tr><td>Langue parlée</td><td>La langue de ce que vous écoutez, distincte de la langue de dictée. Le modèle est celui que l'onglet « Langues et modèles » donne à cette langue. Un modèle en streaming écrit les mots au fil de la parole, les autres chaque phrase une fois celle-ci terminée. Un modèle Whisper a besoin de nombreuses secondes par phrase sur un processeur, son texte a donc un net retard sur la parole ; les phrases accumulées lui sont envoyées ensemble et ressortent en une seule ligne.</td></tr>" +
-			"<tr><td>Traduction</td><td>Répète chaque ligne terminée sous l'original dans la langue choisie, d'une couleur plus pâle ; la fenêtre devient pour cela deux fois plus haute. C'est le modèle d'édition qui traduit : celui installé dans l'onglet « Post-traitement », ou votre propre serveur de post-traitement s'il y est choisi — chaque ligne terminée est alors envoyée à ce serveur. Un petit modèle traduit grossièrement : le sens passe, mais des mots peuvent être inexacts ; un modèle plus grand ou votre propre serveur traduit plus exactement. La ligne d'origine n'attend jamais sa traduction : elle apparaît tout de suite, et la traduction vient dessous dès qu'elle est prête. La transcription reçoit aussi les traductions, chacune avec l'heure de sa ligne. Sans modèle d'édition, pas de traduction, et les sous-titres fonctionnent comme avant.</td></tr>" +
+			"<tr><td>Traduction</td><td>Affiche dans la fenêtre la traduction au lieu du texte reconnu, dans la langue choisie. La parole est découpée en phrases au fil de l'eau, et chaque phrase est traduite aussitôt : la traduction apparaît un instant après la parole, mot à mot, comme le texte reconnu, et la fenêtre garde son nombre de lignes. Les phrases d'un même passage s'enchaînent en un paragraphe, et une pause commence une nouvelle ligne. Une phrase qui n'a pas pu être traduite est affichée telle qu'elle a été entendue, d'une couleur plus pâle. C'est le modèle d'édition qui traduit : celui installé dans l'onglet « Post-traitement », ou votre propre serveur de post-traitement s'il y est choisi — chaque phrase est alors envoyée à ce serveur. Un petit modèle traduit grossièrement : le sens passe, mais des mots peuvent être inexacts ; un modèle plus grand ou votre propre serveur traduit plus exactement. La transcription reçoit chaque phrase avec sa traduction dessous. Sans modèle d'édition, pas de traduction, et les sous-titres fonctionnent comme avant.</td></tr>" +
 			"<tr><td>Raccourci clavier</td><td>Démarre et arrête les sous-titres depuis n'importe quelle fenêtre. Il ne lance jamais de dictée et ne peut pas reprendre un autre raccourci.</td></tr>" +
 			"<tr><td>Enregistrer la transcription</td><td>Chaque session écrit un fichier texte dans le dossier transcripts à côté du programme : une première ligne avec la date, la langue et le modèle, puis chaque ligne terminée avec l'heure à laquelle elle a commencé. Rien n'est écrit tant que la première ligne n'est pas terminée.</td></tr>" +
 			"<tr><td>Fenêtre des sous-titres</td><td>Combien de lignes de texte elle affiche et quelle taille ont les lettres. Chaque ligne terminée commence une nouvelle ligne de la fenêtre. La fenêtre se déplace à la souris ; l'emplacement est retenu pour chaque résolution d'écran, et « Remettre à l'emplacement par défaut » l'oublie.</td></tr>" +
@@ -1884,10 +1882,10 @@ func init() {
 		"S_SUBS_GO_MODELS": "Abrir «Idiomas y modelos»",
 		"S_SUBS_REMOTE": "El reconocimiento se hace en otro ordenador: cada frase se envía a ese servidor.",
 		"S_SUBS_TR": "Traducción",
-		"S_SUBS_TR_SUB": "Cada línea terminada se repite bajo el original en este idioma",
+		"S_SUBS_TR_SUB": "La ventana muestra la traducción en lugar del texto reconocido",
 		"S_SUBS_TR_OFF": "Desactivada",
-		"S_SUBS_TR_LOCAL": "%s traduce: la traducción aparece bajo la línea cuando está lista.",
-		"S_SUBS_TR_API": "Traduce tu servidor de posprocesado (%s): cada línea se envía a él.",
+		"S_SUBS_TR_LOCAL": "%s traduce: la traducción llega frase a frase, un momento después del habla.",
+		"S_SUBS_TR_API": "Traduce tu servidor de posprocesado (%s): cada frase se envía a él, y la traducción llega frase a frase, un momento después del habla.",
 		"S_SUBS_TR_NONE": "No hay ningún modelo editor instalado, así que no habrá traducción.",
 		"S_SUBS_TR_GO": "Abrir «Posprocesado»",
 		"S_SUBS_TR_SAME": "El idioma de la traducción es el mismo que el idioma del habla: no hay nada que traducir.",
@@ -1898,7 +1896,6 @@ func init() {
 		"S_SUBS_FOLDER": "Carpeta de transcripciones",
 		"S_SUBS_WINDOW": "Ventana de subtítulos",
 		"S_SUBS_ROWS": "Filas de texto",
-		"S_SUBS_ROWS_SUB": "Con traducción la ventana es el doble de alta",
 		"S_SUBS_SIZE": "Tamaño del texto",
 		"S_SUBS_SIZE_S": "Pequeño",
 		"S_SUBS_SIZE_M": "Mediano",
@@ -2429,7 +2426,7 @@ func init() {
 			"<table class=\"hopt\">" +
 			"<tr><td>Iniciar subtítulos</td><td>Los inicia y los detiene. La línea de al lado dice qué pasa: apagados, cargando el modelo, escuchando o reiniciando el reconocimiento. El menú de la bandeja, un atajo propio y la cruz de la ventana hacen lo mismo.</td></tr>" +
 			"<tr><td>Idioma del habla</td><td>El idioma de lo que escuchas, aparte del idioma de dictado. El modelo es el que la pestaña «Idiomas y modelos» da a ese idioma. Un modelo de streaming escribe las palabras a medida que se dicen; los demás, cada frase cuando termina. Un modelo Whisper necesita muchos segundos por frase en un procesador, así que su texto va muy por detrás del habla; las frases acumuladas le llegan juntas y salen como una sola línea.</td></tr>" +
-			"<tr><td>Traducción</td><td>Repite cada línea terminada bajo el original en el idioma que elijas, en un color más tenue; para ello la ventana se vuelve el doble de alta. Traduce el modelo editor: el instalado en la pestaña «Posprocesado» o tu propio servidor de posprocesado si es el elegido allí, y entonces cada línea terminada se envía a ese servidor. Un modelo pequeño traduce de forma aproximada: el sentido se entiende, pero algunas palabras pueden no ser exactas; un modelo más grande o tu propio servidor traduce con más precisión. La línea original nunca espera a su traducción: aparece al momento, y la traducción llega debajo cuando está lista. La transcripción también recibe las traducciones, cada una con la hora de su línea. Sin modelo editor no hay traducción, y los subtítulos funcionan como antes.</td></tr>" +
+			"<tr><td>Traducción</td><td>Muestra en la ventana la traducción en lugar del texto reconocido, en el idioma que elijas. El habla se corta en frases sobre la marcha, y cada frase se traduce al momento: la traducción aparece un momento después del habla, palabra a palabra, igual que el texto reconocido, y la ventana conserva sus filas de texto. Las frases de un mismo tramo de habla forman un párrafo, y una pausa empieza una fila nueva. Una frase que no se pudo traducir se muestra tal como se oyó, en un color más tenue. Traduce el modelo editor: el instalado en la pestaña «Posprocesado» o tu propio servidor de posprocesado si es el elegido allí, y entonces cada frase se envía a ese servidor. Un modelo pequeño traduce de forma aproximada: el sentido se entiende, pero algunas palabras pueden no ser exactas; un modelo más grande o tu propio servidor traduce con más precisión. La transcripción recibe cada frase con su traducción debajo. Sin modelo editor no hay traducción, y los subtítulos funcionan como antes.</td></tr>" +
 			"<tr><td>Atajo de teclado</td><td>Inicia y detiene los subtítulos desde cualquier ventana. Nunca empieza un dictado y no puede repetir otro atajo.</td></tr>" +
 			"<tr><td>Guardar la transcripción</td><td>Cada sesión escribe un archivo de texto en la carpeta transcripts junto al programa: una primera línea con la fecha, el idioma y el modelo, y luego cada línea terminada con la hora en que empezó. No se escribe nada hasta que la primera línea está terminada.</td></tr>" +
 			"<tr><td>Ventana de subtítulos</td><td>Cuántas filas de texto muestra y qué tamaño tienen las letras. Cada línea terminada empieza en una fila nueva. La ventana se mueve con el ratón; el lugar se recuerda para cada resolución de pantalla, y «Volver al lugar por defecto» lo olvida.</td></tr>" +
@@ -2524,10 +2521,10 @@ func init() {
 		"S_SUBS_GO_MODELS": "Apri «Lingue e modelli»",
 		"S_SUBS_REMOTE": "Il riconoscimento avviene su un altro computer: ogni frase viene inviata a quel server.",
 		"S_SUBS_TR": "Traduzione",
-		"S_SUBS_TR_SUB": "Ogni riga finita viene ripetuta sotto l'originale in questa lingua",
+		"S_SUBS_TR_SUB": "La finestra mostra la traduzione al posto del testo riconosciuto",
 		"S_SUBS_TR_OFF": "Disattivata",
-		"S_SUBS_TR_LOCAL": "%s traduce: la traduzione compare sotto la riga quando è pronta.",
-		"S_SUBS_TR_API": "Il tuo server di post-elaborazione (%s) traduce: ogni riga gli viene inviata.",
+		"S_SUBS_TR_LOCAL": "%s traduce: la traduzione arriva frase per frase, un attimo dopo il parlato.",
+		"S_SUBS_TR_API": "Il tuo server di post-elaborazione (%s) traduce: ogni frase gli viene inviata, e la traduzione arriva frase per frase, un attimo dopo il parlato.",
 		"S_SUBS_TR_NONE": "Nessun modello editor è installato, quindi non ci sarà traduzione.",
 		"S_SUBS_TR_GO": "Apri «Post-elaborazione»",
 		"S_SUBS_TR_SAME": "La lingua della traduzione è la stessa del parlato: non c'è nulla da tradurre.",
@@ -2538,7 +2535,6 @@ func init() {
 		"S_SUBS_FOLDER": "Cartella delle trascrizioni",
 		"S_SUBS_WINDOW": "Finestra dei sottotitoli",
 		"S_SUBS_ROWS": "Righe di testo",
-		"S_SUBS_ROWS_SUB": "Con la traduzione la finestra è alta il doppio",
 		"S_SUBS_SIZE": "Dimensione del testo",
 		"S_SUBS_SIZE_S": "Piccolo",
 		"S_SUBS_SIZE_M": "Medio",
@@ -3069,7 +3065,7 @@ func init() {
 			"<table class=\"hopt\">" +
 			"<tr><td>Avvia i sottotitoli</td><td>Li avvia e li ferma. La riga accanto dice cosa succede: spenti, caricamento del modello, in ascolto o riconoscimento in riavvio. Lo stesso fanno il menu nell'area di notifica, una scorciatoia tutta loro e la croce sulla finestra.</td></tr>" +
 			"<tr><td>Lingua del parlato</td><td>La lingua di ciò che ascolti, distinta dalla lingua di dettatura. Il modello è quello che la scheda «Lingue e modelli» assegna a quella lingua. Un modello in streaming scrive le parole mentre vengono dette, gli altri ogni frase dopo la sua fine. Un modello Whisper sul processore ha bisogno di molti secondi per frase, quindi il suo testo resta molto indietro rispetto al parlato; le frasi accumulate gli arrivano insieme ed escono come una sola riga.</td></tr>" +
-			"<tr><td>Traduzione</td><td>Ripete ogni riga finita sotto l'originale nella lingua scelta, con un colore più tenue; per questo la finestra diventa alta il doppio. A tradurre è il modello editor: quello installato nella scheda «Post-elaborazione», oppure il tuo server di post-elaborazione se è quello scelto lì, e allora ogni riga finita viene inviata a quel server. Un modello piccolo traduce in modo approssimativo: il senso arriva, ma le parole possono essere imprecise; un modello più grande o il tuo server traduce in modo più esatto. La riga originale non aspetta mai la sua traduzione: compare subito, e la traduzione arriva sotto quando è pronta. Anche la trascrizione riceve le traduzioni, ciascuna con l'ora della sua riga. Senza modello editor non c'è traduzione, e i sottotitoli funzionano come prima.</td></tr>" +
+			"<tr><td>Traduzione</td><td>Mostra nella finestra la traduzione al posto del testo riconosciuto, nella lingua scelta. Il parlato viene tagliato in frasi mentre procede, e ogni frase viene tradotta subito: la traduzione compare un attimo dopo il parlato, parola per parola, come il testo riconosciuto, e la finestra mantiene le sue righe di testo. Le frasi di uno stesso tratto di parlato scorrono come un unico paragrafo, e una pausa inizia una riga nuova. Una frase che non è stato possibile tradurre viene mostrata così come è stata sentita, con un colore più tenue. A tradurre è il modello editor: quello installato nella scheda «Post-elaborazione», oppure il tuo server di post-elaborazione se è quello scelto lì, e allora ogni frase viene inviata a quel server. Un modello piccolo traduce in modo approssimativo: il senso arriva, ma le parole possono essere imprecise; un modello più grande o il tuo server traduce in modo più esatto. La trascrizione riceve ogni frase con la sua traduzione sotto. Senza modello editor non c'è traduzione, e i sottotitoli funzionano come prima.</td></tr>" +
 			"<tr><td>Scorciatoia da tastiera</td><td>Avvia e ferma i sottotitoli da qualsiasi finestra. Non avvia mai una dettatura e non può ripetere un'altra scorciatoia.</td></tr>" +
 			"<tr><td>Salva la trascrizione</td><td>Ogni sessione scrive un file di testo nella cartella transcripts accanto al programma: una prima riga con data, lingua e modello, poi ogni riga finita con l'ora in cui è cominciata. Finché la prima riga non è finita, non viene scritto nulla.</td></tr>" +
 			"<tr><td>Finestra dei sottotitoli</td><td>Quante righe di testo mostra e quanto sono grandi le lettere. Ogni riga finita comincia su una nuova riga della finestra. La finestra si sposta con il mouse; la posizione viene ricordata per ogni risoluzione dello schermo, e «Riporta alla posizione predefinita» la dimentica.</td></tr>" +
@@ -3164,10 +3160,10 @@ func init() {
 		"S_SUBS_GO_MODELS": "Otwórz „Języki i modele”",
 		"S_SUBS_REMOTE": "Rozpoznawanie działa na innym komputerze: każde zdanie jest wysyłane na ten serwer.",
 		"S_SUBS_TR": "Tłumaczenie",
-		"S_SUBS_TR_SUB": "Każdy gotowy wiersz jest powtarzany pod oryginałem w tym języku",
+		"S_SUBS_TR_SUB": "Okno pokazuje tłumaczenie zamiast rozpoznanego tekstu",
 		"S_SUBS_TR_OFF": "Wyłączone",
-		"S_SUBS_TR_LOCAL": "Tłumaczy %s: tłumaczenie pojawia się pod wierszem, gdy jest gotowe.",
-		"S_SUBS_TR_API": "Tłumaczy twój serwer obróbki końcowej (%s): każdy wiersz jest na niego wysyłany.",
+		"S_SUBS_TR_LOCAL": "Tłumaczy %s: tłumaczenie pojawia się fraza po frazie, chwilę po mowie.",
+		"S_SUBS_TR_API": "Tłumaczy twój serwer obróbki końcowej (%s): każda fraza jest na niego wysyłana, a tłumaczenie pojawia się fraza po frazie, chwilę po mowie.",
 		"S_SUBS_TR_NONE": "Nie zainstalowano modelu redaktora, więc tłumaczenia nie będzie.",
 		"S_SUBS_TR_GO": "Otwórz „Obróbka końcowa”",
 		"S_SUBS_TR_SAME": "Język tłumaczenia jest taki sam jak język mowy: nie ma czego tłumaczyć.",
@@ -3178,7 +3174,6 @@ func init() {
 		"S_SUBS_FOLDER": "Folder transkrypcji",
 		"S_SUBS_WINDOW": "Okno napisów",
 		"S_SUBS_ROWS": "Wiersze tekstu",
-		"S_SUBS_ROWS_SUB": "Z tłumaczeniem okno jest dwa razy wyższe",
 		"S_SUBS_SIZE": "Rozmiar tekstu",
 		"S_SUBS_SIZE_S": "Mały",
 		"S_SUBS_SIZE_M": "Średni",
@@ -3709,7 +3704,7 @@ func init() {
 			"<table class=\"hopt\">" +
 			"<tr><td>Włącz napisy</td><td>Włącza je i wyłącza. Wiersz obok mówi, co się dzieje: wyłączone, wczytywanie modelu, nasłuch albo ponowne uruchamianie rozpoznawania. To samo robią menu w zasobniku, własny skrót klawiszowy i krzyżyk na oknie.</td></tr>" +
 			"<tr><td>Język mowy</td><td>Język tego, czego słuchasz, osobno od języka dyktowania. Model to ten, który zakładka „Języki i modele” daje temu językowi. Model strumieniowy pisze słowa w trakcie mówienia, pozostałe każde zdanie po jego końcu. Model Whisper na procesorze potrzebuje wielu sekund na zdanie, więc jego tekst mocno spóźnia się względem mowy; zaległe zdania trafiają do niego razem i wychodzą jako jeden wiersz.</td></tr>" +
-			"<tr><td>Tłumaczenie</td><td>Powtarza każdy gotowy wiersz pod oryginałem w wybranym języku, bledszym kolorem; okno staje się wtedy dwa razy wyższe. Tłumaczy model redaktor: ten zainstalowany na zakładce „Obróbka końcowa” albo twój własny serwer obróbki końcowej, jeśli to on jest tam wybrany — wtedy każdy gotowy wiersz trafia na ten serwer. Mały model tłumaczy z grubsza: sens jest zrozumiały, ale słowa bywają nietrafione; większy model albo twój własny serwer tłumaczy dokładniej. Oryginalny wiersz nigdy nie czeka na tłumaczenie: pojawia się od razu, a tłumaczenie przychodzi pod nim, gdy jest gotowe. Transkrypcja też dostaje tłumaczenia, każde z czasem swojego wiersza. Bez modelu redaktora nie ma tłumaczenia, a napisy działają jak dotąd.</td></tr>" +
+			"<tr><td>Tłumaczenie</td><td>Pokazuje w oknie tłumaczenie zamiast rozpoznanego tekstu, w wybranym języku. Mowa jest cięta na frazy na bieżąco, a każda fraza od razu idzie do tłumaczenia: tłumaczenie pojawia się chwilę po mowie, słowo po słowie, tak jak rozpoznany tekst, a okno zachowuje swoją liczbę wierszy tekstu. Frazy jednego odcinka mowy płyną jednym akapitem, a po pauzie zaczyna się nowy wiersz. Fraza, której nie udało się przetłumaczyć, jest pokazywana tak, jak została usłyszana, bledszym kolorem. Tłumaczy model redaktor: ten zainstalowany na zakładce „Obróbka końcowa” albo twój własny serwer obróbki końcowej, jeśli to on jest tam wybrany — wtedy każda fraza trafia na ten serwer. Mały model tłumaczy z grubsza: sens jest zrozumiały, ale słowa bywają nietrafione; większy model albo twój własny serwer tłumaczy dokładniej. Transkrypcja dostaje każdą frazę, a pod nią jej tłumaczenie. Bez modelu redaktora nie ma tłumaczenia, a napisy działają jak dotąd.</td></tr>" +
 			"<tr><td>Skrót klawiszowy</td><td>Włącza i wyłącza napisy z każdego okna. Nigdy nie zaczyna dyktowania i nie może powtarzać innego skrótu.</td></tr>" +
 			"<tr><td>Zapisuj transkrypcję</td><td>Każde uruchomienie zapisuje plik tekstowy w folderze transcripts obok programu: pierwszy wiersz z datą, językiem i modelem, potem każdy gotowy wiersz z godziną, o której się zaczął. Dopóki pierwszy wiersz nie jest gotowy, nic nie jest zapisywane.</td></tr>" +
 			"<tr><td>Okno napisów</td><td>Ile wierszy tekstu pokazuje i jak duże są litery. Każdy gotowy wiersz zaczyna się w nowym wierszu okna. Okno przesuwa się myszą; miejsce jest zapamiętywane dla każdej rozdzielczości ekranu, a „Przywróć domyślne miejsce” je zapomina.</td></tr>" +
@@ -3919,10 +3914,10 @@ func init() {
 		"S_SUBS_GO_MODELS": "Відкрити «Мови і моделі»",
 		"S_SUBS_REMOTE": "Розпізнавання йде на іншому комп'ютері: кожна фраза надсилається на цей сервер.",
 		"S_SUBS_TR": "Переклад",
-		"S_SUBS_TR_SUB": "Кожен завершений рядок повторюється під оригіналом цією мовою",
+		"S_SUBS_TR_SUB": "Вікно показує переклад замість розпізнаного тексту",
 		"S_SUBS_TR_OFF": "Вимкнено",
-		"S_SUBS_TR_LOCAL": "Перекладає %s: переклад з'являється під рядком, коли він готовий.",
-		"S_SUBS_TR_API": "Перекладає ваш сервер постобробки (%s): кожен рядок надсилається на нього.",
+		"S_SUBS_TR_LOCAL": "Перекладає %s: переклад іде фраза за фразою, за мить після мовлення.",
+		"S_SUBS_TR_API": "Перекладає ваш сервер постобробки (%s): кожна фраза надсилається на нього, і переклад іде фраза за фразою, за мить після мовлення.",
 		"S_SUBS_TR_NONE": "Модель-редактор не встановлена, тому перекладу не буде.",
 		"S_SUBS_TR_GO": "Відкрити «Постобробку»",
 		"S_SUBS_TR_SAME": "Мова перекладу збігається з мовою мовлення: перекладати нічого.",
@@ -3933,7 +3928,6 @@ func init() {
 		"S_SUBS_FOLDER": "Тека розшифровок",
 		"S_SUBS_WINDOW": "Вікно субтитрів",
 		"S_SUBS_ROWS": "Рядків тексту",
-		"S_SUBS_ROWS_SUB": "З перекладом вікно стає вдвічі вищим",
 		"S_SUBS_SIZE": "Розмір тексту",
 		"S_SUBS_SIZE_S": "Дрібний",
 		"S_SUBS_SIZE_M": "Середній",
@@ -4465,7 +4459,7 @@ func init() {
 			"<table class=\"hopt\">" +
 			"<tr><td>Запустити субтитри</td><td>Запускає і зупиняє їх. Рядок поруч каже, що відбувається: вимкнено, завантажується модель, триває прослуховування або розпізнавання перезапускається. Те саме роблять меню в треї, власне сполучення клавіш і хрестик на вікні.</td></tr>" +
 			"<tr><td>Мова мовлення</td><td>Мова того, що ви слухаєте, окремо від мови диктування. Модель — та, яку цій мові дано на вкладці «Мови і моделі». Потокова модель пише слова під час мовлення, решта — кожну фразу після її кінця. Моделі Whisper на процесорі потрібно багато секунд на фразу, і її текст сильно відстає від мовлення; фрази, що накопичилися, йдуть до неї разом і виходять одним рядком.</td></tr>" +
-			"<tr><td>Переклад</td><td>Повторює кожен завершений рядок під оригіналом вибраною мовою, тьмянішим кольором; вікно для цього стає вдвічі вищим. Перекладає модель-редактор: та, що встановлена на вкладці «Постобробка», або ваш власний сервер постобробки, якщо там вибрано його, — тоді кожен завершений рядок надсилається на цей сервер. Невелика модель перекладає грубо: зміст зрозумілий, але слова бувають неточними; більша модель або ваш сервер перекладають точніше. Початковий рядок ніколи не чекає на переклад: він з'являється одразу, а переклад стає під ним, коли готовий. До розшифровки переклади теж потрапляють, кожен із часом свого рядка. Без моделі-редактора перекладу немає, і субтитри працюють як раніше.</td></tr>" +
+			"<tr><td>Переклад</td><td>Показує у вікні переклад замість розпізнаного тексту, вибраною мовою. Мовлення ріжеться на фрази просто по ходу, і кожна фраза одразу йде на переклад: він з'являється за мить після мовлення, слово за словом, так само як розпізнаний текст; у вікна лишається його кількість рядків. Фрази одного відрізка мовлення йдуть одним абзацом, а після паузи починається новий рядок. Фраза, яку не вдалося перекласти, показується так, як її почуто, тьмянішим кольором. Перекладає модель-редактор: та, що встановлена на вкладці «Постобробка», або ваш власний сервер постобробки, якщо там вибрано його, — тоді кожна фраза надсилається на цей сервер. Невелика модель перекладає грубо: зміст зрозумілий, але слова бувають неточними; більша модель або ваш сервер перекладають точніше. До розшифровки потрапляє кожна фраза, а під нею її переклад. Без моделі-редактора перекладу немає, і субтитри працюють як раніше.</td></tr>" +
 			"<tr><td>Сполучення клавіш</td><td>Запускає і зупиняє субтитри з будь-якого вікна. Диктування воно не починає і не може повторювати інше сполучення.</td></tr>" +
 			"<tr><td>Зберігати розшифровку</td><td>Кожен запуск пише текстовий файл у теку transcripts поруч із програмою: перший рядок із датою, мовою і моделлю, далі кожен готовий рядок із часом, коли він почався. Поки перший рядок не готовий, нічого не пишеться.</td></tr>" +
 			"<tr><td>Вікно субтитрів</td><td>Скільки рядків тексту воно показує і наскільки великі літери. Кожен готовий рядок починається з нового рядка вікна. Вікно пересувається мишею; місце запам'ятовується для кожної роздільності екрана, а «Повернути на типове місце» його забуває.</td></tr>" +

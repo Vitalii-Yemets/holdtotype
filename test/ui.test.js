@@ -1779,9 +1779,9 @@ function check(name, actual, expected) {
   await change(sv("subtitles_translate"), "de");
   check("choosing a language saves it", w.lastSaveForm.subtitles_translate, "de");
   await setTr("local", "qwen2.5-1.5b-instruct-q4_k_m");
-  check("a local editor model names itself and nothing else shows", [trLines(), sv("subs_tr_hint").textContent], [[true, false, false], "qwen2.5-1.5b-instruct-q4_k_m translates: the translation appears under the line when it is ready."]);
+  check("a local editor model names itself and nothing else shows", [trLines(), sv("subs_tr_hint").textContent], [[true, false, false], "qwen2.5-1.5b-instruct-q4_k_m translates: the translation comes phrase by phrase, a moment after the speech."]);
   await setTr("api", "gpt-4o-mini");
-  check("the user's server says every line goes to it", [trLines(), sv("subs_tr_hint").textContent], [[true, false, false], "Your post-processing server (gpt-4o-mini) translates: every line is sent to it."]);
+  check("the user's server says every phrase goes to it", [trLines(), sv("subs_tr_hint").textContent], [[true, false, false], "Your post-processing server (gpt-4o-mini) translates: every phrase is sent to it, and the translation comes phrase by phrase, a moment after the speech."]);
   await setTr("", "");
   check("without a translator only the warning with its button shows", trLines(), [false, true, false]);
   check("the warning is the no-model sentence", sv("subs_tr_none").textContent, "S_SUBS_TR_NONE");
@@ -1812,7 +1812,7 @@ function check(name, actual, expected) {
   check("a line below brings the divider back", sv("subtitles_translate").closest(".row").classList.contains("noline"), false);
   await change(sv("subtitles_translate"), "");
   check("the search finds the translation row", w.searchMatches("s_subs_tr_sub").some((el) => el.closest("#subs_tr_card")), true);
-  check("the rows of text say the window doubles with translation", sv("subtitles_lines").closest(".row").querySelector(".sub").textContent, "S_SUBS_ROWS_SUB");
+  check("the rows of text have no sub-line, the window keeps its height with translation", sv("subtitles_lines").closest(".row").querySelector(".sub"), null);
 
   const postCard = () => d.querySelectorAll("#state_models .stcard")[1];
   const postRow = () => [postCard().querySelector(".stnm").textContent, postCard().querySelector(".stnm .led").classList.contains("on")];
