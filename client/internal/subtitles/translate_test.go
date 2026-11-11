@@ -8,17 +8,26 @@ import (
 	"time"
 )
 
+func noKeys(rows []Row) []Row {
+	out := make([]Row, 0, len(rows))
+	for _, r := range rows {
+		r.Key = 0
+		out = append(out, r)
+	}
+	return out
+}
+
 func TestRowsOfLinesAndLiveText(t *testing.T) {
 	b := NewBoard(10)
 	b.Add(time.Now(), "one")
 	b.Add(time.Now(), "two")
-	want := []Row{{RowLine, "one"}, {RowLine, "two"}}
-	if got := b.Tail(500).Rows(); !reflect.DeepEqual(got, want) {
+	want := []Row{{Kind: RowLine, Text: "one"}, {Kind: RowLine, Text: "two"}}
+	if got := noKeys(b.Tail(500).Rows()); !reflect.DeepEqual(got, want) {
 		t.Fatalf("rows %+v", got)
 	}
 	b.SetLive("thr")
-	want = append(want, Row{RowLive, "thr"})
-	if got := b.Tail(500).Rows(); !reflect.DeepEqual(got, want) {
+	want = append(want, Row{Kind: RowLive, Text: "thr"})
+	if got := noKeys(b.Tail(500).Rows()); !reflect.DeepEqual(got, want) {
 		t.Fatalf("rows with live text %+v", got)
 	}
 	if got := NewBoard(3).Tail(100).Rows(); len(got) != 0 {
@@ -32,49 +41,49 @@ func TestPiecesOfOneParagraphFlowAsOneRow(t *testing.T) {
 	b.AddPiece(2, false, "thanks for joining.")
 	b.SetPiece(1, "Доброе утро всем,", PieceDone)
 	b.SetPiece(2, "спасибо, что", PieceRunning)
-	want := []Row{{RowPiece, "Доброе утро всем, спасибо, что"}}
-	if got := b.TranslationRows(500); !reflect.DeepEqual(got, want) {
+	want := []Row{{Kind: RowPiece, Text: "Доброе утро всем, спасибо, что"}}
+	if got := noKeys(b.TranslationRows(500)); !reflect.DeepEqual(got, want) {
 		t.Fatalf("rows %+v", got)
 	}
 	b.SetPiece(2, "спасибо, что пришли.", PieceDone)
 	b.AddPiece(3, true, "Let us start.")
 	b.SetPiece(3, "Начнём.", PieceDone)
-	want = []Row{{RowPiece, "Доброе утро всем, спасибо, что пришли."}, {RowPiece, "Начнём."}}
-	if got := b.TranslationRows(500); !reflect.DeepEqual(got, want) {
+	want = []Row{{Kind: RowPiece, Text: "Доброе утро всем, спасибо, что пришли."}, {Kind: RowPiece, Text: "Начнём."}}
+	if got := noKeys(b.TranslationRows(500)); !reflect.DeepEqual(got, want) {
 		t.Fatalf("a paragraph did not start a row: %+v", got)
 	}
 }
 
 func TestPendingSpeechEndsTheTextWithAnEllipsis(t *testing.T) {
 	b := NewBoard(50)
-	if got := b.TranslationRows(500); len(got) != 0 {
+	if got := noKeys(b.TranslationRows(500)); len(got) != 0 {
 		t.Fatalf("an empty board %+v", got)
 	}
 	b.SetHearing(true)
-	if got := b.TranslationRows(500); !reflect.DeepEqual(got, []Row{{RowPiece, "…"}}) {
+	if got := noKeys(b.TranslationRows(500)); !reflect.DeepEqual(got, []Row{{Kind: RowPiece, Text: "…"}}) {
 		t.Fatalf("hearing with nothing shown %+v", got)
 	}
 	b.SetHearing(false)
 	b.AddPiece(1, true, "first piece")
-	if got := b.TranslationRows(500); !reflect.DeepEqual(got, []Row{{RowPiece, "…"}}) {
+	if got := noKeys(b.TranslationRows(500)); !reflect.DeepEqual(got, []Row{{Kind: RowPiece, Text: "…"}}) {
 		t.Fatalf("a waiting piece %+v", got)
 	}
 	b.SetPiece(1, "", PieceRunning)
-	if got := b.TranslationRows(500); !reflect.DeepEqual(got, []Row{{RowPiece, "…"}}) {
+	if got := noKeys(b.TranslationRows(500)); !reflect.DeepEqual(got, []Row{{Kind: RowPiece, Text: "…"}}) {
 		t.Fatalf("a running piece without text %+v", got)
 	}
 	b.SetPiece(1, "erstes", PieceRunning)
-	if got := b.TranslationRows(500); !reflect.DeepEqual(got, []Row{{RowPiece, "erstes"}}) {
+	if got := noKeys(b.TranslationRows(500)); !reflect.DeepEqual(got, []Row{{Kind: RowPiece, Text: "erstes"}}) {
 		t.Fatalf("a running piece with text %+v", got)
 	}
 	b.SetPiece(1, "erstes Stück", PieceDone)
 	b.AddPiece(2, false, "second piece")
-	if got := b.TranslationRows(500); !reflect.DeepEqual(got, []Row{{RowPiece, "erstes Stück …"}}) {
+	if got := noKeys(b.TranslationRows(500)); !reflect.DeepEqual(got, []Row{{Kind: RowPiece, Text: "erstes Stück …"}}) {
 		t.Fatalf("a done piece and a waiting one %+v", got)
 	}
 	b.SetPiece(2, "zweites", PieceDone)
 	b.SetHearing(true)
-	if got := b.TranslationRows(500); !reflect.DeepEqual(got, []Row{{RowPiece, "erstes Stück zweites …"}}) {
+	if got := noKeys(b.TranslationRows(500)); !reflect.DeepEqual(got, []Row{{Kind: RowPiece, Text: "erstes Stück zweites …"}}) {
 		t.Fatalf("hearing after done pieces %+v", got)
 	}
 }
@@ -87,15 +96,15 @@ func TestFailedPieceIsShownAsHeardOnItsOwnRow(t *testing.T) {
 	b.SetPiece(1, "eins zwei", PieceDone)
 	b.SetPiece(2, "", PieceFailed)
 	b.SetPiece(3, "sechs sieben", PieceDone)
-	want := []Row{{RowPiece, "eins zwei"}, {RowHeard, "three four five"}, {RowPiece, "sechs sieben"}}
-	if got := b.TranslationRows(500); !reflect.DeepEqual(got, want) {
+	want := []Row{{Kind: RowPiece, Text: "eins zwei"}, {Kind: RowHeard, Text: "three four five"}, {Kind: RowPiece, Text: "sechs sieben"}}
+	if got := noKeys(b.TranslationRows(500)); !reflect.DeepEqual(got, want) {
 		t.Fatalf("rows %+v", got)
 	}
 	b.AddPiece(4, false, "eight")
 	b.SetPiece(4, "", PieceFailed)
 	b.SetHearing(true)
-	want = append(want, Row{RowHeard, "eight …"})
-	if got := b.TranslationRows(500); !reflect.DeepEqual(got, want) {
+	want = append(want, Row{Kind: RowHeard, Text: "eight …"})
+	if got := noKeys(b.TranslationRows(500)); !reflect.DeepEqual(got, want) {
 		t.Fatalf("rows ending with a failed piece %+v", got)
 	}
 }
@@ -111,8 +120,8 @@ func TestJoinedPiecesBecomeOne(t *testing.T) {
 	b.SetPiece(3, "lost", PieceDone)
 	b.SetPiece(2, "", PieceFailed)
 	b.SetPiece(4, "D", PieceDone)
-	want := []Row{{RowPiece, "A"}, {RowHeard, "beta gamma"}, {RowPiece, "D"}}
-	if got := b.TranslationRows(500); !reflect.DeepEqual(got, want) {
+	want := []Row{{Kind: RowPiece, Text: "A"}, {Kind: RowHeard, Text: "beta gamma"}, {Kind: RowPiece, Text: "D"}}
+	if got := noKeys(b.TranslationRows(500)); !reflect.DeepEqual(got, want) {
 		t.Fatalf("rows %+v", got)
 	}
 	if b.SetPiece(3, "x", PieceDone) || b.SetPiece(99, "x", PieceDone) {
@@ -137,10 +146,10 @@ func TestTranslationRowsKeepTheTailThatFits(t *testing.T) {
 	if n > 20 {
 		t.Fatalf("%d runes in %+v", n, rows)
 	}
-	if got := b.TranslationRows(13); !reflect.DeepEqual(got, []Row{{RowPiece, "neu eins zwei"}}) {
+	if got := noKeys(b.TranslationRows(13)); !reflect.DeepEqual(got, []Row{{Kind: RowPiece, Text: "neu eins zwei"}}) {
 		t.Fatalf("an exact fit %+v", got)
 	}
-	if got := b.TranslationRows(0); len(got) != 0 {
+	if got := noKeys(b.TranslationRows(0)); len(got) != 0 {
 		t.Fatalf("no room %+v", got)
 	}
 }
@@ -151,8 +160,8 @@ func TestBoardKeepsAFewPieces(t *testing.T) {
 		b.AddPiece(i, true, "x")
 		b.SetPiece(i, string(rune('a'+i)), PieceDone)
 	}
-	want := []Row{{RowPiece, "d"}, {RowPiece, "e"}, {RowPiece, "f"}}
-	if got := b.TranslationRows(500); !reflect.DeepEqual(got, want) {
+	want := []Row{{Kind: RowPiece, Text: "d"}, {Kind: RowPiece, Text: "e"}, {Kind: RowPiece, Text: "f"}}
+	if got := noKeys(b.TranslationRows(500)); !reflect.DeepEqual(got, want) {
 		t.Fatalf("rows %+v", got)
 	}
 	if b.SetPiece(1, "y", PieceDone) {

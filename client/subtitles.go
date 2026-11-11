@@ -328,11 +328,12 @@ func (r *subRun) setPhase(p int) { r.phase.Store(int32(p)) }
 
 func (r *subRun) windowPhase() int { return int(r.phase.Load()) }
 
-func (r *subRun) windowRows() []subtitles.Row {
-	if r.trShown.Load() {
-		return r.board.TranslationRows(swTextRunes)
-	}
-	return r.board.Tail(swTextRunes).Rows()
+func (r *subRun) windowLines() []subtitles.Row {
+	return r.board.Tail(swKeepRunes).Rows()
+}
+
+func (r *subRun) windowPieces() ([]subtitles.PieceView, bool) {
+	return r.board.Pieces()
 }
 
 func (r *subRun) refreshShown() {

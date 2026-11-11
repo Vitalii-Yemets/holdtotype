@@ -26,9 +26,19 @@ const (
 	RowHeard
 )
 
+const TailKey = 1 << 30
+
 type Row struct {
 	Kind int
 	Text string
+	Key  int
+}
+
+type PieceView struct {
+	Seq   int
+	Para  bool
+	State int
+	Text  string
 }
 
 const (
@@ -149,11 +159,11 @@ func (v View) Rows() []Row {
 	rows := make([]Row, 0, len(v.Lines)+1)
 	for _, ln := range v.Lines {
 		if ln.Text != "" {
-			rows = append(rows, Row{Kind: RowLine, Text: ln.Text})
+			rows = append(rows, Row{Kind: RowLine, Text: ln.Text, Key: ln.ID})
 		}
 	}
 	if v.Live != "" {
-		rows = append(rows, Row{Kind: RowLive, Text: v.Live})
+		rows = append(rows, Row{Kind: RowLive, Text: v.Live, Key: TailKey})
 	}
 	return rows
 }
@@ -215,46 +225,75 @@ func (b *Board) SetHearing(on bool) {
 	b.mu.Unlock()
 }
 
-func (b *Board) TranslationRows(maxRunes int) []Row {
+func (b *Board) Pieces() ([]PieceView, bool) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	if maxRunes <= 0 {
-		return nil
-	}
-	var rows []Row
-	pending := b.hearing
-	breakNext := true
+	out := make([]PieceView, 0, len(b.pieces))
 	for _, pc := range b.pieces {
-		if pc.para {
+		text := pc.text
+		if pc.state == PieceFailed {
+			text = pc.source
+		}
+		out = append(out, PieceView{Seq: pc.seq, Para: pc.para, State: pc.state, Text: text})
+	}
+	return out, b.hearing
+}
+
+func pieceRows(views []PieceView, text func(int) string, pending bool) []Row {
+	var rows []Row
+	breakNext := true
+	for i, pc := range views {
+		if pc.Para {
 			breakNext = true
 		}
-		switch {
-		case pc.state == PieceWaiting, pc.state == PieceRunning && pc.text == "":
-			pending = true
-			continue
-		case pc.state == PieceFailed:
-			if pc.source != "" {
-				rows = append(rows, Row{Kind: RowHeard, Text: pc.source})
+		t := text(i)
+		if pc.State == PieceFailed {
+			if t != "" {
+				rows = append(rows, Row{Kind: RowHeard, Text: t, Key: pc.Seq})
 			}
 			breakNext = true
 			continue
-		case pc.text == "":
+		}
+		if t == "" {
 			continue
 		}
 		if breakNext || len(rows) == 0 || rows[len(rows)-1].Kind != RowPiece {
-			rows = append(rows, Row{Kind: RowPiece, Text: pc.text})
+			rows = append(rows, Row{Kind: RowPiece, Text: t, Key: pc.Seq})
 		} else {
-			rows[len(rows)-1].Text += " " + pc.text
+			rows[len(rows)-1].Text += " " + t
 		}
 		breakNext = false
 	}
 	if pending {
 		if len(rows) == 0 {
-			rows = append(rows, Row{Kind: RowPiece, Text: "…"})
+			rows = append(rows, Row{Kind: RowPiece, Text: "…", Key: TailKey})
 		} else {
 			rows[len(rows)-1].Text += " …"
 		}
 	}
+	return rows
+}
+
+func waitingView(p PieceView) bool {
+	return p.State == PieceWaiting || p.State == PieceRunning && p.Text == ""
+}
+
+func (b *Board) TranslationRows(maxRunes int) []Row {
+	if maxRunes <= 0 {
+		return nil
+	}
+	views, pending := b.Pieces()
+	for _, p := range views {
+		if waitingView(p) {
+			pending = true
+		}
+	}
+	rows := pieceRows(views, func(i int) string {
+		if waitingView(views[i]) {
+			return ""
+		}
+		return views[i].Text
+	}, pending)
 	budget := maxRunes
 	start := len(rows)
 	for start > 0 && budget > 0 {

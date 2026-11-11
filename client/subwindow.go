@@ -30,6 +30,7 @@ const (
 	wmSwSet         = 0x0400 + 20
 	wmSwLayout      = 0x0400 + 21
 	wmMouseActivate = 0x0021
+	wmMouseWheel    = 0x020A
 	wmCaptureLost   = 0x0215
 	wmPrintClient   = 0x0318
 	maNoActivate    = 3
@@ -46,30 +47,101 @@ const (
 	swSideGap   = 24
 	swGripDIP   = 6
 	swAlpha     = 235
-	swTextRunes = 900
 	swCloseDIP  = 40
+	swWheelRows = 3
+	swFastTick  = 50
+	swSlowTick  = 100
+	swKeepRunes = 1 << 20
 )
 
 var swSizes = map[string]int32{"s": 15, "m": 19, "l": 25}
 
+var procGetTextExtentPoint32W = gdi32.NewProc("GetTextExtentPoint32W")
+
 type subWindowSource interface {
 	windowPhase() int
-	windowRows() []subtitles.Row
 	windowHeader() (bool, string, string)
+	windowLines() []subtitles.Row
+	windowPieces() ([]subtitles.PieceView, bool)
+}
+
+const (
+	partHeard = iota
+	partTranslation
+)
+
+type swLine struct {
+	text string
+	kind int
+	ref  subwin.LineRef
 }
 
 type subPart struct {
-	rows     func() []subtitles.Row
+	kind     int
+	src      subWindowSource
+	reveal   *subtitles.Revealer
+	scroll   subwin.Scroll
 	area     rect
 	dim      bool
 	lastRows []subtitles.Row
+	busy     bool
+	refs     []subwin.LineRef
+	visible  int
+	wheel    int
+}
+
+func newSubPart(kind int, src subWindowSource) *subPart {
+	p := &subPart{kind: kind, src: src}
+	if kind == partTranslation {
+		p.reveal = subtitles.NewRevealer()
+	}
+	return p
 }
 
 func (p *subPart) fetch() []subtitles.Row {
-	if p.rows == nil {
+	if p.src == nil {
 		return nil
 	}
-	return p.rows()
+	if p.kind == partTranslation {
+		views, hearing := p.src.windowPieces()
+		rows, busy := p.reveal.Rows(views, hearing, time.Now())
+		p.busy = busy
+		return rows
+	}
+	p.busy = false
+	return p.src.windowLines()
+}
+
+func (p *subPart) contains(y int32) bool {
+	return y >= p.area.Top && y < p.area.Bottom
+}
+
+var (
+	swWrapMu    sync.Mutex
+	swWrapCache = map[string][]string{}
+)
+
+func swWrap(hdc, font uintptr, text string, width int32) []string {
+	key := fmt.Sprintf("%d/%d/%s", font, width, text)
+	swWrapMu.Lock()
+	if lines, ok := swWrapCache[key]; ok {
+		swWrapMu.Unlock()
+		return lines
+	}
+	swWrapMu.Unlock()
+	lines := subwin.Wrap(text, width, func(s string) int32 {
+		u, _ := windows.UTF16FromString(s)
+		var size struct{ cx, cy int32 }
+		procGetTextExtentPoint32W.Call(hdc, uintptr(unsafe.Pointer(&u[0])), uintptr(len(u)-1), uintptr(unsafe.Pointer(&size)))
+		return size.cx
+	})
+	swWrapMu.Lock()
+	if len(swWrapCache) > 4000 {
+		swWrapCache = map[string][]string{}
+	}
+	swWrapCache[key] = lines
+	swWrapMu.Unlock()
+	return lines
 }
 
 type swHeader struct {
@@ -113,6 +185,9 @@ type subWindow struct {
 	lineH     int32
 	dpi       int32
 	parts     []*subPart
+	partsTr   bool
+	followAt  rect
+	tick      int
 	lastPhase int
 	lastHead  string
 	lastPaint time.Time
@@ -373,7 +448,13 @@ func (sw *subWindow) setParts() {
 		sw.parts = nil
 		return
 	}
-	sw.parts = []*subPart{{rows: src.windowRows}}
+	translated, _, _ := src.windowHeader()
+	sw.partsTr = translated
+	kind := partHeard
+	if translated {
+		kind = partTranslation
+	}
+	sw.parts = []*subPart{newSubPart(kind, src)}
 	sw.layoutParts()
 }
 
@@ -485,6 +566,7 @@ func (sw *subWindow) applyState(hwnd uintptr) {
 		procShowWindow.Call(hwnd, swHide)
 		sw.shown = false
 		sw.parts = nil
+		sw.followAt = rect{}
 		sw.lastPhase, sw.lastHead = -1, ""
 		return
 	}
@@ -493,7 +575,8 @@ func (sw *subWindow) applyState(hwnd uintptr) {
 		sw.layout(hwnd)
 	}
 	sw.shown = true
-	procSetTimer.Call(hwnd, swTimerID, 100, 0)
+	sw.tick = swSlowTick
+	procSetTimer.Call(hwnd, swTimerID, uintptr(sw.tick), 0)
 	procShowWindow.Call(hwnd, swShowNoActivate)
 	overlayRaise(hwnd)
 	sw.renderNow(hwnd)
@@ -545,11 +628,15 @@ func (sw *subWindow) render(hwnd, hdc uintptr) {
 	sw.lastPhase, sw.lastHead = phase, hdr.key()
 	partRows := make([][]subtitles.Row, len(sw.parts))
 	hasText := false
+	back := false
 	for i, p := range sw.parts {
 		partRows[i] = p.fetch()
 		p.lastRows = partRows[i]
 		if swHasText(partRows[i]) {
 			hasText = true
+		}
+		if p.scroll.Back() {
+			back = true
 		}
 	}
 
@@ -600,7 +687,18 @@ func (sw *subWindow) render(hwnd, hdc uintptr) {
 	measure := draw(title, rect{}, colGreen, 0x0400|0x0020)
 	tr0 := rect{Left: px(32), Top: 0, Right: px(32) + (measure.Right - measure.Left), Bottom: head}
 	draw(title, tr0, colGreen, 0x0020|0x0004)
-	if code := hdr.codes; code != "" {
+	sw.followAt = rect{}
+	if back {
+		mark := tr("sub.follow")
+		size := draw(mark, rect{}, colGreen, 0x0400|0x0020)
+		at := rect{Left: tr0.Right + px(10), Top: 0, Right: tr0.Right + px(10) + (size.Right - size.Left), Bottom: head}
+		if at.Right > rc.Right-px(swCloseDIP) {
+			at.Right = rc.Right - px(swCloseDIP)
+		}
+		draw(mark, at, colGreen, 0x0020|0x0004|0x8000)
+		fill(rect{Left: at.Left, Top: head/2 + (size.Bottom-size.Top)/2, Right: at.Right, Bottom: head/2 + (size.Bottom-size.Top)/2 + 1}, colGreenDm)
+		sw.followAt = at
+	} else if code := hdr.codes; code != "" {
 		draw(code, rect{Left: tr0.Right + px(10), Top: 0, Right: rc.Right - px(swCloseDIP), Bottom: head}, colGreenDm, 0x0020|0x0004|0x8000)
 	}
 	xcol := colGreenDm
@@ -618,30 +716,94 @@ func (sw *subWindow) render(hwnd, hdc uintptr) {
 		return
 	}
 	for i, p := range sw.parts {
-		sw.drawPart(hdc, p, partRows[i], draw)
+		sw.drawPart(hdc, font, p, partRows[i], draw)
 	}
 }
 
-func (sw *subWindow) drawPart(hdc uintptr, p *subPart, rows []subtitles.Row, draw func(string, rect, uintptr, uintptr) rect) {
+func (sw *subWindow) drawPart(hdc, font uintptr, p *subPart, rows []subtitles.Row, draw func(string, rect, uintptr, uintptr) rect) {
 	area := p.area
+	lineH := sw.lineH
+	if lineH <= 0 {
+		lineH = 1
+	}
+	var lines []swLine
+	for _, row := range rows {
+		for j, t := range swWrap(hdc, font, row.Text, area.Right-area.Left) {
+			lines = append(lines, swLine{text: t, kind: row.Kind, ref: subwin.LineRef{Key: row.Key, Line: j}})
+		}
+	}
+	p.refs = make([]subwin.LineRef, len(lines))
+	for i, l := range lines {
+		p.refs[i] = l.ref
+	}
+	p.visible = int((area.Bottom - area.Top) / lineH)
+	if p.visible < 1 {
+		p.visible = 1
+	}
+	top := p.scroll.Top(p.refs, p.visible)
+	end := top + p.visible
+	if end > len(lines) {
+		end = len(lines)
+	}
 	saved, _, _ := procSaveDC.Call(hdc)
 	procIntersectClipRect.Call(hdc, uintptr(area.Left), uintptr(area.Top), uintptr(area.Right), uintptr(area.Bottom))
-	bottom := area.Bottom
-	for i := len(rows) - 1; i >= 0 && bottom > area.Top; i-- {
-		s := strings.TrimSpace(rows[i].Text)
-		if s == "" {
-			continue
-		}
+	y := area.Bottom - int32(end-top)*lineH
+	for _, l := range lines[top:end] {
 		color := colGreen
-		if p.dim || rows[i].Kind == subtitles.RowHeard {
+		if p.dim || l.kind == subtitles.RowHeard {
 			color = colGreenDm
 		}
-		calc := draw(s, rect{Right: area.Right - area.Left}, color, 0x0400|0x0010)
-		height := calc.Bottom - calc.Top
-		draw(s, rect{Left: area.Left, Top: bottom - height, Right: area.Right, Bottom: bottom}, color, 0x0010)
-		bottom -= height
+		draw(l.text, rect{Left: area.Left, Top: y, Right: area.Right, Bottom: y + lineH}, color, 0x0020|0x0800)
+		y += lineH
 	}
 	procRestoreDC.Call(hdc, saved)
+}
+
+func (sw *subWindow) wheel(hwnd uintptr, delta int, sx, sy int32) {
+	pt := point{X: sx, Y: sy}
+	procScreenToClient.Call(hwnd, uintptr(unsafe.Pointer(&pt)))
+	var target *subPart
+	for _, p := range sw.parts {
+		if p.contains(pt.Y) {
+			target = p
+		}
+	}
+	if target == nil && len(sw.parts) > 0 {
+		target = sw.parts[len(sw.parts)-1]
+	}
+	if target == nil {
+		return
+	}
+	target.wheel += delta
+	notches := target.wheel / 120
+	target.wheel %= 120
+	if notches == 0 {
+		return
+	}
+	target.scroll.Wheel(target.refs, target.visible, -notches*swWheelRows)
+	sw.renderNow(hwnd)
+}
+
+func (sw *subWindow) follow(hwnd uintptr) {
+	for _, p := range sw.parts {
+		p.scroll.Follow()
+		p.wheel = 0
+	}
+	sw.renderNow(hwnd)
+}
+
+func (sw *subWindow) inFollow(x, y int32) bool {
+	r := sw.followAt
+	return r.Right > r.Left && x >= r.Left && x < r.Right && y >= r.Top && y < r.Bottom
+}
+
+func (sw *subWindow) busy() bool {
+	for _, p := range sw.parts {
+		if p.busy {
+			return true
+		}
+	}
+	return false
 }
 
 func swHasText(rows []subtitles.Row) bool {
@@ -739,6 +901,16 @@ func (sw *subWindow) edgesAt(x, y int32) int {
 	return subwin.Hit(x, y, sw.w, sw.h, scaleDPI(swGripDIP, sw.dpi))
 }
 
+func (sw *subWindow) headerNow() (bool, string, string) {
+	sw.mu.Lock()
+	src := sw.src
+	sw.mu.Unlock()
+	if src == nil {
+		return false, "", ""
+	}
+	return src.windowHeader()
+}
+
 func (sw *subWindow) changed() bool {
 	phase, hdr, _ := sw.content()
 	if phase != sw.lastPhase || hdr.key() != sw.lastHead {
@@ -776,11 +948,28 @@ func (sw *subWindow) proc(hwnd, msg, wParam, lParam uintptr) uintptr {
 		if sw.ticks%30 == 0 {
 			overlayRaise(hwnd)
 		}
+		if translated, _, _ := sw.headerNow(); translated != sw.partsTr {
+			sw.setParts()
+			sw.renderNow(hwnd)
+		}
 		x, y := swCursorClient(hwnd)
 		hover := sw.inClose(x, y)
 		if hover != sw.hover || sw.changed() || time.Since(sw.lastPaint) > time.Second {
 			sw.hover = hover
 			sw.renderNow(hwnd)
+		}
+		want := swSlowTick
+		if sw.busy() {
+			want = swFastTick
+		}
+		if want != sw.tick {
+			sw.tick = want
+			procSetTimer.Call(hwnd, swTimerID, uintptr(want), 0)
+		}
+		return 0
+	case wmMouseWheel:
+		if sw.shown {
+			sw.wheel(hwnd, int(int16(wParam>>16)), int32(int16(lParam&0xFFFF)), int32(int16(lParam>>16&0xFFFF)))
 		}
 		return 0
 	case wmPaint:
@@ -807,6 +996,10 @@ func (sw *subWindow) proc(hwnd, msg, wParam, lParam uintptr) uintptr {
 			wa, _ := monitorRectsForPoint(sw.x+sw.w/2, sw.y+sw.h/2)
 			sw.resRows = sw.limits(wa, sw.dpi, sw.lineH).RowsFor(sw.h)
 			procSetCapture.Call(hwnd)
+			return 0
+		}
+		if sw.inFollow(x, y) {
+			sw.follow(hwnd)
 			return 0
 		}
 		if sw.inClose(x, y) {
@@ -876,7 +1069,7 @@ func (sw *subWindow) proc(hwnd, msg, wParam, lParam uintptr) uintptr {
 		id := uintptr(32512)
 		if c := swEdgeCursor(sw.edgesAt(x, y)); c != 0 {
 			id = c
-		} else if sw.inClose(x, y) {
+		} else if sw.inClose(x, y) || sw.inFollow(x, y) {
 			id = 32649
 		}
 		cur, _, _ := procLoadCursorW.Call(0, id)
@@ -914,11 +1107,12 @@ func (d *swDemo) windowHeader() (bool, string, string) {
 	return d.translate, d.lang, d.to
 }
 
-func (d *swDemo) windowRows() []subtitles.Row {
-	if d.translate {
-		return d.board.TranslationRows(swTextRunes)
-	}
-	return d.board.Tail(swTextRunes).Rows()
+func (d *swDemo) windowLines() []subtitles.Row {
+	return d.board.Tail(swKeepRunes).Rows()
+}
+
+func (d *swDemo) windowPieces() ([]subtitles.PieceView, bool) {
+	return d.board.Pieces()
 }
 
 type swDemoPiece struct {
