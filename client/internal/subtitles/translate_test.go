@@ -1,6 +1,7 @@
 package subtitles
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 	"testing"
@@ -148,73 +149,143 @@ func TestHiddenTranslationsTakeNoRoomAndComeBack(t *testing.T) {
 	}
 }
 
-func pending(id int) Pending {
-	return Pending{ID: id, Text: "line", Target: "de"}
+func phrase(seq, words int, heard time.Time, para bool) Pending {
+	ws := make([]string, words)
+	for i := range ws {
+		ws[i] = fmt.Sprintf("w%d.%d", seq, i)
+	}
+	return Pending{Seq: seq, Text: strings.Join(ws, " "), Words: words, Target: "de", Para: para, Start: heard.Add(-3 * time.Second), Heard: heard}
 }
 
-func TestQueueDropsTheOldestWaitingLine(t *testing.T) {
-	q := NewTranslateQueue(TranslateWaiting, TranslateMaxWait)
+func seqsOf(ps []Pending) []int {
+	var out []int
+	for _, p := range ps {
+		out = append(out, p.Seq)
+	}
+	return out
+}
+
+func newQueue() *TranslateQueue {
+	return NewTranslateQueue(TranslateWaiting, TranslateMaxWait, TranslateMerge)
+}
+
+func TestQueueDropsTheOldestWaitingPhrase(t *testing.T) {
+	q := newQueue()
 	t0 := time.Now()
-	for i := 1; i <= 3; i++ {
-		if n := q.Push(pending(i), t0); n != 0 {
-			t.Fatalf("push %d dropped %d", i, n)
+	for i := 1; i <= 6; i++ {
+		if d := q.Push(phrase(i, 5, t0, true)); len(d) != 0 {
+			t.Fatalf("push %d dropped %v", i, seqsOf(d))
 		}
 	}
-	if n := q.Push(pending(4), t0); n != 1 {
-		t.Fatalf("the fourth line dropped %d", n)
+	d := q.Push(phrase(7, 5, t0, true))
+	if !reflect.DeepEqual(seqsOf(d), []int{1}) {
+		t.Fatalf("the seventh phrase dropped %v", seqsOf(d))
 	}
-	if q.Len() != 3 {
+	if q.Len() != 6 {
 		t.Fatalf("len %d", q.Len())
 	}
-	var ids []int
+	var got []int
 	for {
-		p, ok, _ := q.Pop(t0.Add(time.Second))
+		b, ok, _ := q.Pop(t0.Add(time.Second))
 		if !ok {
 			break
 		}
-		ids = append(ids, p.ID)
+		got = append(got, b.Seqs...)
 	}
-	if !reflect.DeepEqual(ids, []int{2, 3, 4}) {
-		t.Fatalf("popped %v", ids)
+	if !reflect.DeepEqual(got, []int{2, 3, 4, 5, 6, 7}) {
+		t.Fatalf("popped %v", got)
 	}
 	c := q.Counts()
-	if c.Pushed != 4 || c.Overflow != 1 || c.Stale != 0 || c.Dropped() != 1 {
+	if c.Pushed != 7 || c.Overflow != 1 || c.Stale != 0 || c.Dropped() != 1 {
 		t.Fatalf("counts %+v", c)
 	}
 }
 
-func TestQueueDropsALineThatWaitedTooLong(t *testing.T) {
-	q := NewTranslateQueue(TranslateWaiting, TranslateMaxWait)
+func TestQueueDropsAPhraseThatWaitedTooLong(t *testing.T) {
+	q := newQueue()
 	t0 := time.Now()
-	q.Push(pending(1), t0)
-	q.Push(pending(2), t0.Add(5*time.Second))
-	q.Push(pending(3), t0.Add(10*time.Second))
-	p, ok, stale := q.Pop(t0.Add(25*time.Second + time.Millisecond))
-	if !ok || p.ID != 3 || stale != 2 {
-		t.Fatalf("pop gave %+v %v, %d stale", p, ok, stale)
+	q.Push(phrase(1, 5, t0, true))
+	q.Push(phrase(2, 5, t0.Add(5*time.Second), true))
+	q.Push(phrase(3, 5, t0.Add(10*time.Second), true))
+	b, ok, stale := q.Pop(t0.Add(15*time.Second + time.Millisecond))
+	if !ok || b.Seq() != 3 || !reflect.DeepEqual(seqsOf(stale), []int{1, 2}) {
+		t.Fatalf("pop gave %+v %v, stale %v", b, ok, seqsOf(stale))
 	}
-	if !p.Queued.Equal(t0.Add(10 * time.Second)) {
-		t.Fatal("the queue did not keep the time the line was pushed")
+	if !b.Heard.Equal(t0.Add(10*time.Second)) || !b.Start.Equal(t0.Add(7*time.Second)) {
+		t.Fatalf("the batch did not keep the times of its phrase: %+v", b)
 	}
-	q.Push(pending(4), t0)
-	if p, ok, _ := q.Pop(t0.Add(TranslateMaxWait)); !ok || p.ID != 4 {
-		t.Fatal("a line that waited exactly the limit was dropped")
+	q.Push(phrase(4, 5, t0, true))
+	if b, ok, _ := q.Pop(t0.Add(TranslateMaxWait)); !ok || b.Seq() != 4 {
+		t.Fatal("a phrase that waited exactly the limit was dropped")
 	}
-	q.Push(pending(5), t0)
-	if _, ok, stale := q.Pop(t0.Add(time.Minute)); ok || stale != 1 {
-		t.Fatalf("a lone old line: ok %v, %d stale", ok, stale)
+	q.Push(phrase(5, 5, t0, true))
+	if _, ok, stale := q.Pop(t0.Add(time.Minute)); ok || len(stale) != 1 {
+		t.Fatalf("a lone old phrase: ok %v, stale %v", ok, seqsOf(stale))
 	}
-	if _, ok, stale := q.Pop(t0.Add(time.Minute)); ok || stale != 0 {
+	if _, ok, stale := q.Pop(t0.Add(time.Minute)); ok || len(stale) != 0 {
 		t.Fatal("an empty queue gave something")
 	}
-	q.Push(pending(6), t0)
-	q.Push(pending(7), t0)
-	if n := q.Clear(); n != 2 || q.Len() != 0 {
-		t.Fatalf("clear %d, len %d", n, q.Len())
+	q.Push(phrase(6, 5, t0, true))
+	q.Push(phrase(7, 5, t0, true))
+	if d := q.Clear(); !reflect.DeepEqual(seqsOf(d), []int{6, 7}) || q.Len() != 0 {
+		t.Fatalf("clear %v, len %d", seqsOf(d), q.Len())
 	}
 	c := q.Counts()
 	if c.Pushed != 7 || c.Stale != 3 || c.Cleared != 2 || c.Overflow != 0 || c.Dropped() != 5 {
 		t.Fatalf("counts %+v", c)
+	}
+}
+
+func TestQueueMergesWaitingPhrasesOfOneParagraph(t *testing.T) {
+	q := newQueue()
+	t0 := time.Now()
+	q.Push(phrase(1, 12, t0, true))
+	q.Push(phrase(2, 10, t0, false))
+	q.Push(phrase(3, 8, t0, false))
+	q.Push(phrase(4, 2, t0, false))
+	b, ok, _ := q.Pop(t0)
+	if !ok || !reflect.DeepEqual(b.Seqs, []int{1, 2, 3}) || b.Words != 30 {
+		t.Fatalf("batch %+v", b)
+	}
+	if want := phrase(1, 12, t0, true).Text + " " + phrase(2, 10, t0, false).Text + " " + phrase(3, 8, t0, false).Text; b.Text != want {
+		t.Fatalf("text %q", b.Text)
+	}
+	if b, _, _ := q.Pop(t0); !reflect.DeepEqual(b.Seqs, []int{4}) {
+		t.Fatalf("the rest %+v", b)
+	}
+
+	q.Push(phrase(5, 6, t0, false))
+	q.Push(phrase(6, 6, t0, true))
+	q.Push(phrase(7, 6, t0, false))
+	if b, _, _ := q.Pop(t0); !reflect.DeepEqual(b.Seqs, []int{5}) {
+		t.Fatalf("a paragraph start joined the batch: %+v", b)
+	}
+	if b, _, _ := q.Pop(t0); !reflect.DeepEqual(b.Seqs, []int{6, 7}) {
+		t.Fatalf("a paragraph did not start its own batch: %+v", b)
+	}
+
+	q.Push(phrase(8, 6, t0, false))
+	other := phrase(9, 6, t0, false)
+	other.Target = "fr"
+	q.Push(other)
+	b, _, _ = q.Pop(t0)
+	if !reflect.DeepEqual(b.Seqs, []int{8}) || b.Target != "de" {
+		t.Fatalf("another target joined the batch: %+v", b)
+	}
+	if b, _, _ := q.Pop(t0); !reflect.DeepEqual(b.Seqs, []int{9}) || b.Target != "fr" {
+		t.Fatalf("the other target %+v", b)
+	}
+
+	q.Push(phrase(10, 18, t0, false))
+	q.Push(phrase(11, 13, t0, false))
+	if b, _, _ := q.Pop(t0); !reflect.DeepEqual(b.Seqs, []int{10}) {
+		t.Fatalf("a batch went over the limit: %+v", b)
+	}
+	q.Clear()
+
+	q.Push(Pending{Seq: 12, Text: "three words here", Target: "de", Heard: t0})
+	if b, _, _ := q.Pop(t0); b.Words != 3 {
+		t.Fatalf("words were not counted: %+v", b)
 	}
 }
 

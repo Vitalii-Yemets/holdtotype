@@ -7,8 +7,9 @@ import (
 )
 
 const (
-	TranslateWaiting = 3
-	TranslateMaxWait = 20 * time.Second
+	TranslateWaiting = 6
+	TranslateMaxWait = 10 * time.Second
+	TranslateMerge   = 30
 )
 
 var TranslateTargets = []string{"de", "en", "es", "fr", "it", "pl", "uk", "ru"}
@@ -140,11 +141,29 @@ func CleanTranslation(line, answer, target string) (string, Verdict) {
 }
 
 type Pending struct {
-	ID     int
-	At     time.Time
+	Seq    int
 	Text   string
+	Words  int
 	Target string
-	Queued time.Time
+	Para   bool
+	Start  time.Time
+	Heard  time.Time
+}
+
+type Batch struct {
+	Seqs   []int
+	Text   string
+	Words  int
+	Target string
+	Start  time.Time
+	Heard  time.Time
+}
+
+func (b Batch) Seq() int {
+	if len(b.Seqs) == 0 {
+		return 0
+	}
+	return b.Seqs[0]
 }
 
 type QueueCounts struct {
@@ -159,53 +178,74 @@ func (c QueueCounts) Dropped() int { return c.Overflow + c.Stale + c.Cleared }
 type TranslateQueue struct {
 	limit   int
 	maxWait time.Duration
+	merge   int
 	items   []Pending
 	counts  QueueCounts
 }
 
-func NewTranslateQueue(limit int, maxWait time.Duration) *TranslateQueue {
+func NewTranslateQueue(limit int, maxWait time.Duration, merge int) *TranslateQueue {
 	if limit < 1 {
 		limit = 1
 	}
-	return &TranslateQueue{limit: limit, maxWait: maxWait}
+	return &TranslateQueue{limit: limit, maxWait: maxWait, merge: merge}
 }
 
-func (q *TranslateQueue) Push(p Pending, now time.Time) int {
-	p.Queued = now
+func (q *TranslateQueue) Push(p Pending) []Pending {
+	if p.Words <= 0 {
+		p.Words = len(strings.Fields(p.Text))
+	}
 	q.counts.Pushed++
-	dropped := 0
+	var dropped []Pending
 	for len(q.items) >= q.limit {
+		dropped = append(dropped, q.items[0])
 		q.items[0] = Pending{}
 		q.items = q.items[1:]
-		dropped++
 	}
-	q.counts.Overflow += dropped
+	q.counts.Overflow += len(dropped)
 	q.items = append(q.items, p)
 	return dropped
 }
 
-func (q *TranslateQueue) Pop(now time.Time) (Pending, bool, int) {
-	stale := 0
-	for len(q.items) > 0 {
-		p := q.items[0]
-		q.items[0] = Pending{}
-		q.items = q.items[1:]
-		if q.maxWait > 0 && now.Sub(p.Queued) > q.maxWait {
-			stale++
-			continue
-		}
-		q.counts.Stale += stale
-		return p, true, stale
-	}
-	q.counts.Stale += stale
-	return Pending{}, false, stale
+func (q *TranslateQueue) take() Pending {
+	p := q.items[0]
+	q.items[0] = Pending{}
+	q.items = q.items[1:]
+	return p
 }
 
-func (q *TranslateQueue) Clear() int {
-	n := len(q.items)
+func (q *TranslateQueue) stale(p Pending, now time.Time) bool {
+	return q.maxWait > 0 && now.Sub(p.Heard) > q.maxWait
+}
+
+func (q *TranslateQueue) Pop(now time.Time) (Batch, bool, []Pending) {
+	var dropped []Pending
+	for len(q.items) > 0 && q.stale(q.items[0], now) {
+		dropped = append(dropped, q.take())
+	}
+	q.counts.Stale += len(dropped)
+	if len(q.items) == 0 {
+		return Batch{}, false, dropped
+	}
+	first := q.take()
+	b := Batch{Seqs: []int{first.Seq}, Text: first.Text, Words: first.Words, Target: first.Target, Start: first.Start, Heard: first.Heard}
+	for len(q.items) > 0 {
+		next := q.items[0]
+		if next.Para || next.Target != b.Target || b.Words+next.Words > q.merge || q.stale(next, now) {
+			break
+		}
+		q.take()
+		b.Seqs = append(b.Seqs, next.Seq)
+		b.Text += " " + next.Text
+		b.Words += next.Words
+	}
+	return b, true, dropped
+}
+
+func (q *TranslateQueue) Clear() []Pending {
+	out := q.items
 	q.items = nil
-	q.counts.Cleared += n
-	return n
+	q.counts.Cleared += len(out)
+	return out
 }
 
 func (q *TranslateQueue) Len() int { return len(q.items) }

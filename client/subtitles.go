@@ -620,7 +620,7 @@ func newSubTranslator(r *subRun) *subTranslator {
 		stopCh: make(chan struct{}),
 		exitCh: make(chan struct{}),
 		sig:    make(chan struct{}, 1),
-		q:      subtitles.NewTranslateQueue(subtitles.TranslateWaiting, subtitles.TranslateMaxWait),
+		q:      subtitles.NewTranslateQueue(subtitles.TranslateWaiting, subtitles.TranslateMaxWait, subtitles.TranslateMerge),
 	}
 	go w.loop()
 	return w
@@ -642,7 +642,7 @@ func (w *subTranslator) push(ln subtitles.Line, to string) {
 		return
 	}
 	w.target = to
-	n := w.q.Push(subtitles.Pending{ID: ln.ID, At: ln.Start, Text: ln.Text, Target: to}, time.Now())
+	n := len(w.q.Push(subtitles.Pending{Seq: ln.ID, Start: ln.Start, Text: ln.Text, Target: to, Para: true, Heard: time.Now()}))
 	w.mu.Unlock()
 	if n > 0 {
 		w.noteDrop(fmt.Sprintf("translation falls behind, %d waiting line(s) left untranslated", n))
@@ -716,8 +716,8 @@ func (w *subTranslator) loop() {
 			w.mu.Lock()
 			p, ok, stale := w.q.Pop(time.Now())
 			w.mu.Unlock()
-			if stale > 0 {
-				w.noteDrop(fmt.Sprintf("%d line(s) waited more than %.0f s for translation and are left untranslated", stale, subtitles.TranslateMaxWait.Seconds()))
+			if len(stale) > 0 {
+				w.noteDrop(fmt.Sprintf("%d line(s) waited more than %.0f s for translation and are left untranslated", len(stale), subtitles.TranslateMaxWait.Seconds()))
 			}
 			if !ok {
 				break
@@ -730,7 +730,7 @@ func (w *subTranslator) loop() {
 	}
 }
 
-func (w *subTranslator) handle(p subtitles.Pending) {
+func (w *subTranslator) handle(p subtitles.Batch) {
 	r := w.run
 	cfg := r.app.snapshot()
 	src := translationSource(cfg)
@@ -774,9 +774,9 @@ func (w *subTranslator) handle(p subtitles.Pending) {
 		w.noteFail(fmt.Errorf("the answer is not written in %s", subtitles.LanguageName(p.Target)))
 		return
 	}
-	r.board.SetTranslation(p.ID, text)
+	r.board.SetTranslation(p.Seq(), text)
 	if r.app.snapshot().SubtitlesSave {
-		r.writeTranslation(p.At, text)
+		r.writeTranslation(p.Start, text)
 	}
 	w.translated.Add(1)
 	if r.opts.logLive {
