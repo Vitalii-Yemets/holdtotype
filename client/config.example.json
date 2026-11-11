@@ -55,6 +55,8 @@
   "subtitles_custom": {},
   "subtitles_position": "bottom",
   "subtitles_monitor": "",
+  "subtitles_box": {},
+  "subtitles_original": false,
   "subtitles_translate": "",
   "wizard_done": false
 }

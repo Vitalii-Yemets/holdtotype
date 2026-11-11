@@ -167,6 +167,7 @@ type settingsForm struct {
 	SubtitlesPos      *string                  `json:"subtitles_position"`
 	SubtitlesMonitor  *string                  `json:"subtitles_monitor"`
 	SubtitlesBox      *map[string]subwin.Box   `json:"subtitles_box"`
+	SubtitlesOriginal *bool                    `json:"subtitles_original"`
 
 	SubtitlesTranslate *string `json:"subtitles_translate"`
 }
@@ -971,6 +972,9 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	if f.SubtitlesBox != nil {
 		c.SubtitlesBox = subwin.CleanBoxes(*f.SubtitlesBox)
 	}
+	if f.SubtitlesOriginal != nil {
+		c.SubtitlesOriginal = *f.SubtitlesOriginal
+	}
 	if f.SubtitlesTranslate != nil && (*f.SubtitlesTranslate == "" || validTranslateLang(*f.SubtitlesTranslate)) {
 		c.SubtitlesTranslate = *f.SubtitlesTranslate
 	}
@@ -1115,6 +1119,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"subtitles_monitor":       cfg.SubtitlesMonitor,
 		"subtitles_custom":        cfg.SubtitlesXY,
 		"subtitles_translate":     cfg.SubtitlesTranslate,
+		"subtitles_original":      cfg.SubtitlesOriginal,
 		"translate_target":        cfg.TranslateTarget,
 		"translate_ask":           cfg.TranslateAsk,
 		"translate_ask_seconds":   cfg.TranslateAskSeconds,
@@ -2432,6 +2437,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
   <div class="row noline" id="subs_tr_none_row" style="display:none"><label><span class="sub warn" id="subs_tr_none">{{S_SUBS_TR_NONE}}</span></label>
    <button type="button" class="mini" id="subs_tr_go">{{S_SUBS_TR_GO}}</button></div>
   <div class="hint" id="subs_tr_same" style="display:none">{{S_SUBS_TR_SAME}}</div>
+  <div class="row" id="subs_orig_row"><label>{{S_SUBS_ORIG}}<span class="sub">{{S_SUBS_ORIG_SUB}}</span></label><input type="checkbox" id="subtitles_original"></div>
  </div>
  <div class="card">
   <div class="row"><label>{{S_SUBS_KEY}}<span class="sub">{{S_SUBS_KEY_SUB}}</span></label>
@@ -4026,8 +4032,11 @@ function renderSubsTr(){
   if(n) n.style.display = none ? "" : "none";
   const s = subsEl("subs_tr_same");
   if(s) s.style.display = same ? "" : "none";
-  const row = sel.closest(".row");
-  if(row) row.classList.toggle("noline", !hint && !none && !same);
+  const orig = subsEl("subtitles_original");
+  if(orig){
+    orig.disabled = !to;
+    orig.closest(".row").classList.toggle("dimmed", !to);
+  }
 }
 function subsGotoModels(){
   const row = subsEl("subs_case_row");
@@ -4047,6 +4056,7 @@ function initSubs(){
   subsEl("subtitles_size").value = CFG.subtitles_size || "m";
   const trSel = subsEl("subtitles_translate");
   trSel.value = CFG.subtitles_translate || "";
+  subsEl("subtitles_original").checked = !!CFG.subtitles_original;
   paintSubsKey();
   sel.addEventListener("change", refreshSubsModel);
   sel.addEventListener("change", renderSubsTr);
@@ -5421,6 +5431,7 @@ async function doSave(){
     subtitles_position: OVS.posDirty ? OVS.pos : null,
     subtitles_monitor: (subsEl("subtitles_monitor")||{}).value || "",
     subtitles_box: subsBoxReset ? {} : null,
+    subtitles_original: !!(subsEl("subtitles_original")||{}).checked,
     subtitles_translate: (subsEl("subtitles_translate")||{}).value || ""};
   OVS.posDirty = false;
   OVS.customDirty = false;

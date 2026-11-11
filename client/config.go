@@ -159,6 +159,7 @@ type Config struct {
 	SubtitlesPos      string                  `json:"subtitles_position"`
 	SubtitlesMonitor  string                  `json:"subtitles_monitor"`
 	SubtitlesBox      map[string]subwin.Box   `json:"subtitles_box"`
+	SubtitlesOriginal bool                    `json:"subtitles_original"`
 
 	SubtitlesTranslate string `json:"subtitles_translate"`
 

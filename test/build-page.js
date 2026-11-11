@@ -33,6 +33,7 @@ const cfg = {
   subtitles_position: "bottom",
   subtitles_monitor: "",
   subtitles_custom: {},
+  subtitles_original: false,
   subtitles_translate: "",
   beep: true,
   sound_theme: "speech",

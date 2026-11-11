@@ -165,6 +165,7 @@ type subWindow struct {
 	monitor string
 	custom  map[string]ovplace.Frac
 	box     map[string]subwin.Box
+	orig    bool
 	onClose func()
 	onMoved func(key string, f ovplace.Frac)
 	onSized func(key string, b subwin.Box)
@@ -186,6 +187,9 @@ type subWindow struct {
 	dpi       int32
 	parts     []*subPart
 	partsTr   bool
+	top       int32
+	splitY    int32
+	splitting bool
 	followAt  rect
 	tick      int
 	lastPhase int
@@ -261,6 +265,7 @@ func (sw *subWindow) configure(cfg *Config) {
 	sw.monitor = mon
 	sw.custom = places
 	sw.box = boxes
+	sw.orig = cfg.SubtitlesOriginal
 	hwnd := sw.hwnd
 	sw.mu.Unlock()
 	if hwnd != 0 {
@@ -412,7 +417,11 @@ func (sw *subWindow) place() (work, screen rect) {
 func (sw *subWindow) limits(wa rect, dpi, lineH int32) subwin.Limits {
 	px := func(v int32) int32 { return scaleDPI(v, dpi) }
 	chrome := px(swHeaderDIP) + px(swPadTop) + px(swPadBottom)
-	return subwin.NewLimits(px(subwin.BoxMinW), wa.Right-wa.Left, wa.Bottom-wa.Top, chrome, lineH, 1)
+	minRows := int32(1)
+	if len(sw.parts) > 1 {
+		minRows = 2
+	}
+	return subwin.NewLimits(px(subwin.BoxMinW), wa.Right-wa.Left, wa.Bottom-wa.Top, chrome, lineH, minRows)
 }
 
 func (sw *subWindow) measure(wa, screen rect, dpi int32) (w, h, lineH int32) {
@@ -433,8 +442,10 @@ func (sw *subWindow) measure(wa, screen rect, dpi int32) (w, h, lineH int32) {
 	rows := sw.rows
 	b, sized := sw.box[ovplace.ResKey(toPlace(screen))]
 	sw.mu.Unlock()
+	sw.top = 0
 	if sized {
 		w, rows = px(b.W), b.Rows
+		sw.top = b.Top
 	}
 	l := sw.limits(wa, dpi, lineH)
 	return l.Width(w), l.Height(rows), lineH
@@ -449,20 +460,101 @@ func (sw *subWindow) setParts() {
 		return
 	}
 	translated, _, _ := src.windowHeader()
+	sw.mu.Lock()
+	orig := sw.orig
+	sw.mu.Unlock()
 	sw.partsTr = translated
-	kind := partHeard
-	if translated {
-		kind = partTranslation
+	kinds := []int{partHeard}
+	if translated && orig {
+		kinds = []int{partHeard, partTranslation}
+	} else if translated {
+		kinds = []int{partTranslation}
 	}
-	sw.parts = []*subPart{newSubPart(kind, src)}
+	same := len(kinds) == len(sw.parts)
+	for i := 0; same && i < len(kinds); i++ {
+		same = sw.parts[i].kind == kinds[i] && sw.parts[i].src == src
+	}
+	if !same {
+		parts := make([]*subPart, len(kinds))
+		for i, k := range kinds {
+			parts[i] = newSubPart(k, src)
+			parts[i].dim = k == partHeard && len(kinds) > 1
+		}
+		sw.parts = parts
+	}
 	sw.layoutParts()
 }
 
 func (sw *subWindow) layoutParts() {
 	px := func(v int32) int32 { return scaleDPI(v, sw.dpi) }
 	area := rect{Left: px(swPadX), Top: px(swHeaderDIP) + px(swPadTop), Right: sw.w - px(swPadX), Bottom: sw.h - px(swPadBottom)}
+	sw.splitY = 0
+	if len(sw.parts) == 2 && sw.lineH > 0 {
+		upper, _ := subwin.SplitRows((area.Bottom-area.Top)/sw.lineH, sw.top)
+		sw.splitY = area.Top + upper*sw.lineH
+		up, low := area, area
+		up.Bottom = sw.splitY
+		low.Top = sw.splitY
+		sw.parts[0].area = up
+		sw.parts[1].area = low
+		return
+	}
 	for _, p := range sw.parts {
 		p.area = area
+	}
+}
+
+func (sw *subWindow) textArea() rect {
+	px := func(v int32) int32 { return scaleDPI(v, sw.dpi) }
+	return rect{Left: px(swPadX), Top: px(swHeaderDIP) + px(swPadTop), Right: sw.w - px(swPadX), Bottom: sw.h - px(swPadBottom)}
+}
+
+func (sw *subWindow) totalRows() int32 {
+	a := sw.textArea()
+	if sw.lineH <= 0 {
+		return 0
+	}
+	return (a.Bottom - a.Top) / sw.lineH
+}
+
+func (sw *subWindow) onSplit(y int32) bool {
+	return len(sw.parts) == 2 && sw.splitY > 0 && subwin.HitSplit(y, sw.splitY, scaleDPI(swGripDIP, sw.dpi))
+}
+
+func (sw *subWindow) splitTo(hwnd uintptr, y int32) {
+	rows := subwin.SplitAt(y, sw.textArea().Top, sw.lineH, sw.totalRows())
+	if rows == 0 || rows == sw.top {
+		return
+	}
+	sw.top = rows
+	sw.layoutParts()
+	sw.renderNow(hwnd)
+}
+
+func (sw *subWindow) saveBox() {
+	_, screen := monitorRectsForPoint(sw.x+sw.w/2, sw.y+sw.h/2)
+	key := ovplace.ResKey(toPlace(screen))
+	rows := sw.totalRows()
+	if sw.resizing {
+		rows = sw.resRows
+	}
+	b := subwin.Box{W: sw.w * 96 / sw.dpi, Rows: rows, Top: sw.top}
+	if b.W < subwin.BoxMinW {
+		b.W = subwin.BoxMinW
+	}
+	if b.Top >= b.Rows {
+		b.Top = 0
+	}
+	sw.mu.Lock()
+	if sw.box == nil {
+		sw.box = map[string]subwin.Box{}
+	}
+	sw.box[key] = b
+	cb := sw.onSized
+	sw.mu.Unlock()
+	log.Printf("subtitles: the window size %d dip, %d rows, %d above the line is kept for the %s screen", b.W, b.Rows, b.Top, key)
+	if cb != nil {
+		go cb(key, b)
 	}
 }
 
@@ -718,6 +810,9 @@ func (sw *subWindow) render(hwnd, hdc uintptr) {
 	for i, p := range sw.parts {
 		sw.drawPart(hdc, font, p, partRows[i], draw)
 	}
+	if sw.splitY > 0 {
+		fill(rect{Left: px(10), Top: sw.splitY, Right: rc.Right - px(10), Bottom: sw.splitY + 1}, colLine)
+	}
 }
 
 func (sw *subWindow) drawPart(hdc, font uintptr, p *subPart, rows []subtitles.Row, draw func(string, rect, uintptr, uintptr) rect) {
@@ -859,25 +954,11 @@ func (sw *subWindow) endResize() {
 	if !sw.resizing {
 		return
 	}
+	sw.saveBox()
 	sw.resizing = false
-	_, screen := monitorRectsForPoint(sw.x+sw.w/2, sw.y+sw.h/2)
-	key := ovplace.ResKey(toPlace(screen))
-	b := subwin.Box{W: sw.w * 96 / sw.dpi, Rows: sw.resRows}
-	if b.W < subwin.BoxMinW {
-		b.W = subwin.BoxMinW
-	}
 	sw.mu.Lock()
-	if sw.box == nil {
-		sw.box = map[string]subwin.Box{}
-	}
-	sw.box[key] = b
-	cb := sw.onSized
 	pos := sw.pos
 	sw.mu.Unlock()
-	log.Printf("subtitles: the window was resized to %d dip and %d rows on the %s screen", b.W, b.Rows, key)
-	if cb != nil {
-		go cb(key, b)
-	}
 	if pos == ovPosCustom {
 		sw.savePlace()
 	}
@@ -936,6 +1017,7 @@ func (sw *subWindow) proc(hwnd, msg, wParam, lParam uintptr) uintptr {
 		return 0
 	case wmSwLayout:
 		if sw.shown {
+			sw.setParts()
 			sw.layout(hwnd)
 			sw.renderNow(hwnd)
 		}
@@ -950,6 +1032,7 @@ func (sw *subWindow) proc(hwnd, msg, wParam, lParam uintptr) uintptr {
 		}
 		if translated, _, _ := sw.headerNow(); translated != sw.partsTr {
 			sw.setParts()
+			sw.layout(hwnd)
 			sw.renderNow(hwnd)
 		}
 		x, y := swCursorClient(hwnd)
@@ -998,6 +1081,11 @@ func (sw *subWindow) proc(hwnd, msg, wParam, lParam uintptr) uintptr {
 			procSetCapture.Call(hwnd)
 			return 0
 		}
+		if sw.onSplit(y) {
+			sw.splitting = true
+			procSetCapture.Call(hwnd)
+			return 0
+		}
 		if sw.inFollow(x, y) {
 			sw.follow(hwnd)
 			return 0
@@ -1011,6 +1099,11 @@ func (sw *subWindow) proc(hwnd, msg, wParam, lParam uintptr) uintptr {
 		procSetCapture.Call(hwnd)
 		return 0
 	case wmMouseMove:
+		if sw.splitting {
+			_, y := swCursorClient(hwnd)
+			sw.splitTo(hwnd, y)
+			return 0
+		}
 		if sw.resizing {
 			sw.resizeTo(hwnd)
 			return 0
@@ -1037,6 +1130,12 @@ func (sw *subWindow) proc(hwnd, msg, wParam, lParam uintptr) uintptr {
 			sw.endResize()
 			return 0
 		}
+		if sw.splitting {
+			sw.splitting = false
+			procReleaseCapture.Call()
+			sw.saveBox()
+			return 0
+		}
 		if sw.dragging {
 			sw.dragging = false
 			procReleaseCapture.Call()
@@ -1057,6 +1156,10 @@ func (sw *subWindow) proc(hwnd, msg, wParam, lParam uintptr) uintptr {
 		return 0
 	case wmCaptureLost:
 		sw.endResize()
+		if sw.splitting {
+			sw.splitting = false
+			sw.saveBox()
+		}
 		if sw.dragging {
 			sw.dragging = false
 			if sw.dragMoved {
@@ -1069,6 +1172,8 @@ func (sw *subWindow) proc(hwnd, msg, wParam, lParam uintptr) uintptr {
 		id := uintptr(32512)
 		if c := swEdgeCursor(sw.edgesAt(x, y)); c != 0 {
 			id = c
+		} else if sw.onSplit(y) {
+			id = 32645
 		} else if sw.inClose(x, y) || sw.inFollow(x, y) {
 			id = 32649
 		}

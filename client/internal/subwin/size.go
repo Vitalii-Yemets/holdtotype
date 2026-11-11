@@ -117,6 +117,7 @@ func Resize(start ovplace.Rect, edges int, dx, dy int32, mode string, l Limits) 
 type Box struct {
 	W    int32 `json:"w"`
 	Rows int32 `json:"rows"`
+	Top  int32 `json:"top,omitempty"`
 }
 
 const (
@@ -140,6 +141,9 @@ func CleanBoxes(in map[string]Box) map[string]Box {
 	for k, b := range in {
 		if !validKey(k) || b.W < BoxMinW || b.W > BoxMaxW || b.Rows < 1 || b.Rows > BoxMaxRows {
 			continue
+		}
+		if b.Top < 0 || b.Top >= b.Rows {
+			b.Top = 0
 		}
 		out[k] = b
 	}

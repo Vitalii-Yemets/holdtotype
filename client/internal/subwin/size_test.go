@@ -99,8 +99,11 @@ func TestCleanBoxes(t *testing.T) {
 		"3840x2160": {W: 1000, Rows: 0},
 		"1280x720":  {W: 360, Rows: 100},
 		"01x2":      {W: 900, Rows: 4},
+		"2560x1080": {W: 900, Rows: 5, Top: 3},
+		"1600x900":  {W: 900, Rows: 5, Top: 5},
+		"1366x768":  {W: 900, Rows: 5, Top: -1},
 	}
-	want := map[string]Box{"1920x1080": {W: 900, Rows: 4}, "1280x720": {W: 360, Rows: 100}}
+	want := map[string]Box{"1920x1080": {W: 900, Rows: 4}, "1280x720": {W: 360, Rows: 100}, "2560x1080": {W: 900, Rows: 5, Top: 3}, "1600x900": {W: 900, Rows: 5}, "1366x768": {W: 900, Rows: 5}}
 	if got := CleanBoxes(in); !reflect.DeepEqual(got, want) {
 		t.Fatalf("%+v", got)
 	}
