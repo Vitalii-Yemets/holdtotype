@@ -52,10 +52,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.23"
-          cache-dependency-path: client/go.sum
       - name: Version matches tag
         if: github.ref_type == 'tag'
         run: |
@@ -66,16 +62,16 @@ jobs:
             exit 1
           fi
         working-directory: client
-      - name: Unit tests
-        run: go test ./internal/...
-        working-directory: client
-      - name: Install MinGW toolchain
-        run: sudo apt-get update && sudo apt-get install -y gcc-mingw-w64-x86-64
-      - name: Vet (Windows target)
-        run: |
-          touch setup/payload.zip
-          GOOS=windows CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc go vet -unsafeptr=false ./...
-        working-directory: client
+      - uses: docker/setup-buildx-action@v3
+      - name: Unit tests and vet (Windows target)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: build/Dockerfile
+          target: gotest
+          outputs: type=cacheonly
+          cache-from: type=gha,scope=gotest
+          cache-to: type=gha,mode=max,scope=gotest
 
   build:
     name: Build Windows binaries
