@@ -9,6 +9,7 @@ import (
 	"holdtotype/internal/ovplace"
 	"holdtotype/internal/preset"
 	"holdtotype/internal/replace"
+	"holdtotype/internal/subwin"
 	"io"
 	"log"
 	"net/http"
@@ -163,6 +164,8 @@ type settingsForm struct {
 	SubtitlesLines    *int                     `json:"subtitles_lines"`
 	SubtitlesSize     *string                  `json:"subtitles_size"`
 	SubtitlesXY       *map[string]ovplace.Frac `json:"subtitles_custom"`
+	SubtitlesPos      *string                  `json:"subtitles_position"`
+	SubtitlesMonitor  *string                  `json:"subtitles_monitor"`
 
 	SubtitlesTranslate *string `json:"subtitles_translate"`
 }
@@ -958,6 +961,12 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	if f.SubtitlesXY != nil {
 		c.SubtitlesXY = ovplace.CleanCustom(*f.SubtitlesXY)
 	}
+	if f.SubtitlesPos != nil && subwin.ValidPosition(*f.SubtitlesPos) {
+		c.SubtitlesPos = *f.SubtitlesPos
+	}
+	if f.SubtitlesMonitor != nil && validOverlayMonitor(*f.SubtitlesMonitor) {
+		c.SubtitlesMonitor = *f.SubtitlesMonitor
+	}
 	if f.SubtitlesTranslate != nil && (*f.SubtitlesTranslate == "" || validTranslateLang(*f.SubtitlesTranslate)) {
 		c.SubtitlesTranslate = *f.SubtitlesTranslate
 	}
@@ -1098,6 +1107,9 @@ func settingsHTML(cfg *Config, tab string) string {
 		"subtitles_save":          cfg.SubtitlesSave,
 		"subtitles_lines":         cfg.SubtitlesLines,
 		"subtitles_size":          cfg.SubtitlesSize,
+		"subtitles_position":      cfg.SubtitlesPos,
+		"subtitles_monitor":       cfg.SubtitlesMonitor,
+		"subtitles_custom":        cfg.SubtitlesXY,
 		"subtitles_translate":     cfg.SubtitlesTranslate,
 		"translate_target":        cfg.TranslateTarget,
 		"translate_ask":           cfg.TranslateAsk,
@@ -1226,7 +1238,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"subsoff": "S_SUBS_OFF", "subsloading": "S_SUBS_LOADING", "subslive": "S_SUBS_LISTEN_LIVE", "subsphrases": "S_SUBS_LISTEN_PHRASES",
 		"subsrestart": "S_SUBS_RESTARTING", "subsstart": "S_SUBS_START", "subsstop": "S_SUBS_STOP",
 		"subsmlive": "S_SUBS_M_LIVE", "subsmphrases": "S_SUBS_M_PHRASES", "subsmabsent": "S_SUBS_M_ABSENT", "subsmwhisper": "S_SUBS_M_WHISPER",
-		"subsplacedone": "S_SUBS_PLACE_DONE",
+		"subsposscheme": "S_SUBS_POS_SCHEME_SUB", "subsposdrag": "S_SUBS_POS_DRAG_SUB",
 		"subson": "S_SUBS_ON", "subsherohint": "S_SUBS_HERO_HINT", "subsherolive": "S_SUBS_HERO_LIVE", "subsherophrases": "S_SUBS_HERO_PHRASES",
 		"subsherostart": "S_SUBS_HERO_START", "subsherostop": "S_SUBS_HERO_STOP",
 		"substrlocal": "S_SUBS_TR_LOCAL", "substrapi": "S_SUBS_TR_API",
@@ -2433,8 +2445,12 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
    <select id="subtitles_lines"><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
   <div class="row"><label>{{S_SUBS_SIZE}}</label>
    <select id="subtitles_size"><option value="s">{{S_SUBS_SIZE_S}}</option><option value="m">{{S_SUBS_SIZE_M}}</option><option value="l">{{S_SUBS_SIZE_L}}</option></select></div>
-  <div class="row"><label>{{S_SUBS_PLACE}}<span class="sub">{{S_SUBS_PLACE_SUB}}</span></label>
-   <button type="button" class="mini" id="subs_place">{{S_SUBS_PLACE_BTN}}</button></div>
+  <div class="row noline"><label>{{S_SUBS_FREE}}<span class="sub">{{S_SUBS_FREE_SUB}}</span></label><input type="checkbox" id="subs_free"></div>
+  <div class="row"><label>{{S_SUBS_POS}}<span class="sub" id="subspos_sub">{{S_SUBS_POS_SCHEME_SUB}}</span></label>
+   <input type="hidden" id="subtitles_position">
+   <div id="subs_scheme_slot"></div></div>
+  <div class="row" id="subsmon_row" style="display:none"><label>{{S_SUBS_MON}}<span class="sub">{{S_SUBS_MON_SUB}}</span></label>
+   <select id="subtitles_monitor"></select></div>
  </div>
 </div>
 
@@ -2689,7 +2705,6 @@ let translateHotkey = CFG.translate_hotkey || "";
 let langKeys = Object.assign({}, CFG.lang_hotkeys || {});
 let subsKey = CFG.subtitles_hotkey || "";
 let subsRunning = false;
-let subsPlaceReset = false;
 let subsTr = null;
 let expandedID = null;
 let captureFor = null;
@@ -4038,11 +4053,7 @@ function initSubs(){
   subsEl("subs_key").onclick = ()=>{ captureFor = "subs"; appCaptureCombo(); };
   subsEl("subs_key_clear").onclick = ()=>setSubsKey("");
   subsEl("subs_folder").onclick = ()=>appOpenTranscripts();
-  subsEl("subs_place").onclick = async ()=>{
-    subsPlaceReset = true;
-    const r = await doSave();
-    if(r && r.severity !== "error") toast(L.subsplacedone, "ok");
-  };
+  initSubsScheme();
   subsEl("subs_case_go").onclick = subsGotoModels;
   refreshSubsModel();
   renderSubsTr();
@@ -4059,6 +4070,7 @@ async function refreshState(){
   showPostErr(s.post_err || "");
   renderSubsState(s);
   renderSubsHero(s);
+  subsPlaceFromState(s.subs_place);
   subsTr = s.subs_tr || {kind: "", name: ""};
   renderSubsTr();
 
@@ -5366,9 +5378,9 @@ function setHotkey(s, warn){
 async function doSave(){
   const micSel = document.getElementById("mic_device");
   const f={hotkey:CFG.hotkey, lang_models: langModels,
-    overlay_position: ovPos,
+    overlay_position: OVP.pos,
     overlay_monitor: (document.getElementById("overlay_monitor")||{}).value || "",
-    overlay_custom: ovCustom,
+    overlay_custom: OVP.custom,
     post_api_url: postURL,
     post_enabled: postEnabled,
     post_source: postSource,
@@ -5393,9 +5405,12 @@ async function doSave(){
     subtitles_save: !!(subsEl("subtitles_save")||{}).checked,
     subtitles_lines: parseInt((subsEl("subtitles_lines")||{}).value) || 3,
     subtitles_size: (subsEl("subtitles_size")||{}).value || "m",
-    subtitles_custom: subsPlaceReset ? {} : null,
+    subtitles_custom: OVS.customDirty ? OVS.custom : null,
+    subtitles_position: OVS.posDirty ? OVS.pos : null,
+    subtitles_monitor: (subsEl("subtitles_monitor")||{}).value || "",
     subtitles_translate: (subsEl("subtitles_translate")||{}).value || ""};
-  subsPlaceReset = false;
+  OVS.posDirty = false;
+  OVS.customDirty = false;
   bools.forEach(k=>f[k]=document.getElementById(k).checked);
   texts.forEach(k=>f[k]=document.getElementById(k).value);
   f.server_exe = exeStored;
@@ -6250,14 +6265,24 @@ function ruleOpts(sel, items, value){
   });
   sel.value = [...sel.options].some(o=>o.value===value) ? value : items[0][0];
 }
-let ovPos = CFG.overlay_position || "bottom";
-let ovCustom = Object.assign({}, CFG.overlay_custom || {});
 const OV_ANCHORS = {"top-left":[.12,.15],"top":[.5,.15],"top-right":[.88,.15],"left":[.12,.5],"center":[.5,.5],"right":[.88,.5],"bottom-left":[.12,.85],"bottom":[.5,.85],"bottom-right":[.88,.85]};
 const OV_CELLS = {"top-left":[0,0],"top":[1,0],"top-right":[2,0],"left":[0,1],"center":[1,1],"right":[2,1],"bottom-left":[0,2],"bottom":[1,2],"bottom-right":[2,2]};
-let ovAnchorLast = OV_ANCHORS[CFG.overlay_position] ? CFG.overlay_position : "bottom";
-function ovMonKey(){
+function ovScheme(o){
+  o.custom = Object.assign({}, o.custom || {});
+  o.last = OV_ANCHORS[o.pos] ? o.pos : "bottom";
+  o.dragging = false;
+  o.posDirty = false;
+  o.customDirty = false;
+  return o;
+}
+const OVP = ovScheme({ids: {box: "ovscheme", crt: "ovcrt", mini: "ovmini", store: "overlay_position", free: "ov_free", caret: "ov_caret", sub: "ovpos_sub", monRow: "ovmon_row", monSel: "overlay_monitor", master: "overlay"},
+  text: {drag: "ovposdrag", scheme: "ovposscheme"}, pos: CFG.overlay_position || "bottom", custom: CFG.overlay_custom, monitor: CFG.overlay_monitor || ""});
+const OVS = ovScheme({ids: {box: "swscheme", crt: "swcrt", mini: "swmini", store: "subtitles_position", free: "subs_free", sub: "subspos_sub", monRow: "subsmon_row", monSel: "subtitles_monitor", slot: "subs_scheme_slot"},
+  text: {drag: "subsposdrag", scheme: "subsposscheme"}, pos: CFG.subtitles_position || "bottom", custom: CFG.subtitles_custom, monitor: CFG.subtitles_monitor || ""});
+function ovEl(s, k){ return s.ids[k] ? document.getElementById(s.ids[k]) : null; }
+function ovMonKey(s){
   const mons = CFG._monitors || [];
-  const sel = document.getElementById("overlay_monitor");
+  const sel = ovEl(s || OVP, "monSel");
   const v = sel ? sel.value : "";
   if(v !== "" && v !== "cursor"){
     const m = mons[parseInt(v)];
@@ -6275,47 +6300,58 @@ function syncOverlayCard(){
     r.classList.toggle("dimmed", !on);
     r.querySelectorAll("input,select,button").forEach(el=>{ el.disabled = !on; });
   });
-  paintOvScheme();
+  paintOvScheme(OVP);
 }
-function paintOvScheme(){
-  const box = document.getElementById("ovscheme");
-  const mini = document.getElementById("ovmini");
+function paintOvScheme(s){
+  s = s || OVP;
+  const box = ovEl(s, "box");
+  const mini = ovEl(s, "mini");
   if(!box || !mini) return;
-  const master = document.getElementById("overlay");
+  const master = ovEl(s, "master");
   const shown = !master || master.checked;
-  const store = document.getElementById("overlay_position");
-  if(store) store.value = ovPos;
-  const caret = document.getElementById("ov_caret");
-  if(caret) caret.checked = ovPos === "caret";
-  box.classList.toggle("off", ovPos === "caret" || !shown);
-  const free = ovPos === "custom";
-  const crt = document.getElementById("ovcrt");
+  const store = ovEl(s, "store");
+  if(store) store.value = s.pos;
+  const caret = ovEl(s, "caret");
+  if(caret) caret.checked = s.pos === "caret";
+  box.classList.toggle("off", s.pos === "caret" || !shown);
+  const free = s.pos === "custom";
+  const crt = ovEl(s, "crt");
   if(crt) crt.classList.toggle("free", free);
-  const freeBox = document.getElementById("ov_free");
+  const freeBox = ovEl(s, "free");
   if(freeBox) freeBox.checked = free;
-  const sub = document.getElementById("ovpos_sub");
-  if(sub) sub.textContent = free ? L.ovposdrag : L.ovposscheme;
+  const sub = ovEl(s, "sub");
+  if(sub) sub.textContent = free ? L[s.text.drag] : L[s.text.scheme];
   box.querySelectorAll(".ovzone").forEach(z=>{
     const cell = OV_CELLS[z.dataset.pos];
     z.style.left = (cell[0] * 33.333) + "%";
     z.style.top = (cell[1] * 33.333) + "%";
   });
-  let f = OV_ANCHORS[ovPos] || [.5,.85];
+  let f = OV_ANCHORS[s.pos] || [.5,.85];
   if(free){
-    const c = ovCustom[ovMonKey()];
+    const c = s.custom[ovMonKey(s)];
     if(c) f = [c.x, c.y];
   }
   mini.style.left = (f[0]*100) + "%";
   mini.style.top = (f[1]*100) + "%";
-  mini.style.display = ovPos === "caret" ? "none" : "";
+  mini.style.display = s.pos === "caret" ? "none" : "";
 }
-function initOverlayScheme(){
-  const box = document.getElementById("ovscheme");
-  const mini = document.getElementById("ovmini");
-  const caret = document.getElementById("ov_caret");
-  const monRow = document.getElementById("ovmon_row");
-  const monSel = document.getElementById("overlay_monitor");
-  if(!box || !mini || !caret || !monSel) return;
+function ovCloneScheme(s){
+  const slot = ovEl(s, "slot");
+  const src = document.getElementById(OVP.ids.box);
+  if(!slot || !src) return;
+  const copy = src.cloneNode(true);
+  copy.id = s.ids.box;
+  copy.querySelector("#" + OVP.ids.crt).id = s.ids.crt;
+  copy.querySelector("#" + OVP.ids.mini).id = s.ids.mini;
+  slot.replaceWith(copy);
+}
+function initOvScheme(s){
+  ovCloneScheme(s);
+  const box = ovEl(s, "box");
+  const mini = ovEl(s, "mini");
+  const monSel = ovEl(s, "monSel");
+  if(!box || !mini || !monSel) return false;
+  const monRow = ovEl(s, "monRow");
   const mons = CFG._monitors || [];
   const o = document.createElement("option");
   o.value = ""; o.textContent = L.ovmoncursor;
@@ -6327,58 +6363,78 @@ function initOverlayScheme(){
     op.textContent = label + " (" + m.w + "×" + m.h + ")" + (m.primary ? " ★" : "");
     monSel.appendChild(op);
   });
-  monSel.value = [...monSel.options].some(x=>x.value===(CFG.overlay_monitor||"")) ? (CFG.overlay_monitor||"") : "";
+  monSel.value = [...monSel.options].some(x=>x.value===s.monitor) ? s.monitor : "";
   if(monRow && mons.length > 1) monRow.style.display = "";
-  monSel.addEventListener("change", paintOvScheme);
+  monSel.addEventListener("change", ()=>paintOvScheme(s));
   box.querySelectorAll(".ovzone").forEach(z=>{
-    z.onclick = ()=>{ ovPos = z.dataset.pos; ovAnchorLast = ovPos; paintOvScheme(); doSave(); };
+    z.onclick = ()=>{ s.pos = z.dataset.pos; s.last = s.pos; s.posDirty = true; paintOvScheme(s); doSave(); };
   });
-  caret.onchange = e=>{ e.stopPropagation(); ovPos = caret.checked ? "caret" : ovAnchorLast; paintOvScheme(); doSave(); };
-  const freeBox = document.getElementById("ov_free");
+  const caret = ovEl(s, "caret");
+  if(caret) caret.onchange = e=>{ e.stopPropagation(); s.pos = caret.checked ? "caret" : s.last; s.posDirty = true; paintOvScheme(s); doSave(); };
+  const freeBox = ovEl(s, "free");
   if(freeBox) freeBox.onchange = e=>{
     e.stopPropagation();
     if(freeBox.checked){
-      const key = ovMonKey();
-      if(!ovCustom[key]){
-        const a = OV_ANCHORS[ovAnchorLast] || [.5,.85];
-        ovCustom[key] = {x: a[0], y: a[1]};
+      const key = ovMonKey(s);
+      if(!s.custom[key]){
+        const a = OV_ANCHORS[s.last] || [.5,.85];
+        s.custom[key] = {x: a[0], y: a[1]};
+        s.customDirty = true;
       }
-      ovPos = "custom";
+      s.pos = "custom";
     } else {
-      ovPos = ovAnchorLast;
+      s.pos = s.last;
     }
-    paintOvScheme();
+    s.posDirty = true;
+    paintOvScheme(s);
     doSave();
   };
-  const crt = document.getElementById("ovcrt");
-  let dragging = false;
+  const crt = ovEl(s, "crt");
   const dragTo = e=>{
     const r = crt.getBoundingClientRect();
     if(!r.width || !r.height) return;
     const fx = Math.max(.07, Math.min(.93, (e.clientX - r.left) / r.width));
     const fy = Math.max(.07, Math.min(.93, (e.clientY - r.top) / r.height));
-    ovCustom[ovMonKey()] = {x: +fx.toFixed(3), y: +fy.toFixed(3)};
-    paintOvScheme();
+    s.custom[ovMonKey(s)] = {x: +fx.toFixed(3), y: +fy.toFixed(3)};
+    s.customDirty = true;
+    paintOvScheme(s);
   };
   if(crt) crt.addEventListener("pointerdown", e=>{
-    if(ovPos !== "custom") return;
-    dragging = true;
+    if(s.pos !== "custom") return;
+    s.dragging = true;
     if(crt.setPointerCapture && e.pointerId !== undefined) crt.setPointerCapture(e.pointerId);
     e.preventDefault();
     dragTo(e);
   });
   if(crt) crt.addEventListener("pointermove", e=>{
-    if(!dragging) return;
+    if(!s.dragging) return;
     dragTo(e);
   });
   if(crt) crt.addEventListener("pointerup", ()=>{
-    if(!dragging) return;
-    dragging = false;
+    if(!s.dragging) return;
+    s.dragging = false;
     doSave();
   });
+  return true;
+}
+function initOverlayScheme(){
+  if(!initOvScheme(OVP)) return;
   const master = document.getElementById("overlay");
   if(master) master.addEventListener("change", syncOverlayCard);
   syncOverlayCard();
+}
+function initSubsScheme(){
+  if(initOvScheme(OVS)) paintOvScheme(OVS);
+}
+function subsPlaceFromState(p){
+  if(!p || OVS.dragging || OVS.posDirty || OVS.customDirty) return;
+  const pos = p.position || "bottom";
+  const custom = JSON.stringify(p.custom || {});
+  if(pos === OVS.pos && custom === JSON.stringify(OVS.custom)) return;
+  OVS.pos = pos;
+  if(OV_ANCHORS[pos]) OVS.last = pos;
+  OVS.custom = Object.assign({}, p.custom || {});
+  paintOvScheme(OVS);
 }
 let skipFilterVal = ()=>"";
 function skipItems(){

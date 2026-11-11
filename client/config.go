@@ -10,6 +10,7 @@ import (
 	"holdtotype/internal/preset"
 	"holdtotype/internal/profiles"
 	"holdtotype/internal/replace"
+	"holdtotype/internal/subwin"
 	"holdtotype/internal/theme"
 
 	"bytes"
@@ -155,6 +156,8 @@ type Config struct {
 	SubtitlesLines    int                     `json:"subtitles_lines"`
 	SubtitlesSize     string                  `json:"subtitles_size"`
 	SubtitlesXY       map[string]ovplace.Frac `json:"subtitles_custom"`
+	SubtitlesPos      string                  `json:"subtitles_position"`
+	SubtitlesMonitor  string                  `json:"subtitles_monitor"`
 
 	SubtitlesTranslate string `json:"subtitles_translate"`
 
@@ -710,6 +713,13 @@ func cleanSubtitles(cfg *Config) bool {
 		cfg.SubtitlesSize = "m"
 	}
 	cfg.SubtitlesXY = ovplace.CleanCustom(cfg.SubtitlesXY)
+	if pos, moved := subwin.Position(cfg.SubtitlesPos, len(cfg.SubtitlesXY) > 0); moved {
+		cfg.SubtitlesPos = pos
+		changed = true
+	}
+	if !validOverlayMonitor(cfg.SubtitlesMonitor) {
+		cfg.SubtitlesMonitor = ""
+	}
 	cfg.SubtitlesHotkey = strings.TrimSpace(cfg.SubtitlesHotkey)
 	if cfg.SubtitlesHotkey != "" && !hotkeyParses(cfg.SubtitlesHotkey) {
 		log.Printf("subtitles: the shortcut %q cannot be read and is dropped", cfg.SubtitlesHotkey)

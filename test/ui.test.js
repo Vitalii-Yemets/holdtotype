@@ -60,7 +60,7 @@ const dom = new JSDOM(html, {
     };
     window.removeLLMByHand = (f) => { llmState.installed = llmState.installed.filter(m => m.file !== f); };
     window.appState = async () =>
-      JSON.stringify({ ...postFields(), subtitles: window.subsState, subs_tr: window.subsTr, hotkey: "ctrl+win", mic: "Realtek", engine: "sherpa · gigaam-v3", llm: "model.gguf",
+      JSON.stringify({ ...postFields(), subtitles: window.subsState, subs_tr: window.subsTr, subs_place: window.subsPlace, hotkey: "ctrl+win", mic: "Realtek", engine: "sherpa · gigaam-v3", llm: "model.gguf",
         ram: "8000 MB free", last: "hello", last_meta: "just now · 5 characters", ready: engineReady, status: "Ready",
         status_line: "Ready · gigaam-v3 + ggml-small.bin · 7.8 GB free",
         active_model: "GigaAM v3", active_state: ruState, active_lang: "RU",
@@ -178,6 +178,7 @@ const dom = new JSDOM(html, {
     window.subsCalls = [];
     window.subsState = { phase: "off" };
     window.subsTr = { kind: "local", name: "qwen2.5-1.5b-instruct-q4_k_m" };
+    window.subsPlace = { position: "bottom", custom: {} };
     window.appSubtitles = (action) => {
       window.subsCalls.push(action);
       window.subsState = action === "start" ? { phase: "loading", mode: "live", model: "Nemotron 3.5", lang: "en" } : { phase: "off" };
@@ -208,6 +209,8 @@ const dom = new JSDOM(html, {
       micBadge = f.mic_device_name ? f.mic_device_name.split(" ")[0] : "Realtek";
       const message = Number(f.server_port) === 8910 ? "Saved" : "Restarting the recognizer…";
       window.lastSaveForm = f;
+      if (window.subsPlace && f.subtitles_position) window.subsPlace = { ...window.subsPlace, position: f.subtitles_position };
+      if (window.subsPlace && f.subtitles_custom) window.subsPlace = { ...window.subsPlace, custom: f.subtitles_custom };
       const keys = Object.values(f.lang_hotkeys || {});
       if (f.subtitles_hotkey) keys.push(f.subtitles_hotkey);
       if (keys.includes(f.hotkey) || new Set(keys).size !== keys.length) {
@@ -1659,11 +1662,45 @@ function check(name, actual, expected) {
   check("the rows reach the save form", w.lastSaveForm.subtitles_lines, 5);
   await change(sv("subtitles_size"), "l");
   check("the text size reaches the save form", w.lastSaveForm.subtitles_size, "l");
-  check("an ordinary save leaves the window place alone", w.lastSaveForm.subtitles_custom, null);
-  sv("subs_place").click(); await sleep(300);
-  check("the place button clears the saved places", w.lastSaveForm.subtitles_custom, {});
+  check("an ordinary save leaves the window place alone", [w.lastSaveForm.subtitles_custom, w.lastSaveForm.subtitles_position], [null, null]);
+  check("the button that forgot the place is gone", !!sv("subs_place"), false);
+  const swZones = d.querySelectorAll("#swscheme .ovzone");
+  check("the window card has the same picture of a screen with nine places", [swZones.length, !!d.querySelector("#swscheme .ovcase"), !!d.querySelector("#swscheme .ovneck"), !!d.querySelector("#swscheme .ovbase")], [9, true, true, true]);
+  check("the picture is the plate's own, not a copy in the page", d.querySelectorAll(".ovscheme").length, 2);
+  check("and the plate keeps its own picture", [d.querySelectorAll("#ovscheme .ovzone").length, !!d.getElementById("ovmini"), !!d.getElementById("swmini")], [9, true, true]);
+  check("there is no at-the-cursor choice for the window", !!d.querySelector("#p-subs #ov_caret, #p-subs [id*=caret]"), false);
+  check("the window starts at the bottom of the screen", [d.getElementById("swmini").style.left, d.getElementById("swmini").style.top], ["50%", "85%"]);
+  check("its own spot is off", sv("subs_free").checked, false);
+  d.querySelector('#swscheme .ovzone[data-pos="top-left"]').click(); await sleep(300);
+  check("clicking a place moves the window and saves itself", w.lastSaveForm.subtitles_position, "top-left");
+  check("the miniature follows the chosen place", [d.getElementById("swmini").style.left, d.getElementById("swmini").style.top], ["12%", "15%"]);
+  check("the plate does not move with it", [w.lastSaveForm.overlay_position, d.getElementById("ovmini").style.left], ["bottom", "50%"]);
   await change(sv("subtitles_save"), true);
-  check("and only that once", w.lastSaveForm.subtitles_custom, null);
+  check("the place is sent only when it changed", w.lastSaveForm.subtitles_position, null);
+  const swCrt = d.getElementById("swcrt");
+  swCrt.getBoundingClientRect = () => ({ left: 0, top: 0, width: 156, height: 80 });
+  check("dragging does nothing while its own spot is off", (() => { const before = w.saveCalls; swCrt.dispatchEvent(new w.MouseEvent("pointerdown", { clientX: 40, clientY: 20 })); return w.saveCalls === before; })(), true);
+  const swFree = sv("subs_free");
+  swFree.checked = true; swFree.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
+  check("its own spot hands the screen over", [w.lastSaveForm.subtitles_position, d.getElementById("swcrt").className.includes("free")], ["custom", true]);
+  check("starting from the place chosen before", w.lastSaveForm.subtitles_custom["1920x1080"], { x: 0.12, y: 0.15 });
+  check("and the hint says the window itself can be dragged", sv("subspos_sub").textContent, "drag the mark or the window itself — it lands anywhere");
+  swCrt.dispatchEvent(new w.MouseEvent("pointerdown", { clientX: 117, clientY: 60 }));
+  swCrt.dispatchEvent(new w.MouseEvent("pointermove", { clientX: 117, clientY: 60 }));
+  swCrt.dispatchEvent(new w.Event("pointerup")); await sleep(300);
+  check("dragging the mark remembers the fraction for this screen", w.lastSaveForm.subtitles_custom["1920x1080"], { x: 0.75, y: 0.75 });
+  swFree.checked = false; swFree.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
+  check("turning it off returns the last chosen place", w.lastSaveForm.subtitles_position, "top-left");
+  w.subsPlace = { position: "custom", custom: { "1920x1080": { x: 0.3, y: 0.4 } } };
+  await w.refreshState(); await sleep(50);
+  check("a drag of the window itself shows on the next poll", [sv("subs_free").checked, d.getElementById("swmini").style.left, d.getElementById("swmini").style.top], [true, "30%", "40%"]);
+  w.subsPlace = { position: "bottom", custom: { "1920x1080": { x: 0.3, y: 0.4 } } };
+  await w.refreshState(); await sleep(50);
+  check("and so does a place chosen elsewhere", [sv("subs_free").checked, d.getElementById("swmini").style.top], [false, "85%"]);
+  check("with two monitors the window gets its own screen choice", [sv("subsmon_row").style.display, sv("subtitles_monitor").options.length, sv("subtitles_monitor").options[0].textContent], ["", 3, "The screen with the cursor"]);
+  await change(sv("subtitles_monitor"), "1");
+  check("the chosen screen is saved", [w.lastSaveForm.subtitles_monitor, w.lastSaveForm.overlay_monitor], ["1", ""]);
+  await change(sv("subtitles_monitor"), "");
   sv("subs_go").click(); await sleep(700);
   check("the button starts them when they are off", w.subsCalls, ["start"]);
   check("the state line follows the poll", [sv("subs_state").dataset.phase, sv("subs_state").textContent], ["loading", "Loading Nemotron 3.5…"]);

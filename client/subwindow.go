@@ -43,6 +43,7 @@ const (
 	swMaxW      = 1100
 	swShare     = 56
 	swBottomGap = 150
+	swSideGap   = 24
 	swAlpha     = 235
 	swTextRunes = 900
 	swCloseDIP  = 40
@@ -87,6 +88,8 @@ type subWindow struct {
 	src     subWindowSource
 	rows    int32
 	size    string
+	pos     string
+	monitor string
 	custom  map[string]ovplace.Frac
 	onClose func()
 	onMoved func(key string, f ovplace.Frac)
@@ -115,6 +118,7 @@ func newSubWindow(class string) *subWindow {
 		ready:     make(chan struct{}),
 		rows:      defaultSubtitlesLines,
 		size:      "m",
+		pos:       ovPosBottom,
 		dpi:       96,
 		lastPhase: -1,
 	}
@@ -130,8 +134,8 @@ var (
 	swFonts  = map[string]uintptr{}
 )
 
-func subWindowConfigure(rows int, size string, custom map[string]ovplace.Frac) {
-	swMain.configure(rows, size, custom)
+func subWindowConfigure(cfg *Config) {
+	swMain.configure(cfg)
 }
 
 func subWindowShow(src subWindowSource, onClose func(), onMoved func(string, ovplace.Frac)) {
@@ -142,20 +146,32 @@ func subWindowHide(src subWindowSource) {
 	swMain.hide(src)
 }
 
-func (sw *subWindow) configure(rows int, size string, custom map[string]ovplace.Frac) {
+func (sw *subWindow) configure(cfg *Config) {
+	rows := cfg.SubtitlesLines
 	if rows < minSubtitlesLines || rows > maxSubtitlesLines {
 		rows = defaultSubtitlesLines
 	}
+	size := cfg.SubtitlesSize
 	if !validSubtitlesSize(size) {
 		size = "m"
 	}
+	pos := cfg.SubtitlesPos
+	if !subwin.ValidPosition(pos) {
+		pos = ovPosBottom
+	}
+	mon := cfg.SubtitlesMonitor
+	if !validOverlayMonitor(mon) {
+		mon = ""
+	}
 	places := map[string]ovplace.Frac{}
-	for k, v := range custom {
+	for k, v := range cfg.SubtitlesXY {
 		places[k] = v
 	}
 	sw.mu.Lock()
 	sw.rows = int32(rows)
 	sw.size = size
+	sw.pos = pos
+	sw.monitor = mon
 	sw.custom = places
 	hwnd := sw.hwnd
 	sw.mu.Unlock()
@@ -285,6 +301,16 @@ func swMeasureLine(font uintptr) int32 {
 }
 
 func (sw *subWindow) place() (work, screen rect) {
+	sw.mu.Lock()
+	pick := sw.monitor
+	sw.mu.Unlock()
+	if pick != "" && pick != "cursor" {
+		idx, err := strconv.Atoi(pick)
+		mons := listMonitors()
+		if err == nil && idx >= 0 && idx < len(mons) {
+			return mons[idx].Work, mons[idx].Screen
+		}
+	}
 	if sw.shown && sw.w > 0 {
 		return monitorRectsForPoint(sw.x+sw.w/2, sw.y+sw.h/2)
 	}
@@ -349,17 +375,13 @@ func (sw *subWindow) layout(hwnd uintptr) {
 	dpi := dpiForPoint(wa.Left+(wa.Right-wa.Left)/2, wa.Top+(wa.Bottom-wa.Top)/2)
 	w, h, lineH := sw.measure(wa, dpi)
 	sw.mu.Lock()
-	custom := sw.custom
+	custom, pos := sw.custom, sw.pos
 	sw.mu.Unlock()
 	var x, y int32
-	if f, ok := custom[ovplace.ResKey(toPlace(screen))]; ok {
+	if f, ok := custom[ovplace.ResKey(toPlace(screen))]; ok && pos == ovPosCustom {
 		x, y = ovplace.Custom(f, toPlace(wa), w, h)
 	} else {
-		x = wa.Left + (wa.Right-wa.Left-w)/2
-		y = wa.Bottom - scaleDPI(swBottomGap, dpi) - h
-		if y < wa.Top {
-			y = wa.Top
-		}
+		x, y = subwin.Place(pos, toPlace(wa), w, h, scaleDPI(swSideGap, dpi), scaleDPI(swBottomGap, dpi))
 	}
 	sw.setRect(hwnd, x, y, w, h, lineH, dpi)
 }
@@ -618,6 +640,7 @@ func (sw *subWindow) savePlace() {
 		sw.custom = map[string]ovplace.Frac{}
 	}
 	sw.custom[key] = f
+	sw.pos = ovPosCustom
 	cb := sw.onMoved
 	sw.mu.Unlock()
 	log.Printf("subtitles: the window was moved to %.3f,%.3f of the %s screen", f.X, f.Y, key)
@@ -861,7 +884,7 @@ func runSubwindowDemo(args []string) {
 		registerBundledFonts()
 		initLang(cfg.UILanguage)
 		applyTheme(cfg.Skin, cfg.Theme)
-		subWindowConfigure(cfg.SubtitlesLines, cfg.SubtitlesSize, cfg.SubtitlesXY)
+		subWindowConfigure(cfg)
 		langCode = cfg.SubtitlesLanguage
 		if cfg.SubtitlesTranslate != "" {
 			to = cfg.SubtitlesTranslate

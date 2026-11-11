@@ -683,6 +683,11 @@ func translationTarget(cfg *Config, t *subTarget) string {
 	return to
 }
 
+type subPlaceState struct {
+	Position string                  `json:"position"`
+	Custom   map[string]ovplace.Frac `json:"custom"`
+}
+
 type subTrState struct {
 	Kind string `json:"kind"`
 	Name string `json:"name"`
@@ -1625,7 +1630,7 @@ func (a *App) startSubtitles() {
 		return
 	}
 	a.sub = r
-	subWindowConfigure(cfg.SubtitlesLines, cfg.SubtitlesSize, cfg.SubtitlesXY)
+	subWindowConfigure(cfg)
 	subWindowShow(r, func() {
 		a.stopSubtitles("closed from its window", subStopDrain)
 	}, a.saveSubtitlesPlace)
@@ -1640,6 +1645,7 @@ func (a *App) saveSubtitlesPlace(key string, f ovplace.Frac) {
 	}
 	places[key] = f
 	c.SubtitlesXY = places
+	c.SubtitlesPos = ovPosCustom
 	a.mu.Unlock()
 	if err := saveConfig("config.json", &c); err != nil {
 		log.Printf("subtitles: the window place was not saved: %v", err)
@@ -1648,6 +1654,7 @@ func (a *App) saveSubtitlesPlace(key string, f ovplace.Frac) {
 	a.mu.Lock()
 	cur := *a.cfg
 	cur.SubtitlesXY = places
+	cur.SubtitlesPos = ovPosCustom
 	a.cfg = &cur
 	a.mu.Unlock()
 }
@@ -1738,7 +1745,7 @@ func (a *App) subtitlesConfigChanged() {
 		return
 	}
 	cfg := a.snapshot()
-	subWindowConfigure(cfg.SubtitlesLines, cfg.SubtitlesSize, cfg.SubtitlesXY)
+	subWindowConfigure(cfg)
 	t, err := resolveSubtitles(cfg)
 	if err != nil {
 		r.fail(subErrorKind(err), fmt.Sprintf("the new settings leave subtitles without a model: %s", logText(err)))

@@ -53,6 +53,8 @@
   "subtitles_lines": 3,
   "subtitles_size": "m",
   "subtitles_custom": {},
+  "subtitles_position": "bottom",
+  "subtitles_monitor": "",
   "subtitles_translate": "",
   "wizard_done": false
 }
