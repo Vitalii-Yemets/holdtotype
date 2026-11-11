@@ -743,7 +743,7 @@ func (w *subTranslator) handle(p subtitles.Pending) {
 	w.mu.Unlock()
 	ctx, cancel := context.WithTimeout(w.ctx, subTranslateTimeout)
 	started := time.Now()
-	out, err := r.app.editorChat(ctx, cfg, src, subtitles.TranslatePrompt(p.Target), p.Text, subTranslateTokens)
+	out, err := r.app.editorChat(ctx, cfg, src, subtitles.TranslatePrompt(p.Target), p.Text, subTranslateTokens, subtitles.TranslateGrammar(p.Target))
 	cancel()
 	if err != nil {
 		if w.ctx.Err() != nil {
@@ -756,7 +756,7 @@ func (w *subTranslator) handle(p subtitles.Pending) {
 		w.noteFail(err)
 		return
 	}
-	text, verdict := subtitles.CleanTranslation(p.Text, out)
+	text, verdict := subtitles.CleanTranslation(p.Text, out, p.Target)
 	switch verdict {
 	case subtitles.TrSame:
 		w.same.Add(1)
@@ -769,6 +769,9 @@ func (w *subTranslator) handle(p subtitles.Pending) {
 		return
 	case subtitles.TrRamble:
 		w.noteFail(fmt.Errorf("an answer of %d characters for a line of %d is thrown away", len([]rune(out)), len([]rune(p.Text))))
+		return
+	case subtitles.TrScript:
+		w.noteFail(fmt.Errorf("the answer is not written in %s", subtitles.LanguageName(p.Target)))
 		return
 	}
 	r.board.SetTranslation(p.ID, text)

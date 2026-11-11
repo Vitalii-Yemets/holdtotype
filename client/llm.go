@@ -135,10 +135,10 @@ func (s *llamaServer) stop() {
 }
 
 func (s *llamaServer) chat(ctx context.Context, system, user string) (string, error) {
-	return s.chatWith(ctx, system, user, 2048)
+	return s.chatWith(ctx, system, user, 2048, "")
 }
 
-func (s *llamaServer) chatWith(ctx context.Context, system, user string, maxTokens int) (string, error) {
+func (s *llamaServer) chatWith(ctx context.Context, system, user string, maxTokens int, grammar string) (string, error) {
 	payload := map[string]any{
 		"messages": []map[string]string{
 			{"role": "system", "content": system},
@@ -146,6 +146,9 @@ func (s *llamaServer) chatWith(ctx context.Context, system, user string, maxToke
 		},
 		"temperature": 0.2,
 		"max_tokens":  maxTokens,
+	}
+	if grammar != "" {
+		payload["grammar"] = grammar
 	}
 	body, _ := json.Marshal(payload)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, s.baseURL+"/v1/chat/completions", bytes.NewReader(body))
@@ -547,7 +550,7 @@ func translationSource(cfg *Config) editorSource {
 
 var errNoEditor = errors.New("no editor model is installed and no post-processing server is set")
 
-func (a *App) editorChat(ctx context.Context, cfg *Config, src editorSource, system, user string, maxTokens int) (string, error) {
+func (a *App) editorChat(ctx context.Context, cfg *Config, src editorSource, system, user string, maxTokens int, localGrammar string) (string, error) {
 	switch src.kind {
 	case editorAPI:
 		return externalChatWith(ctx, cfg, system, user, chatOptions{maxTokens: maxTokens, quiet: true})
@@ -556,7 +559,7 @@ func (a *App) editorChat(ctx context.Context, cfg *Config, src editorSource, sys
 		if err != nil {
 			return "", err
 		}
-		return llm.chatWith(ctx, system, user, maxTokens)
+		return llm.chatWith(ctx, system, user, maxTokens, localGrammar)
 	}
 	return "", errNoEditor
 }

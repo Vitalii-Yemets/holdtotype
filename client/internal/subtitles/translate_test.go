@@ -220,36 +220,93 @@ func TestQueueDropsALineThatWaitedTooLong(t *testing.T) {
 
 func TestCleanTranslation(t *testing.T) {
 	cases := []struct {
-		line, answer, want string
-		verdict            Verdict
+		line, answer, target, want string
+		verdict                    Verdict
 	}{
-		{"Hello there", "Hallo da", "Hallo da", TrOK},
-		{"Hello there", `"Hallo da"`, "Hallo da", TrOK},
-		{"Hello there", "«Привет»", "Привет", TrOK},
-		{"Hello there", "„Hallo da“", "Hallo da", TrOK},
-		{"Hello there", "“Hallo da”", "Hallo da", TrOK},
-		{"Hello there", "'Hallo da'", "Hallo da", TrOK},
-		{"Hello there", "‘Ciao’", "Ciao", TrOK},
-		{"Hello there", "「こんにちは」", "こんにちは", TrOK},
-		{"Hello there", "\"« Hallo da »\"", "Hallo da", TrOK},
-		{"Hello there", `"Hallo", sagte er.`, `"Hallo", sagte er.`, TrOK},
-		{"Hello there", "  Hallo   \t da  ", "Hallo da", TrOK},
-		{"Hello there", "\n\n  Hallo da\nNote: this is German.\n", "Hallo da", TrOK},
-		{"Hello there", "\r\nHallo da\r\n(translated)", "Hallo da", TrOK},
-		{"Hello there", "", "", TrEmpty},
-		{"Hello there", " \n \"\" \n", "", TrEmpty},
-		{"Hello there", "...", "", TrEmpty},
-		{"Hello, there!", "hello there", "", TrSame},
-		{"Hello there", "  HELLO,   THERE.  ", "", TrSame},
-		{"Привет, мир", "«привет мир!»", "", TrSame},
-		{"Hi", strings.Repeat("x", 49), "", TrRamble},
-		{"Hi", strings.Repeat("x", 48), strings.Repeat("x", 48), TrOK},
-		{"Hi", "\"" + strings.Repeat("x", 48) + "\"", strings.Repeat("x", 48), TrOK},
+		{"Hello there", "Hallo da", "de", "Hallo da", TrOK},
+		{"Hello there", `"Hallo da"`, "de", "Hallo da", TrOK},
+		{"Hello there", "«Привет»", "ru", "Привет", TrOK},
+		{"Hello there", "„Hallo da“", "de", "Hallo da", TrOK},
+		{"Hello there", "“Hallo da”", "de", "Hallo da", TrOK},
+		{"Hello there", "'Hallo da'", "de", "Hallo da", TrOK},
+		{"Hello there", "‘Ciao’", "it", "Ciao", TrOK},
+		{"Hello there", "「Hallo da」", "de", "Hallo da", TrOK},
+		{"Hello there", "\"« Hallo da »\"", "de", "Hallo da", TrOK},
+		{"Hello there", `"Hallo", sagte er.`, "de", `"Hallo", sagte er.`, TrOK},
+		{"Hello there", "  Hallo   \t da  ", "de", "Hallo da", TrOK},
+		{"Hello there", "\n\n  Hallo da\nNote: this is German.\n", "de", "Hallo da", TrOK},
+		{"Hello there", "\r\nHallo da\r\n(translated)", "de", "Hallo da", TrOK},
+		{"Hello there", "", "de", "", TrEmpty},
+		{"Hello there", " \n \"\" \n", "de", "", TrEmpty},
+		{"Hello there", "...", "de", "", TrEmpty},
+		{"Hello, there!", "hello there", "de", "", TrSame},
+		{"Hello there", "  HELLO,   THERE.  ", "de", "", TrSame},
+		{"Привет, мир", "«привет мир!»", "ru", "", TrSame},
+		{"Hi", strings.Repeat("x", 49), "de", "", TrRamble},
+		{"Hi", strings.Repeat("x", 48), "de", strings.Repeat("x", 48), TrOK},
+		{"Hi", "\"" + strings.Repeat("x", 48) + "\"", "de", strings.Repeat("x", 48), TrOK},
 	}
 	for _, c := range cases {
-		got, v := CleanTranslation(c.line, c.answer)
+		got, v := CleanTranslation(c.line, c.answer, c.target)
 		if got != c.want || v != c.verdict {
-			t.Errorf("CleanTranslation(%q, %q) = %q, %q; want %q, %q", c.line, c.answer, got, v, c.want, c.verdict)
+			t.Errorf("CleanTranslation(%q, %q, %q) = %q, %q; want %q, %q", c.line, c.answer, c.target, got, v, c.want, c.verdict)
+		}
+	}
+}
+
+func TestCleanTranslationRejectsTheWrongScript(t *testing.T) {
+	cases := []struct {
+		line, answer, target string
+		verdict              Verdict
+	}{
+		{"Press the keyboard shortcut to start.", "Нажмите клавиатурным快捷方式, чтобы начать.", "ru", TrScript},
+		{"Look at your screen.", "Посмотрите на ваш屏幕.", "ru", TrScript},
+		{"So basically what happened is the server ran out of memory.", "Так что basically что happened is the server ran out of memory", "ru", TrScript},
+		{"The server restarted at night.", "Сервер перезапустился ночью.", "en", TrScript},
+		{"The server restarted at night.", "Сервер перезапустився вночі.", "de", TrScript},
+		{"Anna will put it on GitHub tomorrow.", "Анна выложит это на GitHub завтра.", "ru", TrOK},
+		{"Good morning everyone", "Доброе утро everyone", "ru", TrOK},
+		{"Good day, Kyiv", "Добрий день, Kyiv", "uk", TrOK},
+		{"Good morning everyone", "Guten Morgen zusammen", "de", TrOK},
+		{"Good morning everyone", "Dzień dobry wszystkim", "pl", TrOK},
+		{"Fine, 1234567890 — 42%!", "Ок, 1234567890 — 42%!", "ru", TrOK},
+		{"Fine, 1234567890 — 42%!", "OK, 1234567890 — 42%!", "ru", TrScript},
+		{"Ok", "Хорошо, мистер Smith", "ru", TrOK},
+		{"Hello", "Hallo！", "de", TrScript},
+		{"Hello", "Hello 안녕", "fr", TrScript},
+		{"Hello", "Hallo ハロー", "de", TrScript},
+		{"Hello", "Привет", "", TrOK},
+		{"Hello", "Hallo 中", "", TrScript},
+		{"Quote", "«Цитата» — №1…", "ru", TrOK},
+	}
+	for _, c := range cases {
+		_, v := CleanTranslation(c.line, c.answer, c.target)
+		if v != c.verdict {
+			t.Errorf("CleanTranslation(%q, %q, %q) gave %q, want %q", c.line, c.answer, c.target, v, c.verdict)
+		}
+	}
+}
+
+func TestTranslateGrammarForbidsTheForeignScripts(t *testing.T) {
+	want := "root ::= [^⺀-鿿가-힯぀-ヿ＀-￯]*"
+	for _, code := range TranslateTargets {
+		if got := TranslateGrammar(code); got != want {
+			t.Errorf("grammar for %s: %q", code, got)
+		}
+	}
+	for _, r := range []rune{0x2e80, 0x9fff, 0xac00, 0xd7af, 0x3040, 0x30ff, 0xff00, 0xffef} {
+		if !strings.ContainsRune(want, r) {
+			t.Errorf("the grammar lacks the real character %U", r)
+		}
+	}
+	for _, code := range []string{"", "auto", "xx", "DE", "zh"} {
+		if got := TranslateGrammar(code); got != "" {
+			t.Errorf("grammar for an unknown code %q: %q", code, got)
+		}
+	}
+	for _, r := range []rune{0x2e80, 0x4e2d, 0x9fff, 0xac00, 0xd7af, 0x3042, 0x30a2, 0xff01, 0xffef} {
+		if _, v := CleanTranslation("Hello", "Hallo "+string(r), "de"); v != TrScript {
+			t.Errorf("an answer with %U was not rejected: %q", r, v)
 		}
 	}
 }
@@ -257,10 +314,10 @@ func TestCleanTranslation(t *testing.T) {
 func TestCleanTranslationRambleLimit(t *testing.T) {
 	line := strings.Repeat("a", 10)
 	limit := 4*10 + 40
-	if got, v := CleanTranslation(line, strings.Repeat("b", limit)); v != TrOK || len(got) != limit {
+	if got, v := CleanTranslation(line, strings.Repeat("b", limit), "de"); v != TrOK || len(got) != limit {
 		t.Fatalf("an answer at the limit was thrown away: %q", v)
 	}
-	if _, v := CleanTranslation(line, strings.Repeat("b", limit+1)); v != TrRamble {
+	if _, v := CleanTranslation(line, strings.Repeat("b", limit+1), "de"); v != TrRamble {
 		t.Fatalf("an answer over the limit gave %q", v)
 	}
 }

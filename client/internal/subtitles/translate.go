@@ -39,6 +39,7 @@ const (
 	TrEmpty  Verdict = "empty"
 	TrSame   Verdict = "same"
 	TrRamble Verdict = "ramble"
+	TrScript Verdict = "script"
 )
 
 const quoteRunes = "\"'`«»‹›„“”‚‘’「」『』〝〞＂"
@@ -76,7 +77,51 @@ func plain(s string) string {
 	return b.String()
 }
 
-func CleanTranslation(line, answer string) (string, Verdict) {
+var foreignScripts = []*unicode.RangeTable{{R16: []unicode.Range16{
+	{Lo: 0x2e80, Hi: 0x9fff, Stride: 1},
+	{Lo: 0xac00, Hi: 0xd7af, Stride: 1},
+	{Lo: 0xff00, Hi: 0xffef, Stride: 1},
+}}}
+
+const translateGrammar = "root ::= [^⺀-鿿가-힯぀-ヿ＀-￯]*"
+
+func TranslateGrammar(target string) string {
+	if LanguageName(target) == "" {
+		return ""
+	}
+	return translateGrammar
+}
+
+func wrongScript(answer, target string) bool {
+	latin, cyrillic, letters := 0, 0, 0
+	for _, r := range answer {
+		if unicode.In(r, foreignScripts...) {
+			return true
+		}
+		if !unicode.IsLetter(r) {
+			continue
+		}
+		letters++
+		switch {
+		case unicode.Is(unicode.Latin, r):
+			latin++
+		case unicode.Is(unicode.Cyrillic, r):
+			cyrillic++
+		}
+	}
+	if letters == 0 {
+		return false
+	}
+	switch target {
+	case "ru", "uk":
+		return 2*latin >= letters
+	case "de", "en", "es", "fr", "it", "pl":
+		return 2*cyrillic >= letters
+	}
+	return false
+}
+
+func CleanTranslation(line, answer, target string) (string, Verdict) {
 	out := oneLine(unquote(firstLine(answer)))
 	p := plain(out)
 	if p == "" {
@@ -84,6 +129,9 @@ func CleanTranslation(line, answer string) (string, Verdict) {
 	}
 	if p == plain(line) {
 		return "", TrSame
+	}
+	if wrongScript(out, target) {
+		return "", TrScript
 	}
 	if len([]rune(out)) > 4*len([]rune(line))+40 {
 		return "", TrRamble
