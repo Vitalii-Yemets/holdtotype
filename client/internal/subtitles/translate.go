@@ -168,6 +168,28 @@ func TranslateGrammar(target string) string {
 	return translateGrammar
 }
 
+func lowerWordsIn(answer string, script *unicode.RangeTable) int {
+	n := 0
+	for _, f := range strings.Fields(answer) {
+		letters := 0
+		ok := true
+		for _, r := range f {
+			if !unicode.IsLetter(r) {
+				continue
+			}
+			letters++
+			if !unicode.Is(script, r) || !unicode.IsLower(r) {
+				ok = false
+				break
+			}
+		}
+		if ok && letters >= 3 {
+			n++
+		}
+	}
+	return n
+}
+
 func wrongScript(answer, target string) bool {
 	latin, cyrillic, letters := 0, 0, 0
 	for _, r := range answer {
@@ -190,9 +212,9 @@ func wrongScript(answer, target string) bool {
 	}
 	switch target {
 	case "ru", "uk":
-		return 2*latin >= letters
+		return 2*latin >= letters && lowerWordsIn(answer, unicode.Latin) >= 3
 	case "de", "en", "es", "fr", "it", "pl":
-		return 2*cyrillic >= letters
+		return 2*cyrillic >= letters && lowerWordsIn(answer, unicode.Cyrillic) >= 3
 	}
 	return false
 }

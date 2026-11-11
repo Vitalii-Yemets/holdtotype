@@ -243,6 +243,7 @@ type subRun struct {
 	trSeen   string
 	trLang   string
 	trShown  atomic.Bool
+	trTo     atomic.Value
 
 	phMu     sync.Mutex
 	phraser  *subtitles.Phraser
@@ -335,7 +336,21 @@ func (r *subRun) windowRows() []subtitles.Row {
 
 func (r *subRun) refreshShown() {
 	t := r.target()
-	r.trShown.Store(t != nil && translationTarget(r.app.snapshot(), t) != "")
+	to := ""
+	if t != nil {
+		to = translationTarget(r.app.snapshot(), t)
+	}
+	r.trTo.Store(to)
+	r.trShown.Store(to != "")
+}
+
+func (r *subRun) windowHeader() (bool, string, string) {
+	lang := ""
+	if t := r.target(); t != nil {
+		lang = t.lang
+	}
+	to, _ := r.trTo.Load().(string)
+	return r.trShown.Load(), lang, to
 }
 
 func (r *subRun) fail(kind, msg string) {
@@ -1611,7 +1626,7 @@ func (a *App) startSubtitles() {
 	}
 	a.sub = r
 	subWindowConfigure(cfg.SubtitlesLines, cfg.SubtitlesSize, cfg.SubtitlesXY)
-	subWindowShow(r, r.target().lang, func() {
+	subWindowShow(r, func() {
 		a.stopSubtitles("closed from its window", subStopDrain)
 	}, a.saveSubtitlesPlace)
 }
@@ -1731,7 +1746,6 @@ func (a *App) subtitlesConfigChanged() {
 	}
 	if cur := r.target(); cur != nil && !cur.same(t) {
 		r.restart(t)
-		subWindowSetLang(r, t.lang)
 	}
 	r.syncTranslation(cfg, t)
 	r.refreshShown()

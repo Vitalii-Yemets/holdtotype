@@ -17,6 +17,7 @@ import (
 	"holdtotype/internal/appid"
 	"holdtotype/internal/ovplace"
 	"holdtotype/internal/subtitles"
+	"holdtotype/internal/subwin"
 )
 
 const (
@@ -52,6 +53,7 @@ var swSizes = map[string]int32{"s": 15, "m": 19, "l": 25}
 type subWindowSource interface {
 	windowPhase() int
 	windowRows() []subtitles.Row
+	windowHeader() (bool, string, string)
 }
 
 var (
@@ -60,7 +62,6 @@ var (
 	swOnce    sync.Once
 	swReady   = make(chan struct{})
 	swSrc     subWindowSource
-	swLang    string
 	swRows    int32 = defaultSubtitlesLines
 	swSize          = "m"
 	swCustom  map[string]ovplace.Frac
@@ -79,6 +80,7 @@ var (
 	swDPI       int32 = 96
 	swLastRows  []subtitles.Row
 	swLastPhase = -1
+	swLastHead  string
 	swLastPaint time.Time
 	swTicks     int
 	swBuf       backBuf
@@ -109,12 +111,11 @@ func subWindowConfigure(rows int, size string, custom map[string]ovplace.Frac) {
 	}
 }
 
-func subWindowShow(src subWindowSource, langCode string, onClose func(), onMoved func(string, ovplace.Frac)) {
+func subWindowShow(src subWindowSource, onClose func(), onMoved func(string, ovplace.Frac)) {
 	swOnce.Do(startSubWindowThread)
 	<-swReady
 	swMu.Lock()
 	swSrc = src
-	swLang = strings.ToUpper(strings.TrimSpace(langCode))
 	swOnClose = onClose
 	swOnMoved = onMoved
 	hwnd := swHwnd
@@ -122,14 +123,6 @@ func subWindowShow(src subWindowSource, langCode string, onClose func(), onMoved
 	if hwnd != 0 {
 		procPostMessageW.Call(hwnd, wmSwSet, 0, 0)
 	}
-}
-
-func subWindowSetLang(src subWindowSource, langCode string) {
-	swMu.Lock()
-	if swSrc == src {
-		swLang = strings.ToUpper(strings.TrimSpace(langCode))
-	}
-	swMu.Unlock()
 }
 
 func subWindowHide(src subWindowSource) {
@@ -339,18 +332,27 @@ func swCursorClient(hwnd uintptr) (int32, int32) {
 	return pt.X, pt.Y
 }
 
-func swContent() (int, []subtitles.Row, bool) {
+type swHeader struct {
+	title string
+	codes string
+}
+
+func (h swHeader) key() string { return h.title + "\x00" + h.codes }
+
+func swContent() (int, []subtitles.Row, swHeader, bool) {
 	swMu.Lock()
 	src := swSrc
 	swMu.Unlock()
 	if src == nil {
-		return 0, nil, false
+		return 0, nil, swHeader{}, false
 	}
-	return src.windowPhase(), src.windowRows(), true
+	translated, lang, to := src.windowHeader()
+	head := swHeader{title: tr(subwin.TitleKey(translated)), codes: subwin.Codes(lang, to, translated)}
+	return src.windowPhase(), src.windowRows(), head, true
 }
 
 func swApplyState(hwnd uintptr) {
-	_, _, on := swContent()
+	_, _, _, on := swContent()
 	if !on {
 		if swDragging {
 			procReleaseCapture.Call()
@@ -359,7 +361,7 @@ func swApplyState(hwnd uintptr) {
 		procKillTimer.Call(hwnd, swTimerID)
 		procShowWindow.Call(hwnd, swHide)
 		swShown = false
-		swLastRows, swLastPhase = nil, -1
+		swLastRows, swLastPhase, swLastHead = nil, -1, ""
 		return
 	}
 	if !swShown {
@@ -414,8 +416,8 @@ func swRender(hwnd, hdc uintptr) {
 	procGetClientRect.Call(hwnd, uintptr(unsafe.Pointer(&rc)))
 	dpi := swDPI
 	px := func(v int32) int32 { return scaleDPI(v, dpi) }
-	phase, rows, _ := swContent()
-	swLastRows, swLastPhase = rows, phase
+	phase, rows, hdr, _ := swContent()
+	swLastRows, swLastPhase, swLastHead = rows, phase, hdr.key()
 
 	fill := func(r rect, color uintptr) {
 		br, _, _ := procCreateSolidBrush.Call(color)
@@ -460,14 +462,11 @@ func swRender(hwnd, hdc uintptr) {
 	drawSmoothDot(hdc, px(18), cy, core, halo, dot, colBg, 0.34)
 
 	procSelectObject.Call(hdc, uiFontDPI(dpi))
-	title := tr("sub.title")
+	title := hdr.title
 	measure := draw(title, rect{}, colGreen, 0x0400|0x0020)
 	tr0 := rect{Left: px(32), Top: 0, Right: px(32) + (measure.Right - measure.Left), Bottom: head}
 	draw(title, tr0, colGreen, 0x0020|0x0004)
-	swMu.Lock()
-	code := swLang
-	swMu.Unlock()
-	if code != "" {
+	if code := hdr.codes; code != "" {
 		draw(code, rect{Left: tr0.Right + px(10), Top: 0, Right: rc.Right - px(swCloseDIP), Bottom: head}, colGreenDm, 0x0020|0x0004|0x8000)
 	}
 	xcol := colGreenDm
@@ -556,8 +555,8 @@ func subWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 		}
 		x, y := swCursorClient(hwnd)
 		hover := swInClose(x, y)
-		phase, rows, _ := swContent()
-		if hover != swHover || !slices.Equal(rows, swLastRows) || phase != swLastPhase || time.Since(swLastPaint) > time.Second {
+		phase, rows, head, _ := swContent()
+		if hover != swHover || !slices.Equal(rows, swLastRows) || phase != swLastPhase || head.key() != swLastHead || time.Since(swLastPaint) > time.Second {
 			swHover = hover
 			swRenderNow(hwnd)
 		}
@@ -656,12 +655,18 @@ type swDemo struct {
 	phase     int
 	board     *subtitles.Board
 	translate bool
+	lang      string
+	to        string
 }
 
 func (d *swDemo) windowPhase() int {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	return d.phase
+}
+
+func (d *swDemo) windowHeader() (bool, string, string) {
+	return d.translate, d.lang, d.to
 }
 
 func (d *swDemo) windowRows() []subtitles.Row {
@@ -741,23 +746,26 @@ func runSubwindowDemo(args []string) {
 			seconds = n
 		}
 	}
-	langCode := "auto"
+	langCode, to := "auto", "ru"
 	if cfg, err := loadConfig("config.json"); err == nil && cfg != nil {
 		registerBundledFonts()
 		initLang(cfg.UILanguage)
 		applyTheme(cfg.Skin, cfg.Theme)
 		subWindowConfigure(cfg.SubtitlesLines, cfg.SubtitlesSize, cfg.SubtitlesXY)
 		langCode = cfg.SubtitlesLanguage
+		if cfg.SubtitlesTranslate != "" {
+			to = cfg.SubtitlesTranslate
+		}
 	}
 	translate := len(args) > 1 && strings.TrimSpace(args[1]) != ""
-	demo := &swDemo{phase: subPhaseLoading, board: subtitles.NewBoard(subBoardKeep), translate: translate}
+	demo := &swDemo{phase: subPhaseLoading, board: subtitles.NewBoard(subBoardKeep), translate: translate, lang: langCode, to: to}
 	var script []func()
 	if translate {
 		script = swDemoScript(demo)
 	}
 	closed := make(chan struct{})
 	var once sync.Once
-	subWindowShow(demo, langCode, func() { once.Do(func() { close(closed) }) }, func(key string, f ovplace.Frac) {
+	subWindowShow(demo, func() { once.Do(func() { close(closed) }) }, func(key string, f ovplace.Frac) {
 		log.Printf("subwindow: the place %s %.3f,%.3f is not saved by the demo", key, f.X, f.Y)
 	})
 	if translate {
