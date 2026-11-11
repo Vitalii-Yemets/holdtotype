@@ -538,7 +538,11 @@ func (sw *subWindow) saveBox() {
 	if sw.resizing {
 		rows = sw.resRows
 	}
-	b := subwin.Box{W: sw.w * 96 / sw.dpi, Rows: rows, Top: sw.top}
+	top := sw.top
+	if len(sw.parts) == 2 {
+		top, _ = subwin.SplitRows(rows, sw.top)
+	}
+	b := subwin.Box{W: sw.w * 96 / sw.dpi, Rows: rows, Top: top}
 	if b.W < subwin.BoxMinW {
 		b.W = subwin.BoxMinW
 	}
@@ -1225,20 +1229,33 @@ type swDemoPiece struct {
 	text   string
 	para   bool
 	fail   bool
+	burst  bool
+}
+
+var swDemoHistory = []swDemoPiece{
+	{"Before we start, a few words about the agenda.", "Прежде чем начать, пара слов о повестке.", true, false, false},
+	{"We have three topics today,", "Сегодня у нас три темы,", false, false, false},
+	{"and the last one will take the most time.", "и последняя займёт больше всего времени.", false, false, false},
+	{"First, the release that went out last week.", "Сначала о выпуске, который вышел на прошлой неделе.", true, false, false},
+	{"Second, the reports from the support team,", "Затем отчёты команды поддержки,", false, false, false},
+	{"who collected the questions people asked most often.", "которая собрала самые частые вопросы.", false, false, false},
+	{"And third, the plan for the next two weeks.", "И третья тема — план на следующие две недели.", true, false, false},
+	{"Anna prepared the slides for that part,", "Анна подготовила слайды для этой части,", false, false, false},
+	{"so she will take over when we get there.", "так что она продолжит, когда мы до неё дойдём.", false, false, false},
+	{"Can everyone hear me well?", "Всем меня хорошо слышно?", true, false, false},
 }
 
 var swDemoPieces = []swDemoPiece{
-	{"Good morning everyone,", "Доброе утро всем,", true, false},
-	{"thanks for joining the call today, I know it is early for some of you.", "спасибо, что подключились, я знаю, что для некоторых из вас это рано.", false, false},
-	{"Let us start with a quick look at last week:", "Начнём с короткого обзора прошлой недели:", true, false},
-	{"the new build went out on Tuesday,", "новая сборка вышла во вторник,", false, false},
-	{"and the feedback so far has been better than we expected,", "и отзывы пока лучше, чем мы ожидали,", false, false},
-	{"especially from the people who use the export every day.", "особенно от тех, кто каждый день пользуется экспортом.", false, false},
-	{"Any questions so far?", "", true, true},
-	{"If not, Anna will walk us through the plan for the next two weeks.", "Если нет, Анна расскажет нам о плане на следующие две недели.", true, false},
+	{"Good morning everyone,", "Доброе утро всем,", true, false, false},
+	{"thanks for joining the call today, I know it is early for some of you.", "спасибо, что подключились, я знаю, что для некоторых из вас это рано.", false, false, false},
+	{"Let us start with a quick look at last week:", "Начнём с короткого обзора прошлой недели:", true, false, false},
+	{"the new build went out on Tuesday, and the feedback so far has been better than we expected, especially from the people who use the export every day and from the two teams that tested it first.",
+		"новая сборка вышла во вторник, и отзывы пока лучше, чем мы ожидали, особенно от тех, кто каждый день пользуется экспортом, и от двух команд, которые проверяли её первыми.", false, false, true},
+	{"Any questions so far?", "", true, true, false},
+	{"If not, Anna will walk us through the plan for the next two weeks.", "Если нет, Анна расскажет нам о плане на следующие две недели.", true, false, false},
 }
 
-func swDemoScript(d *swDemo) []func() {
+func swDemoScript(d *swDemo, both bool) []func() {
 	var steps []func()
 	idle := func(n int) {
 		for i := 0; i < n; i++ {
@@ -1246,29 +1263,58 @@ func swDemoScript(d *swDemo) []func() {
 		}
 	}
 	hearing := func(on bool) { steps = append(steps, func() { d.board.SetHearing(on) }) }
+	seq := 0
+	steps = append(steps, func() {
+		for _, pc := range swDemoHistory {
+			seq++
+			d.board.AddPiece(seq, pc.para, pc.source)
+			d.board.SetPiece(seq, pc.text, subtitles.PieceDone)
+			if both {
+				d.board.Add(time.Now(), pc.source)
+			}
+		}
+	})
+	first := len(swDemoHistory)
 	for round := 0; round < 50; round++ {
 		for i, pc := range swDemoPieces {
-			seq := round*len(swDemoPieces) + i + 1
-			if pc.para {
+			n := first + round*len(swDemoPieces) + i + 1
+			if pc.para && (round > 0 || i > 0) {
 				hearing(false)
-				idle(12)
+				idle(9)
 			}
 			hearing(true)
-			idle(len(strings.Fields(pc.source)) * 2)
-			steps = append(steps, func() { d.board.AddPiece(seq, pc.para, pc.source) })
+			words := strings.Fields(pc.source)
+			if both {
+				for k := 1; k <= len(words); k += 2 {
+					shown := strings.Join(words[:k], " ")
+					steps = append(steps, func() { d.board.SetLive(shown) })
+				}
+			} else {
+				idle(len(words) / 2)
+			}
+			steps = append(steps, func() {
+				d.board.AddPiece(n, pc.para, pc.source)
+				if both {
+					d.board.Add(time.Now(), pc.source)
+					d.board.SetLive("")
+				}
+			})
 			idle(1)
-			steps = append(steps, func() { d.board.SetPiece(seq, "", subtitles.PieceRunning) })
-			idle(2)
-			if pc.fail {
-				steps = append(steps, func() { d.board.SetPiece(seq, "", subtitles.PieceFailed) })
-				continue
+			steps = append(steps, func() { d.board.SetPiece(n, "", subtitles.PieceRunning) })
+			idle(1)
+			switch {
+			case pc.fail:
+				steps = append(steps, func() { d.board.SetPiece(n, "", subtitles.PieceFailed) })
+			case pc.burst:
+				steps = append(steps, func() { d.board.SetPiece(n, pc.text, subtitles.PieceDone) })
+			default:
+				tr := strings.Fields(pc.text)
+				for k := 3; k < len(tr); k += 3 {
+					shown := strings.Join(tr[:k], " ")
+					steps = append(steps, func() { d.board.SetPiece(n, shown, subtitles.PieceRunning) })
+				}
+				steps = append(steps, func() { d.board.SetPiece(n, pc.text, subtitles.PieceDone) })
 			}
-			words := strings.Fields(pc.text)
-			for n := 2; n < len(words); n += 2 {
-				shown := strings.Join(words[:n], " ")
-				steps = append(steps, func() { d.board.SetPiece(seq, shown, subtitles.PieceRunning) })
-			}
-			steps = append(steps, func() { d.board.SetPiece(seq, pc.text, subtitles.PieceDone) })
 		}
 	}
 	return steps
@@ -1290,33 +1336,41 @@ func runSubwindowDemo(args []string) {
 			seconds = n
 		}
 	}
+	translate := len(args) > 1 && strings.TrimSpace(args[1]) != ""
+	both := translate && len(args) > 2 && strings.TrimSpace(args[2]) == "both"
 	langCode, to := "auto", "ru"
 	if cfg, err := loadConfig("config.json"); err == nil && cfg != nil {
 		registerBundledFonts()
 		initLang(cfg.UILanguage)
 		applyTheme(cfg.Skin, cfg.Theme)
-		subWindowConfigure(cfg)
+		c := *cfg
+		if both {
+			c.SubtitlesOriginal = true
+		}
+		subWindowConfigure(&c)
 		langCode = cfg.SubtitlesLanguage
 		if cfg.SubtitlesTranslate != "" {
 			to = cfg.SubtitlesTranslate
 		}
 	}
-	translate := len(args) > 1 && strings.TrimSpace(args[1]) != ""
 	demo := &swDemo{phase: subPhaseLoading, board: subtitles.NewBoard(subBoardKeep), translate: translate, lang: langCode, to: to}
 	var script []func()
 	if translate {
-		script = swDemoScript(demo)
+		script = swDemoScript(demo, both)
 	}
 	closed := make(chan struct{})
 	var once sync.Once
 	subWindowShow(demo, func() { once.Do(func() { close(closed) }) }, func(key string, f ovplace.Frac) {
 		log.Printf("subwindow: the place %s %.3f,%.3f is not saved by the demo", key, f.X, f.Y)
 	}, func(key string, b subwin.Box) {
-		log.Printf("subwindow: the size %s %d dip, %d rows is not saved by the demo", key, b.W, b.Rows)
+		log.Printf("subwindow: the size %s %d dip, %d rows, %d above the line is not saved by the demo", key, b.W, b.Rows, b.Top)
 	})
-	if translate {
+	switch {
+	case both:
+		log.Printf("subwindow: showing the subtitles window with the heard text and the translation for %d s", seconds)
+	case translate:
 		log.Printf("subwindow: showing the subtitles window with translation for %d s", seconds)
-	} else {
+	default:
 		log.Printf("subwindow: showing the subtitles window for %d s", seconds)
 	}
 	end := time.After(time.Duration(seconds) * time.Second)
@@ -1344,7 +1398,7 @@ loop:
 			demo.phase = subPhaseListening
 		}
 		demo.mu.Unlock()
-		if age < 3*time.Second {
+		if age < 1500*time.Millisecond {
 			continue
 		}
 		if translate {
