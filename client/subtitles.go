@@ -171,6 +171,9 @@ type subRun struct {
 	engPort   int
 	engShared bool
 	engModel  string
+	engPid    int
+
+	cores coreDivider
 
 	fileMu   sync.Mutex
 	file     *os.File
@@ -311,7 +314,9 @@ func (r *subRun) noteEngine(rec recognizer, shared bool, t *subTarget) {
 	r.engPort = recognizerPort(rec)
 	r.engShared = shared
 	r.engModel = t.name
+	r.engPid = recognizerPid(rec)
 	r.mu.Unlock()
+	r.syncCores()
 }
 
 func (r *subRun) loop(t *subTarget) {
@@ -351,6 +356,7 @@ func (r *subRun) loop(t *subTarget) {
 		case <-dev.C:
 			r.checkDevice(time.Now())
 			r.refreshShown()
+			r.syncCores()
 		}
 	}
 }
@@ -558,6 +564,7 @@ func (r *subRun) finish() {
 		w.stop()
 		trSummary = w.summary()
 	}
+	r.cores.close()
 	r.board.SetHearing(false)
 	r.fileMu.Lock()
 	if r.file != nil {
@@ -639,6 +646,7 @@ func (r *subRun) syncTranslation(cfg *Config, t *subTarget) {
 			log.Printf("subtitles: the editor model did not start: %s", logText(f.err))
 			return
 		}
+		r.syncCores()
 		r.primeTranslation(f.srv, to)
 	}()
 }
