@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -41,10 +42,8 @@ const (
 	subRecoverWindow = 2 * time.Minute
 	subRecoverMax    = 3
 
-	subTranslateTimeout = 20 * time.Second
-	subTranslateStop    = 3 * time.Second
-	subTranslateTokens  = 256
-	subTranslateLogGap  = 10 * time.Second
+	subTranslateStop   = 3 * time.Second
+	subTranslateLogGap = 10 * time.Second
 )
 
 var errSubStopped = errors.New("subtitles are stopping")
@@ -186,6 +185,12 @@ type subRun struct {
 	trLang   string
 	trShown  atomic.Bool
 
+	phMu     sync.Mutex
+	phraser  *subtitles.Phraser
+	outMu    sync.Mutex
+	outOrder []int
+	outDone  map[int]subPieceOut
+
 	skipped atomic.Int64
 	muted   atomic.Int64
 
@@ -217,6 +222,8 @@ func startSubtitlesRun(a *App, cfg *Config, opts subOptions) (*subRun, error) {
 		cap:       lb,
 		pacer:     subtitles.NewPacer(sampleRate, now),
 		board:     subtitles.NewBoard(subBoardKeep),
+		phraser:   subtitles.NewPhraser(),
+		outDone:   map[int]subPieceOut{},
 		stopCh:    make(chan struct{}),
 		doneCh:    make(chan struct{}),
 		restartCh: make(chan *subTarget, 1),
@@ -256,10 +263,11 @@ func (r *subRun) setPhase(p int) { r.phase.Store(int32(p)) }
 func (r *subRun) windowPhase() int { return int(r.phase.Load()) }
 
 func (r *subRun) windowRows() []subtitles.Row {
-	return r.board.Tail(swTextRunes, r.trShown.Load()).Rows()
+	if r.trShown.Load() {
+		return r.board.TranslationRows(swTextRunes)
+	}
+	return r.board.Tail(swTextRunes).Rows()
 }
-
-func (r *subRun) windowTranslated() bool { return r.trShown.Load() }
 
 func (r *subRun) refreshShown() {
 	t := r.target()
@@ -339,6 +347,7 @@ func (r *subRun) loop(t *subTarget) {
 			if len(out) > 0 {
 				pipe.feed(out)
 			}
+			r.hear(pipe.target, func(ph *subtitles.Phraser, at time.Time) []subtitles.TextPhrase { return ph.Tick(at) })
 		case <-dev.C:
 			r.checkDevice(time.Now())
 			r.refreshShown()
@@ -395,13 +404,17 @@ func (r *subRun) setLive(text string) {
 	log.Printf("subtitles: live %q", livetail.Tail(text, 160))
 }
 
-func (r *subRun) finishLine(at time.Time, text string, t *subTarget) {
+func (r *subRun) cleanText(cfg *Config, t *subTarget, text string) string {
 	text = strings.TrimSpace(segments.Join(strings.TrimSpace(text)))
 	if text == "" || onlyNoise.MatchString(text) {
-		return
+		return ""
 	}
+	return strings.TrimSpace(replace.Apply(replace.ForLang(cfg.Replacements, t.lang), text))
+}
+
+func (r *subRun) finishLine(at time.Time, text string, t *subTarget) {
 	cfg := r.app.snapshot()
-	text = strings.TrimSpace(replace.Apply(replace.ForLang(cfg.Replacements, t.lang), text))
+	text = r.cleanText(cfg, t, text)
 	if text == "" {
 		return
 	}
@@ -410,21 +423,43 @@ func (r *subRun) finishLine(at time.Time, text string, t *subTarget) {
 	}
 	ln := r.board.Add(at, text)
 	log.Printf("subtitles: line %q", text)
-	to := translationTarget(cfg, t)
-	if cfg.SubtitlesSave {
-		r.write(ln, t, to)
-	}
-	if to != "" {
-		if w := r.translator(); w != nil {
-			w.push(ln, to)
-		}
+	if cfg.SubtitlesSave && translationTarget(cfg, t) == "" {
+		r.appendTranscript(t, "", subtitles.Entry(ln.Start, ln.Text))
 	}
 }
 
-func (r *subRun) write(ln subtitles.Line, t *subTarget, to string) {
+func (r *subRun) hear(t *subTarget, cut func(*subtitles.Phraser, time.Time) []subtitles.TextPhrase) {
+	r.phMu.Lock()
+	defer r.phMu.Unlock()
+	out := cut(r.phraser, time.Now())
+	r.board.SetHearing(r.phraser.Waiting() > 0)
+	for _, ph := range out {
+		r.phraseCut(ph, t)
+	}
+}
+
+func (r *subRun) phraseCut(ph subtitles.TextPhrase, t *subTarget) {
+	cfg := r.app.snapshot()
+	text := r.cleanText(cfg, t, ph.Text)
+	if text == "" {
+		return
+	}
+	if r.opts.logLive {
+		log.Printf("subtitles: phrase %d, %d words, cut %.1f s after its first word: %q", ph.Seq, ph.Words, ph.Heard.Sub(ph.Start).Seconds(), text)
+	}
+	to := translationTarget(cfg, t)
+	if to == "" {
+		return
+	}
+	if w := r.translator(); w != nil {
+		w.push(ph, text, to)
+	}
+}
+
+func (r *subRun) appendTranscript(t *subTarget, to string, entries ...string) {
 	r.fileMu.Lock()
 	defer r.fileMu.Unlock()
-	if r.fileErr {
+	if r.fileErr || r.fileDone {
 		return
 	}
 	if r.file == nil {
@@ -450,24 +485,66 @@ func (r *subRun) write(ln subtitles.Line, t *subTarget, to string) {
 		}
 		log.Printf("subtitles: transcript %s", r.filePath)
 	}
-	if _, err := r.file.WriteString(subtitles.Entry(ln.Start, ln.Text)); err != nil {
-		log.Printf("subtitles: writing the transcript: %v", err)
-		return
+	for _, e := range entries {
+		if _, err := r.file.WriteString(e); err != nil {
+			log.Printf("subtitles: writing the transcript: %v", err)
+			return
+		}
 	}
 	_ = r.file.Sync()
 }
 
-func (r *subRun) writeTranslation(at time.Time, text string) {
-	r.fileMu.Lock()
-	defer r.fileMu.Unlock()
-	if r.file == nil || r.fileErr || r.fileDone {
-		return
+type subPieceOut struct {
+	at          time.Time
+	source      string
+	translation string
+	target      string
+}
+
+func (r *subRun) pieceQueued(seq int) {
+	r.outMu.Lock()
+	r.outOrder = append(r.outOrder, seq)
+	r.outMu.Unlock()
+}
+
+func (r *subRun) piecesJoined(seqs []int) {
+	r.outMu.Lock()
+	defer r.outMu.Unlock()
+	gone := map[int]bool{}
+	for _, s := range seqs[1:] {
+		gone[s] = true
 	}
-	if _, err := r.file.WriteString(subtitles.TranslationEntry(at, text)); err != nil {
-		log.Printf("subtitles: writing the transcript: %v", err)
-		return
+	kept := r.outOrder[:0]
+	for _, s := range r.outOrder {
+		if !gone[s] {
+			kept = append(kept, s)
+		}
 	}
-	_ = r.file.Sync()
+	r.outOrder = kept
+}
+
+func (r *subRun) pieceFinished(seq int, out subPieceOut) {
+	r.outMu.Lock()
+	defer r.outMu.Unlock()
+	r.outDone[seq] = out
+	cfg := r.app.snapshot()
+	t := r.target()
+	for len(r.outOrder) > 0 {
+		e, ok := r.outDone[r.outOrder[0]]
+		if !ok {
+			break
+		}
+		delete(r.outDone, r.outOrder[0])
+		r.outOrder = r.outOrder[1:]
+		if !cfg.SubtitlesSave || t == nil {
+			continue
+		}
+		entries := []string{subtitles.Entry(e.at, e.source)}
+		if e.translation != "" {
+			entries = append(entries, subtitles.TranslationEntry(e.at, e.translation))
+		}
+		r.appendTranscript(t, e.target, entries...)
+	}
 }
 
 func (r *subRun) finish() {
@@ -481,6 +558,7 @@ func (r *subRun) finish() {
 		w.stop()
 		trSummary = w.summary()
 	}
+	r.board.SetHearing(false)
 	r.fileMu.Lock()
 	if r.file != nil {
 		_ = r.file.Close()
@@ -547,7 +625,7 @@ func (r *subRun) syncTranslation(cfg *Config, t *subTarget) {
 	}
 	src := translationSource(cfg)
 	if !src.ok() {
-		log.Printf("subtitles: translation into %s: no editor model is installed and no post-processing server is set, the lines stay untranslated", name)
+		log.Printf("subtitles: translation into %s: no editor model is installed and no post-processing server is set, the text stays untranslated", name)
 		return
 	}
 	log.Printf("subtitles: translation into %s by %s", name, src.label())
@@ -559,8 +637,24 @@ func (r *subRun) syncTranslation(cfg *Config, t *subTarget) {
 		<-f.done
 		if f.err != nil {
 			log.Printf("subtitles: the editor model did not start: %s", logText(f.err))
+			return
 		}
+		r.primeTranslation(f.srv, to)
 	}()
+}
+
+func (r *subRun) primeTranslation(llm *llamaServer, to string) {
+	if llm == nil {
+		return
+	}
+	started := time.Now()
+	ctx, cancel := context.WithTimeout(context.Background(), subtitles.TranslateTimeout)
+	defer cancel()
+	if _, err := llm.chatStream(ctx, subtitles.TranslateMessages(to, "Hello."), 1, subtitles.TranslateGrammar(to), nil); err != nil {
+		log.Printf("subtitles: the translation request did not load: %s", logText(err))
+		return
+	}
+	log.Printf("subtitles: the translation request is loaded into the editor model in %.1f s", time.Since(started).Seconds())
 }
 
 func (r *subRun) translator() *subTranslator {
@@ -604,11 +698,12 @@ type subTranslator struct {
 	failLog logGap
 	dropLog logGap
 	waitLog bool
+	delays  []time.Duration
 
+	pieces     atomic.Int64
 	translated atomic.Int64
-	same       atomic.Int64
-	failed     atomic.Int64
-	cut        atomic.Int64
+	heard      atomic.Int64
+	dropped    atomic.Int64
 }
 
 func newSubTranslator(r *subRun) *subTranslator {
@@ -635,21 +730,39 @@ func (w *subTranslator) stopped() bool {
 	}
 }
 
-func (w *subTranslator) push(ln subtitles.Line, to string) {
+func (w *subTranslator) push(ph subtitles.TextPhrase, text, to string) {
+	r := w.run
 	w.mu.Lock()
 	if w.closed {
 		w.mu.Unlock()
 		return
 	}
 	w.target = to
-	n := len(w.q.Push(subtitles.Pending{Seq: ln.ID, Start: ln.Start, Text: ln.Text, Target: to, Para: true, Heard: time.Now()}))
+	r.board.AddPiece(ph.Seq, ph.Para, text)
+	r.pieceQueued(ph.Seq)
+	dropped := w.q.Push(subtitles.Pending{Seq: ph.Seq, Text: text, Words: len(strings.Fields(text)), Target: to, Para: ph.Para, Start: ph.Start, Heard: ph.Heard})
 	w.mu.Unlock()
-	if n > 0 {
-		w.noteDrop(fmt.Sprintf("translation falls behind, %d waiting line(s) left untranslated", n))
+	if len(dropped) > 0 {
+		w.drop(dropped, "the queue is full")
+		w.noteDrop(fmt.Sprintf("translation falls behind, %d waiting phrase(s) are shown as heard", len(dropped)))
 	}
 	select {
 	case w.sig <- struct{}{}:
 	default:
+	}
+}
+
+func (w *subTranslator) drop(ps []subtitles.Pending, why string) {
+	r := w.run
+	now := time.Now()
+	for _, p := range ps {
+		w.pieces.Add(1)
+		w.dropped.Add(1)
+		r.board.SetPiece(p.Seq, "", subtitles.PieceFailed)
+		r.pieceFinished(p.Seq, subPieceOut{at: p.Start, source: p.Text, target: p.Target})
+		if r.opts.logLive {
+			log.Printf("subtitles: piece %d dropped after %.1f s: %s", p.Seq, now.Sub(p.Heard).Seconds(), why)
+		}
 	}
 }
 
@@ -667,7 +780,6 @@ func (w *subTranslator) noteDrop(msg string) {
 }
 
 func (w *subTranslator) noteFail(err error) {
-	w.failed.Add(1)
 	w.mu.Lock()
 	ok, quiet := w.failLog.pass(time.Now())
 	w.mu.Unlock()
@@ -678,13 +790,13 @@ func (w *subTranslator) noteFail(err error) {
 	if quiet > 0 {
 		more = fmt.Sprintf(" (%d more failure(s) not logged)", quiet)
 	}
-	log.Printf("subtitles: a line was not translated: %s%s", logText(err), more)
+	log.Printf("subtitles: a piece was not translated: %s%s", logText(err), more)
 }
 
 func (w *subTranslator) waitDictation() bool {
 	a := w.run.app
-	if a.state.Load() != stProcessing {
-		return !w.stopped()
+	if a.state.Load() != stProcessing || w.stopped() {
+		return w.ctx.Err() == nil
 	}
 	if !w.waitLog {
 		w.waitLog = true
@@ -695,10 +807,10 @@ func (w *subTranslator) waitDictation() bool {
 		select {
 		case <-time.After(100 * time.Millisecond):
 		case <-w.stopCh:
-			return false
+			return w.ctx.Err() == nil
 		}
 	}
-	return !w.stopped()
+	return w.ctx.Err() == nil
 }
 
 func (w *subTranslator) loop() {
@@ -707,93 +819,129 @@ func (w *subTranslator) loop() {
 		select {
 		case <-w.sig:
 		case <-w.stopCh:
-			return
 		}
 		for {
 			if !w.waitDictation() {
 				return
 			}
 			w.mu.Lock()
-			p, ok, stale := w.q.Pop(time.Now())
+			b, ok, stale := w.q.Pop(time.Now())
 			w.mu.Unlock()
 			if len(stale) > 0 {
-				w.noteDrop(fmt.Sprintf("%d line(s) waited more than %.0f s for translation and are left untranslated", len(stale), subtitles.TranslateMaxWait.Seconds()))
+				w.drop(stale, "it waited too long")
+				w.noteDrop(fmt.Sprintf("%d phrase(s) waited more than %.0f s for translation and are shown as heard", len(stale), subtitles.TranslateMaxWait.Seconds()))
 			}
 			if !ok {
 				break
 			}
-			w.handle(p)
-			if w.stopped() {
+			w.handle(b)
+			if w.ctx.Err() != nil {
 				return
 			}
+		}
+		if w.stopped() {
+			return
 		}
 	}
 }
 
-func (w *subTranslator) handle(p subtitles.Batch) {
+func (w *subTranslator) fail(b subtitles.Batch, err error) {
 	r := w.run
+	seq := b.Seq()
+	r.board.SetPiece(seq, "", subtitles.PieceFailed)
+	r.pieceFinished(seq, subPieceOut{at: b.Start, source: b.Text, target: b.Target})
+	if w.ctx.Err() != nil {
+		w.dropped.Add(1)
+		if r.opts.logLive {
+			log.Printf("subtitles: piece %d dropped: the run ended before its translation", seq)
+		}
+		return
+	}
+	w.heard.Add(1)
+	w.noteFail(err)
+	if r.opts.logLive {
+		log.Printf("subtitles: piece %d shown as heard after %.1f s: %s", seq, time.Since(b.Heard).Seconds(), logText(err))
+	}
+}
+
+func (w *subTranslator) handle(b subtitles.Batch) {
+	r := w.run
+	seq := b.Seq()
+	if len(b.Seqs) > 1 {
+		r.board.JoinPieces(b.Seqs)
+		r.piecesJoined(b.Seqs)
+	}
+	w.pieces.Add(1)
 	cfg := r.app.snapshot()
 	src := translationSource(cfg)
 	if !src.ok() {
-		w.noteFail(errNoEditor)
+		w.fail(b, errNoEditor)
 		return
 	}
 	w.mu.Lock()
 	w.used = src.label()
 	w.mu.Unlock()
-	ctx, cancel := context.WithTimeout(w.ctx, subTranslateTimeout)
-	started := time.Now()
-	out, err := r.app.editorChat(ctx, cfg, src, subtitles.TranslatePrompt(p.Target), p.Text, subTranslateTokens, subtitles.TranslateGrammar(p.Target))
+	r.board.SetPiece(seq, "", subtitles.PieceRunning)
+	ctx, cancel := context.WithTimeout(w.ctx, subtitles.TranslateTimeout)
+	var first time.Time
+	out, err := r.app.editorStream(ctx, cfg, src, subtitles.TranslateMessages(b.Target, b.Text), subtitles.TranslateTokens(b.Words), subtitles.TranslateGrammar(b.Target), func(sofar string) {
+		if first.IsZero() {
+			first = time.Now()
+		}
+		r.board.SetPiece(seq, subtitles.StreamingText(sofar), subtitles.PieceRunning)
+	})
+	timedOut := ctx.Err() == context.DeadlineExceeded
 	cancel()
+	done := time.Now()
 	if err != nil {
-		if w.ctx.Err() != nil {
-			w.cut.Add(1)
-			return
+		if timedOut {
+			err = fmt.Errorf("no answer within %.0f s (%s)", subtitles.TranslateTimeout.Seconds(), logText(err))
 		}
-		if ctx.Err() == context.DeadlineExceeded {
-			err = fmt.Errorf("no answer within %.0f s (%s)", subTranslateTimeout.Seconds(), logText(err))
-		}
-		w.noteFail(err)
+		w.fail(b, err)
 		return
 	}
-	text, verdict := subtitles.CleanTranslation(p.Text, out, p.Target)
+	text, verdict := subtitles.CleanTranslation(b.Text, out, b.Target)
 	switch verdict {
 	case subtitles.TrSame:
-		w.same.Add(1)
-		if r.opts.logLive {
-			log.Printf("subtitles: the translation is the same as the line, not shown")
-		}
-		return
+		text = b.Text
 	case subtitles.TrEmpty:
-		w.noteFail(errors.New("the answer is empty"))
+		w.fail(b, errors.New("the answer is empty"))
 		return
 	case subtitles.TrRamble:
-		w.noteFail(fmt.Errorf("an answer of %d characters for a line of %d is thrown away", len([]rune(out)), len([]rune(p.Text))))
+		w.fail(b, fmt.Errorf("an answer of %d characters for a piece of %d is thrown away", len([]rune(out)), len([]rune(b.Text))))
 		return
 	case subtitles.TrScript:
-		w.noteFail(fmt.Errorf("the answer is not written in %s", subtitles.LanguageName(p.Target)))
+		w.fail(b, fmt.Errorf("the answer is not written in %s", subtitles.LanguageName(b.Target)))
 		return
 	}
-	r.board.SetTranslation(p.Seq(), text)
-	if r.app.snapshot().SubtitlesSave {
-		r.writeTranslation(p.Start, text)
-	}
+	r.board.SetPiece(seq, text, subtitles.PieceDone)
+	r.pieceFinished(seq, subPieceOut{at: b.Start, source: b.Text, translation: text, target: b.Target})
 	w.translated.Add(1)
+	w.mu.Lock()
+	w.delays = append(w.delays, done.Sub(b.Heard))
+	waiting := w.q.Len()
+	w.mu.Unlock()
 	if r.opts.logLive {
-		log.Printf("subtitles: translated in %.1f s: %q", time.Since(started).Seconds(), text)
+		if first.IsZero() {
+			first = done
+		}
+		same := ""
+		if verdict == subtitles.TrSame {
+			same = ", the same as heard"
+		}
+		log.Printf("subtitles: piece %d translated: first word after %.1f s, complete after %.1f s, %d waiting%s: %q", seq, first.Sub(b.Heard).Seconds(), done.Sub(b.Heard).Seconds(), waiting, same, text)
 	}
 }
 
 func (w *subTranslator) stop() {
 	w.mu.Lock()
 	w.closed = true
-	w.q.Clear()
 	w.mu.Unlock()
 	close(w.stopCh)
 	select {
 	case <-w.exitCh:
 	case <-time.After(subTranslateStop):
-		log.Printf("subtitles: the translation in progress did not finish within %.0f s, it is cancelled", subTranslateStop.Seconds())
+		log.Printf("subtitles: the translation did not finish within %.0f s, it is cancelled", subTranslateStop.Seconds())
 		w.cancel()
 		select {
 		case <-w.exitCh:
@@ -801,12 +949,18 @@ func (w *subTranslator) stop() {
 		}
 	}
 	w.cancel()
+	w.mu.Lock()
+	rest := w.q.Clear()
+	w.mu.Unlock()
+	if len(rest) > 0 {
+		w.drop(rest, "the run ended")
+	}
 }
 
 func (w *subTranslator) summary() string {
 	w.mu.Lock()
-	c := w.q.Counts()
 	target, used := w.target, w.used
+	delays := append([]time.Duration(nil), w.delays...)
 	w.mu.Unlock()
 	if used == "" {
 		used = "none (no request sent)"
@@ -814,8 +968,13 @@ func (w *subTranslator) summary() string {
 	if target == "" {
 		target = "none"
 	}
-	return fmt.Sprintf(", translation into %s: %d translated, %d the same as the line, %d dropped, %d failed, by %s",
-		target, w.translated.Load(), w.same.Load(), c.Dropped()+int(w.cut.Load()), w.failed.Load(), used)
+	timing := "none complete"
+	if len(delays) > 0 {
+		slices.Sort(delays)
+		timing = fmt.Sprintf("complete after %.1f s (median), %.1f s (worst)", delays[len(delays)/2].Seconds(), delays[len(delays)-1].Seconds())
+	}
+	return fmt.Sprintf(", translation into %s: %d pieces, %d translated, %d shown as heard, %d dropped, %s, by %s",
+		target, w.pieces.Load(), w.translated.Load(), w.heard.Load(), w.dropped.Load(), timing, used)
 }
 
 type subPipe struct {
@@ -846,9 +1005,9 @@ type subPipe struct {
 	smu     sync.Mutex
 	sess    *segSession
 	pending []byte
-	lmu  sync.Mutex
-	live *subtitles.Live
-	gate *subtitles.Gate
+	lmu     sync.Mutex
+	live    *subtitles.Live
+	gate    *subtitles.Gate
 }
 
 func newSubPipe(r *subRun, t *subTarget) *subPipe {
@@ -1191,6 +1350,10 @@ func (p *subPipe) phraseLoop() {
 			log.Printf("subtitles: phrase of %.1f s recognized in %.1f s", ph.Duration(sampleRate).Seconds(), time.Since(started).Seconds())
 		}
 		p.run.finishLine(ph.At, text, p.target)
+		from, to := ph.At, ph.At.Add(ph.Duration(sampleRate))
+		p.run.hear(p.target, func(x *subtitles.Phraser, at time.Time) []subtitles.TextPhrase {
+			return x.Whole(segments.Join(text), from, to, at)
+		})
 	}
 }
 
@@ -1206,6 +1369,9 @@ func (p *subPipe) onSegment(seg int, text string, final bool) {
 		p.run.finishLine(f.Start, f.Text, p.target)
 	}
 	p.run.setLive(cur)
+	p.run.hear(p.target, func(ph *subtitles.Phraser, at time.Time) []subtitles.TextPhrase {
+		return ph.Update(seg, text, final, at)
+	})
 }
 
 func (p *subPipe) flushLive() {
@@ -1219,6 +1385,7 @@ func (p *subPipe) flushLive() {
 		p.run.finishLine(f.Start, f.Text, p.target)
 	}
 	p.run.setLive("")
+	p.run.hear(p.target, func(ph *subtitles.Phraser, at time.Time) []subtitles.TextPhrase { return ph.Flush(at) })
 }
 
 func (p *subPipe) liveLoop() {

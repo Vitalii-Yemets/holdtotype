@@ -23,16 +23,6 @@ func LanguageName(code string) string {
 	return languageNames[code]
 }
 
-func TranslatePrompt(target string) string {
-	name := LanguageName(target)
-	if name == "" {
-		return ""
-	}
-	return "You translate subtitles. Translate the user's message into " + name +
-		". Reply with the translation only: one line, no quotes, no notes, no explanations. Keep names and numbers as they are. If the message is already in " +
-		name + ", repeat it unchanged."
-}
-
 const (
 	TranslateTimeout   = 8 * time.Second
 	TranslateMinTokens = 48

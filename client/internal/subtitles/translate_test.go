@@ -8,144 +8,155 @@ import (
 	"time"
 )
 
-func TestTranslationOnAKeptLine(t *testing.T) {
-	b := NewBoard(5)
-	t0 := time.Now()
-	b.Add(t0, "first")
-	ln := b.Add(t0, "second")
-	if !b.SetTranslation(ln.ID, "  zweite \n Zeile ") {
-		t.Fatal("a kept line did not take its translation")
-	}
-	lines := b.Lines()
-	if lines[1].Tr != "zweite Zeile" || lines[0].Tr != "" {
-		t.Fatalf("lines %+v", lines)
-	}
-}
-
-func TestTranslationOnALineThatLeftTheBoard(t *testing.T) {
-	b := NewBoard(2)
-	first := b.Add(time.Now(), "first")
-	b.Add(time.Now(), "second")
-	b.Add(time.Now(), "third")
-	if b.SetTranslation(first.ID, "erste") {
-		t.Fatal("a line that left the board took a translation")
-	}
-	for _, ln := range b.Lines() {
-		if ln.Tr != "" {
-			t.Fatalf("another line took it: %+v", ln)
-		}
-	}
-	if b.SetTranslation(99, "nothing") {
-		t.Fatal("an unknown id took a translation")
-	}
-}
-
-func TestRowsWithoutTranslations(t *testing.T) {
+func TestRowsOfLinesAndLiveText(t *testing.T) {
 	b := NewBoard(10)
 	b.Add(time.Now(), "one")
 	b.Add(time.Now(), "two")
 	want := []Row{{RowLine, "one"}, {RowLine, "two"}}
-	if got := b.Tail(500, false).Rows(); !reflect.DeepEqual(got, want) {
+	if got := b.Tail(500).Rows(); !reflect.DeepEqual(got, want) {
 		t.Fatalf("rows %+v", got)
 	}
 	b.SetLive("thr")
 	want = append(want, Row{RowLive, "thr"})
-	if got := b.Tail(500, false).Rows(); !reflect.DeepEqual(got, want) {
+	if got := b.Tail(500).Rows(); !reflect.DeepEqual(got, want) {
 		t.Fatalf("rows with live text %+v", got)
 	}
-	if got := NewBoard(3).Tail(100, false).Rows(); len(got) != 0 {
+	if got := NewBoard(3).Tail(100).Rows(); len(got) != 0 {
 		t.Fatalf("empty board %+v", got)
 	}
 }
 
-func TestRowsPutEachTranslationUnderItsLine(t *testing.T) {
-	b := NewBoard(10)
-	one := b.Add(time.Now(), "one")
-	b.Add(time.Now(), "two")
-	three := b.Add(time.Now(), "three")
-	b.SetTranslation(one.ID, "eins")
-	b.SetTranslation(three.ID, "drei")
-	b.SetLive("four")
-	want := []Row{
-		{RowLine, "one"}, {RowTranslation, "eins"},
-		{RowLine, "two"},
-		{RowLine, "three"}, {RowTranslation, "drei"},
-		{RowLive, "four"},
-	}
-	v := b.Tail(500, true)
-	if got := v.Rows(); !reflect.DeepEqual(got, want) {
+func TestPiecesOfOneParagraphFlowAsOneRow(t *testing.T) {
+	b := NewBoard(50)
+	b.AddPiece(1, true, "Good morning everyone,")
+	b.AddPiece(2, false, "thanks for joining.")
+	b.SetPiece(1, "Доброе утро всем,", PieceDone)
+	b.SetPiece(2, "спасибо, что", PieceRunning)
+	want := []Row{{RowPiece, "Доброе утро всем, спасибо, что"}}
+	if got := b.TranslationRows(500); !reflect.DeepEqual(got, want) {
 		t.Fatalf("rows %+v", got)
 	}
-	if got := v.Text(); got != "one\ntwo\nthree\nfour" {
-		t.Fatalf("text keeps the originals only, got %q", got)
+	b.SetPiece(2, "спасибо, что пришли.", PieceDone)
+	b.AddPiece(3, true, "Let us start.")
+	b.SetPiece(3, "Начнём.", PieceDone)
+	want = []Row{{RowPiece, "Доброе утро всем, спасибо, что пришли."}, {RowPiece, "Начнём."}}
+	if got := b.TranslationRows(500); !reflect.DeepEqual(got, want) {
+		t.Fatalf("a paragraph did not start a row: %+v", got)
 	}
 }
 
-func TestTailCountsTranslationsInItsBudget(t *testing.T) {
-	b := NewBoard(10)
-	a := b.Add(time.Now(), "aaaaa")
-	c := b.Add(time.Now(), "bbbbb")
-	b.SetTranslation(a.ID, "AAAAA")
-	b.SetTranslation(c.ID, "BBBBB")
-	v := b.Tail(15, true)
-	if len(v.Lines) != 1 || v.Lines[0].Text != "bbbbb" || v.Lines[0].Tr != "BBBBB" {
-		t.Fatalf("tail %+v", v.Lines)
+func TestPendingSpeechEndsTheTextWithAnEllipsis(t *testing.T) {
+	b := NewBoard(50)
+	if got := b.TranslationRows(500); len(got) != 0 {
+		t.Fatalf("an empty board %+v", got)
 	}
-	v = b.Tail(20, true)
-	if len(v.Lines) != 2 {
-		t.Fatalf("tail %+v", v.Lines)
+	b.SetHearing(true)
+	if got := b.TranslationRows(500); !reflect.DeepEqual(got, []Row{{RowPiece, "…"}}) {
+		t.Fatalf("hearing with nothing shown %+v", got)
 	}
-	b.SetLive("live!")
-	if v = b.Tail(20, true); len(v.Lines) != 1 || v.Live != "live!" {
-		t.Fatalf("tail with live text %+v", v)
+	b.SetHearing(false)
+	b.AddPiece(1, true, "first piece")
+	if got := b.TranslationRows(500); !reflect.DeepEqual(got, []Row{{RowPiece, "…"}}) {
+		t.Fatalf("a waiting piece %+v", got)
+	}
+	b.SetPiece(1, "", PieceRunning)
+	if got := b.TranslationRows(500); !reflect.DeepEqual(got, []Row{{RowPiece, "…"}}) {
+		t.Fatalf("a running piece without text %+v", got)
+	}
+	b.SetPiece(1, "erstes", PieceRunning)
+	if got := b.TranslationRows(500); !reflect.DeepEqual(got, []Row{{RowPiece, "erstes"}}) {
+		t.Fatalf("a running piece with text %+v", got)
+	}
+	b.SetPiece(1, "erstes Stück", PieceDone)
+	b.AddPiece(2, false, "second piece")
+	if got := b.TranslationRows(500); !reflect.DeepEqual(got, []Row{{RowPiece, "erstes Stück …"}}) {
+		t.Fatalf("a done piece and a waiting one %+v", got)
+	}
+	b.SetPiece(2, "zweites", PieceDone)
+	b.SetHearing(true)
+	if got := b.TranslationRows(500); !reflect.DeepEqual(got, []Row{{RowPiece, "erstes Stück zweites …"}}) {
+		t.Fatalf("hearing after done pieces %+v", got)
 	}
 }
 
-func TestTailCutsTheOriginalBeforeTheTranslation(t *testing.T) {
-	b := NewBoard(10)
-	ln := b.Add(time.Now(), strings.Repeat("word ", 10))
-	b.SetTranslation(ln.ID, "Wort Wort")
-	v := b.Tail(20, true)
-	if len(v.Lines) != 1 || v.Lines[0].Tr != "Wort Wort" {
-		t.Fatalf("tail %+v", v.Lines)
+func TestFailedPieceIsShownAsHeardOnItsOwnRow(t *testing.T) {
+	b := NewBoard(50)
+	b.AddPiece(1, true, "one two")
+	b.AddPiece(2, false, "three  four\nfive")
+	b.AddPiece(3, false, "six seven")
+	b.SetPiece(1, "eins zwei", PieceDone)
+	b.SetPiece(2, "", PieceFailed)
+	b.SetPiece(3, "sechs sieben", PieceDone)
+	want := []Row{{RowPiece, "eins zwei"}, {RowHeard, "three four five"}, {RowPiece, "sechs sieben"}}
+	if got := b.TranslationRows(500); !reflect.DeepEqual(got, want) {
+		t.Fatalf("rows %+v", got)
 	}
-	if n := len([]rune(v.Lines[0].Text)) + len([]rune(v.Lines[0].Tr)); n > 20 || !strings.HasPrefix(v.Lines[0].Text, "…") {
-		t.Fatalf("cut %+v (%d runes)", v.Lines[0], n)
+	b.AddPiece(4, false, "eight")
+	b.SetPiece(4, "", PieceFailed)
+	b.SetHearing(true)
+	want = append(want, Row{RowHeard, "eight …"})
+	if got := b.TranslationRows(500); !reflect.DeepEqual(got, want) {
+		t.Fatalf("rows ending with a failed piece %+v", got)
 	}
-	b.SetTranslation(ln.ID, strings.Repeat("Wort ", 10))
-	v = b.Tail(20, true)
-	if len(v.Lines) != 1 || v.Lines[0].Text != "" || len([]rune(v.Lines[0].Tr)) > 20 {
-		t.Fatalf("an overlong translation %+v", v.Lines)
+}
+
+func TestJoinedPiecesBecomeOne(t *testing.T) {
+	b := NewBoard(50)
+	b.AddPiece(1, true, "alpha")
+	b.AddPiece(2, false, "beta")
+	b.AddPiece(3, false, "gamma")
+	b.AddPiece(4, false, "delta")
+	b.JoinPieces([]int{2, 3})
+	b.SetPiece(1, "A", PieceDone)
+	b.SetPiece(3, "lost", PieceDone)
+	b.SetPiece(2, "", PieceFailed)
+	b.SetPiece(4, "D", PieceDone)
+	want := []Row{{RowPiece, "A"}, {RowHeard, "beta gamma"}, {RowPiece, "D"}}
+	if got := b.TranslationRows(500); !reflect.DeepEqual(got, want) {
+		t.Fatalf("rows %+v", got)
 	}
-	rows := v.Rows()
-	if len(rows) != 1 || rows[0].Kind != RowTranslation {
+	if b.SetPiece(3, "x", PieceDone) || b.SetPiece(99, "x", PieceDone) {
+		t.Fatal("a joined or unknown piece took a text")
+	}
+}
+
+func TestTranslationRowsKeepTheTailThatFits(t *testing.T) {
+	b := NewBoard(50)
+	b.AddPiece(1, true, "a")
+	b.SetPiece(1, strings.Repeat("alt ", 10), PieceDone)
+	b.AddPiece(2, true, "b")
+	b.SetPiece(2, "neu eins zwei", PieceDone)
+	rows := b.TranslationRows(20)
+	if len(rows) != 2 || rows[1].Text != "neu eins zwei" || !strings.HasPrefix(rows[0].Text, "…") {
 		t.Fatalf("rows %+v", rows)
 	}
-	if v.Text() != "" {
-		t.Fatalf("text %q", v.Text())
+	n := 0
+	for _, r := range rows {
+		n += len([]rune(r.Text))
+	}
+	if n > 20 {
+		t.Fatalf("%d runes in %+v", n, rows)
+	}
+	if got := b.TranslationRows(13); !reflect.DeepEqual(got, []Row{{RowPiece, "neu eins zwei"}}) {
+		t.Fatalf("an exact fit %+v", got)
+	}
+	if got := b.TranslationRows(0); len(got) != 0 {
+		t.Fatalf("no room %+v", got)
 	}
 }
 
-func TestHiddenTranslationsTakeNoRoomAndComeBack(t *testing.T) {
-	b := NewBoard(10)
-	a := b.Add(time.Now(), "aaaaa")
-	c := b.Add(time.Now(), "bbbbb")
-	b.SetTranslation(a.ID, "AAAAA")
-	b.SetTranslation(c.ID, "BBBBB")
-	v := b.Tail(10, false)
-	if len(v.Lines) != 2 || v.Lines[0].Tr != "" || v.Lines[1].Tr != "" {
-		t.Fatalf("hidden translations %+v", v.Lines)
+func TestBoardKeepsAFewPieces(t *testing.T) {
+	b := NewBoard(3)
+	for i := 1; i <= 5; i++ {
+		b.AddPiece(i, true, "x")
+		b.SetPiece(i, string(rune('a'+i)), PieceDone)
 	}
-	want := []Row{{RowLine, "aaaaa"}, {RowLine, "bbbbb"}}
-	if got := v.Rows(); !reflect.DeepEqual(got, want) {
-		t.Fatalf("rows with hidden translations %+v", got)
+	want := []Row{{RowPiece, "d"}, {RowPiece, "e"}, {RowPiece, "f"}}
+	if got := b.TranslationRows(500); !reflect.DeepEqual(got, want) {
+		t.Fatalf("rows %+v", got)
 	}
-	v = b.Tail(10, true)
-	if len(v.Lines) != 1 || v.Lines[0].Tr != "BBBBB" {
-		t.Fatalf("shown again %+v", v.Lines)
-	}
-	if lines := b.Lines(); lines[0].Tr != "AAAAA" || lines[1].Tr != "BBBBB" {
-		t.Fatalf("the board lost its translations %+v", lines)
+	if b.SetPiece(1, "y", PieceDone) {
+		t.Fatal("a piece that left the board took a text")
 	}
 }
 
@@ -393,7 +404,7 @@ func TestCleanTranslationRambleLimit(t *testing.T) {
 	}
 }
 
-func TestTranslatePromptNamesTheLanguage(t *testing.T) {
+func TestLanguageNames(t *testing.T) {
 	names := map[string]string{
 		"de": "German", "en": "English", "es": "Spanish", "fr": "French",
 		"it": "Italian", "pl": "Polish", "uk": "Ukrainian", "ru": "Russian",
@@ -402,21 +413,11 @@ func TestTranslatePromptNamesTheLanguage(t *testing.T) {
 		t.Fatalf("targets %v", TranslateTargets)
 	}
 	for _, code := range TranslateTargets {
-		name := names[code]
-		if LanguageName(code) != name {
+		if LanguageName(code) != names[code] {
 			t.Errorf("name of %s is %q", code, LanguageName(code))
-		}
-		want := "You translate subtitles. Translate the user's message into " + name +
-			". Reply with the translation only: one line, no quotes, no notes, no explanations. Keep names and numbers as they are. If the message is already in " +
-			name + ", repeat it unchanged."
-		if got := TranslatePrompt(code); got != want {
-			t.Errorf("prompt for %s: %q", code, got)
 		}
 	}
 	for _, code := range []string{"", "auto", "xx", "DE", "zh"} {
-		if got := TranslatePrompt(code); got != "" {
-			t.Errorf("prompt for an unknown code %q: %q", code, got)
-		}
 		if LanguageName(code) != "" {
 			t.Errorf("name for an unknown code %q", code)
 		}

@@ -12,7 +12,6 @@ type Line struct {
 	ID    int
 	Start time.Time
 	Text  string
-	Tr    string
 }
 
 type View struct {
@@ -22,8 +21,9 @@ type View struct {
 
 const (
 	RowLine = iota
-	RowTranslation
 	RowLive
+	RowPiece
+	RowHeard
 )
 
 type Row struct {
@@ -31,12 +31,29 @@ type Row struct {
 	Text string
 }
 
+const (
+	PieceWaiting = iota
+	PieceRunning
+	PieceDone
+	PieceFailed
+)
+
+type piece struct {
+	seq    int
+	para   bool
+	source string
+	text   string
+	state  int
+}
+
 type Board struct {
-	mu    sync.Mutex
-	keep  int
-	next  int
-	lines []Line
-	live  string
+	mu      sync.Mutex
+	keep    int
+	next    int
+	lines   []Line
+	live    string
+	pieces  []piece
+	hearing bool
 }
 
 func NewBoard(keep int) *Board {
@@ -57,18 +74,6 @@ func (b *Board) Add(start time.Time, text string) Line {
 		b.lines = b.lines[:n]
 	}
 	return ln
-}
-
-func (b *Board) SetTranslation(id int, text string) bool {
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	for i := len(b.lines) - 1; i >= 0; i-- {
-		if b.lines[i].ID == id {
-			b.lines[i].Tr = oneLine(text)
-			return true
-		}
-	}
-	return false
 }
 
 func (b *Board) SetLive(text string) {
@@ -95,18 +100,7 @@ func (b *Board) Lines() []Line {
 	return append([]Line(nil), b.lines...)
 }
 
-func cutLine(ln Line, budget int) Line {
-	tr := len([]rune(ln.Tr))
-	if tr >= budget {
-		ln.Tr = livetail.Tail(ln.Tr, budget)
-		ln.Text = ""
-		return ln
-	}
-	ln.Text = livetail.Tail(ln.Text, budget-tr)
-	return ln
-}
-
-func (b *Board) Tail(maxRunes int, translations bool) View {
+func (b *Board) Tail(maxRunes int) View {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	var v View
@@ -121,13 +115,11 @@ func (b *Board) Tail(maxRunes int, translations bool) View {
 	var picked []Line
 	for i := len(b.lines) - 1; i >= 0 && budget > 0; i-- {
 		ln := b.lines[i]
-		if !translations {
-			ln.Tr = ""
-		}
-		n := len([]rune(ln.Text)) + len([]rune(ln.Tr))
+		n := len([]rune(ln.Text))
 		if n > budget {
 			if len(picked) == 0 {
-				picked = append(picked, cutLine(ln, budget))
+				ln.Text = livetail.Tail(ln.Text, budget)
+				picked = append(picked, ln)
 			}
 			break
 		}
@@ -154,17 +146,126 @@ func (v View) Text() string {
 }
 
 func (v View) Rows() []Row {
-	rows := make([]Row, 0, 2*len(v.Lines)+1)
+	rows := make([]Row, 0, len(v.Lines)+1)
 	for _, ln := range v.Lines {
 		if ln.Text != "" {
 			rows = append(rows, Row{Kind: RowLine, Text: ln.Text})
-		}
-		if ln.Tr != "" {
-			rows = append(rows, Row{Kind: RowTranslation, Text: ln.Tr})
 		}
 	}
 	if v.Live != "" {
 		rows = append(rows, Row{Kind: RowLive, Text: v.Live})
 	}
 	return rows
+}
+
+func (b *Board) findPiece(seq int) int {
+	for i := len(b.pieces) - 1; i >= 0; i-- {
+		if b.pieces[i].seq == seq {
+			return i
+		}
+	}
+	return -1
+}
+
+func (b *Board) AddPiece(seq int, para bool, source string) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	b.pieces = append(b.pieces, piece{seq: seq, para: para, source: oneLine(source)})
+	if over := len(b.pieces) - b.keep; over > 0 {
+		n := copy(b.pieces, b.pieces[over:])
+		b.pieces = b.pieces[:n]
+	}
+}
+
+func (b *Board) JoinPieces(seqs []int) {
+	if len(seqs) < 2 {
+		return
+	}
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	at := b.findPiece(seqs[0])
+	if at < 0 {
+		return
+	}
+	for _, s := range seqs[1:] {
+		i := b.findPiece(s)
+		if i <= at {
+			continue
+		}
+		b.pieces[at].source = oneLine(b.pieces[at].source + " " + b.pieces[i].source)
+		b.pieces = append(b.pieces[:i], b.pieces[i+1:]...)
+	}
+}
+
+func (b *Board) SetPiece(seq int, text string, state int) bool {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	i := b.findPiece(seq)
+	if i < 0 {
+		return false
+	}
+	b.pieces[i].text = oneLine(text)
+	b.pieces[i].state = state
+	return true
+}
+
+func (b *Board) SetHearing(on bool) {
+	b.mu.Lock()
+	b.hearing = on
+	b.mu.Unlock()
+}
+
+func (b *Board) TranslationRows(maxRunes int) []Row {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	if maxRunes <= 0 {
+		return nil
+	}
+	var rows []Row
+	pending := b.hearing
+	breakNext := true
+	for _, pc := range b.pieces {
+		if pc.para {
+			breakNext = true
+		}
+		switch {
+		case pc.state == PieceWaiting, pc.state == PieceRunning && pc.text == "":
+			pending = true
+			continue
+		case pc.state == PieceFailed:
+			if pc.source != "" {
+				rows = append(rows, Row{Kind: RowHeard, Text: pc.source})
+			}
+			breakNext = true
+			continue
+		case pc.text == "":
+			continue
+		}
+		if breakNext || len(rows) == 0 || rows[len(rows)-1].Kind != RowPiece {
+			rows = append(rows, Row{Kind: RowPiece, Text: pc.text})
+		} else {
+			rows[len(rows)-1].Text += " " + pc.text
+		}
+		breakNext = false
+	}
+	if pending {
+		if len(rows) == 0 {
+			rows = append(rows, Row{Kind: RowPiece, Text: "…"})
+		} else {
+			rows[len(rows)-1].Text += " …"
+		}
+	}
+	budget := maxRunes
+	start := len(rows)
+	for start > 0 && budget > 0 {
+		n := len([]rune(rows[start-1].Text))
+		if n > budget {
+			rows[start-1].Text = livetail.Tail(rows[start-1].Text, budget)
+			start--
+			break
+		}
+		budget -= n
+		start--
+	}
+	return rows[start:]
 }
