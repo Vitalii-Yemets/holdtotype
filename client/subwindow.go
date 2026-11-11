@@ -56,40 +56,93 @@ type subWindowSource interface {
 	windowHeader() (bool, string, string)
 }
 
-var (
-	swMu      sync.Mutex
-	swHwnd    uintptr
-	swOnce    sync.Once
-	swReady   = make(chan struct{})
-	swSrc     subWindowSource
-	swRows    int32 = defaultSubtitlesLines
-	swSize          = "m"
-	swCustom  map[string]ovplace.Frac
-	swOnClose func()
-	swOnMoved func(key string, f ovplace.Frac)
+type subPart struct {
+	rows     func() []subtitles.Row
+	area     rect
+	dim      bool
+	lastRows []subtitles.Row
+}
 
-	swShown     bool
-	swHover     bool
-	swDragging  bool
-	swDragMoved bool
-	swDragDX    int32
-	swDragDY    int32
-	swX, swY    int32
-	swW, swH    int32
-	swLineH     int32
-	swDPI       int32 = 96
-	swLastRows  []subtitles.Row
-	swLastPhase = -1
-	swLastHead  string
-	swLastPaint time.Time
-	swTicks     int
-	swBuf       backBuf
+func (p *subPart) fetch() []subtitles.Row {
+	if p.rows == nil {
+		return nil
+	}
+	return p.rows()
+}
+
+type swHeader struct {
+	title string
+	codes string
+}
+
+func (h swHeader) key() string { return h.title + "\x00" + h.codes }
+
+type subWindow struct {
+	class string
+	once  sync.Once
+	ready chan struct{}
+
+	mu      sync.Mutex
+	hwnd    uintptr
+	src     subWindowSource
+	rows    int32
+	size    string
+	custom  map[string]ovplace.Frac
+	onClose func()
+	onMoved func(key string, f ovplace.Frac)
+
+	shown     bool
+	hover     bool
+	dragging  bool
+	dragMoved bool
+	dragDX    int32
+	dragDY    int32
+	x, y      int32
+	w, h      int32
+	lineH     int32
+	dpi       int32
+	parts     []*subPart
+	lastPhase int
+	lastHead  string
+	lastPaint time.Time
+	ticks     int
+	buf       backBuf
+}
+
+func newSubWindow(class string) *subWindow {
+	return &subWindow{
+		class:     class,
+		ready:     make(chan struct{}),
+		rows:      defaultSubtitlesLines,
+		size:      "m",
+		dpi:       96,
+		lastPhase: -1,
+	}
+}
+
+var (
+	swMain     = newSubWindow("SubtitlesWnd")
+	swByHwnd   sync.Map
+	swProcOnce sync.Once
+	swProc     uintptr
 
 	swFontMu sync.Mutex
 	swFonts  = map[string]uintptr{}
 )
 
 func subWindowConfigure(rows int, size string, custom map[string]ovplace.Frac) {
+	swMain.configure(rows, size, custom)
+}
+
+func subWindowShow(src subWindowSource, onClose func(), onMoved func(string, ovplace.Frac)) {
+	swMain.show(src, onClose, onMoved)
+}
+
+func subWindowHide(src subWindowSource) {
+	swMain.hide(src)
+}
+
+func (sw *subWindow) configure(rows int, size string, custom map[string]ovplace.Frac) {
 	if rows < minSubtitlesLines || rows > maxSubtitlesLines {
 		rows = defaultSubtitlesLines
 	}
@@ -100,55 +153,64 @@ func subWindowConfigure(rows int, size string, custom map[string]ovplace.Frac) {
 	for k, v := range custom {
 		places[k] = v
 	}
-	swMu.Lock()
-	swRows = int32(rows)
-	swSize = size
-	swCustom = places
-	hwnd := swHwnd
-	swMu.Unlock()
+	sw.mu.Lock()
+	sw.rows = int32(rows)
+	sw.size = size
+	sw.custom = places
+	hwnd := sw.hwnd
+	sw.mu.Unlock()
 	if hwnd != 0 {
 		procPostMessageW.Call(hwnd, wmSwLayout, 0, 0)
 	}
 }
 
-func subWindowShow(src subWindowSource, onClose func(), onMoved func(string, ovplace.Frac)) {
-	swOnce.Do(startSubWindowThread)
-	<-swReady
-	swMu.Lock()
-	swSrc = src
-	swOnClose = onClose
-	swOnMoved = onMoved
-	hwnd := swHwnd
-	swMu.Unlock()
+func (sw *subWindow) show(src subWindowSource, onClose func(), onMoved func(string, ovplace.Frac)) {
+	sw.once.Do(sw.startThread)
+	<-sw.ready
+	sw.mu.Lock()
+	sw.src = src
+	sw.onClose = onClose
+	sw.onMoved = onMoved
+	hwnd := sw.hwnd
+	sw.mu.Unlock()
 	if hwnd != 0 {
 		procPostMessageW.Call(hwnd, wmSwSet, 0, 0)
 	}
 }
 
-func subWindowHide(src subWindowSource) {
-	swMu.Lock()
-	if swSrc != src {
-		swMu.Unlock()
+func (sw *subWindow) hide(src subWindowSource) {
+	sw.mu.Lock()
+	if sw.src != src {
+		sw.mu.Unlock()
 		return
 	}
-	had := swSrc != nil
-	swSrc = nil
-	swOnClose = nil
-	swOnMoved = nil
-	hwnd := swHwnd
-	swMu.Unlock()
+	had := sw.src != nil
+	sw.src = nil
+	sw.onClose = nil
+	sw.onMoved = nil
+	hwnd := sw.hwnd
+	sw.mu.Unlock()
 	if had && hwnd != 0 {
 		procPostMessageW.Call(hwnd, wmSwSet, 0, 0)
 	}
 }
 
-func startSubWindowThread() {
+func subWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
+	if v, ok := swByHwnd.Load(hwnd); ok {
+		return v.(*subWindow).proc(hwnd, msg, wParam, lParam)
+	}
+	r, _, _ := procDefWindowProcW.Call(hwnd, msg, wParam, lParam)
+	return r
+}
+
+func (sw *subWindow) startThread() {
+	swProcOnce.Do(func() { swProc = syscall.NewCallback(subWndProc) })
 	go func() {
 		runtime.LockOSThread()
-		className, _ := windows.UTF16PtrFromString(appid.Class("SubtitlesWnd"))
+		className, _ := windows.UTF16PtrFromString(appid.Class(sw.class))
 		wc := wndClassExW{
 			Size:      uint32(unsafe.Sizeof(wndClassExW{})),
-			WndProc:   syscall.NewCallback(subWndProc),
+			WndProc:   swProc,
 			ClassName: className,
 		}
 		procRegisterClassExW.Call(uintptr(unsafe.Pointer(&wc)))
@@ -160,15 +222,16 @@ func startSubWindowThread() {
 			0, 0, 0, 0,
 		)
 		if hwnd != 0 {
+			swByHwnd.Store(hwnd, sw)
 			applyDarkCaption(hwnd)
 			procSetLayeredWindowAttributes.Call(hwnd, 0, swAlpha, lwaAlpha)
 		} else {
 			log.Printf("subtitles: the window was not created")
 		}
-		swMu.Lock()
-		swHwnd = hwnd
-		swMu.Unlock()
-		close(swReady)
+		sw.mu.Lock()
+		sw.hwnd = hwnd
+		sw.mu.Unlock()
+		close(sw.ready)
 		if hwnd == 0 {
 			return
 		}
@@ -198,10 +261,10 @@ func swFont(face string, weight int32, px int32) uintptr {
 	return f
 }
 
-func swTextFont(dpi int32) uintptr {
-	swMu.Lock()
-	size := swSize
-	swMu.Unlock()
+func (sw *subWindow) textFont(dpi int32) uintptr {
+	sw.mu.Lock()
+	size := sw.size
+	sw.mu.Unlock()
 	skin := themeLook()
 	return swFont(skin.FontGDI, skin.Weight, scaleDPI(swSizes[size], dpi))
 }
@@ -221,16 +284,16 @@ func swMeasureLine(font uintptr) int32 {
 	return r.Bottom - r.Top
 }
 
-func swPlace() (work, screen rect) {
-	if swShown && swW > 0 {
-		return monitorRectsForPoint(swX+swW/2, swY+swH/2)
+func (sw *subWindow) place() (work, screen rect) {
+	if sw.shown && sw.w > 0 {
+		return monitorRectsForPoint(sw.x+sw.w/2, sw.y+sw.h/2)
 	}
 	var pt point
 	procGetCursorPos.Call(uintptr(unsafe.Pointer(&pt)))
 	return monitorRectsForPoint(pt.X, pt.Y)
 }
 
-func swMeasure(wa rect, dpi int32) (w, h, lineH int32) {
+func (sw *subWindow) measure(wa rect, dpi int32) (w, h, lineH int32) {
 	px := func(v int32) int32 { return scaleDPI(v, dpi) }
 	waW := wa.Right - wa.Left
 	w = waW * swShare / 100
@@ -243,24 +306,51 @@ func swMeasure(wa rect, dpi int32) (w, h, lineH int32) {
 	if w > waW {
 		w = waW
 	}
-	lineH = swMeasureLine(swTextFont(dpi))
+	lineH = swMeasureLine(sw.textFont(dpi))
 	if lineH <= 0 {
 		lineH = px(24)
 	}
-	swMu.Lock()
-	rows := swRows
-	swMu.Unlock()
+	sw.mu.Lock()
+	rows := sw.rows
+	sw.mu.Unlock()
 	h = px(swHeaderDIP) + px(swPadTop) + rows*lineH + px(swPadBottom)
 	return w, h, lineH
 }
 
-func swLayout(hwnd uintptr) {
-	wa, screen := swPlace()
+func (sw *subWindow) setParts() {
+	sw.mu.Lock()
+	src := sw.src
+	sw.mu.Unlock()
+	if src == nil {
+		sw.parts = nil
+		return
+	}
+	sw.parts = []*subPart{{rows: src.windowRows}}
+	sw.layoutParts()
+}
+
+func (sw *subWindow) layoutParts() {
+	px := func(v int32) int32 { return scaleDPI(v, sw.dpi) }
+	area := rect{Left: px(swPadX), Top: px(swHeaderDIP) + px(swPadTop), Right: sw.w - px(swPadX), Bottom: sw.h - px(swPadBottom)}
+	for _, p := range sw.parts {
+		p.area = area
+	}
+}
+
+func (sw *subWindow) setRect(hwnd uintptr, x, y, w, h, lineH, dpi int32) {
+	sw.x, sw.y, sw.w, sw.h, sw.lineH, sw.dpi = x, y, w, h, lineH, dpi
+	sw.layoutParts()
+	procSetWindowPos.Call(hwnd, ^uintptr(0), uintptr(x), uintptr(y), uintptr(w), uintptr(h), swpNoActivate)
+	procSetWindowRgn.Call(hwnd, swRegion(w, h, dpi), 1)
+}
+
+func (sw *subWindow) layout(hwnd uintptr) {
+	wa, screen := sw.place()
 	dpi := dpiForPoint(wa.Left+(wa.Right-wa.Left)/2, wa.Top+(wa.Bottom-wa.Top)/2)
-	w, h, lineH := swMeasure(wa, dpi)
-	swMu.Lock()
-	custom := swCustom
-	swMu.Unlock()
+	w, h, lineH := sw.measure(wa, dpi)
+	sw.mu.Lock()
+	custom := sw.custom
+	sw.mu.Unlock()
 	var x, y int32
 	if f, ok := custom[ovplace.ResKey(toPlace(screen))]; ok {
 		x, y = ovplace.Custom(f, toPlace(wa), w, h)
@@ -271,37 +361,33 @@ func swLayout(hwnd uintptr) {
 			y = wa.Top
 		}
 	}
-	swX, swY, swW, swH, swLineH, swDPI = x, y, w, h, lineH, dpi
-	procSetWindowPos.Call(hwnd, ^uintptr(0), uintptr(x), uintptr(y), uintptr(w), uintptr(h), swpNoActivate)
-	procSetWindowRgn.Call(hwnd, swRegion(w, h, dpi), 1)
+	sw.setRect(hwnd, x, y, w, h, lineH, dpi)
 }
 
-func swRescale(hwnd uintptr) bool {
+func (sw *subWindow) rescale(hwnd uintptr) bool {
 	var pt point
 	procGetCursorPos.Call(uintptr(unsafe.Pointer(&pt)))
 	cx, cy := pt.X, pt.Y
-	if !swDragging {
-		cx, cy = swX+swW/2, swY+swH/2
+	if !sw.dragging {
+		cx, cy = sw.x+sw.w/2, sw.y+sw.h/2
 	}
 	dpi := dpiForPoint(cx, cy)
-	if dpi == swDPI || swW <= 0 || swH <= 0 {
+	if dpi == sw.dpi || sw.w <= 0 || sw.h <= 0 {
 		return false
 	}
 	wa, _ := monitorRectsForPoint(cx, cy)
-	w, h, lineH := swMeasure(wa, dpi)
+	w, h, lineH := sw.measure(wa, dpi)
 	var x, y int32
-	if swDragging {
-		swDragDX = int32(int64(swDragDX) * int64(w) / int64(swW))
-		swDragDY = int32(int64(swDragDY) * int64(h) / int64(swH))
-		x, y = pt.X-swDragDX, pt.Y-swDragDY
+	if sw.dragging {
+		sw.dragDX = int32(int64(sw.dragDX) * int64(w) / int64(sw.w))
+		sw.dragDY = int32(int64(sw.dragDY) * int64(h) / int64(sw.h))
+		x, y = pt.X-sw.dragDX, pt.Y-sw.dragDY
 	} else {
 		x, y = cx-w/2, cy-h/2
 	}
 	log.Printf("subtitles: the window is on a screen at %d DPI now, %dx%d", dpi, w, h)
-	swX, swY, swW, swH, swLineH, swDPI = x, y, w, h, lineH, dpi
-	procSetWindowPos.Call(hwnd, ^uintptr(0), uintptr(x), uintptr(y), uintptr(w), uintptr(h), swpNoActivate)
-	procSetWindowRgn.Call(hwnd, swRegion(w, h, dpi), 1)
-	swRenderNow(hwnd)
+	sw.setRect(hwnd, x, y, w, h, lineH, dpi)
+	sw.renderNow(hwnd)
 	return true
 }
 
@@ -320,9 +406,9 @@ func swRegion(w, h, dpi int32) uintptr {
 	return rgn
 }
 
-func swInClose(x, y int32) bool {
-	px := func(v int32) int32 { return scaleDPI(v, swDPI) }
-	return x >= swW-px(swCloseDIP) && x < swW && y >= 0 && y < px(swHeaderDIP)
+func (sw *subWindow) inClose(x, y int32) bool {
+	px := func(v int32) int32 { return scaleDPI(v, sw.dpi) }
+	return x >= sw.w-px(swCloseDIP) && x < sw.w && y >= 0 && y < px(swHeaderDIP)
 }
 
 func swCursorClient(hwnd uintptr) (int32, int32) {
@@ -332,68 +418,63 @@ func swCursorClient(hwnd uintptr) (int32, int32) {
 	return pt.X, pt.Y
 }
 
-type swHeader struct {
-	title string
-	codes string
-}
-
-func (h swHeader) key() string { return h.title + "\x00" + h.codes }
-
-func swContent() (int, []subtitles.Row, swHeader, bool) {
-	swMu.Lock()
-	src := swSrc
-	swMu.Unlock()
+func (sw *subWindow) content() (int, swHeader, bool) {
+	sw.mu.Lock()
+	src := sw.src
+	sw.mu.Unlock()
 	if src == nil {
-		return 0, nil, swHeader{}, false
+		return 0, swHeader{}, false
 	}
 	translated, lang, to := src.windowHeader()
 	head := swHeader{title: tr(subwin.TitleKey(translated)), codes: subwin.Codes(lang, to, translated)}
-	return src.windowPhase(), src.windowRows(), head, true
+	return src.windowPhase(), head, true
 }
 
-func swApplyState(hwnd uintptr) {
-	_, _, _, on := swContent()
+func (sw *subWindow) applyState(hwnd uintptr) {
+	_, _, on := sw.content()
 	if !on {
-		if swDragging {
+		if sw.dragging {
 			procReleaseCapture.Call()
-			swDragging = false
+			sw.dragging = false
 		}
 		procKillTimer.Call(hwnd, swTimerID)
 		procShowWindow.Call(hwnd, swHide)
-		swShown = false
-		swLastRows, swLastPhase, swLastHead = nil, -1, ""
+		sw.shown = false
+		sw.parts = nil
+		sw.lastPhase, sw.lastHead = -1, ""
 		return
 	}
-	if !swShown {
-		swLayout(hwnd)
+	sw.setParts()
+	if !sw.shown {
+		sw.layout(hwnd)
 	}
-	swShown = true
+	sw.shown = true
 	procSetTimer.Call(hwnd, swTimerID, 100, 0)
 	procShowWindow.Call(hwnd, swShowNoActivate)
 	overlayRaise(hwnd)
-	swRenderNow(hwnd)
+	sw.renderNow(hwnd)
 }
 
-func swRenderNow(hwnd uintptr) {
+func (sw *subWindow) renderNow(hwnd uintptr) {
 	hdc, _, _ := procGetDC.Call(hwnd)
 	if hdc == 0 {
 		return
 	}
-	swFrame(hwnd, hdc)
+	sw.frame(hwnd, hdc)
 	procReleaseDC.Call(hwnd, hdc)
 }
 
-func swFrame(hwnd, hdc uintptr) {
+func (sw *subWindow) frame(hwnd, hdc uintptr) {
 	var rc rect
 	procGetClientRect.Call(hwnd, uintptr(unsafe.Pointer(&rc)))
-	mem := swBuf.begin(hdc, rc.Right-rc.Left, rc.Bottom-rc.Top)
+	mem := sw.buf.begin(hdc, rc.Right-rc.Left, rc.Bottom-rc.Top)
 	if mem == 0 {
-		swRender(hwnd, hdc)
+		sw.render(hwnd, hdc)
 		return
 	}
-	swRender(hwnd, mem)
-	swBuf.blit(hdc)
-	swLastPaint = time.Now()
+	sw.render(hwnd, mem)
+	sw.buf.blit(hdc)
+	sw.lastPaint = time.Now()
 }
 
 func swPhaseText(phase int) string {
@@ -406,7 +487,7 @@ func swPhaseText(phase int) string {
 	return tr("sub.listening")
 }
 
-func swRender(hwnd, hdc uintptr) {
+func (sw *subWindow) render(hwnd, hdc uintptr) {
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("subtitles window: panic: %v", r)
@@ -414,10 +495,19 @@ func swRender(hwnd, hdc uintptr) {
 	}()
 	var rc rect
 	procGetClientRect.Call(hwnd, uintptr(unsafe.Pointer(&rc)))
-	dpi := swDPI
+	dpi := sw.dpi
 	px := func(v int32) int32 { return scaleDPI(v, dpi) }
-	phase, rows, hdr, _ := swContent()
-	swLastRows, swLastPhase, swLastHead = rows, phase, hdr.key()
+	phase, hdr, _ := sw.content()
+	sw.lastPhase, sw.lastHead = phase, hdr.key()
+	partRows := make([][]subtitles.Row, len(sw.parts))
+	hasText := false
+	for i, p := range sw.parts {
+		partRows[i] = p.fetch()
+		p.lastRows = partRows[i]
+		if swHasText(partRows[i]) {
+			hasText = true
+		}
+	}
 
 	fill := func(r rect, color uintptr) {
 		br, _, _ := procCreateSolidBrush.Call(color)
@@ -470,19 +560,26 @@ func swRender(hwnd, hdc uintptr) {
 		draw(code, rect{Left: tr0.Right + px(10), Top: 0, Right: rc.Right - px(swCloseDIP), Bottom: head}, colGreenDm, 0x0020|0x0004|0x8000)
 	}
 	xcol := colGreenDm
-	if swHover {
+	if sw.hover {
 		xcol = colGreen
 	}
 	draw("✕", rect{Left: rc.Right - px(swCloseDIP), Top: 0, Right: rc.Right - px(6), Bottom: head}, xcol, 0x0020|0x0004|0x0001)
 	fill(rect{Left: px(10), Top: head, Right: rc.Right - px(10), Bottom: head + 1}, colLine)
 
-	area := rect{Left: px(swPadX), Top: head + px(swPadTop), Right: rc.Right - px(swPadX), Bottom: rc.Bottom - px(swPadBottom)}
-	font := swTextFont(dpi)
+	font := sw.textFont(dpi)
 	procSelectObject.Call(hdc, font)
-	if !swHasText(rows) {
-		draw(swPhaseText(phase), rect{Left: area.Left, Top: area.Bottom - swLineH, Right: area.Right, Bottom: area.Bottom}, colGreenDm, 0x0020|0x0004|0x8000)
+	if !hasText {
+		area := rect{Left: px(swPadX), Top: head + px(swPadTop), Right: rc.Right - px(swPadX), Bottom: rc.Bottom - px(swPadBottom)}
+		draw(swPhaseText(phase), rect{Left: area.Left, Top: area.Bottom - sw.lineH, Right: area.Right, Bottom: area.Bottom}, colGreenDm, 0x0020|0x0004|0x8000)
 		return
 	}
+	for i, p := range sw.parts {
+		sw.drawPart(hdc, p, partRows[i], draw)
+	}
+}
+
+func (sw *subWindow) drawPart(hdc uintptr, p *subPart, rows []subtitles.Row, draw func(string, rect, uintptr, uintptr) rect) {
+	area := p.area
 	saved, _, _ := procSaveDC.Call(hdc)
 	procIntersectClipRect.Call(hdc, uintptr(area.Left), uintptr(area.Top), uintptr(area.Right), uintptr(area.Bottom))
 	bottom := area.Bottom
@@ -492,7 +589,7 @@ func swRender(hwnd, hdc uintptr) {
 			continue
 		}
 		color := colGreen
-		if rows[i].Kind == subtitles.RowHeard {
+		if p.dim || rows[i].Kind == subtitles.RowHeard {
 			color = colGreenDm
 		}
 		calc := draw(s, rect{Right: area.Right - area.Left}, color, 0x0400|0x0010)
@@ -512,90 +609,102 @@ func swHasText(rows []subtitles.Row) bool {
 	return false
 }
 
-func swSavePlace() {
-	wa, screen := monitorRectsForPoint(swX+swW/2, swY+swH/2)
+func (sw *subWindow) savePlace() {
+	wa, screen := monitorRectsForPoint(sw.x+sw.w/2, sw.y+sw.h/2)
 	key := ovplace.ResKey(toPlace(screen))
-	f := ovplace.FracOf(swX, swY, swW, swH, toPlace(wa))
-	swMu.Lock()
-	if swCustom == nil {
-		swCustom = map[string]ovplace.Frac{}
+	f := ovplace.FracOf(sw.x, sw.y, sw.w, sw.h, toPlace(wa))
+	sw.mu.Lock()
+	if sw.custom == nil {
+		sw.custom = map[string]ovplace.Frac{}
 	}
-	swCustom[key] = f
-	cb := swOnMoved
-	swMu.Unlock()
+	sw.custom[key] = f
+	cb := sw.onMoved
+	sw.mu.Unlock()
 	log.Printf("subtitles: the window was moved to %.3f,%.3f of the %s screen", f.X, f.Y, key)
 	if cb != nil {
 		go cb(key, f)
 	}
 }
 
-func subWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
+func (sw *subWindow) changed() bool {
+	phase, hdr, _ := sw.content()
+	if phase != sw.lastPhase || hdr.key() != sw.lastHead {
+		return true
+	}
+	for _, p := range sw.parts {
+		if !slices.Equal(p.fetch(), p.lastRows) {
+			return true
+		}
+	}
+	return false
+}
+
+func (sw *subWindow) proc(hwnd, msg, wParam, lParam uintptr) uintptr {
 	switch msg {
 	case wmSwSet:
-		swApplyState(hwnd)
+		sw.applyState(hwnd)
 		return 0
 	case wmDpiChanged:
-		if swShown {
-			swRescale(hwnd)
+		if sw.shown {
+			sw.rescale(hwnd)
 		}
 		return 0
 	case wmSwLayout:
-		if swShown {
-			swLayout(hwnd)
-			swRenderNow(hwnd)
+		if sw.shown {
+			sw.layout(hwnd)
+			sw.renderNow(hwnd)
 		}
 		return 0
 	case wmTimer:
-		if !swShown {
+		if !sw.shown {
 			return 0
 		}
-		swTicks++
-		if swTicks%30 == 0 {
+		sw.ticks++
+		if sw.ticks%30 == 0 {
 			overlayRaise(hwnd)
 		}
 		x, y := swCursorClient(hwnd)
-		hover := swInClose(x, y)
-		phase, rows, head, _ := swContent()
-		if hover != swHover || !slices.Equal(rows, swLastRows) || phase != swLastPhase || head.key() != swLastHead || time.Since(swLastPaint) > time.Second {
-			swHover = hover
-			swRenderNow(hwnd)
+		hover := sw.inClose(x, y)
+		if hover != sw.hover || sw.changed() || time.Since(sw.lastPaint) > time.Second {
+			sw.hover = hover
+			sw.renderNow(hwnd)
 		}
 		return 0
 	case wmPaint:
 		var ps paintStruct
 		hdc, _, _ := procBeginPaint.Call(hwnd, uintptr(unsafe.Pointer(&ps)))
-		swFrame(hwnd, hdc)
+		sw.frame(hwnd, hdc)
 		procEndPaint.Call(hwnd, uintptr(unsafe.Pointer(&ps)))
 		return 0
 	case wmPrintClient:
-		swRender(hwnd, wParam)
+		sw.render(hwnd, wParam)
 		return 0
 	case wmMouseActivate:
 		return maNoActivate
 	case wmLButtonDown:
 		x := int32(int16(lParam & 0xFFFF))
 		y := int32(int16(lParam >> 16 & 0xFFFF))
-		if swInClose(x, y) {
+		if sw.inClose(x, y) {
 			return 0
 		}
 		var pt point
 		procGetCursorPos.Call(uintptr(unsafe.Pointer(&pt)))
-		swDragging = true
-		swDragMoved = false
-		swDragDX, swDragDY = pt.X-swX, pt.Y-swY
+		sw.dragging = true
+		sw.dragMoved = false
+		sw.dragDX, sw.dragDY = pt.X-sw.x, pt.Y-sw.y
 		procSetCapture.Call(hwnd)
 		return 0
 	case wmMouseMove:
-		if swDragging {
+		if sw.dragging {
 			var pt point
 			procGetCursorPos.Call(uintptr(unsafe.Pointer(&pt)))
-			if swRescale(hwnd) {
+			if sw.rescale(hwnd) {
 				return 0
 			}
-			nx, ny := pt.X-swDragDX, pt.Y-swDragDY
-			if nx != swX || ny != swY {
-				swX, swY = nx, ny
-				swDragMoved = true
+			nx, ny := pt.X-sw.dragDX, pt.Y-sw.dragDY
+			if nx != sw.x || ny != sw.y {
+				sw.x, sw.y = nx, ny
+				sw.dragMoved = true
 				procSetWindowPos.Call(hwnd, ^uintptr(0), uintptr(nx), uintptr(ny), 0, 0, swpNoSize|swpNoActivate)
 			}
 		}
@@ -603,18 +712,18 @@ func subWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 	case wmLBtnUp:
 		x := int32(int16(lParam & 0xFFFF))
 		y := int32(int16(lParam >> 16 & 0xFFFF))
-		if swDragging {
-			swDragging = false
+		if sw.dragging {
+			sw.dragging = false
 			procReleaseCapture.Call()
-			if swDragMoved {
-				swSavePlace()
+			if sw.dragMoved {
+				sw.savePlace()
 			}
 			return 0
 		}
-		if swInClose(x, y) {
-			swMu.Lock()
-			cb := swOnClose
-			swMu.Unlock()
+		if sw.inClose(x, y) {
+			sw.mu.Lock()
+			cb := sw.onClose
+			sw.mu.Unlock()
 			if cb != nil {
 				log.Printf("subtitles: closed from the window")
 				go cb()
@@ -622,17 +731,17 @@ func subWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 		}
 		return 0
 	case wmCaptureLost:
-		if swDragging {
-			swDragging = false
-			if swDragMoved {
-				swSavePlace()
+		if sw.dragging {
+			sw.dragging = false
+			if sw.dragMoved {
+				sw.savePlace()
 			}
 		}
 		return 0
 	case wmSetCursor:
 		x, y := swCursorClient(hwnd)
 		id := uintptr(32512)
-		if swInClose(x, y) {
+		if sw.inClose(x, y) {
 			id = 32649
 		}
 		cur, _, _ := procLoadCursorW.Call(0, id)
@@ -642,7 +751,8 @@ func subWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 		applyChrome(hwnd)
 		return 0
 	case wmDestroy:
-		swBuf.release()
+		sw.buf.release()
+		swByHwnd.Delete(hwnd)
 		procPostQuitMessage.Call(0)
 		return 0
 	}
