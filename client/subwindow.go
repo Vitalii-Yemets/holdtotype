@@ -44,6 +44,7 @@ const (
 	swShare     = 56
 	swBottomGap = 150
 	swSideGap   = 24
+	swGripDIP   = 6
 	swAlpha     = 235
 	swTextRunes = 900
 	swCloseDIP  = 40
@@ -91,8 +92,10 @@ type subWindow struct {
 	pos     string
 	monitor string
 	custom  map[string]ovplace.Frac
+	box     map[string]subwin.Box
 	onClose func()
 	onMoved func(key string, f ovplace.Frac)
+	onSized func(key string, b subwin.Box)
 
 	shown     bool
 	hover     bool
@@ -100,6 +103,11 @@ type subWindow struct {
 	dragMoved bool
 	dragDX    int32
 	dragDY    int32
+	resizing  bool
+	resEdges  int
+	resStart  ovplace.Rect
+	resPt     point
+	resRows   int32
 	x, y      int32
 	w, h      int32
 	lineH     int32
@@ -138,8 +146,8 @@ func subWindowConfigure(cfg *Config) {
 	swMain.configure(cfg)
 }
 
-func subWindowShow(src subWindowSource, onClose func(), onMoved func(string, ovplace.Frac)) {
-	swMain.show(src, onClose, onMoved)
+func subWindowShow(src subWindowSource, onClose func(), onMoved func(string, ovplace.Frac), onSized func(string, subwin.Box)) {
+	swMain.show(src, onClose, onMoved, onSized)
 }
 
 func subWindowHide(src subWindowSource) {
@@ -167,12 +175,17 @@ func (sw *subWindow) configure(cfg *Config) {
 	for k, v := range cfg.SubtitlesXY {
 		places[k] = v
 	}
+	boxes := map[string]subwin.Box{}
+	for k, v := range cfg.SubtitlesBox {
+		boxes[k] = v
+	}
 	sw.mu.Lock()
 	sw.rows = int32(rows)
 	sw.size = size
 	sw.pos = pos
 	sw.monitor = mon
 	sw.custom = places
+	sw.box = boxes
 	hwnd := sw.hwnd
 	sw.mu.Unlock()
 	if hwnd != 0 {
@@ -180,13 +193,14 @@ func (sw *subWindow) configure(cfg *Config) {
 	}
 }
 
-func (sw *subWindow) show(src subWindowSource, onClose func(), onMoved func(string, ovplace.Frac)) {
+func (sw *subWindow) show(src subWindowSource, onClose func(), onMoved func(string, ovplace.Frac), onSized func(string, subwin.Box)) {
 	sw.once.Do(sw.startThread)
 	<-sw.ready
 	sw.mu.Lock()
 	sw.src = src
 	sw.onClose = onClose
 	sw.onMoved = onMoved
+	sw.onSized = onSized
 	hwnd := sw.hwnd
 	sw.mu.Unlock()
 	if hwnd != 0 {
@@ -204,6 +218,7 @@ func (sw *subWindow) hide(src subWindowSource) {
 	sw.src = nil
 	sw.onClose = nil
 	sw.onMoved = nil
+	sw.onSized = nil
 	hwnd := sw.hwnd
 	sw.mu.Unlock()
 	if had && hwnd != 0 {
@@ -319,7 +334,13 @@ func (sw *subWindow) place() (work, screen rect) {
 	return monitorRectsForPoint(pt.X, pt.Y)
 }
 
-func (sw *subWindow) measure(wa rect, dpi int32) (w, h, lineH int32) {
+func (sw *subWindow) limits(wa rect, dpi, lineH int32) subwin.Limits {
+	px := func(v int32) int32 { return scaleDPI(v, dpi) }
+	chrome := px(swHeaderDIP) + px(swPadTop) + px(swPadBottom)
+	return subwin.NewLimits(px(subwin.BoxMinW), wa.Right-wa.Left, wa.Bottom-wa.Top, chrome, lineH, 1)
+}
+
+func (sw *subWindow) measure(wa, screen rect, dpi int32) (w, h, lineH int32) {
 	px := func(v int32) int32 { return scaleDPI(v, dpi) }
 	waW := wa.Right - wa.Left
 	w = waW * swShare / 100
@@ -329,18 +350,19 @@ func (sw *subWindow) measure(wa rect, dpi int32) (w, h, lineH int32) {
 	if w > px(swMaxW) {
 		w = px(swMaxW)
 	}
-	if w > waW {
-		w = waW
-	}
 	lineH = swMeasureLine(sw.textFont(dpi))
 	if lineH <= 0 {
 		lineH = px(24)
 	}
 	sw.mu.Lock()
 	rows := sw.rows
+	b, sized := sw.box[ovplace.ResKey(toPlace(screen))]
 	sw.mu.Unlock()
-	h = px(swHeaderDIP) + px(swPadTop) + rows*lineH + px(swPadBottom)
-	return w, h, lineH
+	if sized {
+		w, rows = px(b.W), b.Rows
+	}
+	l := sw.limits(wa, dpi, lineH)
+	return l.Width(w), l.Height(rows), lineH
 }
 
 func (sw *subWindow) setParts() {
@@ -373,7 +395,7 @@ func (sw *subWindow) setRect(hwnd uintptr, x, y, w, h, lineH, dpi int32) {
 func (sw *subWindow) layout(hwnd uintptr) {
 	wa, screen := sw.place()
 	dpi := dpiForPoint(wa.Left+(wa.Right-wa.Left)/2, wa.Top+(wa.Bottom-wa.Top)/2)
-	w, h, lineH := sw.measure(wa, dpi)
+	w, h, lineH := sw.measure(wa, screen, dpi)
 	sw.mu.Lock()
 	custom, pos := sw.custom, sw.pos
 	sw.mu.Unlock()
@@ -397,8 +419,8 @@ func (sw *subWindow) rescale(hwnd uintptr) bool {
 	if dpi == sw.dpi || sw.w <= 0 || sw.h <= 0 {
 		return false
 	}
-	wa, _ := monitorRectsForPoint(cx, cy)
-	w, h, lineH := sw.measure(wa, dpi)
+	wa, screen := monitorRectsForPoint(cx, cy)
+	w, h, lineH := sw.measure(wa, screen, dpi)
 	var x, y int32
 	if sw.dragging {
 		sw.dragDX = int32(int64(sw.dragDX) * int64(w) / int64(sw.w))
@@ -649,6 +671,74 @@ func (sw *subWindow) savePlace() {
 	}
 }
 
+func (sw *subWindow) resizeTo(hwnd uintptr) {
+	var pt point
+	procGetCursorPos.Call(uintptr(unsafe.Pointer(&pt)))
+	wa, _ := monitorRectsForPoint(sw.x+sw.w/2, sw.y+sw.h/2)
+	sw.mu.Lock()
+	pos := sw.pos
+	sw.mu.Unlock()
+	l := sw.limits(wa, sw.dpi, sw.lineH)
+	r, rows := subwin.Resize(sw.resStart, sw.resEdges, pt.X-sw.resPt.X, pt.Y-sw.resPt.Y, pos, l)
+	w, h := r.Right-r.Left, r.Bottom-r.Top
+	x, y := r.Left, r.Top
+	if pos != ovPosCustom {
+		x, y = subwin.Place(pos, toPlace(wa), w, h, scaleDPI(swSideGap, sw.dpi), scaleDPI(swBottomGap, sw.dpi))
+	}
+	sw.resRows = rows
+	if x == sw.x && y == sw.y && w == sw.w && h == sw.h {
+		return
+	}
+	sw.setRect(hwnd, x, y, w, h, sw.lineH, sw.dpi)
+	sw.renderNow(hwnd)
+}
+
+func (sw *subWindow) endResize() {
+	if !sw.resizing {
+		return
+	}
+	sw.resizing = false
+	_, screen := monitorRectsForPoint(sw.x+sw.w/2, sw.y+sw.h/2)
+	key := ovplace.ResKey(toPlace(screen))
+	b := subwin.Box{W: sw.w * 96 / sw.dpi, Rows: sw.resRows}
+	if b.W < subwin.BoxMinW {
+		b.W = subwin.BoxMinW
+	}
+	sw.mu.Lock()
+	if sw.box == nil {
+		sw.box = map[string]subwin.Box{}
+	}
+	sw.box[key] = b
+	cb := sw.onSized
+	pos := sw.pos
+	sw.mu.Unlock()
+	log.Printf("subtitles: the window was resized to %d dip and %d rows on the %s screen", b.W, b.Rows, key)
+	if cb != nil {
+		go cb(key, b)
+	}
+	if pos == ovPosCustom {
+		sw.savePlace()
+	}
+}
+
+func swEdgeCursor(edges int) uintptr {
+	switch {
+	case edges == subwin.EdgeLeft|subwin.EdgeTop, edges == subwin.EdgeRight|subwin.EdgeBottom:
+		return 32642
+	case edges == subwin.EdgeRight|subwin.EdgeTop, edges == subwin.EdgeLeft|subwin.EdgeBottom:
+		return 32643
+	case edges&(subwin.EdgeLeft|subwin.EdgeRight) != 0:
+		return 32644
+	case edges != 0:
+		return 32645
+	}
+	return 0
+}
+
+func (sw *subWindow) edgesAt(x, y int32) int {
+	return subwin.Hit(x, y, sw.w, sw.h, scaleDPI(swGripDIP, sw.dpi))
+}
+
 func (sw *subWindow) changed() bool {
 	phase, hdr, _ := sw.content()
 	if phase != sw.lastPhase || hdr.key() != sw.lastHead {
@@ -707,17 +797,31 @@ func (sw *subWindow) proc(hwnd, msg, wParam, lParam uintptr) uintptr {
 	case wmLButtonDown:
 		x := int32(int16(lParam & 0xFFFF))
 		y := int32(int16(lParam >> 16 & 0xFFFF))
+		var pt point
+		procGetCursorPos.Call(uintptr(unsafe.Pointer(&pt)))
+		if edges := sw.edgesAt(x, y); edges != 0 {
+			sw.resizing = true
+			sw.resEdges = edges
+			sw.resStart = ovplace.Rect{Left: sw.x, Top: sw.y, Right: sw.x + sw.w, Bottom: sw.y + sw.h}
+			sw.resPt = pt
+			wa, _ := monitorRectsForPoint(sw.x+sw.w/2, sw.y+sw.h/2)
+			sw.resRows = sw.limits(wa, sw.dpi, sw.lineH).RowsFor(sw.h)
+			procSetCapture.Call(hwnd)
+			return 0
+		}
 		if sw.inClose(x, y) {
 			return 0
 		}
-		var pt point
-		procGetCursorPos.Call(uintptr(unsafe.Pointer(&pt)))
 		sw.dragging = true
 		sw.dragMoved = false
 		sw.dragDX, sw.dragDY = pt.X-sw.x, pt.Y-sw.y
 		procSetCapture.Call(hwnd)
 		return 0
 	case wmMouseMove:
+		if sw.resizing {
+			sw.resizeTo(hwnd)
+			return 0
+		}
 		if sw.dragging {
 			var pt point
 			procGetCursorPos.Call(uintptr(unsafe.Pointer(&pt)))
@@ -735,6 +839,11 @@ func (sw *subWindow) proc(hwnd, msg, wParam, lParam uintptr) uintptr {
 	case wmLBtnUp:
 		x := int32(int16(lParam & 0xFFFF))
 		y := int32(int16(lParam >> 16 & 0xFFFF))
+		if sw.resizing {
+			procReleaseCapture.Call()
+			sw.endResize()
+			return 0
+		}
 		if sw.dragging {
 			sw.dragging = false
 			procReleaseCapture.Call()
@@ -754,6 +863,7 @@ func (sw *subWindow) proc(hwnd, msg, wParam, lParam uintptr) uintptr {
 		}
 		return 0
 	case wmCaptureLost:
+		sw.endResize()
 		if sw.dragging {
 			sw.dragging = false
 			if sw.dragMoved {
@@ -764,7 +874,9 @@ func (sw *subWindow) proc(hwnd, msg, wParam, lParam uintptr) uintptr {
 	case wmSetCursor:
 		x, y := swCursorClient(hwnd)
 		id := uintptr(32512)
-		if sw.inClose(x, y) {
+		if c := swEdgeCursor(sw.edgesAt(x, y)); c != 0 {
+			id = c
+		} else if sw.inClose(x, y) {
 			id = 32649
 		}
 		cur, _, _ := procLoadCursorW.Call(0, id)
@@ -900,6 +1012,8 @@ func runSubwindowDemo(args []string) {
 	var once sync.Once
 	subWindowShow(demo, func() { once.Do(func() { close(closed) }) }, func(key string, f ovplace.Frac) {
 		log.Printf("subwindow: the place %s %.3f,%.3f is not saved by the demo", key, f.X, f.Y)
+	}, func(key string, b subwin.Box) {
+		log.Printf("subwindow: the size %s %d dip, %d rows is not saved by the demo", key, b.W, b.Rows)
 	})
 	if translate {
 		log.Printf("subwindow: showing the subtitles window with translation for %d s", seconds)

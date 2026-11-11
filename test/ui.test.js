@@ -1660,6 +1660,16 @@ function check(name, actual, expected) {
   check("saving the transcript reaches the save form", w.lastSaveForm.subtitles_save, false);
   await change(sv("subtitles_lines"), "5");
   check("the rows reach the save form", w.lastSaveForm.subtitles_lines, 5);
+  check("the rows of text go from two to eight", [...sv("subtitles_lines").options].map((o) => o.value), ["2", "3", "4", "5", "6", "7", "8"]);
+  await change(sv("subtitles_lines"), "8");
+  check("eight rows reach the save form", w.lastSaveForm.subtitles_lines, 8);
+  check("an ordinary save leaves the remembered sizes alone", w.lastSaveForm.subtitles_box, null);
+  sv("subs_box_reset").click(); await sleep(300);
+  check("the size button forgets the remembered sizes", w.lastSaveForm.subtitles_box, {});
+  check("and says the window goes back to its default size", d.getElementById("st_saved").textContent, "The window goes back to its default size");
+  await change(sv("subtitles_lines"), "5");
+  check("and only that once", w.lastSaveForm.subtitles_box, null);
+  check("the size row explains the mouse and the rows", sv("subs_box_reset").closest(".row").querySelector(".sub").textContent, "S_SUBS_BOX_SUB");
   await change(sv("subtitles_size"), "l");
   check("the text size reaches the save form", w.lastSaveForm.subtitles_size, "l");
   check("an ordinary save leaves the window place alone", [w.lastSaveForm.subtitles_custom, w.lastSaveForm.subtitles_position], [null, null]);

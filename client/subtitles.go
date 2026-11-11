@@ -21,6 +21,7 @@ import (
 	"holdtotype/internal/replace"
 	"holdtotype/internal/segments"
 	"holdtotype/internal/subtitles"
+	"holdtotype/internal/subwin"
 )
 
 const (
@@ -1633,7 +1634,7 @@ func (a *App) startSubtitles() {
 	subWindowConfigure(cfg)
 	subWindowShow(r, func() {
 		a.stopSubtitles("closed from its window", subStopDrain)
-	}, a.saveSubtitlesPlace)
+	}, a.saveSubtitlesPlace, a.saveSubtitlesBox)
 }
 
 func (a *App) saveSubtitlesPlace(key string, f ovplace.Frac) {
@@ -1655,6 +1656,27 @@ func (a *App) saveSubtitlesPlace(key string, f ovplace.Frac) {
 	cur := *a.cfg
 	cur.SubtitlesXY = places
 	cur.SubtitlesPos = ovPosCustom
+	a.cfg = &cur
+	a.mu.Unlock()
+}
+
+func (a *App) saveSubtitlesBox(key string, b subwin.Box) {
+	a.mu.Lock()
+	c := *a.cfg
+	boxes := map[string]subwin.Box{}
+	for k, v := range c.SubtitlesBox {
+		boxes[k] = v
+	}
+	boxes[key] = b
+	c.SubtitlesBox = boxes
+	a.mu.Unlock()
+	if err := saveConfig("config.json", &c); err != nil {
+		log.Printf("subtitles: the window size was not saved: %v", err)
+		return
+	}
+	a.mu.Lock()
+	cur := *a.cfg
+	cur.SubtitlesBox = boxes
 	a.cfg = &cur
 	a.mu.Unlock()
 }

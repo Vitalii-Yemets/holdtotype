@@ -166,6 +166,7 @@ type settingsForm struct {
 	SubtitlesXY       *map[string]ovplace.Frac `json:"subtitles_custom"`
 	SubtitlesPos      *string                  `json:"subtitles_position"`
 	SubtitlesMonitor  *string                  `json:"subtitles_monitor"`
+	SubtitlesBox      *map[string]subwin.Box   `json:"subtitles_box"`
 
 	SubtitlesTranslate *string `json:"subtitles_translate"`
 }
@@ -967,6 +968,9 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	if f.SubtitlesMonitor != nil && validOverlayMonitor(*f.SubtitlesMonitor) {
 		c.SubtitlesMonitor = *f.SubtitlesMonitor
 	}
+	if f.SubtitlesBox != nil {
+		c.SubtitlesBox = subwin.CleanBoxes(*f.SubtitlesBox)
+	}
 	if f.SubtitlesTranslate != nil && (*f.SubtitlesTranslate == "" || validTranslateLang(*f.SubtitlesTranslate)) {
 		c.SubtitlesTranslate = *f.SubtitlesTranslate
 	}
@@ -1238,7 +1242,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"subsoff": "S_SUBS_OFF", "subsloading": "S_SUBS_LOADING", "subslive": "S_SUBS_LISTEN_LIVE", "subsphrases": "S_SUBS_LISTEN_PHRASES",
 		"subsrestart": "S_SUBS_RESTARTING", "subsstart": "S_SUBS_START", "subsstop": "S_SUBS_STOP",
 		"subsmlive": "S_SUBS_M_LIVE", "subsmphrases": "S_SUBS_M_PHRASES", "subsmabsent": "S_SUBS_M_ABSENT", "subsmwhisper": "S_SUBS_M_WHISPER",
-		"subsposscheme": "S_SUBS_POS_SCHEME_SUB", "subsposdrag": "S_SUBS_POS_DRAG_SUB",
+		"subsposscheme": "S_SUBS_POS_SCHEME_SUB", "subsposdrag": "S_SUBS_POS_DRAG_SUB", "subsboxdone": "S_SUBS_BOX_DONE",
 		"subson": "S_SUBS_ON", "subsherohint": "S_SUBS_HERO_HINT", "subsherolive": "S_SUBS_HERO_LIVE", "subsherophrases": "S_SUBS_HERO_PHRASES",
 		"subsherostart": "S_SUBS_HERO_START", "subsherostop": "S_SUBS_HERO_STOP",
 		"substrlocal": "S_SUBS_TR_LOCAL", "substrapi": "S_SUBS_TR_API",
@@ -2442,9 +2446,11 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
  <div class="card">
   <label class="blklbl">{{S_SUBS_WINDOW}}</label>
   <div class="row"><label>{{S_SUBS_ROWS}}</label>
-   <select id="subtitles_lines"><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
+   <select id="subtitles_lines"><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option></select></div>
   <div class="row"><label>{{S_SUBS_SIZE}}</label>
    <select id="subtitles_size"><option value="s">{{S_SUBS_SIZE_S}}</option><option value="m">{{S_SUBS_SIZE_M}}</option><option value="l">{{S_SUBS_SIZE_L}}</option></select></div>
+  <div class="row"><label>{{S_SUBS_BOX}}<span class="sub">{{S_SUBS_BOX_SUB}}</span></label>
+   <button type="button" class="mini" id="subs_box_reset">{{S_SUBS_BOX_BTN}}</button></div>
   <div class="row noline"><label>{{S_SUBS_FREE}}<span class="sub">{{S_SUBS_FREE_SUB}}</span></label><input type="checkbox" id="subs_free"></div>
   <div class="row"><label>{{S_SUBS_POS}}<span class="sub" id="subspos_sub">{{S_SUBS_POS_SCHEME_SUB}}</span></label>
    <input type="hidden" id="subtitles_position">
@@ -2706,6 +2712,7 @@ let langKeys = Object.assign({}, CFG.lang_hotkeys || {});
 let subsKey = CFG.subtitles_hotkey || "";
 let subsRunning = false;
 let subsTr = null;
+let subsBoxReset = false;
 let expandedID = null;
 let captureFor = null;
 
@@ -4054,6 +4061,11 @@ function initSubs(){
   subsEl("subs_key_clear").onclick = ()=>setSubsKey("");
   subsEl("subs_folder").onclick = ()=>appOpenTranscripts();
   initSubsScheme();
+  subsEl("subs_box_reset").onclick = async ()=>{
+    subsBoxReset = true;
+    const r = await doSave();
+    if(r && r.severity !== "error") toast(L.subsboxdone, "ok");
+  };
   subsEl("subs_case_go").onclick = subsGotoModels;
   refreshSubsModel();
   renderSubsTr();
@@ -5408,9 +5420,11 @@ async function doSave(){
     subtitles_custom: OVS.customDirty ? OVS.custom : null,
     subtitles_position: OVS.posDirty ? OVS.pos : null,
     subtitles_monitor: (subsEl("subtitles_monitor")||{}).value || "",
+    subtitles_box: subsBoxReset ? {} : null,
     subtitles_translate: (subsEl("subtitles_translate")||{}).value || ""};
   OVS.posDirty = false;
   OVS.customDirty = false;
+  subsBoxReset = false;
   bools.forEach(k=>f[k]=document.getElementById(k).checked);
   texts.forEach(k=>f[k]=document.getElementById(k).value);
   f.server_exe = exeStored;

@@ -158,6 +158,7 @@ type Config struct {
 	SubtitlesXY       map[string]ovplace.Frac `json:"subtitles_custom"`
 	SubtitlesPos      string                  `json:"subtitles_position"`
 	SubtitlesMonitor  string                  `json:"subtitles_monitor"`
+	SubtitlesBox      map[string]subwin.Box   `json:"subtitles_box"`
 
 	SubtitlesTranslate string `json:"subtitles_translate"`
 
@@ -680,7 +681,7 @@ func validPresetLang(code string) bool {
 const (
 	defaultSubtitlesLines = 3
 	minSubtitlesLines     = 2
-	maxSubtitlesLines     = 5
+	maxSubtitlesLines     = 8
 )
 
 func validSubtitlesSize(v string) bool { return v == "s" || v == "m" || v == "l" }
@@ -720,6 +721,7 @@ func cleanSubtitles(cfg *Config) bool {
 	if !validOverlayMonitor(cfg.SubtitlesMonitor) {
 		cfg.SubtitlesMonitor = ""
 	}
+	cfg.SubtitlesBox = subwin.CleanBoxes(cfg.SubtitlesBox)
 	cfg.SubtitlesHotkey = strings.TrimSpace(cfg.SubtitlesHotkey)
 	if cfg.SubtitlesHotkey != "" && !hotkeyParses(cfg.SubtitlesHotkey) {
 		log.Printf("subtitles: the shortcut %q cannot be read and is dropped", cfg.SubtitlesHotkey)
