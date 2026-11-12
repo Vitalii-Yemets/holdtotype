@@ -205,6 +205,29 @@ func TestHardLimitFindsAPreposition(t *testing.T) {
 	}
 }
 
+func TestNoLinkingWordIsLeftAtTheEndOfAPiece(t *testing.T) {
+	words := numbered(20)
+	words[11], words[12] = "on", "a"
+	if got := hardCut("-", words); len(got) != 1 || got[0] != strings.Join(words[:11], " ") {
+		t.Fatalf("on a: %v", got)
+	}
+	words = numbered(20)
+	words[9], words[10], words[11] = "and", "in", "a"
+	if got := hardCut("-", words); len(got) != 1 || got[0] != strings.Join(words[:9], " ") {
+		t.Fatalf("and in a: %v", got)
+	}
+	words = numbered(20)
+	words[3], words[4], words[5] = "and", "in", "a"
+	if got := hardCut("-", words); len(got) != 1 || got[0] != strings.Join(words[:PhraseHard-PhraseKeep], " ") {
+		t.Fatalf("a chain that leaves too short a piece: %v", got)
+	}
+	words = numbered(20)
+	words[12], words[13] = "on", "a"
+	if got := hardCut("en", words); len(got) != 1 || got[0] != strings.Join(words[:12], " ") {
+		t.Fatalf("english, where a is not a linking word: %v", got)
+	}
+}
+
 func TestHardLimitFallsBackToKeepingThreeWords(t *testing.T) {
 	words := numbered(20)
 	got := hardCut("en", words)

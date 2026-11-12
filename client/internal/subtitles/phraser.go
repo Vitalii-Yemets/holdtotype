@@ -168,9 +168,17 @@ func (p *Phraser) phraseCut(ws []heardWord, after string, finished bool) int {
 		if links == nil {
 			links = linkingSet("")
 		}
+		linking := func(i int) bool { return links[linkingKey(ws[i].text)] }
 		for j := n - 1; j >= PhraseMinClause; j-- {
-			if links[linkingKey(ws[j].text)] {
-				return j
+			if !linking(j) {
+				continue
+			}
+			k := j
+			for k > 0 && linking(k-1) {
+				k--
+			}
+			if k >= PhraseMinClause {
+				return k
 			}
 		}
 		return n - PhraseKeep
