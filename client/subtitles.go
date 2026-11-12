@@ -248,6 +248,7 @@ type subRun struct {
 	trSeen   string
 	trLang   string
 	trSrc    string
+	coldFail sync.Map
 	trShown  atomic.Bool
 	trTo     atomic.Value
 
@@ -819,64 +820,99 @@ func (r *subRun) syncTranslation(cfg *Config, t *subTarget) {
 	if to == "" {
 		log.Printf("subtitles: translation is off from now on")
 		r.translationPaused()
+		r.releaseWaiting()
 		return
 	}
 	name := subtitles.LanguageName(to)
 	if to == t.lang {
 		log.Printf("subtitles: translation into %s: the speech language is the same, nothing is translated", name)
+		r.releaseWaiting()
 		return
 	}
 	if !src.ok() {
 		log.Printf("subtitles: translation into %s: %s, the text is shown as heard", name, missingText(src))
+		r.releaseWaiting()
 		return
 	}
 	log.Printf("subtitles: translation into %s by %s", name, src.label())
 	if r.translator() == nil {
 		return
 	}
-	switch src.kind {
-	case editorLocal:
-		f := r.app.llmWarmUp()
-		go func() {
-			<-f.done
-			if f.err != nil {
-				log.Printf("subtitles: the editor model did not start: %s", logText(f.err))
-				return
-			}
-			r.syncCores()
-			r.primeTranslation(f.srv, to, subtitles.TranslateGrammar(to), "the editor model")
-		}()
-	case editorQuality:
+	if src.kind == editorQuality {
 		r.syncCores()
-		f := r.app.qualityWarmUp()
-		go func() {
-			<-f.done
-			if f.err != nil {
-				fail := asQualityFail(f.err)
-				setQualityDown(fail)
-				log.Printf("subtitles: the graphics card engine did not start (%s): %s", fail.code, fail.detail)
-				if tt := r.target(); tt != nil && !r.ended() {
-					r.syncTranslation(r.app.snapshot(), tt)
-				}
-				return
-			}
-			r.primeTranslation(f.srv, to, "", "the translation model on the graphics card")
-		}()
 	}
+	r.startWarm(src, to)
 }
 
-func (r *subRun) primeTranslation(llm *llamaServer, to, grammar, what string) {
-	if llm == nil {
+func (r *subRun) worker() *subTranslator {
+	r.trMu.Lock()
+	defer r.trMu.Unlock()
+	return r.tr
+}
+
+func (r *subRun) releaseWaiting() {
+	w := r.worker()
+	if w == nil {
 		return
 	}
-	started := time.Now()
-	ctx, cancel := context.WithTimeout(context.Background(), subtitles.TranslateTimeout)
-	defer cancel()
-	if _, err := llm.chatStream(ctx, subtitles.TranslateMessages(to, nil, "Hello."), 1, grammar, nil); err != nil {
-		log.Printf("subtitles: the translation request did not load: %s", logText(err))
+	label, n, ok := w.releaseAll()
+	if !ok || n == 0 {
 		return
 	}
-	log.Printf("subtitles: the translation request is loaded into %s in %.1f s", what, time.Since(started).Seconds())
+	next := "they are shown as heard"
+	if src := translationSource(r.app.snapshot()); src.ok() {
+		next = "they go to " + src.label()
+	}
+	log.Printf("subtitles: %d piece(s) waited for %s, %s", n, label, next)
+}
+
+func (r *subRun) startWarm(src editorSource, to string) {
+	w := r.translator()
+	if w == nil {
+		return
+	}
+	if _, failed := r.coldFail.Load(src.kind); failed || !needsStart(src.kind) || r.app.translatorWarm(src.kind) {
+		r.releaseWaiting()
+		return
+	}
+	label := src.label()
+	gen, fresh, waiting := w.hold(label)
+	if !fresh {
+		return
+	}
+	log.Printf("subtitles: %s is starting, the pieces heard meanwhile wait for it (%d waiting now)", label, waiting)
+	go func() {
+		started := time.Now()
+		err := r.app.warmTranslator(src.kind, to)
+		if err != nil {
+			if src.kind == editorQuality {
+				fail := asQualityFail(err)
+				setQualityDown(fail)
+				r.app.qualityShutdown()
+				log.Printf("subtitles: the graphics card engine did not start (%s): %s", fail.code, fail.detail)
+			} else {
+				r.coldFail.Store(src.kind, true)
+				log.Printf("subtitles: the editor model did not start: %s", logText(err))
+			}
+			if tt := r.target(); tt != nil && !r.ended() {
+				r.syncTranslation(r.app.snapshot(), tt)
+			}
+			if n, ok := w.release(gen); ok && n > 0 {
+				next := "they are shown as heard"
+				if src := translationSource(r.app.snapshot()); src.ok() {
+					next = "they go to " + src.label()
+				}
+				log.Printf("subtitles: %d piece(s) waited for %s, %s", n, label, next)
+			}
+			return
+		}
+		if src.kind == editorLocal {
+			r.syncCores()
+		}
+		if n, ok := w.release(gen); ok {
+			log.Printf("subtitles: %s is warm after %.1f s, %d piece(s) heard meanwhile go to it now", label, time.Since(started).Seconds(), n)
+		}
+	}()
 }
 
 func (r *subRun) translator() *subTranslator {
@@ -979,6 +1015,56 @@ func (w *subTranslator) push(ph subtitles.TextPhrase, text, to string) {
 	}
 }
 
+func (w *subTranslator) hold(label string) (int, bool, int) {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	gen, fresh := w.q.Hold(label, time.Now())
+	return gen, fresh, w.q.Len()
+}
+
+func (w *subTranslator) wake() {
+	select {
+	case w.sig <- struct{}{}:
+	default:
+	}
+}
+
+func (w *subTranslator) release(gen int) (int, bool) {
+	w.mu.Lock()
+	n, ok := w.q.Release(gen, time.Now())
+	w.mu.Unlock()
+	if ok {
+		w.wake()
+	}
+	return n, ok
+}
+
+func (w *subTranslator) releaseAll() (string, int, bool) {
+	w.mu.Lock()
+	_, label, _ := w.q.Holding()
+	n, ok := w.q.ReleaseAll(time.Now())
+	w.mu.Unlock()
+	if ok {
+		w.wake()
+	}
+	return label, n, ok
+}
+
+func (w *subTranslator) checkWarm() {
+	r := w.run
+	cfg := r.app.snapshot()
+	src := translationSource(cfg)
+	w.mu.Lock()
+	to := w.target
+	held, _, _ := w.q.Holding()
+	n := w.q.Len()
+	w.mu.Unlock()
+	if _, failed := r.coldFail.Load(src.kind); failed || held || n == 0 || to == "" || !src.ok() || !needsStart(src.kind) || r.app.translatorWarm(src.kind) {
+		return
+	}
+	r.startWarm(src, to)
+}
+
 func (w *subTranslator) drop(ps []subtitles.Pending, why string) {
 	r := w.run
 	now := time.Now()
@@ -1051,6 +1137,7 @@ func (w *subTranslator) loop() {
 			if !w.waitDictation() {
 				return
 			}
+			w.checkWarm()
 			w.mu.Lock()
 			b, ok, stale := w.q.Pop(time.Now())
 			w.mu.Unlock()

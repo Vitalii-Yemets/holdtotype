@@ -8,9 +8,11 @@ import (
 )
 
 const (
-	TranslateWaiting = 6
-	TranslateMaxWait = 10 * time.Second
-	TranslateMerge   = 30
+	TranslateWaiting  = 6
+	TranslateMaxWait  = 10 * time.Second
+	TranslateMerge    = 30
+	TranslateHoldMax  = 40
+	TranslateWarmWait = 90 * time.Second
 )
 
 var TranslateTargets = []string{"de", "en", "es", "fr", "it", "pl", "uk", "ru"}
@@ -342,6 +344,9 @@ type Pending struct {
 	Para   bool
 	Start  time.Time
 	Heard  time.Time
+
+	held  bool
+	since time.Time
 }
 
 type Batch struct {
@@ -370,34 +375,119 @@ type QueueCounts struct {
 func (c QueueCounts) Dropped() int { return c.Overflow + c.Stale + c.Cleared }
 
 type TranslateQueue struct {
-	limit   int
-	maxWait time.Duration
-	merge   int
-	items   []Pending
-	counts  QueueCounts
+	limit     int
+	maxWait   time.Duration
+	merge     int
+	holdLimit int
+	items     []Pending
+	counts    QueueCounts
+
+	holding   bool
+	holdGen   int
+	holdFor   string
+	holdSince time.Time
+	holdCount int
 }
 
 func NewTranslateQueue(limit int, maxWait time.Duration, merge int) *TranslateQueue {
 	if limit < 1 {
 		limit = 1
 	}
-	return &TranslateQueue{limit: limit, maxWait: maxWait, merge: merge}
+	return &TranslateQueue{limit: limit, maxWait: maxWait, merge: merge, holdLimit: TranslateHoldMax}
+}
+
+func (q *TranslateQueue) dropAt(i int) Pending {
+	p := q.items[i]
+	copy(q.items[i:], q.items[i+1:])
+	q.items[len(q.items)-1] = Pending{}
+	q.items = q.items[:len(q.items)-1]
+	return p
+}
+
+func (q *TranslateQueue) loose() int {
+	n := 0
+	for _, it := range q.items {
+		if !it.held {
+			n++
+		}
+	}
+	return n
 }
 
 func (q *TranslateQueue) Push(p Pending) []Pending {
 	if p.Words <= 0 {
 		p.Words = len(strings.Fields(p.Text))
 	}
+	p.held, p.since = false, time.Time{}
 	q.counts.Pushed++
 	var dropped []Pending
-	for len(q.items) >= q.limit {
-		dropped = append(dropped, q.items[0])
-		q.items[0] = Pending{}
-		q.items = q.items[1:]
+	if q.holding {
+		p.held = true
+		q.holdCount++
+		for len(q.items) >= q.holdLimit {
+			dropped = append(dropped, q.dropAt(0))
+		}
+	} else {
+		for q.loose() >= q.limit {
+			for i := range q.items {
+				if !q.items[i].held {
+					dropped = append(dropped, q.dropAt(i))
+					break
+				}
+			}
+		}
 	}
 	q.counts.Overflow += len(dropped)
 	q.items = append(q.items, p)
 	return dropped
+}
+
+func (q *TranslateQueue) Hold(label string, now time.Time) (int, bool) {
+	if q.holding && q.holdFor == label {
+		return q.holdGen, false
+	}
+	if !q.holding {
+		q.holdSince = now
+		q.holdCount = 0
+	}
+	q.holding = true
+	q.holdFor = label
+	q.holdGen++
+	for i := range q.items {
+		q.items[i].held = true
+	}
+	return q.holdGen, true
+}
+
+func (q *TranslateQueue) Holding() (bool, string, time.Time) {
+	return q.holding, q.holdFor, q.holdSince
+}
+
+func (q *TranslateQueue) Release(gen int, now time.Time) (int, bool) {
+	if !q.holding || gen != q.holdGen {
+		return 0, false
+	}
+	return q.release(now), true
+}
+
+func (q *TranslateQueue) ReleaseAll(now time.Time) (int, bool) {
+	if !q.holding {
+		return 0, false
+	}
+	return q.release(now), true
+}
+
+func (q *TranslateQueue) release(now time.Time) int {
+	q.holding = false
+	q.holdFor = ""
+	n := 0
+	for i := range q.items {
+		if q.items[i].held {
+			q.items[i].since = now
+			n++
+		}
+	}
+	return n
 }
 
 func (q *TranslateQueue) take() Pending {
@@ -408,10 +498,17 @@ func (q *TranslateQueue) take() Pending {
 }
 
 func (q *TranslateQueue) stale(p Pending, now time.Time) bool {
-	return q.maxWait > 0 && now.Sub(p.Heard) > q.maxWait
+	from := p.Heard
+	if !p.since.IsZero() {
+		from = p.since
+	}
+	return q.maxWait > 0 && now.Sub(from) > q.maxWait
 }
 
 func (q *TranslateQueue) Pop(now time.Time) (Batch, bool, []Pending) {
+	if q.holding {
+		return Batch{}, false, nil
+	}
 	var dropped []Pending
 	for len(q.items) > 0 && q.stale(q.items[0], now) {
 		dropped = append(dropped, q.take())

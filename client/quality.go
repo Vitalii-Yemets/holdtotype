@@ -397,6 +397,12 @@ func runGPUCheck(args []string) {
 		return
 	}
 	log.Printf("gpucheck: ready in %.1f s", time.Since(started).Seconds())
+	primed := time.Now()
+	if err := f.srv.prime("ru", ""); err != nil {
+		log.Printf("gpucheck: the priming request failed: %v", err)
+	} else {
+		log.Printf("gpucheck: warm after %.1f s of priming, %.1f s after the start", time.Since(primed).Seconds(), time.Since(started).Seconds())
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	asked := time.Now()
 	var first time.Time

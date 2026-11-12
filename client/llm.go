@@ -18,6 +18,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 	"unsafe"
@@ -56,6 +57,61 @@ type llamaServer struct {
 
 	mu     sync.Mutex
 	exited bool
+
+	primeMu sync.Mutex
+	primed  atomic.Bool
+}
+
+func (s *llamaServer) prime(to, grammar string) error {
+	s.primeMu.Lock()
+	defer s.primeMu.Unlock()
+	if s.primed.Load() {
+		return nil
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), subtitles.TranslateWarmWait)
+	defer cancel()
+	if _, err := s.chatStream(ctx, subtitles.TranslateMessages(to, nil, "Hello."), 1, grammar, nil); err != nil {
+		if ctx.Err() == context.DeadlineExceeded {
+			return fmt.Errorf("%s %w: the first request took more than %.0f s", s.label, errEngineTimeout, subtitles.TranslateWarmWait.Seconds())
+		}
+		return err
+	}
+	s.primed.Store(true)
+	return nil
+}
+
+func (a *App) translatorWarm(kind string) bool {
+	var s *llamaServer
+	switch kind {
+	case editorLocal:
+		s = a.editorEng.live()
+	case editorQuality:
+		s = a.gpuEng.live()
+	default:
+		return true
+	}
+	return s != nil && s.primed.Load()
+}
+
+func needsStart(kind string) bool { return kind == editorLocal || kind == editorQuality }
+
+func (a *App) warmTranslator(kind, to string) error {
+	var f *llmFlight
+	grammar := ""
+	switch kind {
+	case editorLocal:
+		f = a.llmWarmUp()
+		grammar = subtitles.TranslateGrammar(to)
+	case editorQuality:
+		f = a.qualityWarmUp()
+	default:
+		return nil
+	}
+	<-f.done
+	if f.err != nil {
+		return f.err
+	}
+	return f.srv.prime(to, grammar)
 }
 
 type engineSpec struct {
