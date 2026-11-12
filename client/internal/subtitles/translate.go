@@ -76,6 +76,33 @@ type Turn struct {
 	Translation string
 }
 
+const WarmRounds = 3
+
+func SendAgain(local, timedOut bool, attempt int) bool {
+	return local && timedOut && attempt < 2
+}
+
+func WarmMessages(target string) [][]Message {
+	answers, ok := shotAnswers[target]
+	if !ok || TranslateSystem(target) == "" {
+		return nil
+	}
+	sources := shotSources
+	if target == "en" {
+		sources = shotSourcesForEnglish
+	}
+	var turns []Turn
+	for r := 0; r < WarmRounds; r++ {
+		for i := range sources {
+			turns = append(turns, Turn{Source: sources[i], Translation: answers[i]})
+		}
+	}
+	return [][]Message{
+		TranslateMessages(target, turns, "Thank you."),
+		TranslateMessages(target, nil, "Hello."),
+	}
+}
+
 func TranslateMessages(target string, history []Turn, text string) []Message {
 	system := TranslateSystem(target)
 	answers, ok := shotAnswers[target]

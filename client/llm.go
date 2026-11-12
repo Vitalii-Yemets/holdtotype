@@ -70,11 +70,13 @@ func (s *llamaServer) prime(to, grammar string) error {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), subtitles.TranslateWarmWait)
 	defer cancel()
-	if _, err := s.chatStream(ctx, subtitles.TranslateMessages(to, nil, "Hello."), 1, grammar, nil); err != nil {
-		if ctx.Err() == context.DeadlineExceeded {
-			return fmt.Errorf("%s %w: the first request took more than %.0f s", s.label, errEngineTimeout, subtitles.TranslateWarmWait.Seconds())
+	for _, msgs := range subtitles.WarmMessages(to) {
+		if _, err := s.chatStream(ctx, msgs, 1, grammar, nil); err != nil {
+			if ctx.Err() == context.DeadlineExceeded {
+				return fmt.Errorf("%s %w: the first requests took more than %.0f s", s.label, errEngineTimeout, subtitles.TranslateWarmWait.Seconds())
+			}
+			return err
 		}
-		return err
 	}
 	s.primed.Store(true)
 	return nil

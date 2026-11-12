@@ -967,6 +967,7 @@ type subTranslator struct {
 	translated atomic.Int64
 	heard      atomic.Int64
 	dropped    atomic.Int64
+	retried    atomic.Int64
 }
 
 func newSubTranslator(r *subRun) *subTranslator {
@@ -1223,16 +1224,28 @@ func (w *subTranslator) handle(b subtitles.Batch) {
 	r.board.SetPiece(seq, "", subtitles.PieceRunning)
 	hist := w.history(src.kind, b.Target)
 	prior := hist.Turns()
-	ctx, cancel := context.WithTimeout(w.ctx, subtitles.TranslateTimeout)
 	var first time.Time
-	out, err := r.app.editorStream(ctx, cfg, src, subtitles.TranslateMessages(b.Target, prior, b.Text), subtitles.TranslateTokens(b.Words), subtitles.TranslateGrammar(b.Target), func(sofar string) {
-		if first.IsZero() {
-			first = time.Now()
+	var out string
+	var err error
+	timedOut := false
+	for attempt := 1; ; attempt++ {
+		ctx, cancel := context.WithTimeout(w.ctx, subtitles.TranslateTimeout)
+		first = time.Time{}
+		out, err = r.app.editorStream(ctx, cfg, src, subtitles.TranslateMessages(b.Target, prior, b.Text), subtitles.TranslateTokens(b.Words), subtitles.TranslateGrammar(b.Target), func(sofar string) {
+			if first.IsZero() {
+				first = time.Now()
+			}
+			r.board.SetPiece(seq, subtitles.StreamingText(sofar), subtitles.PieceRunning)
+		})
+		timedOut = ctx.Err() == context.DeadlineExceeded
+		cancel()
+		if err == nil || !subtitles.SendAgain(needsStart(src.kind), timedOut, attempt) || w.ctx.Err() != nil {
+			break
 		}
-		r.board.SetPiece(seq, subtitles.StreamingText(sofar), subtitles.PieceRunning)
-	})
-	timedOut := ctx.Err() == context.DeadlineExceeded
-	cancel()
+		w.retried.Add(1)
+		log.Printf("subtitles: piece %d got no answer within %.0f s from %s, it is sent once more", seq, subtitles.TranslateTimeout.Seconds(), src.label())
+		r.board.SetPiece(seq, "", subtitles.PieceRunning)
+	}
 	done := time.Now()
 	if err != nil {
 		if timedOut {
@@ -1317,8 +1330,8 @@ func (w *subTranslator) summary() string {
 		slices.Sort(delays)
 		timing = fmt.Sprintf("complete after %.1f s (median), %.1f s (worst)", delays[len(delays)/2].Seconds(), delays[len(delays)-1].Seconds())
 	}
-	return fmt.Sprintf(", translation into %s: %d pieces, %d translated, %d shown as heard, %d dropped, %s, by %s",
-		target, w.pieces.Load(), w.translated.Load(), w.heard.Load(), w.dropped.Load(), timing, used)
+	return fmt.Sprintf(", translation into %s: %d pieces, %d translated, %d shown as heard, %d dropped, %d sent twice, %s, by %s",
+		target, w.pieces.Load(), w.translated.Load(), w.heard.Load(), w.dropped.Load(), w.retried.Load(), timing, used)
 }
 
 type subPipe struct {

@@ -215,3 +215,51 @@ func TestWithoutAStartTheQueueIsAsBefore(t *testing.T) {
 		t.Fatal("constants")
 	}
 }
+
+func TestTheWarmUpAlsoReusesPartOfTheCache(t *testing.T) {
+	for _, code := range TranslateTargets {
+		w := WarmMessages(code)
+		if len(w) != 2 {
+			t.Fatalf("%s: %d requests", code, len(w))
+		}
+		second, first := w[0], w[1]
+		if !reflect.DeepEqual(first, TranslateMessages(code, nil, "Hello.")) {
+			t.Fatalf("%s: the last request is not the usual one", code)
+		}
+		if !reflect.DeepEqual(first[:7], second[:7]) || reflect.DeepEqual(first[7], second[7]) {
+			t.Fatalf("%s: the second request does not share exactly the system text and the examples", code)
+		}
+		if len(second) != 7+2*3*WarmRounds+1 {
+			t.Fatalf("%s: %d messages", code, len(second))
+		}
+		chars := 0
+		for _, m := range second[7:] {
+			chars += len([]rune(m.Content))
+		}
+		if chars < 900 || chars > 2000 {
+			t.Fatalf("%s: %d characters of turns", code, chars)
+		}
+	}
+	if WarmMessages("xx") != nil {
+		t.Fatal("an unknown target")
+	}
+}
+
+func TestOnlyALocalEngineGetsASecondTry(t *testing.T) {
+	cases := []struct {
+		local, timedOut bool
+		attempt         int
+		want            bool
+	}{
+		{true, true, 1, true},
+		{true, true, 2, false},
+		{true, false, 1, false},
+		{false, true, 1, false},
+		{false, false, 1, false},
+	}
+	for _, c := range cases {
+		if got := SendAgain(c.local, c.timedOut, c.attempt); got != c.want {
+			t.Errorf("SendAgain(%v, %v, %d) = %v", c.local, c.timedOut, c.attempt, got)
+		}
+	}
+}
