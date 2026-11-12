@@ -1980,7 +1980,7 @@ function check(name, actual, expected) {
     for (const m of goSrc.slice(start, end).matchAll(/"(S_[A-Z0-9_]+)":\s*"((?:[^"\\]|\\.)*)"/g)) out[m[1]] = JSON.parse('"' + m[2] + '"');
     return out;
   };
-  const jsKeys = { trmget: "S_SUBS_TRM_GETTING", trmsub: "S_SUBS_TRM_SUB", trmsmall: "S_SUBS_TRM_SMALL", trmdown: "S_SUBS_TRM_DOWN", trmwmemory: "S_SUBS_TRM_W_MEMORY", trmdownheard: "S_SUBS_TRM_DOWN_HEARD", substrquality: "S_SUBS_TR_QUALITY", subsmissmodel: "S_SUBS_TR_MISS_MODEL", trmready: "S_SUBS_TRM_READY", trmabsent: "S_SUBS_TRM_ABSENT" };
+  const jsKeys = { trmget: "S_SUBS_TRM_GETTING", trmsub: "S_SUBS_TRM_SUB", trmsmall: "S_SUBS_TRM_SMALL", trmdown: "S_SUBS_TRM_DOWN", trmwmemory: "S_SUBS_TRM_W_MEMORY", trmdownheard: "S_SUBS_TRM_DOWN_HEARD", substrquality: "S_SUBS_TR_QUALITY", subsmissmodel: "S_SUBS_TR_MISS_MODEL", trmready: "S_SUBS_TRM_READY", trmabsent: "S_SUBS_TRM_ABSENT", stgb: "S_ST_GB", stmb: "S_ST_MB" };
   const englishL = w.eval("JSON.stringify(L)");
   await change(whoSel, "quality");
   for (const lang of ["en", "ru", "uk", "de", "fr", "es", "it", "pl"]) {
@@ -1995,7 +1995,7 @@ function check(name, actual, expected) {
     await setQ("quality", "start", model({ state: "ready", down: "memory", fits: false, reason: "small", card_mb: 2048 }));
     const got3 = [sv("subs_trm_state").textContent, sv("subs_trm_note").textContent];
     check(lang + ": the model row and the line in its own language", [got1, got2, got3], [
-      [t.S_SUBS_TRM_GETTING.replace("%s", "7"), t.S_SUBS_TRM_SUB.replace("%s", "2.3 GB"), t.S_SUBS_TR_MISS_MODEL],
+      [t.S_SUBS_TRM_GETTING.replace("%s", "7"), t.S_SUBS_TRM_SUB.replace("%s", t.S_ST_GB.replace("%s", "2.3")), t.S_SUBS_TR_MISS_MODEL],
       [t.S_SUBS_TRM_READY, t.S_SUBS_TR_QUALITY.replace("%s", card)],
       [t.S_SUBS_TRM_DOWN.replace("%s", t.S_SUBS_TRM_W_MEMORY), t.S_SUBS_TRM_SMALL.replace("%s", "2048") + " " + t.S_SUBS_TRM_DOWN_HEARD],
     ]);
@@ -2061,6 +2061,12 @@ function check(name, actual, expected) {
   await change(sv("subtitles_language"), "auto");
   await setFast("fast", "", "", "", { en: { state: "ready" } });
   check("with auto and no language yet the line says it waits", sv("subs_tr_hint").textContent, "The light translation engine translates; it waits until the speech language is recognized from the first words.");
+  await setFast("fast", "", "", "", { en: { state: "ready" } }, { installed: ["en"] });
+  check("with one installed language it starts with that one at once", sv("subs_tr_hint").textContent, "The light translation engine translates (English → Deutsch) at once with the only language pack installed, and switches if the speech turns out to be in another language whose packs are installed.");
+  await setFast("fast", "", "", "", { es: { state: "ready" } }, { installed: ["es"] });
+  check("and names the way through English", sv("subs_tr_hint").textContent.startsWith("The light translation engine translates (Español → English → Deutsch) at once"), true);
+  await setFast("fast", "", "", "", { en: { state: "ready" }, ru: { state: "ready" } }, { installed: ["en", "ru"] });
+  check("with several installed languages it waits for the guess", sv("subs_tr_hint").textContent, "The light translation engine translates; it waits until the speech language is recognized from the first words.");
   await setFast("fast", "", "", "ru", { en: { state: "ready" } });
   check("with auto the row follows the guessed language", sv("subs_fpk_lang").value, "ru");
   await setFast("fast", "pack", "ru-en", "ru", {});
@@ -2082,6 +2088,15 @@ function check(name, actual, expected) {
     check(lang + ": no text names the engine or the models", Object.entries(t).filter(([k, v]) => /^S_SUBS_/.test(k) && /bergamot|firefox|mozilla|marian/i.test(v)).map(([k]) => k), []);
   }
   check("in Russian the option is called by the user's own word for it", stringsOf("ru").S_SUBS_WHO_FAST, "Быстрый: лёгкий движок");
+  {
+    const ru = stringsOf("ru");
+    w.eval("Object.assign(L, " + JSON.stringify({ fpksub: ru.S_SUBS_FPK_SUB, stmb: ru.S_ST_MB, stgb: ru.S_ST_GB, trmsub: ru.S_SUBS_TRM_SUB }) + ")");
+    await change(sv("subtitles_translate"), "de");
+    await setFast("fast", "", "", "en", { en: { state: "ready" } });
+    check("sizes use the units of the interface language", [sv("subs_fpk_sub").textContent.endsWith(", 36 МБ"), sv("subs_trm_sub").textContent.startsWith("2.3 ГБ")], [true, true]);
+    w.eval("Object.assign(L, " + englishL + ")");
+    await change(sv("subtitles_translate"), "");
+  }
   await change(whoSel, "");
   await change(sv("subtitles_translate"), "");
   w.subsTr = { kind: "local", name: "qwen2.5-1.5b-instruct-q4_k_m" };

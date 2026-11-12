@@ -1244,7 +1244,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"stautorunsub": "S_ST_AUTORUN_SUB", "stoverlaysub": "S_ST_OVERLAY_SUB", "sthint": "S_STATE_HINT",
 		"stoverlay": "S_ST_OVERLAY", "stbeep": "S_ST_BEEP", "stautorun": "S_ST_AUTORUN", "stpost": "S_ST_POST",
 		"stonm": "S_ST_ON_M", "stoffm": "S_ST_OFF_M", "stmicok": "S_ST_MIC_OK", "stmicbad": "S_ST_MIC_BAD",
-		"stlocal": "S_ST_LOCAL", "stchecked": "S_ST_CHECKED", "stgb": "S_ST_GB", "stcheck": "S_ST_CHECK", "strecog": "S_ST_RECOG", "stver": "S_ST_VER", "stlatest": "S_ST_LATEST", "stoutdated": "S_ST_OUTDATED", "stupdok": "S_ST_UPD_OK", "stupddl": "S_ST_UPD_DL",
+		"stlocal": "S_ST_LOCAL", "stchecked": "S_ST_CHECKED", "stgb": "S_ST_GB", "stmb": "S_ST_MB", "substrfastone": "S_SUBS_TR_FAST_ONE", "stcheck": "S_ST_CHECK", "strecog": "S_ST_RECOG", "stver": "S_ST_VER", "stlatest": "S_ST_LATEST", "stoutdated": "S_ST_OUTDATED", "stupdok": "S_ST_UPD_OK", "stupddl": "S_ST_UPD_DL",
 		"navmic": "S_NAV_MIC", "overlay": "S_OVERLAY", "beep": "S_BEEP", "autorun": "S_AUTORUN", "postenable": "S_POST_ENABLE",
 		"berropen": "S_BERR_OPEN", "retry": "S_RETRY", "updcheck": "S_UPD_CHECK", "postapi": "S_POSTAPI", "histtill": "S_HIST_TILL", "histtill1": "S_HIST_TILL1", "histtillfull": "S_HIST_TILL_FULL",
 		"skipadddlg": "S_SKIP_ADD_DLG", "skipeditdlg": "S_SKIP_EDIT_DLG", "skipname": "S_SKIP_NAME", "skipnamesub": "S_SKIP_NAME_SUB",
@@ -4095,7 +4095,7 @@ function renderTrModel(on){
   else if(st === "bad") state = L.trmbad;
   else if(st === "error") state = L.trmerr.replace("%s", ()=>m.err || "");
   else state = L.trmabsent;
-  subsEl("subs_trm_sub").textContent = L.trmsub.replace("%s", ()=>llmSize(m.size || 0));
+  subsEl("subs_trm_sub").textContent = L.trmsub.replace("%s", ()=>sizeLabel(m.size || 0));
   const se = subsEl("subs_trm_state");
   se.textContent = state;
   se.classList.toggle("warn", st === "bad" || st === "error" || (st === "ready" && !!m.down));
@@ -4144,7 +4144,7 @@ function renderFastPacks(on){
   if(!r){ return; }
   sel.value = r.lang;
   const route = [r.lang].concat((r.packs || []).length > 1 ? ["en"] : []).concat([to]).map(langName).join(" → ");
-  subsEl("subs_fpk_sub").textContent = L.fpksub.replace("%s", ()=>route).replace("%s", ()=>llmSize(r.size || 0));
+  subsEl("subs_fpk_sub").textContent = L.fpksub.replace("%s", ()=>route).replace("%s", ()=>sizeLabel(r.size || 0));
   let state = L.fpkabsent;
   if(r.state === "downloading") state = L.fpkget.replace("%s", ()=>String(r.pct || 0));
   else if(r.state === "checking") state = L.fpkcheck;
@@ -4184,7 +4184,11 @@ function renderSubsTr(){
     else if(!miss && tr.kind === "quality") hint = L.substrquality.replace("%s", ()=>tr.name || "");
     else if(!miss && tr.kind === "fast"){
       const f = tr.fast || {};
-      hint = f.lang ? L.substrfast.replace("%s", ()=>[f.lang].concat(String(tr.name || "").includes(" → en → ") ? ["en"] : []).concat([to]).map(langName).join(" → ")) : L.substrfastwait;
+      const inst = f.installed || [];
+      const routeOf = (l)=>[l].concat(String(tr.name || "").includes(" → en → ") || (l !== "en" && to !== "en" && !f.lang) ? ["en"] : []).concat([to]).map(langName).join(" → ");
+      if(f.lang) hint = L.substrfast.replace("%s", ()=>routeOf(f.lang));
+      else if(inst.length === 1) hint = L.substrfastone.replace("%s", ()=>routeOf(inst[0]));
+      else hint = L.substrfastwait;
     }
     else {
       none = ({card: L.subsmisscard, model: L.subsmissmodel, start: L.subsmissstart, server: L.subsmissserver,
@@ -4460,6 +4464,9 @@ function soundName(){
   const sel = document.getElementById("sound_theme");
   if(!sel || sel.selectedIndex < 0) return "";
   return sel.options[sel.selectedIndex].textContent;
+}
+function sizeLabel(mb){
+  return mb >= 1024 ? gbLabel(mb) : L.stmb.replace("%s", String(mb || 0));
 }
 function gbLabel(mb){
 

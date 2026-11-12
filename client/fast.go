@@ -748,11 +748,12 @@ type packRoute struct {
 }
 
 type fastUI struct {
-	Lang   string      `json:"lang"`
-	Auto   bool        `json:"auto"`
-	Exe    bool        `json:"exe"`
-	Down   string      `json:"down"`
-	Routes []packRoute `json:"routes"`
+	Lang      string      `json:"lang"`
+	Auto      bool        `json:"auto"`
+	Installed []string    `json:"installed"`
+	Exe       bool        `json:"exe"`
+	Down      string      `json:"down"`
+	Routes    []packRoute `json:"routes"`
 }
 
 func routeView(lang, to string) packRoute {
@@ -811,6 +812,7 @@ func (a *App) fastView(cfg *Config) fastUI {
 	if to == "" {
 		return v
 	}
+	v.Installed = installedInto(to)
 	for _, lang := range fastpack.Languages {
 		if lang != to {
 			v.Routes = append(v.Routes, routeView(lang, to))
