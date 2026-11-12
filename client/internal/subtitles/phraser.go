@@ -41,11 +41,40 @@ type Phraser struct {
 	prevAt  time.Time
 	seq     int
 	links   map[string]bool
+	recent  []string
 }
 
-func NewPhraser() *Phraser { return &Phraser{cur: -1, done: -1, links: linkingSet("")} }
+func NewPhraser() *Phraser { return &Phraser{cur: -1, done: -1} }
 
-func (p *Phraser) SetLanguage(lang string) { p.links = linkingSet(lang) }
+func (p *Phraser) SetLanguage(lang string) {
+	p.links = nil
+	if l := strings.ToLower(strings.TrimSpace(lang)); l != "" {
+		if set, ok := linkingSets[l]; ok {
+			p.links = set
+		}
+	}
+}
+
+func (p *Phraser) linksFor(ws []heardWord) map[string]bool {
+	if p.links != nil {
+		return p.links
+	}
+	recent := make([]string, 0, len(p.recent)+len(ws))
+	recent = append(recent, p.recent...)
+	for _, w := range ws {
+		recent = append(recent, w.text)
+	}
+	return linkingSet(GuessLanguage(recent))
+}
+
+func (p *Phraser) remember(ws []heardWord) {
+	for _, w := range ws {
+		p.recent = append(p.recent, w.text)
+	}
+	if extra := len(p.recent) - GuessWords; extra > 0 {
+		p.recent = append(p.recent[:0], p.recent[extra:]...)
+	}
+}
 
 func isCloser(r rune) bool {
 	return strings.ContainsRune("\"')]}»”’›", r)
@@ -164,10 +193,7 @@ func (p *Phraser) phraseCut(ws []heardWord, after string, finished bool) int {
 		}
 	}
 	if n >= PhraseHard {
-		links := p.links
-		if links == nil {
-			links = linkingSet("")
-		}
+		links := p.linksFor(ws)
 		linking := func(i int) bool { return links[linkingKey(ws[i].text)] }
 		for j := n - 1; j >= PhraseMinClause; j-- {
 			if !linking(j) {
@@ -196,6 +222,7 @@ func (p *Phraser) emit(ws []heardWord, now time.Time, out []TextPhrase) []TextPh
 	}
 	para := p.prevAt.IsZero() || ws[0].at.Sub(p.prevAt) >= PhrasePause
 	p.prevAt = ws[len(ws)-1].at
+	p.remember(ws)
 	p.seq++
 	return append(out, TextPhrase{
 		Seq:   p.seq,

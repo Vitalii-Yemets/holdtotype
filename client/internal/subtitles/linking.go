@@ -64,6 +64,44 @@ func linkingKey(w string) string {
 	return strings.TrimFunc(w, func(r rune) bool { return !unicode.IsLetter(r) && !unicode.IsDigit(r) })
 }
 
+const (
+	GuessWords = 100
+	GuessMin   = 6
+)
+
+var guessOrder = []string{"en", "ru", "uk", "de", "fr", "es", "it", "pl"}
+
+func GuessLanguage(words []string) string {
+	if len(words) > GuessWords {
+		words = words[len(words)-GuessWords:]
+	}
+	counts := map[string]int{}
+	for _, w := range words {
+		key := linkingKey(w)
+		if key == "" {
+			continue
+		}
+		for _, lang := range guessOrder {
+			if linkingSets[lang][key] {
+				counts[lang]++
+			}
+		}
+	}
+	best, top, second := "", 0, 0
+	for _, lang := range guessOrder {
+		switch c := counts[lang]; {
+		case c > top:
+			best, top, second = lang, c, top
+		case c > second:
+			second = c
+		}
+	}
+	if top < GuessMin || 2*top < 3*second {
+		return ""
+	}
+	return best
+}
+
 func IsLinkingWord(lang, w string) bool {
 	return linkingSet(lang)[linkingKey(w)]
 }
