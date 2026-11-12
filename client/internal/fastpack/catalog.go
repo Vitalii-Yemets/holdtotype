@@ -31,10 +31,10 @@ var catalog = []Pack{
 		{Kind: "vocab", Name: "vocab.enuk.spm", Size: 922077, SHA256: "4dd6a91feff71e745395dcc0d52f885848ca0d843d5f70628ca51b3be1b70b45", URL: "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/translations-models/ffea5811-fcfe-486e-8812-6284bd33ee3a.spm"},
 		{Kind: "lex", Name: "lex.50.50.enuk.s2t.bin", Size: 3054364, SHA256: "dbfd4f8dc95da9c575164f7fc95ef00a2fb5f7d9f51b656559f99eeebdb57c87", URL: "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/translations-models/e7b2fd05-abf2-4e30-a612-59bce8a6702c.bin"},
 	}},
-	{From: "en", To: "ru", Version: "2.1", Files: []File{
-		{Kind: "model", Name: "model.enru.intgemm.alphas.bin", Size: 31561787, SHA256: "184cb5cda528eeefc0f75f5d0035d787b71d74af135e3c5608d01ae02ecfb920", URL: "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/translations-models/db6b48bb-b563-4ea1-bbf4-b033fa9cc482.bin"},
+	{From: "en", To: "ru", Version: "2.0", Files: []File{
+		{Kind: "model", Name: "model.enru.intgemm.alphas.bin", Size: 42992955, SHA256: "0ef9a209c5edc46692750e7505b3695655b1c7c3ec73058b641201ef18c481ce", URL: "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/translations-models/a6257317-71eb-4ca0-83ce-279c77f7b613.bin"},
 		{Kind: "vocab", Name: "vocab.enru.spm", Size: 904455, SHA256: "56ee63e14e8cb926c394242adc3ed7cc602644c3d33058cff2ce2959d52a6258", URL: "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/translations-models/568807dd-9620-4c4d-a0b5-d651d64c0ab0.spm"},
-		{Kind: "lex", Name: "lex.50.50.enru.s2t.bin", Size: 2774540, SHA256: "4d91839726b960e70b6d05c53d0cffd16262832b1c0e1ea99d66f412dcc6a239", URL: "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/translations-models/e88cc45c-0e0b-45d3-a957-8d1ba3a9b5aa.bin"},
+		{Kind: "lex", Name: "lex.50.50.enru.s2t.bin", Size: 2768468, SHA256: "3587f93c10c1d457f874c2ba7ff4d5e2686fdaf7f3fd179cfefeacab3c6990b9", URL: "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/translations-models/bec0fc43-6cb1-4e63-a37f-7f6653fdda77.bin"},
 	}},
 	{From: "de", To: "en", Version: "2.0", Files: []File{
 		{Kind: "model", Name: "model.deen.intgemm.alphas.bin", Size: 31561787, SHA256: "3e6f7c2c2425d10824797270b382bee718ff34af2cab9308841c82ca46dc6f20", URL: "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/translations-models/f44b1b1b-9df6-4ece-971e-0e5ce96fae54.bin"},

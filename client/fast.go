@@ -679,7 +679,14 @@ func doPackDownload(ctx context.Context, key string, p fastpack.Pack, base strin
 	total := p.Size()
 	var done int64
 	for _, f := range p.Files {
-		if ok, _ := trmodelKnown(dir, f); ok {
+		ready, known := trmodelKnown(dir, f)
+		if !known {
+			ready, _ = trmodelCheck(dir, f)
+			if ready {
+				log.Printf("%s: the file already in the folder matches its checksum, it is not downloaded", f.Name)
+			}
+		}
+		if ready {
 			done += f.Size
 			continue
 		}

@@ -51,15 +51,15 @@ func TestTheCatalogHasFourteenDirections(t *testing.T) {
 	}
 }
 
-func TestTheEnglishToRussianPackIsTheOneOnDisk(t *testing.T) {
+func TestTheEnglishToRussianPackIsTheDesktopRelease(t *testing.T) {
 	p, ok := Find("en", "ru")
-	if !ok || p.Version != "2.1" {
+	if !ok || p.Version != "2.0" {
 		t.Fatalf("%+v", p)
 	}
 	want := map[string]string{
-		"model": "184cb5cda528eeefc0f75f5d0035d787b71d74af135e3c5608d01ae02ecfb920",
+		"model": "0ef9a209c5edc46692750e7505b3695655b1c7c3ec73058b641201ef18c481ce",
 		"vocab": "56ee63e14e8cb926c394242adc3ed7cc602644c3d33058cff2ce2959d52a6258",
-		"lex":   "4d91839726b960e70b6d05c53d0cffd16262832b1c0e1ea99d66f412dcc6a239",
+		"lex":   "3587f93c10c1d457f874c2ba7ff4d5e2686fdaf7f3fd179cfefeacab3c6990b9",
 	}
 	for kind, h := range want {
 		if f, _ := p.File(kind); f.SHA256 != h {
