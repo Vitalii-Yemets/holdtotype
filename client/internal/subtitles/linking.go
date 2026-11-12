@@ -71,7 +71,32 @@ const (
 
 var guessOrder = []string{"en", "ru", "uk", "de", "fr", "es", "it", "pl"}
 
-func GuessLanguage(words []string) string {
+var commonLists = map[string]string{
+	"en": "the an is are was were be been have has had does did not this it you he she we they your there just know think will would can get really going people very much something",
+	"ru": "ты он она мы вы они это да нет вот ну же бы уже ещё есть был была было были всё очень только можно надо тоже сейчас меня тебя его её какой этот ничего хорошо говорит",
+	"uk": "ти він вона ми ви вони це вже ще є був була було були дуже тільки можна треба теж зараз мене тебе його її цей нічого добре каже бути немає також свій",
+	"de": "der die das ist sind war nicht ich er sie wir ihr ein eine einen auch noch schon mal doch nein haben hat wird kann sehr jetzt hier gibt man dann mir mich uns",
+	"fr": "les une des est sont était pas je il elle nous vous ils ce cette ça être fait très bien aussi oui ici tout plus c' j' n' d' mon votre",
+	"es": "el los las una está son yo él ella nosotros ellos me te muy también sí aquí todo más hay eso esto esta este bueno ahora puede tiene hacer",
+	"it": "gli è sono io lui lei noi voi loro questo questa quello molto anche già sì qui tutto più ho ha hanno fare bene ancora adesso cosa degli",
+	"pl": "jest są był była było nie tak ty ona oni się mnie mi ten tego tylko bardzo już jeszcze można trzeba też teraz właśnie coś nic dobrze będzie mam ma",
+}
+
+var commonSets = func() map[string]map[string]bool {
+	out := map[string]map[string]bool{}
+	for lang, list := range commonLists {
+		set := map[string]bool{}
+		for _, w := range strings.Fields(list) {
+			set[w] = true
+		}
+		out[lang] = set
+	}
+	return out
+}()
+
+func GuessLanguage(words []string) string { return guessWith(words, true) }
+
+func guessWith(words []string, common bool) string {
 	if len(words) > GuessWords {
 		words = words[len(words)-GuessWords:]
 	}
@@ -82,7 +107,7 @@ func GuessLanguage(words []string) string {
 			continue
 		}
 		for _, lang := range guessOrder {
-			if linkingSets[lang][key] {
+			if linkingSets[lang][key] || (common && commonSets[lang][key]) {
 				counts[lang]++
 			}
 		}

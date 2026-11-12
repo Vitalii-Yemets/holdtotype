@@ -330,18 +330,21 @@ func routeReady(packs []fastpack.Pack) (bool, string) {
 	return len(packs) > 0, ""
 }
 
-func anyRouteInto(to string) bool {
+var fastWaitForGuess atomic.Bool
+
+func installedInto(to string) []string {
+	var out []string
 	for _, from := range fastpack.Languages {
 		if from == to {
 			continue
 		}
 		if packs, ok := fastpack.Route(from, to); ok {
 			if ready, _ := routeReady(packs); ready {
-				return true
+				out = append(out, from)
 			}
 		}
 	}
-	return false
+	return out
 }
 
 type fastStatus struct {
@@ -368,13 +371,17 @@ func fastAvail(cfg *Config) fastStatus {
 		lang = l
 	}
 	if lang == "" {
-		if lost {
+		installed := installedInto(to)
+		switch {
+		case len(installed) == 1 && !fastWaitForGuess.Load():
+			lang = installed[0]
+		case lost:
 			return fastStatus{missing: subtitles.MissingLang}
-		}
-		if anyRouteInto(to) {
+		case len(installed) > 1 || (len(installed) == 1 && fastWaitForGuess.Load()):
 			return fastStatus{ok: true}
+		default:
+			return fastStatus{missing: subtitles.MissingPack, detail: "en-" + to}
 		}
-		return fastStatus{missing: subtitles.MissingPack, detail: "en-" + to}
 	}
 	if lang == to {
 		return fastStatus{ok: true, lang: lang}

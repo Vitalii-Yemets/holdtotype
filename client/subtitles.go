@@ -549,9 +549,7 @@ func (r *subRun) hear(t *subTarget, cut func(*subtitles.Phraser, time.Time) []su
 	r.phMu.Lock()
 	defer r.phMu.Unlock()
 	out := cut(r.phraser, time.Now())
-	if len(out) > 0 {
-		r.noteSpeechLangLocked()
-	}
+	r.noteSpeechLangLocked()
 	r.board.SetHearing(r.phraser.Waiting() > 0)
 	for _, ph := range out {
 		r.phraseCut(ph, t)
@@ -2096,6 +2094,11 @@ func runSubcheck(args []string) {
 	for _, a := range args[min(1, len(args)):] {
 		if strings.HasSuffix(strings.ToLower(a), ".wav") {
 			file = a
+			continue
+		}
+		if a == "guess" {
+			fastWaitForGuess.Store(true)
+			log.Printf("subcheck: the light engine waits for the guessed language as if several language packs were installed")
 			continue
 		}
 		words = append(words, a)

@@ -79,3 +79,76 @@ func TestAutoUsesTheGuessedLanguageAtTheHardLimit(t *testing.T) {
 		t.Fatalf("phrases %v", textsOf(out))
 	}
 }
+
+const guessGerman = "Also das Erste, was uns aufgefallen ist, als wir uns die Zahlen angesehen haben, war, dass die meisten Nutzer, die sich im März angemeldet haben, " +
+	"nach der ersten Woche nicht mehr gekommen sind. Wir haben dann geschaut, was beim ersten Besuch passiert ist, und es hat sich gezeigt, dass die Einrichtung " +
+	"am Telefon viel zu lange gedauert hat, weil das Formular nach Dingen gefragt hat, die man nicht zur Hand hatte. Jetzt sind es nur noch zwei Felder, " +
+	"und der Rest wartet in den Einstellungen, bis ihn wirklich jemand braucht. Danach ist der Anteil der Leute, die auch in der zweiten Woche noch da waren, " +
+	"um etwa ein Drittel gestiegen, und das ist mehr, als wir von so einer kleinen Änderung erwartet hätten."
+
+const guessPolish = "A więc pierwsza rzecz, którą zauważyliśmy, kiedy spojrzeliśmy na dane, była taka, że większość użytkowników, którzy zarejestrowali się w marcu, " +
+	"nie wróciła po pierwszym tygodniu. Potem sprawdziliśmy, co się działo przy pierwszej wizycie, i okazało się, że konfiguracja na telefonie trwała " +
+	"zdecydowanie za długo, bo formularz pytał o rzeczy, których ludzie nie mieli pod ręką. Teraz są tylko dwa pola, a reszta czeka w ustawieniach, " +
+	"aż ktoś naprawdę będzie jej potrzebował. Po tej zmianie odsetek osób, które zostały na drugi tydzień, wzrósł mniej więcej o jedną trzecią, " +
+	"i to jest więcej, niż się spodziewaliśmy po tak małej zmianie."
+
+func settleAt(words []string, lang string, common bool) int {
+	at := 0
+	for n := 1; n <= len(words); n++ {
+		if guessWith(words[:n], common) != lang {
+			at = 0
+			continue
+		}
+		if at == 0 {
+			at = n
+		}
+	}
+	return at
+}
+
+func TestTheGuessSettlesSooner(t *testing.T) {
+	cases := []struct {
+		lang, text string
+		most       int
+	}{
+		{"en", guessEnglish, 20},
+		{"ru", guessRussian, 25},
+		{"uk", guessUkrainian, 25},
+		{"de", guessGerman, 20},
+		{"pl", guessPolish, 25},
+	}
+	for _, c := range cases {
+		words := strings.Fields(c.text)
+		before := settleAt(words, c.lang, false)
+		after := settleAt(words, c.lang, true)
+		t.Logf("%s: settles after %d words with the frequent words, %d with the linking words alone, of %d", c.lang, after, before, len(words))
+		if after == 0 || after > c.most {
+			t.Errorf("%s settles after %d words", c.lang, after)
+		}
+		if before != 0 && after > before {
+			t.Errorf("%s: the frequent words made it slower: %d against %d", c.lang, after, before)
+		}
+		if got := GuessLanguage(words); got != c.lang {
+			t.Errorf("%s: the whole text gives %q", c.lang, got)
+		}
+	}
+}
+
+func TestTheFrequentWordListsBarelyOverlap(t *testing.T) {
+	seen := map[string][]string{}
+	for _, lang := range guessOrder {
+		n := 0
+		for w := range commonSets[lang] {
+			seen[w] = append(seen[w], lang)
+			n++
+		}
+		if n < 25 || n > 40 {
+			t.Errorf("%s: %d frequent words", lang, n)
+		}
+	}
+	for w, langs := range seen {
+		if len(langs) > 1 {
+			t.Errorf("%q is frequent in %v", w, langs)
+		}
+	}
+}

@@ -67,7 +67,18 @@ func (p *Phraser) linksFor(ws []heardWord) map[string]bool {
 	return linkingSet(GuessLanguage(recent))
 }
 
-func (p *Phraser) Guess() string { return GuessLanguage(p.recent) }
+func (p *Phraser) Guess() string {
+	words := append([]string(nil), p.recent...)
+	for _, w := range p.carry {
+		words = append(words, w.text)
+	}
+	if p.given < len(p.words) {
+		for _, w := range p.words[p.given:] {
+			words = append(words, w.text)
+		}
+	}
+	return GuessLanguage(words)
+}
 
 func (p *Phraser) remember(ws []heardWord) {
 	for _, w := range ws {
