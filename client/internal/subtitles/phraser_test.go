@@ -94,11 +94,183 @@ func TestSentenceEndIsCutOnlyAfterTheNextWord(t *testing.T) {
 	}
 }
 
-func TestShortSentenceLeavesWithTheNextOne(t *testing.T) {
+func TestEverySentenceEndClosesAPiece(t *testing.T) {
 	f := newFeed()
-	f.speak(0, strings.Fields("Yes it is. We will see you there tomorrow. And"))
-	if !reflect.DeepEqual(textsOf(f.out), []string{"Yes it is. We will see you there tomorrow."}) {
+	f.speak(0, strings.Fields("Yes it is. We will see you there tomorrow. Fine. And"))
+	want := []string{"Yes it is.", "We will see you there tomorrow.", "Fine."}
+	if !reflect.DeepEqual(textsOf(f.out), want) {
 		t.Fatalf("phrases %v", textsOf(f.out))
+	}
+	p := NewPhraser()
+	t0 := time.Now()
+	got := p.Whole("Right. So the long sentence that goes on and on finally ends here. Yes.", t0, t0, t0)
+	if !reflect.DeepEqual(textsOf(got), []string{"Right.", "So the long sentence that goes on and on finally ends here.", "Yes."}) {
+		t.Fatalf("whole %v", textsOf(got))
+	}
+}
+
+func TestShortWordBeforeAFullStop(t *testing.T) {
+	cases := []struct {
+		w, next string
+		last    bool
+		want    bool
+	}{
+		{"it.", "But", false, true},
+		{"it.", "but", false, false},
+		{"it.", "", true, true},
+		{"it.", "", false, false},
+		{"It.", "But", false, false},
+		{"It.", "", true, false},
+		{"Mr.", "Smith", false, false},
+		{"A.", "Smith", false, false},
+		{"a.", "Smith", false, true},
+		{"it.", "«But", false, true},
+		{"it.", "2026", false, false},
+		{"42.", "next", false, true},
+		{"e.g.", "The", false, false},
+		{"office.", "and", false, true},
+		{"so", "But", false, false},
+	}
+	for _, c := range cases {
+		if got := EndsSentenceBefore(c.w, c.next, c.last); got != c.want {
+			t.Errorf("EndsSentenceBefore(%q, %q, %v) = %v", c.w, c.next, c.last, got)
+		}
+	}
+	f := newFeed()
+	f.send(0, "you can really get into it.", false)
+	if len(f.out) != 0 {
+		t.Fatalf("the unstable last word was used: %v", textsOf(f.out))
+	}
+	f.wait(600 * time.Millisecond)
+	f.send(0, "you can really get into it. Bu", false)
+	if !reflect.DeepEqual(textsOf(f.out), []string{"you can really get into it."}) {
+		t.Fatalf("the unstable next word did not decide: %v", textsOf(f.out))
+	}
+	g := newFeed()
+	g.send(0, "you can really get into it. but then we", false)
+	if len(g.out) != 0 {
+		t.Fatalf("a lower-case next word ended the sentence: %v", textsOf(g.out))
+	}
+	h := newFeed()
+	h.send(0, "and that is all there is to it.", false)
+	h.wait(300 * time.Millisecond)
+	if got := h.send(0, "and that is all there is to it.", true); !reflect.DeepEqual(textsOf(got), []string{"and that is all there is to it."}) {
+		t.Fatalf("the end of a finished segment %v", textsOf(got))
+	}
+	if h.p.Waiting() != 0 {
+		t.Fatalf("waiting %d", h.p.Waiting())
+	}
+}
+
+func numbered(n int) []string {
+	names := strings.Fields("one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty twentyone twentytwo twentythree twentyfour")
+	return append([]string(nil), names[:n]...)
+}
+
+func hardCut(lang string, words []string) []string {
+	p := NewPhraser()
+	if lang != "-" {
+		p.SetLanguage(lang)
+	}
+	t0 := time.Date(2026, 11, 12, 10, 0, 0, 0, time.UTC)
+	return textsOf(p.Update(0, strings.Join(words, " "), false, t0))
+}
+
+func TestHardLimitCutsBeforeALinkingWord(t *testing.T) {
+	words := numbered(20)
+	words[11] = "because"
+	got := hardCut("en", words)
+	if len(got) != 1 || got[0] != strings.Join(words[:11], " ") {
+		t.Fatalf("phrases %v", got)
+	}
+	words = numbered(20)
+	words[7], words[13] = "and", "with"
+	got = hardCut("en", words)
+	if len(got) != 1 || got[0] != strings.Join(words[:13], " ") {
+		t.Fatalf("the last linking word was not used: %v", got)
+	}
+	words = numbered(20)
+	words[17] = "and"
+	got = hardCut("en", words)
+	if len(got) != 1 || got[0] != strings.Join(words[:17], " ") {
+		t.Fatalf("a linking word as the newest word: %v", got)
+	}
+}
+
+func TestHardLimitFallsBackToKeepingThreeWords(t *testing.T) {
+	words := numbered(20)
+	got := hardCut("en", words)
+	if len(got) != 1 || got[0] != strings.Join(words[:PhraseHard-PhraseKeep], " ") {
+		t.Fatalf("no linking word: %v", got)
+	}
+	words = numbered(20)
+	words[4] = "and"
+	got = hardCut("en", words)
+	if len(got) != 1 || got[0] != strings.Join(words[:PhraseHard-PhraseKeep], " ") {
+		t.Fatalf("a linking word that leaves too short a piece: %v", got)
+	}
+	words = numbered(20)
+	words[5] = "and"
+	got = hardCut("en", words)
+	if len(got) != 1 || got[0] != strings.Join(words[:5], " ") {
+		t.Fatalf("a linking word that leaves exactly the shortest piece: %v", got)
+	}
+}
+
+func TestHardLimitUsesTheSpeechLanguage(t *testing.T) {
+	words := numbered(20)
+	words[10] = "und"
+	cut := strings.Join(words[:10], " ")
+	keep := strings.Join(words[:PhraseHard-PhraseKeep], " ")
+	cases := map[string]string{"de": cut, "en": keep, "auto": cut, "-": cut, "xx": cut, "ru": keep}
+	for lang, want := range cases {
+		if got := hardCut(lang, words); len(got) != 1 || got[0] != want {
+			t.Errorf("language %q: %v", lang, got)
+		}
+	}
+	words = numbered(20)
+	words[9] = "который"
+	if got := hardCut("ru", words); len(got) != 1 || got[0] != strings.Join(words[:9], " ") {
+		t.Errorf("russian: %v", got)
+	}
+}
+
+func TestHardLimitDoesNotApplyAtTheSoftLimit(t *testing.T) {
+	words := numbered(17)
+	words[8] = "because"
+	if got := hardCut("en", words); len(got) != 0 {
+		t.Fatalf("a cut before the hard limit: %v", got)
+	}
+}
+
+func TestLinkingWords(t *testing.T) {
+	cases := []struct {
+		lang, w string
+		want    bool
+	}{
+		{"en", "And,", true}, {"en", "because", true}, {"en", "than", true}, {"en", "of", false}, {"en", "to", false}, {"en", "the", false},
+		{"ru", "который", true}, {"ru", "В", true}, {"ru", "of", false},
+		{"uk", "якщо", true}, {"de", "dass", true}, {"de", "zu", false}, {"de", "der", false},
+		{"fr", "qu'il", true}, {"fr", "lorsqu’on", true}, {"fr", "parce", true}, {"fr", "de", false}, {"fr", "des", false}, {"fr", "l'utilisateur", false},
+		{"es", "porque", true}, {"es", "de", false}, {"es", "del", false},
+		{"it", "nell'anno", true}, {"it", "perché", true}, {"it", "di", false}, {"it", "della", false},
+		{"pl", "ponieważ", true}, {"pl", "żeby", true},
+		{"auto", "und", true}, {"auto", "который", true}, {"xx", "because", true}, {"", "the", false},
+	}
+	for _, c := range cases {
+		if got := IsLinkingWord(c.lang, c.w); got != c.want {
+			t.Errorf("IsLinkingWord(%q, %q) = %v", c.lang, c.w, got)
+		}
+	}
+	for _, lang := range TranslateTargets {
+		if len(linkingSets[lang]) == 0 {
+			t.Errorf("no linking words for %s", lang)
+		}
+		for _, w := range []string{"of", "to", "the", "de", "du", "di", "del", "della", "zu", "der", "die", "das", "le", "la", "el", "il"} {
+			if linkingSets[lang][w] {
+				t.Errorf("%s: %q must stay with the word before it", lang, w)
+			}
+		}
 	}
 }
 

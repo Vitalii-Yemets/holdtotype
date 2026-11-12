@@ -7,14 +7,13 @@ import (
 )
 
 const (
-	PhraseMinSentence = 4
-	PhraseSoft        = 10
-	PhraseHard        = 18
-	PhraseMinClause   = 5
-	PhraseKeep        = 3
-	PhraseCarry       = 1500 * time.Millisecond
-	PhraseQuiet       = 1000 * time.Millisecond
-	PhrasePause       = 2 * time.Second
+	PhraseSoft      = 10
+	PhraseHard      = 18
+	PhraseMinClause = 5
+	PhraseKeep      = 3
+	PhraseCarry     = 1500 * time.Millisecond
+	PhraseQuiet     = 1000 * time.Millisecond
+	PhrasePause     = 2 * time.Second
 )
 
 type TextPhrase struct {
@@ -41,9 +40,12 @@ type Phraser struct {
 	carryAt time.Time
 	prevAt  time.Time
 	seq     int
+	links   map[string]bool
 }
 
-func NewPhraser() *Phraser { return &Phraser{cur: -1, done: -1} }
+func NewPhraser() *Phraser { return &Phraser{cur: -1, done: -1, links: linkingSet("")} }
+
+func (p *Phraser) SetLanguage(lang string) { p.links = linkingSet(lang) }
 
 func isCloser(r rune) bool {
 	return strings.ContainsRune("\"')]}»”’›", r)
@@ -88,6 +90,53 @@ func EndsSentence(w string) bool {
 	return true
 }
 
+func shortLowerEnd(w string) bool {
+	core := strings.TrimRightFunc(w, isCloser)
+	if !strings.HasSuffix(core, ".") || strings.HasSuffix(core, "..") {
+		return false
+	}
+	letters := 0
+	for _, r := range strings.TrimSuffix(core, ".") {
+		switch {
+		case r == '.':
+			return false
+		case unicode.IsLetter(r):
+			if !unicode.IsLower(r) {
+				return false
+			}
+			letters++
+		case unicode.IsDigit(r):
+			return false
+		}
+	}
+	return letters >= 1 && letters <= 2
+}
+
+func startsUpper(w string) bool {
+	for _, r := range w {
+		if unicode.IsLetter(r) {
+			return unicode.IsUpper(r)
+		}
+		if unicode.IsDigit(r) {
+			return false
+		}
+	}
+	return false
+}
+
+func EndsSentenceBefore(w, next string, last bool) bool {
+	if EndsSentence(w) {
+		return true
+	}
+	if !shortLowerEnd(w) {
+		return false
+	}
+	if next == "" {
+		return last
+	}
+	return startsUpper(next)
+}
+
 func EndsClause(w string) bool {
 	if isDash(w) {
 		return true
@@ -96,10 +145,14 @@ func EndsClause(w string) bool {
 	return strings.HasSuffix(core, ",") || strings.HasSuffix(core, ";") || strings.HasSuffix(core, ":")
 }
 
-func phraseCut(ws []heardWord) int {
+func (p *Phraser) phraseCut(ws []heardWord, after string, finished bool) int {
 	n := len(ws)
-	for i := n - 1; i >= PhraseMinSentence-1; i-- {
-		if EndsSentence(ws[i].text) {
+	for i := n - 1; i >= 0; i-- {
+		next, last := after, finished
+		if i+1 < n {
+			next, last = ws[i+1].text, false
+		}
+		if EndsSentenceBefore(ws[i].text, next, last) {
 			return i + 1
 		}
 	}
@@ -111,6 +164,15 @@ func phraseCut(ws []heardWord) int {
 		}
 	}
 	if n >= PhraseHard {
+		links := p.links
+		if links == nil {
+			links = linkingSet("")
+		}
+		for j := n - 1; j >= PhraseMinClause; j-- {
+			if links[linkingKey(ws[j].text)] {
+				return j
+			}
+		}
 		return n - PhraseKeep
 	}
 	return 0
@@ -137,12 +199,16 @@ func (p *Phraser) emit(ws []heardWord, now time.Time, out []TextPhrase) []TextPh
 	})
 }
 
-func (p *Phraser) cutAll(pend []heardWord, now time.Time, out []TextPhrase) ([]heardWord, []TextPhrase) {
+func (p *Phraser) cutAll(pend []heardWord, after string, finished bool, now time.Time, out []TextPhrase) ([]heardWord, []TextPhrase) {
 	n := 0
 	for n < len(pend) {
 		n++
 		for {
-			c := phraseCut(pend[:n])
+			next, last := after, finished
+			if n < len(pend) {
+				next, last = pend[n].text, false
+			}
+			c := p.phraseCut(pend[:n], next, last)
 			if c == 0 {
 				break
 			}
@@ -169,7 +235,11 @@ func (p *Phraser) advance(final bool, now time.Time, out []TextPhrase) []TextPhr
 	use := p.usable(final)
 	pend := append(append([]heardWord(nil), p.carry...), p.words[p.given:use]...)
 	total := len(pend)
-	left, out := p.cutAll(pend, now, out)
+	after := ""
+	if !final && use < len(p.words) {
+		after = p.words[use].text
+	}
+	left, out := p.cutAll(pend, after, final, now, out)
 	took := total - len(left)
 	fromCarry := took
 	if fromCarry > len(p.carry) {
@@ -202,7 +272,7 @@ func (p *Phraser) closeSegment(now time.Time, out []TextPhrase) []TextPhrase {
 	left := append(append([]heardWord(nil), p.carry...), p.words[p.given:]...)
 	p.carry = nil
 	if len(left) > 0 {
-		if EndsSentence(left[len(left)-1].text) || now.Sub(p.lastNew) >= PhraseQuiet {
+		if EndsSentenceBefore(left[len(left)-1].text, "", true) || now.Sub(p.lastNew) >= PhraseQuiet {
 			out = p.emit(left, now, out)
 		} else {
 			p.carry = left
@@ -254,7 +324,7 @@ func (p *Phraser) Whole(text string, from, to, now time.Time) []TextPhrase {
 	for i, f := range fields {
 		ws[i] = heardWord{text: f, at: from}
 	}
-	left, out := p.cutAll(ws, now, nil)
+	left, out := p.cutAll(ws, "", true, now, nil)
 	out = p.emit(left, now, out)
 	if !to.Before(from) {
 		p.prevAt = to
@@ -264,7 +334,7 @@ func (p *Phraser) Whole(text string, from, to, now time.Time) []TextPhrase {
 
 func (p *Phraser) Flush(now time.Time) []TextPhrase {
 	pend := append(append([]heardWord(nil), p.carry...), p.words[p.given:]...)
-	left, out := p.cutAll(pend, now, nil)
+	left, out := p.cutAll(pend, "", true, now, nil)
 	out = p.emit(left, now, out)
 	p.carry = nil
 	p.words = nil
