@@ -152,14 +152,14 @@ func TestLiveFlushAfterABrokenConnection(t *testing.T) {
 
 func TestTranscriptFormatting(t *testing.T) {
 	at := time.Date(2026, 11, 10, 14, 5, 33, 0, time.Local)
-	if got := FileName(at); got != "2026-11-10 14-05-33.txt" {
+	if got := OriginalFileName(at, "auto", false); got != "2026-11-10_14-05-33.txt" {
 		t.Fatalf("file name %q", got)
 	}
 	want := "HoldToType subtitles · 2026-11-10 14:05 · language: auto · model: Nemotron 3.5"
 	if got := Header(at, "auto", "Nemotron 3.5"); got != want {
 		t.Fatalf("header %q", got)
 	}
-	if got := Opening(at, "auto", "Nemotron 3.5", ""); got != want+"\r\n\r\n" {
+	if got := Opening(OriginalHeader(at, "auto", "Nemotron 3.5", false)); got != want+"\r\n\r\n" {
 		t.Fatalf("opening %q", got)
 	}
 	line := at.Add(8 * time.Second)

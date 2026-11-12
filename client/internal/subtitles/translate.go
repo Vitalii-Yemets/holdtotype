@@ -35,26 +35,26 @@ type Message struct {
 }
 
 var shotSources = [3]string{
-	"and then we went back to the office,",
-	"which is why the second test took almost three minutes",
-	"So if you look at the numbers here, Windows Eleven is",
+	"So the first thing we noticed when we looked at the data",
+	"was that most of the users who signed up in March",
+	"never came back after the first week.",
 }
 
 var shotSourcesForEnglish = [3]string{
-	"y luego volvimos a la oficina,",
-	"weshalb der zweite Test fast drei Minuten gedauert hat",
-	"Donc si vous regardez les chiffres ici, Windows Eleven est",
+	"Así que lo primero que notamos cuando miramos los datos",
+	"fue que la mayoría de los usuarios que se registraron en marzo",
+	"nunca volvieron después de la primera semana.",
 }
 
 var shotAnswers = map[string][3]string{
 	"en": shotSources,
-	"ru": {"а потом мы вернулись в офис,", "поэтому второй тест занял почти три минуты", "Так что если посмотреть на цифры, Windows Eleven"},
-	"uk": {"а потім ми повернулися до офісу,", "тому другий тест тривав майже три хвилини", "Тож якщо подивитися на цифри, Windows Eleven"},
-	"de": {"und dann sind wir zurück ins Büro gegangen,", "weshalb der zweite Test fast drei Minuten gedauert hat", "Wenn man sich also die Zahlen hier ansieht, ist Windows Eleven"},
-	"fr": {"et ensuite nous sommes retournés au bureau,", "c'est pourquoi le deuxième test a pris presque trois minutes", "Donc si vous regardez les chiffres ici, Windows Eleven est"},
-	"es": {"y luego volvimos a la oficina,", "por eso la segunda prueba tardó casi tres minutos", "Así que si miran los números aquí, Windows Eleven es"},
-	"it": {"e poi siamo tornati in ufficio,", "ed è per questo che il secondo test ha richiesto quasi tre minuti", "Quindi, se guardate i numeri qui, Windows Eleven è"},
-	"pl": {"a potem wróciliśmy do biura,", "dlatego drugi test trwał prawie trzy minuty", "Więc jeśli spojrzycie na te liczby, Windows Eleven jest"},
+	"ru": {"Итак, первое, что мы заметили, когда посмотрели на данные,", "это то, что большинство пользователей, зарегистрировавшихся в марте,", "так и не вернулись после первой недели."},
+	"uk": {"Отже, перше, що ми помітили, коли подивилися на дані,", "це те, що більшість користувачів, які зареєструвалися в березні,", "так і не повернулися після першого тижня."},
+	"de": {"Also, das Erste, was uns auffiel, als wir uns die Daten ansahen,", "war, dass die meisten Nutzer, die sich im März angemeldet hatten,", "nach der ersten Woche nie wiederkamen."},
+	"fr": {"Donc la première chose que nous avons remarquée en regardant les données,", "c'est que la plupart des utilisateurs qui se sont inscrits en mars", "ne sont jamais revenus après la première semaine."},
+	"es": {"Así que lo primero que notamos cuando miramos los datos", "fue que la mayoría de los usuarios que se registraron en marzo", "nunca volvieron después de la primera semana."},
+	"it": {"Quindi la prima cosa che abbiamo notato guardando i dati", "è che la maggior parte degli utenti che si sono registrati a marzo", "non è mai tornata dopo la prima settimana."},
+	"pl": {"A więc pierwszą rzeczą, którą zauważyliśmy, gdy spojrzeliśmy na dane,", "było to, że większość użytkowników, którzy zarejestrowali się w marcu,", "nigdy nie wróciła po pierwszym tygodniu."},
 }
 
 func TranslateSystem(target string) string {
@@ -63,11 +63,17 @@ func TranslateSystem(target string) string {
 		return ""
 	}
 	return "You translate live subtitles into " + name +
-		". Each message is a piece of speech, often only a part of a sentence. Reply with the " +
-		name + " translation of that piece only."
+		". The messages are consecutive pieces of one speech, often only a part of a sentence. Reply with the " +
+		name + " translation of the new piece only, worded so that it continues your previous replies. " +
+		"Never repeat what you have already translated. Do not end the reply with a full stop unless the piece ends with one."
 }
 
-func TranslateMessages(target, text string) []Message {
+type Turn struct {
+	Source      string
+	Translation string
+}
+
+func TranslateMessages(target string, history []Turn, text string) []Message {
 	system := TranslateSystem(target)
 	answers, ok := shotAnswers[target]
 	if system == "" || !ok {
@@ -77,12 +83,72 @@ func TranslateMessages(target, text string) []Message {
 	if target == "en" {
 		sources = shotSourcesForEnglish
 	}
-	out := make([]Message, 0, 8)
+	out := make([]Message, 0, 8+2*len(history))
 	out = append(out, Message{Role: "system", Content: system})
 	for i := range sources {
 		out = append(out, Message{Role: "user", Content: sources[i]}, Message{Role: "assistant", Content: answers[i]})
 	}
+	for _, t := range history {
+		out = append(out, Message{Role: "user", Content: oneLine(t.Source)}, Message{Role: "assistant", Content: oneLine(t.Translation)})
+	}
 	return append(out, Message{Role: "user", Content: oneLine(text)})
+}
+
+const (
+	HistoryLimit      = 8
+	HistoryKeepServer = 3
+	HistoryKeepLocal  = 1
+)
+
+type History struct {
+	limit int
+	keep  int
+	turns []Turn
+}
+
+func NewHistory(limit, keep int) *History {
+	if limit < 1 {
+		limit = 1
+	}
+	if keep < 0 {
+		keep = 0
+	}
+	if keep >= limit {
+		keep = limit - 1
+	}
+	return &History{limit: limit, keep: keep}
+}
+
+func (h *History) Turns() []Turn { return append([]Turn(nil), h.turns...) }
+
+func (h *History) Len() int { return len(h.turns) }
+
+func (h *History) Add(t Turn) {
+	h.turns = append(h.turns, t)
+	if len(h.turns) >= h.limit {
+		h.turns = append([]Turn(nil), h.turns[len(h.turns)-h.keep:]...)
+	}
+}
+
+func (h *History) Clear() { h.turns = nil }
+
+func lastWord(text string) string {
+	f := strings.Fields(text)
+	if len(f) == 0 {
+		return ""
+	}
+	return f[len(f)-1]
+}
+
+func DropAddedFullStop(source, answer string) string {
+	if EndsSentenceBefore(lastWord(source), "", true) {
+		return answer
+	}
+	core := strings.TrimRightFunc(answer, isCloser)
+	if !strings.HasSuffix(core, ".") || strings.HasSuffix(core, "..") {
+		return answer
+	}
+	return strings.TrimRightFunc(core[:len(core)-1], unicode.IsSpace) + answer[len(core):]
 }
 
 func TranslateTokens(words int) int {

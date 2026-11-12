@@ -237,6 +237,10 @@ type subRun struct {
 	filePath string
 	fileErr  bool
 	fileDone bool
+	trFile   *os.File
+	trFileTo string
+	trPaths  []string
+	trErr    bool
 
 	trMu     sync.Mutex
 	tr       *subTranslator
@@ -288,7 +292,7 @@ func startSubtitlesRun(a *App, cfg *Config, opts subOptions) (*subRun, error) {
 		fromFile:  opts.sound != nil,
 		pacer:     subtitles.NewPacer(sampleRate, now),
 		board:     subtitles.NewBoard(subBoardKeep),
-		phraser:   subtitles.NewPhraser(),
+		phraser:   newRunPhraser(t.lang),
 		outDone:   map[int]subPieceOut{},
 		stopCh:    make(chan struct{}),
 		doneCh:    make(chan struct{}),
@@ -414,6 +418,9 @@ func (r *subRun) loop(t *subTarget) {
 		case next := <-r.restartCh:
 			log.Printf("subtitles: restarting in place: %s", pipe.target.diff(next))
 			pipe.stop(subRestartDrain)
+			r.phMu.Lock()
+			r.phraser.SetLanguage(next.lang)
+			r.phMu.Unlock()
 			pipe = newSubPipe(r, next)
 		case <-tick.C:
 			now := time.Now()
@@ -501,6 +508,12 @@ func (r *subRun) cleanText(cfg *Config, t *subTarget, text string) string {
 	return strings.TrimSpace(replace.Apply(replace.ForLang(cfg.Replacements, t.lang), text))
 }
 
+func newRunPhraser(lang string) *subtitles.Phraser {
+	p := subtitles.NewPhraser()
+	p.SetLanguage(lang)
+	return p
+}
+
 func (r *subRun) finishLine(at time.Time, text string, t *subTarget) {
 	cfg := r.app.snapshot()
 	text = r.cleanText(cfg, t, text)
@@ -512,8 +525,8 @@ func (r *subRun) finishLine(at time.Time, text string, t *subTarget) {
 	}
 	ln := r.board.Add(at, text)
 	log.Printf("subtitles: line %q", text)
-	if cfg.SubtitlesSave && translationTarget(cfg, t) == "" {
-		r.appendTranscript(t, "", subtitles.Entry(ln.Start, ln.Text))
+	if cfg.SubtitlesSave {
+		r.writeOriginal(t, translationTarget(cfg, t) != "", subtitles.Entry(ln.Start, ln.Text))
 	}
 }
 
@@ -538,6 +551,7 @@ func (r *subRun) phraseCut(ph subtitles.TextPhrase, t *subTarget) {
 	}
 	to := translationTarget(cfg, t)
 	if to == "" {
+		r.translationPaused()
 		return
 	}
 	if w := r.translator(); w != nil {
@@ -545,42 +559,83 @@ func (r *subRun) phraseCut(ph subtitles.TextPhrase, t *subTarget) {
 	}
 }
 
-func (r *subRun) appendTranscript(t *subTarget, to string, entries ...string) {
+func (r *subRun) translationPaused() {
+	r.trMu.Lock()
+	w := r.tr
+	r.trMu.Unlock()
+	if w != nil {
+		w.histReset.Store(true)
+	}
+}
+
+func openTranscript(name, header string) (*os.File, string, error) {
+	if err := os.MkdirAll(subtitles.Folder, 0o755); err != nil {
+		return nil, "", fmt.Errorf("the transcript folder was not created: %w", err)
+	}
+	p := filepath.Join(subtitles.Folder, name)
+	f, err := os.OpenFile(p, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
+	if err != nil {
+		return nil, "", fmt.Errorf("the transcript was not created: %w", err)
+	}
+	if _, err := f.WriteString(subtitles.Opening(header)); err != nil {
+		log.Printf("subtitles: writing the transcript: %v", err)
+	}
+	if abs, aerr := filepath.Abs(p); aerr == nil {
+		p = abs
+	}
+	return f, p, nil
+}
+
+func writeEntry(f *os.File, entry string) {
+	if _, err := f.WriteString(entry); err != nil {
+		log.Printf("subtitles: writing the transcript: %v", err)
+		return
+	}
+	_ = f.Sync()
+}
+
+func (r *subRun) writeOriginal(t *subTarget, translating bool, entry string) {
 	r.fileMu.Lock()
 	defer r.fileMu.Unlock()
 	if r.fileErr || r.fileDone {
 		return
 	}
 	if r.file == nil {
-		if err := os.MkdirAll(subtitles.Folder, 0o755); err != nil {
-			log.Printf("subtitles: the transcript folder was not created: %v", err)
-			r.fileErr = true
-			return
-		}
-		p := filepath.Join(subtitles.Folder, subtitles.FileName(r.started))
-		f, err := os.OpenFile(p, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
+		name := subtitles.OriginalFileName(r.started, t.lang, translating)
+		f, p, err := openTranscript(name, subtitles.OriginalHeader(r.started, t.lang, t.name, translating))
 		if err != nil {
-			log.Printf("subtitles: the transcript was not created: %v", err)
+			log.Printf("subtitles: %v", err)
 			r.fileErr = true
 			return
 		}
-		if _, err := f.WriteString(subtitles.Opening(r.started, t.lang, t.name, to)); err != nil {
-			log.Printf("subtitles: writing the transcript: %v", err)
-		}
-		r.file = f
-		r.filePath = p
-		if abs, aerr := filepath.Abs(p); aerr == nil {
-			r.filePath = abs
-		}
-		log.Printf("subtitles: transcript %s", r.filePath)
+		r.file, r.filePath = f, p
+		log.Printf("subtitles: transcript %s", p)
 	}
-	for _, e := range entries {
-		if _, err := r.file.WriteString(e); err != nil {
-			log.Printf("subtitles: writing the transcript: %v", err)
+	writeEntry(r.file, entry)
+}
+
+func (r *subRun) writeTranslation(t *subTarget, to, by, entry string) {
+	r.fileMu.Lock()
+	defer r.fileMu.Unlock()
+	if r.trErr || r.fileDone {
+		return
+	}
+	if r.trFile != nil && r.trFileTo != to {
+		_ = r.trFile.Close()
+		r.trFile = nil
+	}
+	if r.trFile == nil {
+		f, p, err := openTranscript(subtitles.TranslationFileName(r.started, to), subtitles.TranslationHeader(r.started, t.lang, to, by))
+		if err != nil {
+			log.Printf("subtitles: %v", err)
+			r.trErr = true
 			return
 		}
+		r.trFile, r.trFileTo = f, to
+		r.trPaths = append(r.trPaths, p)
+		log.Printf("subtitles: translation transcript %s", p)
 	}
-	_ = r.file.Sync()
+	writeEntry(r.trFile, entry)
 }
 
 type subPieceOut struct {
@@ -588,6 +643,7 @@ type subPieceOut struct {
 	source      string
 	translation string
 	target      string
+	by          string
 }
 
 func (r *subRun) pieceQueued(seq int) {
@@ -628,11 +684,11 @@ func (r *subRun) pieceFinished(seq int, out subPieceOut) {
 		if !cfg.SubtitlesSave || t == nil {
 			continue
 		}
-		entries := []string{subtitles.Entry(e.at, e.source)}
-		if e.translation != "" {
-			entries = append(entries, subtitles.TranslationEntry(e.at, e.translation))
+		text := e.translation
+		if text == "" {
+			text = e.source
 		}
-		r.appendTranscript(t, e.target, entries...)
+		r.writeTranslation(t, e.target, e.by, subtitles.Entry(e.at, text))
 	}
 }
 
@@ -653,8 +709,12 @@ func (r *subRun) finish() {
 	if r.file != nil {
 		_ = r.file.Close()
 	}
+	if r.trFile != nil {
+		_ = r.trFile.Close()
+	}
 	r.fileDone = true
 	path := r.filePath
+	trPaths := strings.Join(r.trPaths, ", ")
 	r.fileMu.Unlock()
 	r.mu.Lock()
 	name, port, shared, model := r.engName, r.engPort, r.engShared, r.engModel
@@ -669,9 +729,12 @@ func (r *subRun) finish() {
 	if path == "" {
 		path = "none"
 	}
-	log.Printf("subtitles: summary: %.1f s captured, %.1f s of silence added, topping up paused %d time(s) after %.0f s of silence, %d line(s), %.1f s skipped, %.1f s of the app's own sounds silenced, engine %s on port %d with %s (%s), %d device open(s), transcript %s%s",
+	if trPaths == "" {
+		trPaths = "none"
+	}
+	log.Printf("subtitles: summary: %.1f s captured, %.1f s of silence added, topping up paused %d time(s) after %.0f s of silence, %d line(s), %.1f s skipped, %.1f s of the app's own sounds silenced, engine %s on port %d with %s (%s), %d device open(s), transcript %s, translation transcript %s%s",
 		r.pacer.Captured().Seconds(), r.pacer.Added().Seconds(), r.pacer.Pauses(), subtitles.SilenceLimit.Seconds(),
-		r.board.Count(), time.Duration(r.skipped.Load()).Seconds(), float64(r.muted.Load())/sampleRate, name, port, model, how, r.cap.openCount(), path, trSummary)
+		r.board.Count(), time.Duration(r.skipped.Load()).Seconds(), float64(r.muted.Load())/sampleRate, name, port, model, how, r.cap.openCount(), path, trPaths, trSummary)
 	if r.opts.onEnd != nil {
 		r.opts.onEnd(r)
 	}
@@ -711,6 +774,7 @@ func (r *subRun) syncTranslation(cfg *Config, t *subTarget) {
 	}
 	if to == "" {
 		log.Printf("subtitles: translation is off from now on")
+		r.translationPaused()
 		return
 	}
 	name := subtitles.LanguageName(to)
@@ -746,7 +810,7 @@ func (r *subRun) primeTranslation(llm *llamaServer, to string) {
 	started := time.Now()
 	ctx, cancel := context.WithTimeout(context.Background(), subtitles.TranslateTimeout)
 	defer cancel()
-	if _, err := llm.chatStream(ctx, subtitles.TranslateMessages(to, "Hello."), 1, subtitles.TranslateGrammar(to), nil); err != nil {
+	if _, err := llm.chatStream(ctx, subtitles.TranslateMessages(to, nil, "Hello."), 1, subtitles.TranslateGrammar(to), nil); err != nil {
 		log.Printf("subtitles: the translation request did not load: %s", logText(err))
 		return
 	}
@@ -795,6 +859,11 @@ type subTranslator struct {
 	dropLog logGap
 	waitLog bool
 	delays  []time.Duration
+
+	hist       *subtitles.History
+	histKind   string
+	histTarget string
+	histReset  atomic.Bool
 
 	pieces     atomic.Int64
 	translated atomic.Int64
@@ -855,7 +924,7 @@ func (w *subTranslator) drop(ps []subtitles.Pending, why string) {
 		w.pieces.Add(1)
 		w.dropped.Add(1)
 		r.board.SetPiece(p.Seq, "", subtitles.PieceFailed)
-		r.pieceFinished(p.Seq, subPieceOut{at: p.Start, source: p.Text, target: p.Target})
+		r.pieceFinished(p.Seq, subPieceOut{at: p.Start, source: p.Text, target: p.Target, by: w.label()})
 		if r.opts.logLive {
 			log.Printf("subtitles: piece %d dropped after %.1f s: %s", p.Seq, now.Sub(p.Heard).Seconds(), why)
 		}
@@ -945,7 +1014,7 @@ func (w *subTranslator) fail(b subtitles.Batch, err error) {
 	r := w.run
 	seq := b.Seq()
 	r.board.SetPiece(seq, "", subtitles.PieceFailed)
-	r.pieceFinished(seq, subPieceOut{at: b.Start, source: b.Text, target: b.Target})
+	r.pieceFinished(seq, subPieceOut{at: b.Start, source: b.Text, target: b.Target, by: w.label()})
 	if w.ctx.Err() != nil {
 		w.dropped.Add(1)
 		if r.opts.logLive {
@@ -958,6 +1027,28 @@ func (w *subTranslator) fail(b subtitles.Batch, err error) {
 	if r.opts.logLive {
 		log.Printf("subtitles: piece %d shown as heard after %.1f s: %s", seq, time.Since(b.Heard).Seconds(), logText(err))
 	}
+}
+
+func (w *subTranslator) label() string {
+	w.mu.Lock()
+	used := w.used
+	w.mu.Unlock()
+	if used != "" {
+		return used
+	}
+	return translationSource(w.run.app.snapshot()).label()
+}
+
+func (w *subTranslator) history(kind, target string) *subtitles.History {
+	keep := subtitles.HistoryKeepServer
+	if kind == editorLocal {
+		keep = subtitles.HistoryKeepLocal
+	}
+	if w.hist == nil || w.histKind != kind || w.histTarget != target || w.histReset.Swap(false) {
+		w.hist = subtitles.NewHistory(subtitles.HistoryLimit, keep)
+		w.histKind, w.histTarget = kind, target
+	}
+	return w.hist
 }
 
 func (w *subTranslator) handle(b subtitles.Batch) {
@@ -978,9 +1069,11 @@ func (w *subTranslator) handle(b subtitles.Batch) {
 	w.used = src.label()
 	w.mu.Unlock()
 	r.board.SetPiece(seq, "", subtitles.PieceRunning)
+	hist := w.history(src.kind, b.Target)
+	prior := hist.Turns()
 	ctx, cancel := context.WithTimeout(w.ctx, subtitles.TranslateTimeout)
 	var first time.Time
-	out, err := r.app.editorStream(ctx, cfg, src, subtitles.TranslateMessages(b.Target, b.Text), subtitles.TranslateTokens(b.Words), subtitles.TranslateGrammar(b.Target), func(sofar string) {
+	out, err := r.app.editorStream(ctx, cfg, src, subtitles.TranslateMessages(b.Target, prior, b.Text), subtitles.TranslateTokens(b.Words), subtitles.TranslateGrammar(b.Target), func(sofar string) {
 		if first.IsZero() {
 			first = time.Now()
 		}
@@ -998,6 +1091,8 @@ func (w *subTranslator) handle(b subtitles.Batch) {
 	}
 	text, verdict := subtitles.CleanTranslation(b.Text, out, b.Target)
 	switch verdict {
+	case subtitles.TrOK:
+		text = subtitles.DropAddedFullStop(b.Text, text)
 	case subtitles.TrSame:
 		text = b.Text
 	case subtitles.TrEmpty:
@@ -1011,7 +1106,8 @@ func (w *subTranslator) handle(b subtitles.Batch) {
 		return
 	}
 	r.board.SetPiece(seq, text, subtitles.PieceDone)
-	r.pieceFinished(seq, subPieceOut{at: b.Start, source: b.Text, translation: text, target: b.Target})
+	hist.Add(subtitles.Turn{Source: b.Text, Translation: text})
+	r.pieceFinished(seq, subPieceOut{at: b.Start, source: b.Text, translation: text, target: b.Target, by: src.label()})
 	w.translated.Add(1)
 	w.mu.Lock()
 	w.delays = append(w.delays, done.Sub(b.Heard))
@@ -1025,7 +1121,7 @@ func (w *subTranslator) handle(b subtitles.Batch) {
 		if verdict == subtitles.TrSame {
 			same = ", the same as heard"
 		}
-		log.Printf("subtitles: piece %d translated: first word after %.1f s, complete after %.1f s, %d waiting%s: %q", seq, first.Sub(b.Heard).Seconds(), done.Sub(b.Heard).Seconds(), waiting, same, text)
+		log.Printf("subtitles: piece %d translated with %d earlier piece(s): first word after %.1f s, complete after %.1f s, %d waiting%s: %q", seq, len(prior), first.Sub(b.Heard).Seconds(), done.Sub(b.Heard).Seconds(), waiting, same, text)
 	}
 }
 

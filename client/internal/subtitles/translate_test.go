@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"unicode"
 )
 
 func noKeys(rows []Row) []Row {
@@ -443,73 +444,182 @@ func TestLanguageNames(t *testing.T) {
 	}
 }
 
-func TestTranscriptWithTranslation(t *testing.T) {
-	at := time.Date(2026, 11, 10, 14, 5, 33, 0, time.Local)
-	head := "HoldToType subtitles · 2026-11-10 14:05 · language: auto · model: Nemotron 3.5"
-	if got := Opening(at, "auto", "Nemotron 3.5", ""); got != head+"\r\n\r\n" {
-		t.Fatalf("opening without translation %q", got)
+func TestTranscriptFileNames(t *testing.T) {
+	at := time.Date(2026, 11, 12, 10, 18, 29, 0, time.Local)
+	cases := []struct{ got, want string }{
+		{OriginalFileName(at, "en", true), "2026-11-12_10-18-29_original_EN.txt"},
+		{OriginalFileName(at, "auto", true), "2026-11-12_10-18-29_original.txt"},
+		{OriginalFileName(at, "", true), "2026-11-12_10-18-29_original.txt"},
+		{OriginalFileName(at, "en", false), "2026-11-12_10-18-29.txt"},
+		{OriginalFileName(at, "auto", false), "2026-11-12_10-18-29.txt"},
+		{TranslationFileName(at, "ru"), "2026-11-12_10-18-29_translation_RU.txt"},
+		{TranslationFileName(at, "uk"), "2026-11-12_10-18-29_translation_UK.txt"},
 	}
-	if got := Opening(at, "auto", "Nemotron 3.5", "de"); got != head+" · translation: de\r\n\r\n" {
-		t.Fatalf("opening with translation %q", got)
+	for _, c := range cases {
+		if c.got != c.want {
+			t.Errorf("file name %q, want %q", c.got, c.want)
+		}
+		if strings.ContainsFunc(c.got, unicode.IsSpace) {
+			t.Errorf("file name %q has whitespace", c.got)
+		}
 	}
-	line := at.Add(8 * time.Second)
-	if got := TranslationText(line, " zwei\nZeilen  hier "); got != "[14:05:41] → zwei Zeilen hier" {
-		t.Fatalf("translation text %q", got)
+	for _, lang := range append([]string{"auto", ""}, TranslateTargets...) {
+		for _, tr := range []bool{true, false} {
+			if name := OriginalFileName(at, lang, tr); strings.ContainsFunc(name, unicode.IsSpace) {
+				t.Errorf("file name %q has whitespace", name)
+			}
+		}
+		if name := TranslationFileName(at, lang); strings.ContainsFunc(name, unicode.IsSpace) {
+			t.Errorf("file name %q has whitespace", name)
+		}
 	}
-	if got := TranslationEntry(line, "Hallo"); got != "[14:05:41] → Hallo\r\n" {
-		t.Fatalf("translation entry %q", got)
+}
+
+func TestTranscriptFirstLines(t *testing.T) {
+	at := time.Date(2026, 11, 12, 10, 18, 29, 0, time.Local)
+	cases := []struct{ got, want string }{
+		{OriginalHeader(at, "en", "Nemotron 3.5", true), "HoldToType subtitles · 2026-11-12 10:18 · original · language: en · model: Nemotron 3.5"},
+		{OriginalHeader(at, "en", "Nemotron 3.5", false), "HoldToType subtitles · 2026-11-12 10:18 · language: en · model: Nemotron 3.5"},
+		{TranslationHeader(at, "en", "ru", "gemma-3-4b (post-processing server)"), "HoldToType subtitles · 2026-11-12 10:18 · translation: en → ru · by: gemma-3-4b (post-processing server)"},
+		{TranslationHeader(at, "auto", "ru", "qwen (local)"), "HoldToType subtitles · 2026-11-12 10:18 · translation: auto → ru · by: qwen (local)"},
+		{TranslationHeader(at, "", "de", "x"), "HoldToType subtitles · 2026-11-12 10:18 · translation: auto → de · by: x"},
+	}
+	for _, c := range cases {
+		if c.got != c.want {
+			t.Errorf("first line %q, want %q", c.got, c.want)
+		}
+	}
+	if got := Opening("head"); got != "head\r\n\r\n" {
+		t.Fatalf("opening %q", got)
+	}
+	if got := Entry(at.Add(5*time.Minute), "  Привет  мир "); got != "[10:23:29] Привет мир\r\n" {
+		t.Fatalf("entry %q", got)
 	}
 }
 
 func TestTranslateMessages(t *testing.T) {
-	sys := map[string]string{
-		"ru": "You translate live subtitles into Russian. Each message is a piece of speech, often only a part of a sentence. Reply with the Russian translation of that piece only.",
-		"en": "You translate live subtitles into English. Each message is a piece of speech, often only a part of a sentence. Reply with the English translation of that piece only.",
+	want := "You translate live subtitles into Russian. The messages are consecutive pieces of one speech, often only a part of a sentence. " +
+		"Reply with the Russian translation of the new piece only, worded so that it continues your previous replies. " +
+		"Never repeat what you have already translated. Do not end the reply with a full stop unless the piece ends with one."
+	if got := TranslateSystem("ru"); got != want {
+		t.Errorf("system %q", got)
 	}
-	for code, want := range sys {
-		if got := TranslateSystem(code); got != want {
-			t.Errorf("system for %s: %q", code, got)
-		}
-	}
+	history := []Turn{{Source: "first  piece", Translation: "erstes Stück"}, {Source: "second", Translation: "zweites"}}
 	for _, code := range TranslateTargets {
-		m := TranslateMessages(code, "  the build went out\n on Tuesday ")
-		if len(m) != 8 {
+		m := TranslateMessages(code, history, "  the build went out\n on Tuesday ")
+		if len(m) != 12 {
 			t.Fatalf("%s: %d messages", code, len(m))
 		}
 		if m[0].Role != "system" || m[0].Content != TranslateSystem(code) || !strings.Contains(m[0].Content, LanguageName(code)) {
 			t.Errorf("%s: system %+v", code, m[0])
 		}
-		for i := 1; i < 7; i += 2 {
+		for i := 1; i < 11; i += 2 {
 			if m[i].Role != "user" || m[i+1].Role != "assistant" || m[i].Content == "" || m[i+1].Content == "" {
-				t.Errorf("%s: example turn %d: %+v %+v", code, i, m[i], m[i+1])
+				t.Errorf("%s: turn %d: %+v %+v", code, i, m[i], m[i+1])
 			}
 		}
-		if m[7].Role != "user" || m[7].Content != "the build went out on Tuesday" {
-			t.Errorf("%s: the piece %+v", code, m[7])
+		if m[7].Content != "first piece" || m[8].Content != "erstes Stück" || m[9].Content != "second" || m[10].Content != "zweites" {
+			t.Errorf("%s: history %+v", code, m[7:11])
 		}
-		if code != "en" && m[1].Content != "and then we went back to the office," {
-			t.Errorf("%s: the first example is not the English piece: %q", code, m[1].Content)
+		if m[11].Role != "user" || m[11].Content != "the build went out on Tuesday" {
+			t.Errorf("%s: the piece %+v", code, m[11])
+		}
+		if code != "en" && (m[1].Content != "So the first thing we noticed when we looked at the data" || m[3].Content != "was that most of the users who signed up in March" || m[5].Content != "never came back after the first week.") {
+			t.Errorf("%s: the examples are not the English pieces: %+v", code, m[1:7])
+		}
+		if !strings.HasSuffix(m[6].Content, ".") || strings.HasSuffix(m[2].Content, ".") || strings.HasSuffix(m[4].Content, ".") {
+			t.Errorf("%s: only the last example answer ends the sentence: %+v", code, m[1:7])
+		}
+		if n := len(TranslateMessages(code, nil, "x")); n != 8 {
+			t.Errorf("%s: %d messages without history", code, n)
 		}
 	}
-	ru := TranslateMessages("ru", "x")
-	if ru[2].Content != "а потом мы вернулись в офис," || ru[4].Content != "поэтому второй тест занял почти три минуты" || ru[6].Content != "Так что если посмотреть на цифры, Windows Eleven" {
+	ru := TranslateMessages("ru", nil, "x")
+	if ru[2].Content != "Итак, первое, что мы заметили, когда посмотрели на данные," || ru[4].Content != "это то, что большинство пользователей, зарегистрировавшихся в марте," || ru[6].Content != "так и не вернулись после первой недели." {
 		t.Errorf("russian answers %+v", ru)
 	}
-	en := TranslateMessages("en", "x")
+	en := TranslateMessages("en", nil, "x")
 	wantEn := []Message{
-		{"user", "y luego volvimos a la oficina,"}, {"assistant", "and then we went back to the office,"},
-		{"user", "weshalb der zweite Test fast drei Minuten gedauert hat"}, {"assistant", "which is why the second test took almost three minutes"},
-		{"user", "Donc si vous regardez les chiffres ici, Windows Eleven est"}, {"assistant", "So if you look at the numbers here, Windows Eleven is"},
+		{"user", "Así que lo primero que notamos cuando miramos los datos"}, {"assistant", "So the first thing we noticed when we looked at the data"},
+		{"user", "fue que la mayoría de los usuarios que se registraron en marzo"}, {"assistant", "was that most of the users who signed up in March"},
+		{"user", "nunca volvieron después de la primera semana."}, {"assistant", "never came back after the first week."},
 	}
 	if !reflect.DeepEqual(en[1:7], wantEn) {
 		t.Errorf("english examples %+v", en[1:7])
 	}
 	for _, code := range []string{"", "auto", "xx", "DE", "zh"} {
-		if m := TranslateMessages(code, "hello"); m != nil {
+		if m := TranslateMessages(code, history, "hello"); m != nil {
 			t.Errorf("messages for an unknown code %q: %+v", code, m)
 		}
 		if TranslateSystem(code) != "" {
 			t.Errorf("system for an unknown code %q", code)
+		}
+	}
+}
+
+func historySources(h *History) []string {
+	var out []string
+	for _, t := range h.Turns() {
+		out = append(out, t.Source)
+	}
+	return out
+}
+
+func TestHistoryGrowsAndIsCutBack(t *testing.T) {
+	cases := []struct {
+		keep  int
+		sizes []int
+		last  []string
+	}{
+		{HistoryKeepServer, []int{1, 2, 3, 4, 5, 6, 7, 3, 4, 5, 6, 7, 3}, []string{"11", "12", "13"}},
+		{HistoryKeepLocal, []int{1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6}, []string{"8", "9", "10", "11", "12", "13"}},
+	}
+	for _, c := range cases {
+		h := NewHistory(HistoryLimit, c.keep)
+		for i, want := range c.sizes {
+			h.Add(Turn{Source: fmt.Sprint(i + 1), Translation: "t"})
+			if h.Len() != want {
+				t.Fatalf("keep %d, after %d pieces: %d turns, want %d", c.keep, i+1, h.Len(), want)
+			}
+		}
+		if got := historySources(h); !reflect.DeepEqual(got, c.last) {
+			t.Fatalf("keep %d: turns %v", c.keep, got)
+		}
+		h.Clear()
+		if h.Len() != 0 {
+			t.Fatal("clear left turns")
+		}
+	}
+	if HistoryLimit != 8 || HistoryKeepServer != 3 || HistoryKeepLocal != 1 {
+		t.Fatalf("limits %d %d %d", HistoryLimit, HistoryKeepServer, HistoryKeepLocal)
+	}
+	h := NewHistory(8, 3)
+	h.Add(Turn{Source: "a", Translation: "b"})
+	turns := h.Turns()
+	turns[0].Source = "changed"
+	if h.Turns()[0].Source != "a" {
+		t.Fatal("Turns gave away its own slice")
+	}
+}
+
+func TestDropAddedFullStop(t *testing.T) {
+	cases := []struct{ source, answer, want string }{
+		{"and then we went back to the", "а потом мы вернулись в.", "а потом мы вернулись в"},
+		{"and then we went back to the", "а потом мы вернулись в .", "а потом мы вернулись в"},
+		{"and then we went back to the", "а потом «мы вернулись».", "а потом «мы вернулись»"},
+		{"and then we went back to the", "он сказал «да.»", "он сказал «да»"},
+		{"and then we went back to the", "а потом…", "а потом…"},
+		{"and then we went back to the", "а потом...", "а потом..."},
+		{"and then we went back to the", "а потом?", "а потом?"},
+		{"we went back to the office.", "мы вернулись в офис.", "мы вернулись в офис."},
+		{"did we go back?", "мы вернулись.", "мы вернулись."},
+		{"you can get into it.", "вы можете в этом разобраться.", "вы можете в этом разобраться."},
+		{"that was in the U.S.", "это было в США.", "это было в США"},
+		{"", "что-то.", "что-то"},
+	}
+	for _, c := range cases {
+		if got := DropAddedFullStop(c.source, c.answer); got != c.want {
+			t.Errorf("DropAddedFullStop(%q, %q) = %q, want %q", c.source, c.answer, got, c.want)
 		}
 	}
 }
