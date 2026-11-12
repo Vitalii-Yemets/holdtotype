@@ -103,3 +103,58 @@ func SpeechLanguage(setting, guess string, waited, limit time.Duration) (string,
 	}
 	return "", SpeechWaiting
 }
+
+func plainWord(w string) string {
+	return strings.ToLower(strings.TrimFunc(w, func(r rune) bool { return !unicode.IsLetter(r) && !unicode.IsDigit(r) }))
+}
+
+func TrimRepeated(shown, part string) (string, bool) {
+	var tail []string
+	for _, w := range strings.Fields(shown) {
+		if p := plainWord(w); p != "" {
+			tail = append(tail, p)
+		}
+	}
+	fields := strings.Fields(part)
+	var at []int
+	for i, w := range fields {
+		if plainWord(w) != "" {
+			at = append(at, i)
+		}
+	}
+	for k := 3; k >= 1; k-- {
+		if k > len(tail) || k > len(at) {
+			continue
+		}
+		same := true
+		for j := 0; j < k; j++ {
+			if tail[len(tail)-k+j] != plainWord(fields[at[j]]) {
+				same = false
+				break
+			}
+		}
+		if !same || (k == 1 && len([]rune(tail[len(tail)-1])) < 4) {
+			continue
+		}
+		drop := map[int]bool{}
+		for j := 0; j < k; j++ {
+			drop[at[j]] = true
+		}
+		var kept []string
+		left := false
+		for i, w := range fields {
+			if drop[i] {
+				continue
+			}
+			kept = append(kept, w)
+			if plainWord(w) != "" {
+				left = true
+			}
+		}
+		if !left {
+			return "", false
+		}
+		return strings.Join(kept, " "), true
+	}
+	return part, true
+}

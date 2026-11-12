@@ -153,3 +153,27 @@ func TestTheSpeechLanguage(t *testing.T) {
 		t.Fatalf("a change during a run: %q then %q", before, after)
 	}
 }
+
+func TestAWordRepeatedAtTheBoundaryIsRemoved(t *testing.T) {
+	cases := []struct {
+		shown, part, want string
+		ok                bool
+	}{
+		{"вы достигнете своего пятичасовой лимита", "лимита в течение тридцати сорока пяти минут", "в течение тридцати сорока пяти минут", true},
+		{"вы достигнете своего пятичасовой Лимита,", "лимита в течение", "в течение", true},
+		{"мы посмотрели на тест AGI", "тест AGI, который прошёл", "который прошёл", true},
+		{"он сказал, что это правда и", "и это было видно", "и это было видно", true},
+		{"мы пошли в", "в магазин", "в магазин", true},
+		{"мы пошли в магазин", ", магазин", "", false},
+		{"это очень дорого", "очень дорого", "", false},
+		{"это одна вещь", "одна вещь, которую", "которую", true},
+		{"", "что-то новое", "что-то новое", true},
+		{"совсем другое", "что-то новое", "что-то новое", true},
+	}
+	for _, c := range cases {
+		got, ok := TrimRepeated(c.shown, c.part)
+		if got != c.want || ok != c.ok {
+			t.Errorf("TrimRepeated(%q, %q) = %q %v, want %q %v", c.shown, c.part, got, ok, c.want, c.ok)
+		}
+	}
+}

@@ -478,7 +478,7 @@ func (f *fastFail) Error() string {
 }
 
 type fastCounts struct {
-	alone, split, fallback atomic.Int64
+	alone, split, fallback, trimmed atomic.Int64
 }
 
 func (r *subRun) handleFast(w *subTranslator, b subtitles.Batch, src editorSource) (string, error) {
@@ -488,7 +488,7 @@ func (r *subRun) handleFast(w *subTranslator, b subtitles.Batch, src editorSourc
 		return "", &fastFail{st.missing, st.detail}
 	}
 	w.mu.Lock()
-	prev := w.prevText
+	prev, shown := w.prevText, w.prevShown
 	w.mu.Unlock()
 	if st.lang == b.Target {
 		return b.Text, nil
@@ -511,13 +511,24 @@ func (r *subRun) handleFast(w *subTranslator, b subtitles.Batch, src editorSourc
 			return "", err
 		}
 		if tail, ok := subtitles.SplitTagged(out); ok {
-			w.fast.split.Add(1)
-			return tail, nil
-		}
-		w.fast.fallback.Add(1)
-		if r.opts.logLive {
+			trimmed, left := subtitles.TrimRepeated(shown, tail)
+			if left {
+				w.fast.split.Add(1)
+				if trimmed != tail {
+					w.fast.trimmed.Add(1)
+					if r.opts.logLive {
+						log.Printf("subtitles: piece %d repeated the end of the previous piece, %q is shown as %q", b.Seq(), tail, trimmed)
+					}
+				}
+				return trimmed, nil
+			}
+			if r.opts.logLive {
+				log.Printf("subtitles: piece %d only repeated the end of the previous piece (%q), it is translated alone", b.Seq(), tail)
+			}
+		} else if r.opts.logLive {
 			log.Printf("subtitles: piece %d is translated alone, the split did not work: %q", b.Seq(), out)
 		}
+		w.fast.fallback.Add(1)
 	} else {
 		w.fast.alone.Add(1)
 	}
@@ -541,9 +552,10 @@ func (r *subRun) noteSpeechLangLocked() {
 func (w *subTranslator) handleFastBatch(b subtitles.Batch, src editorSource) {
 	r := w.run
 	seq := b.Seq()
+	shown := ""
 	defer func() {
 		w.mu.Lock()
-		w.prevText = b.Text
+		w.prevText, w.prevShown = b.Text, shown
 		w.mu.Unlock()
 	}()
 	var out string
@@ -573,6 +585,7 @@ func (w *subTranslator) handleFastBatch(b subtitles.Batch, src editorSource) {
 		w.fail(b, fmt.Errorf("an answer of %d characters for a piece of %d is thrown away", len([]rune(out)), len([]rune(b.Text))))
 		return
 	}
+	shown = text
 	r.board.SetPiece(seq, text, subtitles.PieceDone)
 	r.pieceFinished(seq, subPieceOut{at: b.Start, source: b.Text, translation: subtitles.WithoutLeadingMark(text), target: b.Target, by: src.label()})
 	w.translated.Add(1)

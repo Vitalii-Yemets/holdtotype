@@ -994,8 +994,9 @@ type subTranslator struct {
 	dropped    atomic.Int64
 	retried    atomic.Int64
 
-	prevText string
-	fast     fastCounts
+	prevText  string
+	prevShown string
+	fast      fastCounts
 }
 
 func newSubTranslator(r *subRun) *subTranslator {
@@ -1364,7 +1365,7 @@ func (w *subTranslator) summary() string {
 	}
 	fast := ""
 	if n := w.fast.alone.Load() + w.fast.split.Load() + w.fast.fallback.Load(); n > 0 {
-		fast = fmt.Sprintf(", light engine: %d alone, %d split from the previous piece, %d fell back to alone", w.fast.alone.Load(), w.fast.split.Load(), w.fast.fallback.Load())
+		fast = fmt.Sprintf(", light engine: %d alone, %d split from the previous piece (%d with a repeated word removed), %d fell back to alone", w.fast.alone.Load(), w.fast.split.Load(), w.fast.trimmed.Load(), w.fast.fallback.Load())
 	}
 	return fmt.Sprintf(", translation into %s: %d pieces, %d translated, %d shown as heard, %d dropped, %d sent twice, %s, by %s%s",
 		target, w.pieces.Load(), w.translated.Load(), w.heard.Load(), w.dropped.Load(), w.retried.Load(), timing, used, fast)
