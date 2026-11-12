@@ -1998,8 +1998,12 @@ function check(name, actual, expected) {
       [t.S_SUBS_TRM_DOWN.replace("%s", t.S_SUBS_TRM_W_MEMORY), t.S_SUBS_TRM_SMALL.replace("%s", "2048") + " " + t.S_SUBS_TRM_DOWN_HEARD],
     ]);
     check(lang + ": every new text is there and keeps its place for the number", Object.values(jsKeys).every((k) => typeof t[k] === "string" && t[k].length > 0) && ["S_SUBS_TRM_GETTING", "S_SUBS_TRM_SUB", "S_SUBS_TRM_SMALL", "S_SUBS_TRM_DOWN", "S_SUBS_TR_QUALITY", "S_SUBS_TRM_ERR"].every((k) => t[k].split("%s").length === 2), true);
+    const mode = t.S_SUBS_WHO_QUALITY.split(/\s*:/)[0];
+    check(lang + ": the hints quote the option by its own name", ["S_SUBS_TR_MISS_CARD", "S_SUBS_TR_MISS_MODEL", "S_SUBS_TR_MISS_START"].filter((k) => !t[k].includes(mode)), []);
     check(lang + ": no text names the model", Object.entries(t).filter(([k, v]) => /^S_SUBS_(TRM|WHO|TR_)/.test(k) && /gemma|google/i.test(v)).map(([k]) => k), []);
   }
+  const ru = stringsOf("ru");
+  check("in Russian the option is called by the user's own word", [ru.S_SUBS_WHO_QUALITY, ru.S_SUBS_TR_MISS_MODEL.startsWith("Выбран «Качественный», но")], ["Качественный: модель на видеокарте", true]);
   w.eval("Object.assign(L, " + englishL + ")");
   await change(whoSel, "");
   await change(sv("subtitles_translate"), "");
