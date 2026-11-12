@@ -2,7 +2,7 @@ package uninst
 
 import "holdtotype/internal/appid"
 
-var programFiles = []string{"whisper-server.exe", "llama-server.exe", "llama-server-gpu.exe", "sherpa-server.exe", "sherpa-online-server.exe", "config.default.json", "README.md"}
+var programFiles = []string{"whisper-server.exe", "llama-server.exe", "llama-server-gpu.exe", "fast-translator.exe", "sherpa-server.exe", "sherpa-online-server.exe", "config.default.json", "README.md"}
 
 func Plan(delData bool) (files, dirs []string) {
 	files = append(files, programFiles...)

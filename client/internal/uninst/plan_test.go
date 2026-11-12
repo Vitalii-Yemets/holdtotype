@@ -16,6 +16,9 @@ func TestKeepingDataLeavesTranscriptsAlone(t *testing.T) {
 	if !slices.Contains(files, "sherpa-online-server.exe") {
 		t.Fatal("the program files are not removed")
 	}
+	if !slices.Contains(files, "fast-translator.exe") {
+		t.Fatal("the light translation engine is not removed")
+	}
 	if !slices.Contains(files, "llama-server-gpu.exe") {
 		t.Fatal("the graphics card engine is not removed")
 	}
