@@ -1092,7 +1092,7 @@ func (w *subTranslator) handle(b subtitles.Batch) {
 	text, verdict := subtitles.CleanTranslation(b.Text, out, b.Target)
 	switch verdict {
 	case subtitles.TrOK:
-		text = subtitles.DropAddedFullStop(b.Text, text)
+		text = subtitles.KeepSentenceEnd(b.Text, subtitles.DropAddedFullStop(b.Text, text))
 	case subtitles.TrSame:
 		text = b.Text
 	case subtitles.TrEmpty:

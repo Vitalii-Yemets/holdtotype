@@ -4,6 +4,7 @@ import (
 	"strings"
 	"time"
 	"unicode"
+	"unicode/utf8"
 )
 
 const (
@@ -149,6 +150,36 @@ func DropAddedFullStop(source, answer string) string {
 		return answer
 	}
 	return strings.TrimRightFunc(core[:len(core)-1], unicode.IsSpace) + answer[len(core):]
+}
+
+func isSentenceMark(r rune) bool { return r == '.' || r == '!' || r == '?' || r == '…' }
+
+func KeepSentenceEnd(source, answer string) string {
+	last := lastWord(source)
+	if !EndsSentenceBefore(last, "", true) {
+		return answer
+	}
+	src := strings.TrimRightFunc(last, isCloser)
+	body := strings.TrimRightFunc(src, isSentenceMark)
+	mark := src[len(body):]
+	if mark == "" {
+		mark = "."
+	}
+	trimmed := strings.TrimRightFunc(answer, unicode.IsSpace)
+	core := strings.TrimRightFunc(trimmed, isCloser)
+	tail := trimmed[len(core):]
+	core = strings.TrimRightFunc(core, unicode.IsSpace)
+	if core == "" {
+		return answer
+	}
+	if r, _ := utf8.DecodeLastRuneInString(core); isSentenceMark(r) {
+		return answer
+	}
+	cut := strings.TrimRightFunc(core, func(r rune) bool { return strings.ContainsRune(",;:-–—", r) })
+	if cut != core {
+		core = strings.TrimRightFunc(cut, unicode.IsSpace)
+	}
+	return core + mark + tail
 }
 
 func TranslateTokens(words int) int {

@@ -602,6 +602,42 @@ func TestHistoryGrowsAndIsCutBack(t *testing.T) {
 	}
 }
 
+func TestKeepSentenceEnd(t *testing.T) {
+	cases := []struct{ source, answer, want string }{
+		{"the result on artificial analysis.", "результат по искусственному анализу,", "результат по искусственному анализу."},
+		{"a very token hungry model.", "очень прожорливая модель", "очень прожорливая модель."},
+		{"they are absolutely phenomenal.", "они просто феноменальны  ", "они просто феноменальны."},
+		{"is it cheaper?", "это дешевле,", "это дешевле?"},
+		{"we did it!", "мы сделали это;", "мы сделали это!"},
+		{"and then it stopped…", "и потом оно остановилось:", "и потом оно остановилось…"},
+		{"and so it goes.", "и так всё идёт —", "и так всё идёт."},
+		{"and so it goes.", "и так всё идёт -", "и так всё идёт."},
+		{"he said «yes.»", "он сказал «да»", "он сказал «да.»"},
+		{"the model (the small one).", "модель (маленькая),", "модель (маленькая)."},
+		{"he said it.", "он это сказал,", "он это сказал."},
+		{"the end.", "конец.", "конец."},
+		{"the end.", "конец!", "конец!"},
+		{"the end.", "конец…", "конец…"},
+		{"the end.", "«конец?»", "«конец?»"},
+		{"and then we went back to the", "а потом мы вернулись,", "а потом мы вернулись,"},
+		{"and then we went back to the", "а потом мы вернулись", "а потом мы вернулись"},
+		{"that was in the U.S.", "это было в США", "это было в США"},
+		{"the end.", "", ""},
+		{"", "что-то,", "что-то,"},
+	}
+	for _, c := range cases {
+		if got := KeepSentenceEnd(c.source, c.answer); got != c.want {
+			t.Errorf("KeepSentenceEnd(%q, %q) = %q, want %q", c.source, c.answer, got, c.want)
+		}
+	}
+	for _, c := range cases {
+		got := KeepSentenceEnd(c.source, DropAddedFullStop(c.source, c.answer))
+		if again := KeepSentenceEnd(c.source, DropAddedFullStop(c.source, got)); again != got {
+			t.Errorf("not stable for %q: %q then %q", c.answer, got, again)
+		}
+	}
+}
+
 func TestDropAddedFullStop(t *testing.T) {
 	cases := []struct{ source, answer, want string }{
 		{"and then we went back to the", "а потом мы вернулись в.", "а потом мы вернулись в"},
