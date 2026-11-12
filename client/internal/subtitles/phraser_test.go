@@ -197,6 +197,14 @@ func TestHardLimitCutsBeforeALinkingWord(t *testing.T) {
 	}
 }
 
+func TestHardLimitFindsAPreposition(t *testing.T) {
+	words := strings.Fields("you'll hit your five hour limit within thirty to forty five minutes Opus five point five completely takes it")
+	got := hardCut("en", words)
+	if len(got) != 1 || got[0] != "you'll hit your five hour limit" {
+		t.Fatalf("phrases %v", got)
+	}
+}
+
 func TestHardLimitFallsBackToKeepingThreeWords(t *testing.T) {
 	words := numbered(20)
 	got := hardCut("en", words)
@@ -255,6 +263,9 @@ func TestLinkingWords(t *testing.T) {
 		{"es", "porque", true}, {"es", "de", false}, {"es", "del", false},
 		{"it", "nell'anno", true}, {"it", "perché", true}, {"it", "di", false}, {"it", "della", false},
 		{"pl", "ponieważ", true}, {"pl", "żeby", true},
+		{"en", "within", true}, {"en", "towards", true}, {"en", "throughout", true}, {"en", "versus", true},
+		{"ru", "из-за", true}, {"ru", "вокруг", true}, {"uk", "навколо", true}, {"de", "innerhalb", true}, {"de", "zum", true},
+		{"fr", "jusqu'à", true}, {"fr", "selon", true}, {"es", "según", true}, {"it", "attraverso", true}, {"it", "nello", true}, {"pl", "według", true}, {"pl", "wokół", true},
 		{"auto", "und", true}, {"auto", "который", true}, {"xx", "because", true}, {"", "the", false},
 	}
 	for _, c := range cases {
