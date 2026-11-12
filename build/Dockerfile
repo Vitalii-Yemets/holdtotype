@@ -24,7 +24,7 @@ RUN cmake -S /src -B /bld \
         -DCMAKE_EXE_LINKER_FLAGS="-static" \
     && cmake --build /bld --target whisper-server -j"$(nproc)"
 
-FROM debian:trixie-slim AS llama-build
+FROM debian:trixie-slim AS llama-src
 RUN apt-get update && apt-get install -y --no-install-recommends \
         git ca-certificates cmake make g++ \
         gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 \
@@ -33,6 +33,8 @@ ARG LLAMA_CPP_VERSION=v0.2.0
 RUN git clone --depth 1 --branch ${LLAMA_CPP_VERSION} \
         https://github.com/ggml-org/llama.cpp /src
 COPY build/mingw-toolchain.cmake /toolchain.cmake
+
+FROM llama-src AS llama-build
 RUN cmake -S /src -B /bld \
         -DCMAKE_TOOLCHAIN_FILE=/toolchain.cmake \
         -DCMAKE_BUILD_TYPE=Release \
@@ -47,6 +49,46 @@ RUN cmake -S /src -B /bld \
         -DGGML_NATIVE=OFF \
         -DGGML_AVX=ON -DGGML_AVX2=ON -DGGML_FMA=ON -DGGML_F16C=ON \
         -DGGML_OPENMP=OFF \
+        -DCMAKE_EXE_LINKER_FLAGS="-static" \
+    && cmake --build /bld --target llama-server -j"$(nproc)"
+
+FROM llama-src AS llama-gpu-build
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        glslc python3 spirv-headers \
+    && rm -rf /var/lib/apt/lists/*
+ARG VULKAN_SDK_TAG=v1.4.309
+ARG VULKAN_HEADERS_COMMIT=952f776f6573aafbb62ea717d871cd1d6816c387
+ARG VULKAN_LOADER_COMMIT=809941a4ca137df69dc9c6e8eb456bd70309197c
+RUN git clone --depth 1 --branch ${VULKAN_SDK_TAG} https://github.com/KhronosGroup/Vulkan-Headers /vkh \
+    && test "$(git -C /vkh rev-parse HEAD)" = "${VULKAN_HEADERS_COMMIT}" \
+    && git clone --depth 1 --branch ${VULKAN_SDK_TAG} https://github.com/KhronosGroup/Vulkan-Loader /vkl \
+    && test "$(git -C /vkl rev-parse HEAD)" = "${VULKAN_LOADER_COMMIT}"
+RUN cmake -S /vkh -B /vkh/b -DCMAKE_INSTALL_PREFIX=/vk \
+    && cmake --install /vkh/b \
+    && mkdir -p /vk/lib \
+    && x86_64-w64-mingw32-dlltool -d /vkl/loader/vulkan-1.def -D vulkan-1.dll -l /vk/lib/libvulkan-1.dll.a \
+    && cp -r /usr/include/spirv /vk/include/ \
+    && mkdir -p /vk/share/cmake \
+    && cp -r /usr/share/cmake/SPIRV-Headers /vk/share/cmake/
+RUN cmake -S /src -B /bld \
+        -DCMAKE_TOOLCHAIN_FILE=/toolchain.cmake \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DBUILD_SHARED_LIBS=OFF \
+        -DLLAMA_BUILD_TESTS=OFF \
+        -DLLAMA_BUILD_EXAMPLES=OFF \
+        -DLLAMA_BUILD_SERVER=ON \
+        -DLLAMA_CURL=OFF \
+        -DLLAMA_BUILD_UI=OFF \
+        -DLLAMA_USE_PREBUILT_UI=OFF \
+        -DHOST_CXX_COMPILER=/usr/bin/g++ \
+        -DGGML_NATIVE=OFF \
+        -DGGML_AVX=ON -DGGML_AVX2=ON -DGGML_FMA=ON -DGGML_F16C=ON \
+        -DGGML_OPENMP=OFF \
+        -DGGML_VULKAN=ON \
+        -DVulkan_INCLUDE_DIR=/vk/include \
+        -DVulkan_LIBRARY=/vk/lib/libvulkan-1.dll.a \
+        -DVulkan_GLSLC_EXECUTABLE=/usr/bin/glslc \
+        -DSPIRV-Headers_DIR=/vk/share/cmake/SPIRV-Headers \
         -DCMAKE_EXE_LINKER_FLAGS="-static" \
     && cmake --build /bld --target llama-server -j"$(nproc)"
 
@@ -102,10 +144,11 @@ WORKDIR /p
 COPY --from=client-build /out/holdtotype.exe ./
 COPY --from=whisper-build /bld/bin/whisper-server.exe ./
 COPY --from=llama-build /bld/bin/llama-server.exe ./
+COPY --from=llama-gpu-build /bld/bin/llama-server.exe ./llama-server-gpu.exe
 COPY --from=sherpa-fetch /sherpa-server.exe /sherpa-online-server.exe ./
 COPY --from=assets /config.json ./config.default.json
 COPY README.md ./
-RUN zip -9 -X payload.zip holdtotype.exe whisper-server.exe llama-server.exe sherpa-server.exe sherpa-online-server.exe config.default.json README.md
+RUN zip -9 -X payload.zip holdtotype.exe whisper-server.exe llama-server.exe llama-server-gpu.exe sherpa-server.exe sherpa-online-server.exe config.default.json README.md
 
 FROM golang:1.23-bookworm AS setup-build
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -146,6 +189,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 FROM scratch AS dist-slim
 COPY --from=whisper-build /bld/bin/whisper-server.exe /whisper-server.exe
 COPY --from=llama-build /bld/bin/llama-server.exe /llama-server.exe
+COPY --from=llama-gpu-build /bld/bin/llama-server.exe /llama-server-gpu.exe
 COPY --from=sherpa-fetch /sherpa-server.exe /sherpa-server.exe
 COPY --from=sherpa-fetch /sherpa-online-server.exe /sherpa-online-server.exe
 COPY --from=client-build /out/holdtotype.exe /holdtotype.exe
@@ -157,6 +201,7 @@ FROM scratch AS dist
 ARG WHISPER_MODEL
 COPY --from=whisper-build /bld/bin/whisper-server.exe /whisper-server.exe
 COPY --from=llama-build /bld/bin/llama-server.exe /llama-server.exe
+COPY --from=llama-gpu-build /bld/bin/llama-server.exe /llama-server-gpu.exe
 COPY --from=sherpa-fetch /sherpa-server.exe /sherpa-server.exe
 COPY --from=sherpa-fetch /sherpa-online-server.exe /sherpa-online-server.exe
 COPY --from=client-build /out/holdtotype.exe /holdtotype.exe

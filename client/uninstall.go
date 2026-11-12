@@ -45,7 +45,7 @@ func runUninstall(silent bool) {
 
 	_ = hiddenCmd("taskkill", "/F", "/IM", appid.Exe, "/FI", fmt.Sprintf("PID ne %d", os.Getpid())).Run()
 	ps := fmt.Sprintf(
-		`Get-Process whisper-server,llama-server,sherpa-server,sherpa-online-server -ErrorAction SilentlyContinue | Where-Object { $_.Path -like '%s*' } | Stop-Process -Force`,
+		`Get-Process whisper-server,llama-server,llama-server-gpu,sherpa-server,sherpa-online-server -ErrorAction SilentlyContinue | Where-Object { $_.Path -like '%s*' } | Stop-Process -Force`,
 		strings.ReplaceAll(dir, "'", "''"))
 	_ = hiddenCmd("powershell", "-NoProfile", "-NonInteractive", "-Command", ps).Run()
 	time.Sleep(500 * time.Millisecond)
