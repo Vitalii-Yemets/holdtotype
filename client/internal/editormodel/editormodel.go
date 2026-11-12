@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"holdtotype/internal/trmodel"
 )
 
 type File struct {
@@ -16,7 +18,7 @@ func List(dir string) []File {
 	var out []File
 	for _, e := range entries {
 		name := e.Name()
-		if e.IsDir() || !strings.HasSuffix(name, ".gguf") || strings.HasPrefix(name, "mmproj-") {
+		if e.IsDir() || !strings.HasSuffix(name, ".gguf") || strings.HasPrefix(name, "mmproj-") || trmodel.Is(name) {
 			continue
 		}
 		info, err := e.Info()

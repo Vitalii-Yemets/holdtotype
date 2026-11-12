@@ -28,6 +28,7 @@ import (
 	"holdtotype/internal/chatstream"
 	"holdtotype/internal/editormodel"
 	"holdtotype/internal/subtitles"
+	"holdtotype/internal/trmodel"
 )
 
 var llmAPIKey = func() string {
@@ -47,6 +48,7 @@ func llmInstalled(cfg *Config) bool {
 }
 
 type llamaServer struct {
+	label   string
 	baseURL string
 	cmd     *exec.Cmd
 	client  *http.Client
@@ -56,29 +58,56 @@ type llamaServer struct {
 	exited bool
 }
 
-func startLlamaServer(cfg *Config, logw io.Writer) (*llamaServer, error) {
-	s := &llamaServer{
-		baseURL: fmt.Sprintf("http://127.0.0.1:%d", cfg.LLMPort),
-		client:  &http.Client{Timeout: 3 * time.Minute},
-	}
-	exePath := cfg.LLMExe
-	if !filepath.IsAbs(exePath) {
-		if abs, err := filepath.Abs(exePath); err == nil {
-			exePath = abs
+type engineSpec struct {
+	label string
+	exe   string
+	port  int
+	args  []string
+	wait  time.Duration
+}
+
+var (
+	errEngineExited  = errors.New("exited during startup (see the log)")
+	errEngineTimeout = errors.New("did not answer in time")
+)
+
+func absPath(p string) string {
+	if !filepath.IsAbs(p) {
+		if abs, err := filepath.Abs(p); err == nil {
+			return abs
 		}
 	}
-	if !waitPortFree(cfg.LLMPort, portFreeWait) {
-		return nil, uiErr(fmt.Sprintf("port %d is taken by another program", cfg.LLMPort), trf("err.port.busy", cfg.LLMPort))
+	return p
+}
+
+func editorEngine(cfg *Config) (engineSpec, error) {
+	if !llmInstalled(cfg) {
+		return engineSpec{}, fmt.Errorf("no LLM model is installed")
 	}
-	args := []string{
-		"-m", cfg.LLMModel,
+	return engineSpec{
+		label: "llama-server",
+		exe:   absPath(cfg.LLMExe),
+		port:  cfg.LLMPort,
+		args:  []string{"-m", cfg.LLMModel, "-t", strconv.Itoa(cfg.Threads), "-c", "4096"},
+		wait:  2 * time.Minute,
+	}, nil
+}
+
+func startLlamaServer(spec engineSpec, logw io.Writer) (*llamaServer, error) {
+	s := &llamaServer{
+		label:   spec.label,
+		baseURL: fmt.Sprintf("http://127.0.0.1:%d", spec.port),
+		client:  &http.Client{Timeout: 3 * time.Minute},
+	}
+	if !waitPortFree(spec.port, portFreeWait) {
+		return nil, uiErr(fmt.Sprintf("%s: port %d is taken by another program", spec.label, spec.port), trf("err.port.busy", spec.port))
+	}
+	args := append(append([]string(nil), spec.args...),
 		"--host", "127.0.0.1",
-		"--port", strconv.Itoa(cfg.LLMPort),
-		"-t", strconv.Itoa(cfg.Threads),
-		"-c", "4096",
+		"--port", strconv.Itoa(spec.port),
 		"--api-key", llmAPIKey,
-	}
-	cmd := exec.Command(exePath, args...)
+	)
+	cmd := exec.Command(spec.exe, args...)
 	cmd.Stdout = logw
 	cmd.Stderr = logw
 	cmd.SysProcAttr = &syscall.SysProcAttr{
@@ -86,7 +115,7 @@ func startLlamaServer(cfg *Config, logw io.Writer) (*llamaServer, error) {
 		CreationFlags: 0x08000000,
 	}
 	if err := cmd.Start(); err != nil {
-		return nil, fmt.Errorf("starting %s: %w", cfg.LLMExe, err)
+		return nil, fmt.Errorf("starting %s: %w", filepath.Base(spec.exe), err)
 	}
 	s.cmd = cmd
 	s.job = uintptr(attachProcessToJob(cmd.Process.Pid))
@@ -111,7 +140,7 @@ func (s *llamaServer) waitReady(timeout time.Duration) error {
 	deadline := time.Now().Add(timeout)
 	for time.Now().Before(deadline) {
 		if !s.alive() {
-			return fmt.Errorf("llama-server exited during startup (see the log)")
+			return fmt.Errorf("%s %w", s.label, errEngineExited)
 		}
 		resp, err := healthClient.Get(s.baseURL + "/health")
 		if err == nil {
@@ -123,7 +152,7 @@ func (s *llamaServer) waitReady(timeout time.Duration) error {
 		}
 		time.Sleep(400 * time.Millisecond)
 	}
-	return fmt.Errorf("llama-server did not answer within %s", timeout)
+	return fmt.Errorf("%s %w: nothing within %s", s.label, errEngineTimeout, timeout)
 }
 
 func (s *llamaServer) stop() {
@@ -266,10 +295,7 @@ func (a *App) llmStatus() string {
 		Active bool   `json:"active"`
 		Loaded bool   `json:"loaded"`
 	}
-	a.mu.Lock()
-	llm := a.llm
-	a.mu.Unlock()
-	warm := llm != nil && llm.alive()
+	warm := a.editorEng.live() != nil
 	var installed []instRow
 	for _, f := range editormodel.List("models") {
 		installed = append(installed, instRow{File: f.Name, SizeMB: f.SizeMB, Active: f.Name == activeFile, Loaded: warm && f.Name == activeFile})
@@ -305,7 +331,7 @@ func (a *App) llmStatus() string {
 }
 
 func (a *App) llmDownloadFile(repo, file string, sizeMB int) {
-	if !repoOK(repo) || strings.Contains(file, "/") || strings.Contains(file, "\\") || !strings.HasSuffix(file, ".gguf") || strings.HasPrefix(file, "mmproj-") {
+	if !repoOK(repo) || strings.Contains(file, "/") || strings.Contains(file, "\\") || !strings.HasSuffix(file, ".gguf") || strings.HasPrefix(file, "mmproj-") || trmodel.Is(file) {
 		return
 	}
 	u := "https://huggingface.co/" + repo + "/resolve/main/" + file
@@ -313,7 +339,7 @@ func (a *App) llmDownloadFile(repo, file string, sizeMB int) {
 }
 
 func (a *App) llmDelete(file string) string {
-	if strings.Contains(file, "/") || strings.Contains(file, "\\") || !strings.HasSuffix(file, ".gguf") {
+	if strings.Contains(file, "/") || strings.Contains(file, "\\") || !strings.HasSuffix(file, ".gguf") || trmodel.Is(file) {
 		return ""
 	}
 	cfg := a.snapshot()
@@ -426,7 +452,7 @@ func (a *App) llmRepoFiles(repo string) string {
 	}
 	var files []fileRow
 	for _, s := range raw.Siblings {
-		if !strings.HasSuffix(s.Rfilename, ".gguf") || strings.Contains(s.Rfilename, "/") || strings.HasPrefix(s.Rfilename, "mmproj-") {
+		if !strings.HasSuffix(s.Rfilename, ".gguf") || strings.Contains(s.Rfilename, "/") || strings.HasPrefix(s.Rfilename, "mmproj-") || trmodel.Is(s.Rfilename) {
 			continue
 		}
 		mb := int(s.Size / (1024 * 1024))
@@ -439,61 +465,69 @@ func (a *App) llmRepoFiles(repo string) string {
 	return string(out)
 }
 
-func (a *App) llmShutdown() {
-	a.mu.Lock()
-	llm := a.llm
-	a.llm = nil
-	a.mu.Unlock()
-	if llm != nil {
-		llm.stop()
-	}
+type engineSlot struct {
+	mu       sync.Mutex
+	cur      *llamaServer
+	startMu  sync.Mutex
+	flightMu sync.Mutex
+	flight   *llmFlight
 }
 
-var llmStartMu sync.Mutex
+func (e *engineSlot) live() *llamaServer {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	if e.cur != nil && e.cur.alive() {
+		return e.cur
+	}
+	return nil
+}
 
-func (a *App) ensureLLM() (*llamaServer, error) {
-	cfg := a.snapshot()
-	if !llmInstalled(cfg) {
-		return nil, fmt.Errorf("no LLM model is installed")
+func (e *engineSlot) shutdown() bool {
+	e.mu.Lock()
+	s := e.cur
+	e.cur = nil
+	e.mu.Unlock()
+	if s != nil {
+		s.stop()
 	}
-	a.mu.Lock()
-	llm := a.llm
-	a.mu.Unlock()
-	if llm != nil && llm.alive() {
-		return llm, nil
-	}
+	return s != nil
+}
 
-	llmStartMu.Lock()
-	defer llmStartMu.Unlock()
-
-	a.mu.Lock()
-	llm = a.llm
-	a.mu.Unlock()
-	if llm != nil && llm.alive() {
-		return llm, nil
+func (a *App) ensureEngine(e *engineSlot, prepare func(*Config) (engineSpec, error)) (*llamaServer, error) {
+	if s := e.live(); s != nil {
+		return s, nil
 	}
-	if llm != nil {
-		llm.stop()
+	e.startMu.Lock()
+	defer e.startMu.Unlock()
+	if s := e.live(); s != nil {
+		return s, nil
 	}
-	log.Printf("starting llama-server")
-	llm, err := startLlamaServer(cfg, logFile)
+	e.shutdown()
+	spec, err := prepare(a.snapshot())
 	if err != nil {
 		return nil, err
 	}
-	if err := llm.waitReady(2 * time.Minute); err != nil {
-		llm.stop()
+	log.Printf("starting %s", spec.label)
+	s, err := startLlamaServer(spec, logFile)
+	if err != nil {
+		return nil, err
+	}
+	if err := s.waitReady(spec.wait); err != nil {
+		s.stop()
 		return nil, err
 	}
 	a.mu.Lock()
 	if a.quitting {
 		a.mu.Unlock()
-		llm.stop()
+		s.stop()
 		return nil, fmt.Errorf("the application is shutting down")
 	}
-	a.llm = llm
+	e.mu.Lock()
+	e.cur = s
+	e.mu.Unlock()
 	a.mu.Unlock()
-	log.Printf("llama-server ready")
-	return llm, nil
+	log.Printf("%s ready", spec.label)
+	return s, nil
 }
 
 type llmFlight struct {
@@ -502,59 +536,65 @@ type llmFlight struct {
 	err  error
 }
 
-var (
-	llmFlightMu  sync.Mutex
-	llmFlightCur *llmFlight
-)
-
-func (a *App) llmWarmUp() *llmFlight {
-	llmFlightMu.Lock()
-	defer llmFlightMu.Unlock()
-	if f := llmFlightCur; f != nil {
+func (a *App) warmEngine(e *engineSlot, prepare func(*Config) (engineSpec, error)) *llmFlight {
+	e.flightMu.Lock()
+	defer e.flightMu.Unlock()
+	if f := e.flight; f != nil {
 		return f
 	}
 	f := &llmFlight{done: make(chan struct{})}
-	llmFlightCur = f
+	e.flight = f
 	go func() {
-		f.srv, f.err = a.ensureLLM()
-		llmFlightMu.Lock()
-		llmFlightCur = nil
-		llmFlightMu.Unlock()
+		f.srv, f.err = a.ensureEngine(e, prepare)
+		e.flightMu.Lock()
+		e.flight = nil
+		e.flightMu.Unlock()
 		close(f.done)
 	}()
 	return f
 }
 
-func (a *App) llmWait(ctx context.Context) (*llamaServer, error) {
-	a.mu.Lock()
-	llm := a.llm
-	a.mu.Unlock()
-	if llm != nil && llm.alive() {
-		return llm, nil
+func (a *App) waitEngine(ctx context.Context, e *engineSlot, prepare func(*Config) (engineSpec, error), starting string) (*llamaServer, error) {
+	if s := e.live(); s != nil {
+		return s, nil
 	}
-	f := a.llmWarmUp()
+	f := a.warmEngine(e, prepare)
 	select {
 	case <-f.done:
 		return f.srv, f.err
 	case <-ctx.Done():
 		if ctx.Err() == context.DeadlineExceeded {
-			return nil, errors.New("the editor model is still starting")
+			return nil, errors.New(starting)
 		}
 		return nil, ctx.Err()
 	}
 }
 
+func (a *App) llmShutdown() { a.editorEng.shutdown() }
+
+func (a *App) ensureLLM() (*llamaServer, error) {
+	return a.ensureEngine(&a.editorEng, editorEngine)
+}
+
+func (a *App) llmWarmUp() *llmFlight { return a.warmEngine(&a.editorEng, editorEngine) }
+
+func (a *App) llmWait(ctx context.Context) (*llamaServer, error) {
+	return a.waitEngine(ctx, &a.editorEng, editorEngine, "the editor model is still starting")
+}
+
 const (
-	editorLocal = "local"
-	editorAPI   = "api"
+	editorLocal   = subtitles.KindEditor
+	editorAPI     = subtitles.KindServer
+	editorQuality = subtitles.KindQuality
 )
 
 type editorSource struct {
-	kind string
-	name string
+	kind    string
+	name    string
+	missing string
 }
 
-func (s editorSource) ok() bool { return s.kind != "" }
+func (s editorSource) ok() bool { return s.kind != "" && s.missing == "" }
 
 func (s editorSource) label() string {
 	switch s.kind {
@@ -562,6 +602,8 @@ func (s editorSource) label() string {
 		return s.name + " (post-processing server)"
 	case editorLocal:
 		return s.name + " (local)"
+	case editorQuality:
+		return "the built-in translation model (graphics card " + s.name + ")"
 	}
 	return "none"
 }
@@ -575,13 +617,24 @@ func llmName(cfg *Config) string {
 }
 
 func translationSource(cfg *Config) editorSource {
-	if postAPISet(cfg) {
-		return editorSource{kind: editorAPI, name: postAPIName(cfg)}
+	card, fits := qualityCard()
+	pick := subtitles.ChooseTranslator(cfg.SubtitlesTranslator, subtitles.Avail{
+		ModelReady:  trModelReady(),
+		CardFits:    fits,
+		QualityDown: qualityDown() != nil,
+		Server:      postAPISet(cfg),
+		Editor:      llmInstalled(cfg),
+	})
+	src := editorSource{kind: pick.Kind, missing: pick.Missing}
+	switch pick.Kind {
+	case editorAPI:
+		src.name = postAPIName(cfg)
+	case editorLocal:
+		src.name = llmName(cfg)
+	case editorQuality:
+		src.name = card.Name
 	}
-	if llmInstalled(cfg) {
-		return editorSource{kind: editorLocal, name: llmName(cfg)}
-	}
-	return editorSource{}
+	return src
 }
 
 var errNoEditor = errors.New("no editor model is installed and no post-processing server is set")
@@ -596,6 +649,12 @@ func (a *App) editorChat(ctx context.Context, cfg *Config, src editorSource, sys
 			return "", err
 		}
 		return llm.chatWith(ctx, system, user, maxTokens, localGrammar)
+	case editorQuality:
+		srv, err := a.qualityWait(ctx)
+		if err != nil {
+			return "", err
+		}
+		return srv.chatWith(ctx, system, user, maxTokens, "")
 	}
 	return "", errNoEditor
 }
@@ -610,6 +669,12 @@ func (a *App) editorStream(ctx context.Context, cfg *Config, src editorSource, m
 			return "", err
 		}
 		return llm.chatStream(ctx, msgs, maxTokens, localGrammar, onText)
+	case editorQuality:
+		srv, err := a.qualityWait(ctx)
+		if err != nil {
+			return "", err
+		}
+		return srv.chatStream(ctx, msgs, maxTokens, "", onText)
 	}
 	return "", errNoEditor
 }

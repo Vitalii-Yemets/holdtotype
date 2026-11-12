@@ -79,7 +79,8 @@ type App struct {
 	cfg        *Config
 	rec        *Recorder
 	srv        recognizer
-	llm        *llamaServer
+	editorEng  engineSlot
+	gpuEng     engineSlot
 	hook       *hotkeyHook
 	enabled    bool
 	ready      bool
@@ -567,6 +568,14 @@ func main() {
 			log.Printf("routecheck: both engines stopped")
 			return
 		}
+		if arg == "-gpucheck" {
+			runGPUCheck(os.Args[1:][i+1:])
+			return
+		}
+		if arg == "-trdownload" {
+			runTrDownload(os.Args[1:][i+1:])
+			return
+		}
 		if arg == "-subcheck" {
 			runSubcheck(os.Args[1:][i+1:])
 			return
@@ -777,6 +786,7 @@ func main() {
 	go cleanupWebViewProfiles()
 	go app.startupUpdateCheck()
 	go cleanupStaleParts()
+	go trModelState()
 	go app.sweepIdleEngine()
 	args := os.Args[1:]
 	if relaunch.Updated(args) {
@@ -2241,7 +2251,6 @@ func (a *App) onExit() {
 	a.quitting = true
 	srv := a.srv
 	rec := a.rec
-	llm := a.llm
 	hook := a.hook
 	a.mu.Unlock()
 	hook.release()
@@ -2249,9 +2258,8 @@ func (a *App) onExit() {
 		srv.stop()
 	}
 	a.stopAltEngine()
-	if llm != nil {
-		llm.stop()
-	}
+	a.editorEng.shutdown()
+	a.gpuEng.shutdown()
 	if rec != nil {
 		rec.Close()
 	}

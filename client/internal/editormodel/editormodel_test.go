@@ -17,6 +17,7 @@ func TestListShowsOnlyEditorModels(t *testing.T) {
 	dir := t.TempDir()
 	put(t, filepath.Join(dir, "a.gguf"), 3<<20)
 	put(t, filepath.Join(dir, "mmproj-a.gguf"), 10)
+	put(t, filepath.Join(dir, "gemma-3-4b-it-Q4_K_M.gguf"), 10)
 	put(t, filepath.Join(dir, "notes.txt"), 10)
 	if err := os.Mkdir(filepath.Join(dir, "b.gguf"), 0o755); err != nil {
 		t.Fatal(err)

@@ -58,5 +58,7 @@
   "subtitles_box": {},
   "subtitles_original": false,
   "subtitles_translate": "",
+  "subtitles_translator": "",
+  "translate_port": 8914,
   "wizard_done": false
 }

@@ -210,17 +210,18 @@ func (r *subRun) syncCores() {
 	kind := translationSource(cfg).kind
 	want := translating && kind == editorLocal
 	off := ""
-	if translating && kind == editorAPI {
+	switch {
+	case translating && kind == editorAPI:
 		off = "the user's post-processing server translates"
+	case translating && kind == editorQuality:
+		off = "the graphics card translates"
 	}
 	r.mu.Lock()
 	asr := r.engPid
 	r.mu.Unlock()
 	llm := 0
-	r.app.mu.Lock()
-	if s := r.app.llm; s != nil && s.alive() {
+	if s := r.app.editorEng.live(); s != nil {
 		llm = s.pid()
 	}
-	r.app.mu.Unlock()
 	r.cores.apply(want, off, cfg.Threads, asr, llm)
 }

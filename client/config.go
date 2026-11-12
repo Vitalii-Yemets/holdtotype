@@ -10,6 +10,7 @@ import (
 	"holdtotype/internal/preset"
 	"holdtotype/internal/profiles"
 	"holdtotype/internal/replace"
+	"holdtotype/internal/subtitles"
 	"holdtotype/internal/subwin"
 	"holdtotype/internal/theme"
 
@@ -161,7 +162,9 @@ type Config struct {
 	SubtitlesBox      map[string]subwin.Box   `json:"subtitles_box"`
 	SubtitlesOriginal bool                    `json:"subtitles_original"`
 
-	SubtitlesTranslate string `json:"subtitles_translate"`
+	SubtitlesTranslate  string `json:"subtitles_translate"`
+	SubtitlesTranslator string `json:"subtitles_translator"`
+	TranslatePort       int    `json:"translate_port"`
 
 	CanaryTarget string `json:"-"`
 }
@@ -260,6 +263,7 @@ func defaultConfig() *Config {
 		SubtitlesSave:     true,
 		SubtitlesLines:    defaultSubtitlesLines,
 		SubtitlesSize:     "m",
+		TranslatePort:     defaultTranslatePort,
 	}
 }
 
@@ -681,6 +685,7 @@ func validPresetLang(code string) bool {
 
 const (
 	defaultSubtitlesLines = 3
+	defaultTranslatePort  = 8914
 	minSubtitlesLines     = 2
 	maxSubtitlesLines     = 8
 )
@@ -707,6 +712,12 @@ func cleanSubtitles(cfg *Config) bool {
 	}
 	if !validTranslateLang(cfg.SubtitlesTranslate) {
 		cfg.SubtitlesTranslate = ""
+	}
+	if !subtitles.ValidTranslatorChoice(cfg.SubtitlesTranslator) {
+		cfg.SubtitlesTranslator = ""
+	}
+	if cfg.TranslatePort <= 0 || cfg.TranslatePort > 65535 {
+		cfg.TranslatePort = defaultTranslatePort
 	}
 	if cfg.SubtitlesLines < minSubtitlesLines || cfg.SubtitlesLines > maxSubtitlesLines {
 		cfg.SubtitlesLines = defaultSubtitlesLines

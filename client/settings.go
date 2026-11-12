@@ -30,7 +30,9 @@ import (
 
 	"holdtotype/internal/appid"
 	"holdtotype/internal/plexfont"
+	"holdtotype/internal/subtitles"
 	"holdtotype/internal/theme"
+	"holdtotype/internal/trmodel"
 )
 
 var (
@@ -169,7 +171,8 @@ type settingsForm struct {
 	SubtitlesBox      *map[string]subwin.Box   `json:"subtitles_box"`
 	SubtitlesOriginal *bool                    `json:"subtitles_original"`
 
-	SubtitlesTranslate *string `json:"subtitles_translate"`
+	SubtitlesTranslate  *string `json:"subtitles_translate"`
+	SubtitlesTranslator *string `json:"subtitles_translator"`
 }
 
 func (a *App) openSettings(tab string) {
@@ -394,6 +397,19 @@ func (a *App) settingsThread(tab string, attempt int) {
 		})
 		_ = w.Bind("appModelDl", func(id string) {
 			a.downloadModel(id)
+		})
+		_ = w.Bind("appTrModel", func(action string) string {
+			switch action {
+			case "download":
+				a.trModelDownload()
+			case "cancel":
+				cancelDownload(trModelKey)
+			case "delete":
+				return a.trModelDelete()
+			case "terms":
+				shellOpenURL(trmodel.TermsURL)
+			}
+			return ""
 		})
 		_ = w.Bind("appPreviewSound", func(theme string) {
 			previewTheme(theme)
@@ -978,6 +994,9 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	if f.SubtitlesTranslate != nil && (*f.SubtitlesTranslate == "" || validTranslateLang(*f.SubtitlesTranslate)) {
 		c.SubtitlesTranslate = *f.SubtitlesTranslate
 	}
+	if f.SubtitlesTranslator != nil && subtitles.ValidTranslatorChoice(*f.SubtitlesTranslator) {
+		c.SubtitlesTranslator = *f.SubtitlesTranslator
+	}
 	llmChanged := false
 	if f.LLMModelFile != "" && !strings.ContainsAny(f.LLMModelFile, "/\\") && strings.HasSuffix(f.LLMModelFile, ".gguf") {
 		if _, err := os.Stat(filepath.Join("models", f.LLMModelFile)); err == nil {
@@ -1119,6 +1138,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"subtitles_monitor":       cfg.SubtitlesMonitor,
 		"subtitles_custom":        cfg.SubtitlesXY,
 		"subtitles_translate":     cfg.SubtitlesTranslate,
+		"subtitles_translator":    cfg.SubtitlesTranslator,
 		"subtitles_original":      cfg.SubtitlesOriginal,
 		"translate_target":        cfg.TranslateTarget,
 		"translate_ask":           cfg.TranslateAsk,
@@ -1207,7 +1227,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"cmdpundo": "S_CMD_P_UNDO", "cmdpheading": "S_CMD_P_HEADING", "cmdplist": "S_CMD_P_LIST", "cmdpcapital": "S_CMD_P_CAPITAL", "cmdpquotes": "S_CMD_P_QUOTES", "cmdpnostop": "S_CMD_P_NOSTOP",
 		"cmdpand": "S_CMD_P_AND", "cmdpmarks": "S_CMD_P_MARKS",
 		"unitmin": "S_UNIT_MIN", "unithour": "S_UNIT_HOUR", "unitday": "S_UNIT_DAY",
-		"depwhisper": "S_DEP_WHISPER", "depllama": "S_DEP_LLAMA", "depsherpa": "S_DEP_SHERPA", "depggml": "S_DEP_GGML",
+		"depwhisper": "S_DEP_WHISPER", "depllama": "S_DEP_LLAMA", "depvulkan": "S_DEP_VULKAN", "depsherpa": "S_DEP_SHERPA", "depggml": "S_DEP_GGML",
 		"deponnx": "S_DEP_ONNX", "depwebview": "S_DEP_WEBVIEW", "depwv2rt": "S_DEP_WV2RT", "depmalgo": "S_DEP_MALGO",
 		"depminiaudio": "S_DEP_MINIAUDIO", "depws": "S_DEP_WS", "depxsys": "S_DEP_XSYS", "depwinloader": "S_DEP_WINLOADER",
 		"depplex": "S_DEP_PLEX", "dephf": "S_DEP_HF",
@@ -1250,7 +1270,14 @@ func settingsHTML(cfg *Config, tab string) string {
 		"subsposscheme": "S_SUBS_POS_SCHEME_SUB", "subsposdrag": "S_SUBS_POS_DRAG_SUB", "subsboxdone": "S_SUBS_BOX_DONE",
 		"subson": "S_SUBS_ON", "subsherohint": "S_SUBS_HERO_HINT", "subsherolive": "S_SUBS_HERO_LIVE", "subsherophrases": "S_SUBS_HERO_PHRASES",
 		"subsherostart": "S_SUBS_HERO_START", "subsherostop": "S_SUBS_HERO_STOP",
-		"substrlocal": "S_SUBS_TR_LOCAL", "substrapi": "S_SUBS_TR_API",
+		"substrlocal": "S_SUBS_TR_LOCAL", "substrapi": "S_SUBS_TR_API", "substrquality": "S_SUBS_TR_QUALITY", "substrnone": "S_SUBS_TR_NONE",
+		"subsmisscard": "S_SUBS_TR_MISS_CARD", "subsmissmodel": "S_SUBS_TR_MISS_MODEL", "subsmissstart": "S_SUBS_TR_MISS_START", "subsmissserver": "S_SUBS_TR_MISS_SERVER",
+		"trmsub": "S_SUBS_TRM_SUB", "trmabsent": "S_SUBS_TRM_ABSENT", "trmget": "S_SUBS_TRM_GETTING", "trmcheck": "S_SUBS_TRM_CHECKING",
+		"trmready": "S_SUBS_TRM_READY", "trmrunning": "S_SUBS_TRM_RUNNING", "trmbad": "S_SUBS_TRM_BAD", "trmerr": "S_SUBS_TRM_ERR",
+		"trmsmall": "S_SUBS_TRM_SMALL", "trmint": "S_SUBS_TRM_INTEGRATED", "trmnocard": "S_SUBS_TRM_NOCARD", "trmunknown": "S_SUBS_TRM_UNKNOWN",
+		"trmdown": "S_SUBS_TRM_DOWN", "trmdownnext": "S_SUBS_TRM_DOWN_NEXT", "trmdownheard": "S_SUBS_TRM_DOWN_HEARD", "trmdelsure": "S_SUBS_TRM_DEL_SURE",
+		"trmwvulkan": "S_SUBS_TRM_W_VULKAN", "trmwdevice": "S_SUBS_TRM_W_DEVICE", "trmwmemory": "S_SUBS_TRM_W_MEMORY", "trmwcrash": "S_SUBS_TRM_W_CRASH",
+		"trmwtimeout": "S_SUBS_TRM_W_TIMEOUT", "trmwport": "S_SUBS_TRM_W_PORT", "trmwexe": "S_SUBS_TRM_W_EXE",
 		"updatedto": "S_UPDATED_TO",
 	} {
 		lMap[jsKey] = str(sKey)
@@ -2433,8 +2460,21 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
     <option value="it">Italiano</option><option value="pl">Polski</option>
     <option value="uk">Українська</option><option value="ru">Русский</option>
    </select></div>
+  <div class="row" id="subs_who_row"><label>{{S_SUBS_WHO}}<span class="sub">{{S_SUBS_WHO_SUB}}</span></label>
+   <select id="subtitles_translator">
+    <option value="">{{S_SUBS_WHO_AUTO}}</option>
+    <option value="quality">{{S_SUBS_WHO_QUALITY}}</option>
+    <option value="server">{{S_SUBS_WHO_SERVER}}</option>
+   </select></div>
+  <div class="row" id="subs_trm_row"><label>{{S_SUBS_TRM}}<span class="sub" id="subs_trm_sub"></span><span class="sub" id="subs_trm_state"></span></label>
+   <button type="button" class="mini" id="subs_trm_dl" style="display:none">{{S_SUBS_TRM_DL}}</button>
+   <button type="button" class="mini" id="subs_trm_cancel" style="display:none">{{S_SUBS_TRM_CANCEL}}</button>
+   <button type="button" class="mini danger" id="subs_trm_del" style="display:none">{{S_SUBS_TRM_DEL}}</button></div>
+  <div class="hint" id="subs_trm_note" style="display:none"></div>
+  <div class="hint"><span class="lnk" id="subs_trm_terms">{{S_SUBS_TRM_TERMS}}</span></div>
   <div class="hint" id="subs_tr_hint" style="display:none"></div>
   <div class="row noline" id="subs_tr_none_row" style="display:none"><label><span class="sub warn" id="subs_tr_none">{{S_SUBS_TR_NONE}}</span></label>
+   <button type="button" class="mini" id="subs_tr_dl" style="display:none">{{S_SUBS_TRM_DL}}</button>
    <button type="button" class="mini" id="subs_tr_go">{{S_SUBS_TR_GO}}</button></div>
   <div class="hint" id="subs_tr_same" style="display:none">{{S_SUBS_TR_SAME}}</div>
   <div class="row" id="subs_orig_row"><label>{{S_SUBS_ORIG}}<span class="sub">{{S_SUBS_ORIG_SUB}}</span></label><input type="checkbox" id="subtitles_original"></div>
@@ -2938,6 +2978,7 @@ function pickSrvSource(remote){
 const DEPS = [
   ["whisper.cpp", "whisper", "MIT", "https://github.com/ggerganov/whisper.cpp"],
   ["llama.cpp", "llama", "MIT", "https://github.com/ggml-org/llama.cpp"],
+  ["Vulkan-Loader", "vulkan", "Apache-2.0", "https://github.com/KhronosGroup/Vulkan-Loader"],
   ["sherpa-onnx", "sherpa", "Apache-2.0", "https://github.com/k2-fsa/sherpa-onnx"],
   ["ggml", "ggml", "MIT", "https://github.com/ggml-org/ggml"],
   ["ONNX Runtime", "onnx", "MIT", "https://github.com/microsoft/onnxruntime"],
@@ -4014,22 +4055,78 @@ async function refreshSubsModel(){
   const remote = subsEl("subs_remote");
   if(remote) remote.style.display = info.remote && info.installed ? "" : "none";
 }
+function trmWhy(code){
+  return ({vulkan: L.trmwvulkan, device: L.trmwdevice, memory: L.trmwmemory, timeout: L.trmwtimeout, port: L.trmwport, exe: L.trmwexe})[code] || L.trmwcrash;
+}
+function trmCardText(m){
+  if(m.fits) return "";
+  if(m.reason === "small") return L.trmsmall.replace("%s", ()=>String(m.card_mb || 0));
+  if(m.reason === "integrated") return L.trmint;
+  if(m.reason === "unknown") return L.trmunknown;
+  return L.trmnocard;
+}
+function trmCanGet(m){
+  return !!(m && m.fits && (m.state === "absent" || m.state === "bad" || m.state === "error"));
+}
+function renderTrModel(on){
+  const row = subsEl("subs_trm_row");
+  if(!row) return;
+  const m = (subsTr && subsTr.model) || {state: "absent", size: 2374, fits: false};
+  const choice = (subsEl("subtitles_translator")||{}).value || "";
+  const st = m.state || "absent";
+  let state = "";
+  if(st === "downloading") state = L.trmget.replace("%s", ()=>String(m.pct || 0));
+  else if(st === "checking") state = L.trmcheck;
+  else if(st === "ready") state = m.down ? L.trmdown.replace("%s", ()=>trmWhy(m.down)) : (m.running ? L.trmrunning : L.trmready);
+  else if(st === "bad") state = L.trmbad;
+  else if(st === "error") state = L.trmerr.replace("%s", ()=>m.err || "");
+  else state = L.trmabsent;
+  subsEl("subs_trm_sub").textContent = L.trmsub.replace("%s", ()=>llmSize(m.size || 0));
+  const se = subsEl("subs_trm_state");
+  se.textContent = state;
+  se.classList.toggle("warn", st === "bad" || st === "error" || (st === "ready" && !!m.down));
+  subsEl("subs_trm_dl").style.display = trmCanGet(m) ? "" : "none";
+  subsEl("subs_trm_cancel").style.display = st === "downloading" ? "" : "none";
+  const del = subsEl("subs_trm_del");
+  del.style.display = st === "ready" || st === "bad" ? "" : "none";
+  if(del.style.display === "none" && del.dataset.armed){ delete del.dataset.armed; del.textContent = del.dataset.word; }
+  let note = trmCardText(m);
+  if(st === "ready" && m.down) note = (note ? note + " " : "") + (choice === "quality" ? L.trmdownheard : L.trmdownnext);
+  const ne = subsEl("subs_trm_note");
+  ne.textContent = note;
+  ne.style.display = note ? "" : "none";
+  ne.classList.toggle("warn", !!note);
+  [row, subsEl("subs_who_row")].forEach(r=>r && r.classList.toggle("dimmed", !on));
+}
 function renderSubsTr(){
   const sel = subsEl("subtitles_translate");
   if(!sel) return;
   const to = sel.value;
   const lang = (subsEl("subtitles_language")||{}).value || "auto";
-  let hint = "", none = false, same = false;
+  const tr = subsTr || {kind: "", name: ""};
+  const m = tr.model || null;
+  let hint = "", none = "", same = false, go = false, get = false;
   if(to && to === lang) same = true;
   else if(to && subsTr){
-    if(subsTr.kind === "api") hint = L.substrapi.replace("%s", ()=>subsTr.name || "");
-    else if(subsTr.kind === "local") hint = L.substrlocal.replace("%s", ()=>subsTr.name || "");
-    else none = true;
+    const miss = tr.missing || (tr.kind ? "" : "none");
+    if(!miss && tr.kind === "api") hint = L.substrapi.replace("%s", ()=>tr.name || "");
+    else if(!miss && tr.kind === "local") hint = L.substrlocal.replace("%s", ()=>tr.name || "");
+    else if(!miss && tr.kind === "quality") hint = L.substrquality.replace("%s", ()=>tr.name || "");
+    else {
+      none = ({card: L.subsmisscard, model: L.subsmissmodel, start: L.subsmissstart, server: L.subsmissserver})[miss] || L.substrnone;
+      go = miss === "server" || miss === "none";
+      get = (miss === "model" || miss === "none") && trmCanGet(m);
+    }
   }
   const h = subsEl("subs_tr_hint");
   if(h){ h.textContent = hint; h.style.display = hint ? "" : "none"; }
   const n = subsEl("subs_tr_none_row");
-  if(n) n.style.display = none ? "" : "none";
+  if(n){
+    n.style.display = none ? "" : "none";
+    if(none) subsEl("subs_tr_none").textContent = none;
+    subsEl("subs_tr_go").style.display = go ? "" : "none";
+    subsEl("subs_tr_dl").style.display = get ? "" : "none";
+  }
   const s = subsEl("subs_tr_same");
   if(s) s.style.display = same ? "" : "none";
   const orig = subsEl("subtitles_original");
@@ -4037,6 +4134,12 @@ function renderSubsTr(){
     orig.disabled = !to;
     orig.closest(".row").classList.toggle("dimmed", !to);
   }
+  renderTrModel(!!to);
+}
+async function trModelAct(action){
+  const r = await appTrModel(action);
+  if(r) toast(r, "ok");
+  refreshState();
 }
 function subsGotoModels(){
   const row = subsEl("subs_case_row");
@@ -4056,12 +4159,32 @@ function initSubs(){
   subsEl("subtitles_size").value = CFG.subtitles_size || "m";
   const trSel = subsEl("subtitles_translate");
   trSel.value = CFG.subtitles_translate || "";
+  const whoSel = subsEl("subtitles_translator");
+  whoSel.value = CFG.subtitles_translator || "";
   subsEl("subtitles_original").checked = !!CFG.subtitles_original;
   paintSubsKey();
   sel.addEventListener("change", refreshSubsModel);
   sel.addEventListener("change", renderSubsTr);
   trSel.addEventListener("change", renderSubsTr);
+  whoSel.addEventListener("change", renderSubsTr);
   subsEl("subs_tr_go").onclick = ()=>show("post");
+  subsEl("subs_tr_dl").onclick = ()=>trModelAct("download");
+  subsEl("subs_trm_dl").onclick = ()=>trModelAct("download");
+  subsEl("subs_trm_cancel").onclick = ()=>trModelAct("cancel");
+  subsEl("subs_trm_terms").onclick = ()=>appTrModel("terms");
+  const trmDel = subsEl("subs_trm_del");
+  trmDel.dataset.word = trmDel.textContent;
+  trmDel.onclick = ()=>{
+    if(!trmDel.dataset.armed){
+      trmDel.dataset.armed = "1";
+      trmDel.textContent = L.trmdelsure;
+      setTimeout(()=>{ if(trmDel.dataset.armed){ delete trmDel.dataset.armed; trmDel.textContent = trmDel.dataset.word; } }, 4000);
+      return;
+    }
+    delete trmDel.dataset.armed;
+    trmDel.textContent = trmDel.dataset.word;
+    trModelAct("delete");
+  };
   subsEl("subs_go").onclick = ()=>subsToggle(subsEl("subs_go"));
   const heroGo = subsEl("subs_hero_go");
   if(heroGo) heroGo.onclick = ()=>subsToggle(heroGo);
@@ -5432,7 +5555,8 @@ async function doSave(){
     subtitles_monitor: (subsEl("subtitles_monitor")||{}).value || "",
     subtitles_box: subsBoxReset ? {} : null,
     subtitles_original: !!(subsEl("subtitles_original")||{}).checked,
-    subtitles_translate: (subsEl("subtitles_translate")||{}).value || ""};
+    subtitles_translate: (subsEl("subtitles_translate")||{}).value || "",
+    subtitles_translator: (subsEl("subtitles_translator")||{}).value || ""};
   OVS.posDirty = false;
   OVS.customDirty = false;
   subsBoxReset = false;

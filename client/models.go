@@ -615,6 +615,10 @@ func downloadFile(ctx context.Context, url, final string, progress func(written 
 }
 
 func (a *App) startDownload(key, file, url string, sizeMB int) {
+	a.startDownloadWith(key, file, url, sizeMB, nil)
+}
+
+func (a *App) startDownloadWith(key, file, url string, sizeMB int, verify func(string) error) {
 	dlMu.Lock()
 	if st := dl[key]; st != nil && st.active {
 		dlMu.Unlock()
@@ -626,7 +630,7 @@ func (a *App) startDownload(key, file, url string, sizeMB int) {
 
 	go func() {
 		defer cancel()
-		err := a.doDownload(ctx, key, file, url, sizeMB)
+		err := a.doDownload(ctx, key, file, url, sizeMB, verify)
 		dlMu.Lock()
 		switch {
 		case errors.Is(err, context.Canceled):
@@ -703,7 +707,7 @@ func cleanupStaleParts() {
 	}
 }
 
-func (a *App) doDownload(ctx context.Context, key, file, url string, sizeMB int) error {
+func (a *App) doDownload(ctx context.Context, key, file, url string, sizeMB int, verify func(string) error) error {
 	if err := os.MkdirAll("models", 0o755); err != nil {
 		return err
 	}
@@ -741,6 +745,14 @@ func (a *App) doDownload(ctx context.Context, key, file, url string, sizeMB int)
 	})
 	if err != nil {
 		return err
+	}
+	if verify != nil {
+		dlMu.Lock()
+		if st := dl[key]; st != nil {
+			st.pct = 100
+		}
+		dlMu.Unlock()
+		return verify(final)
 	}
 	if m := findModel(key); m != nil {
 		if want := m.Hashes[file]; want != "" {
@@ -1107,7 +1119,7 @@ func (a *App) stateSnapshot() string {
 		PostPrompts: len(cfg.ActiveProfiles),
 		PostRemote:  postAPIOn(cfg),
 		Subtitles:   a.subtitlesState(),
-		SubsTr:      subtitlesTranslator(cfg),
+		SubsTr:      a.subtitlesTranslator(cfg),
 		SubsPlace:   subPlaceState{Position: cfg.SubtitlesPos, Custom: cfg.SubtitlesXY},
 	}
 	a.mu.Lock()

@@ -247,6 +247,7 @@ type subRun struct {
 	trClosed bool
 	trSeen   string
 	trLang   string
+	trSrc    string
 	trShown  atomic.Bool
 	trTo     atomic.Value
 
@@ -300,6 +301,7 @@ func startSubtitlesRun(a *App, cfg *Config, opts subOptions) (*subRun, error) {
 		want:      t,
 	}
 	log.Printf("subtitles: started: language %s, model %s, mode %s", t.lang, t.name, t.mode)
+	setQualityDown(nil)
 	r.syncTranslation(cfg, t)
 	r.refreshShown()
 	go r.loop(t)
@@ -307,6 +309,17 @@ func startSubtitlesRun(a *App, cfg *Config, opts subOptions) (*subRun, error) {
 }
 
 func (r *subRun) done() <-chan struct{} { return r.doneCh }
+
+func (r *subRun) ended() bool {
+	select {
+	case <-r.stopCh:
+		return true
+	case <-r.doneCh:
+		return true
+	default:
+		return false
+	}
+}
 
 func (r *subRun) target() *subTarget {
 	r.mu.Lock()
@@ -704,6 +717,12 @@ func (r *subRun) finish() {
 		trSummary = w.summary()
 	}
 	r.cores.close()
+	r.app.subMu.Lock()
+	cur := r.app.sub
+	r.app.subMu.Unlock()
+	if cur == nil || cur == r {
+		r.app.qualityShutdown()
+	}
 	r.board.SetHearing(false)
 	r.fileMu.Lock()
 	if r.file != nil {
@@ -754,23 +773,48 @@ type subPlaceState struct {
 }
 
 type subTrState struct {
-	Kind string `json:"kind"`
-	Name string `json:"name"`
+	Kind    string    `json:"kind"`
+	Name    string    `json:"name"`
+	Choice  string    `json:"choice"`
+	Missing string    `json:"missing"`
+	Model   trModelUI `json:"model"`
 }
 
-func subtitlesTranslator(cfg *Config) subTrState {
+func (a *App) subtitlesTranslator(cfg *Config) subTrState {
 	src := translationSource(cfg)
-	return subTrState{Kind: src.kind, Name: src.name}
+	return subTrState{Kind: src.kind, Name: src.name, Choice: cfg.SubtitlesTranslator, Missing: src.missing, Model: a.trModelView()}
+}
+
+func missingText(src editorSource) string {
+	switch src.missing {
+	case subtitles.MissingCard:
+		return "the graphics card does not fit: " + cardWhy
+	case subtitles.MissingModel:
+		return "the translation model is not downloaded"
+	case subtitles.MissingStart:
+		if f := qualityDown(); f != nil {
+			return "the graphics card engine did not start: " + f.detail
+		}
+		return "the graphics card engine did not start"
+	case subtitles.MissingServer:
+		return "no post-processing server is set"
+	}
+	return "there is no translation model, no post-processing server and no editor model"
 }
 
 func (r *subRun) syncTranslation(cfg *Config, t *subTarget) {
 	to := cfg.SubtitlesTranslate
+	src := translationSource(cfg)
+	key := cfg.SubtitlesTranslator + "/" + src.kind + "/" + src.missing
 	r.trMu.Lock()
-	prev, prevLang := r.trSeen, r.trLang
-	r.trSeen, r.trLang = to, t.lang
+	prev, prevLang, prevSrc := r.trSeen, r.trLang, r.trSrc
+	r.trSeen, r.trLang, r.trSrc = to, t.lang, key
 	r.trMu.Unlock()
-	if to == prev && (to == "" || t.lang == prevLang) {
+	if to == prev && (to == "" || t.lang == prevLang) && key == prevSrc {
 		return
+	}
+	if to == "" || to == t.lang || src.kind != editorQuality || !src.ok() {
+		r.app.qualityShutdown()
 	}
 	if to == "" {
 		log.Printf("subtitles: translation is off from now on")
@@ -782,39 +826,57 @@ func (r *subRun) syncTranslation(cfg *Config, t *subTarget) {
 		log.Printf("subtitles: translation into %s: the speech language is the same, nothing is translated", name)
 		return
 	}
-	src := translationSource(cfg)
 	if !src.ok() {
-		log.Printf("subtitles: translation into %s: no editor model is installed and no post-processing server is set, the text stays untranslated", name)
+		log.Printf("subtitles: translation into %s: %s, the text is shown as heard", name, missingText(src))
 		return
 	}
 	log.Printf("subtitles: translation into %s by %s", name, src.label())
-	if r.translator() == nil || src.kind != editorLocal {
+	if r.translator() == nil {
 		return
 	}
-	f := r.app.llmWarmUp()
-	go func() {
-		<-f.done
-		if f.err != nil {
-			log.Printf("subtitles: the editor model did not start: %s", logText(f.err))
-			return
-		}
+	switch src.kind {
+	case editorLocal:
+		f := r.app.llmWarmUp()
+		go func() {
+			<-f.done
+			if f.err != nil {
+				log.Printf("subtitles: the editor model did not start: %s", logText(f.err))
+				return
+			}
+			r.syncCores()
+			r.primeTranslation(f.srv, to, subtitles.TranslateGrammar(to), "the editor model")
+		}()
+	case editorQuality:
 		r.syncCores()
-		r.primeTranslation(f.srv, to)
-	}()
+		f := r.app.qualityWarmUp()
+		go func() {
+			<-f.done
+			if f.err != nil {
+				fail := asQualityFail(f.err)
+				setQualityDown(fail)
+				log.Printf("subtitles: the graphics card engine did not start (%s): %s", fail.code, fail.detail)
+				if tt := r.target(); tt != nil && !r.ended() {
+					r.syncTranslation(r.app.snapshot(), tt)
+				}
+				return
+			}
+			r.primeTranslation(f.srv, to, "", "the translation model on the graphics card")
+		}()
+	}
 }
 
-func (r *subRun) primeTranslation(llm *llamaServer, to string) {
+func (r *subRun) primeTranslation(llm *llamaServer, to, grammar, what string) {
 	if llm == nil {
 		return
 	}
 	started := time.Now()
 	ctx, cancel := context.WithTimeout(context.Background(), subtitles.TranslateTimeout)
 	defer cancel()
-	if _, err := llm.chatStream(ctx, subtitles.TranslateMessages(to, nil, "Hello."), 1, subtitles.TranslateGrammar(to), nil); err != nil {
+	if _, err := llm.chatStream(ctx, subtitles.TranslateMessages(to, nil, "Hello."), 1, grammar, nil); err != nil {
 		log.Printf("subtitles: the translation request did not load: %s", logText(err))
 		return
 	}
-	log.Printf("subtitles: the translation request is loaded into the editor model in %.1f s", time.Since(started).Seconds())
+	log.Printf("subtitles: the translation request is loaded into %s in %.1f s", what, time.Since(started).Seconds())
 }
 
 func (r *subRun) translator() *subTranslator {
@@ -1060,9 +1122,12 @@ func (w *subTranslator) handle(b subtitles.Batch) {
 	}
 	w.pieces.Add(1)
 	cfg := r.app.snapshot()
+	if t := r.target(); t != nil {
+		r.syncTranslation(cfg, t)
+	}
 	src := translationSource(cfg)
 	if !src.ok() {
-		w.fail(b, errNoEditor)
+		w.fail(b, errors.New(missingText(src)))
 		return
 	}
 	w.mu.Lock()
@@ -1941,6 +2006,7 @@ func runSubcheck(args []string) {
 	}
 	<-r.done()
 	app.llmShutdown()
+	app.qualityShutdown()
 	log.Printf("subcheck: done")
 }
 

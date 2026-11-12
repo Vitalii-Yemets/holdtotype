@@ -179,6 +179,8 @@ const dom = new JSDOM(html, {
     window.subsState = { phase: "off" };
     window.subsTr = { kind: "local", name: "qwen2.5-1.5b-instruct-q4_k_m" };
     window.subsPlace = { position: "bottom", custom: {} };
+    window.trCalls = [];
+    window.appTrModel = async (action) => { window.trCalls.push(action); return action === "delete" ? "Deleted" : ""; };
     window.appSubtitles = (action) => {
       window.subsCalls.push(action);
       window.subsState = action === "start" ? { phase: "loading", mode: "live", model: "Nemotron 3.5", lang: "en" } : { phase: "off" };
@@ -1831,7 +1833,7 @@ function check(name, actual, expected) {
   check("the user's server says every phrase goes to it", [trLines(), sv("subs_tr_hint").textContent], [[true, false, false], "Your post-processing server (gpt-4o-mini) translates: every phrase is sent to it, and the translation comes phrase by phrase, a moment after the speech."]);
   await setTr("", "");
   check("without a translator only the warning with its button shows", trLines(), [false, true, false]);
-  check("the warning is the no-model sentence", sv("subs_tr_none").textContent, "S_SUBS_TR_NONE");
+  check("the warning is the no-translator sentence", sv("subs_tr_none").textContent, "There is no translation model, no post-processing server and no editor model, so there will be no translation.");
   check("the button carries its label", sv("subs_tr_go").textContent, "S_SUBS_TR_GO");
   sv("subs_tr_go").click(); await sleep(150);
   check("the button opens the Post-processing tab", shown("post"), true);
@@ -1872,6 +1874,137 @@ function check(name, actual, expected) {
   await change(sv("subtitles_translate"), "");
   check("the search finds the translation row", w.searchMatches("s_subs_tr_sub").some((el) => el.closest("#subs_tr_card")), true);
   check("the rows of text have no sub-line, the window keeps its height with translation", sv("subtitles_lines").closest(".row").querySelector(".sub"), null);
+
+  const whoSel = sv("subtitles_translator");
+  const trm = () => ({
+    state: sv("subs_trm_state").textContent,
+    dl: sv("subs_trm_dl").style.display !== "none",
+    cancel: sv("subs_trm_cancel").style.display !== "none",
+    del: sv("subs_trm_del").style.display !== "none",
+    note: sv("subs_trm_note").style.display !== "none" ? sv("subs_trm_note").textContent : "",
+  });
+  const fix = () => ({
+    text: sv("subs_tr_none_row").style.display !== "none" ? sv("subs_tr_none").textContent : "",
+    go: sv("subs_tr_go").style.display !== "none",
+    dl: sv("subs_tr_dl").style.display !== "none",
+  });
+  const card = "NVIDIA GeForce RTX 3070 Ti Laptop GPU";
+  const model = (o) => ({ state: "absent", pct: 0, err: "", size: 2374, fits: true, card, reason: "", card_mb: 8017, need_mb: 4096, down: "", running: false, ...o });
+  const setQ = async (kind, missing, m) => { w.subsTr = { kind, name: kind === "quality" ? card : kind === "api" ? "gpt-4o-mini" : "", missing, model: m }; await w.refreshState(); };
+  check("who translates is a list of three", [...whoSel.options].map((o) => [o.value, o.textContent]), [["", "S_SUBS_WHO_AUTO"], ["quality", "S_SUBS_WHO_QUALITY"], ["server", "S_SUBS_WHO_SERVER"]]);
+  check("it stands right under the translation language, the model row under it", [sv("subs_who_row").previousElementSibling.contains(sv("subtitles_translate")), sv("subs_who_row").nextElementSibling.id], [true, "subs_trm_row"]);
+  check("it carries the config, the program chooses", whoSel.value, "");
+  check("the model row has its own label and no model name", [sv("subs_trm_row").querySelector("label").firstChild.textContent, /gemma|qwen|google/i.test(sv("subs_tr_card").textContent)], ["S_SUBS_TRM", false]);
+  check("while translation is off both rows are dimmed", [sv("subs_who_row").classList.contains("dimmed"), sv("subs_trm_row").classList.contains("dimmed")], [true, true]);
+  await change(sv("subtitles_translate"), "de");
+  check("translation wakes them up", [sv("subs_who_row").classList.contains("dimmed"), sv("subs_trm_row").classList.contains("dimmed")], [false, false]);
+  await change(whoSel, "quality");
+  check("choosing Quality saves it", w.lastSaveForm.subtitles_translator, "quality");
+
+  await setQ("quality", "model", model());
+  check("not downloaded: the size, what it needs and a download button", [sv("subs_trm_sub").textContent, trm()], ["2.3 GB, runs on a graphics card with at least 4 GB of its own memory", { state: "Not downloaded", dl: true, cancel: false, del: false, note: "" }]);
+  check("Quality without the model says so and offers the download", fix(), { text: "Quality is chosen, but the translation model is not downloaded, so the text is shown as heard.", go: false, dl: true });
+  let calls = w.trCalls.length;
+  sv("subs_trm_dl").click(); await sleep(100);
+  sv("subs_tr_dl").click(); await sleep(100);
+  check("both download buttons ask for the download", w.trCalls.slice(calls), ["download", "download"]);
+  await setQ("quality", "model", model({ state: "downloading", pct: 42 }));
+  check("downloading shows the percent and Cancel", trm(), { state: "Downloading… 42%", dl: false, cancel: true, del: false, note: "" });
+  calls = w.trCalls.length;
+  sv("subs_trm_cancel").click(); await sleep(100);
+  check("Cancel cancels", w.trCalls.slice(calls), ["cancel"]);
+  check("no download offer while it downloads", fix().dl, false);
+  await setQ("quality", "model", model({ state: "checking" }));
+  check("the check after the download has no buttons", trm(), { state: "Checking the file…", dl: false, cancel: false, del: false, note: "" });
+  await setQ("quality", "", model({ state: "ready" }));
+  check("ready offers Delete", trm(), { state: "Ready", dl: false, cancel: false, del: true, note: "" });
+  check("the line says the model on the graphics card translates", [sv("subs_tr_hint").style.display, sv("subs_tr_hint").textContent, fix().text], ["", "The translation model on the graphics card (" + card + ") translates: the translation comes phrase by phrase, a moment after the speech.", ""]);
+  await setQ("quality", "", model({ state: "ready", running: true }));
+  check("loaded on the card says so", trm().state, "Ready, loaded on the graphics card");
+  calls = w.trCalls.length;
+  sv("subs_trm_del").click(); await sleep(100);
+  check("Delete asks once more before it deletes", [w.trCalls.slice(calls), sv("subs_trm_del").textContent], [[], "Delete?"]);
+  sv("subs_trm_del").click(); await sleep(150);
+  check("the second click deletes", [w.trCalls.slice(calls), sv("subs_trm_del").textContent], [["delete"], "S_SUBS_TRM_DEL"]);
+  await setQ("quality", "model", model({ state: "bad" }));
+  check("a damaged file offers both a new download and Delete", [trm(), sv("subs_trm_state").classList.contains("warn")], [{ state: "The file in the models folder is damaged or incomplete", dl: true, cancel: false, del: true, note: "" }, true]);
+  await setQ("quality", "model", model({ state: "error", err: "the downloaded file does not match its checksum" }));
+  check("a failed download says why and offers it again", trm(), { state: "Not downloaded: the downloaded file does not match its checksum", dl: true, cancel: false, del: false, note: "" });
+  await setQ("quality", "start", model({ state: "ready", down: "memory" }));
+  check("under Quality a start that failed says why and that the text is shown as heard", [trm(), fix()], [{ state: "Did not start: not enough free memory on the graphics card", dl: false, cancel: false, del: true, note: "Until subtitles start again, the text is shown as heard." }, { text: "Quality is chosen, but the translation model did not start on the graphics card, so the text is shown as heard until subtitles start again.", go: false, dl: false }]);
+  for (const [code, why] of [["vulkan", "the graphics driver offers no Vulkan"], ["device", "the engine does not see this graphics card"], ["crash", "the engine stopped while loading"], ["timeout", "the engine did not answer in time"], ["port", "its port is taken by another program"], ["exe", "llama-server-gpu.exe is missing next to the program"]]) {
+    await setQ("quality", "start", model({ state: "ready", down: code }));
+    check("did not start: " + code, trm().state, "Did not start: " + why);
+  }
+  await setQ("quality", "card", model({ fits: false, reason: "small", card_mb: 2048, card: "" }));
+  check("a card with 2 GB cannot run it and no download is offered", [trm(), fix()], [{ state: "Not downloaded", dl: false, cancel: false, del: false, note: "This computer cannot run it: its graphics card has 2048 MB of its own memory, and 4 GB are needed." }, { text: "Quality is chosen, but this computer's graphics card does not fit, so the text is shown as heard.", go: false, dl: false }]);
+  await setQ("quality", "card", model({ fits: false, reason: "integrated", card_mb: 0, card: "" }));
+  check("integrated graphics cannot run it", trm().note, "This computer cannot run it: it has only integrated graphics, which share the computer's memory.");
+  await setQ("quality", "card", model({ fits: false, reason: "none", card_mb: 0, card: "" }));
+  check("no graphics card", trm().note, "This computer cannot run it: Windows reports no graphics card.");
+  await setQ("quality", "card", model({ fits: false, reason: "unknown", card_mb: 0, card: "" }));
+  check("a Windows that does not describe its card", trm().note, "This computer cannot run it: this version of Windows does not describe its graphics card.");
+  await setQ("quality", "card", model({ state: "ready", fits: false, reason: "small", card_mb: 2048, card: "" }));
+  check("a model copied onto a computer whose card does not fit stays deletable", [trm().del, trm().note !== ""], [true, true]);
+
+  await change(whoSel, "server");
+  check("choosing the own server saves it", w.lastSaveForm.subtitles_translator, "server");
+  await setQ("api", "server", model());
+  check("the own server without an address sends you to Post-processing", fix(), { text: "Your own server is chosen, but no post-processing server is set, so the text is shown as heard.", go: true, dl: false });
+  await setQ("api", "", model());
+  check("with the address it names the server", sv("subs_tr_hint").textContent.startsWith("Your post-processing server (gpt-4o-mini) translates"), true);
+
+  await change(whoSel, "");
+  check("the program chooses is saved as an empty string", w.lastSaveForm.subtitles_translator, "");
+  await setQ("", "none", model());
+  check("with nothing at hand both ways out are offered", fix(), { text: "There is no translation model, no post-processing server and no editor model, so there will be no translation.", go: true, dl: true });
+  await setQ("", "none", model({ fits: false, reason: "small", card_mb: 2048 }));
+  check("without a fitting card only Post-processing is offered", fix(), { text: "There is no translation model, no post-processing server and no editor model, so there will be no translation.", go: true, dl: false });
+  await setQ("api", "", model({ state: "ready", down: "crash" }));
+  check("under the program's choice a failed start hands over to the next translator", [trm().note, sv("subs_tr_hint").textContent.startsWith("Your post-processing server")], ["Until subtitles start again, the next translator in line translates.", true]);
+  calls = w.trCalls.length;
+  sv("subs_trm_terms").click(); await sleep(100);
+  check("the terms link opens the terms", w.trCalls.slice(calls), ["terms"]);
+
+  const goSrc = fs.readFileSync(path.join(__dirname, "..", "client", "i18n.go"), "utf8") + fs.readFileSync(path.join(__dirname, "..", "client", "i18n_extra.go"), "utf8");
+  const stringsOf = (lang) => {
+    let start = goSrc.indexOf('settingsStrings["' + lang + '"] = map[string]string{');
+    if (start < 0) {
+      const t = goSrc.indexOf("var settingsStrings");
+      start = goSrc.indexOf('\n\t"' + lang + '": {', t);
+    }
+    const end = goSrc.indexOf("\n\t}", start + 10);
+    const out = {};
+    for (const m of goSrc.slice(start, end).matchAll(/"(S_[A-Z0-9_]+)":\s*"((?:[^"\\]|\\.)*)"/g)) out[m[1]] = JSON.parse('"' + m[2] + '"');
+    return out;
+  };
+  const jsKeys = { trmget: "S_SUBS_TRM_GETTING", trmsub: "S_SUBS_TRM_SUB", trmsmall: "S_SUBS_TRM_SMALL", trmdown: "S_SUBS_TRM_DOWN", trmwmemory: "S_SUBS_TRM_W_MEMORY", trmdownheard: "S_SUBS_TRM_DOWN_HEARD", substrquality: "S_SUBS_TR_QUALITY", subsmissmodel: "S_SUBS_TR_MISS_MODEL", trmready: "S_SUBS_TRM_READY", trmabsent: "S_SUBS_TRM_ABSENT" };
+  const englishL = w.eval("JSON.stringify(L)");
+  await change(whoSel, "quality");
+  for (const lang of ["en", "ru", "uk", "de", "fr", "es", "it", "pl"]) {
+    const t = stringsOf(lang);
+    const part = {};
+    for (const [js, key] of Object.entries(jsKeys)) part[js] = t[key];
+    w.eval("Object.assign(L, " + JSON.stringify(part) + ")");
+    await setQ("quality", "model", model({ state: "downloading", pct: 7 }));
+    const got1 = [sv("subs_trm_state").textContent, sv("subs_trm_sub").textContent, fix().text];
+    await setQ("quality", "", model({ state: "ready" }));
+    const got2 = [sv("subs_trm_state").textContent, sv("subs_tr_hint").textContent];
+    await setQ("quality", "start", model({ state: "ready", down: "memory", fits: false, reason: "small", card_mb: 2048 }));
+    const got3 = [sv("subs_trm_state").textContent, sv("subs_trm_note").textContent];
+    check(lang + ": the model row and the line in its own language", [got1, got2, got3], [
+      [t.S_SUBS_TRM_GETTING.replace("%s", "7"), t.S_SUBS_TRM_SUB.replace("%s", "2.3 GB"), t.S_SUBS_TR_MISS_MODEL],
+      [t.S_SUBS_TRM_READY, t.S_SUBS_TR_QUALITY.replace("%s", card)],
+      [t.S_SUBS_TRM_DOWN.replace("%s", t.S_SUBS_TRM_W_MEMORY), t.S_SUBS_TRM_SMALL.replace("%s", "2048") + " " + t.S_SUBS_TRM_DOWN_HEARD],
+    ]);
+    check(lang + ": every new text is there and keeps its place for the number", Object.values(jsKeys).every((k) => typeof t[k] === "string" && t[k].length > 0) && ["S_SUBS_TRM_GETTING", "S_SUBS_TRM_SUB", "S_SUBS_TRM_SMALL", "S_SUBS_TRM_DOWN", "S_SUBS_TR_QUALITY", "S_SUBS_TRM_ERR"].every((k) => t[k].split("%s").length === 2), true);
+    check(lang + ": no text names the model", Object.entries(t).filter(([k, v]) => /^S_SUBS_(TRM|WHO|TR_)/.test(k) && /gemma|google/i.test(v)).map(([k]) => k), []);
+  }
+  w.eval("Object.assign(L, " + englishL + ")");
+  await change(whoSel, "");
+  await change(sv("subtitles_translate"), "");
+  w.subsTr = { kind: "local", name: "qwen2.5-1.5b-instruct-q4_k_m" };
+  await w.refreshState();
 
   const postCard = () => d.querySelectorAll("#state_models .stcard")[1];
   const postRow = () => [postCard().querySelector(".stnm").textContent, postCard().querySelector(".stnm .led").classList.contains("on")];
