@@ -81,6 +81,7 @@ type App struct {
 	srv        recognizer
 	editorEng  engineSlot
 	gpuEng     engineSlot
+	fastEng    engineSlot
 	hook       *hotkeyHook
 	enabled    bool
 	ready      bool
@@ -566,6 +567,10 @@ func main() {
 			app.stopAltEngine()
 			srv.stop()
 			log.Printf("routecheck: both engines stopped")
+			return
+		}
+		if arg == "-packdownload" {
+			runPackDownload(os.Args[1:][i+1:])
 			return
 		}
 		if arg == "-gpucheck" {
@@ -2260,6 +2265,7 @@ func (a *App) onExit() {
 	a.stopAltEngine()
 	a.editorEng.shutdown()
 	a.gpuEng.shutdown()
+	a.fastEng.shutdown()
 	if rec != nil {
 		rec.Close()
 	}

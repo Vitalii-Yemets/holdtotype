@@ -4,15 +4,20 @@ const (
 	ChoiceAuto    = ""
 	ChoiceQuality = "quality"
 	ChoiceServer  = "server"
+	ChoiceFast    = "fast"
 
 	KindQuality = "quality"
 	KindServer  = "api"
 	KindEditor  = "local"
+	KindFast    = "fast"
 
 	MissingCard   = "card"
 	MissingModel  = "model"
 	MissingStart  = "start"
 	MissingServer = "server"
+	MissingPack   = "pack"
+	MissingLang   = "lang"
+	MissingFast   = "faststart"
 	MissingAll    = "none"
 )
 
@@ -22,6 +27,8 @@ type Avail struct {
 	QualityDown bool
 	Server      bool
 	Editor      bool
+	Fast        bool
+	FastMissing string
 }
 
 type Choice struct {
@@ -54,6 +61,15 @@ var translatorOrder = []translatorEntry{
 			return MissingServer
 		}
 		return ""
+	}},
+	{KindFast, ChoiceFast, func(a Avail) string {
+		switch {
+		case a.Fast:
+			return ""
+		case a.FastMissing != "":
+			return a.FastMissing
+		}
+		return MissingPack
 	}},
 	{KindEditor, "", func(a Avail) string {
 		if !a.Editor {

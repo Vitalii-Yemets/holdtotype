@@ -257,9 +257,12 @@ func pieceRows(views []PieceView, text func(int) string, pending bool) []Row {
 		if t == "" {
 			continue
 		}
-		if breakNext || len(rows) == 0 || rows[len(rows)-1].Kind != RowPiece {
+		switch {
+		case breakNext || len(rows) == 0 || rows[len(rows)-1].Kind != RowPiece:
 			rows = append(rows, Row{Kind: RowPiece, Text: t, Key: pc.Seq})
-		} else {
+		case GluesToPrevious(t):
+			rows[len(rows)-1].Text += t
+		default:
 			rows[len(rows)-1].Text += " " + t
 		}
 		breakNext = false

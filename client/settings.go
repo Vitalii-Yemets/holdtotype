@@ -398,6 +398,9 @@ func (a *App) settingsThread(tab string, attempt int) {
 		_ = w.Bind("appModelDl", func(id string) {
 			a.downloadModel(id)
 		})
+		_ = w.Bind("appFastPack", func(action, lang string) string {
+			return a.fastPackAction(action, lang)
+		})
 		_ = w.Bind("appTrModel", func(action string) string {
 			switch action {
 			case "download":
@@ -1278,6 +1281,10 @@ func settingsHTML(cfg *Config, tab string) string {
 		"trmdown": "S_SUBS_TRM_DOWN", "trmdownnext": "S_SUBS_TRM_DOWN_NEXT", "trmdownheard": "S_SUBS_TRM_DOWN_HEARD", "trmdelsure": "S_SUBS_TRM_DEL_SURE",
 		"trmwvulkan": "S_SUBS_TRM_W_VULKAN", "trmwdevice": "S_SUBS_TRM_W_DEVICE", "trmwmemory": "S_SUBS_TRM_W_MEMORY", "trmwcrash": "S_SUBS_TRM_W_CRASH",
 		"trmwtimeout": "S_SUBS_TRM_W_TIMEOUT", "trmwport": "S_SUBS_TRM_W_PORT", "trmwexe": "S_SUBS_TRM_W_EXE",
+		"fpksub": "S_SUBS_FPK_SUB", "fpkabsent": "S_SUBS_FPK_ABSENT", "fpkget": "S_SUBS_FPK_GETTING", "fpkcheck": "S_SUBS_FPK_CHECKING",
+		"fpkready": "S_SUBS_FPK_READY", "fpkbad": "S_SUBS_FPK_BAD", "fpkerr": "S_SUBS_FPK_ERR", "fpkexe": "S_SUBS_FPK_EXE",
+		"substrfast": "S_SUBS_TR_FAST", "substrfastwait": "S_SUBS_TR_FAST_WAIT", "subsmisspack": "S_SUBS_TR_MISS_PACK",
+		"subsmisslang": "S_SUBS_TR_MISS_LANG", "subsmissfast": "S_SUBS_TR_MISS_FAST", "depbergamot": "S_DEP_BERGAMOT",
 		"updatedto": "S_UPDATED_TO",
 	} {
 		lMap[jsKey] = str(sKey)
@@ -2465,6 +2472,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
     <option value="">{{S_SUBS_WHO_AUTO}}</option>
     <option value="quality">{{S_SUBS_WHO_QUALITY}}</option>
     <option value="server">{{S_SUBS_WHO_SERVER}}</option>
+    <option value="fast">{{S_SUBS_WHO_FAST}}</option>
    </select></div>
   <div class="row" id="subs_trm_row"><label>{{S_SUBS_TRM}}<span class="sub" id="subs_trm_sub"></span><span class="sub" id="subs_trm_state"></span></label>
    <button type="button" class="mini" id="subs_trm_dl" style="display:none">{{S_SUBS_TRM_DL}}</button>
@@ -2472,6 +2480,11 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
    <button type="button" class="mini danger" id="subs_trm_del" style="display:none">{{S_SUBS_TRM_DEL}}</button></div>
   <div class="hint" id="subs_trm_note" style="display:none"></div>
   <div class="hint"><span class="lnk" id="subs_trm_terms">{{S_SUBS_TRM_TERMS}}</span></div>
+  <div class="row" id="subs_fpk_row"><label>{{S_SUBS_FPK}}<span class="sub" id="subs_fpk_sub"></span><span class="sub" id="subs_fpk_state"></span></label>
+   <select id="subs_fpk_lang"></select>
+   <button type="button" class="mini" id="subs_fpk_dl" style="display:none">{{S_SUBS_TRM_DL}}</button>
+   <button type="button" class="mini" id="subs_fpk_cancel" style="display:none">{{S_SUBS_TRM_CANCEL}}</button>
+   <button type="button" class="mini danger" id="subs_fpk_del" style="display:none">{{S_SUBS_TRM_DEL}}</button></div>
   <div class="hint" id="subs_tr_hint" style="display:none"></div>
   <div class="row noline" id="subs_tr_none_row" style="display:none"><label><span class="sub warn" id="subs_tr_none">{{S_SUBS_TR_NONE}}</span></label>
    <button type="button" class="mini" id="subs_tr_dl" style="display:none">{{S_SUBS_TRM_DL}}</button>
@@ -2979,6 +2992,7 @@ const DEPS = [
   ["whisper.cpp", "whisper", "MIT", "https://github.com/ggerganov/whisper.cpp"],
   ["llama.cpp", "llama", "MIT", "https://github.com/ggml-org/llama.cpp"],
   ["Vulkan-Loader", "vulkan", "Apache-2.0", "https://github.com/KhronosGroup/Vulkan-Loader"],
+  ["bergamot-translator", "bergamot", "MPL-2.0", "https://github.com/browsermt/bergamot-translator"],
   ["sherpa-onnx", "sherpa", "Apache-2.0", "https://github.com/k2-fsa/sherpa-onnx"],
   ["ggml", "ggml", "MIT", "https://github.com/ggml-org/ggml"],
   ["ONNX Runtime", "onnx", "MIT", "https://github.com/microsoft/onnxruntime"],
@@ -4098,6 +4112,62 @@ function renderTrModel(on){
   ne.classList.toggle("warn", !!note);
   [row, subsEl("subs_who_row")].forEach(r=>r && r.classList.toggle("dimmed", !on));
 }
+let fpkPick = "";
+function langName(code){
+  const o = document.querySelector('#subtitles_translate option[value="' + code + '"]');
+  return o ? o.textContent : code;
+}
+function packName(key){
+  return (key || "").split("-").map(langName).join(" → ");
+}
+function fpkRoute(){
+  const f = (subsTr && subsTr.fast) || {routes: []};
+  const routes = f.routes || [];
+  const speech = (subsEl("subtitles_language")||{}).value || "auto";
+  let pick = fpkPick || (speech !== "auto" ? speech : (f.lang || ""));
+  if(!routes.some(r=>r.lang === pick)) pick = (routes.find(r=>r.state === "ready") || routes[0] || {}).lang || "";
+  return [routes, routes.find(r=>r.lang === pick) || null];
+}
+function renderFastPacks(on){
+  const row = subsEl("subs_fpk_row");
+  if(!row) return;
+  const to = (subsEl("subtitles_translate")||{}).value || "";
+  const [routes, r] = fpkRoute();
+  const sel = subsEl("subs_fpk_lang");
+  const want = routes.map(x=>x.lang).join(",");
+  if(sel.dataset.langs !== want){
+    sel.innerHTML = "";
+    routes.forEach(x=>{ const o = document.createElement("option"); o.value = x.lang; o.textContent = langName(x.lang); sel.appendChild(o); });
+    sel.dataset.langs = want;
+  }
+  row.style.display = to && routes.length ? "" : "none";
+  if(!r){ return; }
+  sel.value = r.lang;
+  const route = [r.lang].concat((r.packs || []).length > 1 ? ["en"] : []).concat([to]).map(langName).join(" → ");
+  subsEl("subs_fpk_sub").textContent = L.fpksub.replace("%s", ()=>route).replace("%s", ()=>llmSize(r.size || 0));
+  let state = L.fpkabsent;
+  if(r.state === "downloading") state = L.fpkget.replace("%s", ()=>String(r.pct || 0));
+  else if(r.state === "checking") state = L.fpkcheck;
+  else if(r.state === "ready") state = L.fpkready;
+  else if(r.state === "bad") state = L.fpkbad;
+  else if(r.state === "error") state = L.fpkerr.replace("%s", ()=>r.err || "");
+  const f = (subsTr && subsTr.fast) || {};
+  if(f.exe === false) state = L.fpkexe;
+  const se = subsEl("subs_fpk_state");
+  se.textContent = state;
+  se.classList.toggle("warn", r.state === "bad" || r.state === "error" || f.exe === false);
+  subsEl("subs_fpk_dl").style.display = ["absent", "bad", "error"].includes(r.state) ? "" : "none";
+  subsEl("subs_fpk_cancel").style.display = r.state === "downloading" ? "" : "none";
+  const del = subsEl("subs_fpk_del");
+  del.style.display = r.state === "ready" || r.state === "bad" ? "" : "none";
+  if(del.style.display === "none" && del.dataset.armed){ delete del.dataset.armed; del.textContent = del.dataset.word; }
+  row.classList.toggle("dimmed", !on);
+}
+async function fastPackAct(action, lang){
+  const r = await appFastPack(action, lang || subsEl("subs_fpk_lang").value);
+  if(r) toast(r, "ok");
+  refreshState();
+}
 function renderSubsTr(){
   const sel = subsEl("subtitles_translate");
   if(!sel) return;
@@ -4105,17 +4175,23 @@ function renderSubsTr(){
   const lang = (subsEl("subtitles_language")||{}).value || "auto";
   const tr = subsTr || {kind: "", name: ""};
   const m = tr.model || null;
-  let hint = "", none = "", same = false, go = false, get = false;
+  let hint = "", none = "", same = false, go = false, get = false, fastGet = "";
   if(to && to === lang) same = true;
   else if(to && subsTr){
     const miss = tr.missing || (tr.kind ? "" : "none");
     if(!miss && tr.kind === "api") hint = L.substrapi.replace("%s", ()=>tr.name || "");
     else if(!miss && tr.kind === "local") hint = L.substrlocal.replace("%s", ()=>tr.name || "");
     else if(!miss && tr.kind === "quality") hint = L.substrquality.replace("%s", ()=>tr.name || "");
+    else if(!miss && tr.kind === "fast"){
+      const f = tr.fast || {};
+      hint = f.lang ? L.substrfast.replace("%s", ()=>[f.lang].concat(String(tr.name || "").includes(" → en → ") ? ["en"] : []).concat([to]).map(langName).join(" → ")) : L.substrfastwait;
+    }
     else {
-      none = ({card: L.subsmisscard, model: L.subsmissmodel, start: L.subsmissstart, server: L.subsmissserver})[miss] || L.substrnone;
+      none = ({card: L.subsmisscard, model: L.subsmissmodel, start: L.subsmissstart, server: L.subsmissserver,
+        pack: L.subsmisspack.replace("%s", ()=>packName(tr.detail)), lang: L.subsmisslang, faststart: L.subsmissfast})[miss] || L.substrnone;
       go = miss === "server" || miss === "none";
       get = (miss === "model" || miss === "none") && trmCanGet(m);
+      fastGet = miss === "pack" ? (tr.detail || "").split("-")[0] : "";
     }
   }
   const h = subsEl("subs_tr_hint");
@@ -4125,7 +4201,9 @@ function renderSubsTr(){
     n.style.display = none ? "" : "none";
     if(none) subsEl("subs_tr_none").textContent = none;
     subsEl("subs_tr_go").style.display = go ? "" : "none";
-    subsEl("subs_tr_dl").style.display = get ? "" : "none";
+    const dlb = subsEl("subs_tr_dl");
+    dlb.style.display = get || fastGet ? "" : "none";
+    dlb.dataset.pack = fastGet;
   }
   const s = subsEl("subs_tr_same");
   if(s) s.style.display = same ? "" : "none";
@@ -4135,6 +4213,7 @@ function renderSubsTr(){
     orig.closest(".row").classList.toggle("dimmed", !to);
   }
   renderTrModel(!!to);
+  renderFastPacks(!!to);
 }
 async function trModelAct(action){
   const r = await appTrModel(action);
@@ -4164,11 +4243,28 @@ function initSubs(){
   subsEl("subtitles_original").checked = !!CFG.subtitles_original;
   paintSubsKey();
   sel.addEventListener("change", refreshSubsModel);
+  sel.addEventListener("change", ()=>{ fpkPick = ""; });
   sel.addEventListener("change", renderSubsTr);
   trSel.addEventListener("change", renderSubsTr);
   whoSel.addEventListener("change", renderSubsTr);
   subsEl("subs_tr_go").onclick = ()=>show("post");
-  subsEl("subs_tr_dl").onclick = ()=>trModelAct("download");
+  subsEl("subs_tr_dl").onclick = ()=>{ const p = subsEl("subs_tr_dl").dataset.pack; if(p) fastPackAct("download", p); else trModelAct("download"); };
+  subsEl("subs_fpk_lang").addEventListener("change", ()=>{ fpkPick = subsEl("subs_fpk_lang").value; renderSubsTr(); });
+  subsEl("subs_fpk_dl").onclick = ()=>fastPackAct("download");
+  subsEl("subs_fpk_cancel").onclick = ()=>fastPackAct("cancel");
+  const fpkDel = subsEl("subs_fpk_del");
+  fpkDel.dataset.word = fpkDel.textContent;
+  fpkDel.onclick = ()=>{
+    if(!fpkDel.dataset.armed){
+      fpkDel.dataset.armed = "1";
+      fpkDel.textContent = L.trmdelsure;
+      setTimeout(()=>{ if(fpkDel.dataset.armed){ delete fpkDel.dataset.armed; fpkDel.textContent = fpkDel.dataset.word; } }, 4000);
+      return;
+    }
+    delete fpkDel.dataset.armed;
+    fpkDel.textContent = fpkDel.dataset.word;
+    fastPackAct("delete");
+  };
   subsEl("subs_trm_dl").onclick = ()=>trModelAct("download");
   subsEl("subs_trm_cancel").onclick = ()=>trModelAct("cancel");
   subsEl("subs_trm_terms").onclick = ()=>appTrModel("terms");

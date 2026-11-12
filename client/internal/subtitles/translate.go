@@ -381,6 +381,7 @@ type Batch struct {
 	Text   string
 	Words  int
 	Target string
+	Para   bool
 	Start  time.Time
 	Heard  time.Time
 }
@@ -545,7 +546,7 @@ func (q *TranslateQueue) Pop(now time.Time) (Batch, bool, []Pending) {
 		return Batch{}, false, dropped
 	}
 	first := q.take()
-	b := Batch{Seqs: []int{first.Seq}, Text: first.Text, Words: first.Words, Target: first.Target, Start: first.Start, Heard: first.Heard}
+	b := Batch{Seqs: []int{first.Seq}, Text: first.Text, Words: first.Words, Target: first.Target, Para: first.Para, Start: first.Start, Heard: first.Heard}
 	for len(q.items) > 0 {
 		next := q.items[0]
 		if next.Para || next.Target != b.Target || b.Words+next.Words > q.merge || q.stale(next, now) {

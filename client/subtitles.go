@@ -303,6 +303,7 @@ func startSubtitlesRun(a *App, cfg *Config, opts subOptions) (*subRun, error) {
 	}
 	log.Printf("subtitles: started: language %s, model %s, mode %s", t.lang, t.name, t.mode)
 	setQualityDown(nil)
+	fastRun.begin()
 	r.syncTranslation(cfg, t)
 	r.refreshShown()
 	go r.loop(t)
@@ -548,6 +549,9 @@ func (r *subRun) hear(t *subTarget, cut func(*subtitles.Phraser, time.Time) []su
 	r.phMu.Lock()
 	defer r.phMu.Unlock()
 	out := cut(r.phraser, time.Now())
+	if len(out) > 0 {
+		r.noteSpeechLangLocked()
+	}
 	r.board.SetHearing(r.phraser.Waiting() > 0)
 	for _, ph := range out {
 		r.phraseCut(ph, t)
@@ -723,6 +727,8 @@ func (r *subRun) finish() {
 	r.app.subMu.Unlock()
 	if cur == nil || cur == r {
 		r.app.qualityShutdown()
+		r.app.fastShutdown()
+		fastRun.end()
 	}
 	r.board.SetHearing(false)
 	r.fileMu.Lock()
@@ -778,12 +784,14 @@ type subTrState struct {
 	Name    string    `json:"name"`
 	Choice  string    `json:"choice"`
 	Missing string    `json:"missing"`
+	Detail  string    `json:"detail"`
 	Model   trModelUI `json:"model"`
+	Fast    fastUI    `json:"fast"`
 }
 
 func (a *App) subtitlesTranslator(cfg *Config) subTrState {
 	src := translationSource(cfg)
-	return subTrState{Kind: src.kind, Name: src.name, Choice: cfg.SubtitlesTranslator, Missing: src.missing, Model: a.trModelView()}
+	return subTrState{Kind: src.kind, Name: src.name, Choice: cfg.SubtitlesTranslator, Missing: src.missing, Detail: src.detail, Model: a.trModelView(), Fast: a.fastView(cfg)}
 }
 
 func missingText(src editorSource) string {
@@ -799,6 +807,12 @@ func missingText(src editorSource) string {
 		return "the graphics card engine did not start"
 	case subtitles.MissingServer:
 		return "no post-processing server is set"
+	case subtitles.MissingPack:
+		return "the language pack " + src.detail + " is not downloaded"
+	case subtitles.MissingLang:
+		return "the speech language is not known"
+	case subtitles.MissingFast:
+		return "the light translation engine did not start: " + src.detail
 	}
 	return "there is no translation model, no post-processing server and no editor model"
 }
@@ -816,6 +830,9 @@ func (r *subRun) syncTranslation(cfg *Config, t *subTarget) {
 	}
 	if to == "" || to == t.lang || src.kind != editorQuality || !src.ok() {
 		r.app.qualityShutdown()
+	}
+	if to == "" || to == t.lang || src.kind != editorFast || !src.ok() {
+		r.app.fastShutdown()
 	}
 	if to == "" {
 		log.Printf("subtitles: translation is off from now on")
@@ -885,12 +902,20 @@ func (r *subRun) startWarm(src editorSource, to string) {
 		started := time.Now()
 		err := r.app.warmTranslator(src.kind, to)
 		if err != nil {
-			if src.kind == editorQuality {
+			var ff *fastFail
+			switch {
+			case src.kind == editorQuality:
 				fail := asQualityFail(err)
 				setQualityDown(fail)
 				r.app.qualityShutdown()
 				log.Printf("subtitles: the graphics card engine did not start (%s): %s", fail.code, fail.detail)
-			} else {
+			case errors.As(err, &ff):
+				if ff.missing == subtitles.MissingFast {
+					fastRun.setDown(ff.detail)
+					r.app.fastShutdown()
+				}
+				log.Printf("subtitles: the light translation engine cannot translate: %s", ff.Error())
+			default:
 				r.coldFail.Store(src.kind, true)
 				log.Printf("subtitles: the editor model did not start: %s", logText(err))
 			}
@@ -968,6 +993,9 @@ type subTranslator struct {
 	heard      atomic.Int64
 	dropped    atomic.Int64
 	retried    atomic.Int64
+
+	prevText string
+	fast     fastCounts
 }
 
 func newSubTranslator(r *subRun) *subTranslator {
@@ -1222,6 +1250,10 @@ func (w *subTranslator) handle(b subtitles.Batch) {
 	w.used = src.label()
 	w.mu.Unlock()
 	r.board.SetPiece(seq, "", subtitles.PieceRunning)
+	if src.kind == editorFast {
+		w.handleFastBatch(b, src)
+		return
+	}
 	hist := w.history(src.kind, b.Target)
 	prior := hist.Turns()
 	var first time.Time
@@ -1330,8 +1362,12 @@ func (w *subTranslator) summary() string {
 		slices.Sort(delays)
 		timing = fmt.Sprintf("complete after %.1f s (median), %.1f s (worst)", delays[len(delays)/2].Seconds(), delays[len(delays)-1].Seconds())
 	}
-	return fmt.Sprintf(", translation into %s: %d pieces, %d translated, %d shown as heard, %d dropped, %d sent twice, %s, by %s",
-		target, w.pieces.Load(), w.translated.Load(), w.heard.Load(), w.dropped.Load(), w.retried.Load(), timing, used)
+	fast := ""
+	if n := w.fast.alone.Load() + w.fast.split.Load() + w.fast.fallback.Load(); n > 0 {
+		fast = fmt.Sprintf(", light engine: %d alone, %d split from the previous piece, %d fell back to alone", w.fast.alone.Load(), w.fast.split.Load(), w.fast.fallback.Load())
+	}
+	return fmt.Sprintf(", translation into %s: %d pieces, %d translated, %d shown as heard, %d dropped, %d sent twice, %s, by %s%s",
+		target, w.pieces.Load(), w.translated.Load(), w.heard.Load(), w.dropped.Load(), w.retried.Load(), timing, used, fast)
 }
 
 type subPipe struct {

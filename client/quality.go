@@ -230,7 +230,7 @@ func asQualityFail(err error) *qualityFail {
 func (a *App) qualityWarmUp() *llmFlight { return a.warmEngine(&a.gpuEng, gpuEngine) }
 
 func (a *App) qualityWait(ctx context.Context) (*llamaServer, error) {
-	return a.waitEngine(ctx, &a.gpuEng, gpuEngine, "the translation model is still starting")
+	return asLlama(a.waitEngine(ctx, &a.gpuEng, gpuEngine, "the translation model is still starting"))
 }
 
 func (a *App) qualityShutdown() {
@@ -391,14 +391,15 @@ func runGPUCheck(args []string) {
 	started := time.Now()
 	f := app.warmEngine(&app.gpuEng, func(c *Config) (engineSpec, error) { return gpuEngineFor(c, args[0], need) })
 	<-f.done
-	if f.err != nil {
-		fail := asQualityFail(f.err)
+	srv, err := asLlama(f.srv, f.err)
+	if err != nil {
+		fail := asQualityFail(err)
 		log.Printf("gpucheck: did not start (%s): %s", fail.code, fail.detail)
 		return
 	}
 	log.Printf("gpucheck: ready in %.1f s", time.Since(started).Seconds())
 	primed := time.Now()
-	if err := f.srv.prime("ru", ""); err != nil {
+	if err := srv.prime("ru", ""); err != nil {
 		log.Printf("gpucheck: the priming request failed: %v", err)
 	} else {
 		log.Printf("gpucheck: warm after %.1f s of priming, %.1f s after the start", time.Since(primed).Seconds(), time.Since(started).Seconds())
@@ -406,7 +407,7 @@ func runGPUCheck(args []string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	asked := time.Now()
 	var first time.Time
-	out, err := f.srv.chatStream(ctx, subtitles.TranslateMessages("ru", nil, "So the first thing we noticed was the price."), 64, "", func(string) {
+	out, err := srv.chatStream(ctx, subtitles.TranslateMessages("ru", nil, "So the first thing we noticed was the price."), 64, "", func(string) {
 		if first.IsZero() {
 			first = time.Now()
 		}

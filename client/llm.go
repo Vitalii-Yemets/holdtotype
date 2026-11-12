@@ -83,19 +83,35 @@ func (s *llamaServer) prime(to, grammar string) error {
 }
 
 func (a *App) translatorWarm(kind string) bool {
-	var s *llamaServer
+	var p engineProc
 	switch kind {
+	case editorFast:
+		return a.fastWarm()
 	case editorLocal:
-		s = a.editorEng.live()
+		p = a.editorEng.live()
 	case editorQuality:
-		s = a.gpuEng.live()
+		p = a.gpuEng.live()
 	default:
 		return true
 	}
-	return s != nil && s.primed.Load()
+	s, ok := p.(*llamaServer)
+	return ok && s != nil && s.primed.Load()
 }
 
-func needsStart(kind string) bool { return kind == editorLocal || kind == editorQuality }
+func needsStart(kind string) bool {
+	return kind == editorLocal || kind == editorQuality || kind == editorFast
+}
+
+func asLlama(p engineProc, err error) (*llamaServer, error) {
+	if err != nil {
+		return nil, err
+	}
+	s, ok := p.(*llamaServer)
+	if !ok || s == nil {
+		return nil, errors.New("the engine is not a language model server")
+	}
+	return s, nil
+}
 
 func (a *App) warmTranslator(kind, to string) error {
 	var f *llmFlight
@@ -106,22 +122,35 @@ func (a *App) warmTranslator(kind, to string) error {
 		grammar = subtitles.TranslateGrammar(to)
 	case editorQuality:
 		f = a.qualityWarmUp()
+	case editorFast:
+		ctx, cancel := context.WithTimeout(context.Background(), fastLangWait+subtitles.TranslateWarmWait)
+		defer cancel()
+		return a.warmFast(ctx)
 	default:
 		return nil
 	}
 	<-f.done
-	if f.err != nil {
-		return f.err
+	s, err := asLlama(f.srv, f.err)
+	if err != nil {
+		return err
 	}
-	return f.srv.prime(to, grammar)
+	return s.prime(to, grammar)
+}
+
+type engineProc interface {
+	alive() bool
+	stop()
+	pid() int
+	waitReady(time.Duration) error
 }
 
 type engineSpec struct {
-	label string
-	exe   string
-	port  int
-	args  []string
-	wait  time.Duration
+	label  string
+	exe    string
+	port   int
+	args   []string
+	wait   time.Duration
+	launch func(engineSpec, io.Writer) (engineProc, error)
 }
 
 var (
@@ -525,13 +554,13 @@ func (a *App) llmRepoFiles(repo string) string {
 
 type engineSlot struct {
 	mu       sync.Mutex
-	cur      *llamaServer
+	cur      engineProc
 	startMu  sync.Mutex
 	flightMu sync.Mutex
 	flight   *llmFlight
 }
 
-func (e *engineSlot) live() *llamaServer {
+func (e *engineSlot) live() engineProc {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	if e.cur != nil && e.cur.alive() {
@@ -551,7 +580,7 @@ func (e *engineSlot) shutdown() bool {
 	return s != nil
 }
 
-func (a *App) ensureEngine(e *engineSlot, prepare func(*Config) (engineSpec, error)) (*llamaServer, error) {
+func (a *App) ensureEngine(e *engineSlot, prepare func(*Config) (engineSpec, error)) (engineProc, error) {
 	if s := e.live(); s != nil {
 		return s, nil
 	}
@@ -566,7 +595,11 @@ func (a *App) ensureEngine(e *engineSlot, prepare func(*Config) (engineSpec, err
 		return nil, err
 	}
 	log.Printf("starting %s", spec.label)
-	s, err := startLlamaServer(spec, logFile)
+	launch := spec.launch
+	if launch == nil {
+		launch = func(spec engineSpec, w io.Writer) (engineProc, error) { return startLlamaServer(spec, w) }
+	}
+	s, err := launch(spec, logFile)
 	if err != nil {
 		return nil, err
 	}
@@ -590,7 +623,7 @@ func (a *App) ensureEngine(e *engineSlot, prepare func(*Config) (engineSpec, err
 
 type llmFlight struct {
 	done chan struct{}
-	srv  *llamaServer
+	srv  engineProc
 	err  error
 }
 
@@ -612,7 +645,7 @@ func (a *App) warmEngine(e *engineSlot, prepare func(*Config) (engineSpec, error
 	return f
 }
 
-func (a *App) waitEngine(ctx context.Context, e *engineSlot, prepare func(*Config) (engineSpec, error), starting string) (*llamaServer, error) {
+func (a *App) waitEngine(ctx context.Context, e *engineSlot, prepare func(*Config) (engineSpec, error), starting string) (engineProc, error) {
 	if s := e.live(); s != nil {
 		return s, nil
 	}
@@ -631,25 +664,27 @@ func (a *App) waitEngine(ctx context.Context, e *engineSlot, prepare func(*Confi
 func (a *App) llmShutdown() { a.editorEng.shutdown() }
 
 func (a *App) ensureLLM() (*llamaServer, error) {
-	return a.ensureEngine(&a.editorEng, editorEngine)
+	return asLlama(a.ensureEngine(&a.editorEng, editorEngine))
 }
 
 func (a *App) llmWarmUp() *llmFlight { return a.warmEngine(&a.editorEng, editorEngine) }
 
 func (a *App) llmWait(ctx context.Context) (*llamaServer, error) {
-	return a.waitEngine(ctx, &a.editorEng, editorEngine, "the editor model is still starting")
+	return asLlama(a.waitEngine(ctx, &a.editorEng, editorEngine, "the editor model is still starting"))
 }
 
 const (
 	editorLocal   = subtitles.KindEditor
 	editorAPI     = subtitles.KindServer
 	editorQuality = subtitles.KindQuality
+	editorFast    = subtitles.KindFast
 )
 
 type editorSource struct {
 	kind    string
 	name    string
 	missing string
+	detail  string
 }
 
 func (s editorSource) ok() bool { return s.kind != "" && s.missing == "" }
@@ -662,6 +697,8 @@ func (s editorSource) label() string {
 		return s.name + " (local)"
 	case editorQuality:
 		return "the built-in translation model (graphics card " + s.name + ")"
+	case editorFast:
+		return "the light translation engine (" + s.name + ")"
 	}
 	return "none"
 }
@@ -676,12 +713,15 @@ func llmName(cfg *Config) string {
 
 func translationSource(cfg *Config) editorSource {
 	card, fits := qualityCard()
+	fast := fastAvail(cfg)
 	pick := subtitles.ChooseTranslator(cfg.SubtitlesTranslator, subtitles.Avail{
 		ModelReady:  trModelReady(),
 		CardFits:    fits,
 		QualityDown: qualityDown() != nil,
 		Server:      postAPISet(cfg),
 		Editor:      llmInstalled(cfg),
+		Fast:        fast.ok,
+		FastMissing: fast.missing,
 	})
 	src := editorSource{kind: pick.Kind, missing: pick.Missing}
 	switch pick.Kind {
@@ -691,6 +731,9 @@ func translationSource(cfg *Config) editorSource {
 		src.name = llmName(cfg)
 	case editorQuality:
 		src.name = card.Name
+	case editorFast:
+		src.name = routeName(fast.lang, cfg.SubtitlesTranslate)
+		src.detail = fast.detail
 	}
 	return src
 }

@@ -181,6 +181,8 @@ const dom = new JSDOM(html, {
     window.subsPlace = { position: "bottom", custom: {} };
     window.trCalls = [];
     window.appTrModel = async (action) => { window.trCalls.push(action); return action === "delete" ? "Deleted" : ""; };
+    window.fastCalls = [];
+    window.appFastPack = async (action, lang) => { window.fastCalls.push(action + ":" + lang); return action === "delete" ? "Deleted" : ""; };
     window.appSubtitles = (action) => {
       window.subsCalls.push(action);
       window.subsState = action === "start" ? { phase: "loading", mode: "live", model: "Nemotron 3.5", lang: "en" } : { phase: "off" };
@@ -1833,7 +1835,7 @@ function check(name, actual, expected) {
   check("the user's server says every phrase goes to it", [trLines(), sv("subs_tr_hint").textContent], [[true, false, false], "Your post-processing server (gpt-4o-mini) translates: every phrase is sent to it, and the translation comes phrase by phrase, a moment after the speech."]);
   await setTr("", "");
   check("without a translator only the warning with its button shows", trLines(), [false, true, false]);
-  check("the warning is the no-translator sentence", sv("subs_tr_none").textContent, "There is no translation model, no post-processing server and no editor model, so there will be no translation.");
+  check("the warning is the no-translator sentence", sv("subs_tr_none").textContent, "There is no translation model, no language pack, no post-processing server and no editor model, so there will be no translation.");
   check("the button carries its label", sv("subs_tr_go").textContent, "S_SUBS_TR_GO");
   sv("subs_tr_go").click(); await sleep(150);
   check("the button opens the Post-processing tab", shown("post"), true);
@@ -1891,7 +1893,7 @@ function check(name, actual, expected) {
   const card = "NVIDIA GeForce RTX 3070 Ti Laptop GPU";
   const model = (o) => ({ state: "absent", pct: 0, err: "", size: 2374, fits: true, card, reason: "", card_mb: 8017, need_mb: 4096, down: "", running: false, ...o });
   const setQ = async (kind, missing, m) => { w.subsTr = { kind, name: kind === "quality" ? card : kind === "api" ? "gpt-4o-mini" : "", missing, model: m }; await w.refreshState(); };
-  check("who translates is a list of three", [...whoSel.options].map((o) => [o.value, o.textContent]), [["", "S_SUBS_WHO_AUTO"], ["quality", "S_SUBS_WHO_QUALITY"], ["server", "S_SUBS_WHO_SERVER"]]);
+  check("who translates is a list of four", [...whoSel.options].map((o) => [o.value, o.textContent]), [["", "S_SUBS_WHO_AUTO"], ["quality", "S_SUBS_WHO_QUALITY"], ["server", "S_SUBS_WHO_SERVER"], ["fast", "S_SUBS_WHO_FAST"]]);
   check("it stands right under the translation language, the model row under it", [sv("subs_who_row").previousElementSibling.contains(sv("subtitles_translate")), sv("subs_who_row").nextElementSibling.id], [true, "subs_trm_row"]);
   check("it carries the config, the program chooses", whoSel.value, "");
   check("the model row has its own label and no model name", [sv("subs_trm_row").querySelector("label").firstChild.textContent, /gemma|qwen|google/i.test(sv("subs_tr_card").textContent)], ["S_SUBS_TRM", false]);
@@ -1957,9 +1959,9 @@ function check(name, actual, expected) {
   await change(whoSel, "");
   check("the program chooses is saved as an empty string", w.lastSaveForm.subtitles_translator, "");
   await setQ("", "none", model());
-  check("with nothing at hand both ways out are offered", fix(), { text: "There is no translation model, no post-processing server and no editor model, so there will be no translation.", go: true, dl: true });
+  check("with nothing at hand both ways out are offered", fix(), { text: "There is no translation model, no language pack, no post-processing server and no editor model, so there will be no translation.", go: true, dl: true });
   await setQ("", "none", model({ fits: false, reason: "small", card_mb: 2048 }));
-  check("without a fitting card only Post-processing is offered", fix(), { text: "There is no translation model, no post-processing server and no editor model, so there will be no translation.", go: true, dl: false });
+  check("without a fitting card only Post-processing is offered", fix(), { text: "There is no translation model, no language pack, no post-processing server and no editor model, so there will be no translation.", go: true, dl: false });
   await setQ("api", "", model({ state: "ready", down: "crash" }));
   check("under the program's choice a failed start hands over to the next translator", [trm().note, sv("subs_tr_hint").textContent.startsWith("Your post-processing server")], ["Until subtitles start again, the next translator in line translates.", true]);
   calls = w.trCalls.length;
@@ -2005,6 +2007,81 @@ function check(name, actual, expected) {
   const ru = stringsOf("ru");
   check("in Russian the option is called by the user's own word", [ru.S_SUBS_WHO_QUALITY, ru.S_SUBS_TR_MISS_MODEL.startsWith("Выбран «Качественный», но")], ["Качественный: модель на видеокарте", true]);
   w.eval("Object.assign(L, " + englishL + ")");
+
+  const fpk = () => ({
+    shown: sv("subs_fpk_row").style.display !== "none",
+    sub: sv("subs_fpk_sub").textContent,
+    state: sv("subs_fpk_state").textContent,
+    dl: sv("subs_fpk_dl").style.display !== "none",
+    cancel: sv("subs_fpk_cancel").style.display !== "none",
+    del: sv("subs_fpk_del").style.display !== "none",
+  });
+  const routesFor = (to, over) => ["de", "en", "es", "fr", "it", "pl", "uk", "ru"].filter((l) => l !== to).map((l) => {
+    const packs = l === "en" || to === "en" ? [l + "-" + to] : [l + "-en", "en-" + to];
+    return { lang: l, packs, size: 36 * packs.length, state: "absent", pct: 0, err: "", ...(over[l] || {}) };
+  });
+  const setFast = async (kind, missing, detail, lang, over, extra) => {
+    w.subsTr = { kind, name: kind === "fast" ? (lang ? lang + " → de" : "speech language not known yet → de") : "", missing, detail, model: model({ fits: false, reason: "small", card_mb: 2048 }),
+      fast: { lang, auto: true, exe: true, down: "", routes: routesFor("de", over || {}), ...(extra || {}) } };
+    await w.refreshState();
+  };
+  await change(sv("subtitles_translate"), "de");
+  await change(sv("subtitles_language"), "en");
+  await change(whoSel, "fast");
+  check("choosing Fast saves it", w.lastSaveForm.subtitles_translator, "fast");
+  await setFast("fast", "", "", "en", { en: { state: "ready" } });
+  check("the packs row lists the seven languages other than the target", [...sv("subs_fpk_lang").options].map((o) => o.value), ["en", "es", "fr", "it", "pl", "uk", "ru"]);
+  check("and is preselected from the subtitles language", sv("subs_fpk_lang").value, "en");
+  check("a downloaded pack offers Delete", fpk(), { shown: true, sub: "For the light engine, speech English → Deutsch, 36 MB", state: "Downloaded", dl: false, cancel: false, del: true });
+  check("the line names the light engine and the direction", sv("subs_tr_hint").textContent, "The light translation engine translates (English → Deutsch): fast, a few hundredths of a second a phrase, and more literal than a language model.");
+  let fcalls = w.fastCalls.length;
+  sv("subs_fpk_del").click(); await sleep(100);
+  check("Delete asks once more", [w.fastCalls.slice(fcalls), sv("subs_fpk_del").textContent], [[], "Delete?"]);
+  sv("subs_fpk_del").click(); await sleep(150);
+  check("and then deletes the pack of that language", w.fastCalls.slice(fcalls), ["delete:en"]);
+  await change(sv("subs_fpk_lang"), "es");
+  check("another language through English shows both packs' size and the route", fpk().sub, "For the light engine, speech Español → English → Deutsch, 72 MB");
+  check("not downloaded offers Download", [fpk().state, fpk().dl, fpk().del], ["Not downloaded", true, false]);
+  fcalls = w.fastCalls.length;
+  sv("subs_fpk_dl").click(); await sleep(100);
+  check("Download asks for the packs of the chosen language", w.fastCalls.slice(fcalls), ["download:es"]);
+  await setFast("fast", "", "", "en", { es: { state: "downloading", pct: 40 } });
+  check("downloading shows the percent and Cancel", [fpk().state, fpk().cancel, fpk().dl], ["Downloading… 40%", true, false]);
+  fcalls = w.fastCalls.length;
+  sv("subs_fpk_cancel").click(); await sleep(100);
+  check("Cancel cancels", w.fastCalls.slice(fcalls), ["cancel:es"]);
+  await setFast("fast", "", "", "en", { es: { state: "checking" } });
+  check("checking has no buttons", [fpk().state, fpk().dl, fpk().cancel, fpk().del], ["Checking the files…", false, false, false]);
+  await setFast("fast", "", "", "en", { es: { state: "bad" } });
+  check("a damaged pack offers Download and Delete", [fpk().state, fpk().dl, fpk().del], ["A file of the pack is damaged or incomplete", true, true]);
+  await setFast("fast", "", "", "en", { es: { state: "error", err: "the downloaded file does not match its checksum" } });
+  check("a failed download says why", [fpk().state, fpk().dl], ["Not downloaded: the downloaded file does not match its checksum", true]);
+  await setFast("fast", "", "", "en", {}, { exe: false });
+  check("a missing engine says so", fpk().state, "fast-translator.exe is missing next to the program");
+  await change(sv("subtitles_language"), "auto");
+  await setFast("fast", "", "", "", { en: { state: "ready" } });
+  check("with auto and no language yet the line says it waits", sv("subs_tr_hint").textContent, "The light translation engine translates; it waits until the speech language is recognized from the first words.");
+  await setFast("fast", "", "", "ru", { en: { state: "ready" } });
+  check("with auto the row follows the guessed language", sv("subs_fpk_lang").value, "ru");
+  await setFast("fast", "pack", "ru-en", "ru", {});
+  check("a missing pack is named and can be downloaded from the warning", [fix().text, fix().dl, fix().go], ["“Fast” is chosen, but the language pack Русский → English is not downloaded, so the text is shown as heard.", true, false]);
+  fcalls = w.fastCalls.length;
+  sv("subs_tr_dl").click(); await sleep(100);
+  check("the warning's button downloads the packs of that language", w.fastCalls.slice(fcalls), ["download:ru"]);
+  await setFast("fast", "lang", "", "", {});
+  check("an unknown speech language", fix().text, "“Fast” is chosen, but the speech language could not be recognized from the words, so the text is shown as heard until subtitles start again.");
+  await setFast("fast", "faststart", "exe", "en", {});
+  check("an engine that did not start", fix().text, "“Fast” is chosen, but the light translation engine did not start, so the text is shown as heard until subtitles start again.");
+  await change(sv("subtitles_translate"), "");
+  check("without a target language the packs row is hidden", fpk().shown, false);
+  for (const lang of ["en", "ru", "uk", "de", "fr", "es", "it", "pl"]) {
+    const t = stringsOf(lang);
+    const mode = t.S_SUBS_WHO_FAST.split(/\s*:/)[0];
+    check(lang + ": the Fast hints quote the option by its own name", ["S_SUBS_TR_MISS_PACK", "S_SUBS_TR_MISS_LANG", "S_SUBS_TR_MISS_FAST"].filter((k) => !t[k].includes(mode)), []);
+    check(lang + ": every Fast text is there with its places", ["S_SUBS_FPK", "S_SUBS_FPK_SUB", "S_SUBS_FPK_GETTING", "S_SUBS_TR_FAST", "S_SUBS_TR_MISS_PACK", "S_SUBS_FPK_ERR"].every((k) => typeof t[k] === "string" && t[k].length > 0) && t.S_SUBS_FPK_SUB.split("%s").length === 3 && t.S_SUBS_TR_FAST.split("%s").length === 2, true);
+    check(lang + ": no text names the engine or the models", Object.entries(t).filter(([k, v]) => /^S_SUBS_/.test(k) && /bergamot|firefox|mozilla|marian/i.test(v)).map(([k]) => k), []);
+  }
+  check("in Russian the option is called by the user's own word for it", stringsOf("ru").S_SUBS_WHO_FAST, "Быстрый: лёгкий движок");
   await change(whoSel, "");
   await change(sv("subtitles_translate"), "");
   w.subsTr = { kind: "local", name: "qwen2.5-1.5b-instruct-q4_k_m" };
