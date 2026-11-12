@@ -488,6 +488,37 @@ type fastCounts struct {
 	alone, split, fallback, trimmed atomic.Int64
 }
 
+const (
+	fastAlone    = "alone"
+	fastSplit    = "split"
+	fastTrimmed  = "trimmed"
+	fastFallback = "fallback"
+)
+
+func fastPiece(ctx context.Context, srv *fastServer, from, to, prev, shown, text string, para bool) (string, string, string, error) {
+	if subtitles.BeginsSentence(prev, para, text) {
+		out, err := srv.translate(ctx, from, to, text, false)
+		return out, fastAlone, "", err
+	}
+	out, err := srv.translate(ctx, from, to, subtitles.TagPrevious(prev, text), true)
+	if err != nil {
+		return "", "", "", err
+	}
+	why := "the split did not work: " + out
+	if tail, ok := subtitles.SplitTagged(out); ok {
+		trimmed, left := subtitles.TrimRepeated(shown, tail)
+		if left {
+			if trimmed != tail {
+				return trimmed, fastTrimmed, tail, nil
+			}
+			return trimmed, fastSplit, "", nil
+		}
+		why = "it only repeated the end of the previous piece: " + tail
+	}
+	alone, err := srv.translate(ctx, from, to, text, false)
+	return alone, fastFallback, why, err
+}
+
 func (r *subRun) handleFast(w *subTranslator, b subtitles.Batch, src editorSource) (string, error) {
 	cfg := r.app.snapshot()
 	st := fastAvail(cfg)
@@ -511,35 +542,28 @@ func (r *subRun) handleFast(w *subTranslator, b subtitles.Batch, src editorSourc
 			return "", err
 		}
 	}
-	alone := subtitles.BeginsSentence(prev, b.Para, b.Text)
-	if !alone {
-		out, err := srv.translate(ctx, st.lang, b.Target, subtitles.TagPrevious(prev, b.Text), true)
-		if err != nil {
-			return "", err
-		}
-		if tail, ok := subtitles.SplitTagged(out); ok {
-			trimmed, left := subtitles.TrimRepeated(shown, tail)
-			if left {
-				w.fast.split.Add(1)
-				if trimmed != tail {
-					w.fast.trimmed.Add(1)
-					if r.opts.logLive {
-						log.Printf("subtitles: piece %d repeated the end of the previous piece, %q is shown as %q", b.Seq(), tail, trimmed)
-					}
-				}
-				return trimmed, nil
-			}
-			if r.opts.logLive {
-				log.Printf("subtitles: piece %d only repeated the end of the previous piece (%q), it is translated alone", b.Seq(), tail)
-			}
-		} else if r.opts.logLive {
-			log.Printf("subtitles: piece %d is translated alone, the split did not work: %q", b.Seq(), out)
-		}
-		w.fast.fallback.Add(1)
-	} else {
-		w.fast.alone.Add(1)
+	out, way, note, err := fastPiece(ctx, srv, st.lang, b.Target, prev, shown, b.Text, b.Para)
+	if err != nil {
+		return "", err
 	}
-	return srv.translate(ctx, st.lang, b.Target, b.Text, false)
+	switch way {
+	case fastAlone:
+		w.fast.alone.Add(1)
+	case fastSplit:
+		w.fast.split.Add(1)
+	case fastTrimmed:
+		w.fast.split.Add(1)
+		w.fast.trimmed.Add(1)
+		if r.opts.logLive {
+			log.Printf("subtitles: piece %d repeated the end of the previous piece, %q is shown as %q", b.Seq(), note, out)
+		}
+	case fastFallback:
+		w.fast.fallback.Add(1)
+		if r.opts.logLive {
+			log.Printf("subtitles: piece %d is translated alone, %s", b.Seq(), note)
+		}
+	}
+	return out, nil
 }
 
 func (r *subRun) noteSpeechLangLocked() {
@@ -825,9 +849,13 @@ func (a *App) fastPackAction(action, lang string) string {
 }
 
 func runPackDownload(args []string) {
-	if len(args) < 3 {
-		log.Printf("packdownload: needs <from> <to> <base url>")
+	if len(args) < 2 {
+		log.Printf("packdownload: needs <from> <to> [base url]")
 		return
+	}
+	base := ""
+	if len(args) > 2 {
+		base = args[2]
 	}
 	p, ok := fastpack.Find(args[0], args[1])
 	if !ok {
@@ -835,7 +863,8 @@ func runPackDownload(args []string) {
 		return
 	}
 	app := &App{cfg: defaultConfig(), enabled: true}
-	app.packDownload(p, args[2])
+	started := time.Now()
+	app.packDownload(p, base)
 	for {
 		time.Sleep(200 * time.Millisecond)
 		dlMu.Lock()
@@ -847,5 +876,72 @@ func runPackDownload(args []string) {
 		}
 	}
 	v := routeView(p.From, p.To)
-	log.Printf("packdownload: %s is %s %s", p.Key(), v.State, v.Err)
+	log.Printf("packdownload: %s is %s %s after %.1f s", p.Key(), v.State, v.Err, time.Since(started).Seconds())
+}
+
+func runFastCheck(args []string) {
+	if len(args) < 4 {
+		log.Printf("fastcheck: needs <from> <to> <pieces file> <output file>")
+		return
+	}
+	from, to := args[0], args[1]
+	packs, ok := fastpack.Route(from, to)
+	if !ok {
+		log.Printf("fastcheck: no route %s → %s", from, to)
+		return
+	}
+	raw, err := os.ReadFile(args[2])
+	if err != nil {
+		log.Printf("fastcheck: %v", err)
+		return
+	}
+	cfg, err := loadConfig("config.json")
+	if err != nil {
+		cfg = defaultConfig()
+	}
+	app := &App{cfg: cfg, enabled: true}
+	defer app.fastShutdown()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+	f := app.warmEngine(&app.fastEng, fastEngine)
+	<-f.done
+	srv, err := asFast(f.srv, f.err)
+	if err != nil {
+		log.Printf("fastcheck: the engine did not start: %v", err)
+		return
+	}
+	if err := srv.load(ctx, packs); err != nil {
+		log.Printf("fastcheck: %v", err)
+		return
+	}
+	var out strings.Builder
+	prev, shown := "", ""
+	para := true
+	counts := map[string]int{}
+	for _, line := range strings.Split(strings.ReplaceAll(string(raw), "\r\n", "\n"), "\n") {
+		text := strings.TrimSpace(line)
+		if text == "" {
+			para = true
+			continue
+		}
+		started := time.Now()
+		got, way, note, err := fastPiece(ctx, srv, from, to, prev, shown, text, para)
+		ms := time.Since(started).Seconds() * 1000
+		if err != nil {
+			log.Printf("fastcheck: %q: %v", text, err)
+			return
+		}
+		cleaned, verdict := subtitles.CleanFastTranslation(text, got)
+		if verdict == subtitles.TrSame {
+			cleaned = text
+		}
+		counts[way]++
+		fmt.Fprintf(&out, "%s\t%s\t%.0f ms\t%s\t%s\n", way, text, ms, cleaned, note)
+		prev, shown, para = text, cleaned, false
+	}
+	if err := os.WriteFile(args[3], []byte(out.String()), 0o644); err != nil {
+		log.Printf("fastcheck: %v", err)
+		return
+	}
+	log.Printf("fastcheck: %s → %s through %d pack(s): %d alone, %d split, %d with a repeated word removed, %d fell back to alone", from, to, len(packs), counts[fastAlone], counts[fastSplit], counts[fastTrimmed], counts[fastFallback])
 }

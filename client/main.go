@@ -569,6 +569,10 @@ func main() {
 			log.Printf("routecheck: both engines stopped")
 			return
 		}
+		if arg == "-fastcheck" {
+			runFastCheck(os.Args[1:][i+1:])
+			return
+		}
 		if arg == "-packdownload" {
 			runPackDownload(os.Args[1:][i+1:])
 			return
