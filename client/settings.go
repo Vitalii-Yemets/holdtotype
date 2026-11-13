@@ -4311,6 +4311,13 @@ async function subsChoose(who){
         const key = sp + "-" + to;
         const offer = (subsFast().offer || []).find(o=>o.from === sp);
         const need = p ? p.need : (offer ? offer.need : 0);
+        if(!need){
+          subsWho = who;
+          renderSubsTr();
+          await doSave();
+          if(!p) fastPackAct("add", key);
+          return;
+        }
         renderSubsTr();
         if(!await askConfirm(L.packask.replace("%s", ()=>pairName(sp, to)).replace("%s", ()=>sizeLabel(need || 0)), L.dlstart, null, L.packdlg)){ renderSubsTr(); return; }
         subsWho = who;

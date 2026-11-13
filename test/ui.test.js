@@ -1983,6 +1983,11 @@ function check(name, actual, expected) {
   sv("subs_src_fast").click(); await sleep(250);
   d.querySelector(".modal .btn.yes").click(); await sleep(400);
   check("Download adds the pair and switches", [chosen(), w.lastSaveForm.subtitles_translator, w.fastCalls.slice(fastBefore)], [["fast"], "fast", ["add:fr-de"]]);
+  await setTr("quality", "", { model: model({ state: "ready" }), fast: fast({ pairs: [pair("en", "de")], offer: [{ from: "fr", via: true, need: 0 }] }) });
+  await flip("quality");
+  const fastHave = w.fastCalls.length;
+  sv("subs_src_fast").click(); await sleep(400);
+  check("Fast whose packs are all on disk asks nothing, adds the pair and switches", [!!dlg(), chosen(), w.lastSaveForm.subtitles_translator, w.fastCalls.slice(fastHave)], [false, ["fast"], "fast", ["add:fr-de"]]);
   await setTr("fast", "", { model: model({ state: "ready" }), fast: fast({ pairs: [pair("en", "de"), pair("fr", "de", { state: "downloading", pct: 20 })] }) });
   await flip("server");
   await flip("fast");
