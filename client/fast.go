@@ -51,8 +51,6 @@ func (s *fastServer) alive() bool {
 	return !s.exited
 }
 
-func (s *fastServer) pid() int { return cmdPid(s.cmd) }
-
 func (s *fastServer) stop() {
 	if s.cmd != nil && s.cmd.Process != nil {
 		_ = s.cmd.Process.Kill()
@@ -288,14 +286,6 @@ func (f *fastRunState) setDown(why string) {
 	f.mu.Unlock()
 }
 
-func fastSpeechLang(cfg *Config) string {
-	if l := strings.ToLower(strings.TrimSpace(cfg.SubtitlesLanguage)); l != "" && l != "auto" {
-		return l
-	}
-	lang, _, _ := fastRun.snapshot()
-	return lang
-}
-
 var fastChecks sync.Map
 
 func packState(p fastpack.Pack) fastpack.State {
@@ -355,10 +345,34 @@ type fastStatus struct {
 	packs   []fastpack.Pack
 }
 
+func packOnDisk(p fastpack.Pack) bool {
+	st, _ := fastpack.Known("models", p)
+	return st != fastpack.Absent
+}
+
+func pairOnDiskInto(to string) bool {
+	for _, from := range fastpack.Languages {
+		packs, ok := fastpack.Route(from, to)
+		if !ok {
+			continue
+		}
+		ready := true
+		for _, p := range packs {
+			if st, _ := fastpack.Known("models", p); st != fastpack.Ready {
+				ready = false
+			}
+		}
+		if ready {
+			return true
+		}
+	}
+	return false
+}
+
 func fastAvail(cfg *Config) fastStatus {
 	to := cfg.SubtitlesTranslate
-	if to == "" {
-		return fastStatus{missing: subtitles.MissingPack}
+	if !validTranslateLang(to) {
+		return fastStatus{missing: subtitles.MissingPacks}
 	}
 	if _, err := os.Stat(fastExePath(cfg)); err != nil {
 		return fastStatus{missing: subtitles.MissingFast, detail: "exe"}
@@ -380,7 +394,7 @@ func fastAvail(cfg *Config) fastStatus {
 		case len(installed) > 1 || (len(installed) == 1 && fastWaitForGuess.Load()):
 			return fastStatus{ok: true}
 		default:
-			return fastStatus{missing: subtitles.MissingPack, detail: "en-" + to}
+			return fastStatus{missing: subtitles.MissingPacks}
 		}
 	}
 	if lang == to {
@@ -480,6 +494,8 @@ func (f *fastFail) Error() string {
 		return "the speech language is not known"
 	case subtitles.MissingPack:
 		return "the language pack " + f.detail + " is not downloaded"
+	case subtitles.MissingPacks:
+		return "no language pack into the translation language is downloaded"
 	}
 	return "the light translation engine did not start: " + f.detail
 }
@@ -745,27 +761,47 @@ func (a *App) packDelete(p fastpack.Pack) error {
 	return err
 }
 
-type packRoute struct {
-	Lang   string   `json:"lang"`
+type pairView struct {
+	Key    string   `json:"key"`
+	From   string   `json:"from"`
+	To     string   `json:"to"`
 	Packs  []string `json:"packs"`
 	SizeMB int      `json:"size"`
+	Need   int      `json:"need"`
 	State  string   `json:"state"`
 	Pct    int      `json:"pct"`
 	Err    string   `json:"err"`
 }
 
-type fastUI struct {
-	Lang      string      `json:"lang"`
-	Auto      bool        `json:"auto"`
-	Installed []string    `json:"installed"`
-	Exe       bool        `json:"exe"`
-	Down      string      `json:"down"`
-	Routes    []packRoute `json:"routes"`
+type offerView struct {
+	From string `json:"from"`
+	Via  bool   `json:"via"`
+	Need int    `json:"need"`
 }
 
-func routeView(lang, to string) packRoute {
-	v := packRoute{Lang: lang}
-	packs, ok := fastpack.Route(lang, to)
+type fastUI struct {
+	Exe    bool        `json:"exe"`
+	Pairs  []pairView  `json:"pairs"`
+	Offer  []offerView `json:"offer"`
+	UsedMB int         `json:"used"`
+}
+
+func mbOf(size int64) int { return int((size + 512*1024) / (1024 * 1024)) }
+
+func packBusy(p fastpack.Pack) (*dlState, bool) {
+	dlMu.Lock()
+	defer dlMu.Unlock()
+	st := dl[packKey(p)]
+	if st == nil {
+		return nil, false
+	}
+	cp := *st
+	return &cp, true
+}
+
+func routeView(from, to string) pairView {
+	v := pairView{Key: fastpack.PairKey(from, to), From: from, To: to}
+	packs, ok := fastpack.Route(from, to)
 	if !ok {
 		v.State = "none"
 		return v
@@ -775,8 +811,7 @@ func routeView(lang, to string) packRoute {
 	for _, p := range packs {
 		v.Packs = append(v.Packs, p.Key())
 		size += p.Size()
-		dlMu.Lock()
-		st := dl[packKey(p)]
+		st, _ := packBusy(p)
 		switch {
 		case st != nil && st.active:
 			states["downloading"] = true
@@ -791,9 +826,8 @@ func routeView(lang, to string) packRoute {
 				doneSize += p.Size()
 			}
 		}
-		dlMu.Unlock()
 	}
-	v.SizeMB = int((size + 512*1024) / (1024 * 1024))
+	v.SizeMB = mbOf(size)
 	for _, s := range []string{"downloading", "error", "bad", "checking", "absent"} {
 		if states[s] {
 			v.State = s
@@ -806,53 +840,135 @@ func routeView(lang, to string) packRoute {
 	if v.State == "downloading" && size > 0 {
 		v.Pct = int(doneSize * 100 / size)
 	}
+	v.Need = needMB(from, to)
 	return v
+}
+
+func sourcesInto(to string) []string {
+	out := []string{fastpack.Pivot}
+	for _, l := range fastpack.Languages {
+		if l != fastpack.Pivot {
+			out = append(out, l)
+		}
+	}
+	var keep []string
+	for _, l := range out {
+		if l != to {
+			keep = append(keep, l)
+		}
+	}
+	return keep
+}
+
+func needMB(from, to string) int {
+	packs, _ := fastpack.Route(from, to)
+	var size int64
+	for _, p := range packs {
+		if st, _ := packBusy(p); st != nil && st.active {
+			continue
+		}
+		if packState(p) != fastpack.Ready {
+			size += p.Size()
+		}
+	}
+	return mbOf(size)
 }
 
 func (a *App) fastView(cfg *Config) fastUI {
 	to := cfg.SubtitlesTranslate
-	v := fastUI{Auto: strings.ToLower(strings.TrimSpace(cfg.SubtitlesLanguage)) == "auto" || strings.TrimSpace(cfg.SubtitlesLanguage) == ""}
-	v.Lang = fastSpeechLang(cfg)
+	v := fastUI{}
 	_, err := os.Stat(fastExePath(cfg))
 	v.Exe = err == nil
-	_, _, v.Down = fastRun.snapshot()
-	if to == "" {
-		return v
+	added := map[string]bool{}
+	for _, k := range cfg.SubtitlesPairs {
+		added[k] = true
 	}
-	v.Installed = installedInto(to)
-	for _, lang := range fastpack.Languages {
-		if lang != to {
-			v.Routes = append(v.Routes, routeView(lang, to))
+	targets := []string{to}
+	for _, l := range fastpack.Languages {
+		if l != to {
+			targets = append(targets, l)
 		}
 	}
+	for _, t := range targets {
+		for _, from := range sourcesInto(t) {
+			if added[fastpack.PairKey(from, t)] {
+				v.Pairs = append(v.Pairs, routeView(from, t))
+			}
+		}
+	}
+	speech := strings.ToLower(strings.TrimSpace(cfg.SubtitlesLanguage))
+	offer := sourcesInto(to)
+	for i, l := range offer {
+		if l == speech && i > 0 {
+			offer = append([]string{l}, append(offer[:i:i], offer[i+1:]...)...)
+			break
+		}
+	}
+	for _, from := range offer {
+		if added[fastpack.PairKey(from, to)] {
+			continue
+		}
+		packs, ok := fastpack.Route(from, to)
+		if !ok {
+			continue
+		}
+		v.Offer = append(v.Offer, offerView{From: from, Via: len(packs) > 1, Need: needMB(from, to)})
+	}
+	var used int64
+	for _, p := range fastpack.All() {
+		if packState(p) == fastpack.Ready {
+			used += p.Size()
+		}
+	}
+	v.UsedMB = mbOf(used)
 	return v
 }
 
-func (a *App) fastPackAction(action, lang string) string {
-	cfg := a.snapshot()
-	packs, ok := fastpack.Route(lang, cfg.SubtitlesTranslate)
+func (a *App) setPairs(pairs []string) {
+	a.mu.Lock()
+	c := *a.cfg
+	c.SubtitlesPairs = pairs
+	a.mu.Unlock()
+	if err := saveConfig("config.json", &c); err != nil {
+		log.Printf("subtitles: the language pairs were not saved: %v", err)
+		return
+	}
+	a.mu.Lock()
+	cur := *a.cfg
+	cur.SubtitlesPairs = pairs
+	a.cfg = &cur
+	a.mu.Unlock()
+}
+
+func (a *App) fastPackAction(action, key string) string {
+	from, to, ok := fastpack.ParsePair(key)
 	if !ok {
 		return ""
 	}
 	switch action {
-	case "download":
+	case "add":
+		a.setPairs(fastpack.AddPair(a.snapshot().SubtitlesPairs, key))
+		packs, _ := fastpack.Route(from, to)
 		for _, p := range packs {
 			if packState(p) != fastpack.Ready {
-				log.Printf("language pack %s: download started", p.Key())
+				log.Printf("language pack %s: download started for the pair %s", p.Key(), key)
 				a.packDownload(p, "")
 			}
 		}
-	case "cancel":
-		for _, p := range packs {
-			cancelDownload(packKey(p))
-		}
-	case "delete":
-		for _, p := range packs {
+		log.Printf("subtitles: the language pair %s is added", key)
+	case "remove":
+		ready := routeView(from, to).State == "ready"
+		left, drop := fastpack.DropPair(a.snapshot().SubtitlesPairs, key)
+		a.setPairs(left)
+		log.Printf("subtitles: the language pair %s is removed", key)
+		for _, p := range drop {
 			if err := a.packDelete(p); err != nil {
 				return humanError(err)
 			}
 		}
-		return tr("model.del.ok")
+		if ready {
+			return tr("model.del.ok")
+		}
 	}
 	return ""
 }

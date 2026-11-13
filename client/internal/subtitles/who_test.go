@@ -8,40 +8,15 @@ func availOf(mask int) Avail {
 		CardFits:    mask&2 != 0,
 		QualityDown: mask&4 != 0,
 		Server:      mask&8 != 0,
-		Editor:      mask&16 != 0,
-		Fast:        mask&32 != 0,
+		Fast:        mask&16 != 0,
 	}
 	if !a.Fast {
-		a.FastMissing = []string{"", MissingPack, MissingLang, MissingFast}[mask%4]
+		a.FastMissing = []string{"", MissingPack, MissingPacks, MissingLang, MissingFast}[mask%5]
 	}
 	return a
 }
 
-func TestChooseTranslatorAutomatically(t *testing.T) {
-	for mask := 0; mask < 64; mask++ {
-		a := availOf(mask)
-		want := Choice{Missing: MissingAll}
-		switch {
-		case a.ModelReady && a.CardFits && !a.QualityDown:
-			want = Choice{Kind: KindQuality}
-		case a.Server:
-			want = Choice{Kind: KindServer}
-		case a.Fast:
-			want = Choice{Kind: KindFast}
-		case a.Editor:
-			want = Choice{Kind: KindEditor}
-		}
-		got := ChooseTranslator(ChoiceAuto, a)
-		if got != want {
-			t.Errorf("%+v: %+v, want %+v", a, got, want)
-		}
-		if got.OK() != (want.Kind != "") {
-			t.Errorf("%+v: OK %v", a, got.OK())
-		}
-	}
-}
-
-func TestChooseTranslatorExplicitly(t *testing.T) {
+func TestChooseTranslatorWithoutAnAutomaticOrder(t *testing.T) {
 	for mask := 0; mask < 64; mask++ {
 		a := availOf(mask)
 		q := ChooseTranslator(ChoiceQuality, a)
@@ -77,29 +52,92 @@ func TestChooseTranslatorExplicitly(t *testing.T) {
 			t.Errorf("fast %+v: %+v, want %+v", a, f, wantF)
 		}
 		if q.Kind != KindQuality || s.Kind != KindServer || f.Kind != KindFast {
-			t.Errorf("%+v: an explicit choice was replaced: %+v %+v %+v", a, q, s, f)
+			t.Errorf("%+v: a choice was replaced by another translator: %+v %+v %+v", a, q, s, f)
 		}
 	}
 }
 
 func TestTranslatorChoices(t *testing.T) {
-	for _, c := range []string{"", "quality", "server", "fast"} {
+	for _, c := range []string{"quality", "server", "fast"} {
 		if !ValidTranslatorChoice(c) {
 			t.Errorf("%q is not valid", c)
 		}
 	}
-	for _, c := range []string{"local", "api", "Fast", "Quality", " server"} {
+	for _, c := range []string{"", "local", "api", "Fast", "Quality", " server"} {
 		if ValidTranslatorChoice(c) {
 			t.Errorf("%q is valid", c)
 		}
 	}
-	if got := ChooseTranslator("unknown", Avail{Server: true}); got != (Choice{Kind: KindServer}) {
-		t.Errorf("an unknown choice: %+v", got)
+	all := Avail{ModelReady: true, CardFits: true, Server: true, Fast: true}
+	for _, c := range []string{"", "unknown", "local"} {
+		if got := ChooseTranslator(c, all); got.OK() || got.Kind != "" {
+			t.Errorf("%q chooses %+v", c, got)
+		}
 	}
-	if got := ChooseTranslator(ChoiceAuto, Avail{Fast: true, Editor: true}); got != (Choice{Kind: KindFast}) {
-		t.Errorf("fast before the editor model: %+v", got)
+}
+
+func TestSettleTranslatorFromAnOldSettingsFile(t *testing.T) {
+	for mask := 0; mask < 16; mask++ {
+		h := Have{CardFits: mask&1 != 0, ModelReady: mask&2 != 0, Server: mask&4 != 0, PairReady: mask&8 != 0}
+		var want string
+		switch {
+		case h.CardFits && h.ModelReady:
+			want = ChoiceQuality
+		case h.Server:
+			want = ChoiceServer
+		case h.PairReady:
+			want = ChoiceFast
+		case h.CardFits:
+			want = ChoiceQuality
+		default:
+			want = ChoiceFast
+		}
+		got := SettleTranslator(h)
+		if got != want {
+			t.Errorf("%+v: %q, want %q", h, got, want)
+		}
+		if !ValidTranslatorChoice(got) {
+			t.Errorf("%+v: %q is not a choice", h, got)
+		}
 	}
-	if got := ChooseTranslator(ChoiceAuto, Avail{Fast: true, Server: true}); got != (Choice{Kind: KindServer}) {
-		t.Errorf("the server before fast: %+v", got)
+	if got := SettleTranslator(Have{}); got != ChoiceFast {
+		t.Errorf("a fresh install without a fitting card: %q", got)
+	}
+	if got := SettleTranslator(Have{CardFits: true}); got != ChoiceQuality {
+		t.Errorf("a fresh install with a fitting card: %q", got)
+	}
+	if got := SettleTranslator(Have{ModelReady: true, Server: true}); got != ChoiceServer {
+		t.Errorf("a model on disk without a fitting card does not win over the server: %q", got)
+	}
+}
+
+func TestTheTranslationSettingOfAnOldSettingsFile(t *testing.T) {
+	cases := []struct {
+		lang      string
+		on, saved bool
+		ui        string
+		wantLang  string
+		wantOn    bool
+	}{
+		{"ru", false, false, "en", "ru", true},
+		{"de", false, false, "ru", "de", true},
+		{"", false, false, "ru", "ru", false},
+		{"", false, false, "pl", "pl", false},
+		{"", false, false, "zz", "en", false},
+		{"xx", false, false, "uk", "uk", false},
+		{"fr", false, true, "ru", "fr", false},
+		{"fr", true, true, "ru", "fr", true},
+		{"", true, true, "de", "de", true},
+	}
+	for _, c := range cases {
+		lang, on := TranslationSetting(c.lang, c.on, c.saved, c.ui)
+		if lang != c.wantLang || on != c.wantOn {
+			t.Errorf("%+v: %q %v", c, lang, on)
+		}
+	}
+	for _, ui := range TranslateTargets {
+		if lang, on := TranslationSetting("", false, false, ui); lang != ui || on {
+			t.Errorf("nothing chosen, interface %s: %q %v", ui, lang, on)
+		}
 	}
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"holdtotype/internal/audiolevel"
 	"holdtotype/internal/commands"
+	"holdtotype/internal/fastpack"
 	"holdtotype/internal/history"
 	"holdtotype/internal/hotkeys"
 	"holdtotype/internal/mojibake"
@@ -160,11 +161,12 @@ type Config struct {
 	SubtitlesPos      string                  `json:"subtitles_position"`
 	SubtitlesMonitor  string                  `json:"subtitles_monitor"`
 	SubtitlesBox      map[string]subwin.Box   `json:"subtitles_box"`
-	SubtitlesOriginal bool                    `json:"subtitles_original"`
 
-	SubtitlesTranslate  string `json:"subtitles_translate"`
-	SubtitlesTranslator string `json:"subtitles_translator"`
-	TranslatePort       int    `json:"translate_port"`
+	SubtitlesTranslateOn bool     `json:"subtitles_translate_on"`
+	SubtitlesTranslate   string   `json:"subtitles_translate"`
+	SubtitlesTranslator  string   `json:"subtitles_translator"`
+	SubtitlesPairs       []string `json:"subtitles_pairs"`
+	TranslatePort        int      `json:"translate_port"`
 
 	CanaryTarget string `json:"-"`
 }
@@ -328,6 +330,7 @@ func loadConfig(path string) (*Config, error) {
 			_ = os.WriteFile(path, def, 0o644)
 			err = nil
 		} else {
+			settleSubtitles(cfg, nil)
 			out, _ := json.MarshalIndent(cfg, "", "  ")
 			_ = os.WriteFile(path, out, 0o644)
 			return cfg, nil
@@ -416,6 +419,9 @@ func loadConfig(path string) (*Config, error) {
 		migrated = true
 	}
 	if cleanSubtitles(cfg) {
+		migrated = true
+	}
+	if settleSubtitles(cfg, data) {
 		migrated = true
 	}
 	if !firstRun && fileVer < 6 && cfg.LangModels["auto"] == "" {
@@ -710,12 +716,6 @@ func cleanSubtitles(cfg *Config) bool {
 	if !validPresetLang(cfg.SubtitlesLanguage) {
 		cfg.SubtitlesLanguage = "auto"
 	}
-	if !validTranslateLang(cfg.SubtitlesTranslate) {
-		cfg.SubtitlesTranslate = ""
-	}
-	if !subtitles.ValidTranslatorChoice(cfg.SubtitlesTranslator) {
-		cfg.SubtitlesTranslator = ""
-	}
 	if cfg.TranslatePort <= 0 || cfg.TranslatePort > 65535 {
 		cfg.TranslatePort = defaultTranslatePort
 	}
@@ -743,6 +743,64 @@ func cleanSubtitles(cfg *Config) bool {
 	if subtitlesHotkeyClash(cfg) {
 		log.Printf("subtitles: the shortcut %s repeats another shortcut and is dropped", cfg.SubtitlesHotkey)
 		cfg.SubtitlesHotkey = ""
+		changed = true
+	}
+	return changed
+}
+
+func fileHasKey(data []byte, key string) bool {
+	var raw map[string]json.RawMessage
+	if json.Unmarshal(data, &raw) != nil {
+		return false
+	}
+	_, ok := raw[key]
+	return ok
+}
+
+func uiLanguageNow(cfg *Config) string {
+	if validUILang(cfg.UILanguage) {
+		return cfg.UILanguage
+	}
+	return systemLang()
+}
+
+func settleSubtitles(cfg *Config, data []byte) bool {
+	changed := false
+	saved := fileHasKey(data, "subtitles_translate_on")
+	lang, on := subtitles.TranslationSetting(cfg.SubtitlesTranslate, cfg.SubtitlesTranslateOn, saved, uiLanguageNow(cfg))
+	if !saved && data != nil {
+		state := "off"
+		if on {
+			state = "on"
+		}
+		log.Printf("subtitles: settings of an older version, translation is %s and its language is %s", state, lang)
+	}
+	if !saved || lang != cfg.SubtitlesTranslate || on != cfg.SubtitlesTranslateOn {
+		cfg.SubtitlesTranslate, cfg.SubtitlesTranslateOn = lang, on
+		changed = true
+	}
+	if fileHasKey(data, "subtitles_pairs") {
+		if clean := fastpack.CleanPairs(cfg.SubtitlesPairs); len(clean) != len(cfg.SubtitlesPairs) {
+			cfg.SubtitlesPairs = clean
+			changed = true
+		}
+	} else {
+		cfg.SubtitlesPairs = fastpack.PairsOnDisk(packOnDisk)
+		if len(cfg.SubtitlesPairs) > 0 {
+			log.Printf("subtitles: the language packs on disk become the pairs %s", strings.Join(cfg.SubtitlesPairs, ", "))
+		}
+		changed = true
+	}
+	if !subtitles.ValidTranslatorChoice(cfg.SubtitlesTranslator) {
+		_, fits := qualityCard()
+		was := cfg.SubtitlesTranslator
+		cfg.SubtitlesTranslator = subtitles.SettleTranslator(subtitles.Have{
+			CardFits:   fits,
+			ModelReady: trModelReady(),
+			Server:     postAPISet(cfg),
+			PairReady:  pairOnDiskInto(cfg.SubtitlesTranslate),
+		})
+		log.Printf("subtitles: the translator %q becomes %s", was, cfg.SubtitlesTranslator)
 		changed = true
 	}
 	return changed

@@ -502,7 +502,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_UPDATED_TO": "Программа обновлена до версии %s",
 		"S_SUBS_HERO_LIVE": "%s · слова по ходу речи",
 		"S_SUBS_HERO_PHRASES": "%s · текст после каждой фразы",
-		"S_NAV_SUBS": "Субтитры",
+		"S_NAV_SUBS": "Субтитры и перевод",
 		"S_SUBS_HINT": "Приложение записывает то, что звучит на компьютере, — звонок, видео — и показывает слова в окне поверх остальных.",
 		"S_SUBS_NOTICE": "Собеседники должны знать, что их речь записывается текстом.",
 		"S_SUBS_START": "Запустить субтитры",
@@ -521,22 +521,41 @@ var settingsStrings = map[string]map[string]string{
 		"S_SUBS_GO_MODELS": "Открыть «Языки и модели»",
 		"S_SUBS_REMOTE": "Распознавание идёт на другом компьютере: каждая фраза отправляется на этот сервер.",
 		"S_SUBS_TR": "Перевод",
-		"S_SUBS_TR_SUB": "Окно показывает перевод вместо распознанного текста",
-		"S_SUBS_TR_OFF": "Выключен",
-		"S_SUBS_TR_LOCAL": "Переводит %s: перевод идёт фраза за фразой, через мгновение после речи.",
-		"S_SUBS_TR_API": "Переводит ваш сервер постобработки (%s): каждая фраза отправляется на него, и перевод идёт фраза за фразой, через мгновение после речи.",
-		"S_SUBS_TR_NONE": "Нет ни модели перевода, ни языкового пакета, ни сервера постобработки, ни модели-редактора, поэтому перевода не будет.",
-		"S_SUBS_TR_GO": "Открыть «Постобработку»",
+		"S_SUBS_TR_HINT": "Окно делится на две части: сверху услышанное, снизу перевод; границу между ними можно тянуть мышью. Выключено — окно показывает только услышанное.",
+		"S_SUBS_TR_LANG": "Язык перевода",
+		"S_SUBS_TR_MISS_MODEL_GET": "Выбран «Качественный», но модель перевода ещё скачивается, поэтому пока текст показывается так, как был услышан.",
+		"S_SUBS_TR_MISS_PACK_GET": "Выбран «Быстрый», но языковой пакет %s ещё скачивается, поэтому пока текст показывается так, как был услышан.",
+		"S_SUBS_TR_MISS_PACKS": "Выбран «Быстрый», но для этого языка перевода нет ни одного языкового пакета, поэтому текст показывается так, как был услышан.",
+		"S_SUBS_TR_MISS_PACKS_GET": "Выбран «Быстрый», но языковой пакет ещё скачивается, поэтому пока текст показывается так, как был услышан.",
+		"S_SUBS_Q_HINT": "модель на видеокарте: перевод идёт фраза за фразой, через мгновение после речи",
+		"S_SUBS_Q_NEED": "видеокарта от 4 ГБ своей памяти",
+		"S_SUBS_F_HINT": "лёгкий движок, работает без видеокарты: переводит за сотые доли секунды на фразу и дословнее модели",
+		"S_SUBS_F_USED": "занято",
+		"S_SUBS_F_NONE": "нет",
+		"S_SUBS_F_GETTING": "скачивается… %s %",
+		"S_SUBS_F_AUTO": "Язык речи определяется по первым словам; переводится речь, для которой есть пакет.",
+		"S_SUBS_F_TWO": "%s переводится в два шага: сначала на английский, потом на %s.",
+		"S_SUBS_F_TO_DE": "немецкий",
+		"S_SUBS_F_TO_ES": "испанский",
+		"S_SUBS_F_TO_FR": "французский",
+		"S_SUBS_F_TO_IT": "итальянский",
+		"S_SUBS_F_TO_PL": "польский",
+		"S_SUBS_F_TO_UK": "украинский",
+		"S_SUBS_F_TO_RU": "русский",
+		"S_SUBS_F_ADD": "Добавить пакет",
+		"S_SUBS_ADD_TITLE": "Добавить языковой пакет",
+		"S_SUBS_ADD_HAVE": "уже скачан",
+		"S_SUBS_ADD_HINT": "Пакеты у лёгкого движка есть только с английским. Остальные пары переводятся в два шага — сначала на английский, потом с него, — и для них нужны оба пакета.",
+		"S_SUBS_PACK_DLG": "Загрузка языкового пакета",
+		"S_SUBS_PACK_ASK": "Языковой пакет «%s» не загружен (%s). Начать загрузку?",
+		"S_SUBS_API_HINT": "Субтитры переводит внешний сервер: OpenAI, Groq, свой vLLM — любой с совместимым API. Это тот же сервер, что у постобработки: если изменить его здесь, он изменится и там.",
+		"S_SUBS_API_NONE": "не настроен",
+		"S_SUBS_API_WARN": "⚠ Распознанный текст субтитров будет уходить на этот адрес. Звук не уходит никогда. Ключ хранится зашифрованным.",
+		"S_SUBS_API_CLEAR_MORE": "Субтитры останутся без перевода, пока вы не выберете другого переводчика.",
+		"S_SUBS_ROWS_SUB": "при включённом переводе — в каждой части окна",
 		"S_SUBS_TR_SAME": "Язык перевода совпадает с языком речи: переводить нечего.",
-		"S_SUBS_WHO": "Кто переводит",
-		"S_SUBS_WHO_SUB": "Программа берёт лучшего из доступных, или вы закрепляете одного",
-		"S_SUBS_WHO_AUTO": "Выбирает программа",
-		"S_SUBS_WHO_QUALITY": "Качественный: модель на видеокарте",
-		"S_SUBS_WHO_SERVER": "Ваш сервер",
-		"S_SUBS_TRM": "Модель перевода",
-		"S_SUBS_TRM_SUB": "%s, работает на видеокарте, у которой не меньше 4 ГБ своей памяти",
-		"S_SUBS_TRM_ABSENT": "Не скачана",
-		"S_SUBS_TRM_GETTING": "Скачивается… %s%",
+		"S_SUBS_WHO_QUALITY": "Качественный",
+		"S_SUBS_WHO_SERVER": "Внешний сервер",
 		"S_SUBS_TRM_CHECKING": "Проверяется файл…",
 		"S_SUBS_TRM_READY": "Готова",
 		"S_SUBS_TRM_RUNNING": "Готова, загружена на видеокарту",
@@ -547,8 +566,6 @@ var settingsStrings = map[string]map[string]string{
 		"S_SUBS_TRM_NOCARD": "На этом компьютере она не заработает: Windows не сообщает ни об одной видеокарте.",
 		"S_SUBS_TRM_UNKNOWN": "На этом компьютере она не заработает: эта версия Windows не описывает свою видеокарту.",
 		"S_SUBS_TRM_DOWN": "Не запустилась: %s",
-		"S_SUBS_TRM_DOWN_NEXT": "До следующего запуска субтитров переводит следующий по очереди.",
-		"S_SUBS_TRM_DOWN_HEARD": "До следующего запуска субтитров текст показывается так, как был услышан.",
 		"S_SUBS_TRM_DEL_SURE": "Удалить?",
 		"S_SUBS_TRM_W_VULKAN": "драйвер видеокарты не поддерживает Vulkan",
 		"S_SUBS_TRM_W_DEVICE": "движок не видит эту видеокарту",
@@ -561,29 +578,19 @@ var settingsStrings = map[string]map[string]string{
 		"S_SUBS_TRM_CANCEL": "Отменить",
 		"S_SUBS_TRM_DEL": "Удалить",
 		"S_SUBS_TRM_TERMS": "Условия использования модели",
-		"S_SUBS_TR_QUALITY": "Переводит модель перевода на видеокарте (%s): перевод идёт фраза за фразой, через мгновение после речи.",
 		"S_SUBS_TR_MISS_CARD": "Выбран «Качественный», но видеокарта этого компьютера не подходит, поэтому текст показывается так, как был услышан.",
 		"S_SUBS_TR_MISS_MODEL": "Выбран «Качественный», но модель перевода не скачана, поэтому текст показывается так, как был услышан.",
 		"S_SUBS_TR_MISS_START": "Выбран «Качественный», но модель перевода не запустилась на видеокарте, поэтому до следующего запуска субтитров текст показывается так, как был услышан.",
-		"S_SUBS_TR_MISS_SERVER": "Выбран ваш сервер, но сервер постобработки не настроен, поэтому текст показывается так, как был услышан.",
-		"S_SUBS_WHO_FAST": "Быстрый: лёгкий движок",
-		"S_SUBS_FPK": "Языковые пакеты",
-		"S_SUBS_FPK_SUB": "Для лёгкого движка, речь %s, %s",
-		"S_SUBS_FPK_ABSENT": "Не скачан",
-		"S_SUBS_FPK_GETTING": "Скачивается… %s%",
+		"S_SUBS_TR_MISS_SERVER": "Выбран «Внешний сервер», но он не настроен, поэтому текст показывается так, как был услышан.",
+		"S_SUBS_WHO_FAST": "Быстрый",
+		"S_SUBS_FPK": "языковые пакеты",
 		"S_SUBS_FPK_CHECKING": "Проверяются файлы…",
-		"S_SUBS_FPK_READY": "Скачан",
 		"S_SUBS_FPK_BAD": "Файл пакета повреждён или неполный",
 		"S_SUBS_FPK_ERR": "Не скачан: %s",
 		"S_SUBS_FPK_EXE": "рядом с программой нет fast-translator.exe",
-		"S_SUBS_TR_FAST": "Переводит лёгкий движок перевода (%s): быстро, за сотые доли секунды на фразу, и дословнее языковой модели.",
-		"S_SUBS_TR_FAST_WAIT": "Переводит лёгкий движок перевода; он ждёт, пока язык речи определится по первым словам.",
-		"S_SUBS_TR_FAST_ONE": "Переводит лёгкий движок перевода (%s) сразу, с единственным установленным языковым пакетом, и переключится, если речь окажется на другом языке, пакеты которого установлены.",
 		"S_SUBS_TR_MISS_PACK": "Выбран «Быстрый», но языковой пакет %s не скачан, поэтому текст показывается так, как был услышан.",
 		"S_SUBS_TR_MISS_LANG": "Выбран «Быстрый», но язык речи не удалось определить по словам, поэтому до следующего запуска субтитров текст показывается так, как был услышан.",
 		"S_SUBS_TR_MISS_FAST": "Выбран «Быстрый», но лёгкий движок перевода не запустился, поэтому до следующего запуска субтитров текст показывается так, как был услышан.",
-		"S_SUBS_ORIG": "Показывать и исходный текст",
-		"S_SUBS_ORIG_SUB": "окно показывает над переводом то, что было сказано; границу между ними можно тянуть мышью",
 		"S_SUBS_KEY": "Сочетание клавиш",
 		"S_SUBS_KEY_SUB": "Запускает и останавливает субтитры из любого окна",
 		"S_SUBS_SAVE": "Сохранять расшифровку",
@@ -867,7 +874,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_ABOUT_DEPS":      "Внешние зависимости",
 		"S_ABOUT_DEPS_HINT": "Библиотеки и программы, из которых собрано приложение, и их лицензии. Адрес под каждой открывает страницу проекта.",
 		"S_DEP_WHISPER":     "Запускает модели Whisper. Работает отдельной программой whisper-server.exe рядом с приложением: приложение отдаёт ей записанный звук и получает текст. Нужна всегда, когда язык диктовки ведёт Whisper-модель, а также для перевода речи на английский.",
-		"S_DEP_LLAMA":       "Запускает модель-редактор — ту, что переписывает распознанный текст по вашим промптам и умеет переводить субтитры. Отдельная программа llama-server.exe; поднимается только когда нужна локальная модель-редактор. Вторая её сборка, llama-server-gpu.exe, запускает модель перевода на видеокарте — только пока субтитры переводятся в режиме «Качественный».",
+		"S_DEP_LLAMA":       "Запускает модель-редактор — ту, что переписывает распознанный текст по вашим промптам. Отдельная программа llama-server.exe; поднимается только когда нужна локальная модель-редактор. Вторая её сборка, llama-server-gpu.exe, запускает модель перевода на видеокарте — только пока субтитры переводятся в режиме «Качественный».",
 		"S_DEP_VULKAN": "заголовки и библиотека импорта, с которыми собран движок для видеокарты; сама среда Vulkan приходит с драйвером видеокарты",
 		"S_DEP_BERGAMOT": "лёгкий движок перевода на процессоре (fast-translator.exe) и его языковые пакеты",
 		"S_DEP_SHERPA":      "Второй движок распознавания: на нём работают GigaAM, Parakeet, Canary, Qwen и Moonshine. Именно он разбирает русскую речь по умолчанию. Живёт в файлах sherpa-server.exe и sherpa-online-server.exe.",
@@ -1091,7 +1098,7 @@ var settingsStrings = map[string]map[string]string{
 			"<p>Верхняя карточка бывает трёх видов. <b>Зелёная</b> — всё в порядке, рядом напоминание про клавиши. <b>Жёлтая</b> — вы выключили приложение через значок у часов, клавиши не работают, пока не нажмёте «Включить» тут же на карточке. <b>Красная</b> — настройки противоречат друг другу: выбрано распознавание на другом компьютере, а адрес не указан.</p>" +
 			"<p>Ниже — то, на что обычно смотрят мельком:</p>" +
 			"<ul>" +
-			"<li><b>Субтитры.</b> Карточка сразу под верхней: выключены ли субтитры, загружают модель, идут или перезапускаются, с моделью и тем, как приходит текст, их сочетание клавиш, если оно задано, кнопка, которая их запускает или останавливает, и стрелка на вкладку «Субтитры».</li>" +
+			"<li><b>Субтитры.</b> Карточка сразу под верхней: выключены ли субтитры, загружают модель, идут или перезапускаются, с моделью и тем, как приходит текст, их сочетание клавиш, если оно задано, кнопка, которая их запускает или останавливает, и стрелка на вкладку «Субтитры и перевод».</li>" +
 			"<li><b>Использование за неделю.</b> Круговая диаграмма: в какие программы уходили ваши диктовки и сколько знаков вы наговорили.</li>" +
 			"<li><b>Версия.</b> Номер сборки и кнопка проверки. Если вышла новее, приложение скажет об этом здесь же.</li>" +
 			"<li><b>Память.</b> Сколько её свободно, какая модель сейчас в ней сидит и сколько все модели весят на диске. Кнопка «Выгрузить» освобождает память немедленно — например, перед тяжёлой игрой.</li>" +
@@ -1254,15 +1261,18 @@ var settingsStrings = map[string]map[string]string{
 			"</table>" +
 			"<div class=\"hwarn\">Голос на внешний сервер не уходит никогда — только распознанный текст. Но и он уходит, так что включайте это осознанно.</div>" +
 			"<p>У каждого промпта есть <b>название</b> (по нему он виден на плашке во время работы), <b>текст указания</b> обычными словами, необязательное <b>своё сочетание клавиш</b> — диктовка им прогонит фразу только через этот промпт, минуя остальные, — и <b>проверка</b>: поле, где можно вписать фразу и посмотреть, что получится, ничего не диктуя.</p>" +
-			"<p class=\"wh\" id=\"s-subs\">Вкладка «Субтитры»</p>" +
+			"<p class=\"wh\" id=\"s-subs\">Вкладка «Субтитры и перевод»</p>" +
 			"<p>Субтитры записывают то, что звучит на компьютере, — звонок, видео, лекцию — и показывают слова в небольшом окне поверх остальных окон. Это то же распознавание, что и для диктовки, только звук берётся из динамиков, а не с микрофона, и диктовка работает, пока идут субтитры. Звуки самого приложения не записываются.</p>" +
 			"<table class=\"hopt\">" +
 			"<tr><td>Запустить субтитры</td><td>Запускает и останавливает их. Строка рядом говорит, что происходит: выключено, загружается модель, идёт прослушивание или распознавание перезапускается. То же делают меню в трее, своё сочетание клавиш и крестик на окне.</td></tr>" +
-			"<tr><td>Язык речи</td><td>Язык того, что вы слушаете, отдельно от языка диктовки. Модель — та, что этому языку дана на вкладке «Языки и модели». Потоковая модель пишет слова по ходу речи, остальные — каждую фразу после её конца. Модели Whisper на процессоре нужно много секунд на фразу, и её текст сильно отстаёт от речи; накопившиеся фразы уходят к ней вместе и выходят одной строкой.</td></tr>" +
-			"<tr><td>Перевод</td><td>Показывает в окне перевод вместо распознанного текста, на выбранном языке; заголовок окна тогда говорит «Перевод» и языки, например EN → RU. Речь режется на фразы прямо по ходу, и каждая фраза сразу уходит на перевод. Фраза заканчивается на конце предложения или перед связующим словом, а переводчик получает вместе с ней предыдущие фразы и свои переводы, так что предложение, разрезанное на части, переводится связно. Готовый перевод появляется ровно, целыми словами, со скоростью чтения, а если его накопилось много — быстрее, так что большой кусок не сдвигает текст рывком. Фразы одного отрезка речи идут одним абзацем, а после паузы начинается новая строка. Фраза, которую не удалось перевести, показывается так, как была услышана, более тусклым цветом. «Показывать и исходный текст» делит окно тонкой линией: сверху тусклым цветом то, что было сказано, снизу перевод; линию можно тянуть мышью. Кто переводит, решает строка «Кто переводит». «Качественный» — модель перевода на видеокарте: скачивается один раз, 2,3 ГБ, и нужна видеокарта, у которой не меньше 4 ГБ своей памяти; модель загружается на видеокарту, когда субтитры начинаются, и уходит с неё, когда они заканчиваются, а ссылка рядом открывает условия её использования. «Ваш сервер» — сервер постобработки, заданный на вкладке «Постобработка», и тогда каждая фраза отправляется на этот сервер. «Быстрый» — лёгкий движок перевода на процессоре: фраза занимает сотые доли секунды, для каждого направления нужен языковой пакет примерно в 35 МБ, а пара без английского идёт через английский двумя пакетами; он переводит дословнее языковой модели, поэтому там, где позволяет видеокарта, лучше выбрать «Качественный». «Выбирает программа» берёт модель перевода, если она скачана и видеокарта подходит, иначе ваш сервер, если он задан, иначе лёгкий движок, если его языковой пакет скачан, иначе модель-редактор с вкладки «Постобработка», которая переводит грубо: смысл понятен, но слова бывают неточными. Переводчика, выбранного вручную, программа никогда не подменяет другим: если он не может работать, блок говорит, чего не хватает, а текст показывается так, как был услышан. Перевод сохраняется отдельным файлом рядом с расшифровкой: каждая фраза со временем, когда она началась; фраза, которую не удалось перевести, записывается так, как была услышана. Без переводчика перевода нет, и субтитры работают как раньше.</td></tr>" +
 			"<tr><td>Сочетание клавиш</td><td>Запускает и останавливает субтитры из любого окна. Диктовку оно не начинает и не может повторять другое сочетание.</td></tr>" +
-			"<tr><td>Сохранять расшифровку</td><td>Каждый запуск пишет текстовый файл в папку transcripts рядом с программой: первая строка с датой, языком и моделью, затем каждая готовая строка со временем, когда она началась. Пока первая строка не готова, ничего не пишется. Когда перевод включён, в имени файла расшифровки стоят original и код языка речи, а рядом появляется второй файл, с translation и кодом языка перевода, например 2026-11-12_10-18-29_original_EN.txt и 2026-11-12_10-18-29_translation_RU.txt.</td></tr>" +
+			"<tr><td>Язык речи</td><td>Язык того, что вы слушаете, отдельно от языка диктовки. Модель — та, что этому языку дана на вкладке «Языки и модели». Потоковая модель пишет слова по ходу речи, остальные — каждую фразу после её конца. Модели Whisper на процессоре нужно много секунд на фразу, и её текст сильно отстаёт от речи; накопившиеся фразы уходят к ней вместе и выходят одной строкой.</td></tr>" +
+			"<tr><td>Перевод</td><td>Переключатель в заголовке включает перевод, «Язык перевода» выбирает, на какой язык. С переводом окно делится на две части: сверху тусклым цветом то, что было сказано, снизу перевод; границу между ними можно тянуть мышью, а «Строк текста» тогда считается для каждой части. Заголовок окна говорит «Перевод» и языки, например EN → RU. Речь режется на фразы прямо по ходу, и каждая фраза сразу уходит на перевод; переводчик получает вместе с ней предыдущие фразы, так что предложение, разрезанное на части, переводится связно. Фраза, которую не удалось перевести, показывается так, как была услышана. Если перевод включён, но переводить нечем, под заголовком «Перевод» появляется строка, которая говорит почему, — это единственное место на вкладке, где сказано, что окно показывает текст без перевода. Перевод сохраняется отдельным файлом рядом с расшифровкой. Переводчика выбирают одной из трёх карточек ниже; сама программа его не меняет.</td></tr>" +
+			"<tr><td>Качественный</td><td>Модель перевода на видеокарте: переводит лучше всех, фраза за фразой, через мгновение после речи. Скачивается один раз, 2,3 ГБ, и нужна видеокарта, у которой не меньше 4 ГБ своей памяти; если видеокарта не подходит, эту карточку нельзя выбрать, и в ней сказано почему. Стрелка внизу карточки скачивает модель, крестик отменяет скачивание или, вторым щелчком, удаляет её. Если выбрать «Качественный», пока модель не скачана, программа спросит, начать ли загрузку. Модель загружается на видеокарту, когда начинаются субтитры, и уходит с неё, когда они заканчиваются; ссылка в карточке открывает условия её использования.</td></tr>" +
+			"<tr><td>Быстрый</td><td>Лёгкий движок перевода на процессоре: фраза занимает сотые доли секунды, а перевод дословнее, чем у модели. Ему нужны языковые пакеты, примерно по 35 МБ. Строка «языковые пакеты» показывает добавленные пары, например English → Русский; «Добавить пакет» открывает список пар на текущий язык перевода с размером того, что ещё нужно скачать, и щелчок по паре начинает загрузку. Пакеты есть только с английским, поэтому остальные пары переводятся в два шага, через английский, и им нужны оба пакета; общий пакет скачивается один раз. Крестик у пары отменяет загрузку или, вторым щелчком, удаляет пару вместе с пакетами, которые не нужны другим парам. Когда язык речи определяется автоматически, его узнают по первым словам, и переводится речь, для которой есть пакет.</td></tr>" +
+			"<tr><td>Внешний сервер</td><td>Тот же сервер, что на вкладке «Постобработка»: OpenAI, Groq, свой vLLM — любой с совместимым API. Он настраивается и проверяется в этой карточке так же, как там, и изменение в одном месте видно в другом; настройка здесь не включает сервер для постобработки. Каждая законченная фраза субтитров отправляется на этот сервер, звук не уходит никогда.</td></tr>" +
 			"<tr><td>Окно субтитров</td><td>Где оно стоит, какого оно размера и насколько крупные буквы. Место выбирается на картинке экрана так же, как для плашки диктовки: щелчок по одному из девяти мест ставит окно туда, а со «Своим местом» его можно поставить куда угодно, перетащив отметку на картинке или само окно; при нескольких мониторах можно выбрать экран. Размер меняется мышью за края и углы окна; высота встаёт на целое число строк, а ширина и число строк запоминаются для каждого разрешения экрана. «Строк текста» действует там, где размер ещё не задан, а «Вернуть размер» забывает заданные. Колесо мыши над окном листает текст назад по три строки; пока вы читаете старое, новый текст его не сдвигает, а отметка «к последнему ↓» в заголовке возвращает к текущей речи.</td></tr>" +
+			"<tr><td>Сохранять расшифровку</td><td>Каждый запуск пишет текстовый файл в папку transcripts рядом с программой: первая строка с датой, языком и моделью, затем каждая готовая строка со временем, когда она началась. Пока первая строка не готова, ничего не пишется. Когда перевод включён, в имени файла расшифровки стоят original и код языка речи, а рядом появляется второй файл, с translation и кодом языка перевода, например 2026-11-12_10-18-29_original_EN.txt и 2026-11-12_10-18-29_translation_RU.txt.</td></tr>" +
 			"</table>" +
 			"<div class=\"hwarn\">Собеседники должны знать, что их речь записывается текстом.</div>" +
 			"<p class=\"wh\" id=\"s-about\">«О программе» и «Контакты»</p>" +
@@ -1281,7 +1291,7 @@ var settingsStrings = map[string]map[string]string{
 			"<p class=\"wh\" id=\"s-privacy\">Что уходит в интернет, а что нет</p>" +
 			"<ul>" +
 			"<li><b>Голос</b> не сохраняется и не отправляется — если вы сами не включили распознавание на другом компьютере.</li>" +
-			"<li><b>Субтитры</b> распознаются здесь же, как диктовка, а расшифровка остаётся в папке transcripts; при распознавании на другом компьютере фразы уходят на тот сервер; при переводе через ваш сервер постобработки туда же уходит каждая законченная строка.</li>" +
+			"<li><b>Субтитры</b> распознаются здесь же, как диктовка, а расшифровка остаётся в папке transcripts; при распознавании на другом компьютере фразы уходят на тот сервер; при переводе внешним сервером на него уходит каждая законченная фраза.</li>" +
 			"<li><b>Текст</b> не покидает машину — если вы сами не включили внешний сервер постобработки.</li>" +
 			"<li><b>История</b> лежит файлом рядом с приложением и чистится по вашему сроку.</li>" +
 			"<li><b>Сеть</b> нужна дважды: скачать модель и проверить обновление. Вторую проверку можно выключить.</li>" +
@@ -1336,7 +1346,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_UPDATED_TO": "Updated to version %s",
 		"S_SUBS_HERO_LIVE": "%s · words as they are spoken",
 		"S_SUBS_HERO_PHRASES": "%s · text after each phrase",
-		"S_NAV_SUBS": "Subtitles",
+		"S_NAV_SUBS": "Subtitles & translation",
 		"S_SUBS_HINT": "The app writes down what the computer plays — a call, a video — and shows the words in a window on top of the others.",
 		"S_SUBS_NOTICE": "The people you talk to should know they are being transcribed.",
 		"S_SUBS_START": "Start subtitles",
@@ -1355,22 +1365,41 @@ var settingsStrings = map[string]map[string]string{
 		"S_SUBS_GO_MODELS": "Open “Languages & models”",
 		"S_SUBS_REMOTE": "Recognition runs on another computer: each phrase is sent to that server.",
 		"S_SUBS_TR": "Translation",
-		"S_SUBS_TR_SUB": "The window shows the translation instead of the recognized text",
-		"S_SUBS_TR_OFF": "Off",
-		"S_SUBS_TR_LOCAL": "%s translates: the translation comes phrase by phrase, a moment after the speech.",
-		"S_SUBS_TR_API": "Your post-processing server (%s) translates: every phrase is sent to it, and the translation comes phrase by phrase, a moment after the speech.",
-		"S_SUBS_TR_NONE": "There is no translation model, no language pack, no post-processing server and no editor model, so there will be no translation.",
-		"S_SUBS_TR_GO": "Open “Post-processing”",
+		"S_SUBS_TR_HINT": "The window splits in two: what is heard above, the translation below; the border between them can be dragged with the mouse. Off — the window shows only what is heard.",
+		"S_SUBS_TR_LANG": "Translation language",
+		"S_SUBS_TR_MISS_MODEL_GET": "Quality is chosen, but the translation model is still downloading, so for now the text is shown as heard.",
+		"S_SUBS_TR_MISS_PACK_GET": "“Fast” is chosen, but the language pack %s is still downloading, so for now the text is shown as heard.",
+		"S_SUBS_TR_MISS_PACKS": "“Fast” is chosen, but there is no language pack for this translation language, so the text is shown as heard.",
+		"S_SUBS_TR_MISS_PACKS_GET": "“Fast” is chosen, but the language pack is still downloading, so for now the text is shown as heard.",
+		"S_SUBS_Q_HINT": "a model on the graphics card: the translation comes phrase by phrase, a moment after the speech",
+		"S_SUBS_Q_NEED": "graphics card with 4 GB of its own memory or more",
+		"S_SUBS_F_HINT": "a light engine that works without a graphics card: it translates a phrase in a few hundredths of a second, more literally than the model",
+		"S_SUBS_F_USED": "used",
+		"S_SUBS_F_NONE": "none",
+		"S_SUBS_F_GETTING": "downloading… %s%",
+		"S_SUBS_F_AUTO": "The speech language is recognized from the first words; speech that has a pack is translated.",
+		"S_SUBS_F_TWO": "%s is translated in two steps: first into English, then into %s.",
+		"S_SUBS_F_TO_DE": "German",
+		"S_SUBS_F_TO_ES": "Spanish",
+		"S_SUBS_F_TO_FR": "French",
+		"S_SUBS_F_TO_IT": "Italian",
+		"S_SUBS_F_TO_PL": "Polish",
+		"S_SUBS_F_TO_UK": "Ukrainian",
+		"S_SUBS_F_TO_RU": "Russian",
+		"S_SUBS_F_ADD": "Add a pack",
+		"S_SUBS_ADD_TITLE": "Add a language pack",
+		"S_SUBS_ADD_HAVE": "already downloaded",
+		"S_SUBS_ADD_HINT": "The light engine has packs only to and from English. Other pairs are translated in two steps — first into English, then out of it — and need both packs.",
+		"S_SUBS_PACK_DLG": "Downloading a language pack",
+		"S_SUBS_PACK_ASK": "The \"%s\" language pack is not downloaded (%s). Start downloading?",
+		"S_SUBS_API_HINT": "An external server translates the subtitles: OpenAI, Groq, your own vLLM — anything with a compatible API. It is the same server as for post-processing: change it here and it changes there too.",
+		"S_SUBS_API_NONE": "not set up",
+		"S_SUBS_API_WARN": "⚠ The recognized text of the subtitles will go to this address. Audio never leaves. The key is stored encrypted.",
+		"S_SUBS_API_CLEAR_MORE": "The subtitles stay without translation until you choose another translator.",
+		"S_SUBS_ROWS_SUB": "with translation on — in each part of the window",
 		"S_SUBS_TR_SAME": "The translation language is the same as the speech language: there is nothing to translate.",
-		"S_SUBS_WHO": "Who translates",
-		"S_SUBS_WHO_SUB": "The program takes the best one at hand, or you fix one",
-		"S_SUBS_WHO_AUTO": "The program chooses",
-		"S_SUBS_WHO_QUALITY": "Quality: a model on the graphics card",
-		"S_SUBS_WHO_SERVER": "Your own server",
-		"S_SUBS_TRM": "Translation model",
-		"S_SUBS_TRM_SUB": "%s, runs on a graphics card with at least 4 GB of its own memory",
-		"S_SUBS_TRM_ABSENT": "Not downloaded",
-		"S_SUBS_TRM_GETTING": "Downloading… %s%",
+		"S_SUBS_WHO_QUALITY": "Quality",
+		"S_SUBS_WHO_SERVER": "External server",
 		"S_SUBS_TRM_CHECKING": "Checking the file…",
 		"S_SUBS_TRM_READY": "Ready",
 		"S_SUBS_TRM_RUNNING": "Ready, loaded on the graphics card",
@@ -1381,8 +1410,6 @@ var settingsStrings = map[string]map[string]string{
 		"S_SUBS_TRM_NOCARD": "This computer cannot run it: Windows reports no graphics card.",
 		"S_SUBS_TRM_UNKNOWN": "This computer cannot run it: this version of Windows does not describe its graphics card.",
 		"S_SUBS_TRM_DOWN": "Did not start: %s",
-		"S_SUBS_TRM_DOWN_NEXT": "Until subtitles start again, the next translator in line translates.",
-		"S_SUBS_TRM_DOWN_HEARD": "Until subtitles start again, the text is shown as heard.",
 		"S_SUBS_TRM_DEL_SURE": "Delete?",
 		"S_SUBS_TRM_W_VULKAN": "the graphics driver offers no Vulkan",
 		"S_SUBS_TRM_W_DEVICE": "the engine does not see this graphics card",
@@ -1395,29 +1422,19 @@ var settingsStrings = map[string]map[string]string{
 		"S_SUBS_TRM_CANCEL": "Cancel",
 		"S_SUBS_TRM_DEL": "Delete",
 		"S_SUBS_TRM_TERMS": "Terms of use of the model",
-		"S_SUBS_TR_QUALITY": "The translation model on the graphics card (%s) translates: the translation comes phrase by phrase, a moment after the speech.",
 		"S_SUBS_TR_MISS_CARD": "Quality is chosen, but this computer's graphics card does not fit, so the text is shown as heard.",
 		"S_SUBS_TR_MISS_MODEL": "Quality is chosen, but the translation model is not downloaded, so the text is shown as heard.",
 		"S_SUBS_TR_MISS_START": "Quality is chosen, but the translation model did not start on the graphics card, so the text is shown as heard until subtitles start again.",
-		"S_SUBS_TR_MISS_SERVER": "Your own server is chosen, but no post-processing server is set, so the text is shown as heard.",
-		"S_SUBS_WHO_FAST": "Fast: a light engine",
-		"S_SUBS_FPK": "Language packs",
-		"S_SUBS_FPK_SUB": "For the light engine, speech %s, %s",
-		"S_SUBS_FPK_ABSENT": "Not downloaded",
-		"S_SUBS_FPK_GETTING": "Downloading… %s%",
+		"S_SUBS_TR_MISS_SERVER": "“External server” is chosen, but it is not set up, so the text is shown as heard.",
+		"S_SUBS_WHO_FAST": "Fast",
+		"S_SUBS_FPK": "language packs",
 		"S_SUBS_FPK_CHECKING": "Checking the files…",
-		"S_SUBS_FPK_READY": "Downloaded",
 		"S_SUBS_FPK_BAD": "A file of the pack is damaged or incomplete",
 		"S_SUBS_FPK_ERR": "Not downloaded: %s",
 		"S_SUBS_FPK_EXE": "fast-translator.exe is missing next to the program",
-		"S_SUBS_TR_FAST": "The light translation engine translates (%s): fast, a few hundredths of a second a phrase, and more literal than a language model.",
-		"S_SUBS_TR_FAST_WAIT": "The light translation engine translates; it waits until the speech language is recognized from the first words.",
-		"S_SUBS_TR_FAST_ONE": "The light translation engine translates (%s) at once with the only language pack installed, and switches if the speech turns out to be in another language whose packs are installed.",
 		"S_SUBS_TR_MISS_PACK": "“Fast” is chosen, but the language pack %s is not downloaded, so the text is shown as heard.",
 		"S_SUBS_TR_MISS_LANG": "“Fast” is chosen, but the speech language could not be recognized from the words, so the text is shown as heard until subtitles start again.",
 		"S_SUBS_TR_MISS_FAST": "“Fast” is chosen, but the light translation engine did not start, so the text is shown as heard until subtitles start again.",
-		"S_SUBS_ORIG": "Show the original text too",
-		"S_SUBS_ORIG_SUB": "the window shows what was said above the translation; the line between them can be dragged with the mouse",
 		"S_SUBS_KEY": "Shortcut",
 		"S_SUBS_KEY_SUB": "Starts and stops subtitles from any window",
 		"S_SUBS_SAVE": "Save the transcript",
@@ -1701,7 +1718,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_ABOUT_DEPS":      "External dependencies",
 		"S_ABOUT_DEPS_HINT": "The libraries and programs this app is built from, and their licences. The address under each one opens the project page.",
 		"S_DEP_WHISPER":     "Runs Whisper models. It is a separate program, whisper-server.exe, sitting next to the app: the app hands it the recorded audio and gets text back. Needed whenever a Whisper model serves your language, and for translating speech into English.",
-		"S_DEP_LLAMA":       "Runs the editor model — the one that rewrites recognised text according to your prompts and can translate subtitles. A separate program, llama-server.exe; it starts only when a local editor model is needed. Its second build, llama-server-gpu.exe, runs the translation model on the graphics card, only while subtitles are translated with “Quality”.",
+		"S_DEP_LLAMA":       "Runs the editor model — the one that rewrites recognised text according to your prompts. A separate program, llama-server.exe; it starts only when a local editor model is needed. Its second build, llama-server-gpu.exe, runs the translation model on the graphics card, only while subtitles are translated with “Quality”.",
 		"S_DEP_VULKAN": "the headers and the import library the graphics card engine is built with; the Vulkan runtime itself comes with the graphics driver",
 		"S_DEP_BERGAMOT": "the light translation engine on the processor (fast-translator.exe) and its language packs",
 		"S_DEP_SHERPA":      "The second recognition engine: GigaAM, Parakeet, Canary, Qwen and Moonshine run on it. It is what handles Russian speech by default. Lives in sherpa-server.exe and sherpa-online-server.exe.",
@@ -1925,7 +1942,7 @@ var settingsStrings = map[string]map[string]string{
 			"<p>The top card comes in three kinds. <b>Green</b>: all is well, with a reminder of the keys next to it. <b>Yellow</b>: you switched the app off from the tray icon next to the clock, and the keys do nothing until you press “Switch on” right there on the card. <b>Red</b>: the settings contradict each other. Recognition on another computer is chosen, but no address is given.</p>" +
 			"<p>Below it is what you will usually just glance at:</p>" +
 			"<ul>" +
-			"<li><b>Subtitles.</b> The card right under the top one: whether subtitles are off, loading their model, running or restarting, with the model and how the text arrives, their shortcut when one is set, a button that starts or stops them, and an arrow to the “Subtitles” tab.</li>" +
+			"<li><b>Subtitles.</b> The card right under the top one: whether subtitles are off, loading their model, running or restarting, with the model and how the text arrives, their shortcut when one is set, a button that starts or stops them, and an arrow to the “Subtitles & translation” tab.</li>" +
 			"<li><b>This week.</b> A pie chart: which programs your dictations went to and how many characters you dictated.</li>" +
 			"<li><b>Version.</b> The build number and a check button. If a newer one is out, the app tells you right here.</li>" +
 			"<li><b>Memory.</b> How much of it is free, which model is sitting in it now, and how much all the models take up on disk. The “Unload” button frees the memory at once, for example before a heavy game.</li>" +
@@ -2088,15 +2105,18 @@ var settingsStrings = map[string]map[string]string{
 			"</table>" +
 			"<div class=\"hwarn\">Your voice never goes to an external server, only the recognized text. But that text does leave, so turn this on knowingly.</div>" +
 			"<p>Each prompt has a <b>name</b> (that is how it shows on the plate while it works), the <b>instruction text</b> in ordinary words, an optional <b>shortcut of its own</b> (dictating with it runs the phrase through this prompt alone, skipping the others) and a <b>test</b>: a field where you can type a phrase and see what comes out, without dictating anything.</p>" +
-			"<p class=\"wh\" id=\"s-subs\">The “Subtitles” tab</p>" +
+			"<p class=\"wh\" id=\"s-subs\">The “Subtitles & translation” tab</p>" +
 			"<p>Subtitles write down what the computer plays — a call, a video, a lecture — and show the words in a small window that stays on top of the other windows. It is the same recognition as for dictation, only the sound comes from the speakers instead of the microphone, and dictation keeps working while subtitles run. The app’s own cues are not written down.</p>" +
 			"<table class=\"hopt\">" +
 			"<tr><td>Start subtitles</td><td>Starts and stops them. The line beside it says what is going on: off, loading the model, listening, or recognition restarting. The tray menu, a shortcut of their own and the cross on the window do the same.</td></tr>" +
-			"<tr><td>Speech language</td><td>The language of what you listen to, separate from the language you dictate in. The model is the one the “Languages & models” tab gives that language. A streaming model writes the words as they are spoken; the others write each phrase after it ends. A Whisper model needs many seconds per phrase on a processor, so its text lags well behind the speech; phrases that pile up go to it together and come out as one line.</td></tr>" +
-			"<tr><td>Translation</td><td>Shows the translation in the window instead of the recognized text, in the language you pick; the window's title then says “Translation” and the languages, for example EN → RU. Speech is cut into phrases while it goes on, and each phrase is translated at once. A phrase ends at the end of a sentence or before a linking word, and the translator gets the previous phrases and its own translations of them along with it, so a sentence cut into parts is translated as one. The translation appears steadily, whole words at a time, at reading pace, and faster when a lot has piled up, so a big piece does not make the text jump. Phrases of one stretch of speech flow as one paragraph, and a pause starts a new row. A phrase that could not be translated is shown as it was heard, in a dimmer colour. “Show the original text too” divides the window with a thin line: what was said above, in the dimmer colour, and the translation below; the line can be dragged with the mouse. “Who translates” decides who does it. “Quality” is the translation model on the graphics card: a download of 2.3 GB for a graphics card with at least 4 GB of its own memory, loaded onto the card when subtitles start and taken off it when they stop; a link next to it opens its terms of use. “Your own server” is the post-processing server set on the “Post-processing” tab, and every phrase is then sent to that server. “Fast” is a light translation engine on the processor: a phrase takes a few hundredths of a second, each direction needs a language pack of about 35 MB, and a pair without English goes through English with two packs; it translates more literally than a language model, so “Quality” is the better choice where the graphics card allows it. “The program chooses” takes the translation model when it is downloaded and the graphics card fits, otherwise your server when one is set, otherwise the light engine when its language pack is downloaded, otherwise the editor model installed on the “Post-processing” tab, which translates roughly: the meaning comes through, but words can be off. A translator chosen by hand is never replaced by another: when it cannot work, the block says what is missing and the text is shown as heard. The translation is saved as a file of its own next to the transcript: every phrase with the time it began; a phrase that could not be translated is written as it was heard. Without any translator there is no translation, and subtitles work as before.</td></tr>" +
 			"<tr><td>Shortcut</td><td>Starts and stops subtitles from any window. It never starts a dictation and cannot repeat another shortcut.</td></tr>" +
-			"<tr><td>Save the transcript</td><td>Every run writes a text file into the transcripts folder next to the program: a first line with the date, the language and the model, then each finished line with the time it began. Nothing is written until the first line is finished. When translation is on, the transcript's name carries original and the code of the speech language, and a second file appears beside it with translation and the code of the target language, for example 2026-11-12_10-18-29_original_EN.txt and 2026-11-12_10-18-29_translation_RU.txt.</td></tr>" +
+			"<tr><td>Speech language</td><td>The language of what you listen to, separate from the language you dictate in. The model is the one the “Languages & models” tab gives that language. A streaming model writes the words as they are spoken; the others write each phrase after it ends. A Whisper model needs many seconds per phrase on a processor, so its text lags well behind the speech; phrases that pile up go to it together and come out as one line.</td></tr>" +
+			"<tr><td>Translation</td><td>The switch in the heading turns translation on, and “Translation language” picks the language. With translation the window has two parts: what was said above in a dimmer colour, the translation below; the border between them can be dragged with the mouse, and “Rows of text” then counts for each part. The window title says “Translation” and the languages, for example EN → RU. The speech is cut into phrases as it goes, and every phrase goes to translation at once; the translator gets the previous phrases with it, so a sentence cut into pieces is translated as one. A phrase that could not be translated is shown as heard. When translation is on but nothing can translate, a line under the “Translation” heading says why — it is the only place on the tab that says the window shows the text without translation. The translation is saved as a separate file next to the transcript. The translator is chosen with one of the three cards below; the program never changes it by itself.</td></tr>" +
+			"<tr><td>Quality</td><td>A translation model on the graphics card: it translates best, phrase by phrase, a moment after the speech. It is downloaded once, 2.3 GB, and needs a graphics card with at least 4 GB of its own memory; when the graphics card does not fit, this card cannot be chosen and says why. The arrow at the bottom of the card downloads the model, the cross cancels the download or, on a second click, deletes the model. Choosing “Quality” while the model is not downloaded asks whether to start the download. The model is loaded onto the graphics card when subtitles start and leaves it when they end; the link on the card opens its terms of use.</td></tr>" +
+			"<tr><td>Fast</td><td>A light translation engine on the processor: a phrase takes a few hundredths of a second, and the translation is more literal than the model’s. It needs language packs of about 35 MB each. The “language packs” row shows the pairs you added, for example English → Русский; “Add a pack” opens the list of pairs into the current translation language with the size still to download, and a click on a pair starts the download. Packs exist only to and from English, so other pairs are translated in two steps, through English, and need both packs; a shared pack is downloaded once. The cross next to a pair cancels the download or, on a second click, removes the pair together with the packs no other pair needs. When the speech language is detected automatically, it is recognized from the first words, and speech that has a pack is translated.</td></tr>" +
+			"<tr><td>External server</td><td>The same server as on the “Post-processing” tab: OpenAI, Groq, your own vLLM — anything with a compatible API. It is set up and tested on this card the same way as there, and a change in one place shows in the other; setting it up here does not turn the server on for post-processing. Every finished phrase of the subtitles is sent to this server; audio never leaves.</td></tr>" +
 			"<tr><td>Subtitles window</td><td>Where it stands, how large it is and how large the letters are. The place is chosen on the picture of a screen, the same way as for the dictation plate: a click on one of the nine places puts the window there, and with “Your own spot” it can stand anywhere, by dragging the mark on the picture or the window itself; with more than one monitor you can pick the screen. The size changes by dragging the window's edges and corners; the height snaps to whole rows, and the width and the rows are remembered for each screen resolution. “Rows of text” applies where no size has been set yet, and “Reset the size” forgets the ones that were. The mouse wheel over the window scrolls the text back three rows a notch; while you read older text new text does not move it, and the “to the latest ↓” mark in the title returns to the current speech.</td></tr>" +
+			"<tr><td>Save the transcript</td><td>Every run writes a text file into the transcripts folder next to the program: a first line with the date, the language and the model, then each finished line with the time it began. Nothing is written until the first line is finished. When translation is on, the transcript's name carries original and the code of the speech language, and a second file appears beside it with translation and the code of the target language, for example 2026-11-12_10-18-29_original_EN.txt and 2026-11-12_10-18-29_translation_RU.txt.</td></tr>" +
 			"</table>" +
 			"<div class=\"hwarn\">The people you talk to should know they are being transcribed.</div>" +
 			"<p class=\"wh\" id=\"s-about\">“About” and “Contacts”</p>" +
@@ -2115,7 +2135,7 @@ var settingsStrings = map[string]map[string]string{
 			"<p class=\"wh\" id=\"s-privacy\">What goes online and what does not</p>" +
 			"<ul>" +
 			"<li><b>Your voice</b> is neither saved nor sent anywhere, unless you yourself turned on recognition on another computer.</li>" +
-			"<li><b>Subtitles</b> are recognized here, the same way as dictation, and the transcript stays in the transcripts folder; with recognition on another computer, the phrases go to that server; with translation through your own post-processing server, every finished line goes there too.</li>" +
+			"<li><b>Subtitles</b> are recognized here, the same way as dictation, and the transcript stays in the transcripts folder; with recognition on another computer, the phrases go to that server; with translation by the external server, every finished phrase goes to it.</li>" +
 			"<li><b>The text</b> does not leave the machine, unless you yourself turned on an external post-processing server.</li>" +
 			"<li><b>The history</b> is a file next to the app and is cleaned up on the schedule you set.</li>" +
 			"<li><b>The network</b> is needed twice: to download a model and to check for an update. The second can be turned off.</li>" +

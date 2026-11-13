@@ -389,23 +389,7 @@ func TestCleanTranslationRejectsTheWrongScript(t *testing.T) {
 	}
 }
 
-func TestTranslateGrammarForbidsTheForeignScripts(t *testing.T) {
-	want := "root ::= [^⺀-鿿가-힯぀-ヿ＀-￯]*"
-	for _, code := range TranslateTargets {
-		if got := TranslateGrammar(code); got != want {
-			t.Errorf("grammar for %s: %q", code, got)
-		}
-	}
-	for _, r := range []rune{0x2e80, 0x9fff, 0xac00, 0xd7af, 0x3040, 0x30ff, 0xff00, 0xffef} {
-		if !strings.ContainsRune(want, r) {
-			t.Errorf("the grammar lacks the real character %U", r)
-		}
-	}
-	for _, code := range []string{"", "auto", "xx", "DE", "zh"} {
-		if got := TranslateGrammar(code); got != "" {
-			t.Errorf("grammar for an unknown code %q: %q", code, got)
-		}
-	}
+func TestForeignScriptsAreRejected(t *testing.T) {
 	for _, r := range []rune{0x2e80, 0x4e2d, 0x9fff, 0xac00, 0xd7af, 0x3042, 0x30a2, 0xff01, 0xffef} {
 		if _, v := CleanTranslation("Hello", "Hallo "+string(r), "de"); v != TrScript {
 			t.Errorf("an answer with %U was not rejected: %q", r, v)
@@ -571,8 +555,8 @@ func TestHistoryGrowsAndIsCutBack(t *testing.T) {
 		sizes []int
 		last  []string
 	}{
-		{HistoryKeepServer, []int{1, 2, 3, 4, 5, 6, 7, 3, 4, 5, 6, 7, 3}, []string{"11", "12", "13"}},
-		{HistoryKeepLocal, []int{1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6}, []string{"8", "9", "10", "11", "12", "13"}},
+		{HistoryKeep, []int{1, 2, 3, 4, 5, 6, 7, 3, 4, 5, 6, 7, 3}, []string{"11", "12", "13"}},
+		{1, []int{1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6}, []string{"8", "9", "10", "11", "12", "13"}},
 	}
 	for _, c := range cases {
 		h := NewHistory(HistoryLimit, c.keep)
@@ -590,8 +574,8 @@ func TestHistoryGrowsAndIsCutBack(t *testing.T) {
 			t.Fatal("clear left turns")
 		}
 	}
-	if HistoryLimit != 8 || HistoryKeepServer != 3 || HistoryKeepLocal != 1 {
-		t.Fatalf("limits %d %d %d", HistoryLimit, HistoryKeepServer, HistoryKeepLocal)
+	if HistoryLimit != 8 || HistoryKeep != 3 {
+		t.Fatalf("limits %d %d", HistoryLimit, HistoryKeep)
 	}
 	h := NewHistory(8, 3)
 	h.Add(Turn{Source: "a", Translation: "b"})

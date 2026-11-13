@@ -125,9 +125,8 @@ func TranslateMessages(target string, history []Turn, text string) []Message {
 }
 
 const (
-	HistoryLimit      = 8
-	HistoryKeepServer = 3
-	HistoryKeepLocal  = 1
+	HistoryLimit = 8
+	HistoryKeep  = 3
 )
 
 type History struct {
@@ -284,15 +283,6 @@ var foreignScripts = []*unicode.RangeTable{{R16: []unicode.Range16{
 	{Lo: 0xac00, Hi: 0xd7af, Stride: 1},
 	{Lo: 0xff00, Hi: 0xffef, Stride: 1},
 }}}
-
-const translateGrammar = "root ::= [^⺀-鿿가-힯぀-ヿ＀-￯]*"
-
-func TranslateGrammar(target string) string {
-	if LanguageName(target) == "" {
-		return ""
-	}
-	return translateGrammar
-}
 
 func lowerWordsIn(answer string, script *unicode.RangeTable) int {
 	n := 0

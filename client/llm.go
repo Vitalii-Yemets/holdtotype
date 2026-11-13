@@ -62,7 +62,7 @@ type llamaServer struct {
 	primed  atomic.Bool
 }
 
-func (s *llamaServer) prime(to, grammar string) error {
+func (s *llamaServer) prime(to string) error {
 	s.primeMu.Lock()
 	defer s.primeMu.Unlock()
 	if s.primed.Load() {
@@ -71,7 +71,7 @@ func (s *llamaServer) prime(to, grammar string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), subtitles.TranslateWarmWait)
 	defer cancel()
 	for _, msgs := range subtitles.WarmMessages(to) {
-		if _, err := s.chatStream(ctx, msgs, 1, grammar, nil); err != nil {
+		if _, err := s.chatStream(ctx, msgs, 1, "", nil); err != nil {
 			if ctx.Err() == context.DeadlineExceeded {
 				return fmt.Errorf("%s %w: the first requests took more than %.0f s", s.label, errEngineTimeout, subtitles.TranslateWarmWait.Seconds())
 			}
@@ -87,8 +87,6 @@ func (a *App) translatorWarm(kind string) bool {
 	switch kind {
 	case editorFast:
 		return a.fastWarm()
-	case editorLocal:
-		p = a.editorEng.live()
 	case editorQuality:
 		p = a.gpuEng.live()
 	default:
@@ -99,7 +97,7 @@ func (a *App) translatorWarm(kind string) bool {
 }
 
 func needsStart(kind string) bool {
-	return kind == editorLocal || kind == editorQuality || kind == editorFast
+	return kind == editorQuality || kind == editorFast
 }
 
 func asLlama(p engineProc, err error) (*llamaServer, error) {
@@ -115,11 +113,7 @@ func asLlama(p engineProc, err error) (*llamaServer, error) {
 
 func (a *App) warmTranslator(kind, to string) error {
 	var f *llmFlight
-	grammar := ""
 	switch kind {
-	case editorLocal:
-		f = a.llmWarmUp()
-		grammar = subtitles.TranslateGrammar(to)
 	case editorQuality:
 		f = a.qualityWarmUp()
 	case editorFast:
@@ -134,13 +128,12 @@ func (a *App) warmTranslator(kind, to string) error {
 	if err != nil {
 		return err
 	}
-	return s.prime(to, grammar)
+	return s.prime(to)
 }
 
 type engineProc interface {
 	alive() bool
 	stop()
-	pid() int
 	waitReady(time.Duration) error
 }
 
@@ -667,14 +660,7 @@ func (a *App) ensureLLM() (*llamaServer, error) {
 	return asLlama(a.ensureEngine(&a.editorEng, editorEngine))
 }
 
-func (a *App) llmWarmUp() *llmFlight { return a.warmEngine(&a.editorEng, editorEngine) }
-
-func (a *App) llmWait(ctx context.Context) (*llamaServer, error) {
-	return asLlama(a.waitEngine(ctx, &a.editorEng, editorEngine, "the editor model is still starting"))
-}
-
 const (
-	editorLocal   = subtitles.KindEditor
 	editorAPI     = subtitles.KindServer
 	editorQuality = subtitles.KindQuality
 	editorFast    = subtitles.KindFast
@@ -693,22 +679,12 @@ func (s editorSource) label() string {
 	switch s.kind {
 	case editorAPI:
 		return s.name + " (post-processing server)"
-	case editorLocal:
-		return s.name + " (local)"
 	case editorQuality:
 		return "the built-in translation model (graphics card " + s.name + ")"
 	case editorFast:
 		return "the light translation engine (" + s.name + ")"
 	}
 	return "none"
-}
-
-func llmName(cfg *Config) string {
-	base := filepath.Base(cfg.LLMModel)
-	if strings.EqualFold(filepath.Ext(base), ".gguf") {
-		base = base[:len(base)-len(".gguf")]
-	}
-	return base
 }
 
 func translationSource(cfg *Config) editorSource {
@@ -719,7 +695,6 @@ func translationSource(cfg *Config) editorSource {
 		CardFits:    fits,
 		QualityDown: qualityDown() != nil,
 		Server:      postAPISet(cfg),
-		Editor:      llmInstalled(cfg),
 		Fast:        fast.ok,
 		FastMissing: fast.missing,
 	})
@@ -727,8 +702,6 @@ func translationSource(cfg *Config) editorSource {
 	switch pick.Kind {
 	case editorAPI:
 		src.name = postAPIName(cfg)
-	case editorLocal:
-		src.name = llmName(cfg)
 	case editorQuality:
 		src.name = card.Name
 	case editorFast:
@@ -738,38 +711,12 @@ func translationSource(cfg *Config) editorSource {
 	return src
 }
 
-var errNoEditor = errors.New("no editor model is installed and no post-processing server is set")
+var errNoTranslator = errors.New("this translator does not translate by a language model")
 
-func (a *App) editorChat(ctx context.Context, cfg *Config, src editorSource, system, user string, maxTokens int, localGrammar string) (string, error) {
-	switch src.kind {
-	case editorAPI:
-		return externalChatWith(ctx, cfg, system, user, chatOptions{maxTokens: maxTokens, quiet: true})
-	case editorLocal:
-		llm, err := a.llmWait(ctx)
-		if err != nil {
-			return "", err
-		}
-		return llm.chatWith(ctx, system, user, maxTokens, localGrammar)
-	case editorQuality:
-		srv, err := a.qualityWait(ctx)
-		if err != nil {
-			return "", err
-		}
-		return srv.chatWith(ctx, system, user, maxTokens, "")
-	}
-	return "", errNoEditor
-}
-
-func (a *App) editorStream(ctx context.Context, cfg *Config, src editorSource, msgs []subtitles.Message, maxTokens int, localGrammar string, onText func(string)) (string, error) {
+func (a *App) editorStream(ctx context.Context, cfg *Config, src editorSource, msgs []subtitles.Message, maxTokens int, onText func(string)) (string, error) {
 	switch src.kind {
 	case editorAPI:
 		return externalChatStream(ctx, cfg, msgs, maxTokens, onText)
-	case editorLocal:
-		llm, err := a.llmWait(ctx)
-		if err != nil {
-			return "", err
-		}
-		return llm.chatStream(ctx, msgs, maxTokens, localGrammar, onText)
 	case editorQuality:
 		srv, err := a.qualityWait(ctx)
 		if err != nil {
@@ -777,5 +724,5 @@ func (a *App) editorStream(ctx context.Context, cfg *Config, src editorSource, m
 		}
 		return srv.chatStream(ctx, msgs, maxTokens, "", onText)
 	}
-	return "", errNoEditor
+	return "", errNoTranslator
 }

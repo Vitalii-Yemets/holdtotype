@@ -240,6 +240,7 @@ func (a *App) qualityShutdown() {
 }
 
 type trModelUI struct {
+	Name    string `json:"name"`
 	State   string `json:"state"`
 	Pct     int    `json:"pct"`
 	Err     string `json:"err"`
@@ -255,7 +256,7 @@ type trModelUI struct {
 
 func (a *App) trModelView() trModelUI {
 	card, fits := qualityCard()
-	v := trModelUI{SizeMB: trmodel.SizeMB(), Fits: fits, Card: card.Name, Reason: cardCode, CardMB: cardMB, NeedMB: gpucard.NeedMB}
+	v := trModelUI{Name: trmodel.Name, SizeMB: trmodel.SizeMB(), Fits: fits, Card: card.Name, Reason: cardCode, CardMB: cardMB, NeedMB: gpucard.NeedMB}
 	if f := qualityDown(); f != nil {
 		v.Down = f.code
 	}
@@ -399,7 +400,7 @@ func runGPUCheck(args []string) {
 	}
 	log.Printf("gpucheck: ready in %.1f s", time.Since(started).Seconds())
 	primed := time.Now()
-	if err := srv.prime("ru", ""); err != nil {
+	if err := srv.prime("ru"); err != nil {
 		log.Printf("gpucheck: the priming request failed: %v", err)
 	} else {
 		log.Printf("gpucheck: warm after %.1f s of priming, %.1f s after the start", time.Since(primed).Seconds(), time.Since(started).Seconds())

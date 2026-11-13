@@ -165,7 +165,6 @@ type subWindow struct {
 	monitor string
 	custom  map[string]ovplace.Frac
 	box     map[string]subwin.Box
-	orig    bool
 	onClose func()
 	onMoved func(key string, f ovplace.Frac)
 	onSized func(key string, b subwin.Box)
@@ -265,7 +264,6 @@ func (sw *subWindow) configure(cfg *Config) {
 	sw.monitor = mon
 	sw.custom = places
 	sw.box = boxes
-	sw.orig = cfg.SubtitlesOriginal
 	hwnd := sw.hwnd
 	sw.mu.Unlock()
 	if hwnd != 0 {
@@ -442,7 +440,7 @@ func (sw *subWindow) measure(wa, screen rect, dpi int32) (w, h, lineH int32) {
 	rows := sw.rows
 	b, sized := sw.box[ovplace.ResKey(toPlace(screen))]
 	sw.mu.Unlock()
-	sw.top = 0
+	rows, sw.top = subwin.DefaultRows(rows, int32(len(sw.parts)))
 	if sized {
 		w, rows = px(b.W), b.Rows
 		sw.top = b.Top
@@ -460,15 +458,10 @@ func (sw *subWindow) setParts() {
 		return
 	}
 	translated, _, _ := src.windowHeader()
-	sw.mu.Lock()
-	orig := sw.orig
-	sw.mu.Unlock()
 	sw.partsTr = translated
 	kinds := []int{partHeard}
-	if translated && orig {
+	if translated {
 		kinds = []int{partHeard, partTranslation}
-	} else if translated {
-		kinds = []int{partTranslation}
 	}
 	same := len(kinds) == len(sw.parts)
 	for i := 0; same && i < len(kinds); i++ {
@@ -1255,7 +1248,7 @@ var swDemoPieces = []swDemoPiece{
 	{"If not, Anna will walk us through the plan for the next two weeks.", "Если нет, Анна расскажет нам о плане на следующие две недели.", true, false, false},
 }
 
-func swDemoScript(d *swDemo, both bool) []func() {
+func swDemoScript(d *swDemo) []func() {
 	var steps []func()
 	idle := func(n int) {
 		for i := 0; i < n; i++ {
@@ -1269,9 +1262,7 @@ func swDemoScript(d *swDemo, both bool) []func() {
 			seq++
 			d.board.AddPiece(seq, pc.para, pc.source)
 			d.board.SetPiece(seq, pc.text, subtitles.PieceDone)
-			if both {
-				d.board.Add(time.Now(), pc.source)
-			}
+			d.board.Add(time.Now(), pc.source)
 		}
 	})
 	first := len(swDemoHistory)
@@ -1284,20 +1275,14 @@ func swDemoScript(d *swDemo, both bool) []func() {
 			}
 			hearing(true)
 			words := strings.Fields(pc.source)
-			if both {
-				for k := 1; k <= len(words); k += 2 {
-					shown := strings.Join(words[:k], " ")
-					steps = append(steps, func() { d.board.SetLive(shown) })
-				}
-			} else {
-				idle(len(words) / 2)
+			for k := 1; k <= len(words); k += 2 {
+				shown := strings.Join(words[:k], " ")
+				steps = append(steps, func() { d.board.SetLive(shown) })
 			}
 			steps = append(steps, func() {
 				d.board.AddPiece(n, pc.para, pc.source)
-				if both {
-					d.board.Add(time.Now(), pc.source)
-					d.board.SetLive("")
-				}
+				d.board.Add(time.Now(), pc.source)
+				d.board.SetLive("")
 			})
 			idle(1)
 			steps = append(steps, func() { d.board.SetPiece(n, "", subtitles.PieceRunning) })
@@ -1337,26 +1322,21 @@ func runSubwindowDemo(args []string) {
 		}
 	}
 	translate := len(args) > 1 && strings.TrimSpace(args[1]) != ""
-	both := translate && len(args) > 2 && strings.TrimSpace(args[2]) == "both"
 	langCode, to := "auto", "ru"
 	if cfg, err := loadConfig("config.json"); err == nil && cfg != nil {
 		registerBundledFonts()
 		initLang(cfg.UILanguage)
 		applyTheme(cfg.Skin, cfg.Theme)
-		c := *cfg
-		if both {
-			c.SubtitlesOriginal = true
-		}
-		subWindowConfigure(&c)
+		subWindowConfigure(cfg)
 		langCode = cfg.SubtitlesLanguage
-		if cfg.SubtitlesTranslate != "" {
+		if validTranslateLang(cfg.SubtitlesTranslate) {
 			to = cfg.SubtitlesTranslate
 		}
 	}
 	demo := &swDemo{phase: subPhaseLoading, board: subtitles.NewBoard(subBoardKeep), translate: translate, lang: langCode, to: to}
 	var script []func()
 	if translate {
-		script = swDemoScript(demo, both)
+		script = swDemoScript(demo)
 	}
 	closed := make(chan struct{})
 	var once sync.Once
@@ -1365,12 +1345,9 @@ func runSubwindowDemo(args []string) {
 	}, func(key string, b subwin.Box) {
 		log.Printf("subwindow: the size %s %d dip, %d rows, %d above the line is not saved by the demo", key, b.W, b.Rows, b.Top)
 	})
-	switch {
-	case both:
+	if translate {
 		log.Printf("subwindow: showing the subtitles window with the heard text and the translation for %d s", seconds)
-	case translate:
-		log.Printf("subwindow: showing the subtitles window with translation for %d s", seconds)
-	default:
+	} else {
 		log.Printf("subwindow: showing the subtitles window for %d s", seconds)
 	}
 	end := time.After(time.Duration(seconds) * time.Second)

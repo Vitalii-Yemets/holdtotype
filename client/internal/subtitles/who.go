@@ -1,14 +1,12 @@
 package subtitles
 
 const (
-	ChoiceAuto    = ""
 	ChoiceQuality = "quality"
 	ChoiceServer  = "server"
 	ChoiceFast    = "fast"
 
 	KindQuality = "quality"
 	KindServer  = "api"
-	KindEditor  = "local"
 	KindFast    = "fast"
 
 	MissingCard   = "card"
@@ -16,9 +14,9 @@ const (
 	MissingStart  = "start"
 	MissingServer = "server"
 	MissingPack   = "pack"
+	MissingPacks  = "packs"
 	MissingLang   = "lang"
 	MissingFast   = "faststart"
-	MissingAll    = "none"
 )
 
 type Avail struct {
@@ -26,7 +24,6 @@ type Avail struct {
 	CardFits    bool
 	QualityDown bool
 	Server      bool
-	Editor      bool
 	Fast        bool
 	FastMissing string
 }
@@ -44,7 +41,7 @@ type translatorEntry struct {
 	missing func(Avail) string
 }
 
-var translatorOrder = []translatorEntry{
+var translators = []translatorEntry{
 	{KindQuality, ChoiceQuality, func(a Avail) string {
 		switch {
 		case !a.CardFits:
@@ -71,20 +68,11 @@ var translatorOrder = []translatorEntry{
 		}
 		return MissingPack
 	}},
-	{KindEditor, "", func(a Avail) string {
-		if !a.Editor {
-			return MissingAll
-		}
-		return ""
-	}},
 }
 
 func ValidTranslatorChoice(c string) bool {
-	if c == ChoiceAuto {
-		return true
-	}
-	for _, e := range translatorOrder {
-		if e.choice != "" && e.choice == c {
+	for _, e := range translators {
+		if e.choice == c {
 			return true
 		}
 	}
@@ -92,17 +80,44 @@ func ValidTranslatorChoice(c string) bool {
 }
 
 func ChooseTranslator(choice string, a Avail) Choice {
-	if choice != ChoiceAuto {
-		for _, e := range translatorOrder {
-			if e.choice == choice {
-				return Choice{Kind: e.kind, Missing: e.missing(a)}
-			}
+	for _, e := range translators {
+		if e.choice == choice {
+			return Choice{Kind: e.kind, Missing: e.missing(a)}
 		}
 	}
-	for _, e := range translatorOrder {
-		if e.missing(a) == "" {
-			return Choice{Kind: e.kind}
+	return Choice{}
+}
+
+type Have struct {
+	CardFits   bool
+	ModelReady bool
+	Server     bool
+	PairReady  bool
+}
+
+func SettleTranslator(h Have) string {
+	switch {
+	case h.CardFits && h.ModelReady:
+		return ChoiceQuality
+	case h.Server:
+		return ChoiceServer
+	case h.PairReady:
+		return ChoiceFast
+	case h.CardFits:
+		return ChoiceQuality
+	}
+	return ChoiceFast
+}
+
+func TranslationSetting(lang string, on, saved bool, ui string) (string, bool) {
+	if !saved {
+		on = LanguageName(lang) != ""
+	}
+	if LanguageName(lang) == "" {
+		lang = "en"
+		if LanguageName(ui) != "" {
+			lang = ui
 		}
 	}
-	return Choice{Missing: MissingAll}
+	return lang, on
 }

@@ -169,10 +169,10 @@ type settingsForm struct {
 	SubtitlesPos      *string                  `json:"subtitles_position"`
 	SubtitlesMonitor  *string                  `json:"subtitles_monitor"`
 	SubtitlesBox      *map[string]subwin.Box   `json:"subtitles_box"`
-	SubtitlesOriginal *bool                    `json:"subtitles_original"`
 
-	SubtitlesTranslate  *string `json:"subtitles_translate"`
-	SubtitlesTranslator *string `json:"subtitles_translator"`
+	SubtitlesTranslateOn *bool   `json:"subtitles_translate_on"`
+	SubtitlesTranslate   *string `json:"subtitles_translate"`
+	SubtitlesTranslator  *string `json:"subtitles_translator"`
 }
 
 func (a *App) openSettings(tab string) {
@@ -398,8 +398,8 @@ func (a *App) settingsThread(tab string, attempt int) {
 		_ = w.Bind("appModelDl", func(id string) {
 			a.downloadModel(id)
 		})
-		_ = w.Bind("appFastPack", func(action, lang string) string {
-			return a.fastPackAction(action, lang)
+		_ = w.Bind("appFastPack", func(action, pair string) string {
+			return a.fastPackAction(action, pair)
 		})
 		_ = w.Bind("appTrModel", func(action string) string {
 			switch action {
@@ -991,10 +991,10 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	if f.SubtitlesBox != nil {
 		c.SubtitlesBox = subwin.CleanBoxes(*f.SubtitlesBox)
 	}
-	if f.SubtitlesOriginal != nil {
-		c.SubtitlesOriginal = *f.SubtitlesOriginal
+	if f.SubtitlesTranslateOn != nil {
+		c.SubtitlesTranslateOn = *f.SubtitlesTranslateOn
 	}
-	if f.SubtitlesTranslate != nil && (*f.SubtitlesTranslate == "" || validTranslateLang(*f.SubtitlesTranslate)) {
+	if f.SubtitlesTranslate != nil && validTranslateLang(*f.SubtitlesTranslate) {
 		c.SubtitlesTranslate = *f.SubtitlesTranslate
 	}
 	if f.SubtitlesTranslator != nil && subtitles.ValidTranslatorChoice(*f.SubtitlesTranslator) {
@@ -1140,9 +1140,9 @@ func settingsHTML(cfg *Config, tab string) string {
 		"subtitles_position":      cfg.SubtitlesPos,
 		"subtitles_monitor":       cfg.SubtitlesMonitor,
 		"subtitles_custom":        cfg.SubtitlesXY,
+		"subtitles_translate_on":  cfg.SubtitlesTranslateOn,
 		"subtitles_translate":     cfg.SubtitlesTranslate,
 		"subtitles_translator":    cfg.SubtitlesTranslator,
-		"subtitles_original":      cfg.SubtitlesOriginal,
 		"translate_target":        cfg.TranslateTarget,
 		"translate_ask":           cfg.TranslateAsk,
 		"translate_ask_seconds":   cfg.TranslateAskSeconds,
@@ -1244,7 +1244,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"stautorunsub": "S_ST_AUTORUN_SUB", "stoverlaysub": "S_ST_OVERLAY_SUB", "sthint": "S_STATE_HINT",
 		"stoverlay": "S_ST_OVERLAY", "stbeep": "S_ST_BEEP", "stautorun": "S_ST_AUTORUN", "stpost": "S_ST_POST",
 		"stonm": "S_ST_ON_M", "stoffm": "S_ST_OFF_M", "stmicok": "S_ST_MIC_OK", "stmicbad": "S_ST_MIC_BAD",
-		"stlocal": "S_ST_LOCAL", "stchecked": "S_ST_CHECKED", "stgb": "S_ST_GB", "stmb": "S_ST_MB", "substrfastone": "S_SUBS_TR_FAST_ONE", "stcheck": "S_ST_CHECK", "strecog": "S_ST_RECOG", "stver": "S_ST_VER", "stlatest": "S_ST_LATEST", "stoutdated": "S_ST_OUTDATED", "stupdok": "S_ST_UPD_OK", "stupddl": "S_ST_UPD_DL",
+		"stlocal": "S_ST_LOCAL", "stchecked": "S_ST_CHECKED", "stgb": "S_ST_GB", "stmb": "S_ST_MB", "stcheck": "S_ST_CHECK", "strecog": "S_ST_RECOG", "stver": "S_ST_VER", "stlatest": "S_ST_LATEST", "stoutdated": "S_ST_OUTDATED", "stupdok": "S_ST_UPD_OK", "stupddl": "S_ST_UPD_DL",
 		"navmic": "S_NAV_MIC", "overlay": "S_OVERLAY", "beep": "S_BEEP", "autorun": "S_AUTORUN", "postenable": "S_POST_ENABLE",
 		"berropen": "S_BERR_OPEN", "retry": "S_RETRY", "updcheck": "S_UPD_CHECK", "postapi": "S_POSTAPI", "histtill": "S_HIST_TILL", "histtill1": "S_HIST_TILL1", "histtillfull": "S_HIST_TILL_FULL",
 		"skipadddlg": "S_SKIP_ADD_DLG", "skipeditdlg": "S_SKIP_EDIT_DLG", "skipname": "S_SKIP_NAME", "skipnamesub": "S_SKIP_NAME_SUB",
@@ -1273,17 +1273,23 @@ func settingsHTML(cfg *Config, tab string) string {
 		"subsposscheme": "S_SUBS_POS_SCHEME_SUB", "subsposdrag": "S_SUBS_POS_DRAG_SUB", "subsboxdone": "S_SUBS_BOX_DONE",
 		"subson": "S_SUBS_ON", "subsherohint": "S_SUBS_HERO_HINT", "subsherolive": "S_SUBS_HERO_LIVE", "subsherophrases": "S_SUBS_HERO_PHRASES",
 		"subsherostart": "S_SUBS_HERO_START", "subsherostop": "S_SUBS_HERO_STOP",
-		"substrlocal": "S_SUBS_TR_LOCAL", "substrapi": "S_SUBS_TR_API", "substrquality": "S_SUBS_TR_QUALITY", "substrnone": "S_SUBS_TR_NONE",
+		"substrsame": "S_SUBS_TR_SAME", "subsmissmodelget": "S_SUBS_TR_MISS_MODEL_GET",
 		"subsmisscard": "S_SUBS_TR_MISS_CARD", "subsmissmodel": "S_SUBS_TR_MISS_MODEL", "subsmissstart": "S_SUBS_TR_MISS_START", "subsmissserver": "S_SUBS_TR_MISS_SERVER",
-		"trmsub": "S_SUBS_TRM_SUB", "trmabsent": "S_SUBS_TRM_ABSENT", "trmget": "S_SUBS_TRM_GETTING", "trmcheck": "S_SUBS_TRM_CHECKING",
+		"trmcheck": "S_SUBS_TRM_CHECKING", "trmcancel": "S_SUBS_TRM_CANCEL", "trmdel": "S_SUBS_TRM_DEL",
 		"trmready": "S_SUBS_TRM_READY", "trmrunning": "S_SUBS_TRM_RUNNING", "trmbad": "S_SUBS_TRM_BAD", "trmerr": "S_SUBS_TRM_ERR",
 		"trmsmall": "S_SUBS_TRM_SMALL", "trmint": "S_SUBS_TRM_INTEGRATED", "trmnocard": "S_SUBS_TRM_NOCARD", "trmunknown": "S_SUBS_TRM_UNKNOWN",
-		"trmdown": "S_SUBS_TRM_DOWN", "trmdownnext": "S_SUBS_TRM_DOWN_NEXT", "trmdownheard": "S_SUBS_TRM_DOWN_HEARD", "trmdelsure": "S_SUBS_TRM_DEL_SURE",
+		"trmdown": "S_SUBS_TRM_DOWN", "trmdelsure": "S_SUBS_TRM_DEL_SURE",
 		"trmwvulkan": "S_SUBS_TRM_W_VULKAN", "trmwdevice": "S_SUBS_TRM_W_DEVICE", "trmwmemory": "S_SUBS_TRM_W_MEMORY", "trmwcrash": "S_SUBS_TRM_W_CRASH",
 		"trmwtimeout": "S_SUBS_TRM_W_TIMEOUT", "trmwport": "S_SUBS_TRM_W_PORT", "trmwexe": "S_SUBS_TRM_W_EXE",
-		"fpksub": "S_SUBS_FPK_SUB", "fpkabsent": "S_SUBS_FPK_ABSENT", "fpkget": "S_SUBS_FPK_GETTING", "fpkcheck": "S_SUBS_FPK_CHECKING",
-		"fpkready": "S_SUBS_FPK_READY", "fpkbad": "S_SUBS_FPK_BAD", "fpkerr": "S_SUBS_FPK_ERR", "fpkexe": "S_SUBS_FPK_EXE",
-		"substrfast": "S_SUBS_TR_FAST", "substrfastwait": "S_SUBS_TR_FAST_WAIT", "subsmisspack": "S_SUBS_TR_MISS_PACK",
+		"fpkcheck": "S_SUBS_FPK_CHECKING", "fpkbad": "S_SUBS_FPK_BAD", "fpkerr": "S_SUBS_FPK_ERR",
+		"fnone": "S_SUBS_F_NONE", "fget": "S_SUBS_F_GETTING", "fauto": "S_SUBS_F_AUTO", "ftwo": "S_SUBS_F_TWO",
+		"ftode": "S_SUBS_F_TO_DE", "ftoes": "S_SUBS_F_TO_ES", "ftofr": "S_SUBS_F_TO_FR", "ftoit": "S_SUBS_F_TO_IT",
+		"ftopl": "S_SUBS_F_TO_PL", "ftouk": "S_SUBS_F_TO_UK", "ftoru": "S_SUBS_F_TO_RU",
+		"addtitle": "S_SUBS_ADD_TITLE", "addhint": "S_SUBS_ADD_HINT", "addhave": "S_SUBS_ADD_HAVE",
+		"packdlg": "S_SUBS_PACK_DLG", "packask": "S_SUBS_PACK_ASK",
+		"subsapinone": "S_SUBS_API_NONE", "subsapiwarn": "S_SUBS_API_WARN", "subsapiclear": "S_SUBS_API_CLEAR_MORE",
+		"subsmisspack": "S_SUBS_TR_MISS_PACK", "subsmisspackget": "S_SUBS_TR_MISS_PACK_GET",
+		"subsmisspacks": "S_SUBS_TR_MISS_PACKS", "subsmisspacksget": "S_SUBS_TR_MISS_PACKS_GET",
 		"subsmisslang": "S_SUBS_TR_MISS_LANG", "subsmissfast": "S_SUBS_TR_MISS_FAST", "depbergamot": "S_DEP_BERGAMOT",
 		"updatedto": "S_UPDATED_TO",
 	} {
@@ -1893,6 +1899,30 @@ input.srcpick:disabled,input.srvpick:disabled{opacity:.4;cursor:default}
 #stt_srv_card .srccard.idle>*,#stt_srv_card .srccard.idle>.acts,#stt_srv_card .srccard.idle>.srchead,
 #post_model_card .srccard.idle>*,#post_model_card .srccard.idle>.acts,#post_model_card .srccard.idle>.srchead{opacity:1}
 #p-post .card+.card{margin-top:18px;border-top:1px solid var(--soft);padding-top:18px}
+#p-subs .card+.card{margin-top:18px;border-top:1px solid var(--soft);padding-top:18px}
+#p-subs #subs_who_card{margin-top:0;border-top:0;padding-top:0}
+#subs_who_card .srccard.idle>*,#subs_who_card .srccard.idle>.acts,#subs_who_card .srccard.idle>.srchead{opacity:1}
+#subs_who_card .trcard{min-height:172px;display:flex;flex-direction:column}
+#subs_who_card .trcard .sum{flex:1;display:flex;flex-direction:column;gap:6px;margin:8px 0 10px}
+#subs_who_card .trcard .acts{align-items:center}
+#subs_who_card .trcard .psize{color:var(--dim);font-size:12px}
+#subs_who_card .trcard .plates{display:flex;gap:8px;flex-wrap:wrap}
+#subs_who_card .trcard .pmt{border:1px solid var(--line);border-radius:calc(var(--r) * .4);padding:1px 8px;font-size:10px;letter-spacing:.06em;white-space:nowrap;color:var(--lbl,var(--dim));text-shadow:var(--lblglow,none)}
+#subs_who_card .trcard .plnk{font-size:12px}
+#subs_who_card .srccard.nofit{cursor:default}
+#subs_who_card .srccard.nofit:hover{border-color:var(--line)}
+#subs_who_card .srccard.idle .flang .iconbtn{pointer-events:auto}
+#subs_who_card button.iconbtn.armed{color:var(--bad);font-size:11px}
+#subs_who_card .flangs{display:flex;flex-wrap:wrap;gap:4px 16px}
+#subs_who_card .flang{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+#subs_who_card .flang .fbusy{color:var(--amber)}
+#subs_who_card .flang .iconbtn{padding:0 3px;font-size:11px}
+#subs_add_list{display:flex;flex-direction:column;max-height:50vh;overflow-y:auto}
+#subs_add_list button.arow{appearance:none;border:0;border-bottom:1px solid var(--soft);background:none;color:var(--green);font:inherit;font-size:12.5px;text-align:left;width:100%}
+#subs_add_list button.arow:last-child{border-bottom:0}
+#subs_add_list button.arow:hover{background:var(--navon)}
+#subs_add_list .arow .asize{flex:none;margin-left:auto;color:var(--dim);font-size:12px}
+#subs_add_dlg>.hint{font-size:11.5px;color:var(--dim);line-height:1.5}
 #p-history .card+.card{margin-top:16px;border-top:1px solid var(--soft);padding-top:12px}
 #p-history .card>.row:last-child{padding-bottom:0}
 #p-history #hist_skip_list{margin-bottom:0}
@@ -2443,9 +2473,11 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
    <button type="button" class="mini pri" id="subs_go">{{S_SUBS_START}}</button></div>
   <div class="hint">{{S_SUBS_HINT}}</div>
   <div class="note warn" id="subs_notice">{{S_SUBS_NOTICE}}</div>
+  <div class="row"><label>{{S_SUBS_KEY}}<span class="sub">{{S_SUBS_KEY_SUB}}</span></label>
+   <button type="button" class="hotkey-val" id="subs_key" title="{{S_CHANGE}}"></button></div>
  </div>
  <div class="card">
-  <div class="row"><label>{{S_SUBS_LANG}}<span class="sub">{{S_SUBS_LANG_SUB}}</span></label>
+  <div class="row noline"><label>{{S_SUBS_LANG}}<span class="sub">{{S_SUBS_LANG_SUB}}</span></label>
    <select id="subtitles_language">
     <option value="auto">{{S_RECAUTO}}</option>
     <option value="de">Deutsch</option><option value="en">English</option>
@@ -2459,52 +2491,50 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
   <div class="hint" id="subs_remote" style="display:none">{{S_SUBS_REMOTE}}</div>
  </div>
  <div class="card" id="subs_tr_card">
-  <div class="row"><label>{{S_SUBS_TR}}<span class="sub">{{S_SUBS_TR_SUB}}</span></label>
+  <div class="row noline"><label class="blklbl">{{S_SUBS_TR}}<span class="sub warn" id="subs_tr_warn" style="display:none"></span></label><input type="checkbox" id="subtitles_translate_on"></div>
+  <div class="hint">{{S_SUBS_TR_HINT}}</div>
+  <div class="row" id="subs_tr_lang_row"><label>{{S_SUBS_TR_LANG}}</label>
    <select id="subtitles_translate">
-    <option value="">{{S_SUBS_TR_OFF}}</option>
     <option value="de">Deutsch</option><option value="en">English</option>
     <option value="es">Español</option><option value="fr">Français</option>
     <option value="it">Italiano</option><option value="pl">Polski</option>
     <option value="uk">Українська</option><option value="ru">Русский</option>
    </select></div>
-  <div class="row" id="subs_who_row"><label>{{S_SUBS_WHO}}<span class="sub">{{S_SUBS_WHO_SUB}}</span></label>
-   <select id="subtitles_translator">
-    <option value="">{{S_SUBS_WHO_AUTO}}</option>
-    <option value="quality">{{S_SUBS_WHO_QUALITY}}</option>
-    <option value="server">{{S_SUBS_WHO_SERVER}}</option>
-    <option value="fast">{{S_SUBS_WHO_FAST}}</option>
-   </select></div>
-  <div class="row" id="subs_trm_row"><label>{{S_SUBS_TRM}}<span class="sub" id="subs_trm_sub"></span><span class="sub" id="subs_trm_state"></span></label>
-   <button type="button" class="mini" id="subs_trm_dl" style="display:none">{{S_SUBS_TRM_DL}}</button>
-   <button type="button" class="mini" id="subs_trm_cancel" style="display:none">{{S_SUBS_TRM_CANCEL}}</button>
-   <button type="button" class="mini danger" id="subs_trm_del" style="display:none">{{S_SUBS_TRM_DEL}}</button></div>
-  <div class="hint" id="subs_trm_note" style="display:none"></div>
-  <div class="hint"><span class="lnk" id="subs_trm_terms">{{S_SUBS_TRM_TERMS}}</span></div>
-  <div class="row" id="subs_fpk_row"><label>{{S_SUBS_FPK}}<span class="sub" id="subs_fpk_sub"></span><span class="sub" id="subs_fpk_state"></span></label>
-   <select id="subs_fpk_lang"></select>
-   <button type="button" class="mini" id="subs_fpk_dl" style="display:none">{{S_SUBS_TRM_DL}}</button>
-   <button type="button" class="mini" id="subs_fpk_cancel" style="display:none">{{S_SUBS_TRM_CANCEL}}</button>
-   <button type="button" class="mini danger" id="subs_fpk_del" style="display:none">{{S_SUBS_TRM_DEL}}</button></div>
-  <div class="hint" id="subs_tr_hint" style="display:none"></div>
-  <div class="row noline" id="subs_tr_none_row" style="display:none"><label><span class="sub warn" id="subs_tr_none">{{S_SUBS_TR_NONE}}</span></label>
-   <button type="button" class="mini" id="subs_tr_dl" style="display:none">{{S_SUBS_TRM_DL}}</button>
-   <button type="button" class="mini" id="subs_tr_go">{{S_SUBS_TR_GO}}</button></div>
-  <div class="hint" id="subs_tr_same" style="display:none">{{S_SUBS_TR_SAME}}</div>
-  <div class="row" id="subs_orig_row"><label>{{S_SUBS_ORIG}}<span class="sub">{{S_SUBS_ORIG_SUB}}</span></label><input type="checkbox" id="subtitles_original"></div>
  </div>
- <div class="card">
-  <div class="row"><label>{{S_SUBS_KEY}}<span class="sub">{{S_SUBS_KEY_SUB}}</span></label>
-   <button type="button" class="hotkey-val" id="subs_key" title="{{S_CHANGE}}"></button>
-   <button type="button" class="iconbtn danger" id="subs_key_clear" title="{{S_LANG_KEY_CLEAR}}">&#10005;</button></div>
- </div>
- <div class="card">
-  <div class="row"><label>{{S_SUBS_SAVE}}<span class="sub">{{S_SUBS_SAVE_SUB}}</span></label><input type="checkbox" id="subtitles_save"></div>
-  <div class="row"><label>{{S_SUBS_FOLDER}}<span class="sub"><span class="code">transcripts\</span></span></label>
-   <button type="button" class="mini" id="subs_folder">{{S_OPEN_FOLDER}}</button></div>
+ <div class="card" id="subs_who_card">
+  <div class="srccard trcard idle" id="subs_src_quality" data-who="quality">
+   <h3 class="srchead"><input type="radio" name="subssrc" class="srcpick" id="subs_pick_quality">{{S_SUBS_WHO_QUALITY}}</h3>
+   <div class="hint">{{S_SUBS_Q_HINT}}</div>
+   <div class="hint" id="subs_q_note" style="display:none"></div>
+   <div class="sum">
+    <div class="plates"><span class="pmt" id="subs_q_name"></span><span class="pmt">{{S_SUBS_Q_NEED}}</span></div>
+    <div class="plnk"><span class="lnk" id="subs_trm_terms">{{S_SUBS_TRM_TERMS}}</span></div>
+   </div>
+   <div class="acts"><span class="psize" id="subs_q_size" style="display:none"></span><span class="mpct" id="subs_q_pct" style="display:none"></span><span class="psize" id="subs_q_state" style="display:none"></span><button type="button" class="iconbtn" id="subs_q_dl" title="{{S_SUBS_TRM_DL}}" style="display:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12"/><path d="M6 11l6 6 6-6"/><path d="M4 21h16"/></svg></button><button type="button" class="iconbtn danger" id="subs_q_x" style="display:none">&#10005;</button></div>
+  </div>
+  <div class="srccard trcard idle" id="subs_src_fast" data-who="fast">
+   <h3 class="srchead"><input type="radio" name="subssrc" class="srcpick" id="subs_pick_fast">{{S_SUBS_WHO_FAST}}</h3>
+   <div class="hint">{{S_SUBS_F_HINT}}</div>
+   <div class="hint" id="subs_f_exe" style="display:none">{{S_SUBS_FPK_EXE}}</div>
+   <div class="sum">
+    <div class="sumrow"><span class="sumk">{{S_SUBS_FPK}}</span><span class="sumv flangs" id="subs_f_pairs"></span></div>
+    <div class="sumrow" id="subs_f_used_row" style="display:none"><span class="sumk">{{S_SUBS_F_USED}}</span><span class="sumv" id="subs_f_used"></span></div>
+   </div>
+   <div class="hint" id="subs_f_note" style="display:none"></div>
+   <div class="acts"><button type="button" class="mini" id="subs_f_add">{{S_SUBS_F_ADD}}</button></div>
+  </div>
+  <div class="srccard trcard idle" id="subs_src_api" data-who="server">
+   <h3 class="srchead"><input type="radio" name="subssrc" class="srcpick" id="subs_pick_api">{{S_SUBS_WHO_SERVER}}</h3>
+   <div class="hint">{{S_SUBS_API_HINT}}</div>
+   <div class="sum" id="subs_api_sum"></div>
+   <div class="note warn" id="subs_api_warn"></div>
+   <div class="note bad" id="subs_api_err"></div>
+   <div class="acts"><button type="button" class="mini" id="subs_api_test">{{S_API_TEST}}</button><button type="button" class="mini danger" id="subs_api_clear" style="display:none">{{S_API_CLEAR}}</button><button type="button" class="mini" id="subs_api_edit">{{S_POSTAPI_SETUP}}</button></div>
+  </div>
  </div>
  <div class="card">
   <label class="blklbl">{{S_SUBS_WINDOW}}</label>
-  <div class="row"><label>{{S_SUBS_ROWS}}</label>
+  <div class="row"><label>{{S_SUBS_ROWS}}<span class="sub">{{S_SUBS_ROWS_SUB}}</span></label>
    <select id="subtitles_lines"><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option></select></div>
   <div class="row"><label>{{S_SUBS_SIZE}}</label>
    <select id="subtitles_size"><option value="s">{{S_SUBS_SIZE_S}}</option><option value="m">{{S_SUBS_SIZE_M}}</option><option value="l">{{S_SUBS_SIZE_L}}</option></select></div>
@@ -2516,6 +2546,11 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
    <div id="subs_scheme_slot"></div></div>
   <div class="row" id="subsmon_row" style="display:none"><label>{{S_SUBS_MON}}<span class="sub">{{S_SUBS_MON_SUB}}</span></label>
    <select id="subtitles_monitor"></select></div>
+ </div>
+ <div class="card">
+  <div class="row"><label>{{S_SUBS_SAVE}}<span class="sub">{{S_SUBS_SAVE_SUB}}</span></label><input type="checkbox" id="subtitles_save"></div>
+  <div class="row"><label>{{S_SUBS_FOLDER}}<span class="sub"><span class="code">transcripts\</span></span></label>
+   <button type="button" class="mini" id="subs_folder">{{S_OPEN_FOLDER}}</button></div>
  </div>
 </div>
 
@@ -3969,9 +4004,7 @@ let pendingAssign = null;
 function subsEl(id){ return document.getElementById(id); }
 function paintSubsKey(){
   const btn = subsEl("subs_key");
-  const clear = subsEl("subs_key_clear");
   if(btn) btn.textContent = subsKey || L.langkeyset;
-  if(clear) clear.style.display = subsKey ? "" : "none";
   paintSubsHeroKey();
 }
 function paintSubsHeroKey(){
@@ -4079,150 +4112,280 @@ function trmCardText(m){
   if(m.reason === "unknown") return L.trmunknown;
   return L.trmnocard;
 }
-function trmCanGet(m){
-  return !!(m && m.fits && (m.state === "absent" || m.state === "bad" || m.state === "error"));
-}
-function renderTrModel(on){
-  const row = subsEl("subs_trm_row");
-  if(!row) return;
-  const m = (subsTr && subsTr.model) || {state: "absent", size: 2374, fits: false};
-  const choice = (subsEl("subtitles_translator")||{}).value || "";
-  const st = m.state || "absent";
-  let state = "";
-  if(st === "downloading") state = L.trmget.replace("%s", ()=>String(m.pct || 0));
-  else if(st === "checking") state = L.trmcheck;
-  else if(st === "ready") state = m.down ? L.trmdown.replace("%s", ()=>trmWhy(m.down)) : (m.running ? L.trmrunning : L.trmready);
-  else if(st === "bad") state = L.trmbad;
-  else if(st === "error") state = L.trmerr.replace("%s", ()=>m.err || "");
-  else state = L.trmabsent;
-  subsEl("subs_trm_sub").textContent = L.trmsub.replace("%s", ()=>sizeLabel(m.size || 0));
-  const se = subsEl("subs_trm_state");
-  se.textContent = state;
-  se.classList.toggle("warn", st === "bad" || st === "error" || (st === "ready" && !!m.down));
-  subsEl("subs_trm_dl").style.display = trmCanGet(m) ? "" : "none";
-  subsEl("subs_trm_cancel").style.display = st === "downloading" ? "" : "none";
-  const del = subsEl("subs_trm_del");
-  del.style.display = st === "ready" || st === "bad" ? "" : "none";
-  if(del.style.display === "none" && del.dataset.armed){ delete del.dataset.armed; del.textContent = del.dataset.word; }
-  let note = trmCardText(m);
-  if(st === "ready" && m.down) note = (note ? note + " " : "") + (choice === "quality" ? L.trmdownheard : L.trmdownnext);
-  const ne = subsEl("subs_trm_note");
-  ne.textContent = note;
-  ne.style.display = note ? "" : "none";
-  ne.classList.toggle("warn", !!note);
-  [row, subsEl("subs_who_row")].forEach(r=>r && r.classList.toggle("dimmed", !on));
-}
-let fpkPick = "";
+let subsWho = CFG.subtitles_translator || "fast";
+let subsArmed = "", subsArmTimer = 0;
+function subsOn(){ return !!(subsEl("subtitles_translate_on")||{}).checked; }
+function subsTo(){ return (subsEl("subtitles_translate")||{}).value || "en"; }
+function subsSpeech(){ return (subsEl("subtitles_language")||{}).value || "auto"; }
+function subsModel(){ return (subsTr && subsTr.model) || {state: "absent", size: 0, fits: false, name: ""}; }
+function subsFast(){ return (subsTr && subsTr.fast) || {exe: true, pairs: [], offer: [], used: 0}; }
 function langName(code){
   const o = document.querySelector('#subtitles_translate option[value="' + code + '"]');
   return o ? o.textContent : code;
 }
-function packName(key){
-  return (key || "").split("-").map(langName).join(" → ");
+function pairName(from, to){ return langName(from) + " → " + langName(to); }
+function pairChain(p){ return ((p.packs || []).length > 1 ? [p.from, "en", p.to] : [p.from, p.to]).map(langName).join(" → "); }
+function subsTip(el, text){
+  el.removeAttribute("title");
+  el.dataset.tip = text;
+  if(el.tagName === "BUTTON") el.setAttribute("aria-label", text);
 }
-function fpkRoute(){
-  const f = (subsTr && subsTr.fast) || {routes: []};
-  const routes = f.routes || [];
-  const speech = (subsEl("subtitles_language")||{}).value || "auto";
-  let pick = fpkPick || (speech !== "auto" ? speech : (f.lang || ""));
-  if(!routes.some(r=>r.lang === pick)) pick = (routes.find(r=>r.state === "ready") || routes[0] || {}).lang || "";
-  return [routes, routes.find(r=>r.lang === pick) || null];
-}
-function renderFastPacks(on){
-  const row = subsEl("subs_fpk_row");
-  if(!row) return;
-  const to = (subsEl("subtitles_translate")||{}).value || "";
-  const [routes, r] = fpkRoute();
-  const sel = subsEl("subs_fpk_lang");
-  const want = routes.map(x=>x.lang).join(",");
-  if(sel.dataset.langs !== want){
-    sel.innerHTML = "";
-    routes.forEach(x=>{ const o = document.createElement("option"); o.value = x.lang; o.textContent = langName(x.lang); sel.appendChild(o); });
-    sel.dataset.langs = want;
+function subsPair(from, to){ return (subsFast().pairs || []).find(p=>p.from === from && p.to === to) || null; }
+function subsArm(key, action){
+  if(subsArmed === key){
+    subsArmed = "";
+    clearTimeout(subsArmTimer);
+    action();
+    return;
   }
-  row.style.display = to && routes.length ? "" : "none";
-  if(!r){ return; }
-  sel.value = r.lang;
-  const route = [r.lang].concat((r.packs || []).length > 1 ? ["en"] : []).concat([to]).map(langName).join(" → ");
-  subsEl("subs_fpk_sub").textContent = L.fpksub.replace("%s", ()=>route).replace("%s", ()=>sizeLabel(r.size || 0));
-  let state = L.fpkabsent;
-  if(r.state === "downloading") state = L.fpkget.replace("%s", ()=>String(r.pct || 0));
-  else if(r.state === "checking") state = L.fpkcheck;
-  else if(r.state === "ready") state = L.fpkready;
-  else if(r.state === "bad") state = L.fpkbad;
-  else if(r.state === "error") state = L.fpkerr.replace("%s", ()=>r.err || "");
-  const f = (subsTr && subsTr.fast) || {};
-  if(f.exe === false) state = L.fpkexe;
-  const se = subsEl("subs_fpk_state");
-  se.textContent = state;
-  se.classList.toggle("warn", r.state === "bad" || r.state === "error" || f.exe === false);
-  subsEl("subs_fpk_dl").style.display = ["absent", "bad", "error"].includes(r.state) ? "" : "none";
-  subsEl("subs_fpk_cancel").style.display = r.state === "downloading" ? "" : "none";
-  const del = subsEl("subs_fpk_del");
-  del.style.display = r.state === "ready" || r.state === "bad" ? "" : "none";
-  if(del.style.display === "none" && del.dataset.armed){ delete del.dataset.armed; del.textContent = del.dataset.word; }
-  row.classList.toggle("dimmed", !on);
+  subsArmed = key;
+  clearTimeout(subsArmTimer);
+  subsArmTimer = setTimeout(()=>{ subsArmed = ""; renderSubsTr(); }, 4000);
+  renderSubsTr();
 }
-async function fastPackAct(action, lang){
-  const r = await appFastPack(action, lang || subsEl("subs_fpk_lang").value);
-  if(r) toast(r, "ok");
-  refreshState();
+function subsWarnText(){
+  if(!subsOn()) return "";
+  const to = subsTo(), sp = subsSpeech();
+  if(sp !== "auto" && sp === to) return L.substrsame;
+  const tr = subsTr || {};
+  if(tr.choice !== subsWho) return "";
+  const miss = tr.missing || "";
+  if(subsWho === "quality"){
+    const st = subsModel().state;
+    if(miss === "card") return L.subsmisscard;
+    if(miss === "model") return st === "downloading" || st === "checking" ? L.subsmissmodelget : L.subsmissmodel;
+    if(miss === "start") return L.subsmissstart;
+    return "";
+  }
+  if(subsWho === "fast"){
+    if(miss === "pack"){
+      const from = String(tr.pair || "").split("-")[0] || (sp !== "auto" ? sp : "");
+      const p = subsPair(from, to);
+      return (p && p.state === "downloading" ? L.subsmisspackget : L.subsmisspack).replace("%s", ()=>pairName(from, to));
+    }
+    if(miss === "packs") return (subsFast().pairs || []).some(p=>p.to === to && p.state === "downloading") ? L.subsmisspacksget : L.subsmisspacks;
+    if(miss === "lang") return L.subsmisslang;
+    if(miss === "faststart") return L.subsmissfast;
+    return "";
+  }
+  return miss === "server" ? L.subsmissserver : "";
+}
+function renderSubsQuality(){
+  const m = subsModel(), st = m.state || "absent", fits = !!m.fits;
+  const show = (id, on)=>{ const el = subsEl(id); if(el) el.style.display = on ? "" : "none"; return el; };
+  subsEl("subs_q_name").textContent = m.name || "";
+  subsEl("subs_src_quality").classList.toggle("nofit", !fits);
+  const canGet = fits && (st === "absent" || st === "bad" || st === "error");
+  show("subs_q_size", canGet).textContent = sizeLabel(m.size || 0);
+  show("subs_q_dl", canGet);
+  show("subs_q_pct", st === "downloading").textContent = (m.pct || 0) + "%";
+  const ready = st === "ready";
+  const state = show("subs_q_state", ready || st === "checking");
+  state.textContent = st === "checking" ? L.trmcheck : (m.running ? L.trmrunning : L.trmready);
+  const x = show("subs_q_x", st === "downloading" || ready || st === "bad");
+  const armed = st !== "downloading" && subsArmed === "q";
+  x.textContent = armed ? L.trmdelsure : "✕";
+  x.classList.toggle("armed", armed);
+  subsTip(x, st === "downloading" ? L.trmcancel : L.trmdel);
+  const notes = [trmCardText(m)];
+  if(st === "bad") notes.push(L.trmbad);
+  if(st === "error") notes.push(L.trmerr.replace("%s", ()=>m.err || ""));
+  if(ready && m.down) notes.push(L.trmdown.replace("%s", ()=>trmWhy(m.down)));
+  const note = notes.filter(Boolean).join(" ");
+  show("subs_q_note", !!note).textContent = note;
+}
+function renderSubsFast(){
+  const f = subsFast(), to = subsTo(), sp = subsSpeech(), box = subsEl("subs_f_pairs");
+  const pairs = f.pairs || [];
+  const shape = pairs.map(p=>p.key).join(",");
+  if(box.dataset.shape !== shape){
+    box.dataset.shape = shape;
+    box.innerHTML = "";
+    pairs.forEach(p=>{
+      const el = document.createElement("span");
+      el.className = "flang";
+      el.id = "subs_pair_" + p.key;
+      const name = document.createElement("span");
+      name.className = "fname";
+      const x = document.createElement("button");
+      x.type = "button";
+      x.className = "iconbtn danger";
+      x.dataset.pair = p.key;
+      el.appendChild(name);
+      el.appendChild(x);
+      box.appendChild(el);
+    });
+    if(!pairs.length) box.textContent = L.fnone;
+  }
+  box.classList.toggle("off", !pairs.length);
+  pairs.forEach(p=>{
+    const el = subsEl("subs_pair_" + p.key);
+    if(!el) return;
+    const name = el.querySelector(".fname"), x = el.querySelector(".iconbtn");
+    name.textContent = pairName(p.from, p.to);
+    let extra = "";
+    if(p.state === "downloading") extra = L.fget.replace("%s", ()=>String(p.pct || 0));
+    else if(p.state === "checking") extra = L.fpkcheck;
+    else if(p.state === "bad") extra = L.fpkbad;
+    else if(p.state === "error") extra = L.fpkerr.replace("%s", ()=>p.err || "");
+    if(extra){
+      const b = document.createElement("span");
+      b.className = "fbusy";
+      b.textContent = " — " + extra;
+      name.appendChild(b);
+    }
+    const armed = subsArmed === "pair:" + p.key && p.state !== "downloading";
+    x.textContent = armed ? L.trmdelsure : "✕";
+    x.classList.toggle("armed", armed);
+    subsTip(x, p.state === "downloading" ? L.trmcancel : L.trmdel);
+    subsTip(el, pairChain(p) + " · " + sizeLabel(p.size || 0));
+  });
+  const used = f.used || 0;
+  subsEl("subs_f_used_row").style.display = used ? "" : "none";
+  subsEl("subs_f_used").textContent = sizeLabel(used);
+  subsEl("subs_f_exe").style.display = f.exe === false ? "" : "none";
+  const into = pairs.filter(p=>p.to === to);
+  let note = "";
+  if(sp === "auto" && into.length) note = L.fauto;
+  else if(sp !== "auto" && sp !== to){
+    const p = subsPair(sp, to);
+    if(p && (p.packs || []).length > 1 && p.state === "ready") note = L.ftwo.replace("%s", ()=>pairName(sp, to)).replace("%s", ()=>L["fto" + to] || langName(to));
+  }
+  const n = subsEl("subs_f_note");
+  n.textContent = note;
+  n.style.display = note ? "" : "none";
+  subsEl("subs_f_add").disabled = !(f.offer || []).length;
 }
 function renderSubsTr(){
-  const sel = subsEl("subtitles_translate");
-  if(!sel) return;
-  const to = sel.value;
-  const lang = (subsEl("subtitles_language")||{}).value || "auto";
-  const tr = subsTr || {kind: "", name: ""};
-  const m = tr.model || null;
-  let hint = "", none = "", same = false, go = false, get = false, fastGet = "";
-  if(to && to === lang) same = true;
-  else if(to && subsTr){
-    const miss = tr.missing || (tr.kind ? "" : "none");
-    if(!miss && tr.kind === "api") hint = L.substrapi.replace("%s", ()=>tr.name || "");
-    else if(!miss && tr.kind === "local") hint = L.substrlocal.replace("%s", ()=>tr.name || "");
-    else if(!miss && tr.kind === "quality") hint = L.substrquality.replace("%s", ()=>tr.name || "");
-    else if(!miss && tr.kind === "fast"){
-      const f = tr.fast || {};
-      const inst = f.installed || [];
-      const routeOf = (l)=>[l].concat(String(tr.name || "").includes(" → en → ") || (l !== "en" && to !== "en" && !f.lang) ? ["en"] : []).concat([to]).map(langName).join(" → ");
-      if(f.lang) hint = L.substrfast.replace("%s", ()=>routeOf(f.lang));
-      else if(inst.length === 1) hint = L.substrfastone.replace("%s", ()=>routeOf(inst[0]));
-      else hint = L.substrfastwait;
-    }
-    else {
-      none = ({card: L.subsmisscard, model: L.subsmissmodel, start: L.subsmissstart, server: L.subsmissserver,
-        pack: L.subsmisspack.replace("%s", ()=>packName(tr.detail)), lang: L.subsmisslang, faststart: L.subsmissfast})[miss] || L.substrnone;
-      go = miss === "server" || miss === "none";
-      get = (miss === "model" || miss === "none") && trmCanGet(m);
-      fastGet = miss === "pack" ? (tr.detail || "").split("-")[0] : "";
-    }
-  }
-  const h = subsEl("subs_tr_hint");
-  if(h){ h.textContent = hint; h.style.display = hint ? "" : "none"; }
-  const n = subsEl("subs_tr_none_row");
-  if(n){
-    n.style.display = none ? "" : "none";
-    if(none) subsEl("subs_tr_none").textContent = none;
-    subsEl("subs_tr_go").style.display = go ? "" : "none";
-    const dlb = subsEl("subs_tr_dl");
-    dlb.style.display = get || fastGet ? "" : "none";
-    dlb.dataset.pack = fastGet;
-  }
-  const s = subsEl("subs_tr_same");
-  if(s) s.style.display = same ? "" : "none";
-  const orig = subsEl("subtitles_original");
-  if(orig){
-    orig.disabled = !to;
-    orig.closest(".row").classList.toggle("dimmed", !to);
-  }
-  renderTrModel(!!to);
-  renderFastPacks(!!to);
+  const sw = subsEl("subtitles_translate_on");
+  if(!sw) return;
+  const on = sw.checked;
+  subsEl("subtitles_translate").disabled = !on;
+  subsEl("subs_tr_lang_row").classList.toggle("dimmed", !on);
+  subsEl("subs_who_card").classList.toggle("offdim", !on);
+  const fits = !!subsModel().fits;
+  [["quality", "subs_src_quality", "subs_pick_quality"], ["fast", "subs_src_fast", "subs_pick_fast"], ["server", "subs_src_api", "subs_pick_api"]].forEach(([w, card, pick])=>{
+    const c = subsEl(card), p = subsEl(pick);
+    c.classList.toggle("on", subsWho === w);
+    c.classList.toggle("idle", subsWho !== w);
+    p.checked = subsWho === w;
+    p.disabled = !on || (w === "quality" && !fits);
+  });
+  renderSubsQuality();
+  renderSubsFast();
+  const warn = subsWarnText();
+  const wl = subsEl("subs_tr_warn");
+  wl.textContent = warn;
+  wl.style.display = warn ? "" : "none";
 }
 async function trModelAct(action){
   const r = await appTrModel(action);
   if(r) toast(r, "ok");
   refreshState();
+}
+async function fastPackAct(action, key){
+  const r = await appFastPack(action, key);
+  if(r) toast(r, "ok");
+  refreshState();
+}
+async function subsChoose(who){
+  if(!subsOn() || subsWho === who){ renderSubsTr(); return; }
+  const m = subsModel();
+  if(who === "quality"){
+    if(!m.fits){ renderSubsTr(); return; }
+    if(m.state === "absent" || m.state === "error"){
+      renderSubsTr();
+      if(!await askConfirm(L.dlask.replace("%s", ()=>m.name || "").replace("%s", ()=>sizeLabel(m.size || 0)), L.dlstart, null, L.mtdl)){ renderSubsTr(); return; }
+      subsWho = who;
+      renderSubsTr();
+      await doSave();
+      trModelAct("download");
+      return;
+    }
+  }
+  if(who === "fast"){
+    const sp = subsSpeech(), to = subsTo();
+    if(sp !== "auto" && sp !== to){
+      const p = subsPair(sp, to);
+      if(!p || (p.state !== "ready" && p.state !== "downloading" && p.state !== "checking")){
+        const key = sp + "-" + to;
+        const offer = (subsFast().offer || []).find(o=>o.from === sp);
+        const need = p ? p.need : (offer ? offer.need : 0);
+        renderSubsTr();
+        if(!await askConfirm(L.packask.replace("%s", ()=>pairName(sp, to)).replace("%s", ()=>sizeLabel(need || 0)), L.dlstart, null, L.packdlg)){ renderSubsTr(); return; }
+        subsWho = who;
+        renderSubsTr();
+        await doSave();
+        fastPackAct("add", key);
+        return;
+      }
+    }
+  }
+  subsWho = who;
+  renderSubsTr();
+  doSave();
+}
+function openAddPack(){
+  const f = subsFast(), to = subsTo();
+  const offer = f.offer || [];
+  if(!offer.length) return;
+  const bg = document.createElement("div");
+  bg.className = "modal-bg";
+  const box = document.createElement("div");
+  box.className = "modal formmodal";
+  box.id = "subs_add_dlg";
+  box.setAttribute("role", "dialog");
+  box.setAttribute("aria-modal", "true");
+  mTitle(box, L.addtitle);
+  const list = document.createElement("div");
+  list.id = "subs_add_list";
+  box.appendChild(list);
+  const hint = document.createElement("div");
+  hint.className = "hint";
+  hint.id = "subs_add_hint";
+  hint.textContent = L.addhint;
+  hint.style.display = offer.some(o=>o.via) ? "" : "none";
+  box.appendChild(hint);
+  const row = document.createElement("div");
+  row.className = "modal-btns";
+  const no = document.createElement("button");
+  no.type = "button";
+  no.className = "btn ghost";
+  no.id = "subs_add_cancel";
+  no.textContent = L.cancel;
+  row.appendChild(no);
+  box.appendChild(row);
+  const from = document.activeElement;
+  const close = ()=>{
+    bg.remove();
+    document.removeEventListener("keydown", onKey, true);
+    unlockBg();
+    if(from && from.focus) from.focus();
+  };
+  function onKey(e){ if(e.key === "Escape"){ e.preventDefault(); close(); } }
+  offer.forEach(o=>{
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "arow";
+    b.id = "subs_add_" + o.from;
+    const n = document.createElement("span");
+    n.className = "aname";
+    n.textContent = pairName(o.from, to);
+    const sz = document.createElement("span");
+    sz.className = "asize";
+    sz.textContent = o.need ? sizeLabel(o.need) : L.addhave;
+    b.appendChild(n);
+    b.appendChild(sz);
+    b.onclick = ()=>{ close(); fastPackAct("add", o.from + "-" + to); };
+    list.appendChild(b);
+  });
+  no.onclick = close;
+  bg.onclick = e=>{ if(e.target === bg) close(); };
+  document.addEventListener("keydown", onKey, true);
+  bg.appendChild(box);
+  lockBg();
+  document.body.appendChild(bg);
+  no.focus();
 }
 function subsGotoModels(){
   const row = subsEl("subs_case_row");
@@ -4240,58 +4403,51 @@ function initSubs(){
   subsEl("subtitles_save").checked = CFG.subtitles_save !== false;
   subsEl("subtitles_lines").value = String(CFG.subtitles_lines || 3);
   subsEl("subtitles_size").value = CFG.subtitles_size || "m";
+  const trOn = subsEl("subtitles_translate_on");
+  trOn.checked = !!CFG.subtitles_translate_on;
   const trSel = subsEl("subtitles_translate");
-  trSel.value = CFG.subtitles_translate || "";
-  const whoSel = subsEl("subtitles_translator");
-  whoSel.value = CFG.subtitles_translator || "";
-  subsEl("subtitles_original").checked = !!CFG.subtitles_original;
+  trSel.value = CFG.subtitles_translate || "en";
+  if(!trSel.value) trSel.value = "en";
   paintSubsKey();
   sel.addEventListener("change", refreshSubsModel);
-  sel.addEventListener("change", ()=>{ fpkPick = ""; });
   sel.addEventListener("change", renderSubsTr);
   trSel.addEventListener("change", renderSubsTr);
-  whoSel.addEventListener("change", renderSubsTr);
-  subsEl("subs_tr_go").onclick = ()=>show("post");
-  subsEl("subs_tr_dl").onclick = ()=>{ const p = subsEl("subs_tr_dl").dataset.pack; if(p) fastPackAct("download", p); else trModelAct("download"); };
-  subsEl("subs_fpk_lang").addEventListener("change", ()=>{ fpkPick = subsEl("subs_fpk_lang").value; renderSubsTr(); });
-  subsEl("subs_fpk_dl").onclick = ()=>fastPackAct("download");
-  subsEl("subs_fpk_cancel").onclick = ()=>fastPackAct("cancel");
-  const fpkDel = subsEl("subs_fpk_del");
-  fpkDel.dataset.word = fpkDel.textContent;
-  fpkDel.onclick = ()=>{
-    if(!fpkDel.dataset.armed){
-      fpkDel.dataset.armed = "1";
-      fpkDel.textContent = L.trmdelsure;
-      setTimeout(()=>{ if(fpkDel.dataset.armed){ delete fpkDel.dataset.armed; fpkDel.textContent = fpkDel.dataset.word; } }, 4000);
-      return;
-    }
-    delete fpkDel.dataset.armed;
-    fpkDel.textContent = fpkDel.dataset.word;
-    fastPackAct("delete");
+  trOn.addEventListener("change", renderSubsTr);
+  [["subs_pick_quality", "quality"], ["subs_pick_fast", "fast"], ["subs_pick_api", "server"]].forEach(([id, who])=>{
+    subsEl(id).addEventListener("change", e=>{
+      e.stopPropagation();
+      if(subsEl(id).checked) subsChoose(who); else renderSubsTr();
+    });
+  });
+  document.querySelectorAll("#subs_who_card .srccard[data-who]").forEach(card=>{
+    card.addEventListener("click", e=>{
+      if(e.target.closest(".acts, .lnk, .srcpick, .flang")) return;
+      if(card.classList.contains("idle")) subsChoose(card.dataset.who);
+    });
+  });
+  subsEl("subs_f_pairs").addEventListener("click", e=>{
+    const x = e.target.closest("button[data-pair]");
+    if(!x) return;
+    e.stopPropagation();
+    const key = x.dataset.pair;
+    const p = (subsFast().pairs || []).find(q=>q.key === key);
+    if(p && p.state === "downloading"){ fastPackAct("remove", key); return; }
+    subsArm("pair:" + key, ()=>fastPackAct("remove", key));
+  });
+  subsEl("subs_f_add").onclick = e=>{ e.stopPropagation(); openAddPack(); };
+  subsEl("subs_q_dl").onclick = e=>{ e.stopPropagation(); trModelAct("download"); };
+  subsEl("subs_q_x").onclick = e=>{
+    e.stopPropagation();
+    if(subsModel().state === "downloading"){ trModelAct("cancel"); return; }
+    subsArm("q", ()=>trModelAct("delete"));
   };
-  subsEl("subs_trm_dl").onclick = ()=>trModelAct("download");
-  subsEl("subs_trm_cancel").onclick = ()=>trModelAct("cancel");
-  subsEl("subs_trm_terms").onclick = ()=>appTrModel("terms");
-  const trmDel = subsEl("subs_trm_del");
-  trmDel.dataset.word = trmDel.textContent;
-  trmDel.onclick = ()=>{
-    if(!trmDel.dataset.armed){
-      trmDel.dataset.armed = "1";
-      trmDel.textContent = L.trmdelsure;
-      setTimeout(()=>{ if(trmDel.dataset.armed){ delete trmDel.dataset.armed; trmDel.textContent = trmDel.dataset.word; } }, 4000);
-      return;
-    }
-    delete trmDel.dataset.armed;
-    trmDel.textContent = trmDel.dataset.word;
-    trModelAct("delete");
-  };
+  subsEl("subs_trm_terms").onclick = e=>{ e.stopPropagation(); appTrModel("terms"); };
   subsEl("subs_go").onclick = ()=>subsToggle(subsEl("subs_go"));
   const heroGo = subsEl("subs_hero_go");
   if(heroGo) heroGo.onclick = ()=>subsToggle(heroGo);
   const heroAssign = subsEl("subs_hero_assign");
   if(heroAssign) heroAssign.onclick = ()=>{ captureFor = "subs"; appCaptureCombo(); };
   subsEl("subs_key").onclick = ()=>{ captureFor = "subs"; appCaptureCombo(); };
-  subsEl("subs_key_clear").onclick = ()=>setSubsKey("");
   subsEl("subs_folder").onclick = ()=>appOpenTranscripts();
   initSubsScheme();
   subsEl("subs_box_reset").onclick = async ()=>{
@@ -4316,7 +4472,7 @@ async function refreshState(){
   renderSubsState(s);
   renderSubsHero(s);
   subsPlaceFromState(s.subs_place);
-  subsTr = s.subs_tr || {kind: "", name: ""};
+  subsTr = s.subs_tr || null;
   renderSubsTr();
 
   const hero = document.getElementById("state_hero");
@@ -5264,7 +5420,7 @@ function syncSilenceRows(){
     el.disabled = off;
   });
 }
-async function runPostTest(btn, url, model, timeout, key){
+async function runPostTest(btn, url, model, timeout, key, errId){
   const was = btn.textContent;
   btn.disabled = true;
   btn.textContent = L.apitestrun;
@@ -5277,16 +5433,27 @@ async function runPostTest(btn, url, model, timeout, key){
   btn.disabled = false;
   btn.textContent = was;
   toast(r.message, r.severity);
-  showPostErr(r.ok ? "" : r.message, true);
+  if(errId){
+    const el = document.getElementById(errId);
+    if(el) el.textContent = r.ok ? "" : r.message;
+  } else {
+    showPostErr(r.ok ? "" : r.message, true);
+  }
   return r;
 }
 function showPostErr(msg, force){
   const el = document.getElementById("postapi_err");
   if(el) el.textContent = (force || postSource === "api") ? msg : "";
 }
+const API_VIEWS = [
+  {sum: "api_sum", edit: "api_edit", clear: "api_clear", warn: "postapi_warn", none: ()=>L.apinone, warnText: ()=>L.postwarn},
+  {sum: "subs_api_sum", edit: "subs_api_edit", clear: "subs_api_clear", warn: "subs_api_warn", none: ()=>L.subsapinone, warnText: ()=>L.subsapiwarn},
+];
 function syncPostWarn(){
-  const note = document.getElementById("postapi_warn");
-  if(note) note.textContent = postURL ? L.postwarn : "";
+  API_VIEWS.forEach(v=>{
+    const note = document.getElementById(v.warn);
+    if(note) note.textContent = postURL ? v.warnText() : "";
+  });
 }
 async function updPostKeyState(){
   if(!window.appPostKeySet) return;
@@ -5294,8 +5461,11 @@ async function updPostKeyState(){
 }
 let apiKeySaved = false;
 function renderApiSummary(){
-  const box = document.getElementById("api_sum");
-  const btn = document.getElementById("api_edit");
+  API_VIEWS.forEach(renderApiView);
+}
+function renderApiView(v){
+  const box = document.getElementById(v.sum);
+  const btn = document.getElementById(v.edit);
   if(!box) return;
   box.innerHTML = "";
   const line = (k, v, off)=>{
@@ -5318,13 +5488,13 @@ function renderApiSummary(){
     line(L.apisumkey, apiKeySaved ? L.postkeyset : L.postkeynone, !apiKeySaved);
     line(L.apisumtimeout, timeout + " " + L.secshort);
   } else {
-    line(L.apisumstate, L.apinone, true);
+    line(L.apisumstate, v.none(), true);
   }
   if(btn) btn.textContent = postURL ? L.apiedit : L.apisetup;
-  const clr = document.getElementById("api_clear");
+  const clr = document.getElementById(v.clear);
   if(clr) clr.style.display = (postURL || apiKeySaved) ? "" : "none";
 }
-async function editPostAPI(){
+async function editPostAPI(fromSubs){
   const urlEl = document.getElementById("post_api_url");
   const modelEl = document.getElementById("post_api_model");
   const toEl = document.getElementById("post_api_timeout_s");
@@ -5392,7 +5562,7 @@ async function editPostAPI(){
     await updPostKeyState();
   }
   const want = fresh ? "api" : "local";
-  if(postSource !== want){
+  if(postSource !== want && !(fromSubs && want === "api")){
     postSource = want;
     applyPostState();
     refreshLLM();
@@ -5409,11 +5579,14 @@ function initPostAPI(){
   syncPostWarn();
   updPostKeyState().then(renderApiSummary);
   const edit = document.getElementById("api_edit");
-  if(edit) edit.onclick = e=>{ e.stopPropagation(); editPostAPI(); };
-  const clear = document.getElementById("api_clear");
-  if(clear) clear.onclick = async e=>{
+  if(edit) edit.onclick = e=>{ e.stopPropagation(); editPostAPI(false); };
+  const subsEdit = document.getElementById("subs_api_edit");
+  if(subsEdit) subsEdit.onclick = e=>{ e.stopPropagation(); editPostAPI(true); };
+  const clearServer = async (e, fromSubs)=>{
     e.stopPropagation();
-    if(!await askConfirm(L.apiclearask, L.apiclear, null, L.apidlg)) return;
+    let ask = L.apiclearask;
+    if(fromSubs && subsWho === "server" && subsOn()) ask += " " + L.subsapiclear;
+    if(!await askConfirm(ask, L.apiclear, null, L.apidlg)) return;
     postURL = "";
     document.getElementById("post_api_url").value = "";
     document.getElementById("post_api_model").value = "";
@@ -5425,6 +5598,8 @@ function initPostAPI(){
     postSource = "local";
     postTestErr = "";
     showPostErr("", true);
+    const subsErr = document.getElementById("subs_api_err");
+    if(subsErr) subsErr.textContent = "";
     applyPostState();
     syncPostWarn();
     renderApiSummary();
@@ -5432,13 +5607,19 @@ function initPostAPI(){
     await doSave();
     refreshLLM();
   };
-  const test = document.getElementById("api_test");
-  if(test) test.onclick = e=>{
-    e.stopPropagation();
-    const to = document.getElementById("post_api_timeout_s");
-    const md = document.getElementById("post_api_model");
-    runPostTest(test, postURL, md ? md.value : "", to ? to.value : "", "");
-  };
+  const clear = document.getElementById("api_clear");
+  if(clear) clear.onclick = e=>clearServer(e, false);
+  const subsClear = document.getElementById("subs_api_clear");
+  if(subsClear) subsClear.onclick = e=>clearServer(e, true);
+  [["api_test", ""], ["subs_api_test", "subs_api_err"]].forEach(([id, errId])=>{
+    const test = document.getElementById(id);
+    if(test) test.onclick = e=>{
+      e.stopPropagation();
+      const to = document.getElementById("post_api_timeout_s");
+      const md = document.getElementById("post_api_model");
+      runPostTest(test, postURL, md ? md.value : "", to ? to.value : "", "", errId);
+    };
+  });
   const master = document.getElementById("post_enabled");
   master.checked = CFG.post_enabled !== false;
   master.addEventListener("change", e=>{ e.stopPropagation(); postEnabled = master.checked; applyPostState(); doSave(); });
@@ -5449,7 +5630,7 @@ function initPostAPI(){
     doSave();
     refreshLLM();
   };
-  document.querySelectorAll("input.srcpick").forEach(sw=>{
+  document.querySelectorAll("#post_model_card input.srcpick").forEach(sw=>{
     sw.addEventListener("change", e=>{
       e.stopPropagation();
       if(postSyncing || !sw.checked) return;
@@ -5657,9 +5838,9 @@ async function doSave(){
     subtitles_position: OVS.posDirty ? OVS.pos : null,
     subtitles_monitor: (subsEl("subtitles_monitor")||{}).value || "",
     subtitles_box: subsBoxReset ? {} : null,
-    subtitles_original: !!(subsEl("subtitles_original")||{}).checked,
-    subtitles_translate: (subsEl("subtitles_translate")||{}).value || "",
-    subtitles_translator: (subsEl("subtitles_translator")||{}).value || ""};
+    subtitles_translate_on: subsOn(),
+    subtitles_translate: subsTo(),
+    subtitles_translator: subsWho};
   OVS.posDirty = false;
   OVS.customDirty = false;
   subsBoxReset = false;
@@ -5719,7 +5900,7 @@ let hits = [];
 let hitAt = -1;
 let searchFrom = null;
 function searchMatches(s){
-  const items = [...document.querySelectorAll(".page .row, .page .mrow, .page .sumrow, .page .sect, .page .blklbl, .page .hint, .page .mslot, .page .wizh, .about p, .about li")];
+  const items = [...document.querySelectorAll(".page .row, .page .mrow, .page .sumrow, .page .sect, .page .blklbl, .page .hint, .page .mslot, .page .wizh, #p-subs .srchead, .about p, .about li")];
   const seen = new Set();
   return items.filter(r=>{
     if(!r.textContent.toLowerCase().includes(s)) return false;

@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"holdtotype/internal/evqueue"
+	"holdtotype/internal/fastpack"
 	"holdtotype/internal/livetail"
 	"holdtotype/internal/ovplace"
 	"holdtotype/internal/replace"
@@ -228,9 +229,6 @@ type subRun struct {
 	engPort   int
 	engShared bool
 	engModel  string
-	engPid    int
-
-	cores coreDivider
 
 	fileMu   sync.Mutex
 	file     *os.File
@@ -411,9 +409,7 @@ func (r *subRun) noteEngine(rec recognizer, shared bool, t *subTarget) {
 	r.engPort = recognizerPort(rec)
 	r.engShared = shared
 	r.engModel = t.name
-	r.engPid = recognizerPid(rec)
 	r.mu.Unlock()
-	r.syncCores()
 }
 
 func (r *subRun) loop(t *subTarget) {
@@ -461,7 +457,6 @@ func (r *subRun) loop(t *subTarget) {
 				r.checkDevice(time.Now())
 			}
 			r.refreshShown()
-			r.syncCores()
 		}
 	}
 }
@@ -719,7 +714,6 @@ func (r *subRun) finish() {
 		w.stop()
 		trSummary = w.summary()
 	}
-	r.cores.close()
 	r.app.subMu.Lock()
 	cur := r.app.sub
 	r.app.subMu.Unlock()
@@ -764,8 +758,15 @@ func (r *subRun) finish() {
 	}
 }
 
+func translateTo(cfg *Config) string {
+	if !cfg.SubtitlesTranslateOn {
+		return ""
+	}
+	return cfg.SubtitlesTranslate
+}
+
 func translationTarget(cfg *Config, t *subTarget) string {
-	to := cfg.SubtitlesTranslate
+	to := translateTo(cfg)
 	if to == "" || to == t.lang || !translationSource(cfg).ok() {
 		return ""
 	}
@@ -778,18 +779,22 @@ type subPlaceState struct {
 }
 
 type subTrState struct {
-	Kind    string    `json:"kind"`
-	Name    string    `json:"name"`
 	Choice  string    `json:"choice"`
 	Missing string    `json:"missing"`
-	Detail  string    `json:"detail"`
+	Pair    string    `json:"pair"`
 	Model   trModelUI `json:"model"`
 	Fast    fastUI    `json:"fast"`
 }
 
 func (a *App) subtitlesTranslator(cfg *Config) subTrState {
 	src := translationSource(cfg)
-	return subTrState{Kind: src.kind, Name: src.name, Choice: cfg.SubtitlesTranslator, Missing: src.missing, Detail: src.detail, Model: a.trModelView(), Fast: a.fastView(cfg)}
+	st := subTrState{Choice: cfg.SubtitlesTranslator, Missing: src.missing, Model: a.trModelView(), Fast: a.fastView(cfg)}
+	if src.missing == subtitles.MissingPack {
+		if lang := fastAvail(cfg).lang; lang != "" {
+			st.Pair = fastpack.PairKey(lang, cfg.SubtitlesTranslate)
+		}
+	}
+	return st
 }
 
 func missingText(src editorSource) string {
@@ -807,16 +812,18 @@ func missingText(src editorSource) string {
 		return "no post-processing server is set"
 	case subtitles.MissingPack:
 		return "the language pack " + src.detail + " is not downloaded"
+	case subtitles.MissingPacks:
+		return "no language pack into the translation language is downloaded"
 	case subtitles.MissingLang:
 		return "the speech language is not known"
 	case subtitles.MissingFast:
 		return "the light translation engine did not start: " + src.detail
 	}
-	return "there is no translation model, no post-processing server and no editor model"
+	return "no translator is chosen"
 }
 
 func (r *subRun) syncTranslation(cfg *Config, t *subTarget) {
-	to := cfg.SubtitlesTranslate
+	to := translateTo(cfg)
 	src := translationSource(cfg)
 	key := cfg.SubtitlesTranslator + "/" + src.kind + "/" + src.missing
 	r.trMu.Lock()
@@ -852,9 +859,6 @@ func (r *subRun) syncTranslation(cfg *Config, t *subTarget) {
 	log.Printf("subtitles: translation into %s by %s", name, src.label())
 	if r.translator() == nil {
 		return
-	}
-	if src.kind == editorQuality {
-		r.syncCores()
 	}
 	r.startWarm(src, to)
 }
@@ -915,7 +919,7 @@ func (r *subRun) startWarm(src editorSource, to string) {
 				log.Printf("subtitles: the light translation engine cannot translate: %s", ff.Error())
 			default:
 				r.coldFail.Store(src.kind, true)
-				log.Printf("subtitles: the editor model did not start: %s", logText(err))
+				log.Printf("subtitles: %s did not start: %s", label, logText(err))
 			}
 			if tt := r.target(); tt != nil && !r.ended() {
 				r.syncTranslation(r.app.snapshot(), tt)
@@ -928,9 +932,6 @@ func (r *subRun) startWarm(src editorSource, to string) {
 				log.Printf("subtitles: %d piece(s) waited for %s, %s", n, label, next)
 			}
 			return
-		}
-		if src.kind == editorLocal {
-			r.syncCores()
 		}
 		if n, ok := w.release(gen); ok {
 			log.Printf("subtitles: %s is warm after %.1f s, %d piece(s) heard meanwhile go to it now", label, time.Since(started).Seconds(), n)
@@ -1217,10 +1218,7 @@ func (w *subTranslator) label() string {
 }
 
 func (w *subTranslator) history(kind, target string) *subtitles.History {
-	keep := subtitles.HistoryKeepServer
-	if kind == editorLocal {
-		keep = subtitles.HistoryKeepLocal
-	}
+	keep := subtitles.HistoryKeep
 	if w.hist == nil || w.histKind != kind || w.histTarget != target || w.histReset.Swap(false) {
 		w.hist = subtitles.NewHistory(subtitles.HistoryLimit, keep)
 		w.histKind, w.histTarget = kind, target
@@ -1262,7 +1260,7 @@ func (w *subTranslator) handle(b subtitles.Batch) {
 	for attempt := 1; ; attempt++ {
 		ctx, cancel := context.WithTimeout(w.ctx, subtitles.TranslateTimeout)
 		first = time.Time{}
-		out, err = r.app.editorStream(ctx, cfg, src, subtitles.TranslateMessages(b.Target, prior, b.Text), subtitles.TranslateTokens(b.Words), subtitles.TranslateGrammar(b.Target), func(sofar string) {
+		out, err = r.app.editorStream(ctx, cfg, src, subtitles.TranslateMessages(b.Target, prior, b.Text), subtitles.TranslateTokens(b.Words), func(sofar string) {
 			if first.IsZero() {
 				first = time.Now()
 			}
@@ -2113,9 +2111,9 @@ func runSubcheck(args []string) {
 	if len(words) > 1 {
 		switch to := words[1]; {
 		case to == "off" || to == "-":
-			cfg.SubtitlesTranslate = ""
+			cfg.SubtitlesTranslateOn = false
 		case validTranslateLang(to):
-			cfg.SubtitlesTranslate = to
+			cfg.SubtitlesTranslate, cfg.SubtitlesTranslateOn = to, true
 		default:
 			log.Printf("subcheck: unknown translation language %q", to)
 			return
@@ -2145,8 +2143,8 @@ func runSubcheck(args []string) {
 	case <-r.done():
 	}
 	<-r.done()
-	app.llmShutdown()
 	app.qualityShutdown()
+	app.fastShutdown()
 	log.Printf("subcheck: done")
 }
 

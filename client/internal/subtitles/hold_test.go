@@ -173,8 +173,8 @@ func TestAFailedStartHandsTheWaitingPiecesOn(t *testing.T) {
 		choice string
 		want   Choice
 	}{
-		{ChoiceAuto, Choice{Kind: KindServer}},
 		{ChoiceQuality, Choice{Kind: KindQuality, Missing: MissingStart}},
+		{ChoiceFast, Choice{Kind: KindFast, Missing: MissingFast}},
 	} {
 		q := newQueue()
 		t0 := time.Date(2026, 11, 12, 20, 0, 0, 0, time.UTC)
@@ -182,7 +182,7 @@ func TestAFailedStartHandsTheWaitingPiecesOn(t *testing.T) {
 		for i := 1; i <= 8; i++ {
 			q.Push(phrase(i, 3, t0.Add(time.Duration(i)*time.Second), false))
 		}
-		after := ChooseTranslator(c.choice, Avail{ModelReady: true, CardFits: true, QualityDown: true, Server: true, Editor: true})
+		after := ChooseTranslator(c.choice, Avail{ModelReady: true, CardFits: true, QualityDown: true, Server: true, FastMissing: MissingFast})
 		if after != c.want {
 			t.Fatalf("%q: after the failed start %+v", c.choice, after)
 		}
