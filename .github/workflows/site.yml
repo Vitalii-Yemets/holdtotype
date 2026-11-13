@@ -34,8 +34,8 @@ jobs:
           TOKEN: ${{ secrets.SITE_DISPATCH_TOKEN }}
         run: |
           if [ -z "$TOKEN" ]; then
-            echo "::error::The SITE_DISPATCH_TOKEN secret is missing, so the site does not learn about the release"
-            exit 1
+            echo "::warning::The SITE_DISPATCH_TOKEN secret is missing, so this run does not tell the site about the release"
+            exit 0
           fi
           curl -fsS -X POST \
             -H "Authorization: Bearer $TOKEN" \
