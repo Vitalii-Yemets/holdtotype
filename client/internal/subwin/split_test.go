@@ -49,3 +49,20 @@ func TestHitSplit(t *testing.T) {
 		}
 	}
 }
+
+func TestLinesPerPart(t *testing.T) {
+	for lines := int32(2); lines <= 8; lines++ {
+		rows, top := DefaultRows(lines, 1)
+		if rows != lines || top != 0 {
+			t.Errorf("one part of %d lines: %d rows, %d above the line", lines, rows, top)
+		}
+		rows, top = DefaultRows(lines, 2)
+		if rows != 2*lines || top != lines {
+			t.Errorf("two parts of %d lines: %d rows, %d above the line", lines, rows, top)
+		}
+		upper, lower := SplitRows(rows, top)
+		if upper != lines || lower != lines {
+			t.Errorf("two parts of %d lines are split %d and %d", lines, upper, lower)
+		}
+	}
+}

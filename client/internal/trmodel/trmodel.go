@@ -12,6 +12,7 @@ import (
 )
 
 const (
+	Name     = "Gemma 3 4B"
 	File     = "gemma-3-4b-it-Q4_K_M.gguf"
 	Size     = int64(2489757856)
 	SHA256   = "be49949e48422e4547b00af14179a193d3777eea7fbbd7d6e1b0861304628a01"

@@ -2,6 +2,7 @@ package fastpack
 
 import (
 	"path/filepath"
+	"strings"
 
 	"holdtotype/internal/trmodel"
 )
@@ -85,6 +86,85 @@ func Route(from, to string) ([]Pack, bool) {
 		return nil, false
 	}
 	return []Pack{a, b}, true
+}
+
+func PairKey(from, to string) string { return from + "-" + to }
+
+func ParsePair(key string) (string, string, bool) {
+	from, to, ok := strings.Cut(key, "-")
+	if !ok {
+		return "", "", false
+	}
+	if _, ok := Route(from, to); !ok {
+		return "", "", false
+	}
+	return from, to, true
+}
+
+func CleanPairs(in []string) []string {
+	var out []string
+	seen := map[string]bool{}
+	for _, k := range in {
+		if _, _, ok := ParsePair(k); ok && !seen[k] {
+			seen[k] = true
+			out = append(out, k)
+		}
+	}
+	return out
+}
+
+func AddPair(pairs []string, key string) []string {
+	return CleanPairs(append(append([]string(nil), pairs...), key))
+}
+
+func Needed(pairs []string) map[string]bool {
+	need := map[string]bool{}
+	for _, k := range pairs {
+		from, to, ok := ParsePair(k)
+		if !ok {
+			continue
+		}
+		packs, _ := Route(from, to)
+		for _, p := range packs {
+			need[p.Key()] = true
+		}
+	}
+	return need
+}
+
+func DropPair(pairs []string, key string) ([]string, []Pack) {
+	var left []string
+	had := false
+	for _, k := range CleanPairs(pairs) {
+		if k == key {
+			had = true
+			continue
+		}
+		left = append(left, k)
+	}
+	from, to, ok := ParsePair(key)
+	if !ok || !had {
+		return left, nil
+	}
+	need := Needed(left)
+	packs, _ := Route(from, to)
+	var drop []Pack
+	for _, p := range packs {
+		if !need[p.Key()] {
+			drop = append(drop, p)
+		}
+	}
+	return left, drop
+}
+
+func PairsOnDisk(present func(Pack) bool) []string {
+	var out []string
+	for _, p := range catalog {
+		if present(p) {
+			out = append(out, p.Key())
+		}
+	}
+	return out
 }
 
 type State string

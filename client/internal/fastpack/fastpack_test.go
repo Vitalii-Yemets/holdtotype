@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 )
@@ -156,5 +157,87 @@ func TestTheStateOfAPack(t *testing.T) {
 	}
 	if filepath.Base(filepath.Dir(dir)) != Folder || filepath.Base(dir) != "en-xx" {
 		t.Fatalf("dir %s", dir)
+	}
+}
+
+func keysOf(packs []Pack) []string {
+	var out []string
+	for _, p := range packs {
+		out = append(out, p.Key())
+	}
+	return out
+}
+
+func TestPairsAreCheckedAndKeptInOrder(t *testing.T) {
+	if from, to, ok := ParsePair("fr-ru"); !ok || from != "fr" || to != "ru" {
+		t.Fatalf("fr-ru: %q %q %v", from, to, ok)
+	}
+	for _, bad := range []string{"", "fr", "fr-fr", "xx-ru", "fr-", "-ru", "fr-ru-en", "FR-RU"} {
+		if _, _, ok := ParsePair(bad); ok {
+			t.Fatalf("%q is taken as a pair", bad)
+		}
+	}
+	got := CleanPairs([]string{"en-ru", "bad", "fr-ru", "en-ru", "de-en"})
+	if strings.Join(got, ",") != "en-ru,fr-ru,de-en" {
+		t.Fatalf("cleaned: %v", got)
+	}
+	if got := AddPair([]string{"en-ru"}, "fr-ru"); strings.Join(got, ",") != "en-ru,fr-ru" {
+		t.Fatalf("added: %v", got)
+	}
+	if got := AddPair([]string{"en-ru"}, "en-ru"); strings.Join(got, ",") != "en-ru" {
+		t.Fatalf("added twice: %v", got)
+	}
+	if got := AddPair(nil, "ru-ru"); len(got) != 0 {
+		t.Fatalf("a pair into its own language: %v", got)
+	}
+}
+
+func TestRemovingAPairKeepsThePacksAnotherPairNeeds(t *testing.T) {
+	pairs := []string{"en-ru", "fr-ru", "fr-de"}
+	left, drop := DropPair(pairs, "fr-ru")
+	if strings.Join(left, ",") != "en-ru,fr-de" {
+		t.Fatalf("left: %v", left)
+	}
+	if len(drop) != 0 {
+		t.Fatalf("fr-en is needed by fr-de and en-ru by en-ru, yet %v is deleted", keysOf(drop))
+	}
+	left, drop = DropPair(left, "en-ru")
+	if strings.Join(left, ",") != "fr-de" || strings.Join(keysOf(drop), ",") != "en-ru" {
+		t.Fatalf("left %v, deleted %v", left, keysOf(drop))
+	}
+	left, drop = DropPair(left, "fr-de")
+	if len(left) != 0 || strings.Join(keysOf(drop), ",") != "fr-en,en-de" {
+		t.Fatalf("left %v, deleted %v", left, keysOf(drop))
+	}
+	left, drop = DropPair([]string{"de-ru", "es-ru"}, "de-ru")
+	if strings.Join(left, ",") != "es-ru" || strings.Join(keysOf(drop), ",") != "de-en" {
+		t.Fatalf("the shared English half: left %v, deleted %v", left, keysOf(drop))
+	}
+	left, drop = DropPair([]string{"en-ru"}, "de-ru")
+	if strings.Join(left, ",") != "en-ru" || len(drop) != 0 {
+		t.Fatalf("a pair that was not added: left %v, deleted %v", left, keysOf(drop))
+	}
+	need := Needed([]string{"de-ru", "en-uk"})
+	if len(need) != 3 || !need["de-en"] || !need["en-ru"] || !need["en-uk"] {
+		t.Fatalf("needed: %v", need)
+	}
+}
+
+func TestTheFirstListIsOnePairPerPackOnDisk(t *testing.T) {
+	on := map[string]bool{"en-ru": true, "de-en": true, "uk-en": true}
+	got := PairsOnDisk(func(p Pack) bool { return on[p.Key()] })
+	if len(got) != 3 {
+		t.Fatalf("pairs: %v", got)
+	}
+	for _, k := range got {
+		if !on[k] {
+			t.Fatalf("pair %s has no pack", k)
+		}
+		if _, _, ok := ParsePair(k); !ok {
+			t.Fatalf("pair %s is not a pair", k)
+		}
+	}
+	if got := PairsOnDisk(func(Pack) bool { return false }); len(got) != 0 {
+		t.Fatalf("no packs: %v", got)
 	}
 }

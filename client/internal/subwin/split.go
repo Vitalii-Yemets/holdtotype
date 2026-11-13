@@ -27,3 +27,10 @@ func SplitAt(y, areaTop, lineH, total int32) int32 {
 func HitSplit(y, lineY, grip int32) bool {
 	return y >= lineY-grip && y <= lineY+grip
 }
+
+func DefaultRows(lines, parts int32) (int32, int32) {
+	if parts < 2 {
+		return lines, 0
+	}
+	return lines * parts, lines
+}
