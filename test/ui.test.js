@@ -2061,15 +2061,27 @@ function check(name, actual, expected) {
     ["English → Русский", "English → Русский · 37 MB"],
   ]);
   check("the used row shows the total size", [sv("subs_f_used_row").style.display, sv("subs_f_used").textContent], ["", "121 MB"]);
+  check("only an absent, damaged or failed pair offers the download arrow", ["en-de", "fr-de", "es-de", "it-de", "pl-de", "en-ru"].map((k) => sv("subs_pair_" + k).querySelector("button[data-dl]").style.display !== "none"), [false, false, false, true, true, false]);
   let fc = w.fastCalls.length;
-  sv("subs_pair_fr-de").querySelector("button").click(); await sleep(150);
+  sv("subs_pair_fr-de").querySelector("button[data-pair]").click(); await sleep(150);
   check("the cross of a downloading pair cancels and removes it at once", w.fastCalls.slice(fc), ["remove:fr-de"]);
   fc = w.fastCalls.length;
-  sv("subs_pair_en-de").querySelector("button").click(); await sleep(150);
-  check("the cross of a ready pair asks once more", [w.fastCalls.slice(fc), sv("subs_pair_en-de").querySelector("button").textContent], [[], "Delete?"]);
-  sv("subs_pair_en-de").querySelector("button").click(); await sleep(150);
+  sv("subs_pair_en-de").querySelector("button[data-pair]").click(); await sleep(150);
+  check("the cross of a ready pair asks once more", [w.fastCalls.slice(fc), sv("subs_pair_en-de").querySelector("button[data-pair]").textContent], [[], "Delete?"]);
+  sv("subs_pair_en-de").querySelector("button[data-pair]").click(); await sleep(150);
   check("and then removes the pair", w.fastCalls.slice(fc), ["remove:en-de"]);
   check("a click on a cross does not choose the card", chosen(), ["fast"]);
+  w.eval('subsWho = "server"');
+  await setTr("server", "", { fast: fast({ pairs: [pair("en", "ru"), pair("de", "ru", { state: "absent" }), pair("es", "ru", { state: "bad" }), pair("it", "ru", { state: "error", err: "no network" })] }) });
+  check("a pair not on disk says so, like the other states", entries().map((e) => e[0]), ["English → Русский", "Deutsch → Русский — Not downloaded", "Español → Русский — A file of the pack is damaged or incomplete", "Italiano → Русский — Not downloaded: no network"]);
+  check("absent, damaged and failed pairs show the arrow before the cross, with its tooltip", ["en-ru", "de-ru", "es-ru", "it-ru"].map((k) => { const b = sv("subs_pair_" + k).querySelector("button[data-dl]"); return [b.style.display !== "none", b.nextElementSibling === sv("subs_pair_" + k).querySelector("button[data-pair]"), b.dataset.tip, !!b.querySelector("svg")]; }), [[false, true, PL.trmdl, true], [true, true, PL.trmdl, true], [true, true, PL.trmdl, true], [true, true, PL.trmdl, true]]);
+  for (const k of ["de-ru", "es-ru", "it-ru"]) {
+    fc = w.fastCalls.length;
+    sv("subs_pair_" + k).querySelector("button[data-dl]").click(); await sleep(250);
+    check("the arrow of " + k + " downloads at once, without a question and without choosing the card", [w.fastCalls.slice(fc), !!dlg(), chosen()], [["add:" + k], false, ["server"]]);
+  }
+  w.eval('subsWho = "fast"');
+  await setTr("fast", "");
   await setTr("fast", "", { fast: fast({ exe: false }) });
   check("a missing engine is said in the card", sv("subs_f_exe").style.display, "");
   const note = () => sv("subs_f_note").style.display === "none" ? "" : sv("subs_f_note").textContent;

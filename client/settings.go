@@ -1281,7 +1281,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"trmdown": "S_SUBS_TRM_DOWN", "trmdelsure": "S_SUBS_TRM_DEL_SURE",
 		"trmwvulkan": "S_SUBS_TRM_W_VULKAN", "trmwdevice": "S_SUBS_TRM_W_DEVICE", "trmwmemory": "S_SUBS_TRM_W_MEMORY", "trmwcrash": "S_SUBS_TRM_W_CRASH",
 		"trmwtimeout": "S_SUBS_TRM_W_TIMEOUT", "trmwport": "S_SUBS_TRM_W_PORT", "trmwexe": "S_SUBS_TRM_W_EXE",
-		"fpkcheck": "S_SUBS_FPK_CHECKING", "fpkbad": "S_SUBS_FPK_BAD", "fpkerr": "S_SUBS_FPK_ERR",
+		"fpkcheck": "S_SUBS_FPK_CHECKING", "fpkbad": "S_SUBS_FPK_BAD", "fpkerr": "S_SUBS_FPK_ERR", "fpkabsent": "S_SUBS_FPK_ABSENT", "trmdl": "S_SUBS_TRM_DL",
 		"fnone": "S_SUBS_F_NONE", "fget": "S_SUBS_F_GETTING", "fauto": "S_SUBS_F_AUTO", "ftwo": "S_SUBS_F_TWO",
 		"ftode": "S_SUBS_F_TO_DE", "ftoes": "S_SUBS_F_TO_ES", "ftofr": "S_SUBS_F_TO_FR", "ftoit": "S_SUBS_F_TO_IT",
 		"ftopl": "S_SUBS_F_TO_PL", "ftouk": "S_SUBS_F_TO_UK", "ftoru": "S_SUBS_F_TO_RU",
@@ -4207,11 +4207,17 @@ function renderSubsFast(){
       el.id = "subs_pair_" + p.key;
       const name = document.createElement("span");
       name.className = "fname";
+      const dl = document.createElement("button");
+      dl.type = "button";
+      dl.className = "iconbtn";
+      dl.dataset.dl = p.key;
+      dl.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12"/><path d="M6 11l6 6 6-6"/><path d="M4 21h16"/></svg>';
       const x = document.createElement("button");
       x.type = "button";
       x.className = "iconbtn danger";
       x.dataset.pair = p.key;
       el.appendChild(name);
+      el.appendChild(dl);
       el.appendChild(x);
       box.appendChild(el);
     });
@@ -4221,13 +4227,16 @@ function renderSubsFast(){
   pairs.forEach(p=>{
     const el = subsEl("subs_pair_" + p.key);
     if(!el) return;
-    const name = el.querySelector(".fname"), x = el.querySelector(".iconbtn");
+    const name = el.querySelector(".fname"), x = el.querySelector("button[data-pair]"), dl = el.querySelector("button[data-dl]");
     name.textContent = pairName(p.from, p.to);
     let extra = "";
     if(p.state === "downloading") extra = L.fget.replace("%s", ()=>String(p.pct || 0));
     else if(p.state === "checking") extra = L.fpkcheck;
     else if(p.state === "bad") extra = L.fpkbad;
     else if(p.state === "error") extra = L.fpkerr.replace("%s", ()=>p.err || "");
+    else if(p.state === "absent") extra = L.fpkabsent;
+    dl.style.display = ["absent", "bad", "error"].includes(p.state) ? "" : "none";
+    subsTip(dl, L.trmdl);
     if(extra){
       const b = document.createElement("span");
       b.className = "fbusy";
@@ -4433,6 +4442,12 @@ function initSubs(){
     });
   });
   subsEl("subs_f_pairs").addEventListener("click", e=>{
+    const get = e.target.closest("button[data-dl]");
+    if(get){
+      e.stopPropagation();
+      fastPackAct("add", get.dataset.dl);
+      return;
+    }
     const x = e.target.closest("button[data-pair]");
     if(!x) return;
     e.stopPropagation();

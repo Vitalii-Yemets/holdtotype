@@ -957,18 +957,34 @@ func (a *App) fastPackAction(action, key string) string {
 		}
 		log.Printf("subtitles: the language pair %s is added", key)
 	case "remove":
-		ready := routeView(from, to).State == "ready"
+		packs, _ := fastpack.Route(from, to)
+		busy, onDisk := false, false
+		for _, p := range packs {
+			if st, _ := packBusy(p); st != nil && st.active {
+				busy = true
+			}
+			if packOnDisk(p) {
+				onDisk = true
+			}
+		}
 		left, drop := fastpack.DropPair(a.snapshot().SubtitlesPairs, key)
 		a.setPairs(left)
 		log.Printf("subtitles: the language pair %s is removed", key)
+		deleted := false
 		for _, p := range drop {
+			had := packOnDisk(p)
 			if err := a.packDelete(p); err != nil {
 				return humanError(err)
 			}
+			deleted = deleted || had
 		}
-		if ready {
-			return tr("model.del.ok")
+		switch {
+		case busy || !onDisk:
+			return ""
+		case deleted:
+			return tr("pack.del.ok")
 		}
+		return tr("pack.kept")
 	}
 	return ""
 }

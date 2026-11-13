@@ -155,6 +155,21 @@ func TestTheStateOfAPack(t *testing.T) {
 			t.Fatalf("%s stays", f.Name)
 		}
 	}
+	if _, err := os.Stat(dir); !os.IsNotExist(err) {
+		t.Fatalf("the empty folder of the pack stays: %v", err)
+	}
+	for i := range p.Files {
+		p.Files[i] = put(t, dir, p.Files[i], []byte("file "+p.Files[i].Name))
+	}
+	if err := os.WriteFile(filepath.Join(dir, "notes.txt"), []byte("mine"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := Remove(root, p); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "notes.txt")); err != nil {
+		t.Fatalf("a file that is not part of the pack was removed with its folder: %v", err)
+	}
 	if filepath.Base(filepath.Dir(dir)) != Folder || filepath.Base(dir) != "en-xx" {
 		t.Fatalf("dir %s", dir)
 	}

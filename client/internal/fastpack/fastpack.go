@@ -1,6 +1,7 @@
 package fastpack
 
 import (
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -227,5 +228,6 @@ func Remove(models string, p Pack) error {
 			first = err
 		}
 	}
+	_ = os.Remove(p.Dir(models))
 	return first
 }

@@ -286,6 +286,8 @@ var msgs = map[string]map[string]string{
 		"srv.restarting":         "Перезапускаю распознаватель с новыми настройками…",
 		"model.del.active":       "Нельзя удалить активную модель",
 		"model.del.ok":           "Модель удалена",
+		"pack.del.ok": "Языковой пакет удалён",
+		"pack.kept": "Пара убрана из списка, а её пакет остался: он нужен другой паре",
 		"about.text": "{app} %s\n\n" +
 			"Голос → текст в позицию курсора.\n" +
 			"Поставьте курсор в поле ввода, зажмите %s, скажите фразу, отпустите — текст вставится сам.\n\n" +
@@ -483,6 +485,8 @@ var msgs = map[string]map[string]string{
 		"srv.restarting":         "Restarting the recognizer with the new settings…",
 		"model.del.active":       "Cannot delete the active model",
 		"model.del.ok":           "Model deleted",
+		"pack.del.ok": "Language pack deleted",
+		"pack.kept": "The pair left the list, but its pack stays: another pair needs it",
 		"about.text": "{app} %s\n\n" +
 			"Voice → text at the cursor position.\n" +
 			"Place the cursor in any input field, hold %s, say a phrase, release — the text is inserted automatically.\n\n" +
@@ -521,6 +525,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_SUBS_GO_MODELS": "Открыть «Языки и модели»",
 		"S_SUBS_REMOTE": "Распознавание идёт на другом компьютере: каждая фраза отправляется на этот сервер.",
 		"S_SUBS_TR": "Перевод",
+		"S_SUBS_FPK_ABSENT": "Не скачан",
 		"S_SUBS_TR_HINT": "Окно делится на две части: сверху услышанное, снизу перевод; границу между ними можно тянуть мышью. Выключено — окно показывает только услышанное.",
 		"S_SUBS_TR_LANG": "Язык перевода",
 		"S_SUBS_TR_MISS_MODEL_GET": "Выбран «Качественный», но модель перевода ещё скачивается, поэтому пока текст показывается так, как был услышан.",
@@ -1365,6 +1370,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_SUBS_GO_MODELS": "Open “Languages & models”",
 		"S_SUBS_REMOTE": "Recognition runs on another computer: each phrase is sent to that server.",
 		"S_SUBS_TR": "Translation",
+		"S_SUBS_FPK_ABSENT": "Not downloaded",
 		"S_SUBS_TR_HINT": "The window splits in two: what is heard above, the translation below; the border between them can be dragged with the mouse. Off — the window shows only what is heard.",
 		"S_SUBS_TR_LANG": "Translation language",
 		"S_SUBS_TR_MISS_MODEL_GET": "Quality is chosen, but the translation model is still downloading, so for now the text is shown as heard.",
