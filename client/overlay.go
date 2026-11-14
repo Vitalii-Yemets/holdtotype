@@ -19,6 +19,11 @@ import (
 )
 
 const (
+	ovDotRest = 0.88
+	ovDotGlow = 0.34
+)
+
+const (
 	ovHidden = iota
 	ovRecording
 	ovProcessing
@@ -35,6 +40,16 @@ const (
 	wmDpiChanged = 0x02E0
 	ovW          = 390
 	ovH          = 52
+	ovDotX       = 25
+	ovDotR       = 5
+	ovDotHalo    = 5
+	ovTextX      = 44
+	ovCloseL     = 34
+	ovCloseR     = 8
+	ovLineX      = 10
+	ovPadX       = 16
+	ovPadY       = 5
+	ovAlpha      = 240
 	ovMaxLines   = 6
 	ovLiveW      = 430
 	ovLiveLines  = 3
@@ -293,7 +308,7 @@ func overlayHeightPx(dpi int32) int32 {
 			if rows > ovLiveLines {
 				rows = ovLiveLines
 			}
-			return base + rows*lineH + scaleDPI(10, dpi)
+			return base + rows*lineH + scaleDPI(2*ovPadY, dpi)
 		}
 		return base
 	}
@@ -312,7 +327,7 @@ func ovTextRoom(state int, width int32, dpi int32) int32 {
 	if ovShowsClose(state) {
 		right = width - px(44)
 	}
-	return right - px(44)
+	return right - px(ovTextX)
 }
 
 func measureLiveText(text string, width int32) (rows, lineH int32) {
@@ -537,7 +552,7 @@ func startOverlayThread() {
 		)
 		if hwnd != 0 {
 			applyDarkCaption(hwnd)
-			procSetLayeredWindowAttributes.Call(hwnd, 0, 240, lwaAlpha)
+			procSetLayeredWindowAttributes.Call(hwnd, 0, ovAlpha, lwaAlpha)
 			shapeOverlay(hwnd, int32(startW), int32(startH))
 		}
 		ovMu.Lock()
@@ -759,11 +774,11 @@ func overlayRender(hwnd, hdc uintptr) {
 	}
 	ctlTop := int32(0)
 	cy := ctlTop + px(ovH)/2
-	dotX := px(25)
-	core := int32(float64(px(5)) * (0.88 + 0.2*pulse))
+	dotX := px(ovDotX)
+	core := int32(float64(px(ovDotR)) * (ovDotRest + 0.2*pulse))
 	halo := core
 	if themeGlow() {
-		halo = core + px(5)
+		halo = core + px(ovDotHalo)
 	}
 	hideDot := false
 	if st == ovFlashOK && !askActive() {
@@ -773,7 +788,7 @@ func overlayRender(hwnd, hdc uintptr) {
 			hideDot = age < 12 && int(age/3)%2 == 1
 		case "glow":
 			if k := 1 - age/18; k > 0 {
-				halo = core + px(5) + int32(float64(px(10))*k)
+				halo = core + px(ovDotHalo) + int32(float64(px(10))*k)
 			}
 		case "bounce":
 			if k := math.Exp(-age / 7); k > 0.02 {
@@ -787,7 +802,7 @@ func overlayRender(hwnd, hdc uintptr) {
 		fill(rect{Left: dotX - s, Top: cy - s, Right: dotX + s, Bottom: cy + s}, bright)
 	default:
 		if !hideDot {
-			drawSmoothDot(hdc, dotX, cy, core, halo, bright, colBg, 0.34+0.12*pulse)
+			drawSmoothDot(hdc, dotX, cy, core, halo, bright, colBg, ovDotGlow+0.12*pulse)
 		}
 	}
 
@@ -801,7 +816,7 @@ func overlayRender(hwnd, hdc uintptr) {
 	procSelectObject.Call(hdc, overlayFont())
 	procSetBkMode.Call(hdc, 1)
 	live := ovLiveOn(st) && !askActive()
-	txtRc := rect{Left: px(44), Top: 0, Right: rc.Right - px(12), Bottom: px(ovH)}
+	txtRc := rect{Left: px(ovTextX), Top: 0, Right: rc.Right - px(12), Bottom: px(ovH)}
 	if ovShowsClose(st) {
 		txtRc.Right = rc.Right - px(44)
 	}
@@ -822,12 +837,12 @@ func overlayRender(hwnd, hdc uintptr) {
 		lineH := ovLineH.Load()
 		liveRows := ovLiveRows.Load()
 		if lineH > 0 && liveRows > 0 && strings.TrimSpace(text) != "" {
-			fill(rect{Left: px(10), Top: px(ovH), Right: rc.Right - px(10), Bottom: px(ovH) + 1}, colLine)
+			fill(rect{Left: px(ovLineX), Top: px(ovH), Right: rc.Right - px(ovLineX), Bottom: px(ovH) + 1}, colLine)
 			vis := liveRows
 			if vis > ovLiveLines {
 				vis = ovLiveLines
 			}
-			area := rect{Left: px(16), Top: px(ovH) + px(5), Right: rc.Right - px(16), Bottom: px(ovH) + px(5) + vis*lineH}
+			area := rect{Left: px(ovPadX), Top: px(ovH) + px(ovPadY), Right: rc.Right - px(ovPadX), Bottom: px(ovH) + px(ovPadY) + vis*lineH}
 			draw := area
 			if liveRows > vis {
 				draw.Top = area.Bottom - liveRows*lineH
@@ -899,7 +914,7 @@ func overlayRender(hwnd, hdc uintptr) {
 	}
 
 	if ovShowsClose(st) {
-		xr := rect{Left: rc.Right - px(34), Top: ctlTop, Right: rc.Right - px(8), Bottom: ctlTop + px(ovH)}
+		xr := rect{Left: rc.Right - px(ovCloseL), Top: ctlTop, Right: rc.Right - px(ovCloseR), Bottom: ctlTop + px(ovH)}
 		xs, _ := windows.UTF16FromString("✕")
 		procSetTextColor.Call(hdc, colGreenDm)
 		procDrawTextW.Call(hdc, uintptr(unsafe.Pointer(&xs[0])), uintptr(len(xs)-1),

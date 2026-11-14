@@ -36,18 +36,12 @@ const (
 	maNoActivate    = 3
 
 	swTimerID   = 1
-	swHeaderDIP = 30
-	swPadX      = 16
-	swPadTop    = 4
-	swPadBottom = 12
 	swMinW      = 520
 	swMaxW      = 1100
 	swShare     = 56
 	swBottomGap = 150
 	swSideGap   = 24
 	swGripDIP   = 6
-	swAlpha     = 235
-	swCloseDIP  = 40
 	swWheelRows = 3
 	swFastTick  = 50
 	swSlowTick  = 100
@@ -55,6 +49,37 @@ const (
 )
 
 var swSizes = map[string]int32{"s": 15, "m": 19, "l": 25}
+
+type swLook struct {
+	header    int32
+	dotX      int32
+	dotR      int32
+	dotRest   float64
+	halo      int32
+	textX     int32
+	closeL    int32
+	closeR    int32
+	lineX     int32
+	padX      int32
+	padTop    int32
+	padBottom int32
+	alpha     uintptr
+	glowTitle bool
+}
+
+var (
+	swPlateLook = swLook{header: ovH, dotX: ovDotX, dotR: ovDotR, dotRest: ovDotRest, halo: ovDotHalo, textX: ovTextX,
+		closeL: ovCloseL, closeR: ovCloseR, lineX: ovLineX, padX: ovPadX, padTop: ovPadY, padBottom: ovPadY, alpha: ovAlpha, glowTitle: true}
+	swTerminalLook = swLook{header: 30, dotX: 18, dotR: 4, dotRest: 1, halo: 4, textX: 32,
+		closeL: 40, closeR: 6, lineX: 10, padX: 16, padTop: 4, padBottom: 12, alpha: 235}
+)
+
+func swLookNow() swLook {
+	if skinID() == "terminal" {
+		return swTerminalLook
+	}
+	return swPlateLook
+}
 
 var procGetTextExtentPoint32W = gdi32.NewProc("GetTextExtentPoint32W")
 
@@ -228,6 +253,15 @@ func subWindowShow(src subWindowSource, onClose func(), onMoved func(string, ovp
 	swMain.show(src, onClose, onMoved, onSized)
 }
 
+func subWindowRestyle() {
+	swMain.mu.Lock()
+	hwnd := swMain.hwnd
+	swMain.mu.Unlock()
+	if hwnd != 0 {
+		procPostMessageW.Call(hwnd, wmSwLayout, 0, 0)
+	}
+}
+
 func subWindowHide(src subWindowSource) {
 	swMain.hide(src)
 }
@@ -333,7 +367,7 @@ func (sw *subWindow) startThread() {
 		if hwnd != 0 {
 			swByHwnd.Store(hwnd, sw)
 			applyDarkCaption(hwnd)
-			procSetLayeredWindowAttributes.Call(hwnd, 0, swAlpha, lwaAlpha)
+			procSetLayeredWindowAttributes.Call(hwnd, 0, swLookNow().alpha, lwaAlpha)
 		} else {
 			log.Printf("subtitles: the window was not created")
 		}
@@ -414,7 +448,8 @@ func (sw *subWindow) place() (work, screen rect) {
 
 func (sw *subWindow) limits(wa rect, dpi, lineH int32) subwin.Limits {
 	px := func(v int32) int32 { return scaleDPI(v, dpi) }
-	chrome := px(swHeaderDIP) + px(swPadTop) + px(swPadBottom)
+	look := swLookNow()
+	chrome := px(look.header) + px(look.padTop) + px(look.padBottom)
 	minRows := int32(1)
 	if len(sw.parts) > 1 {
 		minRows = 2
@@ -479,8 +514,7 @@ func (sw *subWindow) setParts() {
 }
 
 func (sw *subWindow) layoutParts() {
-	px := func(v int32) int32 { return scaleDPI(v, sw.dpi) }
-	area := rect{Left: px(swPadX), Top: px(swHeaderDIP) + px(swPadTop), Right: sw.w - px(swPadX), Bottom: sw.h - px(swPadBottom)}
+	area := sw.textArea()
 	sw.splitY = 0
 	if len(sw.parts) == 2 && sw.lineH > 0 {
 		upper, _ := subwin.SplitRows((area.Bottom-area.Top)/sw.lineH, sw.top)
@@ -499,7 +533,8 @@ func (sw *subWindow) layoutParts() {
 
 func (sw *subWindow) textArea() rect {
 	px := func(v int32) int32 { return scaleDPI(v, sw.dpi) }
-	return rect{Left: px(swPadX), Top: px(swHeaderDIP) + px(swPadTop), Right: sw.w - px(swPadX), Bottom: sw.h - px(swPadBottom)}
+	look := swLookNow()
+	return rect{Left: px(look.padX), Top: px(look.header) + px(look.padTop), Right: sw.w - px(look.padX), Bottom: sw.h - px(look.padBottom)}
 }
 
 func (sw *subWindow) totalRows() int32 {
@@ -622,7 +657,8 @@ func swRegion(w, h, dpi int32) uintptr {
 
 func (sw *subWindow) inClose(x, y int32) bool {
 	px := func(v int32) int32 { return scaleDPI(v, sw.dpi) }
-	return x >= sw.w-px(swCloseDIP) && x < sw.w && y >= 0 && y < px(swHeaderDIP)
+	look := swLookNow()
+	return x >= sw.w-px(look.closeL) && x < sw.w && y >= 0 && y < px(look.header)
 }
 
 func swCursorClient(hwnd uintptr) (int32, int32) {
@@ -758,49 +794,55 @@ func (sw *subWindow) render(hwnd, hdc uintptr) {
 	procDeleteObject.Call(brush)
 	procSetBkMode.Call(hdc, 1)
 
-	head := px(swHeaderDIP)
+	look := swLookNow()
+	head := px(look.header)
 	cy := head / 2
 	dot := colDot
 	if phase != subPhaseListening {
 		dot = colAmber
 	}
-	core := px(4)
+	core := int32(float64(px(look.dotR)) * look.dotRest)
 	halo := core
 	if themeGlow() {
-		halo = core + px(4)
+		halo = core + px(look.halo)
 	}
-	drawSmoothDot(hdc, px(18), cy, core, halo, dot, colBg, 0.34)
+	drawSmoothDot(hdc, px(look.dotX), cy, core, halo, dot, colBg, ovDotGlow)
 
 	procSelectObject.Call(hdc, uiFontDPI(dpi))
 	title := hdr.title
 	measure := draw(title, rect{}, colGreen, 0x0400|0x0020)
-	tr0 := rect{Left: px(32), Top: 0, Right: px(32) + (measure.Right - measure.Left), Bottom: head}
+	tr0 := rect{Left: px(look.textX), Top: 0, Right: px(look.textX) + (measure.Right - measure.Left), Bottom: head}
+	if look.glowTitle && themeGlow() {
+		for _, off := range [][2]int32{{1, 0}, {-1, 0}, {0, 1}, {0, -1}} {
+			draw(title, rect{Left: tr0.Left + off[0], Top: tr0.Top + off[1], Right: tr0.Right + off[0], Bottom: tr0.Bottom + off[1]}, colGreenLo, 0x0020|0x0004)
+		}
+	}
 	draw(title, tr0, colGreen, 0x0020|0x0004)
 	sw.followAt = rect{}
 	if back {
 		mark := tr("sub.follow")
 		size := draw(mark, rect{}, colGreen, 0x0400|0x0020)
 		at := rect{Left: tr0.Right + px(10), Top: 0, Right: tr0.Right + px(10) + (size.Right - size.Left), Bottom: head}
-		if at.Right > rc.Right-px(swCloseDIP) {
-			at.Right = rc.Right - px(swCloseDIP)
+		if at.Right > rc.Right-px(look.closeL) {
+			at.Right = rc.Right - px(look.closeL)
 		}
 		draw(mark, at, colGreen, 0x0020|0x0004|0x8000)
 		fill(rect{Left: at.Left, Top: head/2 + (size.Bottom-size.Top)/2, Right: at.Right, Bottom: head/2 + (size.Bottom-size.Top)/2 + 1}, colGreenDm)
 		sw.followAt = at
 	} else if code := hdr.codes; code != "" {
-		draw(code, rect{Left: tr0.Right + px(10), Top: 0, Right: rc.Right - px(swCloseDIP), Bottom: head}, colGreenDm, 0x0020|0x0004|0x8000)
+		draw(code, rect{Left: tr0.Right + px(10), Top: 0, Right: rc.Right - px(look.closeL), Bottom: head}, colGreenDm, 0x0020|0x0004|0x8000)
 	}
 	xcol := colGreenDm
 	if sw.hover {
 		xcol = colGreen
 	}
-	draw("✕", rect{Left: rc.Right - px(swCloseDIP), Top: 0, Right: rc.Right - px(6), Bottom: head}, xcol, 0x0020|0x0004|0x0001)
-	fill(rect{Left: px(10), Top: head, Right: rc.Right - px(10), Bottom: head + 1}, colLine)
+	draw("✕", rect{Left: rc.Right - px(look.closeL), Top: 0, Right: rc.Right - px(look.closeR), Bottom: head}, xcol, 0x0020|0x0004|0x0001)
+	fill(rect{Left: px(look.lineX), Top: head, Right: rc.Right - px(look.lineX), Bottom: head + 1}, colLine)
 
 	font := sw.textFont(dpi)
 	procSelectObject.Call(hdc, font)
 	if !hasText {
-		area := rect{Left: px(swPadX), Top: head + px(swPadTop), Right: rc.Right - px(swPadX), Bottom: rc.Bottom - px(swPadBottom)}
+		area := rect{Left: px(look.padX), Top: head + px(look.padTop), Right: rc.Right - px(look.padX), Bottom: rc.Bottom - px(look.padBottom)}
 		draw(swPhaseText(phase), rect{Left: area.Left, Top: area.Bottom - sw.lineH, Right: area.Right, Bottom: area.Bottom}, colGreenDm, 0x0020|0x0004|0x8000)
 		return
 	}
@@ -808,7 +850,7 @@ func (sw *subWindow) render(hwnd, hdc uintptr) {
 		sw.drawPart(hdc, font, p, partRows[i], draw)
 	}
 	if sw.splitY > 0 {
-		fill(rect{Left: px(10), Top: sw.splitY, Right: rc.Right - px(10), Bottom: sw.splitY + 1}, colLine)
+		fill(rect{Left: px(look.lineX), Top: sw.splitY, Right: rc.Right - px(look.lineX), Bottom: sw.splitY + 1}, colLine)
 	}
 }
 
@@ -1013,6 +1055,7 @@ func (sw *subWindow) proc(hwnd, msg, wParam, lParam uintptr) uintptr {
 		}
 		return 0
 	case wmSwLayout:
+		procSetLayeredWindowAttributes.Call(hwnd, 0, swLookNow().alpha, lwaAlpha)
 		if sw.shown {
 			sw.setParts()
 			sw.layout(hwnd)

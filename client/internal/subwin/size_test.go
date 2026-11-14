@@ -111,3 +111,21 @@ func TestCleanBoxes(t *testing.T) {
 		t.Fatal("an empty result is not nil")
 	}
 }
+
+func TestTheSavedRowsSurviveATallerHeader(t *testing.T) {
+	for _, chrome := range []int32{30 + 4 + 12, 52 + 5 + 5, (30 + 4 + 12) * 3 / 2, (52 + 5 + 5) * 3 / 2} {
+		for lineH := int32(18); lineH <= 40; lineH += 11 {
+			l := NewLimits(BoxMinW, 1920, 1040, chrome, lineH, 2)
+			for rows := int32(2); rows <= 12; rows++ {
+				if got := l.RowsFor(l.Height(rows)); got != rows {
+					t.Errorf("chrome %d, line %d: %d rows come back as %d", chrome, lineH, rows, got)
+				}
+				for top := int32(1); top < rows; top++ {
+					if u, _ := SplitRows(rows, top); u != top {
+						t.Errorf("chrome %d: %d rows above the line of %d become %d", chrome, top, rows, u)
+					}
+				}
+			}
+		}
+	}
+}

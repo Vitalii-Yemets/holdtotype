@@ -1025,6 +1025,7 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	if themeChanged {
 		applyTheme(c.Skin, c.Theme)
 		refreshWindowChrome()
+		subWindowRestyle()
 		trayReloadIcons(trayIdle)
 		a.refreshIdleUI()
 		overlayRefresh()
