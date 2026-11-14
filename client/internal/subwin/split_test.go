@@ -89,3 +89,31 @@ func TestThePartsOfTheWindow(t *testing.T) {
 		t.Errorf("the translation alone: %d rows, %d above the line", rows, top)
 	}
 }
+
+func TestThePartsThatStayAreKept(t *testing.T) {
+	cases := []struct {
+		had, want, got []int
+	}{
+		{[]int{0, 1}, []int{1}, []int{1}},
+		{[]int{1}, []int{0, 1}, []int{-1, 0}},
+		{[]int{0}, []int{0, 1}, []int{0, -1}},
+		{[]int{0, 1}, []int{0}, []int{0}},
+		{[]int{0, 1}, []int{0, 1}, []int{0, 1}},
+		{nil, []int{0, 1}, []int{-1, -1}},
+		{[]int{-1, -1}, []int{0, 1}, []int{-1, -1}},
+		{[]int{-1, 1}, []int{0, 1}, []int{-1, 1}},
+		{[]int{1, 1}, []int{1}, []int{0}},
+	}
+	for _, c := range cases {
+		got := Reuse(c.had, c.want)
+		if len(got) != len(c.got) {
+			t.Fatalf("%v → %v: %v", c.had, c.want, got)
+		}
+		for i := range got {
+			if got[i] != c.got[i] {
+				t.Errorf("%v → %v: %v, want %v", c.had, c.want, got, c.got)
+				break
+			}
+		}
+	}
+}

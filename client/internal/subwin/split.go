@@ -35,6 +35,22 @@ func Parts(translated, translationOnly bool) (bool, bool) {
 	return !translationOnly, true
 }
 
+func Reuse(had, want []int) []int {
+	out := make([]int, len(want))
+	taken := make([]bool, len(had))
+	for i, k := range want {
+		out[i] = -1
+		for j, h := range had {
+			if h == k && h >= 0 && !taken[j] {
+				out[i] = j
+				taken[j] = true
+				break
+			}
+		}
+	}
+	return out
+}
+
 func DefaultRows(lines, parts int32) (int32, int32) {
 	if parts < 2 {
 		return lines, 0

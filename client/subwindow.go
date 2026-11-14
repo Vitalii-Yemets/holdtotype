@@ -512,12 +512,25 @@ func (sw *subWindow) setParts() {
 		same = sw.parts[i].kind == kinds[i] && sw.parts[i].src == src
 	}
 	if !same {
+		had := make([]int, len(sw.parts))
+		for i, p := range sw.parts {
+			had[i] = -1
+			if p.src == src {
+				had[i] = p.kind
+			}
+		}
 		parts := make([]*subPart, len(kinds))
-		for i, k := range kinds {
-			parts[i] = newSubPart(k, src)
-			parts[i].dim = k == partHeard && len(kinds) > 1
+		for i, j := range subwin.Reuse(had, kinds) {
+			if j >= 0 {
+				parts[i] = sw.parts[j]
+			} else {
+				parts[i] = newSubPart(kinds[i], src)
+			}
 		}
 		sw.parts = parts
+	}
+	for _, p := range sw.parts {
+		p.dim = p.kind == partHeard && len(sw.parts) > 1
 	}
 	sw.layoutParts()
 }
