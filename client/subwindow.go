@@ -190,6 +190,7 @@ type subWindow struct {
 	monitor string
 	custom  map[string]ovplace.Frac
 	box     map[string]subwin.Box
+	trOnly  bool
 	onClose func()
 	onMoved func(key string, f ovplace.Frac)
 	onSized func(key string, b subwin.Box)
@@ -298,6 +299,7 @@ func (sw *subWindow) configure(cfg *Config) {
 	sw.monitor = mon
 	sw.custom = places
 	sw.box = boxes
+	sw.trOnly = cfg.SubtitlesTranslationOnly
 	hwnd := sw.hwnd
 	sw.mu.Unlock()
 	if hwnd != 0 {
@@ -493,10 +495,17 @@ func (sw *subWindow) setParts() {
 		return
 	}
 	translated, _, _ := src.windowHeader()
+	sw.mu.Lock()
+	only := sw.trOnly
+	sw.mu.Unlock()
 	sw.partsTr = translated
-	kinds := []int{partHeard}
-	if translated {
-		kinds = []int{partHeard, partTranslation}
+	var kinds []int
+	heard, translation := subwin.Parts(translated, only)
+	if heard {
+		kinds = append(kinds, partHeard)
+	}
+	if translation {
+		kinds = append(kinds, partTranslation)
 	}
 	same := len(kinds) == len(sw.parts)
 	for i := 0; same && i < len(kinds); i++ {
@@ -1365,12 +1374,15 @@ func runSubwindowDemo(args []string) {
 		}
 	}
 	translate := len(args) > 1 && strings.TrimSpace(args[1]) != ""
+	only := translate && len(args) > 2 && strings.TrimSpace(args[2]) == "only"
 	langCode, to := "auto", "ru"
 	if cfg, err := loadConfig("config.json"); err == nil && cfg != nil {
 		registerBundledFonts()
 		initLang(cfg.UILanguage)
 		applyTheme(cfg.Skin, cfg.Theme)
-		subWindowConfigure(cfg)
+		c := *cfg
+		c.SubtitlesTranslationOnly = only
+		subWindowConfigure(&c)
 		langCode = cfg.SubtitlesLanguage
 		if validTranslateLang(cfg.SubtitlesTranslate) {
 			to = cfg.SubtitlesTranslate
@@ -1388,7 +1400,9 @@ func runSubwindowDemo(args []string) {
 	}, func(key string, b subwin.Box) {
 		log.Printf("subwindow: the size %s %d dip, %d rows, %d above the line is not saved by the demo", key, b.W, b.Rows, b.Top)
 	})
-	if translate {
+	if only {
+		log.Printf("subwindow: showing the subtitles window with the translation alone for %d s", seconds)
+	} else if translate {
 		log.Printf("subwindow: showing the subtitles window with the heard text and the translation for %d s", seconds)
 	} else {
 		log.Printf("subwindow: showing the subtitles window for %d s", seconds)

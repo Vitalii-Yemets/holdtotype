@@ -28,6 +28,13 @@ func HitSplit(y, lineY, grip int32) bool {
 	return y >= lineY-grip && y <= lineY+grip
 }
 
+func Parts(translated, translationOnly bool) (bool, bool) {
+	if !translated {
+		return true, false
+	}
+	return !translationOnly, true
+}
+
 func DefaultRows(lines, parts int32) (int32, int32) {
 	if parts < 2 {
 		return lines, 0

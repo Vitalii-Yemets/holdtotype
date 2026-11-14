@@ -170,9 +170,10 @@ type settingsForm struct {
 	SubtitlesMonitor  *string                  `json:"subtitles_monitor"`
 	SubtitlesBox      *map[string]subwin.Box   `json:"subtitles_box"`
 
-	SubtitlesTranslateOn *bool   `json:"subtitles_translate_on"`
-	SubtitlesTranslate   *string `json:"subtitles_translate"`
-	SubtitlesTranslator  *string `json:"subtitles_translator"`
+	SubtitlesTranslateOn     *bool   `json:"subtitles_translate_on"`
+	SubtitlesTranslate       *string `json:"subtitles_translate"`
+	SubtitlesTranslator      *string `json:"subtitles_translator"`
+	SubtitlesTranslationOnly *bool   `json:"subtitles_translation_only"`
 }
 
 func (a *App) openSettings(tab string) {
@@ -994,6 +995,9 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	if f.SubtitlesTranslateOn != nil {
 		c.SubtitlesTranslateOn = *f.SubtitlesTranslateOn
 	}
+	if f.SubtitlesTranslationOnly != nil {
+		c.SubtitlesTranslationOnly = *f.SubtitlesTranslationOnly
+	}
 	if f.SubtitlesTranslate != nil && validTranslateLang(*f.SubtitlesTranslate) {
 		c.SubtitlesTranslate = *f.SubtitlesTranslate
 	}
@@ -1159,6 +1163,8 @@ func settingsHTML(cfg *Config, tab string) string {
 		"_default_model":          defaultPresetModel,
 		"_legacy_model":           legacyDefaultModel,
 		"_ui_lang":                lang(),
+
+		"subtitles_translation_only": cfg.SubtitlesTranslationOnly,
 	}
 	cfgJSON, _ := json.Marshal(cfgMap)
 
@@ -2501,6 +2507,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
     <option value="it">Italiano</option><option value="pl">Polski</option>
     <option value="uk">Українська</option><option value="ru">Русский</option>
    </select></div>
+  <div class="row" id="subs_tr_only_row"><label>{{S_SUBS_TR_ONLY}}<span class="sub">{{S_SUBS_TR_ONLY_SUB}}</span></label><input type="checkbox" id="subtitles_translation_only"></div>
  </div>
  <div class="card" id="subs_who_card">
   <div class="srccard trcard idle" id="subs_src_quality" data-who="quality">
@@ -4272,6 +4279,8 @@ function renderSubsTr(){
   const on = sw.checked;
   subsEl("subtitles_translate").disabled = !on;
   subsEl("subs_tr_lang_row").classList.toggle("dimmed", !on);
+  subsEl("subtitles_translation_only").disabled = !on;
+  subsEl("subs_tr_only_row").classList.toggle("dimmed", !on);
   subsEl("subs_who_card").classList.toggle("offdim", !on);
   const fits = !!subsModel().fits;
   [["quality", "subs_src_quality", "subs_pick_quality"], ["fast", "subs_src_fast", "subs_pick_fast"], ["server", "subs_src_api", "subs_pick_api"]].forEach(([w, card, pick])=>{
@@ -4425,6 +4434,7 @@ function initSubs(){
   const trSel = subsEl("subtitles_translate");
   trSel.value = CFG.subtitles_translate || "en";
   if(!trSel.value) trSel.value = "en";
+  subsEl("subtitles_translation_only").checked = !!CFG.subtitles_translation_only;
   paintSubsKey();
   sel.addEventListener("change", refreshSubsModel);
   sel.addEventListener("change", renderSubsTr);
@@ -5862,6 +5872,7 @@ async function doSave(){
     subtitles_monitor: (subsEl("subtitles_monitor")||{}).value || "",
     subtitles_box: subsBoxReset ? {} : null,
     subtitles_translate_on: subsOn(),
+    subtitles_translation_only: !!(subsEl("subtitles_translation_only")||{}).checked,
     subtitles_translate: subsTo(),
     subtitles_translator: subsWho};
   OVS.posDirty = false;

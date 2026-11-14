@@ -36,6 +36,7 @@ const cfg = {
   subtitles_translate_on: false,
   subtitles_translate: "de",
   subtitles_translator: "fast",
+  subtitles_translation_only: false,
   beep: true,
   sound_theme: "speech",
   auto_enter: false,

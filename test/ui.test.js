@@ -1877,6 +1877,18 @@ function check(name, actual, expected) {
   check("turning it off keeps the language", [w.lastSaveForm.subtitles_translate_on, w.lastSaveForm.subtitles_translate], [false, "ru"]);
   await change(trOn, true);
   check("and turning it on again returns to it", [w.lastSaveForm.subtitles_translate_on, w.lastSaveForm.subtitles_translate, trLang.value], [true, "ru", "ru"]);
+  const onlyBox = sv("subtitles_translation_only");
+  check("showing only the translation is a switch right after the translation language", [onlyBox.type, onlyBox.closest(".row").id, onlyBox.closest(".row").previousElementSibling.id, onlyBox.closest(".row").querySelector("label").firstChild.textContent, onlyBox.closest(".row").querySelector(".sub").textContent, onlyBox.closest(".card").id], ["checkbox", "subs_tr_only_row", "subs_tr_lang_row", "S_SUBS_TR_ONLY", "S_SUBS_TR_ONLY_SUB", "subs_tr_card"]);
+  check("it carries the config, off", onlyBox.checked, false);
+  await change(onlyBox, true);
+  check("turning it on is saved", w.lastSaveForm.subtitles_translation_only, true);
+  await change(trOn, false);
+  check("with translation off it is dimmed and disabled like the language row, and keeps its value", [onlyBox.closest(".row").classList.contains("dimmed"), onlyBox.disabled, trLang.closest(".row").classList.contains("dimmed"), w.lastSaveForm.subtitles_translation_only, onlyBox.checked], [true, true, true, true, true]);
+  await change(trOn, true);
+  check("translation on wakes it up", [onlyBox.closest(".row").classList.contains("dimmed"), onlyBox.disabled], [false, false]);
+  await change(onlyBox, false);
+  check("turning it off is saved", w.lastSaveForm.subtitles_translation_only, false);
+  check("the search finds it", w.searchMatches("s_subs_tr_only").some((el) => el.closest("#subs_tr_only_row")), true);
   await change(trLang, "de");
 
   const PL = w.eval("L");
@@ -2159,6 +2171,7 @@ function check(name, actual, expected) {
       ["S_SUBS_TR_MISS_SERVER"].filter((k) => !t[k].includes(sName)),
     ], [[], [], []]);
     check(lang + ": the texts keep their places for the values", [["S_SUBS_TR_MISS_PACK", 1], ["S_SUBS_TR_MISS_PACK_GET", 1], ["S_SUBS_F_TWO", 2], ["S_SUBS_PACK_ASK", 2], ["S_SUBS_F_GETTING", 1], ["S_SUBS_TRM_ERR", 1], ["S_SUBS_TRM_DOWN", 1], ["S_SUBS_TRM_SMALL", 1]].filter(([k, n]) => typeof t[k] !== "string" || t[k].split("%s").length !== n + 1).map(([k]) => k), []);
+    check(lang + ": the translation-only switch has its texts", ["S_SUBS_TR_ONLY", "S_SUBS_TR_ONLY_SUB"].filter((k) => typeof t[k] !== "string" || !t[k]), []);
     check(lang + ": the removed texts are gone", ["S_SUBS_ORIG", "S_SUBS_WHO_AUTO", "S_SUBS_TR_NONE", "S_SUBS_TR_LOCAL", "S_SUBS_TRM_DOWN_NEXT", "S_SUBS_TR_FAST_ONE", "S_SUBS_FPK_SUB"].filter((k) => k in t), []);
     check(lang + ": no text names the light engine's origin", Object.entries(t).filter(([k, v]) => /^S_SUBS_/.test(k) && /bergamot|firefox|mozilla|marian/i.test(v)).map(([k]) => k), []);
   }
@@ -2254,7 +2267,7 @@ function check(name, actual, expected) {
   check("and the one on the Status tab does too", w.updTabs.slice(-1), ["state"]);
 
   const appFns = Object.keys(w).filter((k) => /^app[A-Z]/.test(k));
-  const updatedHtml = html.replace('"_tab":"general"', '"_tab":"post","_updated":"9.9.9"');
+  const updatedHtml = html.replace('"_tab":"general"', '"_tab":"post","_updated":"9.9.9"').replace('"subtitles_translation_only":false', '"subtitles_translation_only":true');
   check("the page for an updated start is built", updatedHtml !== html, true);
   const dom2 = new JSDOM(updatedHtml, { runScripts: "dangerously", beforeParse(win) {
     for (const k of appFns) win[k] = w[k];
@@ -2269,6 +2282,7 @@ function check(name, actual, expected) {
   await sleep(2600);
   check("the notice stays longer than an ordinary one", d2.getElementById("st_saved").textContent, "Updated to version 9.9.9");
   check("the updated page has no errors", errors2, []);
+  check("a saved translation-only switch comes back on the next opening", d2.getElementById("subtitles_translation_only").checked, true);
   dom2.window.close();
 
   check("no page errors", errors, []);

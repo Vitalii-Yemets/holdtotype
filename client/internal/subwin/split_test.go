@@ -66,3 +66,26 @@ func TestLinesPerPart(t *testing.T) {
 		}
 	}
 }
+
+func TestThePartsOfTheWindow(t *testing.T) {
+	cases := []struct {
+		translated, only, heard, translation bool
+	}{
+		{false, false, true, false},
+		{false, true, true, false},
+		{true, false, true, true},
+		{true, true, false, true},
+	}
+	for _, c := range cases {
+		h, tr := Parts(c.translated, c.only)
+		if h != c.heard || tr != c.translation {
+			t.Errorf("translated %v, only %v: heard %v, translation %v", c.translated, c.only, h, tr)
+		}
+		if !h && !tr {
+			t.Errorf("translated %v, only %v: the window has no part", c.translated, c.only)
+		}
+	}
+	if rows, top := DefaultRows(3, 1); rows != 3 || top != 0 {
+		t.Errorf("the translation alone: %d rows, %d above the line", rows, top)
+	}
+}

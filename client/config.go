@@ -162,11 +162,12 @@ type Config struct {
 	SubtitlesMonitor  string                  `json:"subtitles_monitor"`
 	SubtitlesBox      map[string]subwin.Box   `json:"subtitles_box"`
 
-	SubtitlesTranslateOn bool     `json:"subtitles_translate_on"`
-	SubtitlesTranslate   string   `json:"subtitles_translate"`
-	SubtitlesTranslator  string   `json:"subtitles_translator"`
-	SubtitlesPairs       []string `json:"subtitles_pairs"`
-	TranslatePort        int      `json:"translate_port"`
+	SubtitlesTranslateOn     bool     `json:"subtitles_translate_on"`
+	SubtitlesTranslate       string   `json:"subtitles_translate"`
+	SubtitlesTranslator      string   `json:"subtitles_translator"`
+	SubtitlesTranslationOnly bool     `json:"subtitles_translation_only"`
+	SubtitlesPairs           []string `json:"subtitles_pairs"`
+	TranslatePort            int      `json:"translate_port"`
 
 	CanaryTarget string `json:"-"`
 }
