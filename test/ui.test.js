@@ -2285,6 +2285,51 @@ function check(name, actual, expected) {
   check("a saved translation-only switch comes back on the next opening", d2.getElementById("subtitles_translation_only").checked, true);
   dom2.window.close();
 
+  const helpOf = (lang) => {
+    let start = goSrc.indexOf('settingsStrings["' + lang + '"] = map[string]string{');
+    if (start < 0) start = goSrc.indexOf('\n\t"' + lang + '": {', goSrc.indexOf("var settingsStrings"));
+    const key = '"S_HELP_HTML":';
+    const piece = /\s*(\+)?\s*"((?:[^"\\]|\\.)*)"/y;
+    let at = goSrc.indexOf(key, start) + key.length, out = "";
+    for (;;) {
+      piece.lastIndex = at;
+      const m = piece.exec(goSrc);
+      if (!m || (out && !m[1])) break;
+      out += JSON.parse('"' + m[2] + '"');
+      at = piece.lastIndex;
+    }
+    return out;
+  };
+  const helpWas = helpCard.innerHTML;
+  const realSrv = sv("srv_local");
+  const shapeOf = (card) => [card.className, [...card.children].map((c) => c.tagName + "." + c.className), card.querySelector(".srchead").firstElementChild.tagName, [...card.querySelectorAll(".sum > .sumrow")].map((r) => [...r.children].map((c) => c.tagName + "." + c.className)), [...card.querySelectorAll(".acts > *")].map((b) => b.tagName + "." + b.className + "." + b.type)];
+  const realShape = shapeOf(realSrv);
+  realShape[2] = "SPAN";
+  check("the real server card that the help copies is chosen and has four rows", [realSrv.className, realShape[3].length], ["srccard on", 4]);
+  check("the help picture of the server card is drawn by the rules of the real one", [css.includes("#srv_local,#srv_remote,.hshot .srccard{min-height:150px;display:flex;flex-direction:column}"), css.includes("#srv_local .sum,#srv_remote .sum,.hshot .srccard .sum{flex:1;display:flex;flex-direction:column;gap:6px;margin:8px 0 10px}"), css.includes(".hshot .srccard{margin:0;pointer-events:none}"), css.includes("margin-top:2px}\n.hpick.on")], [true, true, true, false]);
+  for (const lang of ["ru", "en", "de", "fr", "es", "it", "pl", "uk"]) {
+    const S = stringsOf(lang);
+    helpCard.innerHTML = helpOf(lang);
+    const pics = [...helpCard.querySelectorAll(".hshot .srccard")];
+    check(`${lang}: the help has one picture of the server card`, pics.length, 1);
+    const pic = pics[0];
+    if (!pic) continue;
+    check(`${lang}: the picture has the classes and order of the real card`, shapeOf(pic), realShape);
+    check(`${lang}: its mark is a picture of the mark, not a field`, [pic.querySelector(".srchead > span").className, pic.querySelectorAll("input").length], ["hpick on", 0]);
+    check(`${lang}: its name is the name of the real card`, pic.querySelector(".srchead").textContent, S.S_SRV_LOCAL);
+    check(`${lang}: its rows say what the real card says`, [...pic.querySelectorAll(".sumrow")].map((r) => [r.querySelector(".sumk").textContent, r.querySelector(".sumv").textContent, r.querySelector(".sumv").classList.contains("off")]), [[S.S_SRV_K_THREADS, "4", false], [S.S_SRV_K_AUTO, S.S_SRV_ON, false], [S.S_SRV_K_PORT, "8910", false], [S.S_SRV_K_FILE, S.S_SRV_NEAR, true]]);
+    const btn = pic.querySelector(".acts > button");
+    check(`${lang}: its button is the real one and is not reached from the keyboard`, [btn.textContent, btn.getAttribute("tabindex"), btn.tabIndex], [S.S_PROF_EDIT, "-1", -1]);
+    check(`${lang}: the search does not find the rows of the picture`, [S.S_SRV_K_THREADS, S.S_SRV_K_AUTO, S.S_SRV_K_FILE, S.S_SRV_NEAR, "8910"].map((s) => w.searchMatches(s.toLowerCase()).filter((el) => el.closest(".hshot")).length), [0, 0, 0, 0, 0]);
+    omni.value = S.S_SRV_NEAR; omni.dispatchEvent(new w.Event("input")); await sleep(60);
+    check(`${lang}: and highlights nothing in it`, d.querySelectorAll(".hshot .hit").length, 0);
+  }
+  omni.value = "9100"; omni.dispatchEvent(new w.Event("input")); await sleep(60);
+  check("the real server card is still found with the picture in the help", d.querySelectorAll("#srv_local_sum .sumrow.hit").length, 1);
+  omni.value = ""; omni.dispatchEvent(new w.Event("input")); await sleep(60);
+  helpCard.innerHTML = helpWas;
+  check("the help still reaches search after the picture checks", searchFinds(w, d, "config.json"), true);
+
   check("no page errors", errors, []);
 
   if (failures.length) {

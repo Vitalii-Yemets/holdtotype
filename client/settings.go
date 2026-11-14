@@ -1938,8 +1938,8 @@ input.srcpick:disabled,input.srvpick:disabled{opacity:.4;cursor:default}
 #p-system .grp+.grp{border-top:1px solid var(--soft);margin-top:14px;padding-top:12px}
 #p-system .grp .row{border-bottom:0}
 #p-system .card+.card{border-top:1px solid var(--soft);padding-top:16px}
-#srv_local,#srv_remote{min-height:150px;display:flex;flex-direction:column}
-#srv_local .sum,#srv_remote .sum{flex:1;display:flex;flex-direction:column;gap:6px;margin:8px 0 10px}
+#srv_local,#srv_remote,.hshot .srccard{min-height:150px;display:flex;flex-direction:column}
+#srv_local .sum,#srv_remote .sum,.hshot .srccard .sum{flex:1;display:flex;flex-direction:column;gap:6px;margin:8px 0 10px}
 button.mini.eq{min-width:186px}
 .sumrow.hit{background:var(--navon);box-shadow:inset 2px 0 0 var(--hi)}
 .srccard.idle:hover{border-color:var(--dim)}
@@ -2017,6 +2017,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
 .hopt tr:last-child td{border-bottom:0}
 .hshot{border:1px solid var(--line);border-radius:var(--r);background:var(--field);padding:12px 14px;margin:0 0 12px}
 .hshot .hcap{color:var(--faint);font-size:10.5px;margin-top:8px}
+.hshot .srccard{margin:0;pointer-events:none}
 .hshot .hrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--soft)}
 .hshot .hrow:last-of-type{border-bottom:0}
 .hshot .hrow label{flex:1;color:var(--green);font-size:12.5px}
@@ -2029,7 +2030,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
 .hcard .ht{flex:1}
 .hcard .ht b{font-size:13px}
 .hcard .ht span{display:block;color:var(--dim);font-size:11px;margin-top:2px}
-.hpick{width:15px;height:15px;border:1px solid var(--dim);border-radius:var(--dotr);position:relative;flex:none;margin-top:2px}
+.hpick{width:15px;height:15px;border:1px solid var(--dim);border-radius:var(--dotr);position:relative;flex:none}
 .hpick.on{border-color:var(--hi)}
 .hpick.on::after{content:"";position:absolute;top:3px;left:3px;width:7px;height:7px;border-radius:var(--dotr);background:var(--hi);box-shadow:var(--higlow)}
 .hfld{border:1px solid var(--line);background:var(--field);color:var(--green);font-size:12px;padding:4px 9px;min-width:70px}
@@ -5937,6 +5938,7 @@ function searchMatches(s){
   const items = [...document.querySelectorAll(".page .row, .page .mrow, .page .sumrow, .page .sect, .page .blklbl, .page .hint, .page .mslot, .page .wizh, #p-subs .srchead, .about p, .about li")];
   const seen = new Set();
   return items.filter(r=>{
+    if(r.closest(".hshot")) return false;
     if(!r.textContent.toLowerCase().includes(s)) return false;
     if(seen.has(r)) return false;
     seen.add(r);
