@@ -2167,7 +2167,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
    <span class="stcombo" id="state_hotkey"></span>
    <button type="button" class="iconbtn stgo" data-goto="dictation" title="{{S_ST_HOTKEY_GO}}">&#8599;</button>
   </div>
-  <button type="button" class="mini" id="state_enable" style="display:none">{{S_ST_ENABLE}}</button>
+  <button type="button" class="mini pri" id="state_enable" style="display:none">{{S_ST_ENABLE}}</button>
   <button type="button" class="mini danger" id="state_srv_go" style="display:none">{{S_SRV_DOWN_GO}}</button>
  </div>
  <div class="sthero" id="subs_hero" data-phase="off">
@@ -2182,7 +2182,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
     <button type="button" class="hotkey-val" id="subs_hero_assign" title="{{S_CHANGE}}">{{S_LANG_KEY_SET}}</button>
     <button type="button" class="iconbtn stgo" id="subs_hero_goto" data-goto="subs" title="{{S_ST_GOTO}}">&#8599;</button>
    </div>
-   <button type="button" class="mini" id="subs_hero_go" title="{{S_SUBS_START}}">{{S_SUBS_HERO_START}}</button>
+   <button type="button" class="mini pri" id="subs_hero_go" title="{{S_SUBS_START}}">{{S_SUBS_HERO_START}}</button>
   </div>
  </div>
  <div class="stalerts" id="state_alerts"></div>
@@ -2193,13 +2193,13 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
     <div class="stptxt"><div class="stpttl"><span id="state_upd_title">—</span><span class="stbdg" id="state_upd_badge" style="display:none"></span></div><div class="stpsub" id="state_upd_sub"></div></div>
     <button type="button" class="iconbtn stgo" data-goto="system" title="{{S_ST_GOTO}}">&#8599;</button>
    </div>
-   <button type="button" class="mini" id="state_upd_btn">{{S_ST_CHECK}}</button>
+   <button type="button" class="mini pri" id="state_upd_btn">{{S_ST_CHECK}}</button>
   </div>
   <div class="stplate">
    <div class="stptop"><i class="led" id="state_mem_led"></i>
     <div class="stptxt"><div class="stpttl" id="state_mem_title">—</div><div class="stpsub" id="state_mem_sub"></div></div>
    </div>
-   <button type="button" class="mini" id="state_unload">{{S_UNLOAD_GO}}</button>
+   <button type="button" class="mini pri" id="state_unload">{{S_UNLOAD_GO}}</button>
   </div>
  </div>
 
