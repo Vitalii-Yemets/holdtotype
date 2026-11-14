@@ -1136,10 +1136,10 @@ var settingsStrings = map[string]map[string]string{
 			"<tr><td>Сбросить настройки</td><td>Возвращает всё как после установки. Скачанные модели и история остаются на месте — стираются только настройки.</td></tr>" +
 			"</table>" +
 			"<p class=\"hsub\">Где работает распознавание</p>" +
-			"<p>Речь разбирает отдельная маленькая программа. Обычно она лежит рядом с приложением, запускается сама, и вам про неё думать не нужно. Но её можно поставить и на другой компьютер: например, на домашний, где мощная видеокарта, а диктовать с лёгкого ноутбука. Выбор — переключателем на карточках.</p>" +
+			"<p>Речь разбирает отдельная маленькая программа. Обычно она лежит рядом с приложением, запускается сама, и вам про неё думать не нужно. Но её можно поставить и на другой компьютер: например, на домашний, где мощная видеокарта, а диктовать с лёгкого ноутбука. Выбор — отметкой на карточке.</p>" +
 			"<div class=\"hshot\">" +
-			"<div class=\"hcard\" style=\"border-color:var(--hi);box-shadow:var(--higlow)\"><span class=\"hsw on\"><i></i></span><div class=\"ht\"><b>На этом компьютере</b><span>потоки 4 · автозапуск включён · порт 8910 · программа рядом с приложением</span></div><button class=\"hbtn\">Редактировать</button></div>" +
-			"<div class=\"hcap\">включённая карточка подсвечена, вторая в это время притушена</div>" +
+			"<div class=\"hcard\" style=\"border-color:var(--hi);box-shadow:var(--higlow)\"><span class=\"hpick on\"></span><div class=\"ht\"><b>На этом компьютере</b><span>потоки 4 · автозапуск включён · порт 8910 · программа рядом с приложением</span></div><button class=\"hbtn\">Редактировать</button></div>" +
+			"<div class=\"hcap\">выбранная карточка подсвечена</div>" +
 			"</div>" +
 			"<p>Кнопка «Редактировать» открывает окно с четырьмя настройками. Все они со значениями по умолчанию, и почти всегда их можно не трогать.</p>" +
 			"<table class=\"hopt\">" +
@@ -1983,10 +1983,10 @@ var settingsStrings = map[string]map[string]string{
 			"<tr><td>Reset the settings</td><td>Puts everything back the way it was after installation. Downloaded models and history stay where they are: only the settings are wiped.</td></tr>" +
 			"</table>" +
 			"<p class=\"hsub\">Where recognition runs</p>" +
-			"<p>Speech is handled by a separate small program. Normally it sits next to the app and starts by itself, and you do not need to think about it. But it can also live on another computer: for example, a home machine with a powerful graphics card, while you dictate from a light laptop. You choose with the switch on the cards.</p>" +
+			"<p>Speech is handled by a separate small program. Normally it sits next to the app and starts by itself, and you do not need to think about it. But it can also live on another computer: for example, a home machine with a powerful graphics card, while you dictate from a light laptop. You choose with the mark on a card.</p>" +
 			"<div class=\"hshot\">" +
-			"<div class=\"hcard\" style=\"border-color:var(--hi);box-shadow:var(--higlow)\"><span class=\"hsw on\"><i></i></span><div class=\"ht\"><b>On this computer</b><span>CPU threads 4 · autostart on · port 8910 · whisper-server.exe next to the app</span></div><button class=\"hbtn\">Edit</button></div>" +
-			"<div class=\"hcap\">the chosen card is highlighted, and the other one is dimmed meanwhile</div>" +
+			"<div class=\"hcard\" style=\"border-color:var(--hi);box-shadow:var(--higlow)\"><span class=\"hpick on\"></span><div class=\"ht\"><b>On this computer</b><span>CPU threads 4 · autostart on · port 8910 · whisper-server.exe next to the app</span></div><button class=\"hbtn\">Edit</button></div>" +
+			"<div class=\"hcap\">the chosen card is highlighted</div>" +
 			"</div>" +
 			"<p>The “Edit” button opens a window with four settings. They all come with default values, and you can almost always leave them alone.</p>" +
 			"<table class=\"hopt\">" +

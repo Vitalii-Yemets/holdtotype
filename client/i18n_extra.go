@@ -1106,10 +1106,10 @@ func init() {
 			"<tr><td>Einstellungen zurücksetzen</td><td>Stellt alles so her wie nach der Installation. Heruntergeladene Modelle und der Verlauf bleiben, wo sie sind: Gelöscht werden nur die Einstellungen.</td></tr>" +
 			"</table>" +
 			"<p class=\"hsub\">Wo die Erkennung läuft</p>" +
-			"<p>Die Sprache verarbeitet ein eigenes kleines Programm. Normalerweise liegt es neben der App und startet von selbst, und Sie müssen nicht daran denken. Es lässt sich aber auch auf einem anderen Rechner betreiben: zum Beispiel auf dem Rechner zu Hause mit einer starken Grafikkarte, während Sie auf einem leichten Laptop diktieren. Gewählt wird mit dem Schalter auf den Karten.</p>" +
+			"<p>Die Sprache verarbeitet ein eigenes kleines Programm. Normalerweise liegt es neben der App und startet von selbst, und Sie müssen nicht daran denken. Es lässt sich aber auch auf einem anderen Rechner betreiben: zum Beispiel auf dem Rechner zu Hause mit einer starken Grafikkarte, während Sie auf einem leichten Laptop diktieren. Gewählt wird mit der Markierung auf einer Karte.</p>" +
 			"<div class=\"hshot\">" +
-			"<div class=\"hcard\" style=\"border-color:var(--hi);box-shadow:var(--higlow)\"><span class=\"hsw on\"><i></i></span><div class=\"ht\"><b>Auf diesem Rechner</b><span>CPU-Threads 4 · Autostart ein · Port 8910 · whisper-server.exe neben der App</span></div><button class=\"hbtn\">Bearbeiten</button></div>" +
-			"<div class=\"hcap\">die gewählte Karte ist hervorgehoben, die andere ist so lange gedimmt</div>" +
+			"<div class=\"hcard\" style=\"border-color:var(--hi);box-shadow:var(--higlow)\"><span class=\"hpick on\"></span><div class=\"ht\"><b>Auf diesem Rechner</b><span>CPU-Threads 4 · Autostart ein · Port 8910 · whisper-server.exe neben der App</span></div><button class=\"hbtn\">Bearbeiten</button></div>" +
+			"<div class=\"hcap\">die gewählte Karte ist hervorgehoben</div>" +
 			"</div>" +
 			"<p>Die Schaltfläche „Bearbeiten“ öffnet ein Fenster mit vier Einstellungen. Alle haben Standardwerte, und fast immer können Sie sie in Ruhe lassen.</p>" +
 			"<table class=\"hopt\">" +
@@ -1823,10 +1823,10 @@ func init() {
 			"<tr><td>Réinitialiser les réglages</td><td>Remet tout comme après l'installation. Les modèles téléchargés et l'historique restent en place : seuls les réglages sont effacés.</td></tr>" +
 			"</table>" +
 			"<p class=\"hsub\">Où tourne la reconnaissance</p>" +
-			"<p>La parole est traitée par un petit programme à part. D'habitude, il se trouve à côté de l'application, démarre tout seul, et vous n'avez pas à vous en soucier. Mais il peut aussi être installé sur un autre ordinateur : par exemple sur la machine de la maison, qui a une carte graphique puissante, pendant que vous dictez depuis un portable léger. Le choix se fait avec le sélecteur sur les cartes.</p>" +
+			"<p>La parole est traitée par un petit programme à part. D'habitude, il se trouve à côté de l'application, démarre tout seul, et vous n'avez pas à vous en soucier. Mais il peut aussi être installé sur un autre ordinateur : par exemple sur la machine de la maison, qui a une carte graphique puissante, pendant que vous dictez depuis un portable léger. Le choix se fait avec la marque sur une carte.</p>" +
 			"<div class=\"hshot\">" +
-			"<div class=\"hcard\" style=\"border-color:var(--hi);box-shadow:var(--higlow)\"><span class=\"hsw on\"><i></i></span><div class=\"ht\"><b>Sur cet ordinateur</b><span>threads CPU 4 · démarrage auto activé · port 8910 · whisper-server.exe à côté de l'application</span></div><button class=\"hbtn\">Modifier</button></div>" +
-			"<div class=\"hcap\">la carte choisie est mise en évidence, l'autre est estompée pendant ce temps</div>" +
+			"<div class=\"hcard\" style=\"border-color:var(--hi);box-shadow:var(--higlow)\"><span class=\"hpick on\"></span><div class=\"ht\"><b>Sur cet ordinateur</b><span>threads CPU 4 · démarrage auto activé · port 8910 · whisper-server.exe à côté de l'application</span></div><button class=\"hbtn\">Modifier</button></div>" +
+			"<div class=\"hcap\">la carte choisie est mise en évidence</div>" +
 			"</div>" +
 			"<p>Le bouton « Modifier » ouvre une fenêtre avec quatre réglages. Ils ont tous des valeurs par défaut, et vous pouvez presque toujours les laisser tels quels.</p>" +
 			"<table class=\"hopt\">" +
@@ -2540,10 +2540,10 @@ func init() {
 			"<tr><td>Restablecer los ajustes</td><td>Lo deja todo como recién instalado. Los modelos descargados y el historial se quedan donde están: solo se borran los ajustes.</td></tr>" +
 			"</table>" +
 			"<p class=\"hsub\">Dónde funciona el reconocimiento</p>" +
-			"<p>El habla la procesa un pequeño programa aparte. Normalmente está junto a la aplicación, arranca solo y no tienes que preocuparte por él. Pero también puede estar en otro ordenador: por ejemplo, en el de casa, que tiene una tarjeta gráfica potente, mientras tú dictas desde un portátil ligero. Se elige con el selector de las tarjetas.</p>" +
+			"<p>El habla la procesa un pequeño programa aparte. Normalmente está junto a la aplicación, arranca solo y no tienes que preocuparte por él. Pero también puede estar en otro ordenador: por ejemplo, en el de casa, que tiene una tarjeta gráfica potente, mientras tú dictas desde un portátil ligero. Se elige con la marca de una tarjeta.</p>" +
 			"<div class=\"hshot\">" +
-			"<div class=\"hcard\" style=\"border-color:var(--hi);box-shadow:var(--higlow)\"><span class=\"hsw on\"><i></i></span><div class=\"ht\"><b>En este ordenador</b><span>hilos de CPU 4 · inicio automático activado · puerto 8910 · whisper-server.exe junto a la aplicación</span></div><button class=\"hbtn\">Editar</button></div>" +
-			"<div class=\"hcap\">la tarjeta elegida está resaltada, y la otra, mientras tanto, atenuada</div>" +
+			"<div class=\"hcard\" style=\"border-color:var(--hi);box-shadow:var(--higlow)\"><span class=\"hpick on\"></span><div class=\"ht\"><b>En este ordenador</b><span>hilos de CPU 4 · inicio automático activado · puerto 8910 · whisper-server.exe junto a la aplicación</span></div><button class=\"hbtn\">Editar</button></div>" +
+			"<div class=\"hcap\">la tarjeta elegida está resaltada</div>" +
 			"</div>" +
 			"<p>El botón «Editar» abre una ventana con cuatro ajustes. Todos vienen con valores por defecto, y casi siempre puedes dejarlos como están.</p>" +
 			"<table class=\"hopt\">" +
@@ -3257,10 +3257,10 @@ func init() {
 			"<tr><td>Ripristina le impostazioni</td><td>Riporta tutto com'era dopo l'installazione. I modelli scaricati e la cronologia restano al loro posto: si cancellano solo le impostazioni.</td></tr>" +
 			"</table>" +
 			"<p class=\"hsub\">Dove gira il riconoscimento</p>" +
-			"<p>Il parlato lo elabora un piccolo programma a parte. Di solito sta accanto all'app, si avvia da solo e non devi pensarci. Ma può stare anche su un altro computer: per esempio su quello di casa, che ha una scheda grafica potente, mentre detti da un portatile leggero. Si sceglie con l'interruttore sui riquadri.</p>" +
+			"<p>Il parlato lo elabora un piccolo programma a parte. Di solito sta accanto all'app, si avvia da solo e non devi pensarci. Ma può stare anche su un altro computer: per esempio su quello di casa, che ha una scheda grafica potente, mentre detti da un portatile leggero. Si sceglie con il segno su un riquadro.</p>" +
 			"<div class=\"hshot\">" +
-			"<div class=\"hcard\" style=\"border-color:var(--hi);box-shadow:var(--higlow)\"><span class=\"hsw on\"><i></i></span><div class=\"ht\"><b>Su questo computer</b><span>thread CPU 4 · avvio automatico attivo · porta 8910 · whisper-server.exe accanto all’app</span></div><button class=\"hbtn\">Modifica</button></div>" +
-			"<div class=\"hcap\">il riquadro scelto è evidenziato, e l'altro intanto è attenuato</div>" +
+			"<div class=\"hcard\" style=\"border-color:var(--hi);box-shadow:var(--higlow)\"><span class=\"hpick on\"></span><div class=\"ht\"><b>Su questo computer</b><span>thread CPU 4 · avvio automatico attivo · porta 8910 · whisper-server.exe accanto all’app</span></div><button class=\"hbtn\">Modifica</button></div>" +
+			"<div class=\"hcap\">il riquadro scelto è evidenziato</div>" +
 			"</div>" +
 			"<p>Il pulsante «Modifica» apre una finestra con quattro impostazioni. Hanno tutte valori predefiniti, e quasi sempre puoi lasciarle come sono.</p>" +
 			"<table class=\"hopt\">" +
@@ -3974,10 +3974,10 @@ func init() {
 			"<tr><td>Przywróć ustawienia</td><td>Ustawia wszystko tak jak po instalacji. Pobrane modele i historia zostają na miejscu: kasowane są tylko ustawienia.</td></tr>" +
 			"</table>" +
 			"<p class=\"hsub\">Gdzie działa rozpoznawanie</p>" +
-			"<p>Mowę rozpoznaje osobny mały program. Zwykle leży obok aplikacji, uruchamia się sam i nie musisz o nim myśleć. Można go jednak uruchomić na innym komputerze: na przykład na domowym, z mocną kartą graficzną, a dyktować z lekkiego laptopa. Wyboru dokonujesz przełącznikiem na kartach.</p>" +
+			"<p>Mowę rozpoznaje osobny mały program. Zwykle leży obok aplikacji, uruchamia się sam i nie musisz o nim myśleć. Można go jednak uruchomić na innym komputerze: na przykład na domowym, z mocną kartą graficzną, a dyktować z lekkiego laptopa. Wyboru dokonujesz znacznikiem na karcie.</p>" +
 			"<div class=\"hshot\">" +
-			"<div class=\"hcard\" style=\"border-color:var(--hi);box-shadow:var(--higlow)\"><span class=\"hsw on\"><i></i></span><div class=\"ht\"><b>Na tym komputerze</b><span>wątki CPU 4 · autostart włączony · port 8910 · whisper-server.exe obok aplikacji</span></div><button class=\"hbtn\">Edytuj</button></div>" +
-			"<div class=\"hcap\">włączona karta jest podświetlona, a druga jest w tym czasie przygaszona</div>" +
+			"<div class=\"hcard\" style=\"border-color:var(--hi);box-shadow:var(--higlow)\"><span class=\"hpick on\"></span><div class=\"ht\"><b>Na tym komputerze</b><span>wątki CPU 4 · autostart włączony · port 8910 · whisper-server.exe obok aplikacji</span></div><button class=\"hbtn\">Edytuj</button></div>" +
+			"<div class=\"hcap\">wybrana karta jest podświetlona</div>" +
 			"</div>" +
 			"<p>Przycisk „Edytuj” otwiera okno z czterema ustawieniami. Wszystkie mają wartości domyślne i prawie zawsze można ich nie ruszać.</p>" +
 			"<table class=\"hopt\">" +
@@ -4811,10 +4811,10 @@ func init() {
 			"<tr><td>Скинути налаштування</td><td>Повертає все так, як було після встановлення. Завантажені моделі та історія залишаються на місці: стираються лише налаштування.</td></tr>" +
 			"</table>" +
 			"<p class=\"hsub\">Де працює розпізнавання</p>" +
-			"<p>Мовлення розбирає окрема маленька програма. Зазвичай вона лежить поруч із застосунком, запускається сама, і думати про неї вам не потрібно. Але її можна поставити й на інший комп'ютер: наприклад, на домашній, де потужна відеокарта, а диктувати з легкого ноутбука. Вибір робиться перемикачем на картках.</p>" +
+			"<p>Мовлення розбирає окрема маленька програма. Зазвичай вона лежить поруч із застосунком, запускається сама, і думати про неї вам не потрібно. Але її можна поставити й на інший комп'ютер: наприклад, на домашній, де потужна відеокарта, а диктувати з легкого ноутбука. Вибір робиться позначкою на картці.</p>" +
 			"<div class=\"hshot\">" +
-			"<div class=\"hcard\" style=\"border-color:var(--hi);box-shadow:var(--higlow)\"><span class=\"hsw on\"><i></i></span><div class=\"ht\"><b>На цьому комп’ютері</b><span>потоки CPU 4 · автозапуск увімкнено · порт 8910 · whisper-server.exe поряд із застосунком</span></div><button class=\"hbtn\">Редагувати</button></div>" +
-			"<div class=\"hcap\">увімкнену картку підсвічено, а другу тим часом пригашено</div>" +
+			"<div class=\"hcard\" style=\"border-color:var(--hi);box-shadow:var(--higlow)\"><span class=\"hpick on\"></span><div class=\"ht\"><b>На цьому комп’ютері</b><span>потоки CPU 4 · автозапуск увімкнено · порт 8910 · whisper-server.exe поряд із застосунком</span></div><button class=\"hbtn\">Редагувати</button></div>" +
+			"<div class=\"hcap\">вибрану картку підсвічено</div>" +
 			"</div>" +
 			"<p>Кнопка «Редагувати» відкриває вікно з чотирма налаштуваннями. Усі вони мають значення за замовчуванням, і майже завжди їх можна не чіпати.</p>" +
 			"<table class=\"hopt\">" +

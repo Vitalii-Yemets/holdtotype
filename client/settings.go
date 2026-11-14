@@ -2029,9 +2029,9 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
 .hcard .ht{flex:1}
 .hcard .ht b{font-size:13px}
 .hcard .ht span{display:block;color:var(--dim);font-size:11px;margin-top:2px}
-.hsw{width:32px;height:17px;border:1px solid var(--dim);border-radius:calc(var(--r) * .8);position:relative;flex:none}
-.hsw i{position:absolute;top:2px;left:2px;width:11px;height:11px;background:var(--dim);display:block}
-.hsw.on i{left:17px;background:var(--hi);box-shadow:var(--higlow)}
+.hpick{width:15px;height:15px;border:1px solid var(--dim);border-radius:var(--dotr);position:relative;flex:none;margin-top:2px}
+.hpick.on{border-color:var(--hi)}
+.hpick.on::after{content:"";position:absolute;top:3px;left:3px;width:7px;height:7px;border-radius:var(--dotr);background:var(--hi);box-shadow:var(--higlow)}
 .hfld{border:1px solid var(--line);background:var(--field);color:var(--green);font-size:12px;padding:4px 9px;min-width:70px}
 .hnum{display:inline-flex;align-items:stretch}
 .hnum .hfld{border-right:0}
