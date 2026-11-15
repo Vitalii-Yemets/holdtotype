@@ -1226,7 +1226,7 @@ function check(name, actual, expected) {
   const activeDel = () => d.querySelector('#lib_have_list .librow[data-key="asr:small"] button[data-lib="del"]');
   check("the model in use can be removed too — that is the way out of a full disk", !!activeDel(), true);
   activeDel().click(); await sleep(150);
-  check("removing a model in use says what it serves and what follows", d.querySelector(".modal p").textContent, "The “Small” model is used for dictation: RU. Delete it? Another model will have to be chosen there.");
+  check("removing a model in use says what it serves and what follows", d.querySelector(".modal p").textContent, "The “Small” model is used for dictation: русский. Delete it? Another model will have to be chosen there.");
   d.querySelector(".modal .btn.yes").click(); await sleep(400);
   check("and the program is told this was meant", w.delCalls[w.delCalls.length - 1], ["small", true]);
   check("the language it served goes back to Auto-detect", "ru" in (w.lastSaveForm.lang_models || {}), false);

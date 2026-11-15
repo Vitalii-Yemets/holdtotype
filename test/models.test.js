@@ -115,9 +115,9 @@ function open(lang, cfgPatch, setup) {
   check("the installed models come in their order: recognition by name, editors, the translation model", rows("lib_have_list").map((r) => r.dataset.key),
     ["asr:gigaam-v3", "asr:medium-q5_0", "asr:local:my-model", "asr:nemotron-3.5", "asr:small", "llm:a.gguf", "llm:b.gguf", "trm"]);
   check("the total counts the models and their size", d.getElementById("lib_have_total").textContent, "8 models · 8.0 GB");
-  check("a recognition model names the languages it dictates", use("asr:gigaam-v3"), "used for dictation: RU");
-  check("auto-detect, the languages that follow it and the subtitles are named", use("asr:nemotron-3.5"), "used for dictation: Auto-detect, EN, ES, FR, IT, PL, UK, and for subtitles");
-  check("a language of its own is named for its model", use("asr:small"), "used for dictation: DE");
+  check("a recognition model names the languages it dictates", use("asr:gigaam-v3"), "used for dictation: русский");
+  check("auto-detect, the languages that follow it and the subtitles are named", use("asr:nemotron-3.5"), "used for dictation: auto-detect, en, es, fr, it, pl, uk, and for subtitles");
+  check("a language of its own is named for its model", use("asr:small"), "used for dictation: deutsch");
   check("an unused model says so and where it is turned on", [row("asr:medium-q5_0").querySelector(".libidle").textContent, row("asr:medium-q5_0").querySelector(".libturn").textContent],
     ["not in use", "turn on: Languages →"]);
   check("the plate names the place in its tip", (row("asr:medium-q5_0").querySelector(".jump").dataset.tip || row("asr:medium-q5_0").querySelector(".jump").title), "The “Languages” tab, the “Which model serves which language” block");
@@ -182,7 +182,7 @@ function open(lang, cfgPatch, setup) {
   check("and deletes it without touching the languages", [S.calls.includes("del:local:my-model:true"), S.saves.length], [true, saves0]);
 
   row("asr:small").querySelector('button[data-lib="del"]').click(); await sleep(150);
-  check("deleting a model in use names its use", modalText(), "The “Small” model is used for dictation: DE. Delete it? Another model will have to be chosen there.");
+  check("deleting a model in use names its use", modalText(), "The “Small” model is used for dictation: deutsch. Delete it? Another model will have to be chosen there.");
   await answer(false);
   check("saying no keeps everything", [S.calls.includes("del:small:true"), !!row("asr:small")], [false, true]);
   row("asr:small").querySelector('button[data-lib="del"]').click(); await sleep(150);
@@ -193,16 +193,16 @@ function open(lang, cfgPatch, setup) {
 
   tab("library"); await refresh();
   row("asr:nemotron-3.5").querySelector('button[data-lib="del"]').click(); await sleep(150);
-  check("deleting the auto-detect model names the one auto-detect moves to", modalText(), "The “Nemotron 3.5” model is used for dictation: Auto-detect, DE, EN, ES, FR, IT, PL, UK, and for subtitles. Delete it? Auto-detect will move to Medium (q5).");
+  check("deleting the auto-detect model names the one auto-detect moves to", modalText(), "The “Nemotron 3.5” model is used for dictation: auto-detect, de, en, es, fr, it, pl, uk, and for subtitles. Delete it? Auto-detect will move to Medium (q5).");
   await answer(true); await refresh();
   check("auto-detect moves to that model", lastSave().lang_models.auto, "medium-q5_0");
   check("the model is deleted after the move", S.calls.indexOf("del:nemotron-3.5:true") > -1, true);
-  check("the new auto-detect model now names its use", use("asr:medium-q5_0").startsWith("used for dictation: Auto-detect"), true);
+  check("the new auto-detect model now names its use", use("asr:medium-q5_0").startsWith("used for dictation: auto-detect"), true);
 
   row("asr:base").querySelector('button[data-lib="del"]').click(); await sleep(150);
   await answer(true); await refresh();
   row("asr:medium-q5_0").querySelector('button[data-lib="del"]').click(); await sleep(150);
-  check("deleting the last model auto-detect could use says dictation will stop", modalText(), "The “Medium (q5)” model is used for dictation: Auto-detect, DE, EN, ES, FR, IT, PL, UK, and for subtitles. Delete it? There is no other recognition model on this computer — dictation will not work until you download one.");
+  check("deleting the last model auto-detect could use says dictation will stop", modalText(), "The “Medium (q5)” model is used for dictation: auto-detect, de, en, es, fr, it, pl, uk, and for subtitles. Delete it? There is no other recognition model on this computer — dictation will not work until you download one.");
   await answer(true); await refresh();
   check("auto-detect is left without a model of its own", "auto" in lastSave().lang_models, false);
   check("the model it had is among the ones to download again", !!d.querySelector('#lib_get_list .librow[data-key="asr:medium-q5_0"]'), true);

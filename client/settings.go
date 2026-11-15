@@ -5215,7 +5215,7 @@ function asrUse(m){
   const langs = presetLangs.map(p=>p[0]).filter(l=>effectiveFor(l) === m.id);
   const subs = effectiveFor(subsSpeech()) === m.id;
   if(!langs.length) return subs ? L.libusesubs : "";
-  const names = langs.length === presetLangs.length ? L.alllangs : langs.map(l=>l === "auto" ? L.recauto : l.toUpperCase()).join(", ");
+  const names = langs.length === presetLangs.length ? L.alllangs : langsPretty(langs.map(l=>l === "auto" ? L.recauto : l.toUpperCase()).join(", "));
   return fmtText(subs ? L.libusedictsubs : L.libusedict, names);
 }
 function autoReplacement(goneId){
