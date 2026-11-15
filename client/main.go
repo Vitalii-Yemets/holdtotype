@@ -1029,7 +1029,7 @@ func (a *App) initBackend() {
 		parked := a.parked
 		a.mu.Unlock()
 		if parked {
-			log.Printf("the engine was unloaded by hand — waiting for the next dictation")
+			log.Printf("the models were unloaded — waiting for the next dictation")
 			a.setStatus(tr("status.parked"))
 			if !a.waitRetry() {
 				return
@@ -1175,6 +1175,7 @@ func (a *App) wakeForDictation() bool {
 	if parked {
 		a.parked = false
 		a.waking = true
+		a.backendErr = ""
 	}
 	a.mu.Unlock()
 	if parked {
