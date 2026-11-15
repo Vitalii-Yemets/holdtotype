@@ -1207,7 +1207,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"apinone": "S_API_NONE", "apisetup": "S_POSTAPI_SETUP", "apiedit": "S_API_EDIT",
 		"apitest": "S_API_TEST", "apitestrun": "S_API_TEST_RUN", "apiclear": "S_API_CLEAR", "apiclearask": "S_API_CLEAR_ASK",
 		"postnomodel": "S_POST_NO_MODEL", "postnoapi": "S_POST_NO_API", "postbad": "S_POST_BAD", "postnoprompt": "S_POST_NO_PROMPT",
-		"llmcatalog": "S_LLM_CATALOG", "llminstalled": "S_LLM_INSTALLED", "llmsummodel": "S_LLM_SUM_MODEL",
+		"llminstalled": "S_LLM_INSTALLED", "llmsummodel": "S_LLM_SUM_MODEL",
 		"llmblock": "S_LLM_BLOCK", "llmnonehint": "S_LLM_NONE_HINT", "llminmem": "S_LLM_IN_MEM", "llmondisk": "S_LLM_ON_DISK",
 		"llmeject": "S_LLM_EJECT", "llmfound": "S_LLM_FOUND", "llmnosearch": "S_LLM_NOSEARCH", "llmsearchhint": "S_LLM_SEARCH_HINT", "llmpickwait": "S_LLM_PICK_WAIT",
 		"llmsumsize": "S_LLM_SUM_SIZE", "llmsumcount": "S_LLM_SUM_COUNT", "llmsumram": "S_LLM_SUM_RAM",
@@ -1245,7 +1245,17 @@ func settingsHTML(cfg *Config, tab string) string {
 		"stsummary": "S_ST_SUMMARY", "stquick": "S_ST_QUICK", "stmodels": "S_ST_MODELS", "stusage": "S_ST_USAGE",
 		"stready": "S_ST_READY", "stoff": "S_ST_OFF", "stoffsub": "S_ST_OFF_SUB", "stenable": "S_ST_ENABLE",
 		"stgoto": "S_ST_GOTO", "sthotkeygo": "S_ST_HOTKEY_GO", "stupdlast": "S_ST_UPD_LAST", "stupdhave": "S_ST_UPD_HAVE",
-		"stmem": "S_ST_MEM", "stmemsub": "S_ST_MEM_SUB", "ramabout": "S_RAM_ABOUT", "stmemnone": "S_ST_MEM_NONE", "stlang": "S_ST_LANG", "stasr": "S_ST_ASR",
+		"stmem": "S_ST_MEM", "stmemsub": "S_ST_MEM_SUB", "ramabout": "S_RAM_ABOUT",
+		"libcount": "S_LIB_COUNT", "libget": "S_LIB_GET", "libgetasr": "S_LIB_GET_ASR", "libgettrm": "S_LIB_GET_TRM", "libgetmove": "S_LIB_GET_MOVE",
+		"libhf": "S_LIB_HF", "libusedict": "S_LIB_USE_DICT", "libusedictsubs": "S_LIB_USE_DICT_SUBS", "libusesubs": "S_LIB_USE_SUBS",
+		"libusepost": "S_LIB_USE_POST", "libusetr": "S_LIB_USE_TR", "libunused": "S_LIB_UNUSED", "libturnon": "S_LIB_TURN_ON", "libfortr": "S_LIB_FOR_TR",
+		"libdelused": "S_LIB_DEL_USED", "libdelauto": "S_LIB_DEL_AUTO", "libdellast": "S_LIB_DEL_LAST",
+		"jumpblock": "S_JUMP_BLOCK", "jumpcard": "S_JUMP_CARD", "termsplate": "S_TERMS_PLATE", "hfclear": "S_HF_CLEAR", "hfhave": "S_HF_HAVE",
+		"langgetother": "S_LANG_GET_OTHER", "langnone": "S_LANG_NONE", "notinstsize": "S_NOT_INST_SIZE",
+		"postfind": "S_POST_FIND", "postdrop": "S_POST_DROP", "postnone": "S_POST_NONE", "postfindone": "S_POST_FIND_ONE",
+		"navlib": "S_NAV_LIBRARY", "navlangs": "S_NAV_MODELS", "navpost": "S_NAV_POST", "navsubs": "S_NAV_SUBS", "presets": "S_PRESETS",
+		"srclocal": "S_SRC_LOCAL", "whoq": "S_SUBS_WHO_QUALITY", "qneed": "S_SUBS_Q_NEED", "qhint": "S_SUBS_Q_HINT", "trmterms": "S_SUBS_TRM_TERMS",
+		"alllangs": "S_ALL_LANGS", "stmemnone": "S_ST_MEM_NONE", "stlang": "S_ST_LANG", "stasr": "S_ST_ASR",
 		"ston": "S_ST_ON", "stoffw": "S_ST_OFF_W", "stonf": "S_ST_ON_F", "stofff": "S_ST_OFF_F", "stactive": "S_ST_ACTIVE",
 		"stidle": "S_ST_IDLE", "stdisk": "S_ST_DISK", "stusagesub": "S_ST_USAGE_SUB", "stnoweek": "S_ST_NO_WEEK",
 		"stautorunsub": "S_ST_AUTORUN_SUB", "stoverlaysub": "S_ST_OVERLAY_SUB", "sthint": "S_STATE_HINT",
@@ -1873,11 +1883,41 @@ html[data-skin="editor"] .stcombo,html[data-skin="editor"] .hotkey-val{letter-sp
 .llmdl{display:flex;align-items:center;gap:10px;font-size:11.5px;color:var(--dim);margin-bottom:8px}
 .llmdl .nm{flex:0 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .llmdl .mtrack{flex:1;min-width:60px}
-.modal.llmcat{min-width:min(660px,94vw);max-height:86vh;overflow:auto;gap:18px}
-.modal.llmcat #proc-search{display:flex;flex-direction:column;gap:12px}
-.modal.llmcat #proc-models{display:flex;flex-direction:column;margin-top:16px;border-top:1px solid var(--soft);padding-top:14px}
-.modal.llmcat .mrow{padding:0 4px 0 10px;gap:10px;height:32px;flex:none;border-bottom:1px solid var(--soft)}
-.modal.llmcat #hf_results .mrow{padding:0 4px 0 10px}
+#p-library .card+.card{margin-top:18px;border-top:1px solid var(--soft);padding-top:18px}
+#p-library .libtotal{color:var(--faint);font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums}
+#p-library #proc-search{display:flex;flex-direction:column;gap:12px}
+#p-library #hf_results .mrow{padding:0 4px 0 10px;gap:10px;min-height:38px;flex:none;border-bottom:1px solid var(--soft)}
+#p-library #hf_results .hfact{display:inline-flex;align-items:center;justify-content:flex-end;gap:6px;min-width:84px;flex:none}
+#p-library .srchbox .iconbtn{min-width:24px;min-height:24px;display:inline-flex;align-items:center;justify-content:center}
+#p-library .ownm{border-bottom:0;padding-bottom:0;padding-top:0}
+#p-library .ownm .tl{margin-top:6px}
+.librow{cursor:default;align-items:center}
+.librow:hover{border-color:var(--line)}
+.libmain{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.libl1{display:flex;align-items:baseline;gap:12px}
+.librow .pname{flex:0 0 238px;width:238px;min-width:0;font-weight:var(--wb);font-size:13px;display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;overflow-wrap:anywhere}
+.librow .lmodel{flex:1;min-width:0;white-space:normal;overflow:visible;text-overflow:clip;color:var(--dim);font-size:12px;line-height:1.45}
+.librow .libidle{display:block}
+.librow .libturn{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.librow .lmodel .hfhome{margin-left:0;padding:0 7px;line-height:15.4px}
+.libl2{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;color:var(--dim);font-size:11px}
+.libl2 .hfhome{margin-left:0}
+.librow .pmt{border:1px solid var(--line);border-radius:calc(var(--r) * .4);padding:1px 8px;font-size:10px;letter-spacing:.06em;white-space:nowrap;color:var(--lbl,var(--dim));text-shadow:var(--lblglow,none)}
+.librow .pram{white-space:nowrap}
+.librow .pdesc{color:var(--dim);font-size:12px}
+.librow .pdesc.perr{color:var(--bad)}
+.libbars{flex:none;width:160px}
+.libbars .mbars{width:160px;display:flex;flex-direction:column;gap:5px}
+.librow .pact{display:flex;align-items:center;gap:8px;white-space:nowrap;flex:none;min-width:140px;justify-content:flex-end}
+.librow .pact .psize,.librow .pact .mpct{min-width:64px;text-align:right;font-variant-numeric:tabular-nums}
+.librow .pact .psize{color:var(--dim);font-size:12px}
+.librow .pact .iconbtn{min-width:24px;min-height:24px;display:inline-flex;align-items:center;justify-content:center}
+.libslot{display:inline-flex;align-items:center;justify-content:center;width:24px;flex:none}
+.hfhome.jump:focus-visible,#lib_hf_home:focus-visible{outline:1px solid var(--green);outline-offset:2px}
+.jumpline{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px}
+.jumpline .hfhome{margin-left:0}
+.jumpline>span:first-child,.lpick .nonote{color:var(--dim);font-size:11.5px}
+.lpick .jump{border-color:var(--btn2line);background:var(--field)}
 .mrow .mstate{color:var(--faint);font-size:11px;white-space:nowrap}
 .mrow.cur .mstate{color:var(--dim)}
 .mrow.cur .mdesc{text-shadow:var(--glow)}
@@ -2141,6 +2181,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
  <span class="ngrp">{{S_GRP_GENERAL}}</span>
  <button class="nav" role="tab" aria-selected="false" data-p="state"><span class="nlabel">{{S_NAV_STATE}}</span></button>
  <button class="nav" role="tab" aria-selected="false" data-p="system"><span class="nlabel">{{S_NAV_SYSTEM}}</span><span class="nbadge warn" id="badge_system"></span></button>
+ <button class="nav" role="tab" aria-selected="false" data-p="library"><span class="nlabel">{{S_NAV_LIBRARY}}</span></button>
  <button class="nav" role="tab" aria-selected="false" data-p="mic"><span class="nlabel">{{S_NAV_MIC}}</span><span class="nbadge" id="badge_mic"></span></button>
  <button class="nav" role="tab" aria-selected="false" data-p="history"><span class="nlabel">{{S_NAV_HISTORY}}</span><span class="nbadge" id="badge_history"></span></button>
  <span class="ngrp">{{S_GRP_SPEECH}}</span>
@@ -2322,6 +2363,53 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
  </div>
 </div>
 
+<div class="page" role="tabpanel" aria-hidden="true" id="p-library">
+ <div class="card" id="lib_have">
+  <div class="row noline"><label class="blklbl">{{S_LLM_BLOCK}}</label><span class="libtotal" id="lib_have_total"></span></div>
+  <div id="lib_have_list"></div>
+  <div class="hint" id="lib_have_none" style="display:none">{{S_LIB_NONE}}</div>
+  <div class="row noline"><label>{{S_MCHECK}}<span class="sub">{{S_MCHECK_SUB}}</span></label>
+   <button type="button" class="mini" id="mcheck">{{S_MCHECK_GO}}</button></div>
+  <div class="micverdict" id="mcheck_out"></div>
+ </div>
+ <div class="card" id="lib_get">
+  <label class="blklbl">{{S_LIB_GET}}</label>
+  <div class="hint" id="lib_get_hint"></div>
+  <div id="lib_get_list"></div>
+  <div class="hint" id="lib_get_all" style="display:none">{{S_LIB_GET_ALL}}</div>
+ </div>
+ <div class="card" id="lib_hf">
+  <div class="blkhead"><div><label class="blklbl">{{S_LIB_HF}}</label></div><span class="hfhome" role="link" tabindex="0" id="lib_hf_home" title="huggingface.co">Hugging Face ↗</span></div>
+  <div class="hint">{{S_LIB_HF_HINT}}</div>
+  <div id="proc-search"></div>
+ </div>
+ <div class="card" id="lib_own">
+  <label class="blklbl">{{S_MFOLDER}}</label>
+  <div class="hint">{{S_OWNM_SUB}}</div>
+  <div class="ownm">
+   <div class="tl">
+    <div class="tls"><i>1</i>
+     <div class="tlc"><b>{{S_OWNM_S1}}</b><span class="tlsub">{{S_OWNM_S1S}} <span class="code">models\</span></span></div>
+     <div class="tla"><button type="button" class="mini" onclick="appOpenModelsFolder()">{{S_OPEN_FOLDER}}</button></div>
+    </div>
+    <div class="tls"><i>2</i>
+     <div class="tlc"><b>{{S_OWNM_S2}}</b><span class="tlsub">{{S_OWNM_S2S}}</span>
+      <div class="fmts">
+       <div class="fmtc"><div class="fr"><b>Whisper (GGML)</b><span class="cnt">{{S_OWNM_ONEFILE}}</span></div>
+        <div class="chips"><span class="code">ggml-*.bin</span></div></div>
+       <div class="fmtc"><div class="fr"><b>Sherpa-ONNX</b><span class="cnt">{{S_OWNM_FOLDERF}}</span></div>
+        <div class="chips"><span class="code">encoder.onnx</span><span class="code">decoder.onnx</span><span class="code">tokens.txt</span></div></div>
+      </div>
+     </div>
+    </div>
+    <div class="tls"><i>3</i>
+     <div class="tlc"><b>{{S_OWNM_S3}}</b><span class="tlsub tlok">✓ {{S_OWNM_S3S}}</span></div>
+    </div>
+   </div>
+  </div>
+ </div>
+</div>
+
 <div class="page" role="tabpanel" aria-hidden="true" id="p-models">
  <div class="card">
   <div class="row"><label>{{S_RECLANG}}<span class="sub">{{S_SRCLANG_SUB}}</span></label>
@@ -2364,35 +2452,6 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
   <label class="blklbl">{{S_PRESETS}}</label>
   <div class="hint">{{S_PRESETS_HINT}}</div>
   <div id="langlist"></div>
- </div>
- <div class="card">
-  <div class="ownm">
-   <label>{{S_MFOLDER}}<span class="sub">{{S_OWNM_SUB}}</span></label>
-   <div class="tl">
-    <div class="tls"><i>1</i>
-     <div class="tlc"><b>{{S_OWNM_S1}}</b><span class="tlsub">{{S_OWNM_S1S}} <span class="code">models\</span></span></div>
-     <div class="tla"><button type="button" class="mini" onclick="appOpenModelsFolder()">{{S_OPEN_FOLDER}}</button></div>
-    </div>
-    <div class="tls"><i>2</i>
-     <div class="tlc"><b>{{S_OWNM_S2}}</b><span class="tlsub">{{S_OWNM_S2S}}</span>
-      <div class="fmts">
-       <div class="fmtc"><div class="fr"><b>Whisper (GGML)</b><span class="cnt">{{S_OWNM_ONEFILE}}</span></div>
-        <div class="chips"><span class="code">ggml-*.bin</span></div></div>
-       <div class="fmtc"><div class="fr"><b>Sherpa-ONNX</b><span class="cnt">{{S_OWNM_FOLDERF}}</span></div>
-        <div class="chips"><span class="code">encoder.onnx</span><span class="code">decoder.onnx</span><span class="code">tokens.txt</span></div></div>
-      </div>
-     </div>
-    </div>
-    <div class="tls"><i>3</i>
-     <div class="tlc"><b>{{S_OWNM_S3}}</b><span class="tlsub tlok">✓ {{S_OWNM_S3S}}</span></div>
-    </div>
-   </div>
-  </div>
-  <div class="row"><label>{{S_UNLOAD}}<span class="sub">{{S_UNLOAD_SUB}}</span></label>
-   <button type="button" class="mini" id="munload">{{S_UNLOAD_GO}}</button></div>
-  <div class="row" style="border-bottom:0"><label>{{S_MCHECK}}<span class="sub">{{S_MCHECK_SUB}}</span></label>
-   <button type="button" class="mini" id="mcheck">{{S_MCHECK_GO}}</button></div>
-  <div class="micverdict" id="mcheck_out"></div>
  </div>
 </div>
 
@@ -2446,7 +2505,6 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
    <h3 class="srchead"><input type="radio" name="postsrc" class="srcpick" id="pick_local">{{S_SRC_LOCAL}}<span class="hfhome" onclick="appHFHome()" title="huggingface.co">Hugging Face ↗</span></h3>
    <div class="sum" id="llm_sum"></div>
    <div id="llm_dl"></div>
-   <div class="acts"><button type="button" class="mini" id="llm_catalog">{{S_LLM_CATALOG}}</button></div>
   </div>
   <div class="srccard" id="src_api">
    <h3 class="srchead"><input type="radio" name="postsrc" class="srcpick" id="pick_api">{{S_POSTAPI}}</h3>
@@ -3411,49 +3469,6 @@ function renderLLMSummary(st){
     dlBox.appendChild(row);
   });
 }
-function openLLMCatalog(){
-  const bg = document.createElement("div");
-  bg.className = "modal-bg";
-  const box = document.createElement("div");
-  box.className = "modal llmcat";
-  mTitle(box, L.llmcatalog);
-  const search = document.createElement("div");
-  search.id = "proc-search";
-  box.appendChild(search);
-  const list = document.createElement("div");
-  list.id = "proc-models";
-  box.appendChild(list);
-  const row = document.createElement("div");
-  row.className = "modal-btns";
-  const close = document.createElement("button");
-  close.type = "button";
-  close.className = "btn ghost";
-  close.textContent = L.dlgclose;
-  const done = ()=>{
-    bg.remove();
-    document.removeEventListener("keydown", onKey, true);
-    unlockBg();
-    refreshLLM();
-  };
-  const topmost = ()=>[...document.querySelectorAll(".modal-bg")].pop() === bg;
-  function onKey(e){
-    if(e.key !== "Escape" || e.defaultPrevented || !topmost()) return;
-    e.preventDefault();
-    done();
-  }
-  close.onclick = done;
-  bg.onclick = e=>{ if(e.target === bg) done(); };
-  document.addEventListener("keydown", onKey, true);
-  row.appendChild(close);
-  box.appendChild(row);
-  box.setAttribute("role", "dialog");
-  box.setAttribute("aria-modal", "true");
-  bg.appendChild(box);
-  document.body.appendChild(bg);
-  lockBg();
-  initHFBox();
-  refreshLLM();
-}
 async function refreshLLM(){
   const st = JSON.parse(await appLLM());
   const installed = st.installed || [];
@@ -3470,96 +3485,6 @@ async function refreshLLM(){
   updatePostWarn();
   renderLLMSummary(st);
   let busy = (st.downloads || []).some(d=>d.pct >= 0);
-  const body = document.getElementById("proc-models");
-  if(body){
-    body.innerHTML = "";
-    const blk = document.createElement("label");
-    blk.className = "blklbl";
-    blk.textContent = L.llmblock;
-    body.appendChild(blk);
-    if(!installed.length && !(st.downloads||[]).length){
-      const empty = document.createElement("div");
-      empty.className = "hint";
-      empty.textContent = L.llmnonehint;
-      body.appendChild(empty);
-    }
-    installed.forEach(m=>{
-      const cur = selLLM === m.file;
-      const div = document.createElement("div");
-      div.className = "mrow" + (cur ? " cur" : "");
-      div.dataset.f = m.file;
-      const sw = document.createElement("input");
-      sw.type = "checkbox";
-      sw.className = "llmpick";
-      sw.checked = cur;
-      sw.onchange = async ()=>{
-        if(!sw.checked){ sw.checked = true; return; }
-        selLLM = m.file;
-        await doSave();
-        refreshLLM();
-      };
-      div.appendChild(sw);
-      const nm = document.createElement("span");
-      nm.className = "mdesc";
-      nm.style.flex = "1";
-      nm.textContent = m.file;
-      div.appendChild(nm);
-      const state = document.createElement("span");
-      state.className = "mstate";
-      state.textContent = m.loaded ? L.llminmem : L.llmondisk;
-      div.appendChild(state);
-      const sz = document.createElement("span");
-      sz.className = "msize";
-      sz.textContent = llmSize(m.size);
-      div.appendChild(sz);
-      const eject = document.createElement("button");
-      eject.type = "button";
-      eject.className = "iconbtn";
-      eject.title = L.llmeject;
-      eject.disabled = !m.loaded;
-      eject.innerHTML = I_EJECT;
-      eject.onclick = async ()=>{ await appLLMUnload(); refreshLLM(); };
-      div.appendChild(eject);
-      const del = document.createElement("button");
-      del.type = "button";
-      del.className = "iconbtn danger";
-      del.title = L.del;
-      del.dataset.a = "ldel";
-      del.dataset.f = m.file;
-      del.innerHTML = "&#10005;";
-      div.appendChild(del);
-      body.appendChild(div);
-    });
-    (st.downloads || []).forEach(d=>{
-      const div = document.createElement("div");
-      div.className = "mrow";
-      const wait = '<input type="checkbox" class="llmpick" title="'+esc(L.llmpickwait)+'" disabled>';
-      if(d.pct >= 0){
-        div.innerHTML = wait+'<span class="mdesc" style="flex:1">'+esc(d.file)+'</span><span class="mpct">'+(d.pct>0?d.pct+"%":"…")+'</span>'+
-          '<button class="iconbtn danger" title="'+L.dlcancel+'" data-a="lcancel" data-f="'+esc(d.file)+'">&#10005;</button>';
-      } else {
-        div.innerHTML = wait+'<span class="mdesc" style="flex:1">'+esc(d.file)+'</span><span class="mpct">! '+esc(d.err)+'</span>';
-      }
-      body.appendChild(div);
-    });
-    body.querySelectorAll("button[data-a='lcancel']").forEach(b=>{
-      b.onclick = async ()=>{
-        await appModelCancel("llm-" + b.dataset.f);
-        refreshLLM();
-      };
-    });
-    body.querySelectorAll("button[data-a='ldel']").forEach(b=>{
-      b.onclick = async ()=>{
-        const f = b.dataset.f;
-        if(!await askConfirm(L.confirmdel.replace("%s", f), L.del, null, L.mtdel)) return;
-        toast(await appLLMDel(f));
-        if(selLLM === f){
-          selLLM = null;
-        }
-        refreshLLM();
-      };
-    });
-  }
 
   const ramline = document.getElementById("hf_ramline");
   if(ramline) ramline.innerHTML = L.ramavail
@@ -3572,16 +3497,17 @@ async function refreshLLM(){
     '<span class="dot" style="color:var(--bad)">&#9679;</span>'+L.fitbad;
 
   renderProfiles(document.getElementById("profbody"), {state: (installed.length || st.external) ? "installed" : "absent"});
+  if(hfOpenRepo) renderHF();
+  renderLibrary();
   if(sc) sc.scrollTop = keepScroll;
   if(busy) setTimeout(refreshLLM, 900);
 }
 function initHFBox(){
   const sbody = document.getElementById("proc-search");
   if(!sbody) return;
-  sbody.innerHTML = '<div class="srchrow"><label class="srchbox">'+I_FIND+
+  sbody.innerHTML = '<div class="srchrow"><div class="srchbox" id="hf_box"><button type="button" class="iconbtn" id="hf_find" title="'+esc(L.hfgo)+'" aria-label="'+esc(L.hfgo)+'">'+I_FIND+'</button>'+
     '<input type="text" id="hf_q" placeholder="'+L.hfph+'">'+
-    '<button type="button" class="iconbtn" id="hf_clr" title="'+L.cancel+'" style="display:none">&#10005;</button></label>'+
-    '<button type="button" class="mini" id="hf_go">'+L.hfgo+'</button></div>'+
+    '<button type="button" class="iconbtn" id="hf_clr" title="'+esc(L.hfclear)+'" aria-label="'+esc(L.hfclear)+'" style="display:none">&#10005;</button></div></div>'+
     '<div class="ramline" id="hf_ramline"></div>'+
     '<div class="ramline fitleg" id="hf_fitline"></div>'+
     '<div class="filtrow"><label class="fitrow"><input type="checkbox" id="hf_fit" checked> '+L.hffit+'</label>'+
@@ -3593,8 +3519,9 @@ function initHFBox(){
   qEl.value = hfQuery;
   updClr();
   qEl.oninput = ()=>{ hfQuery = qEl.value; updClr(); };
-  clr.onclick = ()=>{ qEl.value = ""; hfQuery = ""; updClr(); qEl.focus(); };
-  document.getElementById("hf_go").onclick = doHFSearch;
+  clr.onclick = ()=>{ qEl.value = ""; hfQuery = ""; updClr(); hfSearched = false; hfRepos = []; hfOpenRepo = null; hfFiles = []; renderHF(); qEl.focus(); };
+  document.getElementById("hf_find").onclick = e=>{ e.preventDefault(); doHFSearch(); };
+  document.getElementById("hf_box").onclick = e=>{ if(e.target.id === "hf_box") qEl.focus(); };
   qEl.onkeydown = e=>{ if(e.key === "Enter") doHFSearch(); };
   document.getElementById("hf_fit").onchange = renderHF;
   renderHF();
@@ -3608,7 +3535,24 @@ async function doHFSearch(){
   if(res.error) toast(res.error);
   renderHF();
 }
+function hfShowResults(){
+  ["hf_ramline", "hf_fitline", "hf_results"].forEach(id=>{ const e = document.getElementById(id); if(e) e.style.display = hfSearched ? "" : "none"; });
+  const f = document.querySelector("#proc-search .filtrow");
+  if(f) f.style.display = hfSearched ? "" : "none";
+}
+function hfFileAct(repo, f){
+  const st = llmRam || {};
+  let html;
+  if((st.installed || []).some(m=>m.file === f.file)) html = '<span class="mstate">'+esc(L.hfhave)+'</span>';
+  else {
+    const d = (st.downloads || []).find(x=>x.file === f.file && x.pct >= 0);
+    if(d) html = '<span class="mpct">'+(d.pct > 0 ? d.pct + "%" : "…")+'</span><button type="button" class="iconbtn danger" title="'+esc(L.dlcancel)+'" aria-label="'+esc(L.dlcancel)+'" data-hfcancel="'+esc(f.file)+'">&#10005;</button>';
+    else html = '<button type="button" class="iconbtn" title="'+esc(L.dl)+'" aria-label="'+esc(L.dl)+'" data-repo="'+esc(repo)+'" data-file="'+esc(f.file)+'" data-size="'+(f.size||0)+'">'+I_DL+'</button>';
+  }
+  return '<span class="hfact">'+html+'</span>';
+}
 function renderHF(){
+  hfShowResults();
   const box = document.getElementById("hf_results");
   if(!box) return;
   box.innerHTML = "";
@@ -3651,7 +3595,7 @@ function renderHF(){
         fd.innerHTML = '<span class="mdesc" style="flex:1">'+esc(f.file)+'</span>'+
           '<span class="msize">'+sizeLabel(f.size||0)+'</span>'+
           '<span>'+fitLabel(f.fit, f.need)+'</span>'+
-          '<button class="iconbtn" title="'+L.dl+'" data-repo="'+esc(r.id)+'" data-file="'+esc(f.file)+'" data-size="'+(f.size||0)+'">'+I_DL+'</button>';
+          hfFileAct(r.id, f);
         box.appendChild(fd);
       });
       if(shown.length < hfFiles.length){
@@ -3667,6 +3611,9 @@ function renderHF(){
           await appLLMDlFile(b.dataset.repo, b.dataset.file, parseInt(b.dataset.size) || 0);
           refreshLLM();
         };
+      });
+      box.querySelectorAll("button[data-hfcancel]").forEach(b=>{
+        b.onclick = async e=>{ e.stopPropagation(); await appModelCancel("llm-" + b.dataset.hfcancel); refreshLLM(); };
       });
     }
   });
@@ -4296,6 +4243,7 @@ function renderSubsTr(){
   const wl = subsEl("subs_tr_warn");
   wl.textContent = warn;
   wl.style.display = warn ? "" : "none";
+  renderLibrary();
 }
 async function trModelAct(action){
   const r = await appTrModel(action);
@@ -5142,6 +5090,239 @@ async function setLangKey(lang, combo){
   }
   renderLangs();
 }
+function pluralCount(n){
+  const forms = {};
+  String(L.libcount || "").split("|").forEach(p=>{
+    const at = p.indexOf(":");
+    if(at > 0) forms[p.slice(0, at)] = p.slice(at + 1);
+  });
+  let cat = "other";
+  try{ cat = new Intl.PluralRules(CFG._ui_lang || "en").select(n); }catch(e){ cat = n === 1 ? "one" : "other"; }
+  return (forms[cat] || forms.other || "%d").replace("%d", String(n));
+}
+function fmtText(text, ...vals){
+  let out = String(text || "");
+  vals.forEach(v=>{ out = out.replace("%s", ()=>String(v)); });
+  return out;
+}
+function jumpChip(target, text, tip){
+  return '<span class="hfhome jump" role="link" tabindex="0" data-jump="'+esc(target)+'" title="'+esc(tip)+'">'+esc(text)+' →</span>';
+}
+function blockChip(id, block){
+  return jumpChip("library:" + id, L.navlib + ": " + block, fmtText(L.jumpblock, L.navlib, block));
+}
+function useSpot(kind){
+  if(kind === "asr") return jumpChip("models:langlist", L.navlangs, fmtText(L.jumpblock, L.navlangs, L.presets));
+  if(kind === "llm") return jumpChip("post:src_local", L.navpost, fmtText(L.jumpcard, L.navpost, L.srclocal));
+  return jumpChip("subs:subs_src_quality", L.navsubs, fmtText(L.jumpcard, L.navsubs, L.whoq));
+}
+function jumpTo(spec){
+  const at = spec.indexOf(":");
+  const tab = at < 0 ? spec : spec.slice(0, at), id = at < 0 ? "" : spec.slice(at + 1);
+  show(tab);
+  const content = document.querySelector(".content");
+  const el = id ? document.getElementById(id) : null;
+  if(!el || id === "lib_have"){
+    content.scrollTop = 0;
+    return;
+  }
+  const block = el.closest(".srccard") || el.closest(".card") || el;
+  const head = block.querySelector(".srchead, .blklbl") || block;
+  content.scrollTop += head.getBoundingClientRect().top - content.getBoundingClientRect().top - 14;
+}
+function initJumps(){
+  document.addEventListener("click", e=>{
+    const j = e.target.closest && e.target.closest("[data-jump]");
+    if(!j) return;
+    e.preventDefault();
+    e.stopPropagation();
+    jumpTo(j.dataset.jump);
+  }, true);
+  document.addEventListener("keydown", e=>{
+    if(e.key !== "Enter" && e.key !== " ") return;
+    const j = e.target.closest && e.target.closest("[data-jump]");
+    if(!j) return;
+    e.preventDefault();
+    e.stopPropagation();
+    jumpTo(j.dataset.jump);
+  }, true);
+}
+function modelBarsHtml(m){
+  const bar = (label, v)=>'<span class="mbar"><span class="mbl">'+label+'</span><span class="mtrack"><i style="width:'+(v*20)+'%"></i></span></span>';
+  return (m.accuracy || m.speed) ? '<span class="mbars">'+bar(L.acc, m.accuracy||0)+bar(L.spd, m.speed||0)+'</span>' : "";
+}
+function modelMetaHtml(m){
+  const langNames = m.langs && m.langs !== "*" ? m.langs.split(",").map(c=>trLangName(c.trim())).join(", ") : "";
+  const langChip = '<span class="pmt"'+(langNames && m.langs.includes(",") ? ' data-tip="'+esc(langNames)+'"' : '')+'>'+esc(langWord(m))+'</span>';
+  const trNames = m.translate && m.trlangs ? m.trlangs.split(",").map(c=>trLangName(c.trim())).join(", ") : "";
+  const trChip = m.translate ? '<span class="pmt"'+(trNames ? ' data-tip="'+esc(trNames)+'"' : '')+'>'+esc(trWord(m))+'</span>' : '';
+  return langChip + trChip + (m.ram ? '<span class="pram">'+esc(fmtText(L.ramabout, sizeLabel(m.ram)))+'</span>' : '');
+}
+function libSlot(html){ return '<span class="libslot">'+(html || "")+'</span>'; }
+function libIcon(cls, title, act, html){
+  return '<button type="button" class="'+cls+'" title="'+esc(title)+'" aria-label="'+esc(title)+'" data-lib="'+act+'">'+html+'</button>';
+}
+function libAct(m, o){
+  if(m.state === "downloading") return '<span class="mpct">'+(m.pct > 0 ? m.pct + "%" : "…")+'</span>'+libSlot()+libSlot(libIcon("iconbtn danger", L.dlcancel, "cancel", "&#10005;"));
+  if(m.state === "absent" && m.manual) return '<button type="button" class="mini" data-lib="link">'+esc(L.manuallink)+' &#8599;</button>';
+  const size = '<span class="psize">'+(m.size ? sizeLabel(m.size) : "")+'</span>';
+  if(m.state === "absent") return size+libSlot()+libSlot(o.canGet === false ? "" : libIcon("iconbtn", L.dl, "dl", I_DL));
+  return size+libSlot(m.loaded && o.on.unload ? libIcon("iconbtn", L.llmeject, "unload", I_EJECT) : "")+libSlot(libIcon("iconbtn danger", L.del, "del", "&#10005;"));
+}
+function libUse(text, kind){
+  if(text) return esc(text);
+  return '<span class="libidle">'+esc(L.libunused)+'</span><span class="libturn">'+esc(L.libturnon)+' '+useSpot(kind)+'</span>';
+}
+function libraryRow(m, o){
+  const row = document.createElement("div");
+  row.className = "lrow librow";
+  row.dataset.key = o.key;
+  const info = o.info && m.desc ? '<span class="pinfo" data-tip="'+esc(m.desc)+'">i</span>' : "";
+  const chip = m.loaded ? '<span class="pchip">'+esc(L.llminmem)+'</span>' : "";
+  const meta = chip + (o.meta !== undefined ? o.meta : modelMetaHtml(m));
+  row.innerHTML = '<div class="libmain">' +
+      '<div class="libl1"><span class="pname"><span class="pnm">'+esc(m.name)+'</span>'+info+'</span><span class="lmodel">'+(o.note || "")+'</span></div>' +
+      (meta ? '<div class="libl2">'+meta+'</div>' : "") + (o.extra || "") +
+    '</div>' +
+    '<div class="libbars">'+(o.kind === "asr" ? modelBarsHtml(m) : "")+'</div>' +
+    '<span class="pact">'+libAct(m, o)+'</span>';
+  row.querySelectorAll("[data-lib]").forEach(b=>{
+    b.onclick = async e=>{
+      e.stopPropagation();
+      const fn = o.on[b.dataset.lib];
+      if(fn) await fn();
+    };
+  });
+  row.querySelectorAll("[data-terms]").forEach(t=>{
+    t.onclick = e=>{ e.stopPropagation(); appTrModel("terms"); };
+    t.onkeydown = e=>{ if(e.key === "Enter" || e.key === " "){ e.preventDefault(); appTrModel("terms"); } };
+  });
+  return row;
+}
+function asrUse(m){
+  const langs = presetLangs.map(p=>p[0]).filter(l=>effectiveFor(l) === m.id);
+  const subs = effectiveFor(subsSpeech()) === m.id;
+  if(!langs.length) return subs ? L.libusesubs : "";
+  const names = langs.length === presetLangs.length ? L.alllangs : langs.map(l=>l === "auto" ? L.recauto : l.toUpperCase()).join(", ");
+  return fmtText(subs ? L.libusedictsubs : L.libusedict, names);
+}
+function autoReplacement(goneId){
+  const ok = modelRowsCache.filter(m=>m.id !== goneId && m.auto && (m.state === "installed" || m.state === "active"));
+  for(const id of [REC_MODEL.auto || DEFAULT_MODEL, CFG._legacy_model]){
+    const hit = ok.find(m=>m.id === id);
+    if(hit) return hit;
+  }
+  return ok.slice().sort((a, b)=>(b.accuracy || 0) - (a.accuracy || 0) || a.name.localeCompare(b.name))[0] || null;
+}
+async function libDeleteAsr(m){
+  const use = asrUse(m);
+  const autoHit = effectiveFor("auto") === m.id;
+  const repl = autoHit ? autoReplacement(m.id) : null;
+  let ask = fmtText(L.confirmdel, m.name);
+  if(use && autoHit && repl) ask = fmtText(L.libdelauto, m.name, use, repl.name);
+  else if(use && autoHit) ask = fmtText(L.libdellast, m.name, use);
+  else if(use) ask = fmtText(L.libdelused, m.name, use);
+  if(!await askConfirm(ask, L.del, null, L.mtdel)) return;
+  let changed = false;
+  Object.keys(langModels).forEach(l=>{
+    if(l !== "auto" && langModels[l] === m.id){ delete langModels[l]; changed = true; }
+  });
+  if(autoHit){
+    if(repl) langModels.auto = repl.id;
+    else delete langModels.auto;
+    changed = true;
+  }
+  if(changed) await doSave();
+  toast(await appModelDel(m.id, true));
+  await refreshModels();
+  refreshState();
+}
+let librarySig = "";
+function renderLibrary(){
+  const have = document.getElementById("lib_have_list"), get = document.getElementById("lib_get_list");
+  if(!have || !get) return;
+  const asr = modelRowsCache.slice().sort((a, b)=>a.name.localeCompare(b.name));
+  const llm = ((llmRam && llmRam.installed) || []).slice().sort((a, b)=>a.file.localeCompare(b.file));
+  const trm = subsModel();
+  const trmUsed = subsOn() && subsWho === "quality";
+  const sig = JSON.stringify([asr.map(m=>[m.id, m.state, m.pct, m.loaded, m.err, asrUse(m)]), llm, selLLM, trm.name, trm.state, trm.pct, trm.fits, trm.size, trm.running, trm.err, trmUsed]);
+  if(sig === librarySig) return;
+  librarySig = sig;
+
+  const asrHave = asr.filter(m=>m.state === "installed" || m.state === "active");
+  const trReady = trm.state === "ready";
+  const count = asrHave.length + llm.length + (trReady ? 1 : 0);
+  const mb = asrHave.reduce((s, m)=>s + (m.size || 0), 0) + llm.reduce((s, m)=>s + (m.size || 0), 0) + (trReady ? (trm.size || 0) : 0);
+  document.getElementById("lib_have_total").textContent = count ? pluralCount(count) + " · " + sizeLabel(mb) : "";
+
+  const haveList = [], getList = [];
+  asrHave.forEach(m=>{
+    haveList.push([m, {key: "asr:" + m.id, kind: "asr", info: true, note: libUse(asrUse(m), "asr"), on: {
+      del: ()=>libDeleteAsr(m),
+      unload: async ()=>{ await appUnloadEngines(); toast(L.unloaded, "ok"); await refreshModels(); setTimeout(refreshModels, 1200); }
+    }}]);
+  });
+  llm.forEach(f=>{
+    const use = selLLM === f.file ? L.libusepost : "";
+    const m = {id: "llm:" + f.file, name: f.file, size: f.size, state: "installed", loaded: f.loaded};
+    haveList.push([m, {key: "llm:" + f.file, kind: "llm", meta: f.need ? '<span class="pram">'+esc(fmtText(L.ramabout, sizeLabel(f.need)))+'</span>' : "", note: libUse(use, "llm"), on: {
+      unload: async ()=>{ await appLLMUnload(); refreshLLM(); },
+      del: async ()=>{
+        if(!await askConfirm(use ? fmtText(L.libdelused, f.file, use) : fmtText(L.confirmdel, f.file), L.del, null, L.mtdel)) return;
+        toast(await appLLMDel(f.file));
+        if(selLLM === f.file) selLLM = null;
+        refreshLLM();
+        refreshState();
+      }
+    }}]);
+  });
+  const trmState = trReady ? "installed" : (trm.state === "downloading" || trm.state === "checking" ? "downloading" : "absent");
+  const trmRow = {id: "trm", name: trm.name || "", desc: L.qhint, size: trm.size, pct: trm.state === "checking" ? 0 : trm.pct, loaded: !!trm.running, state: trmState};
+  const trmMeta = '<span class="pmt">'+esc(L.qneed)+'</span><span class="hfhome" role="link" tabindex="0" data-terms="1" title="'+esc(L.trmterms)+'">'+esc(L.termsplate)+'</span>';
+  if(trReady){
+    const use = trmUsed ? L.libusetr : "";
+    haveList.push([trmRow, {key: "trm", kind: "trm", info: true, meta: trmMeta, note: libUse(use, "trm"), on: {
+      del: async ()=>{
+        if(!await askConfirm(use ? fmtText(L.libdelused, trmRow.name, use) : fmtText(L.confirmdel, trmRow.name), L.del, null, L.mtdel)) return;
+        trModelAct("delete");
+      }
+    }}]);
+  }
+  asr.filter(m=>!m.custom && (m.state === "absent" || m.state === "downloading")).forEach(m=>{
+    const notes = [];
+    if(m.state === "absent" && m.manual) notes.push('<span class="pdesc" style="color:var(--amber)">'+esc(L.manualnote)+'</span>');
+    if(m.state === "absent" && m.err) notes.push('<span class="pdesc perr">'+esc(m.err)+'</span>');
+    getList.push([m, {key: "asr:" + m.id, kind: "asr", note: esc(m.desc || ""), extra: notes.join(""), on: {
+      dl: async ()=>{ await appModelDl(m.id); pendingDl = m.id; refreshModels(); },
+      cancel: async ()=>{ await appModelCancel(m.id); if(pendingDl === m.id) pendingDl = null; await undoAssign(m.id); refreshModels(); },
+      link: async ()=>{ appModelLink(m.id); }
+    }}]);
+  });
+  if(!trReady && trm.name){
+    const notes = [];
+    if(trm.state === "bad") notes.push('<span class="pdesc perr">'+esc(L.trmbad)+'</span>');
+    if(trm.state === "error") notes.push('<span class="pdesc perr">'+esc(fmtText(L.trmerr, trm.err || ""))+'</span>');
+    getList.push([trmRow, {key: "trm", kind: "trm", info: true, meta: trmMeta, note: esc(L.libfortr), extra: notes.join(""), canGet: !!trm.fits, on: {
+      dl: async ()=>{ trModelAct("download"); },
+      cancel: async ()=>{ trModelAct("cancel"); }
+    }}]);
+  }
+
+  [[have, haveList], [get, getList]].forEach(([box, list])=>{
+    box.innerHTML = "";
+    list.forEach(([m, o])=>box.appendChild(libraryRow(m, o)));
+    box.style.display = list.length ? "" : "none";
+  });
+  document.getElementById("lib_have_none").style.display = haveList.length ? "none" : "";
+  const hint = [];
+  if(getList.some(([m])=>m.id !== "trm")) hint.push(L.libgetasr);
+  if(getList.some(([m])=>m.id === "trm")) hint.push(fmtText(L.libgettrm, trm.name));
+  if(getList.length) hint.push(L.libgetmove);
+  const hintEl = document.getElementById("lib_get_hint");
+  hintEl.textContent = hint.join(" ");
+  hintEl.style.display = hint.length ? "" : "none";
+  document.getElementById("lib_get_all").style.display = getList.length ? "none" : "";
+}
 function buildPicker(lang){
   const pick = document.createElement("div");
   pick.className = "lpick";
@@ -5276,6 +5457,7 @@ async function refreshModels(){
   }
   syncTrControls();
   refreshSubsModel();
+  renderLibrary();
   if(busy || pendingDl) setTimeout(refreshModels, 900);
 }
 function lockBg(){
@@ -5413,8 +5595,6 @@ function load(){
   if(micChk) micChk.onclick = micCheck;
   const mChk = document.getElementById("mcheck");
   if(mChk) mChk.onclick = modelsCheck;
-  const mUnload = document.getElementById("munload");
-  if(mUnload) mUnload.onclick = async ()=>{ await appUnloadEngines(); toast(L.unloaded, "ok"); refreshModels(); };
   refreshMics();
   startMicMeter();
   document.getElementById("hotkey").textContent = CFG.hotkey;
@@ -5919,6 +6099,7 @@ function show(p){
   if(p==="history") refreshHistory();
   if(p==="subs"){ refreshSubsModel(); renderSubsTr(); }
   if(p==="post") refreshLLM();
+  if(p==="library"){ refreshLLM(); refreshModels(); }
   document.querySelector(".content").scrollTop = 0;
   if(p==="help" && helpMark) helpMark();
 }
@@ -5934,7 +6115,7 @@ let hits = [];
 let hitAt = -1;
 let searchFrom = null;
 function searchMatches(s){
-  const items = [...document.querySelectorAll(".page .row, .page .mrow, .page .sumrow, .page .sect, .page .blklbl, .page .hint, .page .mslot, .page .wizh, #p-subs .srchead, .about p, .about li")];
+  const items = [...document.querySelectorAll(".page .row, .page .mrow, .page .sumrow, .page .sect, .page .blklbl, .page .hint, .page .mslot, .page .wizh, #p-subs .srchead, #p-library .librow, .about p, .about li")];
   const seen = new Set();
   return items.filter(r=>{
     if(r.closest(".hshot")) return false;
@@ -7107,8 +7288,13 @@ load();
       if(e.key === "Enter" && document.activeElement === omni){ e.preventDefault(); searchStep(e.shiftKey ? -1 : 1); }
     });
   }
-  const llmBtn = document.getElementById("llm_catalog");
-  if(llmBtn) llmBtn.onclick = e=>{ e.stopPropagation(); openLLMCatalog(); };
+  initHFBox();
+  initJumps();
+  const hfHome = document.getElementById("lib_hf_home");
+  if(hfHome){
+    hfHome.onclick = e=>{ e.stopPropagation(); appHFHome(); };
+    hfHome.onkeydown = e=>{ if(e.key === "Enter" || e.key === " "){ e.preventDefault(); appHFHome(); } };
+  }
   const profAdd = document.getElementById("profadd");
   if(profAdd) profAdd.onclick = e=>{
     e.stopPropagation();
@@ -7118,7 +7304,7 @@ load();
   await refreshLLM();
   if(window.appReady) appReady();
 })();
-const tabAlias = {general:"state", rec:"models", proc:"text", server:"system", about:"about", state:"state", dictation:"dictation", history:"history", mic:"mic", models:"models", text:"text", translate:"dictation", system:"system", post:"post", subs:"subs", subtitles:"subs", help:"help", contacts:"contacts"};
+const tabAlias = {library:"library", general:"state", rec:"models", proc:"text", server:"system", about:"about", state:"state", dictation:"dictation", history:"history", mic:"mic", models:"models", text:"text", translate:"dictation", system:"system", post:"post", subs:"subs", subtitles:"subs", help:"help", contacts:"contacts"};
 show(tabAlias[CFG._tab] || "state");
 if(CFG._wizard || CFG._tab === "wizard") wizStart();
 if(CFG._updated) toast(L.updatedto.replace("%s", CFG._updated), "ok", 8000);

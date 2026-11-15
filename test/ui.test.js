@@ -459,10 +459,11 @@ function check(name, actual, expected) {
   check("and it is marked as a warning", d.getElementById("st_saved").className, "stsaved warn");
   w.setHotkey("ctrl+win", "");
 
-  check("twelve sections in the sidebar", d.querySelectorAll(".nav").length, 12);
+  check("thirteen sections in the sidebar", d.querySelectorAll(".nav").length, 13);
   check("in three groups", d.querySelectorAll(".ngrp").length, 3);
   check("in the agreed order", [...d.querySelectorAll(".nav")].map(b=>b.dataset.p),
-    ["state", "system", "mic", "history", "dictation", "models", "text", "post", "subs", "help", "about", "contacts"]);
+    ["state", "system", "library", "mic", "history", "dictation", "models", "text", "post", "subs", "help", "about", "contacts"]);
+  check("the models tab carries its own name", d.querySelector('.nav[data-p="library"] .nlabel').textContent, "S_NAV_LIBRARY");
   check("no mode switch in the header", !!d.querySelector(".lvlsw"), false);
   check("no disclosure buttons anywhere", d.querySelectorAll(".moreb").length, 0);
   check("nothing is folded away", d.querySelectorAll("[data-adv].hidden").length, 0);
@@ -540,10 +541,10 @@ function check(name, actual, expected) {
   const everySetting = [
     "hotkey", "silence_stop", "silence_stop_ms", "min_record_ms", "max_record_seconds", "auto_enter", "restore_clipboard",
     "type_mode", "overlay", "overlay_position", "overlay_text", "mic_device", "mic_bar", "beep", "sound_theme",
-    "langlist", "munload", "language", "threads", "punctuation", "dictbody", "profbody",
+    "langlist", "mcheck", "language", "threads", "punctuation", "dictbody", "profbody",
     "tr_default", "translate_target", "translate_ask", "translate_ask_seconds",
     "tl_en", "ui_language", "upd_check", "check_updates", "server_autostart", "server_port",
-    "srv_local_edit", "server_url", "llm_sum", "llm_catalog", "ver2", "autorun", "post_enabled",
+    "srv_local_edit", "server_url", "llm_sum", "lib_have_list", "lib_get_list", "proc-search", "ver2", "autorun", "post_enabled",
   ];
   const missing = everySetting.filter((id) => !d.getElementById(id));
   check("every setting is present in the new window", missing, []);
@@ -577,12 +578,13 @@ function check(name, actual, expected) {
   check("a model that translates counts the languages it reaches", d.querySelector('#langlist .pcard[data-id="small"] .pmeta').textContent.includes("translates into 99 languages"), true);
   check("the words recognition-only are gone from the page", d.getElementById("p-models").textContent.includes("recognition only"), false);
   check("ram is estimated where it is known", d.querySelector('#langlist .pcard[data-id="small"] .pmeta').textContent.includes("≈921 MB RAM"), true);
-  check("the models folder can be opened for hand-copied files", !!d.querySelector('#p-models button[onclick="appOpenModelsFolder()"]'), true);
+  check("the models folder can be opened for hand-copied files", !!d.querySelector('#p-library button[onclick="appOpenModelsFolder()"]'), true);
+  check("and nothing of the upkeep is left on the languages tab", ["mcheck", "munload"].map(id=>!!d.querySelector("#p-models #" + id)), [false, false]);
   const eject = d.querySelector('#langlist .pcard[data-id="small"] button[data-a="unload"]');
   check("the loaded model offers to leave the memory", !!eject, true);
   eject.click(); await sleep(150);
   check("and the program is asked to unload it", w.unloadCalls, 1);
-  check("there is a plain unload row as well", !!d.getElementById("munload"), true);
+  check("the plain unload row is gone: the model itself carries the button", !!d.getElementById("munload"), false);
   const saveBefore = w.saveCalls;
   d.querySelector('#langlist .pcard[data-id="small"]').click(); await sleep(200);
   check("a click on the card itself chooses nothing", w.saveCalls, saveBefore);
@@ -1100,26 +1102,23 @@ function check(name, actual, expected) {
 
   tab("post"); await sleep(30);
   check("the local model is summed up in the card", !!d.querySelector("#p-post #llm_sum"), true);
-  check("and the catalog waits behind a button", !!d.querySelector("#p-post #llm_catalog"), true);
+  check("the catalog button is gone from the card", !!d.querySelector("#p-post #llm_catalog"), false);
   check("the summary names the model in use", [...d.querySelectorAll("#llm_sum .sumv")][0].textContent, "model.gguf");
-  check("nothing of it is left on the languages page", !!d.querySelector("#p-models #llm_catalog"), false);
-  d.getElementById("llm_catalog").click(); await sleep(200);
-  check("the catalog opens as a titled dialog", d.querySelector(".modal .mtitle").textContent, "Model catalog");
-  check("installed models are listed with a switch each", d.querySelectorAll("#proc-models input.llmpick").length, 1);
-  check("the model in use has its switch on", d.querySelector("#proc-models input.llmpick").checked, true);
-  check("the installed models live under their own label", d.querySelector("#proc-models .blklbl").textContent, "Installed models");
-  check("a warm model says it sits in memory", d.querySelector("#proc-models .mrow .mstate").textContent, "in memory");
-  const ejectBtn = () => d.querySelector('#proc-models .mrow button[aria-label="Unload from memory"]');
-  check("and offers to free it", !!ejectBtn() && !ejectBtn().disabled, true);
+  tab("library"); await sleep(250);
+  const llmRow = () => d.querySelector('#lib_have_list .librow[data-key="llm:model.gguf"]');
+  check("the editor model has its row among the installed models", !!llmRow(), true);
+  check("a warm model says it sits in memory", llmRow().querySelector(".pchip").textContent, "in memory");
+  const ejectBtn = () => llmRow().querySelector('button[data-lib="unload"]');
+  check("and offers to free it", !!ejectBtn(), true);
   ejectBtn().click(); await sleep(250);
   check("ejecting asks the program to drop the model", w.llmUnloads, 1);
-  check("the row then says the model is only on disk", d.querySelector("#proc-models .mrow .mstate").textContent, "on disk");
-  check("and the eject button goes quiet", ejectBtn().disabled, true);
-  check("nothing is searched yet, and the count says so", d.getElementById("hf_count").textContent, "no search yet");
-  check("the empty result area invites a search", !!d.querySelector("#hf_results .searchempty"), true);
-  const del = d.querySelector("#proc-models button[data-a=\"ldel\"]");
-  check("active LLM model can be deleted", !!del, true);
-  del.click(); await sleep(60);
+  check("the chip and the button go with the model", [!!llmRow().querySelector(".pchip"), !!ejectBtn()], [false, false]);
+  check("nothing is searched yet: only the field is shown", ["hf_ramline", "hf_fitline", "hf_results"].map(id=>d.getElementById(id).style.display), ["none", "none", "none"]);
+  check("the count stays out of sight as well", d.querySelector("#proc-search .filtrow").style.display, "none");
+  check("the result area still invites a search", !!d.querySelector("#hf_results .searchempty"), true);
+  const del = () => llmRow().querySelector('button[data-lib="del"]');
+  check("the editor model can be deleted", !!del(), true);
+  del().click(); await sleep(60);
   check("deleting a model asks first", !!d.querySelector(".modal-bg"), true);
   const lastModal = () => [...d.querySelectorAll(".modal")].pop();
   check("the question is asked in the app style, not by the browser", lastModal().querySelectorAll(".btn").length, 2);
@@ -1131,17 +1130,18 @@ function check(name, actual, expected) {
   check("Tab moves between the two answers and no further", d.activeElement.className, "btn yes");
   d.dispatchEvent(new w.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
   await sleep(150);
-  check("Escape closes it as a no", d.querySelectorAll(".modal").length, 1);
-  check("and the catalog behind it stays open", !!d.querySelector(".modal.llmcat"), true);
-  del.click(); await sleep(150);
-  d.querySelector(".modal .btn.yes").click(); await sleep(250);
-  check("the question closes with the answer", d.querySelectorAll(".modal").length, 1);
-  check("model list empty after delete", d.querySelectorAll("#proc-models input.llmpick").length, 0);
+  check("Escape closes it as a no", d.querySelectorAll(".modal").length, 0);
+  check("and the model stays", !!llmRow(), true);
+  del().click(); await sleep(150);
+  d.querySelector(".modal .btn.yes").click(); await sleep(350);
+  check("the question closes with the answer", d.querySelectorAll(".modal").length, 0);
+  check("the deleted model leaves the list", !!llmRow(), false);
   d.getElementById("hf_q").value = "qwen";
-  d.getElementById("hf_go").click(); await sleep(300);
-  check("searching Hugging Face is a button, not a decoration", d.getElementById("hf_go").tagName, "BUTTON");
+  d.getElementById("hf_q").dispatchEvent(new w.Event("input", { bubbles: true }));
+  d.getElementById("hf_find").click(); await sleep(300);
+  check("the magnifier is the search button", d.getElementById("hf_find").tagName, "BUTTON");
+  check("there is no separate search button", !!d.getElementById("hf_go"), false);
   check("a finished search counts what it found", d.getElementById("hf_count").textContent, "found 1");
-  check("the search button stands next to the field, not inside it", !d.querySelector(".srchbox").contains(d.getElementById("hf_go")), true);
   check("memory is spelled out in words", d.getElementById("hf_ramline").textContent, "Memory available: 8.8 GB of 16 GB");
   check("and the colour key sits on its own line", d.getElementById("hf_fitline").textContent, "●fits●tight●not enough RAM");
   const repo = d.querySelector(".hfrepo");
@@ -1158,8 +1158,8 @@ function check(name, actual, expected) {
   check("a file name cannot bring its own attributes along", d.querySelectorAll("#hf_results [data-evil]").length, 0);
   check("and the name is kept whole", d.querySelector("#hf_results button[data-file]").dataset.file, EVIL_FILE);
   fitBox.checked = true; fitBox.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(100);
-  d.querySelector(".modal.llmcat .btn.ghost").click(); await sleep(200);
-  check("closing the catalog leaves the card behind", [!!d.querySelector(".modal.llmcat"), !!d.getElementById("llm_sum")], [false, true]);
+  d.getElementById("hf_clr").click(); await sleep(150);
+  check("the cross clears the search and leaves only the field", [d.getElementById("hf_q").value, d.getElementById("hf_results").style.display], ["", "none"]);
 
 
   tab("models"); await sleep(120);
@@ -2223,10 +2223,10 @@ function check(name, actual, expected) {
   check("status: the editor model is named from the polled state", postRow(), ["Qwen2.5-3B-Instruct-IQ2_M", true]);
   tab("post"); await sleep(200);
   check("post-processing: showing the tab reads the models again", lastSum(), "Qwen2.5-3B-Instruct-IQ2_M.gguf");
-  d.getElementById("llm_catalog").click(); await sleep(200);
-  d.querySelector('#proc-models button[data-a="ldel"][data-f="other.gguf"]').click(); await sleep(150);
+  tab("library"); await sleep(250);
+  d.querySelector('#lib_have_list .librow[data-key="llm:other.gguf"] button[data-lib="del"]').click(); await sleep(150);
   d.querySelector(".modal .btn.yes").click(); await sleep(250);
-  d.querySelector(".modal.llmcat .btn.ghost").click(); await sleep(200);
+  tab("post"); await sleep(200);
   check("deleting a model that is not the chosen one deletes only that one", w.llmDeleted.slice(-1), ["other.gguf"]);
   check("post-processing: the chosen model stays chosen", lastSum(), "Qwen2.5-3B-Instruct-IQ2_M.gguf");
   await w.refreshState(); await sleep(60);

@@ -372,13 +372,14 @@ func (a *App) llmStatus() string {
 	type instRow struct {
 		File   string `json:"file"`
 		SizeMB int    `json:"size"`
+		NeedMB int    `json:"need"`
 		Active bool   `json:"active"`
 		Loaded bool   `json:"loaded"`
 	}
 	warm := a.editorEng.live() != nil
 	var installed []instRow
 	for _, f := range editormodel.List("models") {
-		installed = append(installed, instRow{File: f.Name, SizeMB: f.SizeMB, Active: f.Name == activeFile, Loaded: warm && f.Name == activeFile})
+		installed = append(installed, instRow{File: f.Name, SizeMB: f.SizeMB, NeedMB: llmNeedMB(f.SizeMB), Active: f.Name == activeFile, Loaded: warm && f.Name == activeFile})
 	}
 	type dlRow struct {
 		File string `json:"file"`
