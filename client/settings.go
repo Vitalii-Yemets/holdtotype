@@ -2087,6 +2087,10 @@ input.srcpick:disabled,input.srvpick:disabled{opacity:.4;cursor:default}
 .about .wh+.hshot,.about .wh+.hflow{margin-top:9px}
 .about .wh+ul,.about .wh+.hint{margin-top:8px}
 .about .wh+.hopt tr:first-child td{padding-top:2px}
+.row>label{margin-bottom:-1px}
+.histrow>.histmeta{margin-bottom:-2px}
+#trlangs{margin-bottom:-2px}
+.page .card:has(+.card)>.hint:not(:has(~ :not([style*="none"]))){margin-bottom:-1.5px}
 #srv_local,#srv_remote,.hshot .srccard{min-height:150px;display:flex;flex-direction:column}
 #srv_local .sum,#srv_remote .sum,.hshot .srccard .sum{flex:1;display:flex;flex-direction:column;gap:6px;margin:8px 0 10px}
 button.mini.eq{min-width:186px}
