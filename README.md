@@ -40,12 +40,14 @@ Every shot below is the Editor design, the default: dark grey with a blue accent
 | Status | System |
 |---|---|
 | [![Status: is everything ready, at a glance](docs/shot-state.png)](docs/shot-state.png) | [![System: language, design, updates, maintenance and the recognition server](docs/shot-system.png)](docs/shot-system.png) |
+| **Models** | **Microphone** |
+| [![Every model in one place: installed, to download, the Hugging Face search, unloading when idle](docs/shot-library.png)](docs/shot-library.png) | [![Device, level meter and the microphone test](docs/shot-mic.png)](docs/shot-mic.png) |
+| **History** | **Controls & behaviour** |
+| [![History with its retention and its exclusions](docs/shot-history.png)](docs/shot-history.png) | [![The shortcut, insertion and the on-screen plate](docs/shot-dictation.png)](docs/shot-dictation.png) |
 | **Languages** | **Rules** |
 | [![A model per language](docs/shot-models.png)](docs/shot-models.png) | [![Dictionary, replacements and voice commands](docs/shot-rules.png)](docs/shot-rules.png) |
-| **Controls & behaviour** | **Post-processing** |
-| [![The shortcut, insertion and the on-screen plate](docs/shot-dictation.png)](docs/shot-dictation.png) | [![The editor model and the prompt chain](docs/shot-post.png)](docs/shot-post.png) |
-| **Microphone** | **History** |
-| [![Device, level meter and the microphone test](docs/shot-mic.png)](docs/shot-mic.png) | [![History with its retention and its exclusions](docs/shot-history.png)](docs/shot-history.png) |
+| **Post-processing** | **Subtitles & translation** |
+| [![The editor model and the prompt chain](docs/shot-post.png)](docs/shot-post.png) | [![Subtitles for what the computer plays: translation, the three translators and the window](docs/shot-subs.png)](docs/shot-subs.png) |
 | **Help** | **About** |
 | [![The guide with its contents pinned to the right](docs/shot-help.png)](docs/shot-help.png) | [![Version and every external dependency with its licence](docs/shot-about.png)](docs/shot-about.png) |
 | **Contacts** | **Installer** |
@@ -129,7 +131,7 @@ Download the archive from Releases (or build `dist/` yourself), copy the folder 
 
 Icon colours: the accent of your design (blue on Editor) — ready, red — recording, orange — transcribing, grey — disabled/error.
 
-A full description of every feature lives in **Help** — sixteen sections written for people rather than for the interface, with mock-ups of the plate, the cards and the fields drawn inline. The contents stand in a column on the right that follows you as you read and highlights the section you are in; on a narrow window an icon in the corner widens the window to bring them back. The search in the header (Ctrl+K) reaches into the manual too — a word from it is found just like a setting.
+A full description of every feature lives in **Help** — eighteen sections written for people rather than for the interface, with mock-ups of the plate, the cards and the fields drawn inline. The contents stand in a column on the right that follows you as you read and highlights the section you are in; on a narrow window an icon in the corner widens the window to bring them back. The search in the header (Ctrl+K) reaches into the manual too — a word from it is found just like a setting.
 
 ### Safe insertion
 
@@ -147,7 +149,7 @@ Left-click the tray icon to open the settings window. Thirteen sections in three
 | **History** | the switch that turns it on; how long an entry lives — any number of minutes, hours or days, typed by hand — and how many entries to keep at most; the programs nothing is ever recorded from, added from the list of open windows and worn as removable chips; search, and per entry: copy, paste back into the window you came from, delete, and clearing everything. Three blocks parted by a line, and every entry says the day it goes |
 | **Controls & behaviour** | the hotkey, hold or toggle, the recognition model with its language right beside the shortcut they serve, auto-Enter, stop on silence in toggle mode, recording durations, clipboard restore, character-by-character typing, the on-screen overlay with its little screen map — eight positions, a draggable miniature, cursor-follow, and a monitor choice when there is more than one — and the whole of translation: target language, when to ask, dialog languages, its own shortcut |
 | **Microphone** | input device with a live level meter, recording cue sounds and the sound theme |
-| **Models** | every model the app has, in four blocks. The installed ones, one line each: the name, what it is used for right now — dictation and its languages, subtitles, post-processing, subtitle translation — or, when nothing uses it, a plate that leads to where it is turned on; accuracy and speed bars, the size, an unload icon on the one in memory and a cross that deletes, with the count and the total size on top, a list that unloads the models after 5, 10 or 30 minutes or an hour without dictation or subtitles, and the check against reference checksums at the bottom. Deleting a model in use says where it is used first; the languages it served go back to Auto-detect, and Auto-detect moves to another installed model when its own one is deleted. The models to download, in the same lines with a download arrow, a live percentage and a cancel cross, the licence-bound one explaining itself and offering its link instead; a downloaded model moves up to the installed ones. The Hugging Face search for editor models, with the magnifier as its button and a cross that clears it, filtered by default to files that fit this computer, with the hidden ones counted. And your own model: a Whisper ggml `*.bin` file or a sherpa-onnx folder dropped into `models/`, found after a restart and shown honestly without bars, since its powers are unknown |
+| **Models** | every model the app has, in four blocks. The installed ones, one line each: the name, what it is used for right now — dictation and its languages, subtitles, post-processing, subtitle translation — or, when nothing uses it, a plate that leads to where it is turned on; accuracy and speed bars, the size, an unload icon on the one in memory and a cross that deletes, with the count and the total size on top, a list that unloads the models after 5, 10 or 30 minutes or an hour without dictation or subtitles, and the check against reference checksums at the bottom; in a narrow settings window a row folds into lines — the name and the size, then what it is for, then the plates and the bars. Deleting a model in use says where it is used first; the languages it served go back to Auto-detect, and Auto-detect moves to another installed model when its own one is deleted. The models to download, in the same lines with a download arrow, a live percentage and a cancel cross, the licence-bound one explaining itself and offering its link instead; a downloaded model moves up to the installed ones. The Hugging Face search for editor models, with the magnifier as its button and a cross that clears it, filtered by default to files that fit this computer, with the hidden ones counted. And your own model: a Whisper ggml `*.bin` file or a sherpa-onnx folder dropped into `models/`, found after a restart and shown honestly without bars, since its powers are unknown |
 | **Languages** | a list of languages, each row naming its model and, when one is set, wearing its own shortcut as a chip; a language without one of its own says, in dimmed text, that it follows Auto-detect. Click a language and the installed models that can serve it unfold right under it, each card with its accuracy and speed bars, its languages and translate ability in words and an honest memory number, and the recommended one, when it is missing, last, saying it is not installed and how big it is. A click on a card's switch is the choice — a missing model asks to be downloaded and takes over once ready, and the one download shows its progress on its card, on the collapsed row and in a line above the list. A plate under the cards leads to the models to download on the Models tab |
 | **Rules** | where punctuation comes from, the recognition dictionary (read by Whisper models only — the page says so), replacements — each one pinned to a language or serving them all — and voice commands; each list has its own search box and add button and shows its entries as removable chips, and the dialog that adds a command fills in the usual ones for your language with one button |
 | **Post-processing** | the editor model, picked from a list of the installed ones, with its size and the memory, and two plates that lead to the Hugging Face search and to the installed models on the Models tab, the chain of editing prompts with their shortcuts, and the external OpenAI-compatible server for those who want one |
@@ -214,6 +216,8 @@ The result lands in `dist/`:
 | `models/gigaam-v3/` | the GigaAM v3 model: encoder, decoder, joiner, tokens |
 | `models/nemotron-3.5/` | the Nemotron streaming model, when downloaded |
 | `models/parakeet-v3/` | the Parakeet TDT 0.6B v3 model, when downloaded |
+| `models/gemma-3-4b-it-Q4_K_M.gguf` | the subtitle translation model of the Quality translator, when downloaded |
+| `models/fast/` | the language packs of the Fast translator, one folder per direction, when added |
 | `config.default.json` | default settings |
 
 The pipeline: MinGW-w64 cross-compilation of whisper.cpp and llama.cpp inside a Linux container, the Go client with cgo (microphone capture), icon generation, installer packaging — all in `build/Dockerfile`. Both engines are pinned to specific upstream versions (`WHISPER_CPP_VERSION`, `LLAMA_CPP_VERSION` build args), so builds stay reproducible.
@@ -224,12 +228,13 @@ Everything runs in containers — nothing to install locally:
 
 ```powershell
 docker build --file build/Dockerfile --target gotest .        # Go unit tests + go vet (Windows target)
-docker run --rm -v "${PWD}:/w" -w /w node:20 sh -c "node test/build-page.js && node test/build-page.js ru && cd test && npm i --no-save --silent jsdom && node ui.test.js && node models.test.js"
+docker run --rm -v "${PWD}:/w" -w /w node:20 sh -c "node test/build-page.js && node test/build-page.js ru && cd test && npm i --no-save --silent jsdom && node ui.test.js && node models.test.js && node help.test.js"
 ```
 
 - `client/internal/...` — unit tests for the pieces that carry logic: version comparison, hotkey duplicates, per-application rules, replacements, voice commands, history, prompt chains, sound analysis, file hashes and the lists file.
 - `test/ui.test.js` — the real settings page rendered in jsdom: section switching, the translation enable/disable matrix, the prompt editor accordion, rules, replacements, commands and their file, history with copy and paste-back, model deletion and the model check, the first-run wizard, and "no JavaScript errors".
 - `test/models.test.js` — the Models tab and the tabs that use it, on a page of its own with English and Russian strings: the blocks and their order, what each model is used for, deleting a free model and a model in use with the languages, Auto-detect, post-processing and subtitle translation left working after it, a download moving a model to the installed ones, the Hugging Face search with its magnifier, Enter and cross, an unfolded language without icons, the editor list and its empty state, the plates that lead between tabs, and sizes in the units of the interface language.
+- `test/help.test.js` — the help against the settings page, in all eight languages: every row, block heading, choice card and button of a tab is named in that tab's help section, and every row of the help tables names something that is on the tab.
 - `test/locales.test.js` — every one of the eight languages carries every string the page and the program ask for, and invents none of its own.
 - `test/setup.test.js` — the installer page: the steps, the model choice, the silent switches.
 - `client/internal/theme` — every design keeps its own face, corners, level marks and lamps, and the CSS variables the page needs are all there.
