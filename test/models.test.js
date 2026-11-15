@@ -368,6 +368,59 @@ function open(lang, cfgPatch, setup) {
   }
   check("English: and so does the English one", [await memLine(w, 1), await memLine(w, 2)].map((t) => t.split("·")[1].trim().split(",")[0]), ["on disk: 1 model", "on disk: 2 models"]);
 
+  {
+    const lit = () => [...d.querySelectorAll(".jumphit")];
+    const active = () => d.querySelector(".page.active").id;
+    const css = [...d.querySelectorAll("style")].map((s) => s.textContent).join(" ");
+    check("a jump flash looks like a search hit and fades, still without motion when it is asked for", [css.includes(".jumphit{animation:jumpfade 2.2s ease-in forwards}"), css.includes("@keyframes jumpfade{0%,65%{box-shadow:inset 2px 0 0 var(--hi),inset 0 0 0 9999px var(--navon)}"), css.includes("@media (prefers-reduced-motion:reduce){.jumphit{animation:none;"), css.includes(".jumphit:focus{outline:none}")], [true, true, true, true]);
+    w.jumpTo("models:langlist"); await sleep(50);
+    const head = d.getElementById("langlist").closest(".card").querySelector(".blklbl");
+    check("a jump to a block opens its tab and lights its heading, which takes the focus", [active(), lit().length === 1 && lit()[0] === head, d.activeElement === head], ["p-models", true, true]);
+    await sleep(2600);
+    check("the light goes out after about two seconds", lit().length, 0);
+    w.jumpTo("models:langlist"); await sleep(50);
+    check("a second jump to the same place lights it again", lit()[0] === head, true);
+    w.jumpTo("dictation:hotkey"); await sleep(50);
+    check("a jump to one setting lights its row, not the block, and focuses its control", [active(), lit().length === 1 && lit()[0] === d.getElementById("hotkey").closest(".row"), d.activeElement === d.getElementById("hotkey")], ["p-dictation", true, true]);
+    w.jumpTo("post:src_local"); await sleep(50);
+    check("a jump to a choice card lights the card", [active(), lit()[0] === d.getElementById("src_local")], ["p-post", true]);
+    w.jumpTo("rec:lang=ru"); await sleep(50);
+    const ruRow = d.querySelector('#langlist .lrow[data-lang="ru"]');
+    check("the program's own way in, a language without its model, opens that language on Languages and lights its row", [active(), lit()[0] === ruRow, ruRow.classList.contains("open")], ["p-models", true, true]);
+    w.jumpTo("state"); await sleep(50);
+    check("a jump with no place finer than a tab lights nothing", [active(), lit().length], ["p-state", 0]);
+    tab("post"); await refresh();
+    const plate = d.querySelector("#p-post [data-jump]") || d.querySelector("[data-jump]");
+    const plateTab = plate.dataset.jump.split(":")[0];
+    plate.click(); await sleep(50);
+    check("a jump plate goes through the same jump", [active(), lit().length], ["p-" + plateTab, 1]);
+    tab("state"); await w.refreshState(); await sleep(150);
+    const go = [...d.querySelectorAll("#state_quick .stcard .stgo")];
+    go[0].click(); await sleep(50);
+    check("the arrow of a quick card on Status lights the setting it stands for", [active(), lit()[0] === d.getElementById("mic_device").closest(".row")], ["p-mic", true]);
+    tab("state"); await sleep(100);
+    d.querySelector('[data-goto="subs:subs_main"]').click(); await sleep(50);
+    check("the arrow of the subtitles card lights the subtitles block", [active(), lit()[0] === d.getElementById("subs_main").querySelector(".blklbl")], ["p-subs", true]);
+    tab("state"); await sleep(100);
+    d.getElementById("state_srv_go").click(); await sleep(50);
+    check("the server button of a red card lights the recognition server block", [active(), lit()[0] === d.getElementById("stt_srv_card").querySelector(".blklbl")], ["p-system", true]);
+    tab("subs"); await sleep(100);
+    w.subsGotoModels(); await sleep(50);
+    check("Open Languages on the subtitles tab lights the language it is about", [active(), lit()[0] && lit()[0].classList.contains("lrow")], ["p-models", true]);
+    tab("help"); await sleep(150);
+    const tocLink = d.querySelector("#helptoc a:nth-child(3)");
+    if (tocLink) {
+      tocLink.click(); await sleep(50);
+      check("the help contents go through the same jump", lit()[0] && lit()[0].id === tocLink.getAttribute("href").slice(1), true);
+    }
+    w.searchSettings("s_subs_window"); await sleep(50);
+    check("search lights a block heading it found, and a jump light gives way to it", [d.querySelector(".hit") && d.querySelector(".hit").classList.contains("blklbl"), lit().length], [true, 0]);
+    w.searchSettings("s_subs_who_quality"); await sleep(50);
+    check("search lights a choice card it found by its title", !!(d.querySelector(".hit") && d.querySelector(".hit").classList.contains("srccard")), true);
+    check("found headings, hints and cards wear the same light as found rows", css.includes(".blklbl.hit,.card>.hint.hit,.srccard>.hint.hit,.srccard.hit,"), true);
+    w.searchSettings("");
+  }
+
   check("no JavaScript errors", errors, []);
   if (failures.length) {
     console.error(`\n${failures.length} check(s) failed: ${failures.join(", ")}`);

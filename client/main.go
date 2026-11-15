@@ -1057,7 +1057,11 @@ func (a *App) initBackend() {
 					a.mu.Unlock()
 					a.setStatus(msg)
 					traySetIcon(trayError)
-					go a.openSettings("rec")
+					target := strings.ToLower(strings.TrimSpace(cfg.Language))
+					if target == "" {
+						target = "auto"
+					}
+					go a.openSettings("rec:lang=" + target)
 				}
 				time.Sleep(2 * time.Second)
 				continue

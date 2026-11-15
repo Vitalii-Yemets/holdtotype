@@ -39,7 +39,15 @@ import (
 var (
 	settingsOpen atomic.Bool
 	settingsHwnd atomic.Uintptr
+	settingsJump atomic.Value
 )
+
+func settingsJumpSpec(tab string) string {
+	if i := strings.Index(tab, ":"); i > 0 && i < len(tab)-1 {
+		return tab
+	}
+	return ""
+}
 
 func tryCreateWebView(width, height int) (w webview.WebView) {
 	defer func() {
@@ -192,6 +200,12 @@ func (a *App) openSettings(tab string) {
 			log.Printf("openSettings: already open, bringing it to the front")
 			procShowWindow.Call(hwnd, 9)
 			procSetForegroundWnd.Call(hwnd)
+			if spec := settingsJumpSpec(tab); spec != "" {
+				if jump, ok := settingsJump.Load().(func(string)); ok && jump != nil {
+					log.Printf("openSettings: going to %s", spec)
+					jump(spec)
+				}
+			}
 		}
 		return
 	}
@@ -711,6 +725,11 @@ func (a *App) settingsThread(tab string, attempt int) {
 		log.Printf("openSettings: WebView2 created, opening the page")
 		settingsHwnd.Store(hwnd)
 		defer settingsHwnd.Store(0)
+		settingsJump.Store(func(spec string) {
+			enc, _ := json.Marshal(spec)
+			w.Dispatch(func() { w.Eval("jumpTo(" + string(enc) + ")") })
+		})
+		defer settingsJump.Store(func(string) {})
 		setDarkClientBackground(hwnd)
 		applyDarkCaption(hwnd)
 		makeBorderless(hwnd)
@@ -1474,6 +1493,11 @@ button.btn.ghost{border-color:var(--line);background:none;color:var(--dim);filte
 button.btn.ghost:hover{color:var(--green);border-color:var(--dim);background:none}
 .row.hidden{display:none}
 .row.hit{background:var(--navon);box-shadow:inset 2px 0 0 var(--hi)}
+.blklbl.hit,.card>.hint.hit,.srccard>.hint.hit,.srccard.hit,.sect.hit,.mrow.hit,.mslot.hit,.wizh.hit,.lrow.hit,.stcard.hit{background:var(--navon);box-shadow:inset 2px 0 0 var(--hi)}
+.jumphit{animation:jumpfade 2.2s ease-in forwards}
+.jumphit:focus{outline:none}
+@keyframes jumpfade{0%,65%{box-shadow:inset 2px 0 0 var(--hi),inset 0 0 0 9999px var(--navon)}100%{box-shadow:inset 2px 0 0 transparent,inset 0 0 0 9999px transparent}}
+@media (prefers-reduced-motion:reduce){.jumphit{animation:none;box-shadow:inset 2px 0 0 var(--hi),inset 0 0 0 9999px var(--navon)}}
 .modal-bg{position:fixed;inset:0;background:var(--scrim);display:flex;align-items:center;justify-content:center;z-index:20}
 .modal{background:var(--panel);border:1px solid var(--line);border-radius:var(--panelr);box-shadow:0 0 24px rgba(var(--rgb),.18),var(--shadow);padding:20px 22px;max-width:380px;display:flex;flex-direction:column;gap:16px}
 .modal p{font-size:13px;line-height:1.55;color:var(--green)}
@@ -2283,7 +2307,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
   </div>
   <div class="stkeys" id="state_keys">
    <span class="stcombo" id="state_hotkey"></span>
-   <button type="button" class="iconbtn stgo" data-goto="dictation" title="{{S_ST_HOTKEY_GO}}">&#8599;</button>
+   <button type="button" class="iconbtn stgo" data-goto="dictation:hotkey" title="{{S_ST_HOTKEY_GO}}">&#8599;</button>
   </div>
   <button type="button" class="mini pri" id="state_enable" style="display:none">{{S_ST_ENABLE}}</button>
   <button type="button" class="mini danger" id="state_srv_go" style="display:none">{{S_SRV_DOWN_GO}}</button>
@@ -2298,7 +2322,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
    <div class="stkrow">
     <span class="stcombo" id="subs_hero_combo" style="display:none"></span>
     <button type="button" class="hotkey-val" id="subs_hero_assign" title="{{S_CHANGE}}">{{S_LANG_KEY_SET}}</button>
-    <button type="button" class="iconbtn stgo" id="subs_hero_goto" data-goto="subs" title="{{S_ST_GOTO}}">&#8599;</button>
+    <button type="button" class="iconbtn stgo" id="subs_hero_goto" data-goto="subs:subs_main" title="{{S_ST_GOTO}}">&#8599;</button>
    </div>
    <button type="button" class="mini pri" id="subs_hero_go" title="{{S_SUBS_START}}">{{S_SUBS_HERO_START}}</button>
   </div>
@@ -2310,7 +2334,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
   <div class="stplate">
    <div class="stptop"><i class="led" id="state_upd_led"></i>
     <div class="stptxt"><div class="stpttl"><span id="state_upd_title">—</span><span class="stbdg" id="state_upd_badge" style="display:none"></span></div><div class="stpsub" id="state_upd_sub"></div></div>
-    <button type="button" class="iconbtn stgo" data-goto="system" title="{{S_ST_GOTO}}">&#8599;</button>
+    <button type="button" class="iconbtn stgo" data-goto="system:upd_check" title="{{S_ST_GOTO}}">&#8599;</button>
    </div>
    <button type="button" class="mini pri" id="state_upd_btn">{{S_ST_CHECK}}</button>
   </div>
@@ -3349,8 +3373,7 @@ function buildToc(){
     a.textContent = h.textContent;
     a.onclick = e=>{
       e.preventDefault();
-      if(scroller) scroller.scrollTo({ top: h.offsetTop - 10, behavior: "smooth" });
-      else h.scrollIntoView({ block: "start" });
+      revealTarget(h);
     };
     toc.appendChild(a);
     return a;
@@ -4448,11 +4471,7 @@ function openAddPack(){
 function subsGotoModels(){
   const row = subsEl("subs_case_row");
   const lang = (row && row.dataset.lang) || "auto";
-  show("models");
-  openLang = lang;
-  renderLangs();
-  const target = document.querySelector('#langlist .lrow[data-lang="' + lang + '"]');
-  if(target && target.scrollIntoView) target.scrollIntoView({block: "center"});
+  jumpTo("models:lang=" + lang);
 }
 function syncSizeTiles(){
   const sel = subsEl("subtitles_size"), box = subsEl("subs_size_tiles");
@@ -4653,7 +4672,7 @@ async function refreshState(){
     const rows = [];
     const sttDown = !!(s.stt_broken && s.whisper_now);
     if(s.backend_err && !sttDown) rows.push({cls: "bad", text: s.backend_err, btn: L.retry, act: async ()=>{ await appRetryBackend(); refreshState(); }});
-    if(s.post_err) rows.push({cls: "bad", text: s.post_err, btn: L.berropen, act: ()=>show("post")});
+    if(s.post_err) rows.push({cls: "bad", text: s.post_err, btn: L.berropen, act: ()=>jumpTo("post:post_model_card")});
     const sig = JSON.stringify(rows.map(r=>[r.cls, r.text]));
     if(alerts.dataset.sig !== sig){
       alerts.dataset.sig = sig;
@@ -4786,7 +4805,7 @@ function stateCard(cap, tab, value, on, under){
   const go = document.createElement("button");
   go.type = "button"; go.className = "iconbtn stgo"; go.title = L.stgoto;
   go.innerHTML = "&#8599;";
-  go.onclick = ()=>show(tab);
+  go.onclick = ()=>jumpTo(tab);
   head.appendChild(capEl); head.appendChild(go);
   const val = document.createElement("div");
   val.className = "stval";
@@ -4811,17 +4830,17 @@ function renderQuickCards(s){
   if(box.dataset.sig === sig) return;
   box.dataset.sig = sig;
   box.innerHTML = "";
-  const mic = stateCard(L.navmic, "mic", s.mic, s.mic_ok, s.mic_ok ? L.stmicok : L.stmicbad);
+  const mic = stateCard(L.navmic, "mic:mic_device", s.mic, s.mic_ok, s.mic_ok ? L.stmicok : L.stmicbad);
   const bar = document.createElement("span");
   bar.className = "miclevel grow";
   bar.id = "state_mic_bar";
   bar.innerHTML = new Array(7).fill("<i></i>").join("");
   mic.insertBefore(bar, mic.lastChild);
   box.appendChild(mic);
-  box.appendChild(stateCard(L.stlang, "models", langName(s.active_lang), true, L.strecog.replace("%s", s.active_model)));
-  box.appendChild(stateCard(L.stoverlay, "dictation", overlayOn ? L.stonf : L.stofff, overlayOn, L.stoverlaysub));
-  box.appendChild(stateCard(L.stbeep, "mic", beepOn ? L.stonm : L.stoffm, beepOn, soundName()));
-  box.appendChild(stateCard(L.stautorun, "system", s.autostart ? L.stonm : L.stoffm, s.autostart, s.autostart ? "" : L.stautorunsub));
+  box.appendChild(stateCard(L.stlang, "models:language", langName(s.active_lang), true, L.strecog.replace("%s", s.active_model)));
+  box.appendChild(stateCard(L.stoverlay, "dictation:overlay", overlayOn ? L.stonf : L.stofff, overlayOn, L.stoverlaysub));
+  box.appendChild(stateCard(L.stbeep, "mic:beep", beepOn ? L.stonm : L.stoffm, beepOn, soundName()));
+  box.appendChild(stateCard(L.stautorun, "system:autorun", s.autostart ? L.stonm : L.stoffm, s.autostart, s.autostart ? "" : L.stautorunsub));
 }
 function modelRow(name, note, badgeText, badgeCls, on){
   const row = document.createElement("div");
@@ -4864,7 +4883,7 @@ function renderStateModels(s){
   const ago = document.createElement("button");
   ago.type = "button"; ago.className = "iconbtn stgo"; ago.title = L.stgoto;
   ago.innerHTML = "&#8599;";
-  ago.onclick = ()=>show("models");
+  ago.onclick = ()=>jumpTo("models:langlist");
   ahead.appendChild(acap); ahead.appendChild(ago);
   asr.appendChild(ahead);
   const rows = (s.assigned || []).slice().sort((a, b)=>{
@@ -4894,7 +4913,7 @@ function renderStateModels(s){
   const pgo = document.createElement("button");
   pgo.type = "button"; pgo.className = "iconbtn stgo"; pgo.title = L.stgoto;
   pgo.innerHTML = "&#8599;";
-  pgo.onclick = ()=>show("post");
+  pgo.onclick = ()=>jumpTo("post:post_model_card");
   pcap.style.flex = "0 0 auto";
   const pspace = document.createElement("span");
   pspace.className = "stspace";
@@ -5048,7 +5067,7 @@ function renderUsage(s){
   const headGo = document.createElement("button");
   headGo.type = "button"; headGo.className = "iconbtn stgo"; headGo.title = L.stgoto;
   headGo.innerHTML = "&#8599;";
-  headGo.onclick = ()=>show("models");
+  headGo.onclick = ()=>jumpTo("models");
   head.appendChild(cap); head.appendChild(headGo);
   box.appendChild(head);
   const top = document.createElement("div");
@@ -5098,11 +5117,7 @@ function initStateScreen(){
   const unload = document.getElementById("state_unload");
   if(unload) unload.onclick = async ()=>{ await appUnloadEngines(); refreshState(); };
   const srvGo = document.getElementById("state_srv_go");
-  if(srvGo) srvGo.onclick = ()=>{
-    show("system");
-    const card = document.getElementById("stt_srv_card");
-    if(card && card.scrollIntoView) card.scrollIntoView({block: "center"});
-  };
+  if(srvGo) srvGo.onclick = ()=>jumpTo("system:stt_srv_card");
   const updBtn = document.getElementById("state_upd_btn");
   if(updBtn) updBtn.onclick = async ()=>{
     if(updBtn.dataset.busy) return;
@@ -5122,7 +5137,7 @@ function initStateScreen(){
     refreshState();
   };
 
-  document.querySelectorAll("[data-goto]").forEach(b=>{ b.onclick = ()=>show(b.dataset.goto); });
+  document.querySelectorAll("[data-goto]").forEach(b=>{ b.onclick = ()=>jumpTo(b.dataset.goto); });
   setInterval(refreshState, 1500);
   startMeter("state_mic_bar", "p-state", null);
   refreshState();
@@ -5274,19 +5289,55 @@ function useSpot(kind){
   if(kind === "llm") return jumpChip("post:src_local", L.navpost, fmtText(L.jumpcard, L.navpost, L.srclocal));
   return jumpChip("subs:subs_src_quality", L.navsubs, fmtText(L.jumpcard, L.navsubs, L.whoq));
 }
-function jumpTo(spec){
-  const at = spec.indexOf(":");
-  const tab = at < 0 ? spec : spec.slice(0, at), id = at < 0 ? "" : spec.slice(at + 1);
-  show(tab);
-  const content = document.querySelector(".content");
-  const el = id ? document.getElementById(id) : null;
-  if(!el || id === "lib_have"){
-    content.scrollTop = 0;
-    return;
+let jumpTimer = 0;
+function jumpTarget(id){
+  if(!id) return null;
+  if(id.indexOf("lang=") === 0){
+    const lang = id.slice(5);
+    openLang = lang;
+    renderLangs();
+    return document.querySelector('#langlist .lrow[data-lang="' + lang + '"]');
   }
-  const block = el.closest(".srccard") || el.closest(".card") || el;
-  const head = block.querySelector(".srchead, .blklbl") || block;
-  content.scrollTop += head.getBoundingClientRect().top - content.getBoundingClientRect().top - 14;
+  const el = document.getElementById(id);
+  if(!el) return null;
+  if(el.matches(".row, .srccard, .librow, .lrow, .wh, .blklbl, .stcard, .stplate")) return el;
+  if(el.matches("input, select, textarea, button")) return el.closest(".row, .srccard") || el;
+  const card = el.closest(".srccard");
+  if(card) return card;
+  const block = el.closest(".card") || el;
+  return block.querySelector(".blklbl") || block;
+}
+function flashJump(el){
+  clearTimeout(jumpTimer);
+  document.querySelectorAll(".jumphit").forEach(x=>x.classList.remove("jumphit"));
+  void el.offsetWidth;
+  el.classList.add("jumphit");
+  jumpTimer = setTimeout(()=>el.classList.remove("jumphit"), 2400);
+}
+function revealTarget(el){
+  const content = document.querySelector(".content");
+  if(content) content.scrollTop += el.getBoundingClientRect().top - content.getBoundingClientRect().top - 14;
+  flashJump(el);
+  const own = el.matches("input, select, textarea, button, [tabindex]:not([tabindex='-1'])") ? el : null;
+  let ctl = own || el.querySelector("input:not([type=hidden]):not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex='-1'])");
+  if(!ctl){
+    if(!el.hasAttribute("tabindex")) el.setAttribute("tabindex", "-1");
+    ctl = el;
+  }
+  if(ctl.focus) ctl.focus({preventScroll: true});
+}
+function jumpTo(spec){
+  spec = String(spec || "");
+  const at = spec.indexOf(":");
+  let tab = at < 0 ? spec : spec.slice(0, at);
+  const id = at < 0 ? "" : spec.slice(at + 1);
+  if(typeof tabAlias === "object" && tabAlias[tab]) tab = tabAlias[tab];
+  clearTimeout(jumpTimer);
+  document.querySelectorAll(".jumphit").forEach(x=>x.classList.remove("jumphit"));
+  show(tab);
+  const el = jumpTarget(id);
+  if(!el) return;
+  revealTarget(el);
 }
 function initJumps(){
   document.addEventListener("click", e=>{
@@ -6287,9 +6338,11 @@ function searchMatches(s){
 }
 function showHit(i){
   document.querySelectorAll(".hit").forEach(r=>r.classList.remove("hit"));
+  document.querySelectorAll(".jumphit").forEach(r=>r.classList.remove("jumphit"));
   if(!hits.length) return;
   hitAt = (i + hits.length) % hits.length;
-  const hit = hits[hitAt];
+  const found = hits[hitAt];
+  const hit = (found.matches(".srchead") && found.closest(".srccard")) || found;
   const page = hit.closest(".page");
   show(page.id.slice(2));
   hit.classList.add("hit");
@@ -7465,7 +7518,8 @@ load();
   if(window.appReady) appReady();
 })();
 const tabAlias = {library:"library", general:"state", rec:"models", proc:"text", server:"system", about:"about", state:"state", dictation:"dictation", history:"history", mic:"mic", models:"models", text:"text", translate:"dictation", system:"system", post:"post", subs:"subs", subtitles:"subs", help:"help", contacts:"contacts"};
-show(tabAlias[CFG._tab] || "state");
+if(String(CFG._tab || "").indexOf(":") > 0) setTimeout(()=>jumpTo(CFG._tab), 0);
+show(tabAlias[String(CFG._tab || "").split(":")[0]] || "state");
 if(CFG._wizard || CFG._tab === "wizard") wizStart();
 if(CFG._updated) toast(L.updatedto.replace("%s", CFG._updated), "ok", 8000);
 setTimeout(()=>{ if(window.appReady) appReady(); }, 400);
