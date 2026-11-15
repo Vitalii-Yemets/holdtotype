@@ -140,6 +140,7 @@ function open(lang, cfgPatch, setup) {
   check("a model to download shows its description, size and the arrow", [use("asr:base"), row("asr:base").querySelector(".psize").textContent, !!row("asr:base").querySelector('button[data-lib="dl"]')], ["fast", "142 MB", true]);
   check("the licence-bound one offers its own link and explains why", [!!row("asr:moonshine-uk").querySelector('button[data-lib="dl"]'), row("asr:moonshine-uk").querySelector('button[data-lib="link"]').textContent.trim().startsWith("Download yourself"), !!row("asr:moonshine-uk").querySelector(".pdesc")], [false, true, true]);
 
+  check("the licence-bound button stands with its note, and the right column keeps the size with empty icon places", [!!row("asr:moonshine-uk").querySelector('.libnote button[data-lib="link"]'), row("asr:moonshine-uk").querySelector(".pact .psize").textContent, row("asr:moonshine-uk").querySelectorAll(".pact button").length, row("asr:moonshine-uk").querySelectorAll(".pact .libslot").length], [true, "135 MB", 0, 2]);
   row("asr:base").querySelector('button[data-lib="dl"]').click(); await sleep(150); S.pct.base = 37; await refresh();
   check("downloading shows the percent and a cancel cross", [row("asr:base").querySelector(".mpct").textContent, !!row("asr:base").querySelector('button[data-lib="cancel"]')], ["37%", true]);
   S.states.base = "installed"; await refresh();

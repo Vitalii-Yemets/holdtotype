@@ -1906,6 +1906,10 @@ html[data-skin="editor"] .stcombo,html[data-skin="editor"] .hotkey-val{letter-sp
 .librow .pram{white-space:nowrap}
 .librow .pdesc{color:var(--dim);font-size:12px}
 .librow .pdesc.perr{color:var(--bad)}
+.librow .pdesc.libwarn{color:var(--amber)}
+.libnote{display:flex;align-items:center;gap:12px}
+.libnote .pdesc{flex:1;min-width:0}
+.libnote .mini{flex:none}
 .libbars{flex:none;width:160px}
 .libbars .mbars{width:160px;display:flex;flex-direction:column;gap:5px}
 .librow .pact{display:flex;align-items:center;gap:8px;white-space:nowrap;flex:none;min-width:140px;justify-content:flex-end}
@@ -5176,9 +5180,8 @@ function libIcon(cls, title, act, html){
 }
 function libAct(m, o){
   if(m.state === "downloading") return '<span class="mpct">'+(m.pct > 0 ? m.pct + "%" : "…")+'</span>'+libSlot()+libSlot(libIcon("iconbtn danger", L.dlcancel, "cancel", "&#10005;"));
-  if(m.state === "absent" && m.manual) return '<button type="button" class="mini" data-lib="link">'+esc(L.manuallink)+' &#8599;</button>';
   const size = '<span class="psize">'+(m.size ? sizeLabel(m.size) : "")+'</span>';
-  if(m.state === "absent") return size+libSlot()+libSlot(o.canGet === false ? "" : libIcon("iconbtn", L.dl, "dl", I_DL));
+  if(m.state === "absent") return size+libSlot()+libSlot(o.canGet === false || m.manual ? "" : libIcon("iconbtn", L.dl, "dl", I_DL));
   return size+libSlot(m.loaded && o.on.unload ? libIcon("iconbtn", L.llmeject, "unload", I_EJECT) : "")+libSlot(libIcon("iconbtn danger", L.del, "del", "&#10005;"));
 }
 function libUse(text, kind){
@@ -5302,7 +5305,7 @@ function renderLibrary(){
   }
   asr.filter(m=>!m.custom && (m.state === "absent" || m.state === "downloading")).forEach(m=>{
     const notes = [];
-    if(m.state === "absent" && m.manual) notes.push('<span class="pdesc" style="color:var(--amber)">'+esc(L.manualnote)+'</span>');
+    if(m.state === "absent" && m.manual) notes.push('<div class="libnote"><span class="pdesc libwarn">'+esc(L.manualnote)+'</span><button type="button" class="mini" data-lib="link">'+esc(L.manuallink)+' &#8599;</button></div>');
     if(m.state === "absent" && m.err) notes.push('<span class="pdesc perr">'+esc(m.err)+'</span>');
     getList.push([m, {key: "asr:" + m.id, kind: "asr", note: esc(m.desc || ""), extra: notes.join(""), on: {
       dl: async ()=>{ await appModelDl(m.id); pendingDl = m.id; refreshModels(); },
