@@ -118,6 +118,7 @@ type Box struct {
 	W    int32 `json:"w"`
 	Rows int32 `json:"rows"`
 	Top  int32 `json:"top,omitempty"`
+	Col  int32 `json:"col,omitempty"`
 }
 
 const (
@@ -144,6 +145,9 @@ func CleanBoxes(in map[string]Box) map[string]Box {
 		}
 		if b.Top < 0 || b.Top >= b.Rows {
 			b.Top = 0
+		}
+		if !ValidCol(b.Col) {
+			b.Col = 0
 		}
 		out[k] = b
 	}

@@ -42,6 +42,7 @@ const (
 	swBottomGap = 150
 	swSideGap   = 24
 	swGripDIP   = 6
+	swColMinDIP = 120
 	swWheelRows = 3
 	swFastTick  = 50
 	swSlowTick  = 100
@@ -191,6 +192,7 @@ type subWindow struct {
 	custom  map[string]ovplace.Frac
 	box     map[string]subwin.Box
 	trOnly  bool
+	arrange string
 	onClose func()
 	onMoved func(key string, f ovplace.Frac)
 	onSized func(key string, b subwin.Box)
@@ -215,6 +217,10 @@ type subWindow struct {
 	top       int32
 	splitY    int32
 	splitting bool
+	columns   bool
+	col       int32
+	colX      int32
+	colMoving bool
 	followAt  rect
 	tick      int
 	lastPhase int
@@ -231,6 +237,7 @@ func newSubWindow(class string) *subWindow {
 		rows:      defaultSubtitlesLines,
 		size:      "m",
 		pos:       ovPosBottom,
+		arrange:   subwin.LayoutRows,
 		dpi:       96,
 		lastPhase: -1,
 	}
@@ -300,6 +307,7 @@ func (sw *subWindow) configure(cfg *Config) {
 	sw.custom = places
 	sw.box = boxes
 	sw.trOnly = cfg.SubtitlesTranslationOnly
+	sw.arrange = subwin.Layout(cfg.SubtitlesLayout)
 	hwnd := sw.hwnd
 	sw.mu.Unlock()
 	if hwnd != 0 {
@@ -452,10 +460,7 @@ func (sw *subWindow) limits(wa rect, dpi, lineH int32) subwin.Limits {
 	px := func(v int32) int32 { return scaleDPI(v, dpi) }
 	look := swLookNow()
 	chrome := px(look.header) + px(look.padTop) + px(look.padBottom)
-	minRows := int32(1)
-	if len(sw.parts) > 1 {
-		minRows = 2
-	}
+	minRows := subwin.MinRows(len(sw.parts), sw.columns)
 	return subwin.NewLimits(px(subwin.BoxMinW), wa.Right-wa.Left, wa.Bottom-wa.Top, chrome, lineH, minRows)
 }
 
@@ -478,9 +483,11 @@ func (sw *subWindow) measure(wa, screen rect, dpi int32) (w, h, lineH int32) {
 	b, sized := sw.box[ovplace.ResKey(toPlace(screen))]
 	sw.mu.Unlock()
 	rows, sw.top = subwin.DefaultRows(rows, int32(len(sw.parts)))
+	sw.col = 0
 	if sized {
 		w, rows = px(b.W), b.Rows
 		sw.top = b.Top
+		sw.col = b.Col
 	}
 	l := sw.limits(wa, dpi, lineH)
 	return l.Width(w), l.Height(rows), lineH
@@ -497,6 +504,7 @@ func (sw *subWindow) setParts() {
 	translated, _, _ := src.windowHeader()
 	sw.mu.Lock()
 	only := sw.trOnly
+	layout := sw.arrange
 	sw.mu.Unlock()
 	sw.partsTr = translated
 	var kinds []int
@@ -532,12 +540,22 @@ func (sw *subWindow) setParts() {
 	for _, p := range sw.parts {
 		p.dim = p.kind == partHeard && len(sw.parts) > 1
 	}
+	sw.columns = subwin.InColumns(layout, len(sw.parts))
 	sw.layoutParts()
 }
 
 func (sw *subWindow) layoutParts() {
 	area := sw.textArea()
 	sw.splitY = 0
+	sw.colX = 0
+	if len(sw.parts) == 2 && sw.columns {
+		px := func(v int32) int32 { return scaleDPI(v, sw.dpi) }
+		left, right, x := subwin.ColAreas(sw.w, area.Top, area.Bottom, px(swLookNow().padX), px(swColMinDIP), sw.col)
+		sw.colX = x
+		sw.parts[0].area = rect{Left: left.Left, Top: left.Top, Right: left.Right, Bottom: left.Bottom}
+		sw.parts[1].area = rect{Left: right.Left, Top: right.Top, Right: right.Right, Bottom: right.Bottom}
+		return
+	}
 	if len(sw.parts) == 2 && sw.lineH > 0 {
 		upper, _ := subwin.SplitRows((area.Bottom-area.Top)/sw.lineH, sw.top)
 		sw.splitY = area.Top + upper*sw.lineH
@@ -571,6 +589,31 @@ func (sw *subWindow) onSplit(y int32) bool {
 	return len(sw.parts) == 2 && sw.splitY > 0 && subwin.HitSplit(y, sw.splitY, scaleDPI(swGripDIP, sw.dpi))
 }
 
+func (sw *subWindow) colLine() (int32, int32) {
+	px := func(v int32) int32 { return scaleDPI(v, sw.dpi) }
+	look := swLookNow()
+	return px(look.header), sw.h - px(look.lineX)
+}
+
+func (sw *subWindow) onColumn(x, y int32) bool {
+	if !sw.columns || sw.colX <= 0 || len(sw.parts) != 2 {
+		return false
+	}
+	top, bottom := sw.colLine()
+	return subwin.HitColumn(x, y, sw.colX, top, bottom, scaleDPI(swGripDIP, sw.dpi))
+}
+
+func (sw *subWindow) columnTo(hwnd uintptr, x int32) {
+	px := func(v int32) int32 { return scaleDPI(v, sw.dpi) }
+	col := subwin.ColAt(x, sw.w, px(swLookNow().padX), px(swColMinDIP))
+	if col == sw.col {
+		return
+	}
+	sw.col = col
+	sw.layoutParts()
+	sw.renderNow(hwnd)
+}
+
 func (sw *subWindow) splitTo(hwnd uintptr, y int32) {
 	rows := subwin.SplitAt(y, sw.textArea().Top, sw.lineH, sw.totalRows())
 	if rows == 0 || rows == sw.top {
@@ -589,10 +632,13 @@ func (sw *subWindow) saveBox() {
 		rows = sw.resRows
 	}
 	top := sw.top
-	if len(sw.parts) == 2 {
+	if len(sw.parts) == 2 && !sw.columns {
 		top, _ = subwin.SplitRows(rows, sw.top)
 	}
 	b := subwin.Box{W: sw.w * 96 / sw.dpi, Rows: rows, Top: top}
+	if subwin.ValidCol(sw.col) {
+		b.Col = sw.col
+	}
 	if b.W < subwin.BoxMinW {
 		b.W = subwin.BoxMinW
 	}
@@ -606,7 +652,7 @@ func (sw *subWindow) saveBox() {
 	sw.box[key] = b
 	cb := sw.onSized
 	sw.mu.Unlock()
-	log.Printf("subtitles: the window size %d dip, %d rows, %d above the line is kept for the %s screen", b.W, b.Rows, b.Top, key)
+	log.Printf("subtitles: the window size %d dip, %d rows, %d above the line, the column border at %d of 1000 is kept for the %s screen", b.W, b.Rows, b.Top, b.Col, key)
 	if cb != nil {
 		go cb(key, b)
 	}
@@ -874,6 +920,10 @@ func (sw *subWindow) render(hwnd, hdc uintptr) {
 	if sw.splitY > 0 {
 		fill(rect{Left: px(look.lineX), Top: sw.splitY, Right: rc.Right - px(look.lineX), Bottom: sw.splitY + 1}, colLine)
 	}
+	if sw.colX > 0 {
+		top, bottom := sw.colLine()
+		fill(rect{Left: sw.colX, Top: top, Right: sw.colX + 1, Bottom: bottom}, colLine)
+	}
 }
 
 func (sw *subWindow) drawPart(hdc, font uintptr, p *subPart, rows []subtitles.Row, draw func(string, rect, uintptr, uintptr) rect) {
@@ -922,6 +972,12 @@ func (sw *subWindow) wheel(hwnd uintptr, delta int, sx, sy int32) {
 	for _, p := range sw.parts {
 		if p.contains(pt.Y) {
 			target = p
+		}
+	}
+	if sw.columns && len(sw.parts) == 2 {
+		target = sw.parts[1]
+		if pt.X < sw.colX {
+			target = sw.parts[0]
 		}
 	}
 	if target == nil && len(sw.parts) > 0 {
@@ -1148,6 +1204,11 @@ func (sw *subWindow) proc(hwnd, msg, wParam, lParam uintptr) uintptr {
 			procSetCapture.Call(hwnd)
 			return 0
 		}
+		if sw.onColumn(x, y) {
+			sw.colMoving = true
+			procSetCapture.Call(hwnd)
+			return 0
+		}
 		if sw.inFollow(x, y) {
 			sw.follow(hwnd)
 			return 0
@@ -1164,6 +1225,11 @@ func (sw *subWindow) proc(hwnd, msg, wParam, lParam uintptr) uintptr {
 		if sw.splitting {
 			_, y := swCursorClient(hwnd)
 			sw.splitTo(hwnd, y)
+			return 0
+		}
+		if sw.colMoving {
+			x, _ := swCursorClient(hwnd)
+			sw.columnTo(hwnd, x)
 			return 0
 		}
 		if sw.resizing {
@@ -1198,6 +1264,12 @@ func (sw *subWindow) proc(hwnd, msg, wParam, lParam uintptr) uintptr {
 			sw.saveBox()
 			return 0
 		}
+		if sw.colMoving {
+			sw.colMoving = false
+			procReleaseCapture.Call()
+			sw.saveBox()
+			return 0
+		}
 		if sw.dragging {
 			sw.dragging = false
 			procReleaseCapture.Call()
@@ -1222,6 +1294,10 @@ func (sw *subWindow) proc(hwnd, msg, wParam, lParam uintptr) uintptr {
 			sw.splitting = false
 			sw.saveBox()
 		}
+		if sw.colMoving {
+			sw.colMoving = false
+			sw.saveBox()
+		}
 		if sw.dragging {
 			sw.dragging = false
 			if sw.dragMoved {
@@ -1236,6 +1312,8 @@ func (sw *subWindow) proc(hwnd, msg, wParam, lParam uintptr) uintptr {
 			id = c
 		} else if sw.onSplit(y) {
 			id = 32645
+		} else if sw.onColumn(x, y) {
+			id = 32644
 		} else if sw.inClose(x, y) || sw.inFollow(x, y) {
 			id = 32649
 		}
@@ -1388,7 +1466,7 @@ func runSubwindowDemo(args []string) {
 	}
 	translate := len(args) > 1 && strings.TrimSpace(args[1]) != ""
 	only := translate && len(args) > 2 && strings.TrimSpace(args[2]) == "only"
-	langCode, to := "auto", "ru"
+	langCode, to, layout := "auto", "ru", subwin.LayoutRows
 	if cfg, err := loadConfig("config.json"); err == nil && cfg != nil {
 		registerBundledFonts()
 		initLang(cfg.UILanguage)
@@ -1397,6 +1475,7 @@ func runSubwindowDemo(args []string) {
 		c.SubtitlesTranslationOnly = only
 		subWindowConfigure(&c)
 		langCode = cfg.SubtitlesLanguage
+		layout = subwin.Layout(cfg.SubtitlesLayout)
 		if validTranslateLang(cfg.SubtitlesTranslate) {
 			to = cfg.SubtitlesTranslate
 		}
@@ -1411,14 +1490,14 @@ func runSubwindowDemo(args []string) {
 	subWindowShow(demo, func() { once.Do(func() { close(closed) }) }, func(key string, f ovplace.Frac) {
 		log.Printf("subwindow: the place %s %.3f,%.3f is not saved by the demo", key, f.X, f.Y)
 	}, func(key string, b subwin.Box) {
-		log.Printf("subwindow: the size %s %d dip, %d rows, %d above the line is not saved by the demo", key, b.W, b.Rows, b.Top)
+		log.Printf("subwindow: the size %s %d dip, %d rows, %d above the line, the column border at %d of 1000 is not saved by the demo", key, b.W, b.Rows, b.Top, b.Col)
 	})
 	if only {
-		log.Printf("subwindow: showing the subtitles window with the translation alone for %d s", seconds)
+		log.Printf("subwindow: showing the subtitles window with the translation alone for %d s, the %s layout does not apply", seconds, layout)
 	} else if translate {
-		log.Printf("subwindow: showing the subtitles window with the heard text and the translation for %d s", seconds)
+		log.Printf("subwindow: showing the subtitles window with the heard text and the translation, laid out in %s, for %d s", layout, seconds)
 	} else {
-		log.Printf("subwindow: showing the subtitles window for %d s", seconds)
+		log.Printf("subwindow: showing the subtitles window for %d s, the %s layout does not apply", seconds, layout)
 	}
 	end := time.After(time.Duration(seconds) * time.Second)
 	tick := time.NewTicker(220 * time.Millisecond)

@@ -161,6 +161,7 @@ type Config struct {
 	SubtitlesPos      string                  `json:"subtitles_position"`
 	SubtitlesMonitor  string                  `json:"subtitles_monitor"`
 	SubtitlesBox      map[string]subwin.Box   `json:"subtitles_box"`
+	SubtitlesLayout   string                  `json:"subtitles_layout"`
 
 	SubtitlesTranslateOn     bool     `json:"subtitles_translate_on"`
 	SubtitlesTranslate       string   `json:"subtitles_translate"`
@@ -735,6 +736,7 @@ func cleanSubtitles(cfg *Config) bool {
 		cfg.SubtitlesMonitor = ""
 	}
 	cfg.SubtitlesBox = subwin.CleanBoxes(cfg.SubtitlesBox)
+	cfg.SubtitlesLayout = subwin.Layout(cfg.SubtitlesLayout)
 	cfg.SubtitlesHotkey = strings.TrimSpace(cfg.SubtitlesHotkey)
 	if cfg.SubtitlesHotkey != "" && !hotkeyParses(cfg.SubtitlesHotkey) {
 		log.Printf("subtitles: the shortcut %q cannot be read and is dropped", cfg.SubtitlesHotkey)
