@@ -1259,9 +1259,15 @@ func (a *App) refreshIdleUI() {
 		return
 	}
 	a.mu.Lock()
-	enabled, ready, hotkey := a.enabled, a.ready, a.cfg.Hotkey
+	enabled, ready, parked, waking, hotkey := a.enabled, a.ready, a.parked, a.waking, a.cfg.Hotkey
 	a.mu.Unlock()
 	switch {
+	case !ready && parked:
+		traySetIcon(trayOff)
+		a.setStatus(tr("status.parked"))
+	case !ready && waking:
+		traySetIcon(trayIdle)
+		a.setStatus(tr("status.loading"))
 	case !ready:
 		traySetIcon(trayError)
 	case enabled:
