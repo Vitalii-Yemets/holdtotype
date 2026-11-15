@@ -1192,7 +1192,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"fitok": "S_FIT_OK", "fitwarn": "S_FIT_WARN", "fitbad": "S_FIT_BAD",
 		"ram": "S_RAM", "ramavail": "S_RAM_AVAIL", "ramof": "S_RAM_OF", "hfph": "S_HF_PH",
 		"upd": "S_UPDATED", "pedit": "S_PROF_EDIT", "pclose": "S_PROF_CLOSE",
-		"confirmdel": "S_CONFIRM_DEL", "delactive": "S_DEL_ACTIVE",
+		"confirmdel": "S_CONFIRM_DEL",
 		"free": "S_FREE", "updnone": "S_UPD_NONE",
 		"skinterminal": "S_SKIN_TERMINAL", "skinname": "S_SKIN",
 		"wndmax": "S_WND_MAX", "wndrestore": "S_WND_RESTORE", "wndmin": "S_WND_MIN", "wndclose": "S_WND_CLOSE",
@@ -5533,21 +5533,11 @@ function wireModelActions(root){
   root.querySelectorAll("button[data-a]").forEach(b=>{
     b.onclick = async (e)=>{
       e.stopPropagation();
-      if(b.dataset.a === "dl"){ await appModelDl(b.dataset.id); pendingDl = b.dataset.id; }
-      else if(b.dataset.a === "link"){ appModelLink(b.dataset.id); return; }
-      else if(b.dataset.a === "unload"){ appUnloadEngines(); toast(L.unloaded, "ok"); }
-      else if(b.dataset.a === "cancel"){
-        await appModelCancel(b.dataset.id);
-        if(pendingDl === b.dataset.id) pendingDl = null;
-        await undoAssign(b.dataset.id);
-      }
-      else {
-        const isActive = b.dataset.id === activeModelId;
-        const mname = b.dataset.name || b.dataset.id;
-        const ask = isActive ? L.delactive.replace("%s", mname) : L.confirmdel.replace("%s", mname);
-        if(!await askConfirm(ask, L.del, null, L.mtdel)) return;
-        toast(await appModelDel(b.dataset.id, isActive));
-      }
+      if(b.dataset.a === "link"){ appModelLink(b.dataset.id); return; }
+      if(b.dataset.a !== "cancel") return;
+      await appModelCancel(b.dataset.id);
+      if(pendingDl === b.dataset.id) pendingDl = null;
+      await undoAssign(b.dataset.id);
       refreshModels();
     };
   });
