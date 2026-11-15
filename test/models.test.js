@@ -67,7 +67,7 @@ function open(lang, cfgPatch, setup) {
         appSave: async (f) => { S.saves.push(JSON.parse(f)); return json({ ok: true, severity: "ok", message: "Saved" }); },
         appState: async () => json({ subtitles: { phase: "off" }, subs_tr: { choice: "quality", missing: "", pair: "", model: S.trm, fast: { exe: true, pairs: [], offer: [], used: 0 } },
           subs_place: { position: "bottom", custom: {} }, hotkey: "ctrl+win", mic: "Mic", engine: "", llm: "a.gguf", ram: "", last: "", last_meta: "", ready: true, status: "Ready",
-          status_line: "Ready", active_model: "Nemotron 3.5", active_state: "ready", active_lang: "RU", assigned: [], installed_models: [], loaded_now: Object.keys(S.loaded).length ? "Nemotron 3.5" : "", week_line: "",
+          status_line: "Ready", active_model: "Nemotron 3.5", active_state: "ready", active_lang: "RU", assigned: [], installed_models: S.installedModels || [], loaded_now: Object.keys(S.loaded).length ? "Nemotron 3.5" : "", week_line: "",
           llm_ok: true, mic_ok: true, last_at: 0, last_app: "", remote: false, backend_err: "", post_err: "", stt_broken: false, whisper_now: false, enabled: true, autostart: false,
           disk_mb: 0, ram_mb: 16384, ram_free_mb: 9000, week_count: 0, week_chars: 0, today_count: 0, week_apps: [], badges: { mic: "", models: "", system: "" },
           post_on: true, post_model: "a", post_size: 1066, post_installed: S.llm.length, post_remote: false, post_prompts: 1 }),
@@ -352,6 +352,10 @@ function open(lang, cfgPatch, setup) {
   check("Russian: plural forms", [1, 2, 5, 21, 22].map((n) => rw.pluralCount(n)), ["1 модель", "2 модели", "5 моделей", "21 модель", "22 модели"]);
   check("Russian: the missing one is not installed in words", rrow("trm").querySelector(".lmodel").textContent, "для перевода субтитров");
   check("English: plural forms", [1, 2].map((n) => w.pluralCount(n)), ["1 model", "2 models"]);
+  const memLine = async (win, n) => { win.S.installedModels = Array.from({ length: n }, (_, i) => "m" + i); await win.refreshState(); await sleep(120); return win.document.getElementById("state_mem_sub").textContent; };
+  check("Russian: the memory line on Status counts the models on disk with the right form", [await memLine(rw, 1), await memLine(rw, 2), await memLine(rw, 5), await memLine(rw, 21)].map((t) => t.split("·")[1].trim().split(",")[0]),
+    ["на диске 1 модель", "на диске 2 модели", "на диске 5 моделей", "на диске 21 модель"]);
+  check("English: and so does the English one", [await memLine(w, 1), await memLine(w, 2)].map((t) => t.split("·")[1].trim().split(",")[0]), ["on disk: 1 model", "on disk: 2 models"]);
 
   check("no JavaScript errors", errors, []);
   if (failures.length) {

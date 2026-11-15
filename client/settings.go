@@ -4702,7 +4702,7 @@ async function refreshState(){
   set("state_mem_title", L.stmem.replace("%s", (freeMB / 1024).toFixed(1)).replace("%s", (totalMB / 1024).toFixed(0)));
   set("state_mem_sub", L.stmemsub
     .replace("%s", s.loaded_now || L.stmemnone)
-    .replace("%d", (s.installed_models || []).length)
+    .replace("%s", pluralCount((s.installed_models || []).length))
     .replace("%s", ((s.disk_mb || 0) / 1024).toFixed(1)));
   led("state_mem_led", freeMB > totalMB * 0.25, freeMB <= totalMB * 0.25);
   const unload = document.getElementById("state_unload");
