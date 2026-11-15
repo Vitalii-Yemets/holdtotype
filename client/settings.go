@@ -1320,7 +1320,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"subsoff": "S_SUBS_OFF", "subsloading": "S_SUBS_LOADING", "subslive": "S_SUBS_LISTEN_LIVE", "subsphrases": "S_SUBS_LISTEN_PHRASES",
 		"subsrestart": "S_SUBS_RESTARTING", "subsstart": "S_SUBS_START", "subsstop": "S_SUBS_STOP",
 		"subsmlive": "S_SUBS_M_LIVE", "subsmphrases": "S_SUBS_M_PHRASES", "subsmabsent": "S_SUBS_M_ABSENT", "subsmwhisper": "S_SUBS_M_WHISPER",
-		"subsposscheme": "S_SUBS_POS_SCHEME_SUB", "subsposdrag": "S_SUBS_POS_DRAG_SUB", "subsboxdone": "S_SUBS_BOX_DONE", "subsrowssub": "S_SUBS_ROWS_SUB", "subsrowscols": "S_SUBS_ROWS_SUB_COLS",
+		"subsposscheme": "S_SUBS_POS_SCHEME_SUB", "subsposdrag": "S_SUBS_POS_DRAG_SUB", "subsboxdone": "S_SUBS_BOX_DONE", "subsrowssub": "S_SUBS_ROWS_SUB", "subsrowscols": "S_SUBS_ROWS_SUB_COLS", "subsrowsonly": "S_SUBS_ROWS_SUB_ONLY",
 		"subson": "S_SUBS_ON", "subsherohint": "S_SUBS_HERO_HINT", "subsherolive": "S_SUBS_HERO_LIVE", "subsherophrases": "S_SUBS_HERO_PHRASES",
 		"subsherostart": "S_SUBS_HERO_START", "subsherostop": "S_SUBS_HERO_STOP",
 		"substrsame": "S_SUBS_TR_SAME", "subsmissmodelget": "S_SUBS_TR_MISS_MODEL_GET",
@@ -2045,6 +2045,13 @@ input.srcpick:disabled,input.srvpick:disabled{opacity:.4;cursor:default}
 #subs_hero .stsw span{font-size:13px;font-weight:var(--wb);color:var(--green)}
 #subs_hero .stsw.dimmed{cursor:default}
 #subs_hero .stsw.dimmed span{color:var(--dim)}
+#subs_hero .stlays{display:inline-flex;align-items:center;gap:8px}
+#subs_hero .stlays.off{opacity:.38;pointer-events:none}
+#subs_hero .stlay{position:relative;display:block;padding:4px;border:1px solid var(--line);border-radius:var(--r);background:var(--card);cursor:pointer;line-height:0}
+#subs_hero .stlay svg{display:block;width:64px;height:auto}
+#subs_hero .stlay input{position:absolute;top:0;left:0;width:1px;height:1px;margin:0;opacity:0;pointer-events:none}
+#subs_hero .stlay.on{border-color:var(--hi);box-shadow:var(--higlow)}
+#subs_hero .stlay:has(input:focus-visible){outline:1px solid var(--green);outline-offset:2px}
 #subs_src_quality .plates{align-items:center}
 #subs_src_quality .plates .hfhome{margin-left:0}
 #subs_src_quality .plates .acts{margin-left:auto}
@@ -2154,7 +2161,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
 .hshot{border:1px solid var(--line);border-radius:var(--r);background:var(--field);padding:12px 14px;margin:0 0 12px}
 .hshot .hcap{color:var(--faint);font-size:10.5px;margin-top:8px}
 .hshot .srccard{margin:0;pointer-events:none}
-.hshot .lays{display:grid;grid-template-columns:repeat(2,minmax(0,281px));gap:12px}
+.hshot .lays{display:grid;grid-template-columns:repeat(3,minmax(0,281px));gap:12px}
 .hshot .srccard.lay{min-height:0;display:flex;flex-direction:column;gap:9px;padding:12px 14px 10px}
 .hshot .lay svg{display:block;width:100%;height:auto}
 .hshot .lay .srchead{margin:0}
@@ -2326,7 +2333,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
    </div>
    <button type="button" class="mini pri" id="subs_hero_go" title="{{S_SUBS_START}}">{{S_SUBS_HERO_START}}</button>
   </div>
-  <div class="stsubsw"><label class="stsw"><input type="checkbox" id="st_tr_on"><span>{{S_SUBS_TR}}</span></label><label class="stsw" id="st_tr_only_lbl"><input type="checkbox" id="st_tr_only"><span>{{S_SUBS_TR_ONLY}}</span></label></div>
+  <div class="stsubsw"><label class="stsw"><input type="checkbox" id="st_tr_on"><span>{{S_SUBS_TR}}</span></label><div class="stlays" id="st_lays" role="radiogroup" aria-label="{{S_SUBS_LAYOUT}}"><label class="stlay" data-v="rows" title="{{S_SUBS_LAYOUT_ROWS}}"><input type="radio" name="st_layout" value="rows" aria-label="{{S_SUBS_LAYOUT_ROWS}}"><svg class="laythumb" width="251" height="60" viewBox="0 0 251 60" aria-hidden="true"><rect x="0.5" y="0.50" width="250" height="59.00" rx="2.33" style="fill:var(--bg);stroke:var(--line)"/><circle cx="7.30" cy="7.59" r="2.4" style="fill:var(--ok)"/><path d="M242.67 5.39L247.07 9.79M247.07 5.39L242.67 9.79" style="stroke:var(--dim);stroke-width:1;fill:none"/><rect x="2.92" y="15.00" width="245.16" height="1.00" style="fill:var(--line)"/><rect x="4.67" y="19.87" width="188.50" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="4.67" y="30.35" width="91.83" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="4.67" y="40.83" width="217.49" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="4.67" y="51.30" width="145.00" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="2.92" y="38.00" width="245.16" height="1.00" style="fill:var(--line)"/><rect x="116.50" y="36.50" width="18" height="4" rx="2" style="fill:var(--bg);stroke:var(--dim);stroke-width:1"/></svg></label><label class="stlay" data-v="columns" title="{{S_SUBS_LAYOUT_COLS}}"><input type="radio" name="st_layout" value="columns" aria-label="{{S_SUBS_LAYOUT_COLS}}"><svg class="laythumb" width="251" height="60" viewBox="0 0 251 60" aria-hidden="true"><rect x="0.5" y="0.50" width="250" height="59.00" rx="2.33" style="fill:var(--bg);stroke:var(--line)"/><circle cx="7.30" cy="7.59" r="2.4" style="fill:var(--ok)"/><path d="M242.67 5.39L247.07 9.79M247.07 5.39L242.67 9.79" style="stroke:var(--dim);stroke-width:1;fill:none"/><rect x="2.92" y="15.00" width="245.16" height="1.00" style="fill:var(--line)"/><rect x="4.67" y="19.87" width="107.33" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="4.67" y="30.35" width="77.00" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="4.67" y="40.83" width="97.99" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="4.67" y="51.30" width="58.33" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="130.67" y="19.87" width="92.53" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="130.67" y="30.35" width="108.72" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="130.67" y="40.83" width="69.40" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="130.67" y="51.30" width="83.28" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="126.00" y="15.00" width="1.00" height="42.08" style="fill:var(--line)"/><rect x="124.50" y="28.59" width="4" height="18" rx="2" style="fill:var(--bg);stroke:var(--dim);stroke-width:1"/></svg></label><label class="stlay" data-v="only" title="{{S_SUBS_LAYOUT_ONLY}}"><input type="radio" name="st_layout" value="only" aria-label="{{S_SUBS_LAYOUT_ONLY}}"><svg class="laythumb" width="251" height="60" viewBox="0 0 251 60" aria-hidden="true"><rect x="0.5" y="0.50" width="250" height="59.00" rx="2.33" style="fill:var(--bg);stroke:var(--line)"/><circle cx="7.30" cy="7.59" r="2.4" style="fill:var(--ok)"/><path d="M242.67 5.39L247.07 9.79M247.07 5.39L242.67 9.79" style="stroke:var(--dim);stroke-width:1;fill:none"/><rect x="2.92" y="15.00" width="245.16" height="1.00" style="fill:var(--line)"/><rect x="4.67" y="19.87" width="217.49" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="4.67" y="30.35" width="174.00" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="4.67" y="40.83" width="203.00" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="4.67" y="51.30" width="145.00" height="4.00" rx="2.00" style="fill:var(--green)"/></svg></label></div></div>
  </div>
  <div class="stalerts" id="state_alerts"></div>
  <div class="stplate stusage" id="state_usage"></div>
@@ -2702,8 +2709,8 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
  </div>
  <div class="card" id="subs_win_card">
   <label class="blklbl">{{S_SUBS_WINDOW}}</label>
-  <div class="row pickrow" id="subs_lay_row"><label>{{S_SUBS_LAYOUT}}</label><div class="lays" id="subs_lays" role="radiogroup" aria-label="{{S_SUBS_LAYOUT}}"><label class="srccard lay" data-v="rows" title="{{S_SUBS_LAYOUT_TIP}}"><svg class="laythumb" width="251" height="60" viewBox="0 0 251 60" aria-hidden="true"><rect x="0.5" y="0.50" width="250" height="59.00" rx="2.33" style="fill:var(--bg);stroke:var(--line)"/><circle cx="7.30" cy="7.59" r="2.4" style="fill:var(--ok)"/><path d="M242.67 5.39L247.07 9.79M247.07 5.39L242.67 9.79" style="stroke:var(--dim);stroke-width:1;fill:none"/><rect x="2.92" y="15.00" width="245.16" height="1.00" style="fill:var(--line)"/><rect x="4.67" y="19.87" width="188.50" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="4.67" y="30.35" width="91.83" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="4.67" y="40.83" width="217.49" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="4.67" y="51.30" width="145.00" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="2.92" y="38.00" width="245.16" height="1.00" style="fill:var(--line)"/><rect x="116.50" y="36.50" width="18" height="4" rx="2" style="fill:var(--bg);stroke:var(--dim);stroke-width:1"/></svg><span class="srchead"><input type="radio" name="subtitles_layout" class="srcpick" value="rows">{{S_SUBS_LAYOUT_ROWS}}</span></label><label class="srccard lay" data-v="columns" title="{{S_SUBS_LAYOUT_TIP}}"><svg class="laythumb" width="251" height="60" viewBox="0 0 251 60" aria-hidden="true"><rect x="0.5" y="0.50" width="250" height="59.00" rx="2.33" style="fill:var(--bg);stroke:var(--line)"/><circle cx="7.30" cy="7.59" r="2.4" style="fill:var(--ok)"/><path d="M242.67 5.39L247.07 9.79M247.07 5.39L242.67 9.79" style="stroke:var(--dim);stroke-width:1;fill:none"/><rect x="2.92" y="15.00" width="245.16" height="1.00" style="fill:var(--line)"/><rect x="4.67" y="19.87" width="107.33" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="4.67" y="30.35" width="77.00" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="4.67" y="40.83" width="97.99" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="4.67" y="51.30" width="58.33" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="130.67" y="19.87" width="92.53" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="130.67" y="30.35" width="108.72" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="130.67" y="40.83" width="69.40" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="130.67" y="51.30" width="83.28" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="126.00" y="15.00" width="1.00" height="42.08" style="fill:var(--line)"/><rect x="124.50" y="28.59" width="4" height="18" rx="2" style="fill:var(--bg);stroke:var(--dim);stroke-width:1"/></svg><span class="srchead"><input type="radio" name="subtitles_layout" class="srcpick" value="columns">{{S_SUBS_LAYOUT_COLS}}</span></label></div></div>
-  <div class="row" id="subs_tr_only_row"><label>{{S_SUBS_TR_ONLY}}<span class="sub">{{S_SUBS_TR_ONLY_SUB}}</span></label><input type="checkbox" id="subtitles_translation_only"></div>
+  <div class="row pickrow" id="subs_lay_row"><label>{{S_SUBS_LAYOUT}}</label><div class="lays" id="subs_lays" role="radiogroup" aria-label="{{S_SUBS_LAYOUT}}"><label class="srccard lay" data-v="rows" title="{{S_SUBS_LAYOUT_TIP}}"><svg class="laythumb" width="251" height="60" viewBox="0 0 251 60" aria-hidden="true"><rect x="0.5" y="0.50" width="250" height="59.00" rx="2.33" style="fill:var(--bg);stroke:var(--line)"/><circle cx="7.30" cy="7.59" r="2.4" style="fill:var(--ok)"/><path d="M242.67 5.39L247.07 9.79M247.07 5.39L242.67 9.79" style="stroke:var(--dim);stroke-width:1;fill:none"/><rect x="2.92" y="15.00" width="245.16" height="1.00" style="fill:var(--line)"/><rect x="4.67" y="19.87" width="188.50" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="4.67" y="30.35" width="91.83" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="4.67" y="40.83" width="217.49" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="4.67" y="51.30" width="145.00" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="2.92" y="38.00" width="245.16" height="1.00" style="fill:var(--line)"/><rect x="116.50" y="36.50" width="18" height="4" rx="2" style="fill:var(--bg);stroke:var(--dim);stroke-width:1"/></svg><span class="srchead"><input type="radio" name="subtitles_layout" class="srcpick" value="rows">{{S_SUBS_LAYOUT_ROWS}}</span></label><label class="srccard lay" data-v="columns" title="{{S_SUBS_LAYOUT_TIP}}"><svg class="laythumb" width="251" height="60" viewBox="0 0 251 60" aria-hidden="true"><rect x="0.5" y="0.50" width="250" height="59.00" rx="2.33" style="fill:var(--bg);stroke:var(--line)"/><circle cx="7.30" cy="7.59" r="2.4" style="fill:var(--ok)"/><path d="M242.67 5.39L247.07 9.79M247.07 5.39L242.67 9.79" style="stroke:var(--dim);stroke-width:1;fill:none"/><rect x="2.92" y="15.00" width="245.16" height="1.00" style="fill:var(--line)"/><rect x="4.67" y="19.87" width="107.33" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="4.67" y="30.35" width="77.00" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="4.67" y="40.83" width="97.99" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="4.67" y="51.30" width="58.33" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="130.67" y="19.87" width="92.53" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="130.67" y="30.35" width="108.72" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="130.67" y="40.83" width="69.40" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="130.67" y="51.30" width="83.28" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="126.00" y="15.00" width="1.00" height="42.08" style="fill:var(--line)"/><rect x="124.50" y="28.59" width="4" height="18" rx="2" style="fill:var(--bg);stroke:var(--dim);stroke-width:1"/></svg><span class="srchead"><input type="radio" name="subtitles_layout" class="srcpick" value="columns">{{S_SUBS_LAYOUT_COLS}}</span></label><label class="srccard lay" data-v="only" title="{{S_SUBS_TR_ONLY_SUB}}"><svg class="laythumb" width="251" height="60" viewBox="0 0 251 60" aria-hidden="true"><rect x="0.5" y="0.50" width="250" height="59.00" rx="2.33" style="fill:var(--bg);stroke:var(--line)"/><circle cx="7.30" cy="7.59" r="2.4" style="fill:var(--ok)"/><path d="M242.67 5.39L247.07 9.79M247.07 5.39L242.67 9.79" style="stroke:var(--dim);stroke-width:1;fill:none"/><rect x="2.92" y="15.00" width="245.16" height="1.00" style="fill:var(--line)"/><rect x="4.67" y="19.87" width="217.49" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="4.67" y="30.35" width="174.00" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="4.67" y="40.83" width="203.00" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="4.67" y="51.30" width="145.00" height="4.00" rx="2.00" style="fill:var(--green)"/></svg><span class="srchead"><input type="radio" name="subtitles_layout" class="srcpick" value="only">{{S_SUBS_LAYOUT_ONLY}}</span></label></div></div>
+  <input type="checkbox" id="subtitles_translation_only" hidden>
   <div class="row"><label>{{S_SUBS_ROWS}}<span class="sub" id="subs_rows_sub">{{S_SUBS_ROWS_SUB}}</span></label>
    <select id="subtitles_lines"><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option></select></div>
   <div class="row" id="subs_size_row"><label>{{S_SUBS_SIZE}}</label>
@@ -4332,7 +4339,6 @@ function renderSubsTr(){
   subsEl("subtitles_translate").disabled = !on;
   subsEl("subs_tr_lang_row").classList.toggle("dimmed", !on);
   subsEl("subtitles_translation_only").disabled = !on;
-  subsEl("subs_tr_only_row").classList.toggle("dimmed", !on);
   subsEl("subs_who_card").classList.toggle("offdim", !on);
   const fits = !!subsModel().fits;
   [["quality", "subs_src_quality", "subs_pick_quality"], ["fast", "subs_src_fast", "subs_pick_fast"], ["server", "subs_src_api", "subs_pick_api"]].forEach(([w, card, pick])=>{
@@ -4482,31 +4488,47 @@ function syncSizeTiles(){
     if(i.checked) subsEl("subs_size_name").textContent = i.getAttribute("aria-label");
   });
 }
+let subsLayoutKeep = "rows";
 function subsLayout(){
-  const c = document.querySelector('#subs_lays input:checked');
-  return c && c.value === "columns" ? "columns" : "rows";
+  return subsLayoutKeep === "columns" ? "columns" : "rows";
 }
-function syncLayout(){
-  const box = subsEl("subs_lays");
+function subsLayoutPick(){
+  const only = subsEl("subtitles_translation_only");
+  return only && only.checked ? "only" : subsLayout();
+}
+function paintLays(box, cls){
   if(!box) return;
-  const tr = subsEl("subtitles_translate_on"), only = subsEl("subtitles_translation_only");
-  const off = !(tr && tr.checked) || !!(only && only.checked);
+  const tr = subsEl("subtitles_translate_on");
+  const off = !(tr && tr.checked);
+  const pick = subsLayoutPick();
   box.classList.toggle("off", off);
   box.querySelectorAll("input").forEach(i=>{
+    i.checked = i.value === pick;
     i.disabled = off;
-    i.closest(".lay").classList.toggle("on", i.checked);
+    i.closest(cls).classList.toggle("on", i.checked);
   });
+}
+function syncLayout(){
+  paintLays(subsEl("subs_lays"), ".lay");
+  paintLays(subsEl("st_lays"), ".stlay");
+  const pick = subsLayoutPick();
   const sub = subsEl("subs_rows_sub");
-  if(sub) sub.textContent = subsLayout() === "columns" ? L.subsrowscols : L.subsrowssub;
+  if(sub) sub.textContent = pick === "only" ? L.subsrowsonly : pick === "columns" ? L.subsrowscols : L.subsrowssub;
+}
+function pickLayout(v){
+  if(v !== "only") subsLayoutKeep = v === "columns" ? "columns" : "rows";
+  const only = subsEl("subtitles_translation_only");
+  if(only){
+    only.checked = v === "only";
+    only.dispatchEvent(new Event("change", {bubbles: true}));
+  }
+  syncLayout();
 }
 function syncStateSwitches(){
-  const tr = subsEl("st_tr_on"), only = subsEl("st_tr_only");
-  const rTr = subsEl("subtitles_translate_on"), rOnly = subsEl("subtitles_translation_only");
-  if(!tr || !only || !rTr || !rOnly) return;
+  const tr = subsEl("st_tr_on"), rTr = subsEl("subtitles_translate_on");
+  if(!tr || !rTr) return;
   tr.checked = rTr.checked;
-  only.checked = rOnly.checked;
-  only.disabled = rOnly.disabled;
-  subsEl("st_tr_only_lbl").classList.toggle("dimmed", rOnly.disabled);
+  syncLayout();
 }
 function initSubsExtras(){
   const sel = subsEl("subtitles_size"), box = subsEl("subs_size_tiles");
@@ -4520,16 +4542,18 @@ function initSubsExtras(){
     sel.addEventListener("change", syncSizeTiles);
     syncSizeTiles();
   }
-  const lays = subsEl("subs_lays");
-  if(lays){
-    const want = CFG.subtitles_layout === "columns" ? "columns" : "rows";
-    lays.querySelectorAll("input").forEach(i=>{ i.checked = i.value === want; });
-    lays.addEventListener("change", syncLayout);
-    const only = subsEl("subtitles_translation_only");
-    if(only) only.addEventListener("change", syncLayout);
-    syncLayout();
-  }
-  [["st_tr_on", "subtitles_translate_on"], ["st_tr_only", "subtitles_translation_only"]].forEach(([mine, real])=>{
+  subsLayoutKeep = CFG.subtitles_layout === "columns" ? "columns" : "rows";
+  ["subs_lays", "st_lays"].forEach(id=>{
+    const box = subsEl(id);
+    if(box) box.addEventListener("change", e=>{
+      e.stopPropagation();
+      if(e.target && e.target.name) pickLayout(e.target.value);
+    });
+  });
+  const onlyBox = subsEl("subtitles_translation_only");
+  if(onlyBox) onlyBox.addEventListener("change", syncLayout);
+  syncLayout();
+  [["st_tr_on", "subtitles_translate_on"]].forEach(([mine, real])=>{
     const a = subsEl(mine), b = subsEl(real);
     if(!a || !b) return;
     a.addEventListener("change", e=>{

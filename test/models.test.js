@@ -338,6 +338,15 @@ function open(lang, cfgPatch, setup) {
     na.window.close();
   }
 
+  {
+    const old = open("en", { subtitles_translate_on: true, subtitles_translation_only: true, subtitles_layout: "columns", llm_model: "a.gguf" });
+    const ow = old.window, od = ow.document;
+    await sleep(700);
+    const on = (sel) => [...od.querySelectorAll(sel)].map((c) => c.classList.contains("on"));
+    check("old settings with only the translation show the third card chosen, on the tab and on Status", [on("#subs_lays .lay"), on("#st_lays .stlay"), od.getElementById("subtitles_translation_only").checked], [[false, false, true], [false, false, true], true]);
+    old.window.close();
+  }
+
   const ru = open("ru", { lang_models: { auto: "nemotron-3.5", ru: "gigaam-v3" }, language: "ru", subtitles_language: "auto", llm_model: "a.gguf" });
   const rw = ru.window, rd = rw.document;
   await sleep(700);
