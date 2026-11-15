@@ -786,18 +786,28 @@ func (a *App) deleteModel(id string, force bool) string {
 		return ""
 	}
 	dlMu.Unlock()
-	if m.Dir != "" {
-		dir := filepath.Join("models", m.Dir)
-		if err := os.RemoveAll(dir); err != nil {
-			return humanError(err)
+	remove := func() error {
+		if m.Dir != "" {
+			return os.RemoveAll(filepath.Join("models", m.Dir))
 		}
-		log.Printf("model %s deleted", m.ID)
-		return tr("model.del.ok")
+		err := os.Remove(filepath.Join("models", m.File))
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return err
 	}
-	if err := os.Remove(filepath.Join("models", m.File)); err != nil {
+	var err error
+	for i := 0; i < 10; i++ {
+		if err = remove(); err == nil {
+			break
+		}
+		time.Sleep(200 * time.Millisecond)
+	}
+	if err != nil {
+		log.Printf("deleting the model %s: %v", m.ID, err)
 		return humanError(err)
 	}
-	log.Printf("model %s deleted", m.File)
+	log.Printf("model %s deleted", m.ID)
 	return tr("model.del.ok")
 }
 
