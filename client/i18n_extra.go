@@ -864,11 +864,16 @@ func init() {
 		"S_DEP_WINLOADER": "DLL-Laden in go-webview2",
 		"S_DEP_PLEX": "Schrift der Oberfläche",
 		"S_DEP_HF": "Katalog, aus dem Modelle geladen werden",
-		"S_CONTACT_HINT": "Fehler, Idee, Frage zu einer Einstellung — schreiben Sie eine E-Mail, wenn es persönlich ist, oder öffnen Sie ein Issue, wenn es ein Fehler ist.",
+		"S_CONTACT_HINT": "Eine persönliche Frage per E-Mail. Einen Fehler oder eine Idee schreiben Sie besser im Repository auf: Dort sehen alle sie und auch, was daraus geworden ist.",
 		"S_CONTACT_REPO": "Repository",
 		"S_CONTACT_ISSUES": "Fehler und Ideen",
-		"S_CONTACT_WRITE": "E-Mail schreiben",
+		"S_CONTACT_WRITE": "Schreiben",
 		"S_CONTACT_OPEN": "Öffnen",
+		"S_CONTACT_REPORT": "Melden",
+		"S_CONTACT_COPY": "Kopieren",
+		"S_CONTACT_MAIL_WHY": "Eine Frage, die nicht alle angeht: eine Einstellung, die Arbeit, etwas Persönliches.",
+		"S_CONTACT_REPO_WHY": "Der Code des Programms, alle Versionen und wie man es selbst baut.",
+		"S_CONTACT_ISSUES_WHY": "Ein Fehler oder eine Idee, für alle sichtbar, mit Antwort und dem, was getan wurde.",
 		"S_STATE_ACTIVE": "Erkennt",
 		"S_STATE_USED": "Eingesetzte Modelle",
 		"S_STATE_INST": "Lokal installiert",
@@ -1134,7 +1139,7 @@ func init() {
 			"<p>Drei Zeilen: Sprache der Oberfläche, Design und Farbe. Auf die Arbeit der App haben sie keinerlei Einfluss.</p>" +
 			"<table class=\"hopt\">" +
 			"<tr><td>Sprache der Oberfläche</td><td>Die Sprache des Einstellungsfensters und der Beschriftungen auf der Leiste. Mit der Sprache des Diktats hat sie nichts zu tun: Das Fenster kann auf Deutsch sein, während Sie auf Englisch diktieren.</td></tr>" +
-			"<tr><td>Design</td><td>Das Gesamtbild. Es gibt sieben: „Editor“ (Standard: Dunkelgrau mit Blau), „Fluent“ (wie die Einstellungen von Windows 11), „Studio“ (Graphit mit Orange, fast ohne Rundungen), „Sanft“ (helles Lila, abgerundet), „Dokument“ (Papier mit Blau), „Neon“ (Violett mit einem Verlauf von Rosa zu Türkis) und „Terminal“ (grüne Buchstaben auf Schwarz, Klammern um die Schaltflächen). Alle sieben sind in einer Schrift gesetzt, IBM Plex Mono.</td></tr>" +
+			"<tr><td>Design</td><td>Das Gesamtbild. Es gibt sieben: „Editor“ (Standard: Dunkelgrau mit Blau), „Fluent“ (wie die Einstellungen von Windows 11), „Studio“ (Graphit mit Orange, fast ohne Rundungen), „Sanft“ (helles Lila, abgerundet), „Dokument“ (Papier mit Blau), „Neon“ (Violett mit einem Verlauf von Rosa zu Türkis) und „Terminal“ (grüne Buchstaben auf Schwarz, Klammern um die Schaltflächen). Alle sieben sind in einer Schrift gesetzt, IBM Plex Mono. Gewählt wird es mit einer Karte: Jede zeigt ein kleines Fenster in diesem Design und seinen Namen, und das Einstellungsfenster ändert sich sofort.</td></tr>" +
 			"<tr><td>Farbe</td><td>Ein Farbton nur für „Terminal“: Grün, Bernstein, Blau, Rosa. In derselben Farbe erscheinen auch die Leiste und das Symbol im Infobereich. Die anderen Designs haben ihre eigenen Farben, und die Zeile wird ausgeblendet.</td></tr>" +
 			"</table>" +
 			"<p class=\"hsub\">Start und Updates</p>" +
@@ -1309,7 +1314,7 @@ func init() {
 			"<div class=\"hwarn\">Ihre Gesprächspartner sollten wissen, dass ihre Worte mitgeschrieben werden.</div>" +
 			"<p class=\"wh\" id=\"s-about\">„Über“ und „Kontakte“</p>" +
 			"<p>Auf der Registerkarte „Über“ stehen eine kurze Beschreibung, was das ist und wie es aufgebaut ist, und eine Liste aller fremden Bibliotheken, aus denen die App gebaut ist, mit ihren Lizenzen. Die Namen sind anklickbar und führen zu den Seiten dieser Projekte. Dort steht auch ein Link zum Repository, in dem der Quellcode und alle Versionen liegen.</p>" +
-			"<p>„Kontakte“ besteht aus drei Karten: E-Mail, Repository und eine Seite für Fehler und Ideen. Ein Klick auf die E-Mail-Adresse öffnet Ihr E-Mail-Programm mit bereits eingetragenem Empfänger, und das Symbol daneben kopiert die Adresse einfach.</p>" +
+			"<p>„Kontakte“ besteht aus drei Karten: E-Mail, Repository und eine Seite für Fehler und Ideen. Jede sagt, wofür sie da ist, und nennt die Adresse, die Sie markieren und kopieren können. Unten steht eine Schaltfläche: „Schreiben“ öffnet Ihr E-Mail-Programm mit bereits eingetragenem Empfänger, „Öffnen“ das Repository im Browser, „Melden“ die Seite für Fehler und Ideen. Das Symbol neben der E-Mail-Adresse kopiert sie.</p>" +
 			"<p class=\"wh\" id=\"s-files\">Was im Ordner der App liegt</p>" +
 			"<p>Die App ist portabel: Alles, was zu ihr gehört, liegt in einem Ordner und breitet sich nirgendwo sonst aus.</p>" +
 			"<table class=\"hopt\">" +
@@ -1638,11 +1643,16 @@ func init() {
 		"S_DEP_WINLOADER": "chargement des DLL dans go-webview2",
 		"S_DEP_PLEX": "police de l’interface",
 		"S_DEP_HF": "catalogue d’où viennent les modèles",
-		"S_CONTACT_HINT": "Un bug, une idée, une question sur un réglage — écrivez un e-mail si c’est personnel, ou ouvrez une issue si c’est un bug.",
+		"S_CONTACT_HINT": "Une question personnelle, par e-mail. Un bug ou une idée, mieux vaut les noter dans le dépôt : tout le monde les voit, et on voit ce qui en a été fait.",
 		"S_CONTACT_REPO": "Dépôt",
 		"S_CONTACT_ISSUES": "Bugs et idées",
-		"S_CONTACT_WRITE": "Écrire un e-mail",
+		"S_CONTACT_WRITE": "Écrire",
 		"S_CONTACT_OPEN": "Ouvrir",
+		"S_CONTACT_REPORT": "Signaler",
+		"S_CONTACT_COPY": "Copier",
+		"S_CONTACT_MAIL_WHY": "Une question qui ne regarde pas tout le monde : un réglage, le travail, quelque chose de personnel.",
+		"S_CONTACT_REPO_WHY": "Le code du programme, toutes les versions et comment le compiler soi-même.",
+		"S_CONTACT_ISSUES_WHY": "Un bug ou une idée à la vue de tous, avec la réponse et ce qui a été fait.",
 		"S_STATE_ACTIVE": "Reconnaît",
 		"S_STATE_USED": "Modèles en service",
 		"S_STATE_INST": "Installés localement",
@@ -1908,7 +1918,7 @@ func init() {
 			"<p>Trois lignes : langue de l'interface, design et couleur. Elles n'ont aucun effet sur le fonctionnement.</p>" +
 			"<table class=\"hopt\">" +
 			"<tr><td>Langue de l'interface</td><td>La langue de la fenêtre des réglages et des textes du bandeau. Elle n'a rien à voir avec la langue de dictée : la fenêtre peut être en français pendant que vous dictez en anglais.</td></tr>" +
-			"<tr><td>Design</td><td>L'allure générale. Il y en a sept : « Éditeur » (par défaut : gris foncé et bleu), « Fluent » (comme les Paramètres de Windows 11), « Studio » (graphite et orange, presque sans arrondis), « Doux » (lilas clair, arrondi), « Document » (papier et bleu), « Néon » (violet avec un dégradé du rose au turquoise) et « Terminal » (lettres vertes sur fond noir, crochets autour des boutons). Les sept utilisent la même police, IBM Plex Mono.</td></tr>" +
+			"<tr><td>Design</td><td>L'allure générale. Il y en a sept : « Éditeur » (par défaut : gris foncé et bleu), « Fluent » (comme les Paramètres de Windows 11), « Studio » (graphite et orange, presque sans arrondis), « Doux » (lilas clair, arrondi), « Document » (papier et bleu), « Néon » (violet avec un dégradé du rose au turquoise) et « Terminal » (lettres vertes sur fond noir, crochets autour des boutons). Les sept utilisent la même police, IBM Plex Mono. On le choisit avec une carte : chacune montre une petite fenêtre dans ce design et son nom, et la fenêtre des réglages change aussitôt.</td></tr>" +
 			"<tr><td>Couleur</td><td>Une teinte réservée à « Terminal » : vert, ambre, bleu, rose. Le bandeau et l'icône de la zone de notification prennent la même couleur. Les autres designs ont leurs propres couleurs, et la ligne est masquée.</td></tr>" +
 			"</table>" +
 			"<p class=\"hsub\">Démarrage et mises à jour</p>" +
@@ -2083,7 +2093,7 @@ func init() {
 			"<div class=\"hwarn\">Vos interlocuteurs doivent savoir que leurs paroles sont transcrites.</div>" +
 			"<p class=\"wh\" id=\"s-about\">« À propos » et « Contacts »</p>" +
 			"<p>L'onglet « À propos » contient un court texte sur ce qu'est l'application et comment elle est construite, ainsi que la liste de toutes les bibliothèques tierces dont elle est faite, avec leurs licences. Les noms sont cliquables et mènent aux pages de ces projets. On y trouve aussi un lien vers le dépôt, où se trouvent le code source et toutes les versions.</p>" +
-			"<p>« Contacts » propose trois cartes : l'e-mail, le dépôt et une page pour les bugs et les idées. Un clic sur l'adresse e-mail ouvre votre logiciel de messagerie avec le destinataire déjà rempli, et l'icône à côté copie simplement l'adresse.</p>" +
+			"<p>« Contacts » propose trois cartes : l'e-mail, le dépôt et une page pour les bugs et les idées. Chacune dit à quoi elle sert et donne l'adresse, que vous pouvez sélectionner et copier. En bas, un seul bouton : « Écrire » ouvre votre logiciel de messagerie avec le destinataire déjà rempli, « Ouvrir » ouvre le dépôt dans le navigateur, « Signaler » la page des bugs et des idées. L'icône à côté de l'adresse e-mail la copie.</p>" +
 			"<p class=\"wh\" id=\"s-files\">Ce qu'il y a dans le dossier de l'application</p>" +
 			"<p>L'application est portable : tout ce qui lui appartient se trouve dans un seul dossier et ne se répand nulle part ailleurs.</p>" +
 			"<table class=\"hopt\">" +
@@ -2116,7 +2126,7 @@ func init() {
 			"<tr><td>Le texte est étrange, des mots sont remplacés</td><td>Jetez un œil à l'onglet « Règles » : très probablement, un remplacement ou une commande vocale s'est déclenché.</td></tr>" +
 			"<tr><td>Rien de tout cela</td><td>« Système » → « Ouvrir le journal ». L'application y note tout ce qui la concerne, et la cause est en général écrite en toutes lettres.</td></tr>" +
 			"</table>" +
-			"<p class=\"hdim\" style=\"margin-top:16px\">Vous n'avez pas trouvé de réponse ? Écrivez un e-mail depuis l'onglet « Contacts » ou ouvrez une issue dans le dépôt. L'auteur lit les deux.</p>",
+			"<p class=\"hdim\" style=\"margin-top:16px\">Vous n'avez pas trouvé de réponse ? Écrivez un e-mail depuis l'onglet « Contacts » ou signalez le problème dans le dépôt. L'auteur lit les deux.</p>",
 		"S_WIZ_HELLO":      "Deux minutes de configuration",
 		"S_WIZ_HELLO_TEXT": "{app} transforme votre voix en texte à l'endroit du curseur : maintenez le raccourci, dites une phrase, relâchez — le texte est là. Tout tourne sur votre machine, le son n'en sort jamais.",
 		"S_WIZ_LATER":      "Tout ce que nous choisissons ici se modifie ensuite dans les paramètres.",
@@ -2412,11 +2422,16 @@ func init() {
 		"S_DEP_WINLOADER": "carga de DLL dentro de go-webview2",
 		"S_DEP_PLEX": "tipografía de la interfaz",
 		"S_DEP_HF": "catálogo del que se descargan los modelos",
-		"S_CONTACT_HINT": "Un fallo, una idea, una duda sobre un ajuste: escriba un correo si es personal, o abra un issue si es un fallo.",
+		"S_CONTACT_HINT": "Una pregunta personal, por correo. Un fallo o una idea es mejor anotarlos en el repositorio: allí los ve todo el mundo y se ve qué se hizo con ellos.",
 		"S_CONTACT_REPO": "Repositorio",
 		"S_CONTACT_ISSUES": "Fallos e ideas",
-		"S_CONTACT_WRITE": "Escribir un correo",
+		"S_CONTACT_WRITE": "Escribir",
 		"S_CONTACT_OPEN": "Abrir",
+		"S_CONTACT_REPORT": "Informar",
+		"S_CONTACT_COPY": "Copiar",
+		"S_CONTACT_MAIL_WHY": "Una pregunta que no es para todos: un ajuste, el trabajo, algo personal.",
+		"S_CONTACT_REPO_WHY": "El código del programa, todas las versiones y cómo compilarlo uno mismo.",
+		"S_CONTACT_ISSUES_WHY": "Un fallo o una idea a la vista de todos, con la respuesta y lo que se hizo.",
 		"S_STATE_ACTIVE": "Reconoce",
 		"S_STATE_USED": "Modelos en uso",
 		"S_STATE_INST": "Instalados localmente",
@@ -2682,7 +2697,7 @@ func init() {
 			"<p>Tres filas: idioma de la interfaz, diseño y color. No influyen en absoluto en el funcionamiento.</p>" +
 			"<table class=\"hopt\">" +
 			"<tr><td>Idioma de la interfaz</td><td>El idioma de la ventana de ajustes y de los textos de la barra. No tiene nada que ver con el idioma de dictado: la ventana puede estar en español mientras dictas en inglés.</td></tr>" +
-			"<tr><td>Diseño</td><td>El aspecto general. Hay siete: «Editor» (por defecto: gris oscuro con azul), «Fluent» (como la Configuración de Windows 11), «Estudio» (grafito con naranja, casi sin esquinas redondeadas), «Suave» (lila claro, redondeado), «Documento» (papel con azul), «Neón» (violeta con un degradado de rosa a turquesa) y «Terminal» (letras verdes sobre negro, corchetes alrededor de los botones). Los siete usan la misma tipografía, IBM Plex Mono.</td></tr>" +
+			"<tr><td>Diseño</td><td>El aspecto general. Hay siete: «Editor» (por defecto: gris oscuro con azul), «Fluent» (como la Configuración de Windows 11), «Estudio» (grafito con naranja, casi sin esquinas redondeadas), «Suave» (lila claro, redondeado), «Documento» (papel con azul), «Neón» (violeta con un degradado de rosa a turquesa) y «Terminal» (letras verdes sobre negro, corchetes alrededor de los botones). Los siete usan la misma tipografía, IBM Plex Mono. Se elige con una tarjeta: cada una muestra una ventana pequeña en ese diseño y su nombre, y la ventana de ajustes cambia al momento.</td></tr>" +
 			"<tr><td>Color</td><td>Un tono solo para «Terminal»: verde, ámbar, azul, rosa. La barra y el icono de la bandeja toman el mismo color. Los demás diseños tienen sus propios colores, y la fila se oculta.</td></tr>" +
 			"</table>" +
 			"<p class=\"hsub\">Inicio y actualizaciones</p>" +
@@ -2857,7 +2872,7 @@ func init() {
 			"<div class=\"hwarn\">Las personas con las que hablas deben saber que se transcribe lo que dicen.</div>" +
 			"<p class=\"wh\" id=\"s-about\">«Acerca de» y «Contactos»</p>" +
 			"<p>La pestaña «Acerca de» tiene un breve texto sobre qué es la aplicación y cómo está hecha, y la lista de todas las bibliotecas de terceros con las que está construida, con sus licencias. Los nombres son enlaces y llevan a las páginas de esos proyectos. También hay un enlace al repositorio, donde están el código fuente y todas las versiones.</p>" +
-			"<p>«Contactos» tiene tres tarjetas: el correo, el repositorio y una página para fallos e ideas. Al hacer clic en la dirección de correo se abre tu programa de correo con el destinatario ya puesto, y el icono de al lado simplemente copia la dirección.</p>" +
+			"<p>«Contactos» tiene tres tarjetas: el correo, el repositorio y una página para fallos e ideas. Cada una dice para qué sirve y muestra la dirección, que puedes seleccionar y copiar. Abajo hay un solo botón: «Escribir» abre tu programa de correo con el destinatario ya puesto, «Abrir» abre el repositorio en el navegador e «Informar», la página de fallos e ideas. El icono junto a la dirección de correo la copia.</p>" +
 			"<p class=\"wh\" id=\"s-files\">Qué hay en la carpeta de la aplicación</p>" +
 			"<p>La aplicación es portátil: todo lo suyo está en una sola carpeta y no se esparce por ningún otro sitio.</p>" +
 			"<table class=\"hopt\">" +
@@ -2890,7 +2905,7 @@ func init() {
 			"<tr><td>El texto sale raro, con palabras cambiadas</td><td>Mira en «Reglas»: lo más probable es que haya actuado un reemplazo o un comando de voz.</td></tr>" +
 			"<tr><td>Nada de lo anterior</td><td>«Sistema» → «Abrir el registro». La aplicación anota ahí todo lo que hace, y el motivo suele estar explicado con palabras.</td></tr>" +
 			"</table>" +
-			"<p class=\"hdim\" style=\"margin-top:16px\">¿No encontraste la respuesta? Escribe un correo desde la pestaña «Contactos» o abre un issue en el repositorio. El autor lee las dos cosas.</p>",
+			"<p class=\"hdim\" style=\"margin-top:16px\">¿No encontraste la respuesta? Escribe un correo desde la pestaña «Contactos» o abre una incidencia en el repositorio. El autor lee las dos cosas.</p>",
 		"S_WIZ_HELLO":      "Dos minutos de configuración",
 		"S_WIZ_HELLO_TEXT": "{app} convierte tu voz en texto justo donde está el cursor: mantén la combinación, di una frase, suelta y el texto aparece. Todo se procesa en tu equipo; el audio nunca sale de él.",
 		"S_WIZ_LATER":      "Todo lo que elijamos ahora se puede cambiar después en los ajustes.",
@@ -3186,11 +3201,16 @@ func init() {
 		"S_DEP_WINLOADER": "caricamento delle DLL dentro go-webview2",
 		"S_DEP_PLEX": "carattere dell’interfaccia",
 		"S_DEP_HF": "catalogo da cui si scaricano i modelli",
-		"S_CONTACT_HINT": "Un bug, un’idea, una domanda su un’impostazione: scrivi un’email se è personale, o apri una issue se è un bug.",
+		"S_CONTACT_HINT": "Una domanda personale va per e-mail. Un bug o un’idea è meglio annotarli nel repository: lì li vedono tutti e si vede che cosa ne è stato fatto.",
 		"S_CONTACT_REPO": "Repository",
 		"S_CONTACT_ISSUES": "Bug e idee",
-		"S_CONTACT_WRITE": "Scrivere un’email",
+		"S_CONTACT_WRITE": "Scrivi",
 		"S_CONTACT_OPEN": "Apri",
+		"S_CONTACT_REPORT": "Segnala",
+		"S_CONTACT_COPY": "Copia",
+		"S_CONTACT_MAIL_WHY": "Una domanda non per tutti: un’impostazione, il lavoro, qualcosa di personale.",
+		"S_CONTACT_REPO_WHY": "Il codice del programma, tutte le versioni e come compilarlo da sé.",
+		"S_CONTACT_ISSUES_WHY": "Un bug o un’idea sotto gli occhi di tutti, con la risposta e ciò che è stato fatto.",
 		"S_STATE_ACTIVE": "Riconosce",
 		"S_STATE_USED": "Modelli in uso",
 		"S_STATE_INST": "Installati localmente",
@@ -3456,7 +3476,7 @@ func init() {
 			"<p>Tre righe: lingua dell'interfaccia, design e colore. Sul funzionamento non influiscono per niente.</p>" +
 			"<table class=\"hopt\">" +
 			"<tr><td>Lingua dell'interfaccia</td><td>La lingua della finestra delle impostazioni e delle scritte sulla barra. Con la lingua di dettatura non ha niente a che fare: la finestra può essere in italiano mentre detti in inglese.</td></tr>" +
-			"<tr><td>Design</td><td>L'aspetto generale. Sono sette: «Editor» (predefinito: grigio scuro con blu), «Fluent» (come le Impostazioni di Windows 11), «Studio» (grafite con arancione, quasi senza angoli arrotondati), «Morbido» (lilla chiaro, arrotondato), «Documento» (carta con blu), «Neon» (viola con una sfumatura dal rosa al turchese) e «Terminale» (lettere verdi su nero, parentesi quadre attorno ai pulsanti). Tutti e sette usano lo stesso carattere, IBM Plex Mono.</td></tr>" +
+			"<tr><td>Design</td><td>L'aspetto generale. Sono sette: «Editor» (predefinito: grigio scuro con blu), «Fluent» (come le Impostazioni di Windows 11), «Studio» (grafite con arancione, quasi senza angoli arrotondati), «Morbido» (lilla chiaro, arrotondato), «Documento» (carta con blu), «Neon» (viola con una sfumatura dal rosa al turchese) e «Terminale» (lettere verdi su nero, parentesi quadre attorno ai pulsanti). Tutti e sette usano lo stesso carattere, IBM Plex Mono. Si sceglie con una scheda: ognuna mostra una piccola finestra in quel design e il suo nome, e la finestra delle impostazioni cambia subito.</td></tr>" +
 			"<tr><td>Colore</td><td>Una tinta solo per «Terminale»: verde, ambra, blu, rosa. Dello stesso colore diventano anche la barra e l'icona nell'area di notifica. Gli altri design hanno colori propri, e la riga si nasconde.</td></tr>" +
 			"</table>" +
 			"<p class=\"hsub\">Avvio e aggiornamenti</p>" +
@@ -3631,7 +3651,7 @@ func init() {
 			"<div class=\"hwarn\">Le persone con cui parli devono sapere che le loro parole vengono trascritte.</div>" +
 			"<p class=\"wh\" id=\"s-about\">«Informazioni» e «Contatti»</p>" +
 			"<p>Nella scheda «Informazioni» c'è un breve testo su che cos'è l'app e su come è fatta, e l'elenco di tutte le librerie di terzi con cui è costruita, con le loro licenze. I nomi sono cliccabili e portano alle pagine di quei progetti. C'è anche un link al repository, dove si trovano il codice sorgente e tutte le versioni.</p>" +
-			"<p>«Contatti» ha tre riquadri: l'e-mail, il repository e una pagina per bug e idee. Un clic sull'indirizzo e-mail apre il tuo programma di posta con il destinatario già compilato, e l'icona accanto copia semplicemente l'indirizzo.</p>" +
+			"<p>«Contatti» ha tre riquadri: l'e-mail, il repository e una pagina per bug e idee. Ognuno dice a che cosa serve e riporta l'indirizzo, che puoi selezionare e copiare. In basso c'è un solo pulsante: «Scrivi» apre il tuo programma di posta con il destinatario già compilato, «Apri» apre il repository nel browser, «Segnala» la pagina di bug e idee. L'icona accanto all'indirizzo e-mail lo copia.</p>" +
 			"<p class=\"wh\" id=\"s-files\">Che cosa c'è nella cartella dell'app</p>" +
 			"<p>L'app è portabile: tutte le sue cose stanno in una sola cartella e non si spargono da nessun'altra parte.</p>" +
 			"<table class=\"hopt\">" +
@@ -3664,7 +3684,7 @@ func init() {
 			"<tr><td>Il testo è strano, alcune parole sono cambiate</td><td>Dai un'occhiata a «Regole»: molto probabilmente è scattata una sostituzione o un comando vocale.</td></tr>" +
 			"<tr><td>Nessuno dei casi precedenti</td><td>«Sistema» → «Apri il registro». L'app ci scrive tutto di sé, e il motivo di solito è spiegato a parole.</td></tr>" +
 			"</table>" +
-			"<p class=\"hdim\" style=\"margin-top:16px\">Non hai trovato la risposta? Scrivi un'e-mail dalla scheda «Contatti» o apri una issue nel repository. L'autore legge entrambe.</p>",
+			"<p class=\"hdim\" style=\"margin-top:16px\">Non hai trovato la risposta? Scrivi un'e-mail dalla scheda «Contatti» o segnala il problema nel repository. L'autore legge entrambe.</p>",
 		"S_WIZ_HELLO":      "Due minuti di configurazione",
 		"S_WIZ_HELLO_TEXT": "{app} trasforma la voce in testo proprio dove si trova il cursore: tieni premuta la combinazione, pronuncia una frase, rilascia — il testo è lì. Tutto gira sul tuo computer, l'audio non esce mai.",
 		"S_WIZ_LATER":      "Tutto quello che scegliamo ora si può cambiare dopo nelle impostazioni.",
@@ -3960,11 +3980,16 @@ func init() {
 		"S_DEP_WINLOADER": "ładowanie DLL w go-webview2",
 		"S_DEP_PLEX": "czcionka interfejsu",
 		"S_DEP_HF": "katalog, z którego pobierane są modele",
-		"S_CONTACT_HINT": "Błąd, pomysł, pytanie o ustawienie — napisz e-mail, jeśli sprawa jest osobista, albo załóż issue, jeśli to błąd.",
+		"S_CONTACT_HINT": "Osobiste pytanie — na e-mail. Błąd albo pomysł lepiej zapisać w repozytorium: tam widzą go wszyscy i widać, co z nim zrobiono.",
 		"S_CONTACT_REPO": "Repozytorium",
 		"S_CONTACT_ISSUES": "Błędy i pomysły",
-		"S_CONTACT_WRITE": "Napisz e-mail",
+		"S_CONTACT_WRITE": "Napisz",
 		"S_CONTACT_OPEN": "Otwórz",
+		"S_CONTACT_REPORT": "Zgłoś",
+		"S_CONTACT_COPY": "Kopiuj",
+		"S_CONTACT_MAIL_WHY": "Pytanie nie dla wszystkich: ustawienie, praca, coś osobistego.",
+		"S_CONTACT_REPO_WHY": "Kod programu, wszystkie wersje i jak go samemu zbudować.",
+		"S_CONTACT_ISSUES_WHY": "Błąd albo pomysł na widoku wszystkich, z odpowiedzią i tym, co zrobiono.",
 		"S_STATE_ACTIVE": "Rozpoznaje",
 		"S_STATE_USED": "Modele w użyciu",
 		"S_STATE_INST": "Zainstalowane lokalnie",
@@ -4230,7 +4255,7 @@ func init() {
 			"<p>Trzy wiersze: język interfejsu, wygląd i kolor. Na działanie aplikacji nie wpływają wcale.</p>" +
 			"<table class=\"hopt\">" +
 			"<tr><td>Język interfejsu</td><td>Język okna ustawień i napisów na pasku. Z językiem dyktowania nie ma nic wspólnego: okno może być po polsku, a dyktować będziesz po angielsku.</td></tr>" +
-			"<tr><td>Wygląd</td><td>Ogólny styl. Jest ich siedem: „Edytor” (domyślny: ciemnoszary z niebieskim), „Fluent” (jak Ustawienia w Windows 11), „Studio” (grafit z pomarańczowym, prawie bez zaokrągleń), „Miękki” (jasny liliowy, zaokrąglony), „Dokument” (papier z niebieskim), „Neon” (fiolet z gradientem od różu do turkusu) i „Terminal” (zielone litery na czarnym tle, nawiasy wokół przycisków). Każdy z nich używa tej samej czcionki, IBM Plex Mono.</td></tr>" +
+			"<tr><td>Wygląd</td><td>Ogólny styl. Jest ich siedem: „Edytor” (domyślny: ciemnoszary z niebieskim), „Fluent” (jak Ustawienia w Windows 11), „Studio” (grafit z pomarańczowym, prawie bez zaokrągleń), „Miękki” (jasny liliowy, zaokrąglony), „Dokument” (papier z niebieskim), „Neon” (fiolet z gradientem od różu do turkusu) i „Terminal” (zielone litery na czarnym tle, nawiasy wokół przycisków). Każdy z nich używa tej samej czcionki, IBM Plex Mono. Wybiera się go kartą: każda pokazuje małe okno w tym wyglądzie i jego nazwę, a okno ustawień zmienia się od razu.</td></tr>" +
 			"<tr><td>Kolor</td><td>Odcień tylko dla stylu „Terminal”: zielony, bursztynowy, niebieski, różowy. W tym samym kolorze będą pasek i ikona w zasobniku. Pozostałe style mają własne kolory i ten wiersz się chowa.</td></tr>" +
 			"</table>" +
 			"<p class=\"hsub\">Uruchamianie i aktualizacje</p>" +
@@ -4405,7 +4430,7 @@ func init() {
 			"<div class=\"hwarn\">Twoi rozmówcy powinni wiedzieć, że ich słowa są zapisywane.</div>" +
 			"<p class=\"wh\" id=\"s-about\">„O programie” i „Kontakty”</p>" +
 			"<p>Na zakładce „O programie” jest krótki opis tego, czym jest aplikacja i jak jest zbudowana, oraz lista wszystkich zewnętrznych bibliotek, z których się składa, wraz z licencjami. Nazwy są klikalne i prowadzą do stron tych projektów. Jest tam też link do repozytorium, w którym leżą kod źródłowy i wszystkie wersje.</p>" +
-			"<p>„Kontakty” to trzy karty: e-mail, repozytorium i strona na błędy i pomysły. Kliknięcie adresu e-mail otworzy twój program pocztowy z wypełnionym już odbiorcą, a ikona obok po prostu skopiuje adres.</p>" +
+			"<p>„Kontakty” to trzy karty: e-mail, repozytorium i strona na błędy i pomysły. Każda mówi, do czego służy, i podaje adres, który można zaznaczyć i skopiować. Na dole jest jeden przycisk: „Napisz” otworzy twój program pocztowy z wypełnionym już odbiorcą, „Otwórz” — repozytorium w przeglądarce, „Zgłoś” — stronę błędów i pomysłów. Ikona obok adresu e-mail kopiuje go.</p>" +
 			"<p class=\"wh\" id=\"s-files\">Co jest w folderze aplikacji</p>" +
 			"<p>Aplikacja jest przenośna: wszystko, co do niej należy, leży w jednym folderze i nie trafia nigdzie indziej.</p>" +
 			"<table class=\"hopt\">" +
@@ -4438,7 +4463,7 @@ func init() {
 			"<tr><td>Tekst jest dziwny, słowa są zamienione</td><td>Zajrzyj na zakładkę „Reguły”: najpewniej zadziałała zamiana albo komenda głosowa.</td></tr>" +
 			"<tr><td>Nic z powyższego</td><td>„System” → „Otwórz dziennik”. Aplikacja zapisuje tam wszystko o sobie, a przyczyna jest zwykle opisana słowami.</td></tr>" +
 			"</table>" +
-			"<p class=\"hdim\" style=\"margin-top:16px\">Nie ma tu odpowiedzi? Napisz e-mail z zakładki „Kontakty” albo załóż issue w repozytorium. Jedno i drugie czyta autor.</p>",
+			"<p class=\"hdim\" style=\"margin-top:16px\">Nie ma tu odpowiedzi? Napisz e-mail z zakładki „Kontakty” albo zgłoś problem w repozytorium. Jedno i drugie czyta autor.</p>",
 		"S_WIZ_HELLO":      "Dwie minuty na konfigurację",
 		"S_WIZ_HELLO_TEXT": "{app} zamienia głos w tekst dokładnie w miejscu kursora: przytrzymaj skrót, powiedz zdanie, puść — tekst jest na miejscu. Wszystko liczy się na twoim komputerze, dźwięk nigdzie nie wychodzi.",
 		"S_WIZ_LATER":      "Wszystko, co teraz wybierzemy, można później zmienić w ustawieniach.",
@@ -4884,11 +4909,16 @@ func init() {
 		"S_DEP_WINLOADER": "завантаження DLL усередині go-webview2",
 		"S_DEP_PLEX": "шрифт інтерфейсу",
 		"S_DEP_HF": "каталог, звідки завантажуються моделі",
-		"S_CONTACT_HINT": "Помилка, ідея, питання про налаштування — пишіть на пошту, якщо розмова особиста, або створюйте issue, якщо це помилка.",
+		"S_CONTACT_HINT": "Особисте питання — на пошту. Помилку чи ідею краще записати в репозиторії: там її бачать усі й видно, що з нею зроблено.",
 		"S_CONTACT_REPO": "Репозиторій",
 		"S_CONTACT_ISSUES": "Помилки та ідеї",
-		"S_CONTACT_WRITE": "Написати листа",
+		"S_CONTACT_WRITE": "Написати",
 		"S_CONTACT_OPEN": "Відкрити",
+		"S_CONTACT_REPORT": "Повідомити",
+		"S_CONTACT_COPY": "Скопіювати",
+		"S_CONTACT_MAIL_WHY": "Питання, яке не для всіх: налаштування, робота, щось особисте.",
+		"S_CONTACT_REPO_WHY": "Код програми, усі версії і як зібрати її самому.",
+		"S_CONTACT_ISSUES_WHY": "Помилка чи ідея на виду в усіх, з відповіддю і тим, що зроблено.",
 		"S_STATE_ACTIVE": "Розпізнає",
 		"S_STATE_USED": "Задіяні моделі",
 		"S_STATE_INST": "Встановлені локально",
@@ -5124,7 +5154,7 @@ func init() {
 			"<p>Три рядки: мова інтерфейсу, дизайн і колір. На роботу вони зовсім не впливають.</p>" +
 			"<table class=\"hopt\">" +
 			"<tr><td>Мова інтерфейсу</td><td>Мова вікна налаштувань і написів на смужці. До мови диктування стосунку не має: вікно може бути українською, а диктувати ви будете англійською.</td></tr>" +
-			"<tr><td>Дизайн</td><td>Загальний вигляд. Їх сім: «Редактор» (за замовчуванням: темно-сірий із синім), «Fluent» (як у Параметрах Windows 11), «Студія» (графіт із помаранчевим, майже без заокруглень), «М'який» (світло-бузковий, заокруглений), «Документ» (папір із синім), «Неон» (фіолетовий із градієнтом від рожевого до бірюзового) і «Термінал» (зелені літери на чорному, дужки навколо кнопок). Усі сім набрано одним шрифтом, IBM Plex Mono.</td></tr>" +
+			"<tr><td>Дизайн</td><td>Загальний вигляд. Їх сім: «Редактор» (за замовчуванням: темно-сірий із синім), «Fluent» (як у Параметрах Windows 11), «Студія» (графіт із помаранчевим, майже без заокруглень), «М'який» (світло-бузковий, заокруглений), «Документ» (папір із синім), «Неон» (фіолетовий із градієнтом від рожевого до бірюзового) і «Термінал» (зелені літери на чорному, дужки навколо кнопок). Усі сім набрано одним шрифтом, IBM Plex Mono. Його обирають карткою: у кожній — маленьке вікно в цьому дизайні та його назва, і вікно налаштувань змінюється одразу.</td></tr>" +
 			"<tr><td>Колір</td><td>Відтінок лише для дизайну «Термінал»: зелений, бурштиновий, синій, рожевий. Того самого кольору будуть смужка і значок біля годинника. В інших дизайнів кольори свої, і цей рядок ховається.</td></tr>" +
 			"</table>" +
 			"<p class=\"hsub\">Запуск і оновлення</p>" +
@@ -5299,7 +5329,7 @@ func init() {
 			"<div class=\"hwarn\">Співрозмовники мають знати, що їхнє мовлення записується текстом.</div>" +
 			"<p class=\"wh\" id=\"s-about\">«Про програму» і «Контакти»</p>" +
 			"<p>На вкладці «Про програму» є коротка розповідь про те, що це таке і як воно влаштоване, а також список усіх сторонніх бібліотек, з яких зібрано застосунок, з їхніми ліцензіями. Назви клікабельні й ведуть на сторінки цих проєктів. Там же є посилання на репозиторій, де лежать вихідний код і всі версії.</p>" +
-			"<p>Вкладка «Контакти» містить три картки: пошта, репозиторій і сторінка для помилок та ідей. Клацання по адресі пошти відкриє вашу поштову програму з уже заповненим одержувачем, а значок поруч просто скопіює адресу.</p>" +
+			"<p>Вкладка «Контакти» містить три картки: пошта, репозиторій і сторінка для помилок та ідей. У кожній сказано, для чого вона, і написано адресу — її можна виділити й скопіювати. Унизу одна кнопка: «Написати» відкриє вашу поштову програму з уже заповненим одержувачем, «Відкрити» — репозиторій у браузері, «Повідомити» — сторінку помилок та ідей. Значок поруч з адресою пошти копіює адресу.</p>" +
 			"<p class=\"wh\" id=\"s-files\">Що лежить у теці застосунку</p>" +
 			"<p>Застосунок портативний: усе його господарство лежить в одній теці й більше нікуди не розповзається.</p>" +
 			"<table class=\"hopt\">" +
@@ -5332,7 +5362,7 @@ func init() {
 			"<tr><td>Текст дивний, слова замінено</td><td>Зазирніть на вкладку «Правила»: найімовірніше, спрацювала заміна або голосова команда.</td></tr>" +
 			"<tr><td>Нічого з переліченого</td><td>«Система» → «Відкрити лог». Застосунок пише про себе все, і причину зазвичай описано словами.</td></tr>" +
 			"</table>" +
-			"<p class=\"hdim\" style=\"margin-top:16px\">Не знайшли відповіді? Напишіть на пошту з вкладки «Контакти» або створіть issue в репозиторії. І те, й інше читає автор.</p>",
+			"<p class=\"hdim\" style=\"margin-top:16px\">Не знайшли відповіді? Напишіть на пошту з вкладки «Контакти» або запишіть помилку в репозиторії. І те, й інше читає автор.</p>",
 		"S_WIZ_HELLO":      "Дві хвилини на налаштування",
 		"S_WIZ_HELLO_TEXT": "{app} перетворює голос на текст просто в позиції курсора: затиснули сполучення клавіш, сказали фразу, відпустили — текст на місці. Усе рахується на вашому комп'ютері, звук нікуди не йде.",
 		"S_WIZ_LATER":      "Усе, що ми зараз оберемо, потім змінюється в налаштуваннях.",

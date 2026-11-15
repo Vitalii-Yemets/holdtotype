@@ -934,11 +934,16 @@ var settingsStrings = map[string]map[string]string{
 		"S_DEP_WINLOADER":   "Загружает библиотеки WebView2 в память процесса. Служебная часть go-webview2, отдельно не используется.",
 		"S_DEP_PLEX":        "Шрифт интерфейса. Вшит в приложение, поэтому окно выглядит одинаково на любой машине, даже если такого шрифта в системе нет.",
 		"S_DEP_HF":          "Каталог, откуда качаются модели распознавания и постобработки. Обращение к нему происходит только когда вы сами нажимаете «Скачать».",
-		"S_CONTACT_HINT":    "Ошибка, идея, вопрос по настройке — пишите на почту, если разговор личный, или заводите issue, если это ошибка.",
+		"S_CONTACT_HINT":    "Личный вопрос — на почту. Ошибку или идею лучше записать в репозитории: там её видно всем и видно, что с ней сделано.",
 		"S_CONTACT_REPO":    "Репозиторий",
 		"S_CONTACT_ISSUES":  "Ошибки и идеи",
-		"S_CONTACT_WRITE":   "Написать письмо",
+		"S_CONTACT_WRITE":   "Написать",
 		"S_CONTACT_OPEN":    "Открыть",
+		"S_CONTACT_REPORT": "Сообщить",
+		"S_CONTACT_COPY": "Скопировать",
+		"S_CONTACT_MAIL_WHY": "Вопрос, который не для всех: настройка, работа, что-то личное.",
+		"S_CONTACT_REPO_WHY": "Код программы, все версии и как собрать её самому.",
+		"S_CONTACT_ISSUES_WHY": "Ошибка или идея на виду у всех, с ответом и тем, что сделано.",
 		"S_DICT_MODEL":     "Модель распознавания",
 		"S_LIB_ACC":        "точность",
 		"S_LIB_SPD":        "скорость",
@@ -1164,7 +1169,7 @@ var settingsStrings = map[string]map[string]string{
 			"<p>Три строки: язык интерфейса, дизайн и цвет. На работу они не влияют совсем.</p>" +
 			"<table class=\"hopt\">" +
 			"<tr><td>Язык интерфейса</td><td>Язык окна настроек и подписей на плашке. К языку диктовки отношения не имеет: окно может быть русским, а говорить вы будете по-английски.</td></tr>" +
-			"<tr><td>Дизайн</td><td>Общий облик. Их семь: «Редактор» (по умолчанию: тёмно-серый с синим), «Fluent» (как в параметрах Windows 11), «Студия» (графит с оранжевым, почти без скруглений), «Мягкий» (светло-сиреневый, округлый), «Документ» (бумага с синим), «Неон» (фиолетовый с градиентом от розового к бирюзовому) и «Терминал» (зелёные буквы на чёрном, скобки вокруг кнопок). Все семь набраны одним шрифтом, IBM Plex Mono.</td></tr>" +
+			"<tr><td>Дизайн</td><td>Общий облик. Их семь: «Редактор» (по умолчанию: тёмно-серый с синим), «Fluent» (как в параметрах Windows 11), «Студия» (графит с оранжевым, почти без скруглений), «Мягкий» (светло-сиреневый, округлый), «Документ» (бумага с синим), «Неон» (фиолетовый с градиентом от розового к бирюзовому) и «Терминал» (зелёные буквы на чёрном, скобки вокруг кнопок). Все семь набраны одним шрифтом, IBM Plex Mono. Его выбирают карточкой: в каждой — маленькое окно в этом дизайне и его название, и окно настроек меняется сразу.</td></tr>" +
 			"<tr><td>Цвет</td><td>Оттенок только для «Терминала»: зелёный, янтарный, синий, розовый. Тем же цветом будет плашка и значок у часов. У остальных дизайнов цвета свои, и строка прячется.</td></tr>" +
 			"</table>" +
 			"<p class=\"hsub\">Запуск и обновления</p>" +
@@ -1339,7 +1344,7 @@ var settingsStrings = map[string]map[string]string{
 			"<div class=\"hwarn\">Собеседники должны знать, что их речь записывается текстом.</div>" +
 			"<p class=\"wh\" id=\"s-about\">«О программе» и «Контакты»</p>" +
 			"<p>На вкладке «О программе» — короткий рассказ, что это и как устроено, и список всех чужих библиотек, из которых собрано приложение, с их лицензиями. Названия кликабельны и ведут на страницы этих проектов. Там же ссылка на репозиторий, где лежат исходный код и все версии.</p>" +
-			"<p>«Контакты» — три карточки: почта, репозиторий и страница для ошибок и идей. Щелчок по адресу почты откроет вашу почтовую программу с уже заполненным получателем, а иконка рядом просто скопирует адрес.</p>" +
+			"<p>«Контакты» — три карточки: почта, репозиторий и страница для ошибок и идей. В каждой сказано, для чего она, и написан адрес — его можно выделить и скопировать. Внизу одна кнопка: «Написать» откроет вашу почтовую программу с уже заполненным получателем, «Открыть» — репозиторий в браузере, «Сообщить» — страницу ошибок и идей. Значок рядом с адресом почты копирует адрес.</p>" +
 			"<p class=\"wh\" id=\"s-files\">Что лежит в папке приложения</p>" +
 			"<p>Приложение портативное: всё его хозяйство лежит в одной папке и никуда больше не расползается.</p>" +
 			"<table class=\"hopt\">" +
@@ -1372,7 +1377,7 @@ var settingsStrings = map[string]map[string]string{
 			"<tr><td>Текст странный, слова заменены</td><td>Загляните в «Правила»: скорее всего сработала замена или голосовая команда.</td></tr>" +
 			"<tr><td>Ничего из перечисленного</td><td>«Система» → «Открыть лог». Приложение пишет о себе всё, и причина обычно видна словами.</td></tr>" +
 			"</table>" +
-			"<p class=\"hdim\" style=\"margin-top:16px\">Не нашли ответа — напишите на почту со вкладки «Контакты» или заведите issue в репозитории. И то и другое читает автор.</p>",
+			"<p class=\"hdim\" style=\"margin-top:16px\">Не нашли ответа — напишите на почту со вкладки «Контакты» или запишите ошибку в репозитории. И то и другое читает автор.</p>",
 		"S_WIZ_HELLO":      "Две минуты на настройку",
 		"S_WIZ_HELLO_TEXT": "{app} превращает голос в текст прямо в позиции курсора: зажали сочетание клавиш, сказали фразу, отпустили — текст на месте. Всё считается на вашем компьютере, звук никуда не уходит.",
 		"S_WIZ_LATER":      "Всё, что мы сейчас выберем, потом меняется в настройках.",
@@ -1838,11 +1843,16 @@ var settingsStrings = map[string]map[string]string{
 		"S_DEP_WINLOADER":   "Loads the WebView2 libraries into the process. A helper part of go-webview2, never used on its own.",
 		"S_DEP_PLEX":        "The interface font. It is embedded in the app, so the window looks the same on any machine even when the font is not installed.",
 		"S_DEP_HF":          "The catalogue models are downloaded from. It is contacted only when you press Download yourself.",
-		"S_CONTACT_HINT":    "A bug, an idea, a question about a setting — write an email if it is personal, or open an issue if it is a bug.",
+		"S_CONTACT_HINT":    "A personal question goes to email. A bug or an idea is better written down in the repository: everyone can see it there, and see what was done about it.",
 		"S_CONTACT_REPO":    "Repository",
 		"S_CONTACT_ISSUES":  "Bugs and ideas",
-		"S_CONTACT_WRITE":   "Write an email",
+		"S_CONTACT_WRITE":   "Write",
 		"S_CONTACT_OPEN":    "Open",
+		"S_CONTACT_REPORT": "Report",
+		"S_CONTACT_COPY": "Copy",
+		"S_CONTACT_MAIL_WHY": "A question that is not for everyone: a setting, your work, something personal.",
+		"S_CONTACT_REPO_WHY": "The code of the program, every version, and how to build it yourself.",
+		"S_CONTACT_ISSUES_WHY": "A bug or an idea in plain sight, with the answer and what was done.",
 		"S_DICT_MODEL":     "Recognition model",
 		"S_LIB_ACC":        "accuracy",
 		"S_LIB_SPD":        "speed",
@@ -2068,7 +2078,7 @@ var settingsStrings = map[string]map[string]string{
 			"<p>Three rows: interface language, design and colour. They have no effect on how the app works.</p>" +
 			"<table class=\"hopt\">" +
 			"<tr><td>UI language</td><td>The language of the settings window and of the captions on the plate. It has nothing to do with the dictation language: the window can be in English while you speak German.</td></tr>" +
-			"<tr><td>Design</td><td>The overall look. There are seven: “Editor” (the default: dark grey with blue), “Fluent” (like Windows 11 Settings), “Studio” (graphite with orange, almost no rounded corners), “Soft” (light lilac, rounded), “Document” (paper with blue), “Neon” (purple with a pink-to-turquoise gradient) and “Terminal” (green letters on black, brackets around the buttons). All seven use one font, IBM Plex Mono.</td></tr>" +
+			"<tr><td>Design</td><td>The overall look. There are seven: “Editor” (the default: dark grey with blue), “Fluent” (like Windows 11 Settings), “Studio” (graphite with orange, almost no rounded corners), “Soft” (light lilac, rounded), “Document” (paper with blue), “Neon” (purple with a pink-to-turquoise gradient) and “Terminal” (green letters on black, brackets around the buttons). All seven use one font, IBM Plex Mono. You pick one with a card: each shows a small window in that design with its name, and the settings window changes at once.</td></tr>" +
 			"<tr><td>Colour</td><td>A tint for “Terminal” only: green, amber, blue, pink. The plate and the tray icon take the same colour. The other designs have colours of their own, and the row is hidden.</td></tr>" +
 			"</table>" +
 			"<p class=\"hsub\">Startup and updates</p>" +
@@ -2243,7 +2253,7 @@ var settingsStrings = map[string]map[string]string{
 			"<div class=\"hwarn\">The people you talk to should know they are being transcribed.</div>" +
 			"<p class=\"wh\" id=\"s-about\">“About” and “Contacts”</p>" +
 			"<p>The “About” tab has a short account of what this is and how it is built, and a list of all the third-party libraries the app is made from, with their licences. The names are clickable and lead to the pages of those projects. There is also a link to the repository, where the source code and all the versions live.</p>" +
-			"<p>“Contacts” has three cards: email, the repository, and a page for bugs and ideas. Clicking the email address opens your mail program with the recipient already filled in, and the icon next to it simply copies the address.</p>" +
+			"<p>“Contacts” has three cards: email, the repository, and a page for bugs and ideas. Each says what it is for and spells out the address, which you can select and copy. At the bottom is one button: “Write” opens your mail program with the recipient already filled in, “Open” opens the repository in the browser, and “Report” opens the page for bugs and ideas. The icon next to the email address copies it.</p>" +
 			"<p class=\"wh\" id=\"s-files\">What is in the app folder</p>" +
 			"<p>The app is portable: everything it owns lives in one folder and never spreads anywhere else.</p>" +
 			"<table class=\"hopt\">" +

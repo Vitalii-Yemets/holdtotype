@@ -1593,10 +1593,14 @@ button.btn.ghost:hover{color:var(--green);border-color:var(--dim);background:non
 .berr.upd .berrtext{color:var(--amber)}
 .berr .berrtext{flex:1 1 220px;color:var(--bad);min-width:0}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:12px}
-.ccard{min-height:98px;gap:6px}
-.ccard .v{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ccard .acts{margin-top:auto;display:flex;justify-content:flex-end;gap:2px}
-.ccard .iconbtn{padding:0 4px}
+#p-contacts .card>.hint{margin-bottom:9px}
+#contact_cards{grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch;margin:0}
+.scard.ccard{gap:6px;padding:11px 12px 12px;min-width:0}
+.scard.ccard .cwhy{font-size:11.5px;line-height:1.45;color:var(--dim)}
+.scard.ccard .caddr{display:flex;align-items:flex-start;gap:4px;margin-bottom:6px}
+.scard.ccard .cval{flex:1;min-width:0;font-size:11.5px;line-height:1.45;white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:normal;word-break:normal;user-select:text;cursor:text}
+.scard.ccard .ccopy{flex:none;margin-top:-1px;padding:0 4px}
+.scard.ccard .cmain{align-self:stretch;margin:auto 0 0;text-align:center;min-width:0;white-space:nowrap}
 .scard{border:1px solid var(--line);border-radius:var(--r);background:var(--panel);padding:9px 11px;display:flex;flex-direction:column;gap:5px}
 .scard .k{font-size:9.5px;letter-spacing:.12em;color:var(--dim);text-transform:uppercase}
 .scard .v{font-size:12.5px;color:var(--green)}
@@ -2047,11 +2051,31 @@ input.srcpick:disabled,input.srvpick:disabled{opacity:.4;cursor:default}
 #subs_hero .stsw.dimmed span{color:var(--dim)}
 #subs_hero .stlays{display:inline-flex;align-items:center;gap:8px}
 #subs_hero .stlays.off{opacity:.38;pointer-events:none}
-#subs_hero .stlay{position:relative;display:block;padding:4px;border:1px solid var(--line);border-radius:var(--r);background:var(--card);cursor:pointer;line-height:0}
+#subs_hero .stlay,#skin_cards .stlay{position:relative;display:block;padding:4px;border:1px solid var(--line);border-radius:var(--r);background:var(--card);cursor:pointer;line-height:0}
 #subs_hero .stlay svg{display:block;width:64px;height:auto}
-#subs_hero .stlay input{position:absolute;top:0;left:0;width:1px;height:1px;margin:0;opacity:0;pointer-events:none}
-#subs_hero .stlay.on{border-color:var(--hi);box-shadow:var(--higlow)}
-#subs_hero .stlay:has(input:focus-visible){outline:1px solid var(--green);outline-offset:2px}
+#subs_hero .stlay input,#skin_cards .stlay input{position:absolute;top:0;left:0;width:1px;height:1px;margin:0;opacity:0;pointer-events:none}
+#subs_hero .stlay.on,#skin_cards .stlay.on{border-color:var(--hi);box-shadow:var(--higlow)}
+#subs_hero .stlay:has(input:focus-visible),#skin_cards .stlay:has(input:focus-visible){outline:1px solid var(--green);outline-offset:2px}
+.dsrow{row-gap:9px}
+.dsrow>label{flex:1 1 100%}
+#skin_cards{flex:1 1 100%;min-width:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(var(--dmin,68px),1fr));gap:6px;font-size:11px}
+#skin_cards .stlay{display:flex;flex-direction:column;gap:5px;padding:4px 4px 5px;line-height:1.3;min-width:0}
+#skin_cards .dname{display:block;text-align:center;color:var(--dim);white-space:nowrap}
+#skin_cards .stlay.on .dname{color:var(--green)}
+.dthumb{position:relative;display:flex;width:100%;aspect-ratio:4/3;background:var(--bg);border:1px solid var(--line);border-radius:max(0px,calc(var(--r) - 4px));overflow:hidden;font-family:var(--font);color:var(--green);line-height:1;text-align:left;box-sizing:border-box}
+.dt-side{flex:0 0 21%;background:var(--sidebg);border-right:1px solid var(--line);padding:7px 3px 0;display:flex;flex-direction:column;gap:4px;box-sizing:border-box}
+.dt-side i{display:block;height:2px;border-radius:var(--barr);background:var(--faint)}
+.dt-side i.on{background:var(--hi);box-shadow:var(--higlow)}
+.dt-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;padding:5px 4px;box-sizing:border-box}
+.dt-title{display:block;flex:none;height:2px;width:46%;border-radius:var(--barr);background:var(--brandbg),linear-gradient(var(--dim),var(--dim))}
+.dt-card{flex:1;min-height:0;min-width:0;display:grid;grid-template-columns:auto auto;justify-content:space-between;align-content:center;align-items:center;gap:4px 2px;padding:3px;background:var(--card);border:var(--bw) solid var(--line);border-radius:calc(var(--cardr) * .45);box-sizing:border-box}
+.dt-aa{display:block;font-size:calc(var(--fs) * .7);letter-spacing:-.04em;font-weight:var(--wb);color:var(--green);text-shadow:var(--glow);white-space:nowrap}
+.dt-sw{position:relative;width:10px;height:6px;border:1px solid var(--swonline);background:var(--swonbg);border-radius:var(--switchr);box-sizing:border-box}
+.dt-sw::after{content:"";position:absolute;top:1px;right:1px;width:2px;height:2px;border-radius:var(--dotr,calc(var(--r) * .6));background:var(--swknob);box-shadow:var(--higlow)}
+.dt-btn{grid-column:1 / -1;height:6px;display:flex;align-items:center;justify-content:center;background:var(--btnbg);border:1px solid var(--btnline);border-radius:calc(var(--btnr) * .5);box-sizing:border-box}
+.dt-btn::before{content:"";display:block;width:45%;height:1px;background:var(--btnfg)}
+.dt-scan{position:absolute;inset:0;pointer-events:none;opacity:var(--scan);background:repeating-linear-gradient(transparent 0 2px,rgba(0,0,0,.10) 2px 3px)}
+.dthumb[data-skin="paper"] .dt-card{border-top-width:2px}
 #subs_src_quality .plates{align-items:center}
 #subs_src_quality .plates .hfhome{margin-left:0}
 #subs_src_quality .plates .acts{margin-left:auto}
@@ -2254,8 +2278,6 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
 .mock-cb{width:13px;height:13px;border:1px solid var(--dim);flex:none;display:inline-flex;align-items:center;justify-content:center;font-size:10px;color:var(--bg)}
 .mock-cb.on{background:var(--hi)}
 .mock-note{color:var(--dim);font-size:12px}
-.lnk{color:var(--green);text-decoration:underline;cursor:pointer}
-.lnk:hover{text-shadow:var(--glow)}
 </style></head><body>
 <div class="header">
  <div class="logo"><svg viewBox="0 0 64 64">
@@ -2759,8 +2781,8 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
      <option value="uk">Українська</option>
      <option value="ru">Русский</option>
     </select></div>
-   <div class="row"><label>{{S_SKIN}}<span class="sub">{{S_SKIN_SUB}}</span></label>
-    <select id="skin">
+   <div class="row dsrow"><label>{{S_SKIN}}<span class="sub">{{S_SKIN_SUB}}</span></label>
+    <select id="skin" hidden>
      <option value="editor">{{S_THEME_EDITOR}}</option>
      <option value="fluent">{{S_SKIN_FLUENT}}</option>
      <option value="studio">{{S_SKIN_STUDIO}}</option>
@@ -2768,7 +2790,8 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
      <option value="paper">{{S_SKIN_PAPER}}</option>
      <option value="neon">{{S_THEME_NEON}}</option>
      <option value="terminal">{{S_SKIN_TERMINAL}}</option>
-    </select></div>
+    </select>
+    <div class="stlays" id="skin_cards" role="radiogroup" aria-label="{{S_SKIN}}"></div></div>
    <div class="row" id="colour_row"><label>{{S_THEME}}<span class="sub">{{S_THEME_SUB}}</span></label>
     <span class="swatches" id="theme_swatches"></span>
     <select id="theme">
@@ -2842,21 +2865,24 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
  <div class="card">
   <label class="blklbl">{{S_CONTACT_TITLE}}</label>
   <div class="hint">{{S_CONTACT_HINT}}</div>
-  <div class="cards">
+  <div class="cards" id="contact_cards">
    <div class="scard ccard">
     <span class="k">{{S_CONTACT_MAIL}}</span>
-    <span class="v lnk" id="contact_mail" data-tip="{{S_CONTACT_WRITE}}"></span>
-    <div class="acts"><button type="button" class="iconbtn" id="mail_copy" title="{{S_HIST_COPY}}"></button><button type="button" class="iconbtn" id="mail_write" title="{{S_CONTACT_WRITE}}">&#9993;</button></div>
+    <span class="cwhy">{{S_CONTACT_MAIL_WHY}}</span>
+    <div class="caddr"><span class="v cval" id="contact_mail"></span><button type="button" class="iconbtn ccopy" id="mail_copy" title="{{S_CONTACT_COPY}}" aria-label="{{S_CONTACT_COPY}}"></button></div>
+    <button type="button" class="mini pri cmain" id="mail_write">{{S_CONTACT_WRITE}}</button>
    </div>
    <div class="scard ccard">
     <span class="k">{{S_CONTACT_REPO}}</span>
-    <span class="v lnk" id="contact_repo"></span>
-    <div class="acts"><button type="button" class="iconbtn" id="repo_open" title="{{S_CONTACT_OPEN}}">&#8599;</button></div>
+    <span class="cwhy">{{S_CONTACT_REPO_WHY}}</span>
+    <div class="caddr"><span class="v cval" id="contact_repo"></span></div>
+    <button type="button" class="mini pri cmain" id="repo_open">{{S_CONTACT_OPEN}}</button>
    </div>
    <div class="scard ccard">
     <span class="k">{{S_CONTACT_ISSUES}}</span>
-    <span class="v lnk" id="contact_issues">issues</span>
-    <div class="acts"><button type="button" class="iconbtn" id="issues_open" title="{{S_CONTACT_OPEN}}">&#8599;</button></div>
+    <span class="cwhy">{{S_CONTACT_ISSUES_WHY}}</span>
+    <div class="caddr"><span class="v cval" id="contact_issues"></span></div>
+    <button type="button" class="mini pri cmain" id="issues_open">{{S_CONTACT_REPORT}}</button>
    </div>
   </div>
  </div>
@@ -3023,15 +3049,83 @@ const THEMES = {{THEME_LIST}};
 function lookKey(skin, colour){
   return THEMES[skin + ":" + colour] ? skin + ":" + colour : skin;
 }
+function putThemeVars(style, vars){
+  (vars || "").split(";").forEach(part=>{
+    const at = part.indexOf(":");
+    if(at > 0) style.setProperty(part.slice(0, at).trim(), part.slice(at + 1));
+  });
+}
 function applyThemeVars(id){
   const p = THEMES[id] || THEMES["terminal:green"];
   if(!p) return;
-  const root = document.documentElement.style;
-  (p.vars || "").split(";").forEach(part=>{
-    const at = part.indexOf(":");
-    if(at > 0) root.setProperty(part.slice(0, at).trim(), part.slice(at + 1));
-  });
+  putThemeVars(document.documentElement.style, p.vars);
   document.documentElement.dataset.skin = p.skin || id;
+}
+const SKIN_THUMB = '<span class="dt-side"><i></i><i class="on"></i><i></i></span><span class="dt-main"><span class="dt-title"></span><span class="dt-card"><b class="dt-aa">Aa</b><span class="dt-sw"></span><span class="dt-btn"></span></span></span><span class="dt-scan"></span>';
+function buildSkinCards(){
+  const skin = document.getElementById("skin");
+  const box = document.getElementById("skin_cards");
+  if(!skin || !box) return;
+  box.innerHTML = "";
+  let longest = 0;
+  [...skin.options].forEach(o=>{
+    const card = document.createElement("label");
+    card.className = "stlay";
+    card.dataset.v = o.value;
+    const pick = document.createElement("input");
+    pick.type = "radio";
+    pick.name = "skin_pick";
+    pick.value = o.value;
+    pick.setAttribute("aria-label", o.textContent);
+    const thumb = document.createElement("span");
+    thumb.className = "dthumb";
+    thumb.dataset.skin = o.value;
+    thumb.setAttribute("aria-hidden", "true");
+    thumb.innerHTML = SKIN_THUMB;
+    const name = document.createElement("span");
+    name.className = "dname";
+    name.textContent = o.textContent;
+    longest = Math.max(longest, [...o.textContent].length);
+    card.append(pick, thumb, name);
+    box.appendChild(card);
+  });
+  box.style.setProperty("--dmin", "calc(" + longest + "ch + 10px)");
+  box.addEventListener("change", e=>{
+    e.stopPropagation();
+    if(e.target.name !== "skin_pick" || !e.target.checked) return;
+    skin.value = e.target.value;
+    skin.dispatchEvent(new Event("change", {bubbles: true}));
+  });
+  box.addEventListener("keydown", e=>{
+    if(e.target.name !== "skin_pick") return;
+    const picks = [...box.querySelectorAll("input[name=skin_pick]")];
+    const at = picks.indexOf(e.target);
+    const step = {ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1}[e.key];
+    if(step){
+      e.preventDefault();
+      const next = picks[(at + step + picks.length) % picks.length];
+      next.focus();
+      next.click();
+    } else if(e.key === "Enter" || e.key === " "){
+      e.preventDefault();
+      e.target.click();
+    }
+  });
+}
+function paintSkinCards(){
+  const skin = document.getElementById("skin");
+  const colour = document.getElementById("theme");
+  const box = document.getElementById("skin_cards");
+  if(!skin || !box) return;
+  box.querySelectorAll(".stlay").forEach(card=>{
+    const on = card.dataset.v === skin.value;
+    card.classList.toggle("on", on);
+    card.querySelector("input").checked = on;
+  });
+  box.querySelectorAll(".dthumb").forEach(t=>{
+    const p = THEMES[lookKey(t.dataset.skin, colour ? colour.value : "")] || THEMES[t.dataset.skin + ":green"];
+    if(p) putThemeVars(t.style, p.vars);
+  });
 }
 function paintLook(){
   const skin = document.getElementById("skin");
@@ -3042,6 +3136,7 @@ function paintLook(){
   const ownColours = !THEMES[skin.value + ":" + colour.value] && !THEMES[skin.value + ":green"];
   if(row) row.style.display = ownColours ? "none" : "";
   applyThemeVars(lookKey(skin.value, colour.value));
+  paintSkinCards();
   if(box) box.querySelectorAll(".swatch").forEach(b=>b.classList.toggle("on", b.dataset.theme === colour.value));
   setTimeout(equalizeEq, 0);
 }
@@ -3066,6 +3161,7 @@ function initTheme(){
     b.onclick = ()=>{ colour.value = id; colour.dispatchEvent(new Event("change", {bubbles:true})); };
     box.appendChild(b);
   });
+  buildSkinCards();
   skin.addEventListener("change", paintLook);
   colour.addEventListener("change", paintLook);
   paintLook();
@@ -3259,16 +3355,23 @@ function renderDeps(){
     box.appendChild(row);
   });
 }
+function breakAddress(el, text){
+  if(!el) return;
+  el.textContent = "";
+  text.split(/(?=@)|(?<=\/)/).forEach((part, i)=>{
+    if(i) el.appendChild(document.createElement("wbr"));
+    el.appendChild(document.createTextNode(part));
+  });
+}
 function initContacts(){
   const mail = document.getElementById("contact_mail");
   if(!mail) return;
-  mail.textContent = CFG._mail || "";
-  const repo = document.getElementById("contact_repo");
-  if(repo) repo.textContent = (CFG._repo || "").replace(/^https?:\/\//, "");
-  const write = ()=>appMailLink();
-  mail.onclick = write;
+  const repoUrl = (CFG._repo || "").replace(/^https?:\/\//, "");
+  breakAddress(mail, CFG._mail || "");
+  breakAddress(document.getElementById("contact_repo"), repoUrl);
+  breakAddress(document.getElementById("contact_issues"), repoUrl + "/issues");
   const wbtn = document.getElementById("mail_write");
-  if(wbtn) wbtn.onclick = write;
+  if(wbtn) wbtn.onclick = ()=>appMailLink();
   const copy = document.getElementById("mail_copy");
   if(copy){
     copy.innerHTML = I_COPY;
@@ -3277,15 +3380,10 @@ function initContacts(){
       toast(r.message, r.severity);
     };
   }
-  const openRepo = ()=>appRepoLink();
-  if(repo) repo.onclick = openRepo;
   const rbtn = document.getElementById("repo_open");
-  if(rbtn) rbtn.onclick = openRepo;
-  const openIssues = ()=>appIssuesLink();
-  const issues = document.getElementById("contact_issues");
-  if(issues) issues.onclick = openIssues;
+  if(rbtn) rbtn.onclick = ()=>appRepoLink();
   const ibtn = document.getElementById("issues_open");
-  if(ibtn) ibtn.onclick = openIssues;
+  if(ibtn) ibtn.onclick = ()=>appIssuesLink();
 }
 function initSrvCards(){
   const card = document.getElementById("stt_srv_card");
@@ -4605,7 +4703,7 @@ function initSubs(){
   });
   document.querySelectorAll("#subs_who_card .srccard[data-who]").forEach(card=>{
     card.addEventListener("click", e=>{
-      if(e.target.closest(".acts, .lnk, .srcpick, .flang")) return;
+      if(e.target.closest(".acts, .srcpick, .flang")) return;
       if(card.classList.contains("idle")) subsChoose(card.dataset.who);
     });
   });
