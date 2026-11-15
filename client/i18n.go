@@ -138,7 +138,7 @@ var msgs = map[string]map[string]string{
 		"snd.clipped": "слишком громко, звук обрезался",
 		"snd.silent": "тишина в записи",
 		"status.parked": "Движок выгружен — нажмите сочетание, чтобы разбудить",
-		"status.nomodel.lang": "Для языка %s не установлена модель %s — откройте «Языки и модели»",
+		"status.nomodel.lang": "Для языка %s не установлена модель %s — откройте «Языки»",
 		"status.ready":          "Готов — зажмите %s и говорите",
 		"status.recording":      "Идёт запись…",
 		"status.transcribing":   "Распознаю…",
@@ -337,7 +337,7 @@ var msgs = map[string]map[string]string{
 		"snd.clipped": "too loud, the sound clipped",
 		"snd.silent": "silence in the recording",
 		"status.parked": "Engine unloaded — press the shortcut to wake it",
-		"status.nomodel.lang": "For %s the %s model is not installed — open Languages & models",
+		"status.nomodel.lang": "For %s the %s model is not installed — open Languages",
 		"status.ready":          "Ready — hold %s and speak",
 		"status.recording":      "Recording…",
 		"status.transcribing":   "Transcribing…",
@@ -522,7 +522,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_SUBS_M_PHRASES": "Писать будет %s: текст появляется после того, как закончится каждая фраза.",
 		"S_SUBS_M_ABSENT": "Для этого языка выбрана модель %s, но она не установлена.",
 		"S_SUBS_M_WHISPER": "%s — модель Whisper: на процессоре ей нужно много секунд на каждую фразу, и текст будет сильно отставать от речи. Для субтитров лучше подходит потоковая или быстрая модель.",
-		"S_SUBS_GO_MODELS": "Открыть «Языки и модели»",
+		"S_SUBS_GO_MODELS": "Открыть «Языки»",
 		"S_SUBS_REMOTE": "Распознавание идёт на другом компьютере: каждая фраза отправляется на этот сервер.",
 		"S_SUBS_TR": "Перевод",
 		"S_SUBS_TR_ONLY": "Показывать только перевод",
@@ -809,7 +809,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_HF_FIT": "только подходящие этому компьютеру",
 		"S_HF_HIDDEN": "скрыто: %s",
 		"S_WIZ_SKIP_DL": "Скачать позже",
-		"S_WIZ_SKIP_NOTE": "Без модели диктовка не заработает. Скачать можно в разделе «Языки и модели».",
+		"S_WIZ_SKIP_NOTE": "Без модели диктовка не заработает. Скачать можно на вкладке «Модели».",
 		"S_M_GIGAAM2": "прежнее поколение русской модели: та же скорость, но без знаков препинания",
 		"S_M_MOONUK": "украинская модель Moonshine: быстрая и лёгкая, без знаков препинания",
 		"S_M_LOCAL": "найдена в папке models; характеристики неизвестны, поэтому полосок нет",
@@ -907,7 +907,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_NAV_STATE":      "Состояние",
 		"S_NAV_DICT":       "Управление и поведение",
 		"S_NAV_MIC":        "Микрофон",
-		"S_NAV_MODELS":     "Языки и модели",
+		"S_NAV_MODELS":     "Языки",
 		"S_NAV_TEXT":       "Правила",
 		"S_NAV_TR":         "Перевод",
 		"S_NAV_SYSTEM":     "Система",
@@ -1180,7 +1180,7 @@ var settingsStrings = map[string]map[string]string{
 			"<p>Как запускается диктовка и как текст попадает в поле. Сюда заходят, когда что-то работает не так, как хочется: клавиши неудобные, текст не встаёт, Enter нажимается сам.</p>" +
 			"<p class=\"hsub\">Клавиши</p>" +
 			"<table class=\"hopt\">" +
-			"<tr><td>Сочетание клавиш</td><td>Нажмите «Изменить» и зажмите то, что вам удобно. Приложение перехватывает это сочетание во всей системе, поэтому не берите занятое — Ctrl+C, например. Реже всего заняты сочетания с клавишей Windows. У языка может быть и своё сочетание — оно назначается на вкладке «Языки и модели».</td></tr>" +
+			"<tr><td>Сочетание клавиш</td><td>Нажмите «Изменить» и зажмите то, что вам удобно. Приложение перехватывает это сочетание во всей системе, поэтому не берите занятое — Ctrl+C, например. Реже всего заняты сочетания с клавишей Windows. У языка может быть и своё сочетание — оно назначается на вкладке «Языки».</td></tr>" +
 			"<tr><td>Режим</td><td>«Удержание» — пишет, пока клавиши зажаты: отпустили, и фраза пошла в работу. «Фиксация» — первое нажатие включает запись, второе выключает. Второй режим удобен для длинных монологов, когда держать клавиши устаёт рука.</td></tr>" +
 			"<tr><td>Остановка по тишине</td><td>Только в режиме «фиксация». Когда вы уже что-то сказали, пауза той длины, что задана в «Пауза до остановки, мс», сама завершает запись, как будто вы снова нажали сочетание клавиш, а на плашке появляется «Остановлено по тишине». До ваших первых слов запись не остановится, так что после нажатия можно спокойно собраться с мыслями; если вы не скажете ничего, запись всё равно закончится по пределу «Максимальная запись, сек». Если включено «Нажимать Enter после вставки (автоотправка)», пауза отправит сообщение, поэтому выберите паузу подлиннее.</td></tr>" +
 			"<tr><td>Минимальная запись</td><td>Насколько короткое нажатие считать случайным. Задели клавиши на долю секунды — приложение промолчит, вместо того чтобы вставлять обрывок слова.</td></tr>" +
@@ -1203,7 +1203,7 @@ var settingsStrings = map[string]map[string]string{
 			"<tr><td>Экран</td><td>На каком мониторе показывать, если их несколько.</td></tr>" +
 			"<tr><td>Показывать распознанный текст</td><td>После вставки на плашке видно саму фразу, а не число символов. Удобно для проверки, но фразу увидит любой, кто смотрит на ваш экран.</td></tr>" +
 			"</table>" +
-			"<p class=\"wh\" id=\"s-models\">Вкладка «Языки и модели»</p>" +
+			"<p class=\"wh\" id=\"s-models\">Вкладка «Языки»</p>" +
 			"<p>Здесь вы говорите, на каком языке будете диктовать, а приложение решает, чем это распознавать. Моделей несколько: одни быстрые, другие точные, третьи знают редкие языки.</p>" +
 			"<table class=\"hopt\">" +
 			"<tr><td>Язык исходной речи</td><td>Язык, на котором вы говорите. Если языков несколько, поставьте «Автоопределение»: модель разберётся сама, хотя чуть медленнее и чуть менее точно, чем когда язык назван прямо.</td></tr>" +
@@ -1273,7 +1273,7 @@ var settingsStrings = map[string]map[string]string{
 			"<table class=\"hopt\">" +
 			"<tr><td>Запустить субтитры</td><td>Запускает и останавливает их. Строка рядом говорит, что происходит: выключено, загружается модель, идёт прослушивание или распознавание перезапускается. То же делают меню в трее, своё сочетание клавиш и крестик на окне.</td></tr>" +
 			"<tr><td>Сочетание клавиш</td><td>Запускает и останавливает субтитры из любого окна. Диктовку оно не начинает и не может повторять другое сочетание.</td></tr>" +
-			"<tr><td>Язык речи</td><td>Язык того, что вы слушаете, отдельно от языка диктовки. Модель — та, что этому языку дана на вкладке «Языки и модели». Потоковая модель пишет слова по ходу речи, остальные — каждую фразу после её конца. Модели Whisper на процессоре нужно много секунд на фразу, и её текст сильно отстаёт от речи; накопившиеся фразы уходят к ней вместе и выходят одной строкой.</td></tr>" +
+			"<tr><td>Язык речи</td><td>Язык того, что вы слушаете, отдельно от языка диктовки. Модель — та, что этому языку дана на вкладке «Языки». Потоковая модель пишет слова по ходу речи, остальные — каждую фразу после её конца. Модели Whisper на процессоре нужно много секунд на фразу, и её текст сильно отстаёт от речи; накопившиеся фразы уходят к ней вместе и выходят одной строкой.</td></tr>" +
 			"<tr><td>Перевод</td><td>Переключатель в заголовке включает перевод, «Язык перевода» выбирает, на какой язык. С переводом окно делится на две части: сверху тусклым цветом то, что было сказано, снизу перевод; границу между ними можно тянуть мышью, а «Строк текста» тогда считается для каждой части. Переключатель «Показывать только перевод» убирает услышанное: окно не делится, в нём один перевод, а расшифровка пишется как раньше. Заголовок окна говорит «Перевод» и языки, например EN → RU. Речь режется на фразы прямо по ходу, и каждая фраза сразу уходит на перевод; переводчик получает вместе с ней предыдущие фразы, так что предложение, разрезанное на части, переводится связно. Фраза, которую не удалось перевести, показывается так, как была услышана. Если перевод включён, но переводить нечем, под заголовком «Перевод» появляется строка, которая говорит почему, — это единственное место на вкладке, где сказано, что окно показывает текст без перевода. Перевод сохраняется отдельным файлом рядом с расшифровкой. Переводчика выбирают одной из трёх карточек ниже; сама программа его не меняет.</td></tr>" +
 			"<tr><td>Качественный</td><td>Модель перевода на видеокарте: переводит лучше всех, фраза за фразой, через мгновение после речи. Скачивается один раз, 2,3 ГБ, и нужна видеокарта, у которой не меньше 4 ГБ своей памяти; если видеокарта не подходит, эту карточку нельзя выбрать, и в ней сказано почему. Стрелка внизу карточки скачивает модель, крестик отменяет скачивание или, вторым щелчком, удаляет её. Если выбрать «Качественный», пока модель не скачана, программа спросит, начать ли загрузку. Модель загружается на видеокарту, когда начинаются субтитры, и уходит с неё, когда они заканчиваются; ссылка в карточке открывает условия её использования.</td></tr>" +
 			"<tr><td>Быстрый</td><td>Лёгкий движок перевода на процессоре: фраза занимает сотые доли секунды, а перевод дословнее, чем у модели. Ему нужны языковые пакеты, примерно по 35 МБ. Строка «языковые пакеты» показывает добавленные пары, например English → Русский; «Добавить пакет» открывает список пар на текущий язык перевода с размером того, что ещё нужно скачать, и щелчок по паре начинает загрузку. Пакеты есть только с английским, поэтому остальные пары переводятся в два шага, через английский, и им нужны оба пакета; общий пакет скачивается один раз. Крестик у пары отменяет загрузку или, вторым щелчком, удаляет пару вместе с пакетами, которые не нужны другим парам. Когда язык речи определяется автоматически, его узнают по первым словам, и переводится речь, для которой есть пакет.</td></tr>" +
@@ -1369,7 +1369,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_SUBS_M_PHRASES": "%s will write it: the text appears after each phrase ends.",
 		"S_SUBS_M_ABSENT": "%s is chosen for this language but is not installed.",
 		"S_SUBS_M_WHISPER": "%s is a Whisper model: on a processor it needs many seconds per phrase, so the text will lag well behind the speech. A streaming model or a fast one suits subtitles better.",
-		"S_SUBS_GO_MODELS": "Open “Languages & models”",
+		"S_SUBS_GO_MODELS": "Open “Languages”",
 		"S_SUBS_REMOTE": "Recognition runs on another computer: each phrase is sent to that server.",
 		"S_SUBS_TR": "Translation",
 		"S_SUBS_TR_ONLY": "Show only the translation",
@@ -1656,7 +1656,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_HF_FIT": "only those that fit this computer",
 		"S_HF_HIDDEN": "hidden: %s",
 		"S_WIZ_SKIP_DL": "Download later",
-		"S_WIZ_SKIP_NOTE": "Dictation will not work without a model. You can download one under Languages & models.",
+		"S_WIZ_SKIP_NOTE": "Dictation will not work without a model. You can download one on the Models tab.",
 		"S_M_GIGAAM2": "the previous generation of the Russian model: same speed, but no punctuation",
 		"S_M_MOONUK": "Ukrainian Moonshine model: fast and light, no punctuation",
 		"S_M_LOCAL": "found in the models folder; its properties are unknown, so there are no bars",
@@ -1754,7 +1754,7 @@ var settingsStrings = map[string]map[string]string{
 		"S_NAV_STATE":      "Status",
 		"S_NAV_DICT":       "Controls & behaviour",
 		"S_NAV_MIC":        "Microphone",
-		"S_NAV_MODELS":     "Languages & models",
+		"S_NAV_MODELS":     "Languages",
 		"S_NAV_TEXT":       "Rules",
 		"S_NAV_TR":         "Translation",
 		"S_NAV_SYSTEM":     "System",
@@ -2027,7 +2027,7 @@ var settingsStrings = map[string]map[string]string{
 			"<p>How dictation starts and how the text gets into the field. You come here when something does not work the way you want: the keys are awkward, the text does not appear, Enter gets pressed by itself.</p>" +
 			"<p class=\"hsub\">Keys</p>" +
 			"<table class=\"hopt\">" +
-			"<tr><td>Keyboard shortcut</td><td>Press “Change…” and hold whatever is comfortable for you. The app captures this combination across the whole system, so do not pick one that is already taken, such as Ctrl+C. Combinations with the Windows key are the least likely to be taken. A language can have a shortcut of its own, set on the “Languages & models” tab.</td></tr>" +
+			"<tr><td>Keyboard shortcut</td><td>Press “Change…” and hold whatever is comfortable for you. The app captures this combination across the whole system, so do not pick one that is already taken, such as Ctrl+C. Combinations with the Windows key are the least likely to be taken. A language can have a shortcut of its own, set on the “Languages” tab.</td></tr>" +
 			"<tr><td>Mode</td><td>With “hold”, it records while the keys are held down: let go, and the phrase goes off to be processed. With “toggle”, the first press starts recording and the second stops it. The second mode suits long monologues, when your hand gets tired of holding the keys.</td></tr>" +
 			"<tr><td>Stop on silence</td><td>Only in “toggle” mode. Once you have said something, a pause as long as the one set in “Pause before stopping, ms” ends the recording by itself, as if you had pressed the shortcut again, and the plate says “Stopped on silence”. It never stops before your first words, so you can gather your thoughts after pressing; if you say nothing at all, the “Max recording, s” limit still ends it. With “Press Enter after paste (auto-submit)” on, a pause sends the message, so pick a longer pause.</td></tr>" +
 			"<tr><td>Min recording, ms</td><td>How short a press counts as accidental. Brush the keys for a split second, and the app stays quiet instead of inserting a scrap of a word.</td></tr>" +
@@ -2050,7 +2050,7 @@ var settingsStrings = map[string]map[string]string{
 			"<tr><td>Screen</td><td>Which monitor to show it on, if you have more than one.</td></tr>" +
 			"<tr><td>Show the recognised text</td><td>After insertion the plate shows the phrase itself rather than the number of characters. Handy for checking, but anyone looking at your screen will see the phrase too.</td></tr>" +
 			"</table>" +
-			"<p class=\"wh\" id=\"s-models\">The “Languages & models” tab</p>" +
+			"<p class=\"wh\" id=\"s-models\">The “Languages” tab</p>" +
 			"<p>Here you say which language you will dictate in, and the app decides what to recognize it with. There are several models: some are fast, some are accurate, some know rare languages.</p>" +
 			"<table class=\"hopt\">" +
 			"<tr><td>Source speech language</td><td>The language you speak. If you speak several, choose “Auto-detect”: the model works it out by itself, though a little more slowly and a little less accurately than when the language is named outright.</td></tr>" +
@@ -2120,7 +2120,7 @@ var settingsStrings = map[string]map[string]string{
 			"<table class=\"hopt\">" +
 			"<tr><td>Start subtitles</td><td>Starts and stops them. The line beside it says what is going on: off, loading the model, listening, or recognition restarting. The tray menu, a shortcut of their own and the cross on the window do the same.</td></tr>" +
 			"<tr><td>Shortcut</td><td>Starts and stops subtitles from any window. It never starts a dictation and cannot repeat another shortcut.</td></tr>" +
-			"<tr><td>Speech language</td><td>The language of what you listen to, separate from the language you dictate in. The model is the one the “Languages & models” tab gives that language. A streaming model writes the words as they are spoken; the others write each phrase after it ends. A Whisper model needs many seconds per phrase on a processor, so its text lags well behind the speech; phrases that pile up go to it together and come out as one line.</td></tr>" +
+			"<tr><td>Speech language</td><td>The language of what you listen to, separate from the language you dictate in. The model is the one the “Languages” tab gives that language. A streaming model writes the words as they are spoken; the others write each phrase after it ends. A Whisper model needs many seconds per phrase on a processor, so its text lags well behind the speech; phrases that pile up go to it together and come out as one line.</td></tr>" +
 			"<tr><td>Translation</td><td>The switch in the heading turns translation on, and “Translation language” picks the language. With translation the window has two parts: what was said above in a dimmer colour, the translation below; the border between them can be dragged with the mouse, and “Rows of text” then counts for each part. The “Show only the translation” switch hides what is heard: the window is not split and shows the translation alone, and the transcript is written as before. The window title says “Translation” and the languages, for example EN → RU. The speech is cut into phrases as it goes, and every phrase goes to translation at once; the translator gets the previous phrases with it, so a sentence cut into pieces is translated as one. A phrase that could not be translated is shown as heard. When translation is on but nothing can translate, a line under the “Translation” heading says why — it is the only place on the tab that says the window shows the text without translation. The translation is saved as a separate file next to the transcript. The translator is chosen with one of the three cards below; the program never changes it by itself.</td></tr>" +
 			"<tr><td>Quality</td><td>A translation model on the graphics card: it translates best, phrase by phrase, a moment after the speech. It is downloaded once, 2.3 GB, and needs a graphics card with at least 4 GB of its own memory; when the graphics card does not fit, this card cannot be chosen and says why. The arrow at the bottom of the card downloads the model, the cross cancels the download or, on a second click, deletes the model. Choosing “Quality” while the model is not downloaded asks whether to start the download. The model is loaded onto the graphics card when subtitles start and leaves it when they end; the link on the card opens its terms of use.</td></tr>" +
 			"<tr><td>Fast</td><td>A light translation engine on the processor: a phrase takes a few hundredths of a second, and the translation is more literal than the model’s. It needs language packs of about 35 MB each. The “language packs” row shows the pairs you added, for example English → Русский; “Add a pack” opens the list of pairs into the current translation language with the size still to download, and a click on a pair starts the download. Packs exist only to and from English, so other pairs are translated in two steps, through English, and need both packs; a shared pack is downloaded once. The cross next to a pair cancels the download or, on a second click, removes the pair together with the packs no other pair needs. When the speech language is detected automatically, it is recognized from the first words, and speech that has a pack is translated.</td></tr>" +
