@@ -5330,31 +5330,23 @@ function buildPicker(lang){
   const eff = effectiveFor(lang);
   const explicit = lang === "auto" || !!(langModels[lang] && rowById(langModels[lang]));
   const rec = REC_MODEL[lang];
-  const list = modelRowsCache.filter(m=>eligibleFor(m, lang))
-    .sort((a,b)=>a.name.localeCompare(b.name));
+  const list = modelRowsCache.filter(m=>eligibleFor(m, lang) && (m.state !== "absent" || m.id === rec || (m.id === eff && explicit)))
+    .sort((a,b)=>((a.state === "absent") - (b.state === "absent")) || a.name.localeCompare(b.name));
   list.forEach(m=>{
     const cur = m.id === eff && explicit;
     const card = document.createElement("div");
     card.className = "pcard" + (cur ? " cur" : "");
     card.dataset.id = m.id;
     const chip = m.id === rec ? '<span class="pchip">'+L.recchip+'</span>' : "";
-    const bar = (label, v)=>'<span class="mbar"><span class="mbl">'+label+'</span><span class="mtrack"><i style="width:'+(v*20)+'%"></i></span></span>';
-    const bars = (m.accuracy || m.speed) ? '<span class="mbars">'+bar(L.acc, m.accuracy||0)+bar(L.spd, m.speed||0)+'</span>' : "";
+    const bars = modelBarsHtml(m);
     let act = "";
     if(m.state === "downloading") act = '<span class="mpct" data-id="'+m.id+'">'+(m.pct>0?m.pct+"%":"…")+'</span><button class="iconbtn danger" title="'+L.dlcancel+'" data-a="cancel" data-id="'+m.id+'">&#10005;</button>';
     else if(m.state === "absent" && m.manual) act = '<button class="mini" data-a="link" data-id="'+m.id+'">'+L.manuallink+' &#8599;</button>';
-    else if(m.state === "absent") act = '<span class="psize">'+(m.size?sizeLabel(m.size):"")+'</span><button class="iconbtn" title="'+L.dl+'" data-a="dl" data-id="'+m.id+'">'+I_DL+'</button>';
+    else if(m.state === "absent") act = '<span class="psize">'+esc(fmtText(L.notinstsize, sizeLabel(m.size || 0)))+'</span>';
     else if(cur) act = '<span class="pcur">&#10003;</span>';
-    else act = (m.loaded ? '<button class="iconbtn" title="'+L.unload+'" data-a="unload" data-id="'+m.id+'">&#9167;</button>' : "")+
-      '<button class="iconbtn danger" title="'+L.del+'" data-a="del" data-id="'+m.id+'" data-name="'+esc(m.name)+'">&#10005;</button>';
     const note = m.state === "absent" && m.manual ? '<span class="pdesc" style="color:var(--amber)">'+L.manualnote+'</span>' : "";
     const errNote = m.state === "absent" && m.err ? '<span class="pdesc perr">'+esc(m.err)+'</span>' : "";
-    const langNames = m.langs && m.langs !== "*" ? m.langs.split(",").map(c=>trLangName(c.trim())).join(", ") : "";
-    const langChip = '<span class="pmt"'+(langNames && m.langs.includes(",") ? ' data-tip="'+esc(langNames)+'"' : '')+'>'+esc(langWord(m))+'</span>';
-    const trNames = m.translate && m.trlangs ? m.trlangs.split(",").map(c=>trLangName(c.trim())).join(", ") : "";
-    const trChip = m.translate ? '<span class="pmt"'+(trNames ? ' data-tip="'+esc(trNames)+'"' : '')+'>'+esc(trWord(m))+'</span>' : '';
-    const meta = langChip + trChip +
-      (m.ram ? '<span class="pram">'+esc(L.ramabout.replace("%s", sizeLabel(m.ram)))+'</span>' : '');
+    const meta = modelMetaHtml(m);
     const sw = '<input type="checkbox" class="psw"'+(cur?' checked':'')+((m.state === "absent" && m.manual)?' disabled':'')+' data-sw="'+m.id+'">';
     const info = m.desc ? '<span class="pinfo" data-tip="'+esc(m.desc)+'">i</span>' : "";
     card.innerHTML = '<span class="ptop">'+sw+'<span class="pname"><span class="pnm">'+esc(m.name)+'</span>'+chip+info+'</span>'+bars+'</span>'+
@@ -5362,6 +5354,16 @@ function buildPicker(lang){
       '<span class="pmeta">'+meta+'<span class="pact">'+act+'</span></span>';
     pick.appendChild(card);
   });
+  if(!list.length){
+    const none = document.createElement("div");
+    none.className = "hint nonote";
+    none.textContent = L.langnone;
+    pick.appendChild(none);
+  }
+  const more = document.createElement("div");
+  more.className = "hint jumpline";
+  more.innerHTML = '<span>'+esc(L.langgetother)+'</span>'+blockChip("lib_get", L.libget);
+  pick.appendChild(more);
   if(lang !== "auto" && langModels[lang]){
     const back = document.createElement("button");
     back.type = "button";
