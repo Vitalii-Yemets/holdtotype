@@ -3,6 +3,7 @@ const path = require("path");
 
 const root = path.join(__dirname, "..");
 const src = fs.readFileSync(path.join(root, "client", "settings.go"), "utf8");
+const pageLang = process.argv[2] === "ru" ? "ru" : "en";
 
 const marker = "const settingsPage = `";
 const start = src.indexOf(marker) + marker.length;
@@ -94,6 +95,8 @@ const cfg = {
   _legacy_model: "medium-q5_0",
   _ui_lang: "en",
 };
+cfg.ui_language = pageLang;
+cfg._ui_lang = pageLang;
 
 const i18nSrc = fs.readFileSync(path.join(root, "client", "i18n.go"), "utf8");
 
@@ -112,7 +115,7 @@ function goText(raw) {
 }
 
 const tableStart = i18nSrc.indexOf("var settingsStrings");
-const enStart = tableStart < 0 ? -1 : i18nSrc.indexOf('\n\t"en": {', tableStart);
+const enStart = tableStart < 0 ? -1 : i18nSrc.indexOf('\n\t"' + pageLang + '": {', tableStart);
 const enEnd = enStart < 0 ? -1 : i18nSrc.indexOf("\n\t},", enStart);
 if (enStart < 0 || enEnd < 0) {
   console.error("the English settings strings were not found in client/i18n.go");
@@ -259,6 +262,7 @@ html = html.split("{{CFG}}").join(JSON.stringify(cfg));
 html = html.split("{{L_JSON}}").join(JSON.stringify(strings));
 html = html.replace(/{{([A-Z_0-9]+)}}/g, "$1");
 
-const out = path.join(__dirname, "page.html");
+const name = pageLang === "en" ? "page.html" : "page-" + pageLang + ".html";
+const out = path.join(__dirname, name);
 fs.writeFileSync(out, html, "utf8");
-console.log("page.html written:", html.length, "chars");
+console.log(name + " written:", html.length, "chars");

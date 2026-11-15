@@ -224,11 +224,12 @@ Everything runs in containers — nothing to install locally:
 
 ```powershell
 docker build --file build/Dockerfile --target gotest .        # Go unit tests + go vet (Windows target)
-docker run --rm -v "${PWD}:/w" -w /w node:20 sh -c "node test/build-page.js && cd test && npm i --no-save --silent jsdom && node ui.test.js"
+docker run --rm -v "${PWD}:/w" -w /w node:20 sh -c "node test/build-page.js && node test/build-page.js ru && cd test && npm i --no-save --silent jsdom && node ui.test.js && node models.test.js"
 ```
 
 - `client/internal/...` — unit tests for the pieces that carry logic: version comparison, hotkey duplicates, per-application rules, replacements, voice commands, history, prompt chains, sound analysis, file hashes and the lists file.
 - `test/ui.test.js` — the real settings page rendered in jsdom: section switching, the translation enable/disable matrix, the prompt editor accordion, rules, replacements, commands and their file, history with copy and paste-back, model deletion and the model check, the first-run wizard, and "no JavaScript errors".
+- `test/models.test.js` — the Models tab and the tabs that use it, on a page of its own with English and Russian strings: the blocks and their order, what each model is used for, deleting a free model and a model in use with the languages, Auto-detect, post-processing and subtitle translation left working after it, a download moving a model to the installed ones, the Hugging Face search with its magnifier, Enter and cross, an unfolded language without icons, the editor list and its empty state, the plates that lead between tabs, and sizes in the units of the interface language.
 - `test/locales.test.js` — every one of the eight languages carries every string the page and the program ask for, and invents none of its own.
 - `test/setup.test.js` — the installer page: the steps, the model choice, the silent switches.
 - `client/internal/theme` — every design keeps its own face, corners, level marks and lamps, and the CSS variables the page needs are all there.

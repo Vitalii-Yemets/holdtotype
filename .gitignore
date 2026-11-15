@@ -7,6 +7,7 @@ client/setup/app.manifest
 client/setup/resources.syso
 test/node_modules/
 test/page.html
+test/page-ru.html
 test/package-lock.json
 test/package.json
 
