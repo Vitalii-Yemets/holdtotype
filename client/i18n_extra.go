@@ -1112,7 +1112,7 @@ func init() {
 			"</ul>" +
 			"<p class=\"hdim\">Die Leiste lässt sich ausschalten, in jede Ecke stellen, an den Cursor binden oder einfach mit der Maus dorthin ziehen, wo sie nicht stört. Das finden Sie auf der Registerkarte „Steuerung & Verhalten“.</p>" +
 			"<p class=\"wh\" id=\"s-state\">Der Bildschirm „Status“</p>" +
-			"<p>Dieser Bildschirm beantwortet eine Frage: Können Sie gerade diktieren? Wenn nicht, sagt er, warum, und bietet eine Schaltfläche, die dorthin führt, wo sich das beheben lässt. Der erste Block ist „Übersicht“: Diktierbereitschaft, Untertitel, Version und Speicher.</p>" +
+			"<p>Dieser Bildschirm beantwortet eine Frage: Können Sie gerade diktieren? Wenn nicht, sagt er, warum, und bietet eine Schaltfläche, die dorthin führt, wo sich das beheben lässt. Der erste Block ist „Übersicht“: Diktierbereitschaft, Untertitel, Version und Speicher. Jeder Sprung im Einstellungsfenster, ob Schaltfläche, Pfeil oder Plakette, öffnet die richtige Registerkarte und hebt die Stelle, zu der er führt, für ein paar Sekunden hervor, so wie die Suche in den Einstellungen das Gefundene hervorhebt.</p>" +
 			"<div class=\"hshot\">" +
 			"<div class=\"hcard\"><span class=\"hled\"></span><div class=\"ht\"><b>Bereit zum Diktieren</b><span>halten und sprechen — der Text landet dort, wo der Cursor steht</span></div><span class=\"hkey\">ctrl</span><span style=\"color:var(--dim)\">+</span><span class=\"hkey\">win</span></div>" +
 			"<div class=\"hcap\">das grüne Quadrat bedeutet, dass die App auf ihre Tasten hört</div>" +
@@ -1885,7 +1885,7 @@ func init() {
 			"</ul>" +
 			"<p class=\"hdim\">Le bandeau peut être désactivé, placé dans n'importe quel coin, attaché au curseur ou simplement déplacé à la souris là où il ne gêne pas. Cela se règle dans l'onglet « Commandes et comportement ».</p>" +
 			"<p class=\"wh\" id=\"s-state\">L'écran « État »</p>" +
-			"<p>Cet écran répond à une seule question : pouvez-vous dicter tout de suite ? Sinon, il dit pourquoi et propose un bouton qui mène là où cela se répare. Le premier bloc est « Résumé » : prêt à dicter ou non, sous-titres, version et mémoire.</p>" +
+			"<p>Cet écran répond à une seule question : pouvez-vous dicter tout de suite ? Sinon, il dit pourquoi et propose un bouton qui mène là où cela se répare. Le premier bloc est « Résumé » : prêt à dicter ou non, sous-titres, version et mémoire. Chaque saut dans la fenêtre des réglages, bouton, flèche ou plaque, ouvre le bon onglet et met en évidence pendant quelques secondes l’endroit où il mène, comme la recherche dans les réglages met en évidence ce qu’elle a trouvé.</p>" +
 			"<div class=\"hshot\">" +
 			"<div class=\"hcard\"><span class=\"hled\"></span><div class=\"ht\"><b>Prêt à dicter</b><span>maintenez et parlez — le texte arrive là où se trouve le curseur</span></div><span class=\"hkey\">ctrl</span><span style=\"color:var(--dim)\">+</span><span class=\"hkey\">win</span></div>" +
 			"<div class=\"hcap\">le carré vert signifie que l'application écoute ses touches</div>" +
@@ -2658,7 +2658,7 @@ func init() {
 			"</ul>" +
 			"<p class=\"hdim\">La barra se puede desactivar, colocar en cualquier esquina, situar junto al cursor o simplemente arrastrar con el ratón adonde no moleste. Todo eso está en la pestaña «Control y comportamiento».</p>" +
 			"<p class=\"wh\" id=\"s-state\">La pantalla «Estado»</p>" +
-			"<p>Esta pantalla responde a una sola pregunta: ¿puedes dictar ahora mismo? Si no, te dice por qué y te da un botón que lleva adonde se arregla. El primer bloque es «Resumen»: si se puede dictar, los subtítulos, la versión y la memoria.</p>" +
+			"<p>Esta pantalla responde a una sola pregunta: ¿puedes dictar ahora mismo? Si no, te dice por qué y te da un botón que lleva adonde se arregla. El primer bloque es «Resumen»: si se puede dictar, los subtítulos, la versión y la memoria. Cada salto en la ventana de ajustes, sea un botón, una flecha o una placa, abre la pestaña correcta y resalta durante un par de segundos el lugar al que lleva, igual que la búsqueda en los ajustes resalta lo que encuentra.</p>" +
 			"<div class=\"hshot\">" +
 			"<div class=\"hcard\"><span class=\"hled\"></span><div class=\"ht\"><b>Listo para dictar</b><span>mantén y habla — el texto aparece donde está el cursor</span></div><span class=\"hkey\">ctrl</span><span style=\"color:var(--dim)\">+</span><span class=\"hkey\">win</span></div>" +
 			"<div class=\"hcap\">el cuadrado verde significa que la aplicación está atenta a sus teclas</div>" +
@@ -3431,7 +3431,7 @@ func init() {
 			"</ul>" +
 			"<p class=\"hdim\">La barra si può spegnere, mettere in qualsiasi angolo, legare al cursore o semplicemente trascinare con il mouse dove non dà fastidio. Lo trovi nella scheda «Controlli e comportamento».</p>" +
 			"<p class=\"wh\" id=\"s-state\">La schermata «Stato»</p>" +
-			"<p>Questa schermata risponde a una sola domanda: puoi dettare proprio adesso? Se no, ti dice perché e ti dà un pulsante che porta dove lo si sistema. Il primo blocco è «Riepilogo»: se si può dettare, i sottotitoli, la versione e la memoria.</p>" +
+			"<p>Questa schermata risponde a una sola domanda: puoi dettare proprio adesso? Se no, ti dice perché e ti dà un pulsante che porta dove lo si sistema. Il primo blocco è «Riepilogo»: se si può dettare, i sottotitoli, la versione e la memoria. Ogni salto nella finestra delle impostazioni, che sia un pulsante, una freccia o una targhetta, apre la scheda giusta ed evidenzia per un paio di secondi il punto in cui porta, come la ricerca nelle impostazioni evidenzia ciò che trova.</p>" +
 			"<div class=\"hshot\">" +
 			"<div class=\"hcard\"><span class=\"hled\"></span><div class=\"ht\"><b>Pronto a dettare</b><span>tieni premuto e parla — il testo arriva dov'è il cursore</span></div><span class=\"hkey\">ctrl</span><span style=\"color:var(--dim)\">+</span><span class=\"hkey\">win</span></div>" +
 			"<div class=\"hcap\">il quadratino verde vuol dire che l'app è in ascolto dei suoi tasti</div>" +
@@ -4204,7 +4204,7 @@ func init() {
 			"</ul>" +
 			"<p class=\"hdim\">Pasek można wyłączyć, ustawić w dowolnym rogu, przypiąć do kursora albo po prostu przeciągnąć myszą tam, gdzie nie przeszkadza. Wszystko to jest na zakładce „Sterowanie i zachowanie”.</p>" +
 			"<p class=\"wh\" id=\"s-state\">Ekran „Stan”</p>" +
-			"<p>Ten ekran odpowiada na jedno pytanie: czy można teraz dyktować. Jeśli nie, mówi dlaczego i daje przycisk, który prowadzi tam, gdzie to się naprawia. Pierwszy blok to „Podsumowanie”: gotowość do dyktowania, napisy, wersja i pamięć.</p>" +
+			"<p>Ten ekran odpowiada na jedno pytanie: czy można teraz dyktować. Jeśli nie, mówi dlaczego i daje przycisk, który prowadzi tam, gdzie to się naprawia. Pierwszy blok to „Podsumowanie”: gotowość do dyktowania, napisy, wersja i pamięć. Każde przejście w oknie ustawień — przycisk, strzałka czy plakietka — otwiera właściwą kartę i na kilka sekund podświetla miejsce, do którego prowadzi, tak jak wyszukiwanie w ustawieniach podświetla to, co znalazło.</p>" +
 			"<div class=\"hshot\">" +
 			"<div class=\"hcard\"><span class=\"hled\"></span><div class=\"ht\"><b>Gotowe do dyktowania</b><span>przytrzymaj i mów — tekst trafia tam, gdzie stoi kursor</span></div><span class=\"hkey\">ctrl</span><span style=\"color:var(--dim)\">+</span><span class=\"hkey\">win</span></div>" +
 			"<div class=\"hcap\">zielony kwadrat oznacza, że aplikacja nasłuchuje swoich klawiszy</div>" +
@@ -5097,7 +5097,7 @@ func init() {
 			"</ul>" +
 			"<p class=\"hdim\">Смужку можна вимкнути, поставити в будь-який кут, прив'язати до курсора або просто перетягнути мишею туди, де вона не заважає. Усе це на вкладці «Керування і поведінка».</p>" +
 			"<p class=\"wh\" id=\"s-state\">Екран «Стан»</p>" +
-			"<p>Цей екран відповідає на одне запитання: чи можна диктувати просто зараз. Якщо ні, він пояснює чому й дає кнопку, яка веде туди, де це можна виправити. Перший блок — «Зведення»: готовність до диктування, субтитри, версія і памʼять.</p>" +
+			"<p>Цей екран відповідає на одне запитання: чи можна диктувати просто зараз. Якщо ні, він пояснює чому й дає кнопку, яка веде туди, де це можна виправити. Перший блок — «Зведення»: готовність до диктування, субтитри, версія і памʼять. Будь-який перехід у вікні налаштувань — кнопка, стрілка чи плашка — відкриває потрібну вкладку й на пару секунд підсвічує місце, куди привів, так само як пошук у налаштуваннях підсвічує знайдене.</p>" +
 			"<div class=\"hshot\">" +
 			"<div class=\"hcard\"><span class=\"hled\"></span><div class=\"ht\"><b>Готово до диктування</b><span>тримайте й говоріть — текст з'явиться там, де стоїть курсор</span></div><span class=\"hkey\">ctrl</span><span style=\"color:var(--dim)\">+</span><span class=\"hkey\">win</span></div>" +
 			"<div class=\"hcap\">зелений квадрат означає, що застосунок чекає на свої клавіші</div>" +

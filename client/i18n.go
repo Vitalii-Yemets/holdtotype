@@ -1142,7 +1142,7 @@ var settingsStrings = map[string]map[string]string{
 			"</ul>" +
 			"<p class=\"hdim\">Плашку можно выключить, поставить в любой угол, привязать к курсору или просто перетащить мышкой туда, где она не мешает. Это на вкладке «Управление и поведение».</p>" +
 			"<p class=\"wh\" id=\"s-state\">Экран «Состояние»</p>" +
-			"<p>Этот экран отвечает на один вопрос: можно ли прямо сейчас диктовать. Если нет — говорит почему и даёт кнопку, которая ведёт туда, где это чинится. Первый блок — «Сводка»: готовность к диктовке, субтитры, версия и память.</p>" +
+			"<p>Этот экран отвечает на один вопрос: можно ли прямо сейчас диктовать. Если нет — говорит почему и даёт кнопку, которая ведёт туда, где это чинится. Первый блок — «Сводка»: готовность к диктовке, субтитры, версия и память. Любой переход в окне настроек — кнопка, стрелка или плашка — открывает нужную вкладку и на пару секунд подсвечивает место, куда привёл, так же как поиск по настройкам подсвечивает найденное.</p>" +
 			"<div class=\"hshot\">" +
 			"<div class=\"hcard\"><span class=\"hled\"></span><div class=\"ht\"><b>Готово к диктовке</b><span>зажмите и говорите — текст появится там, где курсор</span></div><span class=\"hkey\">ctrl</span><span style=\"color:var(--dim)\">+</span><span class=\"hkey\">win</span></div>" +
 			"<div class=\"hcap\">зелёный квадрат означает, что приложение слушает клавиши</div>" +
@@ -2045,7 +2045,7 @@ var settingsStrings = map[string]map[string]string{
 			"</ul>" +
 			"<p class=\"hdim\">The plate can be turned off, put in any corner, tied to the cursor, or simply dragged with the mouse to where it is out of the way. That is on the “Controls & behaviour” tab.</p>" +
 			"<p class=\"wh\" id=\"s-state\">The “Status” screen</p>" +
-			"<p>This screen answers one question: can you dictate right now? If not, it tells you why and gives you a button that takes you to where it gets fixed. The first block is “Summary”: readiness to dictate, subtitles, the version and memory.</p>" +
+			"<p>This screen answers one question: can you dictate right now? If not, it tells you why and gives you a button that takes you to where it gets fixed. The first block is “Summary”: readiness to dictate, subtitles, the version and memory. Every jump in the settings window, whether a button, an arrow or a plate, opens the right tab and highlights the place it led to for a couple of seconds, the way the settings search highlights what it found.</p>" +
 			"<div class=\"hshot\">" +
 			"<div class=\"hcard\"><span class=\"hled\"></span><div class=\"ht\"><b>Ready to dictate</b><span>hold it and speak — the text lands where the cursor is</span></div><span class=\"hkey\">ctrl</span><span style=\"color:var(--dim)\">+</span><span class=\"hkey\">win</span></div>" +
 			"<div class=\"hcap\">the green square means the app is listening for its keys</div>" +
