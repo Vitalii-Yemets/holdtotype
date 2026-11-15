@@ -2058,7 +2058,7 @@ input.srcpick:disabled,input.srvpick:disabled{opacity:.4;cursor:default}
 #subs_hero .stlay:has(input:focus-visible),#skin_cards .stlay:has(input:focus-visible){outline:1px solid var(--green);outline-offset:2px}
 .dsrow{row-gap:9px}
 .dsrow>label{flex:1 1 100%}
-#skin_cards{flex:1 1 100%;min-width:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(var(--dmin,68px),1fr));gap:6px;font-size:11px}
+#skin_cards{flex:1 1 100%;min-width:0;max-width:calc(var(--dcount) * 84px + (var(--dcount) - 1) * 6px);display:grid;grid-template-columns:repeat(auto-fit,minmax(var(--dmin,68px),1fr));gap:6px;font-size:11px}
 #skin_cards .stlay{display:flex;flex-direction:column;gap:5px;padding:4px 4px 5px;line-height:1.3;min-width:0}
 #skin_cards .dname{display:block;text-align:center;color:var(--dim);white-space:nowrap}
 #skin_cards .stlay.on .dname{color:var(--green)}
@@ -3090,6 +3090,7 @@ function buildSkinCards(){
     box.appendChild(card);
   });
   box.style.setProperty("--dmin", "calc(" + longest + "ch + 10px)");
+  box.style.setProperty("--dcount", String(skin.options.length));
   box.addEventListener("change", e=>{
     e.stopPropagation();
     if(e.target.name !== "skin_pick" || !e.target.checked) return;
