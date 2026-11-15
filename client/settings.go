@@ -1245,7 +1245,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"stsummary": "S_ST_SUMMARY", "stquick": "S_ST_QUICK", "stmodels": "S_ST_MODELS", "stusage": "S_ST_USAGE",
 		"stready": "S_ST_READY", "stoff": "S_ST_OFF", "stoffsub": "S_ST_OFF_SUB", "stenable": "S_ST_ENABLE",
 		"stgoto": "S_ST_GOTO", "sthotkeygo": "S_ST_HOTKEY_GO", "stupdlast": "S_ST_UPD_LAST", "stupdhave": "S_ST_UPD_HAVE",
-		"stmem": "S_ST_MEM", "stmemsub": "S_ST_MEM_SUB", "stmemnone": "S_ST_MEM_NONE", "stlang": "S_ST_LANG", "stasr": "S_ST_ASR",
+		"stmem": "S_ST_MEM", "stmemsub": "S_ST_MEM_SUB", "ramabout": "S_RAM_ABOUT", "stmemnone": "S_ST_MEM_NONE", "stlang": "S_ST_LANG", "stasr": "S_ST_ASR",
 		"ston": "S_ST_ON", "stoffw": "S_ST_OFF_W", "stonf": "S_ST_ON_F", "stofff": "S_ST_OFF_F", "stactive": "S_ST_ACTIVE",
 		"stidle": "S_ST_IDLE", "stdisk": "S_ST_DISK", "stusagesub": "S_ST_USAGE_SUB", "stnoweek": "S_ST_NO_WEEK",
 		"stautorunsub": "S_ST_AUTORUN_SUB", "stoverlaysub": "S_ST_OVERLAY_SUB", "sthint": "S_STATE_HINT",
@@ -3301,10 +3301,9 @@ let hfFiles = [];
 let hfQuery = "";
 let hfSearched = false;
 function fitLabel(f, need){
-  const gb = (need/1024).toFixed(1);
   const col = f==="ok" ? "var(--green)" : (f==="warn" ? "var(--amber)" : "var(--bad)");
   const tip = f==="ok" ? L.fitok : (f==="warn" ? L.fitwarn : L.fitbad);
-  return '<span title="'+esc(tip)+'" style="color:'+col+';font-size:12px;white-space:nowrap">&#9679; &#8776;'+gb+' GB</span>';
+  return '<span title="'+esc(tip)+'" style="color:'+col+';font-size:12px;white-space:nowrap">&#9679; &#8776;'+gbLabel(need)+'</span>';
 }
 let llmRam = null;
 let postTestErr = "";
@@ -3327,7 +3326,7 @@ function updatePostWarn(){
   el.style.display = text ? "" : "none";
 }
 function llmSize(mb){
-  return mb >= 1024 ? (mb / 1024).toFixed(1) + " GB" : mb + " MB";
+  return sizeLabel(mb);
 }
 function renderLLMSummary(st){
   const box = document.getElementById("llm_sum");
@@ -3650,7 +3649,7 @@ function renderHF(){
         fd.className = "mrow";
         fd.style.paddingLeft = "22px";
         fd.innerHTML = '<span class="mdesc" style="flex:1">'+esc(f.file)+'</span>'+
-          '<span class="msize">'+(f.size>=1024?(f.size/1024).toFixed(1)+" GB":f.size+" MB")+'</span>'+
+          '<span class="msize">'+sizeLabel(f.size||0)+'</span>'+
           '<span>'+fitLabel(f.fit, f.need)+'</span>'+
           '<button class="iconbtn" title="'+L.dl+'" data-repo="'+esc(r.id)+'" data-file="'+esc(f.file)+'" data-size="'+(f.size||0)+'">'+I_DL+'</button>';
         box.appendChild(fd);
@@ -5062,7 +5061,7 @@ async function assignModel(lang, id){
     trSw.checked = false;
   }
   if(row.state === "absent" && !row.manual){
-    const size = row.size ? row.size + " MB" : "";
+    const size = row.size ? sizeLabel(row.size) : "";
     if(!await askConfirm(L.dlask.replace("%s", row.name).replace("%s", size), L.dlstart, null, L.mtdl)){
       refreshModels();
       return;
@@ -5163,7 +5162,7 @@ function buildPicker(lang){
     let act = "";
     if(m.state === "downloading") act = '<span class="mpct" data-id="'+m.id+'">'+(m.pct>0?m.pct+"%":"…")+'</span><button class="iconbtn danger" title="'+L.dlcancel+'" data-a="cancel" data-id="'+m.id+'">&#10005;</button>';
     else if(m.state === "absent" && m.manual) act = '<button class="mini" data-a="link" data-id="'+m.id+'">'+L.manuallink+' &#8599;</button>';
-    else if(m.state === "absent") act = '<span class="psize">'+(m.size?m.size+" MB":"")+'</span><button class="iconbtn" title="'+L.dl+'" data-a="dl" data-id="'+m.id+'">'+I_DL+'</button>';
+    else if(m.state === "absent") act = '<span class="psize">'+(m.size?sizeLabel(m.size):"")+'</span><button class="iconbtn" title="'+L.dl+'" data-a="dl" data-id="'+m.id+'">'+I_DL+'</button>';
     else if(cur) act = '<span class="pcur">&#10003;</span>';
     else act = (m.loaded ? '<button class="iconbtn" title="'+L.unload+'" data-a="unload" data-id="'+m.id+'">&#9167;</button>' : "")+
       '<button class="iconbtn danger" title="'+L.del+'" data-a="del" data-id="'+m.id+'" data-name="'+esc(m.name)+'">&#10005;</button>';
@@ -5174,7 +5173,7 @@ function buildPicker(lang){
     const trNames = m.translate && m.trlangs ? m.trlangs.split(",").map(c=>trLangName(c.trim())).join(", ") : "";
     const trChip = m.translate ? '<span class="pmt"'+(trNames ? ' data-tip="'+esc(trNames)+'"' : '')+'>'+esc(trWord(m))+'</span>' : '';
     const meta = langChip + trChip +
-      (m.ram ? '<span class="pram">≈'+m.ram+' MB RAM</span>' : '');
+      (m.ram ? '<span class="pram">'+esc(L.ramabout.replace("%s", sizeLabel(m.ram)))+'</span>' : '');
     const sw = '<input type="checkbox" class="psw"'+(cur?' checked':'')+((m.state === "absent" && m.manual)?' disabled':'')+' data-sw="'+m.id+'">';
     const info = m.desc ? '<span class="pinfo" data-tip="'+esc(m.desc)+'">i</span>' : "";
     card.innerHTML = '<span class="ptop">'+sw+'<span class="pname"><span class="pnm">'+esc(m.name)+'</span>'+chip+info+'</span>'+bars+'</span>'+
@@ -6013,7 +6012,7 @@ function wizLangName(){
   return opt ? opt.textContent : sel.value;
 }
 function wizCard(row){
-  wizEl("wiz_mname").textContent = row ? row.name + (row.size ? " · " + row.size + " MB" : "") : wizModel;
+  wizEl("wiz_mname").textContent = row ? row.name + (row.size ? " · " + sizeLabel(row.size) : "") : wizModel;
   wizEl("wiz_mdesc").textContent = row ? row.desc || "" : "";
   wizEl("wiz_mpick").textContent = L.wizpicked.replace("%s", wizLangName());
 }
