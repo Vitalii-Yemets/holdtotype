@@ -94,7 +94,7 @@ Every shot below is the Editor design, the default: dark grey with a blue accent
 Download `holdtotype-setup.exe` from [Releases](https://github.com/Vitalii-Yemets/holdtotype/releases) and run it. The themed installer (~16 MB):
 
 - installs without admin rights to `%LOCALAPPDATA%\Programs\HoldToType` (pick any folder via the browse button);
-- can download the recognition model right during installation (Nemotron 3.5, Parakeet TDT 0.6B v3, GigaAM v3, or Whisper Base / Small / Medium / Turbo) — by default it downloads nothing and the app fetches what its wizard proposes for the recognition language (GigaAM v3 for Russian, Parakeet for Polish, Nemotron 3.5 for English, Ukrainian, German, French, Spanish, Italian and several more, Whisper Medium for the rest; the download can be put off and picked up later from Languages & models); a download in progress can be stopped, and the installation still finishes;
+- can download the recognition model right during installation (Nemotron 3.5, Parakeet TDT 0.6B v3, GigaAM v3, or Whisper Base / Small / Medium / Turbo) — by default it downloads nothing and the app fetches what its wizard proposes for the recognition language (GigaAM v3 for Russian, Parakeet for Polish, Nemotron 3.5 for English, Ukrainian, German, French, Spanish, Italian and several more, Whisper Medium for the rest; the download can be put off and picked up later on the Models tab); a download in progress can be stopped, and the installation still finishes;
 - can turn the update check on or off, and the answer is written into the app's settings;
 - creates a Start Menu shortcut and, optionally, autostart with Windows;
 - registers in "Apps & features".
