@@ -54,7 +54,8 @@ function open(lang, cfgPatch, setup) {
         appModelDl: async (id) => { S.calls.push("dl:" + id); S.states[id] = "downloading"; },
         appModelCancel: async (id) => { S.calls.push("cancel:" + id); if (S.states[id] === "downloading") S.states[id] = "absent"; return true; },
         appModelDel: async (id, force) => { S.calls.push("del:" + id + ":" + force); S.states[id] = "absent"; delete S.loaded[id]; return "Deleted"; },
-        appUnloadEngines: async () => { S.calls.push("unload"); S.loaded = {}; },
+        appUnloadEngines: async () => { S.calls.push("unload"); S.loaded = {}; S.llm.forEach((m) => { m.loaded = false; }); },
+        appUnloadRecognition: async () => { S.calls.push("unloadrec"); S.loaded = {}; },
         appModelLink: (id) => { S.calls.push("link:" + id); },
         appLLM: async () => json({ installed: S.llm, downloads: S.llmDl, ram: 16384, ram_free: 9000 }),
         appLLMUnload: async () => { S.calls.push("llmunload"); S.llm.forEach((m) => { m.loaded = false; }); },
@@ -66,7 +67,7 @@ function open(lang, cfgPatch, setup) {
         appSave: async (f) => { S.saves.push(JSON.parse(f)); return json({ ok: true, severity: "ok", message: "Saved" }); },
         appState: async () => json({ subtitles: { phase: "off" }, subs_tr: { choice: "quality", missing: "", pair: "", model: S.trm, fast: { exe: true, pairs: [], offer: [], used: 0 } },
           subs_place: { position: "bottom", custom: {} }, hotkey: "ctrl+win", mic: "Mic", engine: "", llm: "a.gguf", ram: "", last: "", last_meta: "", ready: true, status: "Ready",
-          status_line: "Ready", active_model: "Nemotron 3.5", active_state: "ready", active_lang: "RU", assigned: [], installed_models: [], loaded_now: "", week_line: "",
+          status_line: "Ready", active_model: "Nemotron 3.5", active_state: "ready", active_lang: "RU", assigned: [], installed_models: [], loaded_now: Object.keys(S.loaded).length ? "Nemotron 3.5" : "", week_line: "",
           llm_ok: true, mic_ok: true, last_at: 0, last_app: "", remote: false, backend_err: "", post_err: "", stt_broken: false, whisper_now: false, enabled: true, autostart: false,
           disk_mb: 0, ram_mb: 16384, ram_free_mb: 9000, week_count: 0, week_chars: 0, today_count: 0, week_apps: [], badges: { mic: "", models: "", system: "" },
           post_on: true, post_model: "a", post_size: 1066, post_installed: S.llm.length, post_remote: false, post_prompts: 1 }),
@@ -158,9 +159,21 @@ function open(lang, cfgPatch, setup) {
   S.states.base = "installed"; await refresh();
   check("a downloaded model moves to the installed ones", [!!d.querySelector('#lib_get_list .librow[data-key="asr:base"]'), !!d.querySelector('#lib_have_list .librow[data-key="asr:base"]')], [false, true]);
 
+  S.calls.length = 0;
   row("asr:nemotron-3.5").querySelector('button[data-lib="unload"]').click(); await sleep(300); await refresh();
-  check("the unload icon unloads the model", S.calls.includes("unload"), true);
+  check("the unload icon of a recognition model unloads recognition only", S.calls.slice(), ["unloadrec"]);
   check("and the chip and the icon go", [!!row("asr:nemotron-3.5").querySelector(".pchip"), !!row("asr:nemotron-3.5").querySelector('button[data-lib="unload"]')], [false, false]);
+  check("while the editor stays in memory", [!!row("llm:a.gguf").querySelector(".pchip"), !!row("llm:a.gguf").querySelector('button[data-lib="unload"]')], [true, true]);
+  S.calls.length = 0;
+  row("llm:a.gguf").querySelector('button[data-lib="unload"]').click(); await sleep(300); await refresh();
+  check("the unload icon of the editor unloads the editor only", S.calls.slice(), ["llmunload"]);
+  S.loaded = { "nemotron-3.5": true }; S.llm[0].loaded = true; await refresh();
+  S.calls.length = 0;
+  tab("state"); await w.refreshState(); await sleep(150);
+  d.getElementById("state_unload").click(); await sleep(300);
+  check("the Unload button on Status unloads everything", S.calls.slice(), ["unload"]);
+  tab("library"); await refresh();
+  check("and every chip goes", [!!row("asr:nemotron-3.5").querySelector(".pchip"), !!row("llm:a.gguf").querySelector(".pchip")], [false, false]);
 
   tab("models"); await sleep(100);
   const lrow = (l) => d.querySelector('#langlist .lrow[data-lang="' + l + '"]');

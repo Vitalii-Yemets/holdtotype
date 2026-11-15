@@ -299,6 +299,9 @@ func (a *App) settingsThread(tab string, attempt int) {
 		_ = w.Bind("appUnloadEngines", func() {
 			a.parkEngines()
 		})
+		_ = w.Bind("appUnloadRecognition", func() {
+			a.parkRecognition()
+		})
 		_ = w.Bind("appSetPostKey", func(key string) string {
 			enc, err := protectKey(strings.TrimSpace(key))
 			if err != nil {
@@ -5395,7 +5398,7 @@ function renderLibrary(){
   asrHave.forEach(m=>{
     haveList.push([m, {key: "asr:" + m.id, kind: "asr", info: true, note: libUse(asrUse(m), "asr"), on: {
       del: ()=>libDeleteAsr(m),
-      unload: async ()=>{ await appUnloadEngines(); toast(L.unloaded, "ok"); await refreshModels(); setTimeout(refreshModels, 1200); }
+      unload: async ()=>{ await appUnloadRecognition(); toast(L.unloaded, "ok"); await refreshModels(); setTimeout(refreshModels, 1200); }
     }}]);
   });
   llm.forEach(f=>{

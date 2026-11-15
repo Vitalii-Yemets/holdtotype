@@ -90,6 +90,8 @@ const dom = new JSDOM(html, {
     window.appModelCancel = async (id) => { window.cancelCalls.push(id); modelStates[id] = "absent"; return true; };
     window.unloadCalls = 0;
     window.appUnloadEngines = async () => { window.unloadCalls++; };
+    window.unloadRecCalls = 0;
+    window.appUnloadRecognition = async () => { window.unloadRecCalls++; };
     window.histAimed = [];
     window.appHistoryAim = async (at) => { window.histAimed.push(at); return JSON.stringify({ ok: true, text: "click the field to paste into" }); };
     window.histDeleted = [];
@@ -588,7 +590,7 @@ function check(name, actual, expected) {
   const eject = d.querySelector('#lib_have_list .librow[data-key="asr:small"] button[data-lib="unload"]');
   check("the loaded model offers to leave the memory from its row on the models tab", !!eject, true);
   eject.click(); await sleep(150);
-  check("and the program is asked to unload it", w.unloadCalls, 1);
+  check("and the program is asked to unload recognition only", [w.unloadRecCalls, w.unloadCalls], [1, 0]);
   tab("models"); await sleep(120);
   check("the plain unload row is gone: the model itself carries the button", !!d.getElementById("munload"), false);
   const saveBefore = w.saveCalls;

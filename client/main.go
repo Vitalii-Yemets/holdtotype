@@ -378,12 +378,12 @@ func (a *App) handleIdleUnload() bool {
 	if !idleunload.Due(minutes, a.idleState(), time.Now()) {
 		return false
 	}
-	names := a.unloadModels(false)
+	names := a.unloadModels(false, true)
 	log.Printf("models unloaded after %d idle minutes: %s", minutes, strings.Join(names, ", "))
 	return true
 }
 
-func (a *App) unloadModels(byHand bool) []string {
+func (a *App) unloadModels(byHand, editor bool) []string {
 	var names []string
 	a.mu.Lock()
 	srv, ready := a.srv, a.ready
@@ -407,10 +407,12 @@ func (a *App) unloadModels(byHand bool) []string {
 	}
 	a.altMu.Unlock()
 	a.stopAltEngine()
-	if s := a.editorEng.live(); s != nil {
-		names = append(names, filepath.Base(a.snapshot().LLMModel))
+	if editor {
+		if s := a.editorEng.live(); s != nil {
+			names = append(names, filepath.Base(a.snapshot().LLMModel))
+		}
+		a.llmShutdown()
 	}
-	a.llmShutdown()
 	if park {
 		a.setStatus(tr("status.parked"))
 		traySetIcon(trayOff)
@@ -1158,8 +1160,13 @@ func (a *App) requestServerRestart() {
 }
 
 func (a *App) parkEngines() {
-	names := a.unloadModels(true)
+	names := a.unloadModels(true, true)
 	log.Printf("models unloaded by hand (%s) — memory released, the next dictation records at once and loads the model meanwhile", strings.Join(names, ", "))
+}
+
+func (a *App) parkRecognition() {
+	names := a.unloadModels(true, false)
+	log.Printf("recognition models unloaded by hand (%s), the editor stays — the next dictation records at once and loads the model meanwhile", strings.Join(names, ", "))
 }
 
 func (a *App) wakeForDictation() bool {
