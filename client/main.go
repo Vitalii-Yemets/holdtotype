@@ -7,6 +7,7 @@ import (
 	"holdtotype/internal/commands"
 	"holdtotype/internal/evqueue"
 	"holdtotype/internal/history"
+	"holdtotype/internal/idleunload"
 	"holdtotype/internal/keymatch"
 	"holdtotype/internal/livetail"
 	"holdtotype/internal/profiles"
@@ -53,6 +54,7 @@ const (
 	evDisarm
 	evRetract
 	evLatch
+	evIdleUnload
 )
 
 const latchWait = 800 * time.Millisecond
@@ -87,6 +89,7 @@ type App struct {
 	ready      bool
 	capturing  bool
 	parked     bool
+	waking     bool
 	backendErr string
 	quitting   bool
 
@@ -141,6 +144,11 @@ type App struct {
 	waitedID string
 	latchGen int
 	latchSeq int
+
+	useMu    sync.Mutex
+	lastUse  time.Time
+	llmUses  atomic.Int32
+	wakeSess bool
 }
 
 func (a *App) liveStream(gen int, cfg *Config) {
@@ -330,7 +338,84 @@ func (a *App) sweepIdleEngine() {
 			return
 		}
 		a.sweepOnce()
+		a.sweepModels()
 	}
+}
+
+func (a *App) touchModels() {
+	a.useMu.Lock()
+	a.lastUse = time.Now()
+	a.useMu.Unlock()
+}
+
+func (a *App) idleState() idleunload.State {
+	a.useMu.Lock()
+	last := a.lastUse
+	a.useMu.Unlock()
+	a.mu.Lock()
+	srv, ready, waking := a.srv, a.ready, a.waking
+	a.mu.Unlock()
+	a.subMu.Lock()
+	subs := a.sub != nil
+	a.subMu.Unlock()
+	a.altMu.Lock()
+	alt := a.alt != nil
+	a.altMu.Unlock()
+	busy := a.state.Load() != stIdle || subs || waking || a.llmUses.Load() > 0
+	loaded := (ready && srv != nil && !srv.external()) || alt || a.editorEng.live() != nil
+	return idleunload.State{Busy: busy, Loaded: loaded, Last: last}
+}
+
+func (a *App) sweepModels() {
+	minutes := idleunload.Minutes(a.snapshot().ModelsIdleMin)
+	if idleunload.Due(minutes, a.idleState(), time.Now()) {
+		a.post(ptEvent{kind: evIdleUnload})
+	}
+}
+
+func (a *App) handleIdleUnload() bool {
+	minutes := idleunload.Minutes(a.snapshot().ModelsIdleMin)
+	if !idleunload.Due(minutes, a.idleState(), time.Now()) {
+		return false
+	}
+	names := a.unloadModels(false)
+	log.Printf("models unloaded after %d idle minutes: %s", minutes, strings.Join(names, ", "))
+	return true
+}
+
+func (a *App) unloadModels(byHand bool) []string {
+	var names []string
+	a.mu.Lock()
+	srv, ready := a.srv, a.ready
+	local := srv != nil && !srv.external()
+	park := byHand || (ready && local)
+	if park {
+		a.ready = false
+		a.parked = true
+		a.waking = false
+	}
+	a.mu.Unlock()
+	if park && srv != nil {
+		if ready && local {
+			names = append(names, modelNameForPath(srv.model()))
+		}
+		srv.stop()
+	}
+	a.altMu.Lock()
+	if a.alt != nil {
+		names = append(names, modelNameForPath(a.alt.model()))
+	}
+	a.altMu.Unlock()
+	a.stopAltEngine()
+	if s := a.editorEng.live(); s != nil {
+		names = append(names, filepath.Base(a.snapshot().LLMModel))
+	}
+	a.llmShutdown()
+	if park {
+		a.setStatus(tr("status.parked"))
+		traySetIcon(trayOff)
+	}
+	return names
 }
 
 func (a *App) stopAltEngine() {
@@ -1011,8 +1096,10 @@ func (a *App) initBackend() {
 
 		a.mu.Lock()
 		a.ready = true
+		a.waking = false
 		a.backendErr = ""
 		a.mu.Unlock()
+		a.touchModels()
 		a.refreshIdleUI()
 		log.Printf("ready: hotkey=%s engine=%s model=%s lang=%s", cfg.Hotkey, srv.engine(), activeModelPath(cfg), cfg.Language)
 
@@ -1071,29 +1158,82 @@ func (a *App) requestServerRestart() {
 }
 
 func (a *App) parkEngines() {
-	a.mu.Lock()
-	a.ready = false
-	a.parked = true
-	srv := a.srv
-	a.mu.Unlock()
-	if srv != nil {
-		srv.stop()
-	}
-	a.stopAltEngine()
-	log.Printf("engines unloaded by hand — memory released, the next dictation starts them again")
-	a.setStatus(tr("status.parked"))
-	traySetIcon(trayOff)
+	names := a.unloadModels(true)
+	log.Printf("models unloaded by hand (%s) — memory released, the next dictation records at once and loads the model meanwhile", strings.Join(names, ", "))
 }
 
-func (a *App) unparkEngines() bool {
+func (a *App) wakeForDictation() bool {
 	a.mu.Lock()
-	parked := a.parked
-	a.parked = false
+	parked, waking := a.parked, a.waking
+	if parked {
+		a.parked = false
+		a.waking = true
+	}
 	a.mu.Unlock()
 	if parked {
 		a.signalRetry()
 	}
-	return parked
+	return parked || waking
+}
+
+func (a *App) waitWoken(ctx context.Context, cfg *Config, profileID string) bool {
+	a.mu.Lock()
+	ready := a.ready
+	a.mu.Unlock()
+	if ready {
+		return true
+	}
+	log.Printf("the model is still loading after the unload — the recording waits for it")
+	if cfg.Overlay {
+		overlaySet(ovProcessing, tr("status.loading"))
+	}
+	started := time.Now()
+	deadline := time.NewTimer(10 * time.Minute)
+	defer deadline.Stop()
+	tick := time.NewTicker(100 * time.Millisecond)
+	defer tick.Stop()
+	fail := func(why string) bool {
+		log.Printf("recognition: the model did not load after the unload: %s", why)
+		playCue(cfg.Beep, cfg.SoundTheme, cueError)
+		if cfg.Overlay {
+			overlaySet(ovFlashErr, tr("ov.err.recognize"))
+		}
+		return false
+	}
+	for {
+		a.mu.Lock()
+		ready, waking, berr, quitting := a.ready, a.waking, a.backendErr, a.quitting
+		a.mu.Unlock()
+		switch {
+		case ready:
+			log.Printf("the model loaded in %.1f s, recognizing the recording", time.Since(started).Seconds())
+			if cfg.Overlay {
+				text := ""
+				if profileID == "wtranslate" {
+					text = tr("ov.translating")
+				}
+				overlaySet(ovProcessing, text)
+			}
+			return true
+		case quitting:
+			return false
+		case berr != "":
+			return fail(berr)
+		case !waking:
+			return fail("the models were unloaded again")
+		}
+		select {
+		case <-ctx.Done():
+			log.Printf("recognition cancelled by the user")
+			if cfg.Overlay {
+				overlaySet(ovFlashErr, tr("ov.cancelled"))
+			}
+			return false
+		case <-deadline.C:
+			return fail("no answer in 10 minutes")
+		case <-tick.C:
+		}
+	}
 }
 
 func (a *App) fatal(logMsg, text string) {
@@ -1209,6 +1349,8 @@ func (a *App) worker() {
 				a.handleMicLost()
 			case evSilence:
 				a.handleSilence(ev)
+			case evIdleUnload:
+				a.handleIdleUnload()
 			}
 		}
 	}
@@ -1341,17 +1483,15 @@ func (a *App) handleDown(profileID string, waited bool) {
 	enabled, ready, capturing, backendErr := a.enabled, a.ready, a.capturing, a.backendErr
 	ok := enabled && ready && !capturing && rec != nil
 	a.mu.Unlock()
+	wake := false
 	if !ok {
-		if enabled && !ready && a.unparkEngines() {
-			log.Printf("the press wakes the unloaded engine")
-			a.setStatus(tr("status.loading"))
-			if cfg.Overlay {
-				overlaySet(ovFlashErr, tr("status.loading"))
-			}
+		if enabled && !ready && !capturing && rec != nil && a.wakeForDictation() {
+			wake = true
+			log.Printf("the press after the unload records at once, the model loads meanwhile")
+		} else {
+			a.explainIgnoredPress(cfg, enabled, capturing, backendErr, rec != nil)
 			return
 		}
-		a.explainIgnoredPress(cfg, enabled, capturing, backendErr, rec != nil)
-		return
 	}
 	if err := rec.Start(cfg.MaxRecordSeconds); err != nil {
 		log.Printf("recording start error: %v", err)
@@ -1367,6 +1507,7 @@ func (a *App) handleDown(profileID string, waited bool) {
 	a.sessionTarget, _, _ = procGetForegroundWindow.Call()
 	a.sessionCfg = cfg
 	a.sessionProfile = profileID
+	a.wakeSess = wake
 	a.state.Store(stRecording)
 	traySetIcon(trayRecording)
 	a.setStatus(tr("status.recording"))
@@ -1383,7 +1524,11 @@ func (a *App) handleDown(profileID string, waited bool) {
 		overlaySet(ovRecording, speak)
 	}
 	if m := activeModel(cfg); m != nil && m.Engine == engineStream {
-		go a.liveStream(a.gen, cfg)
+		if wake {
+			log.Printf("live text: the streaming model is still loading, this dictation is recognized whole when it is ready")
+		} else {
+			go a.liveStream(a.gen, cfg)
+		}
 	}
 	if cfg.HotkeyMode == hotkeyToggle && cfg.SilenceStop {
 		a.stopSilenceWatch()
@@ -1436,7 +1581,7 @@ func (a *App) handleStop(expectGen int, why stopReason) {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	a.sessionCancel = cancel
-	go a.process(ctx, pcm, a.gen, a.sessionCfg, a.sessionProfile, a.sessionTarget)
+	go a.process(ctx, pcm, a.gen, a.sessionCfg, a.sessionProfile, a.sessionTarget, a.wakeSess)
 }
 
 func (a *App) handleSilence(ev ptEvent) {
@@ -1520,9 +1665,11 @@ func (a *App) handleDone(gen int) {
 
 var onlyNoise = regexp.MustCompile(`^[\s.,!?\*\[\]\(\)«»"'…·♪♫~-]*$|^\[[^\]]*\]$|^\([^\)]*\)$`)
 
-func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, profileID string, targetWnd uintptr) {
+func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, profileID string, targetWnd uintptr, wake bool) {
 	defer a.post(ptEvent{kind: evDone, gen: gen})
 	defer a.dropLiveIf(gen)
+	a.touchModels()
+	defer a.touchModels()
 
 	minBytes := sampleRate * 2 * cfg.MinRecordMs / 1000
 	if len(pcm) < minBytes {
@@ -1547,6 +1694,9 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 		return
 	}
 
+	if wake && !a.waitWoken(ctx, cfg, profileID) {
+		return
+	}
 	a.mu.Lock()
 	srv := a.srv
 	a.mu.Unlock()
@@ -2169,6 +2319,12 @@ func chainProfiles(cfg *Config, profileID string) []*Profile {
 }
 
 func (a *App) llmProcess(ctx context.Context, prompt, text string) (string, error) {
+	a.llmUses.Add(1)
+	a.touchModels()
+	defer func() {
+		a.touchModels()
+		a.llmUses.Add(-1)
+	}()
 	if cfg := a.snapshot(); postAPIOn(cfg) {
 		out, err := externalChat(ctx, cfg, prompt, text)
 		if err != nil {
@@ -2359,6 +2515,7 @@ func (a *App) backendFailed(logMsg, text string) {
 	log.Printf("recognizer did not start: %s", logMsg)
 	a.mu.Lock()
 	a.ready = false
+	a.waking = false
 	a.backendErr = text
 	a.srv = nil
 	a.mu.Unlock()

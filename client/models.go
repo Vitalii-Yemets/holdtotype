@@ -1016,6 +1016,7 @@ func (a *App) stateSnapshot() string {
 	cfg := a.snapshot()
 	a.mu.Lock()
 	ready := a.ready
+	parked := a.parked
 	backendErr := a.backendErr
 	stamp := a.lastResultAt
 	lastApp := a.lastProcess
@@ -1059,6 +1060,8 @@ func (a *App) stateSnapshot() string {
 		status = strS("S_SRV_DOWN")
 	} else if ready {
 		status = trf("status.ready", cfg.Hotkey)
+	} else if parked {
+		status = tr("status.parked")
 	} else if backendErr != "" {
 		status = backendErr
 	}
@@ -1111,7 +1114,7 @@ func (a *App) stateSnapshot() string {
 		WeekLine:    weekLine(),
 		LLMOK:       postReady(cfg),
 		MicOK:       rec != nil,
-		StatusLine:  statusLine(cfg, ready, free),
+		StatusLine:  statusLine(cfg, ready, parked, free),
 		Remote:      cfg.SttSource == "remote",
 		SttSource:   cfg.SttSource,
 		SttBroken:   sttRemoteBroken(cfg),
@@ -1314,9 +1317,12 @@ func micBadge(name string) string {
 	return shortLabel(strings.TrimSpace(name), 10)
 }
 
-func statusLine(cfg *Config, ready bool, freeMB int) string {
+func statusLine(cfg *Config, ready, parked bool, freeMB int) string {
 	if sttRemoteBroken(cfg) && primaryEngine(cfg) == engineWhisper {
 		return strS("S_SRV_DOWN")
+	}
+	if !ready && parked {
+		return tr("status.parked")
 	}
 	if !ready {
 		return tr("status.loading")

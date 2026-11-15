@@ -6,6 +6,7 @@ import (
 	"holdtotype/internal/fastpack"
 	"holdtotype/internal/history"
 	"holdtotype/internal/hotkeys"
+	"holdtotype/internal/idleunload"
 	"holdtotype/internal/mojibake"
 	"holdtotype/internal/ovplace"
 	"holdtotype/internal/preset"
@@ -97,6 +98,7 @@ type Config struct {
 	ConfigVersion    int    `json:"config_version"`
 	SherpaThreads    int    `json:"sherpa_threads"`
 	EngineIdleMin    int    `json:"engine_idle_minutes"`
+	ModelsIdleMin    int    `json:"models_idle_minutes"`
 	Punctuation      string `json:"punctuation"`
 	HotkeyMode       string `json:"hotkey_mode"`
 	SilenceStop      bool   `json:"silence_stop"`
@@ -466,6 +468,7 @@ func loadConfig(path string) (*Config, error) {
 	if cfg.SherpaThreads <= 0 {
 		cfg.SherpaThreads = 4
 	}
+	cfg.ModelsIdleMin = idleunload.Minutes(cfg.ModelsIdleMin)
 	if cfg.EngineIdleMin <= 0 {
 		cfg.EngineIdleMin = 10
 	}

@@ -2001,6 +2001,7 @@ func (a *App) stopSubtitles(why string, drain time.Duration) bool {
 	if r == nil {
 		return false
 	}
+	a.touchModels()
 	subWindowHide(r)
 	a.subMu.Lock()
 	a.subEnding = append(a.subEnding, r)

@@ -612,6 +612,7 @@ func (a *App) ensureEngine(e *engineSlot, prepare func(*Config) (engineSpec, err
 	e.mu.Unlock()
 	a.mu.Unlock()
 	log.Printf("%s ready", spec.label)
+	a.touchModels()
 	return s, nil
 }
 
