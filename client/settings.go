@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"holdtotype/internal/audiolevel"
 	"holdtotype/internal/commands"
+	"holdtotype/internal/idleunload"
 	"holdtotype/internal/ovplace"
 	"holdtotype/internal/preset"
 	"holdtotype/internal/replace"
@@ -170,6 +171,7 @@ type settingsForm struct {
 	SubtitlesMonitor  *string                  `json:"subtitles_monitor"`
 	SubtitlesBox      *map[string]subwin.Box   `json:"subtitles_box"`
 	SubtitlesLayout   *string                  `json:"subtitles_layout"`
+	ModelsIdleMin     *int                     `json:"models_idle_minutes"`
 
 	SubtitlesTranslateOn     *bool   `json:"subtitles_translate_on"`
 	SubtitlesTranslate       *string `json:"subtitles_translate"`
@@ -996,6 +998,9 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	if f.SubtitlesLayout != nil {
 		c.SubtitlesLayout = subwin.Layout(*f.SubtitlesLayout)
 	}
+	if f.ModelsIdleMin != nil {
+		c.ModelsIdleMin = idleunload.Minutes(*f.ModelsIdleMin)
+	}
 	if f.SubtitlesTranslateOn != nil {
 		c.SubtitlesTranslateOn = *f.SubtitlesTranslateOn
 	}
@@ -1170,6 +1175,7 @@ func settingsHTML(cfg *Config, tab string) string {
 
 		"subtitles_translation_only": cfg.SubtitlesTranslationOnly,
 		"subtitles_layout":           subwin.Layout(cfg.SubtitlesLayout),
+		"models_idle_minutes":        idleunload.Minutes(cfg.ModelsIdleMin),
 	}
 	cfgJSON, _ := json.Marshal(cfgMap)
 
@@ -2422,6 +2428,8 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
   <div class="row noline"><label class="blklbl">{{S_LLM_BLOCK}}</label><span class="libtotal" id="lib_have_total"></span></div>
   <div id="lib_have_list"></div>
   <div class="hint" id="lib_have_none" style="display:none">{{S_LIB_NONE}}</div>
+  <div class="row" id="idle_row"><label>{{S_IDLE_UNLOAD}}<span class="sub">{{S_IDLE_UNLOAD_SUB}}</span></label>
+   <select id="models_idle_minutes"><option value="0">{{S_IDLE_NEVER}}</option><option value="5">{{S_IDLE_5}}</option><option value="10">{{S_IDLE_10}}</option><option value="30">{{S_IDLE_30}}</option><option value="60">{{S_IDLE_60}}</option></select></div>
   <div class="row noline"><label>{{S_MCHECK}}<span class="sub">{{S_MCHECK_SUB}}</span></label>
    <button type="button" class="mini" id="mcheck">{{S_MCHECK_GO}}</button></div>
   <div class="micverdict" id="mcheck_out"></div>
@@ -5735,6 +5743,11 @@ function load(){
   texts.forEach(k=>document.getElementById(k).value = CFG[k]||"");
   document.getElementById("server_url").value = remoteURL;
   nums.forEach(k=>document.getElementById(k).value = CFG[k]);
+  const idleSel = document.getElementById("models_idle_minutes");
+  if(idleSel){
+    idleSel.value = String(CFG.models_idle_minutes || 0);
+    if(!idleSel.value) idleSel.value = "0";
+  }
   sels.forEach(k=>{
     const el=document.getElementById(k), v=CFG[k]||"auto";
     if(![...el.options].some(o=>o.value===v)){const o=document.createElement("option");o.value=v;o.textContent=v;el.appendChild(o);}
@@ -6184,6 +6197,7 @@ async function doSave(){
     subtitles_translate_on: subsOn(),
     subtitles_translation_only: !!(subsEl("subtitles_translation_only")||{}).checked,
     subtitles_layout: subsLayout(),
+    models_idle_minutes: parseInt((document.getElementById("models_idle_minutes")||{}).value) || 0,
     subtitles_translate: subsTo(),
     subtitles_translator: subsWho};
   OVS.posDirty = false;

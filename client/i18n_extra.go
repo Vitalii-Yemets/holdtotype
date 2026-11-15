@@ -69,7 +69,7 @@ func init() {
 		"snd.quiet": "leise — sprechen Sie näher am Mikrofon",
 		"snd.clipped": "zu laut, der Ton übersteuert",
 		"snd.silent": "Stille in der Aufnahme",
-		"status.parked": "Erkennung entladen — das Tastenkürzel weckt sie wieder",
+		"status.parked": "Modelle entladen — das nächste Diktat lädt sie neu",
 		"status.nomodel.lang": "Für %s ist das Modell %s nicht installiert — öffnen Sie „Sprachen“",
 		"menu.lastcopy":  "Letztes Ergebnis kopieren",
 		"ov.copied":      "In die Zwischenablage kopiert", "ov.kept": "Abgebrochen — Text bleibt im letzten Ergebnis",
@@ -188,7 +188,7 @@ func init() {
 		"snd.quiet": "faible — parlez plus près du micro",
 		"snd.clipped": "trop fort, le son a saturé",
 		"snd.silent": "silence dans l’enregistrement",
-		"status.parked": "Moteur déchargé — le raccourci le réveillera",
+		"status.parked": "Modèles déchargés — la prochaine dictée les recharge",
 		"status.nomodel.lang": "Pour %s, le modèle %s n’est pas installé — ouvrez « Langues »",
 		"menu.lastcopy":  "Copier le dernier résultat",
 		"ov.copied":      "Copié dans le presse-papiers", "ov.kept": "Annulé — le texte reste dans le dernier résultat",
@@ -307,7 +307,7 @@ func init() {
 		"snd.quiet": "bajo — hable más cerca del micrófono",
 		"snd.clipped": "demasiado alto, el sonido se recortó",
 		"snd.silent": "silencio en la grabación",
-		"status.parked": "Motor descargado — el atajo lo despertará",
+		"status.parked": "Modelos descargados — el próximo dictado los vuelve a cargar",
 		"status.nomodel.lang": "Para %s no está instalado el modelo %s — abra «Idiomas»",
 		"menu.lastcopy":  "Copiar el último resultado",
 		"ov.copied":      "Copiado al portapapeles", "ov.kept": "Cancelado — el texto queda en el último resultado",
@@ -426,7 +426,7 @@ func init() {
 		"snd.quiet": "piano — parlate più vicino al microfono",
 		"snd.clipped": "troppo forte, il suono è saturato",
 		"snd.silent": "silenzio nella registrazione",
-		"status.parked": "Motore scaricato — la scorciatoia lo risveglia",
+		"status.parked": "Modelli scaricati — la prossima dettatura li ricarica",
 		"status.nomodel.lang": "Per %s il modello %s non è installato — aprite «Lingue»",
 		"menu.lastcopy":  "Copia l'ultimo risultato",
 		"ov.copied":      "Copiato negli appunti", "ov.kept": "Annullato — il testo resta nell'ultimo risultato",
@@ -545,7 +545,7 @@ func init() {
 		"snd.quiet": "cicho — mów bliżej mikrofonu",
 		"snd.clipped": "za głośno, dźwięk się przesterował",
 		"snd.silent": "cisza w nagraniu",
-		"status.parked": "Silnik wyładowany — skrót go obudzi",
+		"status.parked": "Modele wyładowane — następne dyktowanie wczyta je ponownie",
 		"status.nomodel.lang": "Dla języka %s model %s nie jest zainstalowany — otwórz „Języki”",
 		"menu.lastcopy":  "Kopiuj ostatni wynik",
 		"ov.copied":      "Skopiowano do schowka", "ov.kept": "Anulowano — tekst został w ostatnim wyniku",
@@ -950,7 +950,6 @@ func init() {
 		"S_M_NEMOTRON": "schreibt beim Sprechen: der Text erscheint auf der Leiste, während Sie reden; 40 Sprachen, setzt Satzzeichen selbst",
 		"S_M_TINY": "das kleinste und schnellste, für sehr schwache Rechner; spürbar ungenauer",
 		"S_STATE_LOADED": "Gerade im Speicher",
-		"S_STATE_LOADED_SUB": "Modelle entladen sich nach Leerlauf selbst",
 		"S_STATE_WEEK": "Diese Woche",
 		"S_ST_SUMMARY": "Übersicht", "S_ST_OVERLAY": "Leiste auf dem Bildschirm", "S_ST_BEEP": "Tonsignal", "S_ST_AUTORUN": "Start mit Windows", "S_ST_POST": "Nachbearbeitung", "S_ST_LOCAL": "lokal", "S_ST_CHECKED": "geprüft %s", "S_ST_GB": "%s GB", "S_ST_MB": "%s MB", "S_ST_ON_M": "an", "S_ST_OFF_M": "aus", "S_ST_MIC_OK": "Signal ist in Ordnung", "S_ST_MIC_BAD": "das Mikrofon schweigt", "S_ST_CHECK": "Prüfen", "S_ST_RECOG": "erkannt von %s", "S_ST_VER": "Version %s", "S_ST_LATEST": "aktuell", "S_ST_OUTDATED": "veraltet", "S_ST_UPD_OK": "Sie haben die neueste Version", "S_ST_UPD_DL": "Update wird geladen…",
 		"S_ST_QUICK": "Schnelleinstellungen",
@@ -1024,6 +1023,13 @@ func init() {
 		"S_SEC_OVERLAY": "Bildschirmanzeige",
 		"S_MIC_CHECK":   "Mikrofon prüfen", "S_MIC_CHECK_SUB": "drei Sekunden Aufnahme und ein Urteil: Pegel, Übersteuerung, ob Sprache da ist", "S_MIC_CHECKING": "Prüfe…",
 		"S_MCHECK": "Installierte Modelle prüfen", "S_MCHECK_SUB": "vergleicht die Dateien mit den Referenz-Prüfsummen; ein beschädigtes Modell muss gelöscht und neu geladen werden", "S_MCHECK_GO": "Prüfen", "S_MCHECK_RUN": "Prüfe…",
+		"S_IDLE_UNLOAD": "Modelle bei Leerlauf entladen",
+		"S_IDLE_UNLOAD_SUB": "gab es die gewählte Zeit lang weder Diktat noch Untertitel, geben die Modelle den Speicher frei; das nächste Diktat lädt das Modell neu, und der Text erscheint ein paar Sekunden später",
+		"S_IDLE_NEVER": "nicht entladen",
+		"S_IDLE_5": "nach 5 Minuten",
+		"S_IDLE_10": "nach 10 Minuten",
+		"S_IDLE_30": "nach 30 Minuten",
+		"S_IDLE_60": "nach einer Stunde",
 		"S_HIST_INSERT": "Einfügen",
 		"S_MIC": "Mikrofon", "S_MIC_DEFAULT": "Systemstandard", "S_MIC_REFRESH": "Liste aktualisieren",
 		"S_MIC_LEVEL": "Eingangspegel", "S_MIC_QUIET": "still",
@@ -1116,7 +1122,7 @@ func init() {
 			"<li><b>Untertitel.</b> Die Karte direkt unter der obersten: ob die Untertitel aus sind, ihr Modell laden, laufen oder neu starten, mit dem Modell und wie der Text kommt, ihr Tastenkürzel, wenn eines gesetzt ist, eine Schaltfläche, die sie startet oder beendet, und ein Pfeil zur Registerkarte „Untertitel & Übersetzung“. Darunter stehen die Schalter „Übersetzung“ und „Nur die Übersetzung zeigen“ — dieselben wie auf der Registerkarte „Untertitel & Übersetzung“.</li>" +
 			"<li><b>Diese Woche.</b> Ein Kreisdiagramm: in welche Programme Ihre Diktate gingen und wie viele Zeichen Sie diktiert haben.</li>" +
 			"<li><b>Version.</b> Die Build-Nummer und eine Schaltfläche zum Prüfen. Ist eine neuere erschienen, sagt die App es gleich hier.</li>" +
-			"<li><b>Speicher.</b> Wie viel davon frei ist, welches Modell gerade darin sitzt und wie viel alle Modelle auf der Festplatte belegen. Die Schaltfläche „Entladen“ gibt den Speicher sofort frei, etwa vor einem anspruchsvollen Spiel.</li>" +
+			"<li><b>Speicher.</b> Wie viel davon frei ist, welches Modell gerade darin sitzt und wie viel alle Modelle auf der Festplatte belegen. Die Schaltfläche „Entladen“ gibt den Speicher sofort frei, etwa vor einem anspruchsvollen Spiel. Das nächste Diktat nach dem Entladen geht nicht verloren: die Aufnahme beginnt sofort, das Modell lädt währenddessen, und der Text erscheint ein paar Sekunden später.</li>" +
 			"<li><b>Schnelleinstellungen.</b> Fünf Karten mit dem Wichtigsten: Mikrofon, Sprache, Leiste, Ton, Start mit Windows. Sie zeigen, wie es gerade eingestellt ist, und der Pfeil führt zur Registerkarte, auf der man es ändert. Schalter gibt es hier mit Absicht nicht, damit nichts im Vorbeigehen verstellt wird.</li>" +
 			"<li><b>Modelle.</b> Was installiert ist, was gerade arbeitet, für welche Sprachen es zuständig ist und was nur auf der Festplatte liegt.</li>" +
 			"</ul>" +
@@ -1165,6 +1171,7 @@ func init() {
 			"<tr><td>Modelle zum Herunterladen</td><td>Erkennungsmodelle für Diktat und Untertitel und das Modell, das Untertitel übersetzt. Der Pfeil lädt ein Modell herunter, das Kreuz bricht den Download ab; ein heruntergeladenes Modell wandert nach „Installierte Modelle“.</td></tr>" +
 			"<tr><td>Suche auf Hugging Face</td><td>Bearbeitungsmodelle für die Nachbearbeitung. Geben Sie einen Namen ein und drücken Sie Enter oder die Lupe; das Kreuz leert die Suche. Ein heruntergeladenes Modell erscheint unter den installierten, eingeschaltet wird es auf der Registerkarte „Nachbearbeitung“.</td></tr>" +
 			"<tr><td>Eigenes Modell</td><td>Haben Sie ein eigenes Erkennungsmodell, legen Sie es in den Modellordner und starten Sie die App neu: Es erscheint in den Listen der Sprachen, die es versteht. Die Schaltfläche daneben öffnet den richtigen Ordner.</td></tr>" +
+			"<tr><td>Modelle bei Leerlauf entladen</td><td>Gab es die gewählte Zeit lang — 5, 10 oder 30 Minuten oder eine Stunde — weder Diktat noch Untertitel, entlädt das Programm alle geladenen Modelle aus dem Speicher: die Erkennung und das Editor-Modell. Das ist dasselbe wie die Schaltfläche „Entladen“ auf „Status“: das nächste Diktat wird sofort aufgenommen, das Modell lädt währenddessen, und der Text erscheint ein paar Sekunden später. Standardmäßig bleiben die Modelle geladen.</td></tr>" +
 			"<tr><td>Installierte Modelle prüfen</td><td>Vergleicht die heruntergeladenen Dateien mit Referenz-Prüfsummen. Nützlich, wenn die Verbindung beim Herunterladen abgebrochen ist; ein beschädigtes Modell muss gelöscht und neu geladen werden.</td></tr>" +
 			"</table>" +
 			"<p class=\"wh\" id=\"s-mic\">Die Registerkarte „Mikrofon“</p>" +
@@ -1712,7 +1719,6 @@ func init() {
 		"S_M_NEMOTRON": "écrit pendant que vous parlez : le texte apparaît sur le bandeau en direct ; 40 langues, ponctue d’elle-même",
 		"S_M_TINY": "le plus petit et le plus rapide, pour les machines très modestes ; nettement moins précis",
 		"S_STATE_LOADED": "En mémoire en ce moment",
-		"S_STATE_LOADED_SUB": "les modèles se déchargent seuls après inactivité",
 		"S_STATE_WEEK": "Cette semaine",
 		"S_ST_SUMMARY": "Résumé", "S_ST_OVERLAY": "Bandeau à l'écran", "S_ST_BEEP": "Signal sonore", "S_ST_AUTORUN": "Démarrage avec Windows", "S_ST_POST": "Post-traitement", "S_ST_LOCAL": "en local", "S_ST_CHECKED": "vérifié %s", "S_ST_GB": "%s Go", "S_ST_MB": "%s Mo", "S_ST_ON_M": "activé", "S_ST_OFF_M": "désactivé", "S_ST_MIC_OK": "le signal est bon", "S_ST_MIC_BAD": "le micro ne répond pas", "S_ST_CHECK": "Vérifier", "S_ST_RECOG": "reconnu par %s", "S_ST_VER": "Version %s", "S_ST_LATEST": "la plus récente", "S_ST_OUTDATED": "obsolète", "S_ST_UPD_OK": "vous avez la dernière version", "S_ST_UPD_DL": "Téléchargement de la mise à jour…",
 		"S_ST_QUICK": "Réglages rapides",
@@ -1786,6 +1792,13 @@ func init() {
 		"S_SEC_OVERLAY": "Bandeau à l'écran",
 		"S_MIC_CHECK":   "Vérifier le microphone", "S_MIC_CHECK_SUB": "trois secondes d'enregistrement, puis un verdict : niveau, saturation, présence de parole", "S_MIC_CHECKING": "Vérification…",
 		"S_MCHECK": "Vérifier les modèles installés", "S_MCHECK_SUB": "compare les fichiers aux sommes de contrôle de référence ; un modèle endommagé doit être supprimé et retéléchargé", "S_MCHECK_GO": "Vérifier", "S_MCHECK_RUN": "Vérification…",
+		"S_IDLE_UNLOAD": "Décharger les modèles en cas d'inactivité",
+		"S_IDLE_UNLOAD_SUB": "si, pendant le temps choisi, il n'y a eu ni dictée ni sous-titres, les modèles libèrent la mémoire ; la dictée suivante recharge le modèle, et le texte arrive quelques secondes plus tard",
+		"S_IDLE_NEVER": "ne pas décharger",
+		"S_IDLE_5": "après 5 minutes",
+		"S_IDLE_10": "après 10 minutes",
+		"S_IDLE_30": "après 30 minutes",
+		"S_IDLE_60": "après une heure",
 		"S_HIST_INSERT": "Coller",
 		"S_MIC": "Microphone", "S_MIC_DEFAULT": "Par défaut du système", "S_MIC_REFRESH": "Actualiser la liste",
 		"S_MIC_LEVEL": "Niveau d'entrée", "S_MIC_QUIET": "silence",
@@ -1878,7 +1891,7 @@ func init() {
 			"<li><b>Sous-titres.</b> La carte juste sous celle du haut : si les sous-titres sont arrêtés, chargent leur modèle, tournent ou redémarrent, avec le modèle et la façon dont arrive le texte, leur raccourci s'il y en a un, un bouton qui les démarre ou les arrête, et une flèche vers l'onglet « Sous-titres, traduction ». En dessous, les interrupteurs « Traduction » et « Afficher seulement la traduction » — les mêmes que dans l'onglet « Sous-titres, traduction ».</li>" +
 			"<li><b>Cette semaine.</b> Un graphique circulaire : vers quels programmes sont allées vos dictées et combien de caractères vous avez dictés.</li>" +
 			"<li><b>Version.</b> Le numéro de build et un bouton « Vérifier ». Si une version plus récente est sortie, l'application le dit ici même.</li>" +
-			"<li><b>Mémoire.</b> Combien il en reste de libre, quel modèle s'y trouve en ce moment et combien de place tous les modèles prennent sur le disque. Le bouton « Décharger » libère la mémoire immédiatement, par exemple avant un jeu gourmand.</li>" +
+			"<li><b>Mémoire.</b> Combien il en reste de libre, quel modèle s'y trouve en ce moment et combien de place tous les modèles prennent sur le disque. Le bouton « Décharger » libère la mémoire immédiatement, par exemple avant un jeu gourmand. La dictée suivante n'est pas perdue : l'enregistrement commence aussitôt, le modèle se charge pendant ce temps, et le texte arrive quelques secondes plus tard.</li>" +
 			"<li><b>Réglages rapides.</b> Cinq cartes avec l'essentiel : microphone, langue, bandeau, son, démarrage avec Windows. Elles montrent comment c'est réglé en ce moment, et la flèche mène à l'onglet où cela se change. Il n'y a volontairement pas d'interrupteurs ici, pour que rien ne bascule par mégarde.</li>" +
 			"<li><b>Modèles.</b> Ce qui est installé, ce qui fonctionne en ce moment, de quelles langues chacun s'occupe et ce qui dort simplement sur le disque.</li>" +
 			"</ul>" +
@@ -1927,6 +1940,7 @@ func init() {
 			"<tr><td>Modèles à télécharger</td><td>Les modèles de reconnaissance pour la dictée et les sous-titres, et le modèle qui traduit les sous-titres. La flèche télécharge un modèle, la croix annule le téléchargement ; un modèle téléchargé passe dans « Modèles installés ».</td></tr>" +
 			"<tr><td>Recherche sur Hugging Face</td><td>Les modèles d'édition pour le post-traitement. Tapez un nom et appuyez sur Entrée ou sur la loupe ; la croix efface la recherche. Un modèle téléchargé apparaît parmi les modèles installés, et on l'active dans l'onglet « Post-traitement ».</td></tr>" +
 			"<tr><td>Votre propre modèle</td><td>Si vous avez votre propre modèle de reconnaissance, placez-le dans le dossier des modèles et redémarrez l'application : il apparaît dans les listes des langues qu'il comprend. Le bouton à côté ouvre le bon dossier.</td></tr>" +
+			"<tr><td>Décharger les modèles en cas d'inactivité</td><td>Si, pendant le temps choisi — 5, 10 ou 30 minutes ou une heure —, il n'y a eu ni dictée ni sous-titres, le programme décharge de la mémoire tous les modèles chargés : la reconnaissance et le modèle éditeur. C'est la même chose que le bouton « Décharger » sur « État » : la dictée suivante est enregistrée aussitôt, le modèle se charge pendant ce temps, et le texte arrive quelques secondes plus tard. Par défaut, les modèles restent chargés.</td></tr>" +
 			"<tr><td>Vérifier les modèles installés</td><td>Compare les fichiers téléchargés aux sommes de contrôle de référence. Utile si la connexion a été coupée pendant un téléchargement ; un modèle endommagé doit être supprimé et retéléchargé.</td></tr>" +
 			"</table>" +
 			"<p class=\"wh\" id=\"s-mic\">L'onglet « Microphone »</p>" +
@@ -2474,7 +2488,6 @@ func init() {
 		"S_M_NEMOTRON": "escribe mientras hablas: el texto aparece en la barra en directo; 40 idiomas, puntúa por sí solo",
 		"S_M_TINY": "el más pequeño y rápido, para equipos muy modestos; bastante menos preciso",
 		"S_STATE_LOADED": "En memoria ahora mismo",
-		"S_STATE_LOADED_SUB": "los modelos se descargan solos tras la inactividad",
 		"S_STATE_WEEK": "Esta semana",
 		"S_ST_SUMMARY": "Resumen", "S_ST_OVERLAY": "Barra en pantalla", "S_ST_BEEP": "Señal sonora", "S_ST_AUTORUN": "Inicio con Windows", "S_ST_POST": "Posprocesado", "S_ST_LOCAL": "local", "S_ST_CHECKED": "comprobado %s", "S_ST_GB": "%s GB", "S_ST_MB": "%s MB", "S_ST_ON_M": "activado", "S_ST_OFF_M": "desactivado", "S_ST_MIC_OK": "la señal es buena", "S_ST_MIC_BAD": "el micrófono no responde", "S_ST_CHECK": "Comprobar", "S_ST_RECOG": "reconocido por %s", "S_ST_VER": "Versión %s", "S_ST_LATEST": "la última", "S_ST_OUTDATED": "desactualizada", "S_ST_UPD_OK": "tiene la última versión", "S_ST_UPD_DL": "Descargando la actualización…",
 		"S_ST_QUICK": "Ajustes rápidos",
@@ -2548,6 +2561,13 @@ func init() {
 		"S_SEC_OVERLAY": "Aviso en pantalla",
 		"S_MIC_CHECK":   "Comprobar el micrófono", "S_MIC_CHECK_SUB": "tres segundos de grabación y un veredicto: nivel, saturación, si hay voz", "S_MIC_CHECKING": "Comprobando…",
 		"S_MCHECK": "Comprobar los modelos instalados", "S_MCHECK_SUB": "compara los archivos con las sumas de referencia; un modelo dañado hay que eliminarlo y descargarlo de nuevo", "S_MCHECK_GO": "Comprobar", "S_MCHECK_RUN": "Comprobando…",
+		"S_IDLE_UNLOAD": "Descargar los modelos en reposo",
+		"S_IDLE_UNLOAD_SUB": "si durante el tiempo elegido no hubo dictado ni subtítulos, los modelos liberan la memoria; el siguiente dictado vuelve a cargar el modelo y el texto aparece unos segundos más tarde",
+		"S_IDLE_NEVER": "no descargar",
+		"S_IDLE_5": "a los 5 minutos",
+		"S_IDLE_10": "a los 10 minutos",
+		"S_IDLE_30": "a los 30 minutos",
+		"S_IDLE_60": "a la hora",
 		"S_HIST_INSERT": "Pegar",
 		"S_MIC": "Micrófono", "S_MIC_DEFAULT": "Predeterminado del sistema", "S_MIC_REFRESH": "Actualizar la lista",
 		"S_MIC_LEVEL": "Nivel de entrada", "S_MIC_QUIET": "silencio",
@@ -2640,7 +2660,7 @@ func init() {
 			"<li><b>Subtítulos.</b> La tarjeta justo debajo de la primera: si los subtítulos están apagados, cargando su modelo, en marcha o reiniciándose, con el modelo y cómo llega el texto, su atajo si hay uno, un botón que los inicia o los detiene y una flecha a la pestaña «Subtítulos y traducción». Debajo están los interruptores «Traducción» y «Mostrar solo la traducción», los mismos que en la pestaña «Subtítulos y traducción».</li>" +
 			"<li><b>Esta semana.</b> Un gráfico circular: a qué programas fueron tus dictados y cuántos caracteres dictaste.</li>" +
 			"<li><b>Versión.</b> El número de compilación y el botón «Comprobar». Si ha salido una más nueva, la aplicación te lo dice aquí mismo.</li>" +
-			"<li><b>Memoria.</b> Cuánta queda libre, qué modelo está cargado en ella ahora y cuánto ocupan todos los modelos en el disco. El botón «Liberar» vacía la memoria al momento, por ejemplo antes de un juego exigente.</li>" +
+			"<li><b>Memoria.</b> Cuánta queda libre, qué modelo está cargado en ella ahora y cuánto ocupan todos los modelos en el disco. El botón «Liberar» vacía la memoria al momento, por ejemplo antes de un juego exigente. El siguiente dictado no se pierde: la grabación empieza al momento, el modelo se carga mientras tanto y el texto aparece unos segundos más tarde.</li>" +
 			"<li><b>Ajustes rápidos.</b> Cinco tarjetas con lo más usado: micrófono, idioma, barra, sonido e inicio con Windows. Muestran cómo está configurado ahora, y la flecha lleva a la pestaña donde se cambia. Aquí no hay interruptores a propósito, para que nada se toque sin querer.</li>" +
 			"<li><b>Modelos.</b> Qué está instalado, qué funciona ahora mismo, de qué idiomas se encarga cada uno y qué está simplemente guardado en el disco.</li>" +
 			"</ul>" +
@@ -2689,6 +2709,7 @@ func init() {
 			"<tr><td>Modelos para descargar</td><td>Modelos de reconocimiento para el dictado y los subtítulos, y el modelo que traduce los subtítulos. La flecha descarga un modelo, la cruz cancela la descarga; un modelo descargado pasa a «Modelos instalados».</td></tr>" +
 			"<tr><td>Búsqueda en Hugging Face</td><td>Modelos editores para el posprocesado. Escribe un nombre y pulsa Enter o la lupa; la cruz borra la búsqueda. Un modelo descargado aparece entre los instalados, y se activa en la pestaña «Posprocesado».</td></tr>" +
 			"<tr><td>Modelo propio</td><td>Si tienes un modelo de reconocimiento propio, ponlo en la carpeta de modelos y reinicia la aplicación: aparecerá en las listas de los idiomas que entiende. El botón de al lado abre esa carpeta.</td></tr>" +
+			"<tr><td>Descargar los modelos en reposo</td><td>Si durante el tiempo elegido —5, 10 o 30 minutos o una hora— no hubo dictado ni subtítulos, el programa descarga de la memoria todos los modelos cargados: el de reconocimiento y el modelo editor. Es lo mismo que el botón «Liberar» en «Estado»: el siguiente dictado se graba al momento, el modelo se carga mientras tanto y el texto aparece unos segundos más tarde. De forma predeterminada, los modelos siguen cargados.</td></tr>" +
 			"<tr><td>Comprobar los modelos instalados</td><td>Compara los archivos descargados con las sumas de referencia. Sirve si la conexión se cortó durante una descarga; un modelo dañado hay que borrarlo y descargarlo de nuevo.</td></tr>" +
 			"</table>" +
 			"<p class=\"wh\" id=\"s-mic\">La pestaña «Micrófono»</p>" +
@@ -3236,7 +3257,6 @@ func init() {
 		"S_M_NEMOTRON": "scrive mentre parli: il testo appare sulla barra in diretta; 40 lingue, punteggia da sé",
 		"S_M_TINY": "il più piccolo e veloce, per macchine molto modeste; sensibilmente meno preciso",
 		"S_STATE_LOADED": "In memoria in questo momento",
-		"S_STATE_LOADED_SUB": "i modelli si scaricano da soli dopo l’inattività",
 		"S_STATE_WEEK": "Questa settimana",
 		"S_ST_SUMMARY": "Riepilogo", "S_ST_OVERLAY": "Barra a schermo", "S_ST_BEEP": "Segnale acustico", "S_ST_AUTORUN": "Avvio con Windows", "S_ST_POST": "Post-elaborazione", "S_ST_LOCAL": "in locale", "S_ST_CHECKED": "verificato %s", "S_ST_GB": "%s GB", "S_ST_MB": "%s MB", "S_ST_ON_M": "attivo", "S_ST_OFF_M": "spento", "S_ST_MIC_OK": "il segnale è buono", "S_ST_MIC_BAD": "il microfono non risponde", "S_ST_CHECK": "Controlla", "S_ST_RECOG": "riconosciuto da %s", "S_ST_VER": "Versione %s", "S_ST_LATEST": "l'ultima", "S_ST_OUTDATED": "non aggiornata", "S_ST_UPD_OK": "hai l'ultima versione", "S_ST_UPD_DL": "Scarico l'aggiornamento…",
 		"S_ST_QUICK": "Impostazioni rapide",
@@ -3310,6 +3330,13 @@ func init() {
 		"S_SEC_OVERLAY": "Avviso a schermo",
 		"S_MIC_CHECK":   "Controlla il microfono", "S_MIC_CHECK_SUB": "tre secondi di registrazione e un verdetto: livello, distorsione, se c'è voce", "S_MIC_CHECKING": "Controllo…",
 		"S_MCHECK": "Controlla i modelli installati", "S_MCHECK_SUB": "confronta i file con le somme di riferimento; un modello danneggiato va eliminato e scaricato di nuovo", "S_MCHECK_GO": "Controlla", "S_MCHECK_RUN": "Controllo…",
+		"S_IDLE_UNLOAD": "Scaricare i modelli quando inattivi",
+		"S_IDLE_UNLOAD_SUB": "se per il tempo scelto non ci sono stati né dettatura né sottotitoli, i modelli liberano la memoria; la dettatura successiva ricarica il modello e il testo arriva qualche secondo dopo",
+		"S_IDLE_NEVER": "non scaricare",
+		"S_IDLE_5": "dopo 5 minuti",
+		"S_IDLE_10": "dopo 10 minuti",
+		"S_IDLE_30": "dopo 30 minuti",
+		"S_IDLE_60": "dopo un'ora",
 		"S_HIST_INSERT": "Incolla",
 		"S_MIC": "Microfono", "S_MIC_DEFAULT": "Predefinito di sistema", "S_MIC_REFRESH": "Aggiorna l'elenco",
 		"S_MIC_LEVEL": "Livello d'ingresso", "S_MIC_QUIET": "silenzio",
@@ -3402,7 +3429,7 @@ func init() {
 			"<li><b>Sottotitoli.</b> Il riquadro subito sotto quello in alto: se i sottotitoli sono spenti, stanno caricando il modello, sono attivi o si stanno riavviando, con il modello e come arriva il testo, la loro scorciatoia se è impostata, un pulsante che li avvia o li ferma e una freccia verso la scheda «Sottotitoli e traduzione». Sotto ci sono gli interruttori «Traduzione» e «Mostra solo la traduzione», gli stessi della scheda «Sottotitoli e traduzione».</li>" +
 			"<li><b>Questa settimana.</b> Un grafico a torta: in quali programmi sono finite le tue dettature e quanti caratteri hai dettato.</li>" +
 			"<li><b>Versione.</b> Il numero della build e il pulsante «Controlla». Se ne è uscita una più nuova, l'app te lo dice proprio qui.</li>" +
-			"<li><b>Memoria.</b> Quanta ne resta libera, quale modello c'è dentro adesso e quanto pesano tutti i modelli su disco. Il pulsante «Libera» svuota la memoria subito, per esempio prima di un gioco pesante.</li>" +
+			"<li><b>Memoria.</b> Quanta ne resta libera, quale modello c'è dentro adesso e quanto pesano tutti i modelli su disco. Il pulsante «Libera» svuota la memoria subito, per esempio prima di un gioco pesante. La dettatura successiva non va persa: la registrazione parte subito, il modello si carica nel frattempo e il testo arriva qualche secondo dopo.</li>" +
 			"<li><b>Impostazioni rapide.</b> Cinque riquadri con le cose più usate: microfono, lingua, barra, suono e avvio con Windows. Mostrano com'è impostato adesso, e la freccia porta alla scheda dove si cambia. Qui di proposito non ci sono interruttori, così non tocchi niente per sbaglio.</li>" +
 			"<li><b>Modelli.</b> Che cosa è installato, che cosa sta lavorando in questo momento, di quali lingue si occupa ciascuno e che cosa sta semplicemente su disco.</li>" +
 			"</ul>" +
@@ -3451,6 +3478,7 @@ func init() {
 			"<tr><td>Modelli da scaricare</td><td>Modelli di riconoscimento per la dettatura e i sottotitoli, e il modello che traduce i sottotitoli. La freccia scarica un modello, la croce annulla lo scaricamento; un modello scaricato passa in «Modelli installati».</td></tr>" +
 			"<tr><td>Ricerca su Hugging Face</td><td>Modelli editor per la post-elaborazione. Scrivi un nome e premi Invio o la lente; la croce cancella la ricerca. Un modello scaricato compare tra quelli installati, e si attiva nella scheda «Post-elaborazione».</td></tr>" +
 			"<tr><td>Modello proprio</td><td>Se hai un modello di riconoscimento tuo, mettilo nella cartella dei modelli e riavvia l'app: comparirà negli elenchi delle lingue che capisce. Il pulsante accanto apre la cartella giusta.</td></tr>" +
+			"<tr><td>Scaricare i modelli quando inattivi</td><td>Se per il tempo scelto — 5, 10 o 30 minuti o un'ora — non ci sono stati né dettatura né sottotitoli, il programma scarica dalla memoria tutti i modelli caricati: il riconoscimento e il modello editor. È lo stesso del pulsante «Libera» su «Stato»: la dettatura successiva viene registrata subito, il modello si carica nel frattempo e il testo arriva qualche secondo dopo. Di base i modelli restano caricati.</td></tr>" +
 			"<tr><td>Controlla i modelli installati</td><td>Confronta i file scaricati con le somme di riferimento. Torna utile se la connessione è caduta durante lo scaricamento; un modello danneggiato va eliminato e scaricato di nuovo.</td></tr>" +
 			"</table>" +
 			"<p class=\"wh\" id=\"s-mic\">La scheda «Microfono»</p>" +
@@ -3998,7 +4026,6 @@ func init() {
 		"S_M_NEMOTRON": "pisze w trakcie mowy: tekst pojawia się na pasku na żywo; 40 języków, sama stawia interpunkcję",
 		"S_M_TINY": "najmniejszy i najszybszy, dla bardzo słabych komputerów; wyraźnie mniej dokładny",
 		"S_STATE_LOADED": "Teraz w pamięci",
-		"S_STATE_LOADED_SUB": "modele wyładowują się same po bezczynności",
 		"S_STATE_WEEK": "W tym tygodniu",
 		"S_ST_SUMMARY": "Podsumowanie", "S_ST_OVERLAY": "Pasek na ekranie", "S_ST_BEEP": "Sygnał dźwiękowy", "S_ST_AUTORUN": "Start z Windows", "S_ST_POST": "Przetwarzanie", "S_ST_LOCAL": "lokalnie", "S_ST_CHECKED": "sprawdzono %s", "S_ST_GB": "%s GB", "S_ST_MB": "%s MB", "S_ST_ON_M": "włączony", "S_ST_OFF_M": "wyłączony", "S_ST_MIC_OK": "sygnał w normie", "S_ST_MIC_BAD": "mikrofon milczy", "S_ST_CHECK": "Sprawdź", "S_ST_RECOG": "rozpoznaje %s", "S_ST_VER": "Wersja %s", "S_ST_LATEST": "najnowsza", "S_ST_OUTDATED": "nieaktualna", "S_ST_UPD_OK": "masz najnowszą wersję", "S_ST_UPD_DL": "Pobieram aktualizację…",
 		"S_ST_QUICK": "Szybkie ustawienia",
@@ -4072,6 +4099,13 @@ func init() {
 		"S_SEC_OVERLAY": "Pasek na ekranie",
 		"S_MIC_CHECK":   "Sprawdź mikrofon", "S_MIC_CHECK_SUB": "trzy sekundy nagrania i werdykt: poziom, przesterowanie, czy jest mowa", "S_MIC_CHECKING": "Sprawdzam…",
 		"S_MCHECK": "Sprawdź zainstalowane modele", "S_MCHECK_SUB": "porównuje pliki z wzorcowymi sumami kontrolnymi; uszkodzony model trzeba usunąć i pobrać ponownie", "S_MCHECK_GO": "Sprawdź", "S_MCHECK_RUN": "Sprawdzam…",
+		"S_IDLE_UNLOAD": "Wyładowuj modele przy bezczynności",
+		"S_IDLE_UNLOAD_SUB": "jeśli przez wybrany czas nie było ani dyktowania, ani napisów, modele zwalniają pamięć; następne dyktowanie wczyta model ponownie, a tekst pojawi się kilka sekund później",
+		"S_IDLE_NEVER": "nie wyładowuj",
+		"S_IDLE_5": "po 5 minutach",
+		"S_IDLE_10": "po 10 minutach",
+		"S_IDLE_30": "po 30 minutach",
+		"S_IDLE_60": "po godzinie",
 		"S_HIST_INSERT": "Wklej",
 		"S_MIC": "Mikrofon", "S_MIC_DEFAULT": "Domyślny systemowy", "S_MIC_REFRESH": "Odśwież listę",
 		"S_MIC_LEVEL": "Poziom wejścia", "S_MIC_QUIET": "cisza",
@@ -4164,7 +4198,7 @@ func init() {
 			"<li><b>Napisy.</b> Karta tuż pod górną: czy napisy są wyłączone, wczytują model, działają czy uruchamiają się ponownie, z modelem i tym, jak przychodzi tekst, ich skrót, jeśli jest ustawiony, przycisk, który je włącza lub wyłącza, i strzałka do zakładki „Napisy i tłumaczenie”. Pod spodem są przełączniki „Tłumaczenie” i „Pokazuj tylko tłumaczenie” — te same co w zakładce „Napisy i tłumaczenie”.</li>" +
 			"<li><b>W tym tygodniu.</b> Wykres kołowy: do jakich programów trafiały twoje dyktowania i ile znaków podyktowano.</li>" +
 			"<li><b>Wersja.</b> Numer kompilacji i przycisk sprawdzania. Jeśli wyszła nowsza, aplikacja powie o tym właśnie tutaj.</li>" +
-			"<li><b>Pamięć.</b> Ile jej jest wolnej, który model jest w niej teraz i ile wszystkie modele zajmują na dysku. Przycisk „Wyładuj” zwalnia pamięć od razu, na przykład przed wymagającą grą.</li>" +
+			"<li><b>Pamięć.</b> Ile jej jest wolnej, który model jest w niej teraz i ile wszystkie modele zajmują na dysku. Przycisk „Wyładuj” zwalnia pamięć od razu, na przykład przed wymagającą grą. Następne dyktowanie nie przepada: nagrywanie zaczyna się od razu, model w tym czasie się wczytuje, a tekst pojawia się kilka sekund później.</li>" +
 			"<li><b>Szybkie ustawienia.</b> Pięć kart z tym, czego używa się najczęściej: mikrofon, język, pasek, dźwięk, start z Windows. Pokazują, jak wszystko jest teraz ustawione, a strzałka prowadzi na zakładkę, na której się to zmienia. Przełączników celowo tu nie ma, żeby niczego nie przestawić mimochodem.</li>" +
 			"<li><b>Modele.</b> Co jest zainstalowane, co działa w tej chwili, za które języki odpowiada i co po prostu leży na dysku.</li>" +
 			"</ul>" +
@@ -4213,6 +4247,7 @@ func init() {
 			"<tr><td>Modele do pobrania</td><td>Modele rozpoznawania do dyktowania i napisów oraz model, który tłumaczy napisy. Strzałka pobiera model, krzyżyk przerywa pobieranie; pobrany model przechodzi do „Zainstalowane modele”.</td></tr>" +
 			"<tr><td>Wyszukiwanie na Hugging Face</td><td>Modele redaktory do obróbki końcowej. Wpisz nazwę i naciśnij Enter albo lupę; krzyżyk czyści wyszukiwanie. Pobrany model pojawi się wśród zainstalowanych, a włącza się go w zakładce „Obróbka końcowa”.</td></tr>" +
 			"<tr><td>Własny model</td><td>Jeśli masz własny model rozpoznawania, umieść go w folderze modeli i uruchom aplikację ponownie: pojawi się na listach dla języków, które rozumie. Przycisk obok otwiera właściwy folder.</td></tr>" +
+			"<tr><td>Wyładowuj modele przy bezczynności</td><td>Jeśli przez wybrany czas — 5, 10 lub 30 minut albo godzinę — nie było ani dyktowania, ani napisów, program wyładowuje z pamięci wszystkie wczytane modele: rozpoznawanie i model-redaktor. To samo robi przycisk „Wyładuj” na „Stan”: następne dyktowanie nagrywa się od razu, model w tym czasie się wczytuje, a tekst pojawia się kilka sekund później. Domyślnie modele zostają w pamięci.</td></tr>" +
 			"<tr><td>Sprawdź zainstalowane modele</td><td>Porównuje pobrane pliki z wzorcowymi sumami kontrolnymi. Przydaje się, jeśli połączenie zrywało się podczas pobierania; uszkodzony model trzeba usunąć i pobrać ponownie.</td></tr>" +
 			"</table>" +
 			"<p class=\"wh\" id=\"s-mic\">Zakładka „Mikrofon”</p>" +
@@ -4445,7 +4480,7 @@ func init() {
 		"snd.quiet": "тихо — говоріть ближче до мікрофона",
 		"snd.clipped": "занадто гучно, звук обрізався",
 		"snd.silent": "тиша в записі",
-		"status.parked": "Рушій вивантажено — натисніть сполучення, щоб розбудити",
+		"status.parked": "Моделі вивантажено — наступне диктування завантажить їх знову",
 		"status.nomodel.lang": "Для мови %s не встановлено модель %s — відкрийте «Мови»",
 		"menu.settings":  "Налаштування…", "menu.enable": "Увімкнути", "menu.disable": "Вимкнути",
 		"menu.open.config": "Відкрити config.json", "menu.open.log": "Відкрити лог",
@@ -4761,6 +4796,13 @@ func init() {
 		"S_M_BASE": "швидка, для слабких ПК", "S_M_SMALL": "баланс швидкості й точності", "S_M_MED": "Whisper для будь-якої мови; та, що перекладає", "S_M_TURBO": "максимум точності на CPU", "S_M_GIGAAM": "точніша російською, сама ставить розділові знаки", "S_M_PARAKEET": "25 європейських мов, сама ставить розділові знаки",
 		"S_MIC_CHECK": "Перевірити мікрофон", "S_MIC_CHECK_SUB": "три секунди запису та розбір: гучність, перевантаження, чи є мовлення", "S_MIC_CHECKING": "Перевіряю…",
 		"S_MCHECK": "Перевірити встановлені моделі", "S_MCHECK_SUB": "звіряє файли з еталонними сумами; пошкоджену модель треба видалити й скачати знову", "S_MCHECK_GO": "Перевірити", "S_MCHECK_RUN": "Перевіряю…",
+		"S_IDLE_UNLOAD": "Вивантажувати моделі під час простою",
+		"S_IDLE_UNLOAD_SUB": "якщо вибраний час не було ні диктування, ні субтитрів, моделі звільняють пам'ять; наступне диктування завантажить модель знову, і текст з'явиться на кілька секунд пізніше",
+		"S_IDLE_NEVER": "не вивантажувати",
+		"S_IDLE_5": "через 5 хвилин",
+		"S_IDLE_10": "через 10 хвилин",
+		"S_IDLE_30": "через 30 хвилин",
+		"S_IDLE_60": "через годину",
 		"S_HIST_INSERT": "Вставити",
 		"S_MIC": "Мікрофон", "S_MIC_DEFAULT": "Системний за замовчуванням", "S_MIC_REFRESH": "Оновити список",
 		"S_MIC_LEVEL": "Рівень сигналу", "S_MIC_QUIET": "тихо",
@@ -4904,7 +4946,6 @@ func init() {
 		"S_M_NEMOTRON": "друкує під час мовлення: текст з’являється на смужці наживо; 40 мов, знаки сама",
 		"S_M_TINY": "найменша і найшвидша, для дуже слабких машин; помітно менш точна",
 		"S_STATE_LOADED": "Зараз у пам’яті",
-		"S_STATE_LOADED_SUB": "моделі вивантажуються самі після простою",
 		"S_STATE_WEEK": "За тиждень",
 		"S_ST_SUMMARY": "Зведення", "S_ST_OVERLAY": "Смужка на екрані", "S_ST_BEEP": "Звуковий сигнал", "S_ST_AUTORUN": "Запуск із Windows", "S_ST_POST": "Постобробка", "S_ST_LOCAL": "локально", "S_ST_CHECKED": "перевірено %s", "S_ST_GB": "%s ГБ", "S_ST_MB": "%s МБ", "S_ST_ON_M": "увімкнений", "S_ST_OFF_M": "вимкнений", "S_ST_MIC_OK": "сигнал у нормі", "S_ST_MIC_BAD": "мікрофон не відповідає", "S_ST_CHECK": "Перевірити", "S_ST_RECOG": "розпізнає %s", "S_ST_VER": "Версія %s", "S_ST_LATEST": "остання", "S_ST_OUTDATED": "не остання", "S_ST_UPD_OK": "у вас остання версія", "S_ST_UPD_DL": "Завантажую оновлення…",
 		"S_ST_QUICK": "Швидкі налаштування",
@@ -5046,7 +5087,7 @@ func init() {
 			"<li><b>Субтитри.</b> Картка одразу під верхньою: чи вимкнені субтитри, завантажують модель, ідуть чи перезапускаються, з моделлю і тим, як приходить текст, їхнє сполучення клавіш, якщо його задано, кнопка, яка їх запускає або зупиняє, і стрілка на вкладку «Субтитри й переклад». Під нею — перемикачі «Переклад» і «Показувати лише переклад»: ті самі, що на вкладці «Субтитри й переклад».</li>" +
 			"<li><b>Використання за тиждень.</b> Кругова діаграма: у які програми йшли ваші диктування і скільки знаків ви наговорили.</li>" +
 			"<li><b>Версія.</b> Номер збірки й кнопка перевірки. Якщо вийшла новіша, застосунок скаже про це тут же.</li>" +
-			"<li><b>Пам'ять.</b> Скільки її вільно, яка модель зараз у ній сидить і скільки всі моделі важать на диску. Кнопка «Вивантажити» звільняє пам'ять негайно, наприклад перед важкою грою.</li>" +
+			"<li><b>Пам'ять.</b> Скільки її вільно, яка модель зараз у ній сидить і скільки всі моделі важать на диску. Кнопка «Вивантажити» звільняє пам'ять негайно, наприклад перед важкою грою. Наступне диктування після цього не губиться: запис починається одразу, модель тим часом завантажується, і текст з'являється на кілька секунд пізніше.</li>" +
 			"<li><b>Швидкі налаштування.</b> П'ять карток із найуживанішим: мікрофон, мова, смужка, звук, запуск із Windows. Вони показують, як усе налаштовано зараз, а стрілка веде на вкладку, де це змінюється. Перемикачів тут навмисно немає, щоб нічого не зачепити мимохідь.</li>" +
 			"<li><b>Моделі.</b> Що встановлено, що працює саме зараз, за які мови відповідає і що просто лежить на диску.</li>" +
 			"</ul>" +
@@ -5095,6 +5136,7 @@ func init() {
 			"<tr><td>Моделі, які можна скачати</td><td>Моделі розпізнавання для диктування і субтитрів та модель, що перекладає субтитри. Стрілка скачує модель, хрестик скасовує завантаження; скачана модель переходить до «Встановлені моделі».</td></tr>" +
 			"<tr><td>Пошук на Hugging Face</td><td>Моделі-редактори для постобробки. Введіть назву й натисніть Enter або лупу; хрестик очищає пошук. Скачана модель зʼявиться серед встановлених, а вмикають її на вкладці «Постобробка».</td></tr>" +
 			"<tr><td>Своя модель</td><td>Якщо у вас є своя модель розпізнавання, покладіть її в теку моделей і перезапустіть застосунок: вона зʼявиться в списках для тих мов, які розуміє. Кнопка поруч відкриває потрібну теку.</td></tr>" +
+			"<tr><td>Вивантажувати моделі під час простою</td><td>Якщо вибраний час — 5, 10, 30 хвилин або годину — не було ні диктування, ні субтитрів, програма вивантажує з пам'яті всі завантажені моделі: розпізнавання і модель-редактор. Це те саме, що кнопка «Вивантажити» на «Стан»: наступне диктування записується одразу, модель тим часом завантажується, і текст з'являється на кілька секунд пізніше. Типово моделі не вивантажуються.</td></tr>" +
 			"<tr><td>Перевірити встановлені моделі</td><td>Звіряє скачані файли з еталонними сумами. Знадобиться, якщо звʼязок обривався під час завантаження; пошкоджену модель треба видалити й скачати знову.</td></tr>" +
 			"</table>" +
 			"<p class=\"wh\" id=\"s-mic\">Вкладка «Мікрофон»</p>" +

@@ -134,6 +134,18 @@ function open(lang, cfgPatch, setup) {
   check("the translation model has its plates and the terms plate", [...row("trm").querySelectorAll(".libl2 > *")].map((e) => e.textContent), ["graphics card with 4 GB of its own memory or more", "Terms of use ↗"]);
   const checkRow = d.getElementById("mcheck").closest(".row");
   check("the check row closes the block", [checkRow.querySelector("label").firstChild.textContent, [...d.querySelectorAll("#lib_have > .row")].pop() === checkRow], ["S_MCHECK", true]);
+  const idleSel = d.getElementById("models_idle_minutes"), idleRow = d.getElementById("idle_row");
+  check("unloading when idle is a row with a list right before the check row", [idleRow.nextElementSibling === checkRow, idleRow.classList.contains("noline"), idleRow.querySelector("label").firstChild.textContent, idleRow.querySelector(".sub").textContent, idleSel.tagName],
+    [true, false, "S_IDLE_UNLOAD", "S_IDLE_UNLOAD_SUB", "SELECT"]);
+  check("the list offers never, 5, 10 and 30 minutes and an hour", [...idleSel.options].map((o) => [o.value, o.textContent]), [["0", "S_IDLE_NEVER"], ["5", "S_IDLE_5"], ["10", "S_IDLE_10"], ["30", "S_IDLE_30"], ["60", "S_IDLE_60"]]);
+  check("without the key in the config nothing is unloaded", idleSel.value, "0");
+  idleSel.value = "10"; idleSel.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(450);
+  check("a choice is saved as minutes", lastSave().models_idle_minutes, 10);
+  idleSel.value = "60"; idleSel.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(450);
+  check("an hour is saved as 60", lastSave().models_idle_minutes, 60);
+  idleSel.value = "0"; idleSel.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(450);
+  check("and never as 0", lastSave().models_idle_minutes, 0);
+  check("the search finds the row", w.searchMatches("s_idle_unload").some((el) => el === idleRow), true);
 
   check("the models to download, by name", rows("lib_get_list").map((r) => r.dataset.key), ["asr:base", "asr:moonshine-uk", "asr:parakeet-v3"]);
   check("the hint says what they are for", d.getElementById("lib_get_hint").textContent, "For dictation and subtitles — models that turn speech into text. A downloaded model moves to “Installed models”.");
@@ -268,6 +280,33 @@ function open(lang, cfgPatch, setup) {
   check("a found model row is marked like a found setting", [shown("library"), d.querySelector("#p-library .librow.hit") && d.querySelector("#p-library .librow.hit").dataset.key], [true, "asr:gigaam-v3"]);
   check("and the mark has a rule of its own", [...d.styleSheets].some((s) => [...s.cssRules].some((r) => r.selectorText === ".librow.hit" && /inset/.test(r.style.boxShadow))), true);
   w.searchSettings("");
+
+  for (const [v, want] of [[30, "30"], [5, "5"], [7, "0"]]) {
+    const one = open("en", { models_idle_minutes: v });
+    await sleep(500);
+    check("a saved " + v + " shows as " + want, one.window.document.getElementById("models_idle_minutes").value, want);
+    one.window.close();
+  }
+  {
+    const src = fs.readFileSync(path.join(__dirname, "..", "client", "i18n.go"), "utf8").replace(/\r\n/g, "\n");
+    const block = (lang) => {
+      const at = src.indexOf('\n\t"' + lang + '": {', src.indexOf("var settingsStrings"));
+      const out = {};
+      for (const m of src.slice(at, src.indexOf("\n\t},", at)).matchAll(/"(S_[A-Z0-9_]+)":\s*"((?:[^"\\]|\\.)*)"/g)) out[m[1]] = JSON.parse('"' + m[2] + '"');
+      return out;
+    };
+    const tray = (lang) => {
+      const m = src.match(new RegExp('"' + lang + '": \\{[^]*?"status\\.parked":\\s*"([^"]*)"'));
+      return m && m[1];
+    };
+    const ruS = block("ru"), enS = block("en");
+    check("Russian: the row texts", [ruS.S_IDLE_UNLOAD, ruS.S_IDLE_UNLOAD_SUB, ruS.S_IDLE_NEVER, ruS.S_IDLE_5, ruS.S_IDLE_10, ruS.S_IDLE_30, ruS.S_IDLE_60],
+      ["Выгружать модели при простое", "если выбранное время не было ни диктовки, ни субтитров, модели освобождают память; следующая диктовка загрузит модель заново, и текст появится на несколько секунд позже", "не выгружать", "через 5 минут", "через 10 минут", "через 30 минут", "через час"]);
+    check("English: the row texts", [enS.S_IDLE_UNLOAD, enS.S_IDLE_UNLOAD_SUB, enS.S_IDLE_NEVER, enS.S_IDLE_5, enS.S_IDLE_10, enS.S_IDLE_30, enS.S_IDLE_60],
+      ["Unload models when idle", "if there was neither dictation nor subtitles for the chosen time, the models free the memory; the next dictation loads the model again, and the text appears a few seconds later", "never", "after 5 minutes", "after 10 minutes", "after 30 minutes", "after an hour"]);
+    check("the status after an unload tells the truth", [tray("ru"), tray("en")], ["Модели выгружены — следующая диктовка загрузит их заново", "Models unloaded — the next dictation loads them again"]);
+    check("no text promises a wake-up any more, and the line about unloading by itself is gone", [/разбуд|wake/i.test(src), "S_STATE_LOADED_SUB" in ruS || "S_STATE_LOADED_SUB" in enS], [false, false]);
+  }
 
   const ru = open("ru", { lang_models: { auto: "nemotron-3.5", ru: "gigaam-v3" }, language: "ru", subtitles_language: "auto", llm_model: "a.gguf" });
   const rw = ru.window, rd = rw.document;

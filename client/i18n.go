@@ -137,7 +137,7 @@ var msgs = map[string]map[string]string{
 		"snd.quiet": "тихо — говорите ближе к микрофону",
 		"snd.clipped": "слишком громко, звук обрезался",
 		"snd.silent": "тишина в записи",
-		"status.parked": "Движок выгружен — нажмите сочетание, чтобы разбудить",
+		"status.parked": "Модели выгружены — следующая диктовка загрузит их заново",
 		"status.nomodel.lang": "Для языка %s не установлена модель %s — откройте «Языки»",
 		"status.ready":          "Готов — зажмите %s и говорите",
 		"status.recording":      "Идёт запись…",
@@ -336,7 +336,7 @@ var msgs = map[string]map[string]string{
 		"snd.quiet": "quiet — speak closer to the microphone",
 		"snd.clipped": "too loud, the sound clipped",
 		"snd.silent": "silence in the recording",
-		"status.parked": "Engine unloaded — press the shortcut to wake it",
+		"status.parked": "Models unloaded — the next dictation loads them again",
 		"status.nomodel.lang": "For %s the %s model is not installed — open Languages",
 		"status.ready":          "Ready — hold %s and speak",
 		"status.recording":      "Recording…",
@@ -860,7 +860,6 @@ var settingsStrings = map[string]map[string]string{
 		"S_M_NEMOTRON": "печатает по ходу речи: текст появляется на плашке, пока вы говорите; 40 языков, знаки сама",
 		"S_M_TINY": "самая маленькая и быстрая, для очень слабых машин; точность заметно ниже",
 		"S_STATE_LOADED": "Сейчас в памяти",
-		"S_STATE_LOADED_SUB": "модели выгружаются сами после простоя",
 		"S_STATE_WEEK": "За неделю",
 		"S_ST_SUMMARY": "Сводка", "S_ST_OVERLAY": "Плашка на экране", "S_ST_BEEP": "Звуковой сигнал", "S_ST_AUTORUN": "Запуск с Windows", "S_ST_POST": "Постобработка", "S_ST_LOCAL": "локально", "S_ST_CHECKED": "проверено %s", "S_ST_GB": "%s ГБ", "S_ST_MB": "%s МБ", "S_ST_ON_M": "включён", "S_ST_OFF_M": "выключен", "S_ST_MIC_OK": "сигнал в норме", "S_ST_MIC_BAD": "микрофон не отвечает", "S_ST_CHECK": "Проверить", "S_ST_RECOG": "распознаёт %s", "S_ST_VER": "Версия %s", "S_ST_LATEST": "последняя", "S_ST_OUTDATED": "не последняя", "S_ST_UPD_OK": "у вас последняя версия", "S_ST_UPD_DL": "Загружаю обновление…",
 		"S_ST_QUICK": "Быстрые настройки",
@@ -977,6 +976,13 @@ var settingsStrings = map[string]map[string]string{
 		"S_MIC_DEFAULT": "Системный по умолчанию",
 		"S_MIC_CHECK":   "Проверить микрофон", "S_MIC_CHECK_SUB": "три секунды записи и разбор: громкость, перегруз, есть ли речь", "S_MIC_CHECKING": "Проверяю…",
 		"S_MCHECK": "Проверить установленные модели", "S_MCHECK_SUB": "сверяет файлы с эталонными суммами; повреждённую модель нужно удалить и скачать заново", "S_MCHECK_GO": "Проверить", "S_MCHECK_RUN": "Проверяю…",
+		"S_IDLE_UNLOAD": "Выгружать модели при простое",
+		"S_IDLE_UNLOAD_SUB": "если выбранное время не было ни диктовки, ни субтитров, модели освобождают память; следующая диктовка загрузит модель заново, и текст появится на несколько секунд позже",
+		"S_IDLE_NEVER": "не выгружать",
+		"S_IDLE_5": "через 5 минут",
+		"S_IDLE_10": "через 10 минут",
+		"S_IDLE_30": "через 30 минут",
+		"S_IDLE_60": "через час",
 		"S_HIST_INSERT": "Вставить",
 		"S_MIC_REFRESH":     "Обновить список",
 		"S_MIC_LEVEL":       "Уровень сигнала",
@@ -1146,7 +1152,7 @@ var settingsStrings = map[string]map[string]string{
 			"<li><b>Субтитры.</b> Карточка сразу под верхней: выключены ли субтитры, загружают модель, идут или перезапускаются, с моделью и тем, как приходит текст, их сочетание клавиш, если оно задано, кнопка, которая их запускает или останавливает, и стрелка на вкладку «Субтитры и перевод». Под строкой состояния — переключатели «Перевод» и «Показывать только перевод»: те же, что на вкладке «Субтитры и перевод».</li>" +
 			"<li><b>Использование за неделю.</b> Круговая диаграмма: в какие программы уходили ваши диктовки и сколько знаков вы наговорили.</li>" +
 			"<li><b>Версия.</b> Номер сборки и кнопка проверки. Если вышла новее, приложение скажет об этом здесь же.</li>" +
-			"<li><b>Память.</b> Сколько её свободно, какая модель сейчас в ней сидит и сколько все модели весят на диске. Кнопка «Выгрузить» освобождает память немедленно — например, перед тяжёлой игрой.</li>" +
+			"<li><b>Память.</b> Сколько её свободно, какая модель сейчас в ней сидит и сколько все модели весят на диске. Кнопка «Выгрузить» освобождает память немедленно — например, перед тяжёлой игрой. Следующая диктовка после выгрузки не теряется: запись начинается сразу, модель тем временем загружается, и текст появляется на несколько секунд позже.</li>" +
 			"<li><b>Быстрые настройки.</b> Пять карточек с самым ходовым: микрофон, язык, плашка, звук, автозапуск. Показывают, как настроено сейчас, а стрелка ведёт на вкладку, где это меняется. Переключателей здесь намеренно нет, чтобы ничего не задеть мимоходом.</li>" +
 			"<li><b>Модели.</b> Что установлено, что работает прямо сейчас, за какие языки отвечает и что просто лежит на диске.</li>" +
 			"</ul>" +
@@ -1195,6 +1201,7 @@ var settingsStrings = map[string]map[string]string{
 			"<tr><td>Доступные для скачивания модели</td><td>Модели распознавания для диктовки и субтитров и модель перевода субтитров. Стрелка скачивает модель, крестик отменяет загрузку; скачанная модель переезжает в «Установленные модели».</td></tr>" +
 			"<tr><td>Поиск на Hugging Face</td><td>Модели-редакторы для постобработки. Введите название и нажмите Enter или лупу; крестик очищает поиск. Скачанная модель появится среди установленных, а включают её на вкладке «Постобработка».</td></tr>" +
 			"<tr><td>Своя модель</td><td>Если у вас есть своя модель распознавания, положите её в папку моделей и перезапустите приложение — она появится в списках для тех языков, которые понимает. Кнопка рядом открывает нужную папку.</td></tr>" +
+			"<tr><td>Выгружать модели при простое</td><td>Если выбранное время — 5, 10, 30 минут или час — не было ни диктовки, ни субтитров, программа выгружает из памяти все загруженные модели: распознавание и модель-редактор. Это то же, что кнопка «Выгрузить» на «Состояние»: следующая диктовка записывается сразу, модель тем временем загружается, и текст появляется на несколько секунд позже. По умолчанию модели не выгружаются.</td></tr>" +
 			"<tr><td>Проверить установленные модели</td><td>Сверяет скачанные файлы с эталонными суммами. Пригодится, если связь обрывалась во время загрузки; повреждённую модель нужно удалить и скачать заново.</td></tr>" +
 			"</table>" +
 			"<p class=\"wh\" id=\"s-mic\">Вкладка «Микрофон»</p>" +
@@ -1752,7 +1759,6 @@ var settingsStrings = map[string]map[string]string{
 		"S_M_NEMOTRON": "types as you speak: the text shows on the plate while you talk; 40 languages, punctuates by itself",
 		"S_M_TINY": "the smallest and fastest, for very weak machines; noticeably less accurate",
 		"S_STATE_LOADED": "In memory right now",
-		"S_STATE_LOADED_SUB": "models unload themselves after idling",
 		"S_STATE_WEEK": "This week",
 		"S_ST_SUMMARY": "Summary", "S_ST_OVERLAY": "Plate on screen", "S_ST_BEEP": "Sound cue", "S_ST_AUTORUN": "Start with Windows", "S_ST_POST": "Post-processing", "S_ST_LOCAL": "local", "S_ST_CHECKED": "checked %s", "S_ST_GB": "%s GB", "S_ST_MB": "%s MB", "S_ST_ON_M": "on", "S_ST_OFF_M": "off", "S_ST_MIC_OK": "signal is fine", "S_ST_MIC_BAD": "the microphone is silent", "S_ST_CHECK": "Check", "S_ST_RECOG": "recognized by %s", "S_ST_VER": "Version %s", "S_ST_LATEST": "latest", "S_ST_OUTDATED": "outdated", "S_ST_UPD_OK": "you have the latest version", "S_ST_UPD_DL": "Downloading the update…",
 		"S_ST_QUICK": "Quick settings",
@@ -1869,6 +1875,13 @@ var settingsStrings = map[string]map[string]string{
 		"S_MIC_DEFAULT": "System default",
 		"S_MIC_CHECK":   "Check the microphone", "S_MIC_CHECK_SUB": "three seconds of recording, then a verdict: level, clipping, whether there is speech", "S_MIC_CHECKING": "Checking…",
 		"S_MCHECK": "Check installed models", "S_MCHECK_SUB": "compares the files with reference checksums; a damaged model has to be deleted and downloaded again", "S_MCHECK_GO": "Check", "S_MCHECK_RUN": "Checking…",
+		"S_IDLE_UNLOAD": "Unload models when idle",
+		"S_IDLE_UNLOAD_SUB": "if there was neither dictation nor subtitles for the chosen time, the models free the memory; the next dictation loads the model again, and the text appears a few seconds later",
+		"S_IDLE_NEVER": "never",
+		"S_IDLE_5": "after 5 minutes",
+		"S_IDLE_10": "after 10 minutes",
+		"S_IDLE_30": "after 30 minutes",
+		"S_IDLE_60": "after an hour",
 		"S_HIST_INSERT": "Paste",
 		"S_MIC_REFRESH":     "Refresh list",
 		"S_MIC_LEVEL":       "Input level",
@@ -2038,7 +2051,7 @@ var settingsStrings = map[string]map[string]string{
 			"<li><b>Subtitles.</b> The card right under the top one: whether subtitles are off, loading their model, running or restarting, with the model and how the text arrives, their shortcut when one is set, a button that starts or stops them, and an arrow to the “Subtitles & translation” tab. Under it are the “Translation” and “Show only the translation” switches — the same ones as on the “Subtitles & translation” tab.</li>" +
 			"<li><b>This week.</b> A pie chart: which programs your dictations went to and how many characters you dictated.</li>" +
 			"<li><b>Version.</b> The build number and a check button. If a newer one is out, the app tells you right here.</li>" +
-			"<li><b>Memory.</b> How much of it is free, which model is sitting in it now, and how much all the models take up on disk. The “Unload” button frees the memory at once, for example before a heavy game.</li>" +
+			"<li><b>Memory.</b> How much of it is free, which model is sitting in it now, and how much all the models take up on disk. The “Unload” button frees the memory at once, for example before a heavy game. The next dictation after an unload is not lost: the recording starts at once, the model loads meanwhile, and the text appears a few seconds later.</li>" +
 			"<li><b>Quick settings.</b> Five cards with the things you use most: microphone, language, plate, sound, start with Windows. They show how things are set right now, and the arrow takes you to the tab where that is changed. There are deliberately no switches here, so nothing gets flipped in passing.</li>" +
 			"<li><b>Models.</b> What is installed, what is working right now, which languages each one is responsible for, and what is just sitting on disk.</li>" +
 			"</ul>" +
@@ -2087,6 +2100,7 @@ var settingsStrings = map[string]map[string]string{
 			"<tr><td>Models to download</td><td>Recognition models for dictation and subtitles, and the model that translates subtitles. The arrow downloads a model, the cross cancels the download; a downloaded model moves to “Installed models”.</td></tr>" +
 			"<tr><td>Search on Hugging Face</td><td>Editor models for post-processing. Type a name and press Enter or the magnifier; the cross clears the search. A downloaded model appears among the installed ones, and it is turned on on the “Post-processing” tab.</td></tr>" +
 			"<tr><td>Your own model</td><td>If you have a recognition model of your own, put it into the models folder and restart the app: it appears in the lists for the languages it understands. The button next to it opens the right folder.</td></tr>" +
+			"<tr><td>Unload models when idle</td><td>If there was neither dictation nor subtitles for the chosen time — 5, 10 or 30 minutes or an hour — the program unloads every model in memory: recognition and the editor model. It is the same as the “Unload” button on “Status”: the next dictation is recorded at once, the model loads meanwhile, and the text appears a few seconds later. By default the models stay loaded.</td></tr>" +
 			"<tr><td>Check installed models</td><td>Compares the downloaded files with reference checksums. Useful if the connection dropped during a download; a damaged model has to be deleted and downloaded again.</td></tr>" +
 			"</table>" +
 			"<p class=\"wh\" id=\"s-mic\">The “Microphone” tab</p>" +
