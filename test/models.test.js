@@ -183,7 +183,7 @@ function open(lang, cfgPatch, setup) {
   check("and deletes it without touching the languages", [S.calls.includes("del:local:my-model:true"), S.saves.length], [true, saves0]);
 
   row("asr:small").querySelector('button[data-lib="del"]').click(); await sleep(150);
-  check("deleting a model in use names its use", modalText(), "The “Small” model is used for dictation: deutsch. Delete it? Another model will have to be chosen there.");
+  check("deleting a model in use names its use", modalText(), "The “Small” model is used for dictation: deutsch. Delete it? The Auto-detect model will work in its place.");
   await answer(false);
   check("saying no keeps everything", [S.calls.includes("del:small:true"), !!row("asr:small")], [false, true]);
   row("asr:small").querySelector('button[data-lib="del"]').click(); await sleep(150);

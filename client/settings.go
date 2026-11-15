@@ -1249,7 +1249,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"libcount": "S_LIB_COUNT", "libget": "S_LIB_GET", "libgetasr": "S_LIB_GET_ASR", "libgettrm": "S_LIB_GET_TRM", "libgetmove": "S_LIB_GET_MOVE",
 		"libhf": "S_LIB_HF", "libusedict": "S_LIB_USE_DICT", "libusedictsubs": "S_LIB_USE_DICT_SUBS", "libusesubs": "S_LIB_USE_SUBS",
 		"libusepost": "S_LIB_USE_POST", "libusetr": "S_LIB_USE_TR", "libunused": "S_LIB_UNUSED", "libturnon": "S_LIB_TURN_ON", "libfortr": "S_LIB_FOR_TR",
-		"libdelused": "S_LIB_DEL_USED", "libdelauto": "S_LIB_DEL_AUTO", "libdellast": "S_LIB_DEL_LAST",
+		"libdelused": "S_LIB_DEL_USED", "libdellangs": "S_LIB_DEL_LANGS", "libdelauto": "S_LIB_DEL_AUTO", "libdellast": "S_LIB_DEL_LAST",
 		"jumpblock": "S_JUMP_BLOCK", "jumpcard": "S_JUMP_CARD", "termsplate": "S_TERMS_PLATE", "hfclear": "S_HF_CLEAR", "hfhave": "S_HF_HAVE",
 		"langgetother": "S_LANG_GET_OTHER", "langnone": "S_LANG_NONE", "notinstsize": "S_NOT_INST_SIZE",
 		"postfind": "S_POST_FIND", "postdrop": "S_POST_DROP", "postnone": "S_POST_NONE", "postfindone": "S_POST_FIND_ONE",
@@ -5236,7 +5236,7 @@ async function libDeleteAsr(m){
   let ask = fmtText(L.confirmdel, m.name);
   if(use && autoHit && repl) ask = fmtText(L.libdelauto, m.name, use, repl.name);
   else if(use && autoHit) ask = fmtText(L.libdellast, m.name, use);
-  else if(use) ask = fmtText(L.libdelused, m.name, use);
+  else if(use) ask = fmtText(L.libdellangs, m.name, use);
   if(!await askConfirm(ask, L.del, null, L.mtdel)) return;
   let changed = false;
   Object.keys(langModels).forEach(l=>{
