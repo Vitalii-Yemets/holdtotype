@@ -135,6 +135,9 @@ function open(lang, cfgPatch, setup) {
   check("the translation model has its plates and the terms plate", [...row("trm").querySelectorAll(".libl2 > *")].map((e) => e.textContent), ["graphics card with 4 GB of its own memory or more", "Terms of use ↗"]);
   const checkRow = d.getElementById("mcheck").closest(".row");
   check("the check row closes the block", [checkRow.querySelector("label").firstChild.textContent, [...d.querySelectorAll("#lib_have > .row")].pop() === checkRow], ["S_MCHECK", true]);
+  const pageCss = [...d.querySelectorAll("style")].map((s) => s.textContent).join(" ");
+  check("in a narrow window a model row goes in lines: name and size, then the text, then the plates and the bars", ["#lib_have_list,#lib_get_list{container:libs/inline-size}", "@container libs (max-width:819px){", ".librow .libmain,.librow .libl1{display:contents}", ".librow .pname{grid-column:1;grid-row:1;flex:none;width:auto}", ".librow .pact{grid-column:2;grid-row:1}", ".librow .lmodel{grid-column:1/-1;grid-row:2}", ".librow .libl2{grid-column:1;grid-row:3;min-width:0}", ".librow .libbars{grid-column:2;grid-row:3}", ".librow .libmain>:not(.libl1):not(.libl2){grid-column:1/-1}"].filter((r) => !pageCss.includes(r)), []);
+  check("the wide row stays as it was", [".libl1{display:flex;align-items:baseline;gap:12px}", ".librow .pname{flex:0 0 238px;width:238px;", ".libbars{flex:none;width:160px}"].filter((r) => !pageCss.includes(r)), []);
   const idleSel = d.getElementById("models_idle_minutes"), idleRow = d.getElementById("idle_row");
   check("unloading when idle is a row with a list right before the check row", [idleRow.nextElementSibling === checkRow, idleRow.classList.contains("noline"), idleRow.querySelector("label").firstChild.textContent, idleRow.querySelector(".sub").textContent, idleSel.tagName],
     [true, false, "S_IDLE_UNLOAD", "S_IDLE_UNLOAD_SUB", "SELECT"]);

@@ -1931,10 +1931,24 @@ html[data-skin="editor"] .stcombo,html[data-skin="editor"] .hotkey-val{letter-sp
 .librow .pact .psize{color:var(--dim);font-size:12px}
 .librow .pact .iconbtn{min-width:24px;min-height:24px;display:inline-flex;align-items:center;justify-content:center}
 .libslot{display:inline-flex;align-items:center;justify-content:center;width:24px;flex:none}
+#lib_have_list,#lib_get_list{container:libs/inline-size}
+@container libs (max-width:819px){
+.librow{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:12px;row-gap:6px;align-items:center}
+.librow .libmain,.librow .libl1{display:contents}
+.librow .pname{grid-column:1;grid-row:1;flex:none;width:auto}
+.librow .pact{grid-column:2;grid-row:1}
+.librow .lmodel{grid-column:1/-1;grid-row:2}
+.librow .lmodel:empty{display:none}
+.librow .libl2{grid-column:1;grid-row:3;min-width:0}
+.librow .libbars{grid-column:2;grid-row:3}
+.librow .libbars:empty{display:none}
+.librow .libl2:only-child,.librow:has(.libbars:empty) .libl2{grid-column:1/-1}
+.librow .libmain>:not(.libl1):not(.libl2){grid-column:1/-1}
+}
 .hfhome.jump:focus-visible,#lib_hf_home:focus-visible{outline:1px solid var(--green);outline-offset:2px}
 .jumpline{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px}
-.jumpgrid{display:grid;grid-template-columns:max-content max-content;align-items:center;justify-items:start;gap:6px 10px;font-size:11.5px;color:var(--dim);margin:2px 0 6px}
-.jumpgrid .hfhome{margin-left:0}
+.jumpgrid{display:grid;grid-template-columns:minmax(0,max-content) minmax(0,max-content);align-items:center;justify-items:start;gap:6px 10px;font-size:11.5px;color:var(--dim);margin:2px 0 6px}
+.jumpgrid .hfhome{margin-left:0;max-width:100%}
 .postnone .nonote{color:var(--dim);font-size:11.5px;margin-bottom:8px}
 #llm_sum .sumpick{align-items:center}
 #llm_pick{flex:0 0 auto;width:auto;min-width:118px;max-width:min(320px,100%)}

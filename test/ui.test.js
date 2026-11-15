@@ -1117,6 +1117,7 @@ function check(name, actual, expected) {
   check("the model is chosen from a list of the installed ones", [d.getElementById("llm_pick").tagName, [...d.getElementById("llm_pick").options].map(o=>o.value), d.getElementById("llm_pick").value], ["SELECT", ["model.gguf"], "model.gguf"]);
   check("the card says the size and the memory", [...d.querySelectorAll("#llm_sum .sumk")].map(k=>k.textContent), ["model", "size", "memory"]);
   check("the card has no download, unload or delete icons of its own", d.querySelectorAll("#src_local .iconbtn").length, 0);
+  check("the plates of the jump grid shrink in a narrow window instead of leaving the card", [html.includes(".jumpgrid{display:grid;grid-template-columns:minmax(0,max-content) minmax(0,max-content);"), html.includes(".jumpgrid .hfhome{margin-left:0;max-width:100%}")], [true, true]);
   check("two plates lead to the models tab, one under the other", [...d.querySelectorAll("#post_jump .jumpgrid > *")].map(e=>e.textContent), ["Find and download another model:", "Models: Search on Hugging Face →", "Delete one you do not need:", "Models: Installed models →"]);
   check("the Hugging Face link is gone from the card heading", !!d.querySelector("#src_local .srchead .hfhome"), false);
   tab("library"); await sleep(250);
