@@ -1915,6 +1915,12 @@ html[data-skin="editor"] .stcombo,html[data-skin="editor"] .hotkey-val{letter-sp
 .libslot{display:inline-flex;align-items:center;justify-content:center;width:24px;flex:none}
 .hfhome.jump:focus-visible,#lib_hf_home:focus-visible{outline:1px solid var(--green);outline-offset:2px}
 .jumpline{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px}
+.jumpgrid{display:grid;grid-template-columns:max-content max-content;align-items:center;justify-items:start;gap:6px 10px;font-size:11.5px;color:var(--dim);margin:2px 0 6px}
+.jumpgrid .hfhome{margin-left:0}
+.postnone .nonote{color:var(--dim);font-size:11.5px;margin-bottom:8px}
+#llm_sum .sumpick{align-items:center}
+#llm_pick{flex:0 0 auto;width:auto;min-width:118px;max-width:min(320px,100%)}
+#src_local:has(.postnone){min-height:0}
 .jumpline .hfhome{margin-left:0}
 .jumpline>span:first-child,.lpick .nonote{color:var(--dim);font-size:11.5px}
 .lpick .jump{border-color:var(--btn2line);background:var(--field)}
@@ -2502,9 +2508,10 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
  <div class="card" id="post_model_card">
   <label class="blklbl">{{S_POST_MODEL}}</label>
   <div class="srccard" id="src_local">
-   <h3 class="srchead"><input type="radio" name="postsrc" class="srcpick" id="pick_local">{{S_SRC_LOCAL}}<span class="hfhome" onclick="appHFHome()" title="huggingface.co">Hugging Face ↗</span></h3>
+   <h3 class="srchead"><input type="radio" name="postsrc" class="srcpick" id="pick_local">{{S_SRC_LOCAL}}</h3>
    <div class="sum" id="llm_sum"></div>
    <div id="llm_dl"></div>
+   <div id="post_jump"></div>
   </div>
   <div class="srccard" id="src_api">
    <h3 class="srchead"><input type="radio" name="postsrc" class="srcpick" id="pick_api">{{S_POSTAPI}}</h3>
@@ -3405,40 +3412,43 @@ function renderLLMSummary(st){
     return r;
   };
   const cur = installed.find(m=>m.file === selLLM) || installed.find(m=>m.active);
-  if(cur){
-    const row = line(L.llmsummodel, cur.file);
-    const acts = document.createElement("span");
-    acts.className = "sumacts";
-    const eject = document.createElement("button");
-    eject.type = "button";
-    eject.className = "iconbtn";
-    eject.title = L.llmeject;
-    eject.disabled = !cur.loaded;
-    eject.innerHTML = I_EJECT;
-    eject.onclick = async e=>{ e.stopPropagation(); await appLLMUnload(); refreshLLM(); };
-    const drop = document.createElement("button");
-    drop.type = "button";
-    drop.className = "iconbtn danger";
-    drop.title = L.del;
-    drop.innerHTML = "&#10005;";
-    drop.onclick = async e=>{
+  if(installed.length){
+    const row = line(L.llmsummodel, "");
+    const pick = document.createElement("select");
+    pick.id = "llm_pick";
+    if(!cur){
+      const none = document.createElement("option");
+      none.value = "";
+      none.textContent = L.llmnopick;
+      pick.appendChild(none);
+    }
+    installed.forEach(m=>{
+      const o = document.createElement("option");
+      o.value = m.file;
+      o.textContent = m.file;
+      pick.appendChild(o);
+    });
+    pick.value = cur ? cur.file : "";
+    pick.addEventListener("click", e=>e.stopPropagation());
+    pick.onchange = async e=>{
       e.stopPropagation();
-      if(!await askConfirm(L.confirmdel.replace("%s", cur.file), L.del, null, L.mtdel)) return;
-      toast(await appLLMDel(cur.file));
-      if(selLLM === cur.file) selLLM = null;
+      if(!pick.value) return;
+      selLLM = pick.value;
+      await doSave();
       refreshLLM();
     };
-    acts.appendChild(eject); acts.appendChild(drop);
-    row.appendChild(acts);
-    line(L.llmsumsize, llmSize(cur.size));
-    line(L.llmsumcount, String(installed.length));
-  } else if(installed.length){
-    line(L.llmsummodel, L.llmnopick, true);
-    line(L.llmsumcount, String(installed.length));
+    row.classList.add("sumpick");
+    row.replaceChild(pick, row.querySelector(".sumv"));
+    if(cur) line(L.llmsumsize, llmSize(cur.size));
+    if(st.ram) line(L.llmsumram, L.ramof.replace("%s", ((st.ram_free || st.ram) / 1024).toFixed(1)).replace("%s", (st.ram / 1024).toFixed(0)));
   } else {
-    line(L.apisumstate, L.nollm, true);
+    const none = document.createElement("div");
+    none.className = "postnone";
+    none.innerHTML = '<div class="hint nonote">'+esc(L.postnone)+'</div><div class="jumpgrid"><span>'+esc(L.postfindone)+'</span>'+blockChip("lib_hf", L.libhf)+'</div>';
+    box.appendChild(none);
   }
-  if(st.ram) line(L.llmsumram, L.ramof.replace("%s", ((st.ram_free || st.ram) / 1024).toFixed(1)).replace("%s", (st.ram / 1024).toFixed(0)));
+  const jump = document.getElementById("post_jump");
+  if(jump) jump.innerHTML = installed.length ? '<div class="jumpgrid"><span>'+esc(L.postfind)+'</span>'+blockChip("lib_hf", L.libhf)+'<span>'+esc(L.postdrop)+'</span>'+blockChip("lib_have", L.llmblock)+'</div>' : "";
   const dlBox = document.getElementById("llm_dl");
   if(!dlBox) return;
   dlBox.innerHTML = "";

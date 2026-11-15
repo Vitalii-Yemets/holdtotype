@@ -1112,7 +1112,11 @@ function check(name, actual, expected) {
   tab("post"); await sleep(30);
   check("the local model is summed up in the card", !!d.querySelector("#p-post #llm_sum"), true);
   check("the catalog button is gone from the card", !!d.querySelector("#p-post #llm_catalog"), false);
-  check("the summary names the model in use", [...d.querySelectorAll("#llm_sum .sumv")][0].textContent, "model.gguf");
+  check("the model is chosen from a list of the installed ones", [d.getElementById("llm_pick").tagName, [...d.getElementById("llm_pick").options].map(o=>o.value), d.getElementById("llm_pick").value], ["SELECT", ["model.gguf"], "model.gguf"]);
+  check("the card says the size and the memory", [...d.querySelectorAll("#llm_sum .sumk")].map(k=>k.textContent), ["model", "size", "memory"]);
+  check("the card has no download, unload or delete icons of its own", d.querySelectorAll("#src_local .iconbtn").length, 0);
+  check("two plates lead to the models tab, one under the other", [...d.querySelectorAll("#post_jump .jumpgrid > *")].map(e=>e.textContent), ["Find and download another model:", "Models: Search on Hugging Face →", "Delete one you do not need:", "Models: Installed models →"]);
+  check("the Hugging Face link is gone from the card heading", !!d.querySelector("#src_local .srchead .hfhome"), false);
   tab("library"); await sleep(250);
   const llmRow = () => d.querySelector('#lib_have_list .librow[data-key="llm:model.gguf"]');
   check("the editor model has its row among the installed models", !!llmRow(), true);
@@ -2227,7 +2231,7 @@ function check(name, actual, expected) {
 
   const postCard = () => d.querySelectorAll("#state_models .stcard")[1];
   const postRow = () => [postCard().querySelector(".stnm").textContent, postCard().querySelector(".stnm .led").classList.contains("on")];
-  const lastSum = () => [...d.querySelectorAll("#llm_sum .sumv")][0].textContent;
+  const lastSum = () => { const p = d.getElementById("llm_pick"); if(p) return p.options[p.selectedIndex].textContent; const n = d.querySelector("#llm_sum .postnone .nonote"); return n ? n.textContent : ""; };
   llmState = { installed: [
     { file: "Qwen2.5-3B-Instruct-IQ2_M.gguf", size: 1300, active: true, loaded: false },
     { file: "other.gguf", size: 900, active: false, loaded: false },
@@ -2245,9 +2249,12 @@ function check(name, actual, expected) {
   check("post-processing: the chosen model stays chosen", lastSum(), "Qwen2.5-3B-Instruct-IQ2_M.gguf");
   await w.refreshState(); await sleep(60);
   check("status: the chosen model stays named", postRow(), ["Qwen2.5-3B-Instruct-IQ2_M", true]);
-  d.querySelector("#llm_sum .sumacts .iconbtn.danger").click(); await sleep(150);
+  tab("library"); await sleep(250);
+  d.querySelector('#lib_have_list .librow[data-key="llm:Qwen2.5-3B-Instruct-IQ2_M.gguf"] button[data-lib="del"]').click(); await sleep(150);
+  check("deleting the chosen model says what it is used for", d.querySelector(".modal p").textContent, "The “Qwen2.5-3B-Instruct-IQ2_M.gguf” model is used for post-processing. Delete it? Another model will have to be chosen there.");
   d.querySelector(".modal .btn.yes").click(); await sleep(250);
-  check("the cross in the summary deletes the chosen model", w.llmDeleted.slice(-1), ["Qwen2.5-3B-Instruct-IQ2_M.gguf"]);
+  tab("post"); await sleep(250);
+  check("the cross on its row deletes the chosen model", w.llmDeleted.slice(-1), ["Qwen2.5-3B-Instruct-IQ2_M.gguf"]);
   check("post-processing: the summary no longer names it", lastSum(), "not picked");
   await w.refreshState(); await sleep(60);
   check("status: after the next poll, without a reload, the deleted model is gone", postRow(), ["model: not picked", false]);
@@ -2257,7 +2264,9 @@ function check(name, actual, expected) {
   check("status: with nothing left in the folder it says no model is installed", postRow(), ["model: not installed", false]);
   tab("state"); await sleep(30);
   tab("post"); await sleep(200);
-  check("post-processing: the summary says so too", lastSum(), "No models installed yet — find and download one in the search field below.");
+  check("post-processing: the card says there is no editor model", lastSum(), "There is no editor model on this computer.");
+  check("and leads to the search with one plate", [...d.querySelectorAll("#llm_sum .postnone .jumpgrid > *")].map(e=>e.textContent), ["Find and download a model:", "Models: Search on Hugging Face →"]);
+  check("with no list and no lower plates", [!!d.getElementById("llm_pick"), d.getElementById("post_jump").textContent], [false, ""]);
   tab("state"); await sleep(60);
   check("status: the arrow to the Post-processing tab stays", !!postCard().querySelector(".iconbtn.stgo"), true);
   postCard().querySelector(".iconbtn.stgo").click(); await sleep(150);
