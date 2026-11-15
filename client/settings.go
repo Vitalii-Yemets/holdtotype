@@ -169,6 +169,7 @@ type settingsForm struct {
 	SubtitlesPos      *string                  `json:"subtitles_position"`
 	SubtitlesMonitor  *string                  `json:"subtitles_monitor"`
 	SubtitlesBox      *map[string]subwin.Box   `json:"subtitles_box"`
+	SubtitlesLayout   *string                  `json:"subtitles_layout"`
 
 	SubtitlesTranslateOn     *bool   `json:"subtitles_translate_on"`
 	SubtitlesTranslate       *string `json:"subtitles_translate"`
@@ -992,6 +993,9 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	if f.SubtitlesBox != nil {
 		c.SubtitlesBox = subwin.CleanBoxes(*f.SubtitlesBox)
 	}
+	if f.SubtitlesLayout != nil {
+		c.SubtitlesLayout = subwin.Layout(*f.SubtitlesLayout)
+	}
 	if f.SubtitlesTranslateOn != nil {
 		c.SubtitlesTranslateOn = *f.SubtitlesTranslateOn
 	}
@@ -1165,6 +1169,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"_ui_lang":                lang(),
 
 		"subtitles_translation_only": cfg.SubtitlesTranslationOnly,
+		"subtitles_layout":           subwin.Layout(cfg.SubtitlesLayout),
 	}
 	cfgJSON, _ := json.Marshal(cfgMap)
 
@@ -1287,7 +1292,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"subsoff": "S_SUBS_OFF", "subsloading": "S_SUBS_LOADING", "subslive": "S_SUBS_LISTEN_LIVE", "subsphrases": "S_SUBS_LISTEN_PHRASES",
 		"subsrestart": "S_SUBS_RESTARTING", "subsstart": "S_SUBS_START", "subsstop": "S_SUBS_STOP",
 		"subsmlive": "S_SUBS_M_LIVE", "subsmphrases": "S_SUBS_M_PHRASES", "subsmabsent": "S_SUBS_M_ABSENT", "subsmwhisper": "S_SUBS_M_WHISPER",
-		"subsposscheme": "S_SUBS_POS_SCHEME_SUB", "subsposdrag": "S_SUBS_POS_DRAG_SUB", "subsboxdone": "S_SUBS_BOX_DONE",
+		"subsposscheme": "S_SUBS_POS_SCHEME_SUB", "subsposdrag": "S_SUBS_POS_DRAG_SUB", "subsboxdone": "S_SUBS_BOX_DONE", "subsrowssub": "S_SUBS_ROWS_SUB", "subsrowscols": "S_SUBS_ROWS_SUB_COLS",
 		"subson": "S_SUBS_ON", "subsherohint": "S_SUBS_HERO_HINT", "subsherolive": "S_SUBS_HERO_LIVE", "subsherophrases": "S_SUBS_HERO_PHRASES",
 		"subsherostart": "S_SUBS_HERO_START", "subsherostop": "S_SUBS_HERO_STOP",
 		"substrsame": "S_SUBS_TR_SAME", "subsmissmodelget": "S_SUBS_TR_MISS_MODEL_GET",
@@ -1969,6 +1974,14 @@ input.srcpick:disabled,input.srvpick:disabled{opacity:.4;cursor:default}
 #subs_main>*{grid-column:1/-1}
 #subs_main>.row:first-child,#subs_main>.hint,#subs_main>#subs_notice{grid-column:1}
 #subs_main>#subs_go{grid-column:2;grid-row:1/4;align-self:end;margin-bottom:6px}
+#p-subs .pickrow{display:block}
+#p-subs .pickrow>label{display:block;margin:0 0 9px}
+#p-subs .lays{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:0}
+#p-subs .lay{display:flex;flex-direction:column;gap:9px;margin:0;padding:12px 14px 10px;cursor:pointer}
+#p-subs .lay svg{display:block;width:100%;height:auto}
+#p-subs .lay .srchead{margin:0}
+#p-subs .lay input.srcpick:focus-visible{outline:1px solid var(--green);outline-offset:2px}
+#p-subs .lays.off{opacity:.38;pointer-events:none}
 #subs_size_row .sizectl{display:flex;align-items:center;gap:12px}
 #subs_size_row #subs_size_name{margin:0}
 #subs_size_row .sizetiles{display:flex;gap:8px;align-items:center}
@@ -2094,6 +2107,10 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
 .hshot{border:1px solid var(--line);border-radius:var(--r);background:var(--field);padding:12px 14px;margin:0 0 12px}
 .hshot .hcap{color:var(--faint);font-size:10.5px;margin-top:8px}
 .hshot .srccard{margin:0;pointer-events:none}
+.hshot .lays{display:grid;grid-template-columns:repeat(2,minmax(0,281px));gap:12px}
+.hshot .srccard.lay{min-height:0;display:flex;flex-direction:column;gap:9px;padding:12px 14px 10px}
+.hshot .lay svg{display:block;width:100%;height:auto}
+.hshot .lay .srchead{margin:0}
 .hshot .hrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--soft)}
 .hshot .hrow:last-of-type{border-bottom:0}
 .hshot .hrow label{flex:1;color:var(--green);font-size:12.5px}
@@ -2636,8 +2653,9 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
  </div>
  <div class="card" id="subs_win_card">
   <label class="blklbl">{{S_SUBS_WINDOW}}</label>
+  <div class="row pickrow" id="subs_lay_row"><label>{{S_SUBS_LAYOUT}}</label><div class="lays" id="subs_lays" role="radiogroup" aria-label="{{S_SUBS_LAYOUT}}"><label class="srccard lay" data-v="rows" title="{{S_SUBS_LAYOUT_TIP}}"><svg class="laythumb" width="251" height="60" viewBox="0 0 251 60" aria-hidden="true"><rect x="0.5" y="0.50" width="250" height="59.00" rx="2.33" style="fill:var(--bg);stroke:var(--line)"/><circle cx="7.30" cy="7.59" r="2.4" style="fill:var(--ok)"/><path d="M242.67 5.39L247.07 9.79M247.07 5.39L242.67 9.79" style="stroke:var(--dim);stroke-width:1;fill:none"/><rect x="2.92" y="15.00" width="245.16" height="1.00" style="fill:var(--line)"/><rect x="4.67" y="19.87" width="188.50" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="4.67" y="30.35" width="91.83" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="4.67" y="40.83" width="217.49" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="4.67" y="51.30" width="145.00" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="2.92" y="38.00" width="245.16" height="1.00" style="fill:var(--line)"/><rect x="116.50" y="36.50" width="18" height="4" rx="2" style="fill:var(--bg);stroke:var(--dim);stroke-width:1"/></svg><span class="srchead"><input type="radio" name="subtitles_layout" class="srcpick" value="rows">{{S_SUBS_LAYOUT_ROWS}}</span></label><label class="srccard lay" data-v="columns" title="{{S_SUBS_LAYOUT_TIP}}"><svg class="laythumb" width="251" height="60" viewBox="0 0 251 60" aria-hidden="true"><rect x="0.5" y="0.50" width="250" height="59.00" rx="2.33" style="fill:var(--bg);stroke:var(--line)"/><circle cx="7.30" cy="7.59" r="2.4" style="fill:var(--ok)"/><path d="M242.67 5.39L247.07 9.79M247.07 5.39L242.67 9.79" style="stroke:var(--dim);stroke-width:1;fill:none"/><rect x="2.92" y="15.00" width="245.16" height="1.00" style="fill:var(--line)"/><rect x="4.67" y="19.87" width="107.33" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="4.67" y="30.35" width="77.00" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="4.67" y="40.83" width="97.99" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="4.67" y="51.30" width="58.33" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="130.67" y="19.87" width="92.53" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="130.67" y="30.35" width="108.72" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="130.67" y="40.83" width="69.40" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="130.67" y="51.30" width="83.28" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="126.00" y="15.00" width="1.00" height="42.08" style="fill:var(--line)"/><rect x="124.50" y="28.59" width="4" height="18" rx="2" style="fill:var(--bg);stroke:var(--dim);stroke-width:1"/></svg><span class="srchead"><input type="radio" name="subtitles_layout" class="srcpick" value="columns">{{S_SUBS_LAYOUT_COLS}}</span></label></div></div>
   <div class="row" id="subs_tr_only_row"><label>{{S_SUBS_TR_ONLY}}<span class="sub">{{S_SUBS_TR_ONLY_SUB}}</span></label><input type="checkbox" id="subtitles_translation_only"></div>
-  <div class="row"><label>{{S_SUBS_ROWS}}<span class="sub">{{S_SUBS_ROWS_SUB}}</span></label>
+  <div class="row"><label>{{S_SUBS_ROWS}}<span class="sub" id="subs_rows_sub">{{S_SUBS_ROWS_SUB}}</span></label>
    <select id="subtitles_lines"><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option></select></div>
   <div class="row" id="subs_size_row"><label>{{S_SUBS_SIZE}}</label>
    <div class="sizectl"><span class="sub" id="subs_size_name"></span><div class="sizetiles" id="subs_size_tiles" role="radiogroup" aria-label="{{S_SUBS_SIZE}}"><label class="sizetile" data-v="s" title="{{S_SUBS_SIZE_S}}"><input type="radio" name="subs_size_pick" value="s" aria-label="{{S_SUBS_SIZE_S}}"><span class="sizebox"><span class="sizeaa" style="font-size:15px;bottom:6.400px">Aa</span></span></label><label class="sizetile" data-v="m" title="{{S_SUBS_SIZE_M}}"><input type="radio" name="subs_size_pick" value="m" aria-label="{{S_SUBS_SIZE_M}}"><span class="sizebox"><span class="sizeaa" style="font-size:19px;bottom:5.900px">Aa</span></span></label><label class="sizetile" data-v="l" title="{{S_SUBS_SIZE_L}}"><input type="radio" name="subs_size_pick" value="l" aria-label="{{S_SUBS_SIZE_L}}"><span class="sizebox"><span class="sizeaa" style="font-size:25px;bottom:5.150px">Aa</span></span></label></div></div>
@@ -4279,6 +4297,7 @@ function renderSubsTr(){
   renderSubsQuality();
   renderSubsFast();
   syncStateSwitches();
+  syncLayout();
   const warn = subsWarnText();
   const wl = subsEl("subs_tr_warn");
   wl.textContent = warn;
@@ -4419,6 +4438,23 @@ function syncSizeTiles(){
     if(i.checked) subsEl("subs_size_name").textContent = i.getAttribute("aria-label");
   });
 }
+function subsLayout(){
+  const c = document.querySelector('#subs_lays input:checked');
+  return c && c.value === "columns" ? "columns" : "rows";
+}
+function syncLayout(){
+  const box = subsEl("subs_lays");
+  if(!box) return;
+  const tr = subsEl("subtitles_translate_on"), only = subsEl("subtitles_translation_only");
+  const off = !(tr && tr.checked) || !!(only && only.checked);
+  box.classList.toggle("off", off);
+  box.querySelectorAll("input").forEach(i=>{
+    i.disabled = off;
+    i.closest(".lay").classList.toggle("on", i.checked);
+  });
+  const sub = subsEl("subs_rows_sub");
+  if(sub) sub.textContent = subsLayout() === "columns" ? L.subsrowscols : L.subsrowssub;
+}
 function syncStateSwitches(){
   const tr = subsEl("st_tr_on"), only = subsEl("st_tr_only");
   const rTr = subsEl("subtitles_translate_on"), rOnly = subsEl("subtitles_translation_only");
@@ -4439,6 +4475,15 @@ function initSubsExtras(){
     });
     sel.addEventListener("change", syncSizeTiles);
     syncSizeTiles();
+  }
+  const lays = subsEl("subs_lays");
+  if(lays){
+    const want = CFG.subtitles_layout === "columns" ? "columns" : "rows";
+    lays.querySelectorAll("input").forEach(i=>{ i.checked = i.value === want; });
+    lays.addEventListener("change", syncLayout);
+    const only = subsEl("subtitles_translation_only");
+    if(only) only.addEventListener("change", syncLayout);
+    syncLayout();
   }
   [["st_tr_on", "subtitles_translate_on"], ["st_tr_only", "subtitles_translation_only"]].forEach(([mine, real])=>{
     const a = subsEl(mine), b = subsEl(real);
@@ -6138,6 +6183,7 @@ async function doSave(){
     subtitles_box: subsBoxReset ? {} : null,
     subtitles_translate_on: subsOn(),
     subtitles_translation_only: !!(subsEl("subtitles_translation_only")||{}).checked,
+    subtitles_layout: subsLayout(),
     subtitles_translate: subsTo(),
     subtitles_translator: subsWho};
   OVS.posDirty = false;

@@ -1865,7 +1865,7 @@ function check(name, actual, expected) {
     ["", false, true, false, false, false, false],
     ["subs_tr_card", false, false, true, false, false, false],
     ["subs_who_card", false, false, false, true, false, false],
-    ["subs_win_card", false, false, false, false, true, false],
+    ["subs_win_card", false, false, false, true, true, false],
     ["", false, false, false, false, false, true],
   ]);
   check("the start button stands below the heading, after the notice, and the shortcut row closes the block", [sv("subs_go").previousElementSibling.id, sv("subs_key").closest(".row").previousElementSibling.id, sv("subs_key").closest(".row") === sv("subs_main").lastElementChild, sv("subs_state").closest(".row").contains(sv("subs_go"))], ["subs_notice", "subs_go", true, false]);
@@ -1873,11 +1873,41 @@ function check(name, actual, expected) {
   check("blocks are divided as on Post-processing, and the translators are a block of their own now", [css.includes("#p-subs .card+.card{margin-top:18px;border-top:1px solid var(--soft);padding-top:18px}"), css.includes("#p-subs #subs_who_card{margin-top:0;border-top:0;padding-top:0}")], [true, false]);
   check("the translators carry the heading of their block", [sv("subs_who_card").firstElementChild.className, sv("subs_who_card").querySelector(".whohead .blklbl").textContent], ["row noline whohead", "S_SUBS_WHO_TITLE"]);
   check("the translation block holds only its heading and the language row", [...sv("subs_tr_card").children].map((e) => e.id || e.className), ["row noline", "subs_tr_lang_row"]);
-  check("the window block starts with only the translation, then the rows, the size and the rest", [...sv("subs_win_card").children].map((e) => e.id || (e.querySelector("label") ? e.querySelector("label").firstChild.textContent : e.className)).slice(0, 5), ["blklbl", "subs_tr_only_row", "S_SUBS_ROWS", "subs_size_row", "S_SUBS_BOX"]);
+  check("the window block starts with the layout, then only the translation, the rows, the size and the rest", [...sv("subs_win_card").children].map((e) => e.id || (e.querySelector("label") ? e.querySelector("label").firstChild.textContent : e.className)).slice(0, 6), ["blklbl", "subs_lay_row", "subs_tr_only_row", "S_SUBS_ROWS", "subs_size_row", "S_SUBS_BOX"]);
   check("no line between the speech language and its explanation", sv("subtitles_language").closest(".row").classList.contains("noline"), true);
   check("the original text switch is gone", !!sv("subtitles_original"), false);
   check("so is the list of who translates", [!!sv("subtitles_translator"), !!sv("subs_who_row"), !!sv("subs_tr_none_row")], [false, false, false]);
-  check("the rows of text say they count for each part", sv("subtitles_lines").closest(".row").querySelector(".sub").textContent, "S_SUBS_ROWS_SUB");
+  check("the rows of text say they count for each part", sv("subtitles_lines").closest(".row").querySelector(".sub").textContent, stringsOf("en").S_SUBS_ROWS_SUB);
+  {
+    const lays = sv("subs_lays");
+    const layCards = () => [...lays.querySelectorAll(".lay")];
+    const layState = () => [layCards().map((c) => [c.dataset.v, c.classList.contains("on"), c.querySelector("input").checked, c.querySelector("input").disabled]), lays.classList.contains("off")];
+    check("the layout is a labelled row of two picture cards with a mark, a group of radio buttons", [sv("subs_lay_row").querySelector("label").textContent, lays.getAttribute("role"), lays.getAttribute("aria-label"), layCards().map((c) => [c.dataset.v, c.classList.contains("srccard"), !!c.querySelector("svg.laythumb"), c.querySelector("input.srcpick").type, c.querySelector("input").name, c.querySelector(".srchead").textContent, c.title || c.dataset.tip])],
+      ["S_SUBS_LAYOUT", "radiogroup", "S_SUBS_LAYOUT", [["rows", true, true, "radio", "subtitles_layout", "S_SUBS_LAYOUT_ROWS", "S_SUBS_LAYOUT_TIP"], ["columns", true, true, "radio", "subtitles_layout", "S_SUBS_LAYOUT_COLS", "S_SUBS_LAYOUT_TIP"]]]);
+    check("the pictures draw the window with the colours of the theme and nothing of the mockup", [layCards().every((c) => /var\(--dim\)/.test(c.innerHTML) && /var\(--green\)/.test(c.innerHTML) && /var\(--line\)/.test(c.innerHTML)), /mk-/.test(sv("p-subs").innerHTML)], [true, false]);
+    check("off: two rows are chosen, the cards are dim and cannot be picked", layState(), [[["rows", true, true, true], ["columns", false, false, true]], true]);
+    check("dim cards take no clicks, and the focus on a mark is visible", [css.includes("#p-subs .lays.off{opacity:.38;pointer-events:none}"), css.includes("#p-subs .lay input.srcpick:focus-visible{outline:1px solid var(--green);outline-offset:2px}")], [true, true]);
+    await change(sv("subtitles_translate_on"), true);
+    check("with translation on the cards wake up", layState(), [[["rows", true, true, false], ["columns", false, false, false]], false]);
+    const layBefore = w.saveCalls;
+    layCards()[1].click(); await sleep(450);
+    check("a click on the columns card chooses it and saves it", [layState(), w.lastSaveForm.subtitles_layout, w.saveCalls > layBefore], [[[["rows", false, false, false], ["columns", true, true, false]], false], "columns", true]);
+    check("the rows of text then say that the columns hold twice as many", sv("subs_rows_sub").textContent, stringsOf("en").S_SUBS_ROWS_SUB_COLS);
+    const rowsRadio = layCards()[0].querySelector("input");
+    rowsRadio.checked = true; rowsRadio.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(450);
+    check("the keys move the choice the same way: the mark that gets checked chooses", [layState()[0].map((c) => c[1]), w.lastSaveForm.subtitles_layout, sv("subs_rows_sub").textContent], [[true, false], "rows", stringsOf("en").S_SUBS_ROWS_SUB]);
+    layCards()[1].click(); await sleep(450);
+    await change(sv("subtitles_translation_only"), true);
+    check("only the translation: the cards are dim again and keep the choice", [layState(), w.lastSaveForm.subtitles_layout], [[[["rows", false, false, true], ["columns", true, true, true]], true], "columns"]);
+    await change(sv("subtitles_translation_only"), false);
+    check("and wake up when it is off", layState()[1], false);
+    await change(sv("subtitles_translate_on"), false);
+    check("translation off dims them while the choice stays", [layState(), w.lastSaveForm.subtitles_layout], [[[["rows", false, false, true], ["columns", true, true, true]], true], "columns"]);
+    check("the search finds the layout row", w.searchMatches("s_subs_layout").some((el) => el.closest("#subs_lay_row")), true);
+    await change(sv("subtitles_translate_on"), true);
+    rowsRadio.checked = true; rowsRadio.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(450);
+    await change(sv("subtitles_translate_on"), false);
+  }
 
   const trOn = sv("subtitles_translate_on"), trLang = sv("subtitles_translate"), whoCard = sv("subs_who_card");
   const warnLine = () => sv("subs_tr_warn").style.display === "none" ? "" : sv("subs_tr_warn").textContent;
@@ -1911,7 +1941,7 @@ function check(name, actual, expected) {
   await change(trOn, true);
   check("and turning it on again returns to it", [w.lastSaveForm.subtitles_translate_on, w.lastSaveForm.subtitles_translate, trLang.value], [true, "ru", "ru"]);
   const onlyBox = sv("subtitles_translation_only");
-  check("showing only the translation is a switch at the top of the window block", [onlyBox.type, onlyBox.closest(".row").id, onlyBox.closest(".row").previousElementSibling.className, onlyBox.closest(".row").querySelector("label").firstChild.textContent, onlyBox.closest(".row").querySelector(".sub").textContent, onlyBox.closest(".card").id], ["checkbox", "subs_tr_only_row", "blklbl", "S_SUBS_TR_ONLY", "S_SUBS_TR_ONLY_SUB", "subs_win_card"]);
+  check("showing only the translation is a switch right after the layout in the window block", [onlyBox.type, onlyBox.closest(".row").id, onlyBox.closest(".row").previousElementSibling.id, onlyBox.closest(".row").querySelector("label").firstChild.textContent, onlyBox.closest(".row").querySelector(".sub").textContent, onlyBox.closest(".card").id], ["checkbox", "subs_tr_only_row", "subs_lay_row", "S_SUBS_TR_ONLY", "S_SUBS_TR_ONLY_SUB", "subs_win_card"]);
   check("it carries the config, off", onlyBox.checked, false);
   await change(onlyBox, true);
   check("turning it on is saved", w.lastSaveForm.subtitles_translation_only, true);
@@ -2211,7 +2241,7 @@ function check(name, actual, expected) {
   await flip("fast");
   check("and the tab is left without an open dialog", !!dlg(), false);
 
-  check("the search finds the new rows and cards", ["s_subs_tr_lang", "s_subs_who_quality", "s_subs_who_fast", "s_subs_who_server", "s_subs_fpk", "s_subs_rows_sub"].map((k) => w.searchMatches(k).some((el) => el.closest("#p-subs"))), [true, true, true, true, true, true]);
+  check("the search finds the new rows and cards", ["s_subs_tr_lang", "s_subs_who_quality", "s_subs_who_fast", "s_subs_who_server", "s_subs_fpk", "in each part of the window"].map((k) => w.searchMatches(k).some((el) => el.closest("#p-subs"))), [true, true, true, true, true, true]);
   check("and offers none of the removed ones", ["s_subs_orig", "s_subs_who_sub", "s_subs_trm_sub", "s_subs_tr_sub"].map((k) => w.searchMatches(k).filter((el) => el.closest("#p-subs") && !el.closest("#p-help")).length), [0, 0, 0, 0]);
 
   for (const lang of ["en", "ru", "uk", "de", "fr", "es", "it", "pl"]) {
@@ -2224,12 +2254,13 @@ function check(name, actual, expected) {
     ], [[], [], []]);
     check(lang + ": the texts keep their places for the values", [["S_SUBS_TR_MISS_PACK", 1], ["S_SUBS_TR_MISS_PACK_GET", 1], ["S_SUBS_F_TWO", 2], ["S_SUBS_PACK_ASK", 2], ["S_SUBS_F_GETTING", 1], ["S_SUBS_TRM_ERR", 1], ["S_SUBS_TRM_DOWN", 1], ["S_SUBS_TRM_SMALL", 1]].filter(([k, n]) => typeof t[k] !== "string" || t[k].split("%s").length !== n + 1).map(([k]) => k), []);
     check(lang + ": the translation-only switch has its texts", ["S_SUBS_TR_ONLY", "S_SUBS_TR_ONLY_SUB"].filter((k) => typeof t[k] !== "string" || !t[k]), []);
+    check(lang + ": the layout has its texts", ["S_SUBS_LAYOUT", "S_SUBS_LAYOUT_ROWS", "S_SUBS_LAYOUT_COLS", "S_SUBS_LAYOUT_TIP", "S_SUBS_ROWS_SUB_COLS"].filter((k) => typeof t[k] !== "string" || !t[k]), []);
     check(lang + ": the removed texts are gone", ["S_SUBS_ORIG", "S_SUBS_WHO_AUTO", "S_SUBS_TR_NONE", "S_SUBS_TR_LOCAL", "S_SUBS_TRM_DOWN_NEXT", "S_SUBS_TR_FAST_ONE", "S_SUBS_FPK_SUB"].filter((k) => k in t), []);
     check(lang + ": no text names the light engine's origin", Object.entries(t).filter(([k, v]) => /^S_SUBS_/.test(k) && /bergamot|firefox|mozilla|marian/i.test(v)).map(([k]) => k), []);
   }
   {
     const ru = stringsOf("ru");
-    check("Russian: the texts of the task, letter for letter", [ru.S_NAV_SUBS, ru.S_SUBS_WHO_TITLE, ru.S_SUBS_TR_MISS_SERVER, ru.S_SUBS_TR_MISS_MODEL_GET, ru.S_SUBS_TR_MISS_PACK_GET, ru.S_SUBS_TR_MISS_PACKS, ru.S_SUBS_TR_MISS_PACKS_GET, ru.S_SUBS_PACK_DLG, ru.S_SUBS_PACK_ASK, ru.S_SUBS_Q_HINT, ru.S_SUBS_Q_NEED, ru.S_SUBS_F_HINT, ru.S_SUBS_F_AUTO, ru.S_SUBS_ADD_HINT, ru.S_SUBS_API_HINT, ru.S_SUBS_API_NONE, ru.S_SUBS_API_WARN, ru.S_SUBS_API_CLEAR_MORE, ru.S_SUBS_ROWS_SUB], [
+    check("Russian: the texts of the task, letter for letter", [ru.S_NAV_SUBS, ru.S_SUBS_WHO_TITLE, ru.S_SUBS_TR_MISS_SERVER, ru.S_SUBS_TR_MISS_MODEL_GET, ru.S_SUBS_TR_MISS_PACK_GET, ru.S_SUBS_TR_MISS_PACKS, ru.S_SUBS_TR_MISS_PACKS_GET, ru.S_SUBS_PACK_DLG, ru.S_SUBS_PACK_ASK, ru.S_SUBS_Q_HINT, ru.S_SUBS_Q_NEED, ru.S_SUBS_F_HINT, ru.S_SUBS_F_AUTO, ru.S_SUBS_ADD_HINT, ru.S_SUBS_API_HINT, ru.S_SUBS_API_NONE, ru.S_SUBS_API_WARN, ru.S_SUBS_API_CLEAR_MORE, ru.S_SUBS_ROWS_SUB, ru.S_SUBS_ROWS_SUB_COLS, ru.S_SUBS_LAYOUT, ru.S_SUBS_LAYOUT_ROWS, ru.S_SUBS_LAYOUT_COLS, ru.S_SUBS_LAYOUT_TIP], [
       "Субтитры и перевод",
       "Переводчик",
       "Выбран «Внешний сервер», но он не настроен, поэтому текст показывается так, как был услышан.",
@@ -2249,6 +2280,11 @@ function check(name, actual, expected) {
       "⚠ Распознанный текст субтитров будет уходить на этот адрес. Звук не уходит никогда. Ключ хранится зашифрованным.",
       "Субтитры останутся без перевода, пока вы не выберете другого переводчика.",
       "при включённом переводе — в каждой части окна",
+      "при включённом переводе в две колонки — вдвое больше: строки там вдвое короче",
+      "Расположение",
+      "в две строки",
+      "в две колонки",
+      "границу между частями можно тянуть мышью",
     ]);
     check("Russian: the three cards are called as in the mockup", [ru.S_SUBS_WHO_QUALITY, ru.S_SUBS_WHO_FAST, ru.S_SUBS_WHO_SERVER, ru.S_SUBS_TR_LANG, ru.S_SUBS_F_ADD, ru.S_SUBS_ADD_TITLE, ru.S_SUBS_ADD_HAVE, ru.S_SUBS_FPK, ru.S_SUBS_F_USED], ["Качественный", "Быстрый", "Внешний сервер", "Язык перевода", "Добавить пакет", "Добавить языковой пакет", "уже скачан", "языковые пакеты", "занято"]);
     w.eval("Object.assign(L, " + JSON.stringify({ ftwo: ru.S_SUBS_F_TWO, ftode: ru.S_SUBS_F_TO_DE }) + ")");
@@ -2367,8 +2403,12 @@ function check(name, actual, expected) {
   for (const lang of ["ru", "en", "de", "fr", "es", "it", "pl", "uk"]) {
     const S = stringsOf(lang);
     helpCard.innerHTML = helpOf(lang);
-    const pics = [...helpCard.querySelectorAll(".hshot .srccard")];
+    const pics = [...helpCard.querySelectorAll(".hshot .srccard:not(.lay)")];
     check(`${lang}: the help has one picture of the server card`, pics.length, 1);
+    const lays = [...helpCard.querySelectorAll(".hshot .lays .srccard.lay")];
+    check(`${lang}: the help draws the window in two rows and in two columns with the pictures of the tab, the names of the tab and the first one chosen`, [lays.length, lays.map((c) => c.querySelector("svg.laythumb") ? c.querySelector("svg.laythumb").outerHTML : ""), lays.map((c) => c.querySelector(".srchead").textContent), lays.map((c) => c.classList.contains("on") && !!c.querySelector(".hpick.on"))],
+      [2, [...d.querySelectorAll("#subs_lays svg.laythumb")].map((s) => s.outerHTML), [S.S_SUBS_LAYOUT_ROWS, S.S_SUBS_LAYOUT_COLS], [true, false]]);
+    check(`${lang}: the help row of the window tells about the layout and the column border`, [S.S_SUBS_LAYOUT, S.S_SUBS_LAYOUT_ROWS, S.S_SUBS_LAYOUT_COLS].every((n) => helpCard.querySelector("#s-subs") && helpCard.innerHTML.includes(n)), true);
     const pic = pics[0];
     if (!pic) continue;
     check(`${lang}: the picture has the classes and order of the real card`, shapeOf(pic), realShape);
