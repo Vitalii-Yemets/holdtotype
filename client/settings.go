@@ -4713,10 +4713,14 @@ async function refreshState(){
   renderUsage(s);
 
   const sttDown = !!(s.stt_broken && s.whisper_now);
-  set("st_main", sttDown ? L.srvdown : (s.status_line || s.status));
+  const mainText = sttDown ? L.srvdown : (s.status_line || s.status);
+  set("st_main", mainText);
   led("st_led", s.ready && !sttDown);
   const stMain = document.getElementById("st_main");
-  if(stMain) stMain.classList.toggle("bad", sttDown);
+  if(stMain){
+    stMain.classList.toggle("bad", sttDown);
+    stMain.title = mainText || "";
+  }
   const stLed = document.getElementById("st_led");
   if(stLed) stLed.classList.toggle("bad", sttDown);
   if(whisperNow !== !!s.whisper_now){

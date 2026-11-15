@@ -66,8 +66,8 @@ function open(lang, cfgPatch, setup) {
         appTrModel: async (action) => { S.calls.push("trm:" + action); if (action === "delete") S.trm.state = "absent"; if (action === "download") S.trm.state = "downloading"; return ""; },
         appSave: async (f) => { S.saves.push(JSON.parse(f)); return json({ ok: true, severity: "ok", message: "Saved" }); },
         appState: async () => json({ subtitles: { phase: "off" }, subs_tr: { choice: "quality", missing: "", pair: "", model: S.trm, fast: { exe: true, pairs: [], offer: [], used: 0 } },
-          subs_place: { position: "bottom", custom: {} }, hotkey: "ctrl+win", mic: "Mic", engine: "", llm: "a.gguf", ram: "", last: "", last_meta: "", ready: true, status: "Ready",
-          status_line: "Ready", active_model: "Nemotron 3.5", active_state: "ready", active_lang: "RU", assigned: [], installed_models: S.installedModels || [], loaded_now: Object.keys(S.loaded).length ? "Nemotron 3.5" : "", week_line: "",
+          subs_place: { position: "bottom", custom: {} }, hotkey: "ctrl+win", mic: "Mic", engine: "", llm: "a.gguf", ram: "", last: "", last_meta: "", ready: S.ready !== false, status: S.status || "Ready",
+          status_line: S.statusLine || "Ready", active_model: "Nemotron 3.5", active_state: "ready", active_lang: "RU", assigned: [], installed_models: S.installedModels || [], loaded_now: Object.keys(S.loaded).length ? "Nemotron 3.5" : "", week_line: "",
           llm_ok: true, mic_ok: true, last_at: 0, last_app: "", remote: false, backend_err: "", post_err: "", stt_broken: false, whisper_now: false, enabled: true, autostart: false,
           disk_mb: 0, ram_mb: 16384, ram_free_mb: 9000, week_count: 0, week_chars: 0, today_count: 0, week_apps: [], badges: { mic: "", models: "", system: "" },
           post_on: true, post_model: "a", post_size: 1066, post_installed: S.llm.length, post_remote: false, post_prompts: 1 }),
@@ -355,6 +355,17 @@ function open(lang, cfgPatch, setup) {
   const memLine = async (win, n) => { win.S.installedModels = Array.from({ length: n }, (_, i) => "m" + i); await win.refreshState(); await sleep(120); return win.document.getElementById("state_mem_sub").textContent; };
   check("Russian: the memory line on Status counts the models on disk with the right form", [await memLine(rw, 1), await memLine(rw, 2), await memLine(rw, 5), await memLine(rw, 21)].map((t) => t.split("·")[1].trim().split(",")[0]),
     ["на диске 1 модель", "на диске 2 модели", "на диске 5 моделей", "на диске 21 модель"]);
+  {
+    const why = "No model for Russian: GigaAM v3 is not installed — download it on the Models tab or pick another model for this language on the Languages tab";
+    w.S.ready = false; w.S.status = why; w.S.statusLine = why;
+    await w.refreshState(); await sleep(150);
+    const st = d.getElementById("st_main");
+    check("the status bar gives the same reason as Status when the model is missing, cut with dots and whole in its tip", [st.textContent, st.title, d.getElementById("st_led").classList.contains("on")], [why, why, false]);
+    check("the status bar text is cut with an ellipsis instead of pushing the version away", [...d.querySelectorAll("style")].some((s) => s.textContent.includes(".statusbar #st_main{min-width:0;overflow:hidden;text-overflow:ellipsis}")), true);
+    w.S.ready = true; w.S.status = ""; w.S.statusLine = "";
+    await w.refreshState(); await sleep(150);
+    check("and the tip follows the text when all is well again", [st.textContent, st.title], ["Ready", "Ready"]);
+  }
   check("English: and so does the English one", [await memLine(w, 1), await memLine(w, 2)].map((t) => t.split("·")[1].trim().split(",")[0]), ["on disk: 1 model", "on disk: 2 models"]);
 
   check("no JavaScript errors", errors, []);
