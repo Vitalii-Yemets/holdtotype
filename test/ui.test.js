@@ -2029,7 +2029,6 @@ function check(name, actual, expected) {
 
   const q = () => ({
     size: sv("subs_q_size").style.display === "none" ? "" : sv("subs_q_size").textContent,
-    dl: sv("subs_q_dl").style.display !== "none",
     pct: sv("subs_q_pct").style.display === "none" ? "" : sv("subs_q_pct").textContent,
     state: sv("subs_q_state").style.display === "none" ? "" : sv("subs_q_state").textContent,
     x: sv("subs_q_x").style.display === "none" ? "" : sv("subs_q_x").dataset.tip,
@@ -2037,44 +2036,37 @@ function check(name, actual, expected) {
   });
   await setTr("fast", "", { model: model() });
   check("Quality: the hint, the model name and the card it needs", [sv("subs_src_quality").querySelector(".hint").textContent, [...sv("subs_src_quality").querySelectorAll(".pmt")].map((e) => e.textContent)], ["S_SUBS_Q_HINT", ["Gemma 3 4B", "S_SUBS_Q_NEED"]]);
-  check("Quality absent: size and the download arrow", q(), { size: "2.3 GB", dl: true, pct: "", state: "", x: "", note: "" });
-  let tc = w.trCalls.length;
-  sv("subs_q_dl").click(); await sleep(150);
-  check("the arrow downloads without a question and chooses nothing", [w.trCalls.slice(tc), !!dlg(), chosen()], [["download"], false, ["fast"]]);
+  check("Quality has no download arrow of its own", !!sv("subs_q_dl"), false);
+  check("Quality absent: says in words that it is not installed, and its size", q(), { size: "not installed · 2.3 GB", pct: "", state: "", x: "", note: "" });
+  check("the state stands in the line of the plates, on the right", sv("subs_q_size").closest(".plates") === sv("subs_q_name").parentNode, true);
+  check("the terms are a plate beside the others", [sv("subs_trm_terms").className, sv("subs_trm_terms").textContent, sv("subs_trm_terms").parentNode.className], ["hfhome", "S_TERMS_PLATE", "plates"]);
   await setTr("fast", "", { model: model({ state: "downloading", pct: 42 }) });
-  check("Quality downloading: the percent and a cross that cancels", q(), { size: "", dl: false, pct: "42%", state: "", x: "Cancel", note: "" });
-  tc = w.trCalls.length;
+  check("Quality downloading: the percent and a cross that cancels", q(), { size: "", pct: "42%", state: "", x: "Cancel", note: "" });
+  let tc = w.trCalls.length;
   sv("subs_q_x").click(); await sleep(150);
   check("the cross cancels at once", w.trCalls.slice(tc), ["cancel"]);
   await setTr("fast", "", { model: model({ state: "checking" }) });
-  check("Quality checking: words and no control", q(), { size: "", dl: false, pct: "", state: "Checking the file…", x: "", note: "" });
+  check("Quality checking: words and no control", q(), { size: "", pct: "", state: "Checking the file…", x: "", note: "" });
   await setTr("fast", "", { model: model({ state: "ready" }) });
-  check("Quality ready: words and a cross that deletes", q(), { size: "", dl: false, pct: "", state: "Ready", x: PL.trmdel, note: "" });
+  check("Quality ready: words and no cross — the model is deleted on the models tab", q(), { size: "", pct: "", state: "Ready", x: "", note: "" });
   await setTr("fast", "", { model: model({ state: "ready", running: true }) });
   check("Quality loaded says so", q().state, "Ready, loaded on the graphics card");
-  tc = w.trCalls.length;
-  sv("subs_q_x").click(); await sleep(150);
-  check("the first click on the cross asks once more", [w.trCalls.slice(tc), sv("subs_q_x").textContent], [[], "Delete?"]);
-  sv("subs_q_x").click(); await sleep(150);
-  check("the second click deletes", [w.trCalls.slice(tc), sv("subs_q_x").textContent], [["delete"], "✕"]);
-  sv("subs_q_x").click(); await sleep(150);
-  await sleep(4200);
-  check("an armed cross calms down after four seconds", [sv("subs_q_x").textContent, w.trCalls.slice(tc)], ["✕", ["delete"]]);
   await setTr("fast", "", { model: model({ state: "bad" }) });
-  check("Quality damaged: the hint says so and the arrow is offered again", q(), { size: "2.3 GB", dl: true, pct: "", state: "", x: PL.trmdel, note: "The file in the models folder is damaged or incomplete" });
+  check("Quality damaged: the hint says so and the cross removes the damaged file", q(), { size: "not installed · 2.3 GB", pct: "", state: "", x: PL.trmdel, note: "The file in the models folder is damaged or incomplete" });
   await setTr("fast", "", { model: model({ state: "error", err: "the downloaded file does not match its checksum" }) });
-  check("Quality failed download: the reason and the arrow again", q(), { size: "2.3 GB", dl: true, pct: "", state: "", x: "", note: "Not downloaded: the downloaded file does not match its checksum" });
+  check("Quality failed download: the reason", q(), { size: "not installed · 2.3 GB", pct: "", state: "", x: "", note: "Not downloaded: the downloaded file does not match its checksum" });
   await setTr("fast", "", { model: model({ state: "ready", down: "memory" }) });
   check("Quality that did not start: the reason in the hint", q().note, "Did not start: not enough free memory on the graphics card");
   for (const [reason, text] of [["small", "This computer cannot run it: its graphics card has 2048 MB of its own memory, and 4 GB are needed."], ["integrated", "This computer cannot run it: it has only integrated graphics, which share the computer's memory."], ["none", "This computer cannot run it: Windows reports no graphics card."], ["unknown", "This computer cannot run it: this version of Windows does not describe its graphics card."]]) {
     await setTr("fast", "", { model: model({ fits: false, reason, card_mb: 2048 }) });
-    check("Quality on a card that does not fit (" + reason + "): no arrow, the reason", [q().dl, q().size, q().note], [false, "", text]);
+    check("Quality on a card that does not fit (" + reason + "): no size, the reason", [q().size, q().note], ["", text]);
   }
-  await setTr("fast", "", { model: model({ state: "ready", fits: false, reason: "small", card_mb: 2048 }) });
-  check("a model already there can still be deleted", q().x, PL.trmdel);
   tc = w.trCalls.length;
   sv("subs_trm_terms").click(); await sleep(100);
-  check("the terms link opens the terms", w.trCalls.slice(tc), ["terms"]);
+  check("the terms plate opens the terms", w.trCalls.slice(tc), ["terms"]);
+  tc = w.trCalls.length;
+  sv("subs_trm_terms").dispatchEvent(new w.KeyboardEvent("keydown", { key: "Enter", bubbles: true })); await sleep(100);
+  check("and so does Enter on it", w.trCalls.slice(tc), ["terms"]);
 
   const entries = () => [...sv("subs_f_pairs").querySelectorAll(".flang")].map((e) => [e.querySelector(".fname").textContent, e.dataset.tip]);
   await setTr("fast", "", { fast: fast() });

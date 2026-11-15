@@ -1961,7 +1961,12 @@ input.srcpick:disabled,input.srvpick:disabled{opacity:.4;cursor:default}
 #subs_who_card .trcard .psize{color:var(--dim);font-size:12px}
 #subs_who_card .trcard .plates{display:flex;gap:8px;flex-wrap:wrap}
 #subs_who_card .trcard .pmt{border:1px solid var(--line);border-radius:calc(var(--r) * .4);padding:1px 8px;font-size:10px;letter-spacing:.06em;white-space:nowrap;color:var(--lbl,var(--dim));text-shadow:var(--lblglow,none)}
-#subs_who_card .trcard .plnk{font-size:12px}
+#subs_who_card #subs_src_quality.trcard{min-height:0}
+#subs_src_quality .plates{align-items:center}
+#subs_src_quality .plates .hfhome{margin-left:0}
+#subs_src_quality .plates .acts{margin-left:auto}
+#subs_src_quality.idle .plates .acts,#subs_src_quality.idle #subs_trm_terms{pointer-events:auto}
+#subs_trm_terms:focus-visible{outline:1px solid var(--green);outline-offset:2px}
 #subs_who_card .srccard.nofit{cursor:default}
 #subs_who_card .srccard.nofit:hover{border-color:var(--line)}
 #subs_who_card .srccard.idle .flang .iconbtn{pointer-events:auto}
@@ -2581,10 +2586,8 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
    <div class="hint">{{S_SUBS_Q_HINT}}</div>
    <div class="hint" id="subs_q_note" style="display:none"></div>
    <div class="sum">
-    <div class="plates"><span class="pmt" id="subs_q_name"></span><span class="pmt">{{S_SUBS_Q_NEED}}</span></div>
-    <div class="plnk"><span class="lnk" id="subs_trm_terms">{{S_SUBS_TRM_TERMS}}</span></div>
+    <div class="plates"><span class="pmt" id="subs_q_name"></span><span class="pmt">{{S_SUBS_Q_NEED}}</span><span class="hfhome" id="subs_trm_terms" role="link" tabindex="0" title="{{S_SUBS_TRM_TERMS}}">{{S_TERMS_PLATE}}</span><div class="acts"><span class="psize" id="subs_q_size" style="display:none"></span><span class="mpct" id="subs_q_pct" style="display:none"></span><span class="psize" id="subs_q_state" style="display:none"></span><button type="button" class="iconbtn danger" id="subs_q_x" style="display:none">&#10005;</button></div></div>
    </div>
-   <div class="acts"><span class="psize" id="subs_q_size" style="display:none"></span><span class="mpct" id="subs_q_pct" style="display:none"></span><span class="psize" id="subs_q_state" style="display:none"></span><button type="button" class="iconbtn" id="subs_q_dl" title="{{S_SUBS_TRM_DL}}" style="display:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12"/><path d="M6 11l6 6 6-6"/><path d="M4 21h16"/></svg></button><button type="button" class="iconbtn danger" id="subs_q_x" style="display:none">&#10005;</button></div>
   </div>
   <div class="srccard trcard idle" id="subs_src_fast" data-who="fast">
    <h3 class="srchead"><input type="radio" name="subssrc" class="srcpick" id="subs_pick_fast">{{S_SUBS_WHO_FAST}}</h3>
@@ -4141,13 +4144,12 @@ function renderSubsQuality(){
   subsEl("subs_q_name").textContent = m.name || "";
   subsEl("subs_src_quality").classList.toggle("nofit", !fits);
   const canGet = fits && (st === "absent" || st === "bad" || st === "error");
-  show("subs_q_size", canGet).textContent = sizeLabel(m.size || 0);
-  show("subs_q_dl", canGet);
+  show("subs_q_size", canGet).textContent = fmtText(L.notinstsize, sizeLabel(m.size || 0));
   show("subs_q_pct", st === "downloading").textContent = (m.pct || 0) + "%";
   const ready = st === "ready";
   const state = show("subs_q_state", ready || st === "checking");
   state.textContent = st === "checking" ? L.trmcheck : (m.running ? L.trmrunning : L.trmready);
-  const x = show("subs_q_x", st === "downloading" || ready || st === "bad");
+  const x = show("subs_q_x", st === "downloading" || st === "bad");
   const armed = st !== "downloading" && subsArmed === "q";
   x.textContent = armed ? L.trmdelsure : "✕";
   x.classList.toggle("armed", armed);
@@ -4426,13 +4428,13 @@ function initSubs(){
     subsArm("pair:" + key, ()=>fastPackAct("remove", key));
   });
   subsEl("subs_f_add").onclick = e=>{ e.stopPropagation(); openAddPack(); };
-  subsEl("subs_q_dl").onclick = e=>{ e.stopPropagation(); trModelAct("download"); };
   subsEl("subs_q_x").onclick = e=>{
     e.stopPropagation();
     if(subsModel().state === "downloading"){ trModelAct("cancel"); return; }
     subsArm("q", ()=>trModelAct("delete"));
   };
   subsEl("subs_trm_terms").onclick = e=>{ e.stopPropagation(); appTrModel("terms"); };
+  subsEl("subs_trm_terms").onkeydown = e=>{ if(e.key === "Enter" || e.key === " "){ e.preventDefault(); e.stopPropagation(); appTrModel("terms"); } };
   subsEl("subs_go").onclick = ()=>subsToggle(subsEl("subs_go"));
   const heroGo = subsEl("subs_hero_go");
   if(heroGo) heroGo.onclick = ()=>subsToggle(heroGo);
