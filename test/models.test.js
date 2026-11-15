@@ -324,6 +324,20 @@ function open(lang, cfgPatch, setup) {
     check("no text promises a wake-up any more, and the line about unloading by itself is gone", [/разбуд|wake/i.test(src), "S_STATE_LOADED_SUB" in ruS || "S_STATE_LOADED_SUB" in enS], [false, false]);
   }
 
+  {
+    const na = open("en", { lang_models: { auto: "parakeet-v3", ru: "gigaam-v3" }, language: "ru", subtitles_language: "auto", llm_model: "a.gguf" });
+    const nw = na.window, nd = nw.document;
+    await sleep(700);
+    nd.querySelector('.nav[data-p="library"]').click();
+    await nw.refreshModels(); await nw.refreshLLM(); await nw.refreshState(); await sleep(150);
+    nd.querySelector('#p-library .librow[data-key="asr:gigaam-v3"] button[data-lib="del"]').click(); await sleep(150);
+    check("with the auto-detect model not installed the question says dictation in those languages stops", nd.querySelector(".modal p").textContent,
+      "The “GigaAM v3” model is used for dictation: русский. Delete it? The Auto-detect model is not installed — dictation in these languages will not work until you download it.");
+    nd.querySelector(".modal .btn.ghost").click(); await sleep(200);
+    check("and saying no deletes nothing", nw.S.calls.some((c) => c.startsWith("del:")), false);
+    na.window.close();
+  }
+
   const ru = open("ru", { lang_models: { auto: "nemotron-3.5", ru: "gigaam-v3" }, language: "ru", subtitles_language: "auto", llm_model: "a.gguf" });
   const rw = ru.window, rd = rw.document;
   await sleep(700);
