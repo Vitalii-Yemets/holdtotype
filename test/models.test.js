@@ -264,6 +264,10 @@ function open(lang, cfgPatch, setup) {
   const hits = w.searchMatches("s_lib_hf");
   check("settings search finds the blocks of the models tab", hits.some((e) => e.closest("#p-library")), true);
   check("and the models by name", w.searchMatches("gigaam").some((e) => e.closest("#p-library")), true);
+  w.searchSettings("gigaam"); w.showHit(0); await sleep(100);
+  check("a found model row is marked like a found setting", [shown("library"), d.querySelector("#p-library .librow.hit") && d.querySelector("#p-library .librow.hit").dataset.key], [true, "asr:gigaam-v3"]);
+  check("and the mark has a rule of its own", [...d.styleSheets].some((s) => [...s.cssRules].some((r) => r.selectorText === ".librow.hit" && /inset/.test(r.style.boxShadow))), true);
+  w.searchSettings("");
 
   const ru = open("ru", { lang_models: { auto: "nemotron-3.5", ru: "gigaam-v3" }, language: "ru", subtitles_language: "auto", llm_model: "a.gguf" });
   const rw = ru.window, rd = rw.document;

@@ -1997,6 +1997,7 @@ input.srcpick:disabled,input.srvpick:disabled{opacity:.4;cursor:default}
 #srv_local .sum,#srv_remote .sum,.hshot .srccard .sum{flex:1;display:flex;flex-direction:column;gap:6px;margin:8px 0 10px}
 button.mini.eq{min-width:186px}
 .sumrow.hit{background:var(--navon);box-shadow:inset 2px 0 0 var(--hi)}
+.librow.hit{background:var(--navon);border-color:var(--dim);box-shadow:inset 2px 0 0 var(--hi)}
 .srccard.idle:hover{border-color:var(--dim)}
 .card.offdim>:not(h2):not(.blklbl){opacity:.38;pointer-events:none}
 .srchrow{display:flex;align-items:center;gap:8px}
