@@ -1610,8 +1610,7 @@ button.btn.ghost:hover{color:var(--green);border-color:var(--dim);background:non
 .card{background:none;border:0;padding:0;margin:0 0 18px}
 .row{display:flex;align-items:center;gap:10px;padding:9px 0;flex-wrap:wrap;border-bottom:1px solid var(--soft)}
 .card .row:last-child,.row.noline,#ovcard .row{border-bottom:0}
-#ovcard,#behcard{border-top:1px solid var(--soft);padding-top:9px}
-#behcard,#p-dictation .card:has(+#behcard){margin-bottom:0}
+#ovcard,#behcard{border-top:1px solid var(--soft);padding-top:18px;margin-top:18px}
 .row label{flex:1;min-width:100px;color:var(--green)}
 .row label .sub{display:block;font-size:10.5px;color:var(--dim);margin-top:2px;letter-spacing:0}
 .row label .sub.warn{color:var(--amber)}
@@ -1819,7 +1818,7 @@ button.mini.danger:hover{color:var(--dangerfg);border-color:var(--badline);backg
 .lrow .lmodel{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lrow .larr{flex:none;color:var(--faint);font-size:10px}
 .lrow .lkey{flex:none;font-size:11px;color:var(--keyfg);background:var(--keybg);border:1px solid var(--keyline);border-radius:var(--keyr);padding:2px 8px;letter-spacing:.6px;white-space:nowrap}
-.lkeyrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:3px 2px 9px;margin-bottom:7px;border-bottom:1px solid var(--soft)}
+.lkeyrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:3px 2px 7px;margin-bottom:9px;border-bottom:1px solid var(--soft)}
 .lkeyrow .lkeylbl{font-weight:var(--wb)}
 .lkeyrow .hotkey-val{font-size:12px;padding:5px 12px;min-width:0}
 .lkeyrow .hint{flex-basis:100%;margin:0}
@@ -1839,7 +1838,7 @@ button.mini.danger:hover{color:var(--dangerfg);border-color:var(--badline);backg
 .pcard .mbars{flex:none;width:190px;display:flex;flex-direction:column;gap:5px;padding-top:2px}
 .pcard .pdesc{color:var(--dim);font-size:12px}
 .pcard .pdesc.perr{color:var(--bad)}
-.pcard .pmeta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid var(--soft);padding-top:7px;color:var(--dim);font-size:11px}
+.pcard .pmeta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid var(--soft);padding-top:8px;color:var(--dim);font-size:11px}
 .pcard .pmt{border:1px solid var(--line);border-radius:calc(var(--r) * .4);padding:1px 8px;font-size:10px;letter-spacing:.06em;white-space:nowrap;color:var(--lbl,var(--dim));text-shadow:var(--lblglow,none)}
 .pcard .pram{white-space:nowrap}
 .pcard .pact{margin-left:auto;display:flex;align-items:center;gap:8px;white-space:nowrap}
@@ -1925,6 +1924,7 @@ html[data-skin="editor"] .stcombo,html[data-skin="editor"] .hotkey-val{letter-sp
 #p-library .libtotal{color:var(--faint);font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums}
 #p-library #proc-search{display:flex;flex-direction:column;gap:12px}
 #p-library #hf_results .mrow{padding:0 4px 0 10px;gap:10px;min-height:38px;flex:none;border-bottom:1px solid var(--soft)}
+#p-library #hf_results .mrow:last-child{border-bottom:0}
 #p-library #hf_results .hfact{display:inline-flex;align-items:center;justify-content:flex-end;gap:6px;min-width:84px;flex:none}
 #p-library .srchbox .iconbtn{min-width:24px;min-height:24px;display:inline-flex;align-items:center;justify-content:center}
 #p-library .ownm{border-bottom:0;padding-bottom:0;padding-top:0}
@@ -2071,14 +2071,22 @@ input.srcpick:disabled,input.srvpick:disabled{opacity:.4;cursor:default}
 #subs_add_list button.arow:hover{background:var(--navon)}
 #subs_add_list .arow .asize{flex:none;margin-left:auto;color:var(--dim);font-size:12px}
 #subs_add_dlg>.hint{font-size:11.5px;color:var(--dim);line-height:1.5}
-#p-history .card+.card{margin-top:16px;border-top:1px solid var(--soft);padding-top:12px}
-#p-history .card>.row:last-child{padding-bottom:0}
+#p-history .card+.card{margin-top:18px;border-top:1px solid var(--soft);padding-top:18px}
 #p-history #hist_skip_list{margin-bottom:0}
 #p-history #hist_skip_list:empty{margin-top:0}
 #p-history #hist_skip_list .ruleempty{padding:0}
-#p-system .grp+.grp{border-top:1px solid var(--soft);margin-top:14px;padding-top:12px}
+#p-system .grp+.grp{border-top:1px solid var(--soft);margin-top:18px;padding-top:18px}
 #p-system .grp .row{border-bottom:0}
-#p-system .card+.card{border-top:1px solid var(--soft);padding-top:16px}
+#p-system .card+.card{border-top:1px solid var(--soft);padding-top:18px}
+.page .card:has(+.card)>.row:last-child,.page .card:has(+.card)>div:last-child>.row:last-child,#p-system .grp:has(+.grp)>.row:last-child,#p-system .grp:has(+.grp)>div:last-child>.row:last-child{padding-bottom:0}
+.page .card+.card>.row:first-child,#p-system .grp+.grp>.row:first-child,#ovcard>.row:first-child,#behcard>.row:first-child{padding-top:0}
+.page .card:has(+.card)>.hint:last-child,.page .card:has(+.card)>.note:last-child{margin-bottom:0}
+.page .card:has(+.card)>.row:has(+:empty:last-child),#p-system .grp:has(+.grp)>.row:has(+:empty:last-child),#p-system .grp:has(+.grp)>.row:has(+.row[style*="none"]:last-child){padding-bottom:0}
+#lib_get:has(+.card) #lib_get_list>.lrow:last-child{margin-bottom:0}
+#lib_hf:has(+.card) #hf_results:has(.mrow){margin-bottom:-9px}
+.about .wh+.hshot,.about .wh+.hflow{margin-top:9px}
+.about .wh+ul,.about .wh+.hint{margin-top:8px}
+.about .wh+.hopt tr:first-child td{padding-top:2px}
 #srv_local,#srv_remote,.hshot .srccard{min-height:150px;display:flex;flex-direction:column}
 #srv_local .sum,#srv_remote .sum,.hshot .srccard .sum{flex:1;display:flex;flex-direction:column;gap:6px;margin:8px 0 10px}
 button.mini.eq{min-width:186px}
@@ -2155,7 +2163,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
 .helpbody .hdim{color:var(--dim)}
 .helpbody .hsub{color:var(--green);font-weight:var(--wb);font-size:12.5px;margin:14px 0 5px}
 .hopt{width:100%;border-collapse:collapse;margin:0 0 12px;font-size:12px}
-.hopt td{border-bottom:1px solid var(--soft);padding:6px 10px 6px 0;color:var(--dim);vertical-align:top;line-height:1.5}
+.hopt td{border-bottom:1px solid var(--soft);padding:7.5px 10px 7.5px 0;color:var(--dim);vertical-align:top;line-height:1.5}
 .hopt td:first-child{color:var(--green);width:38%}
 .hopt tr:last-child td{border-bottom:0}
 .hshot{border:1px solid var(--line);border-radius:var(--r);background:var(--field);padding:12px 14px;margin:0 0 12px}
@@ -2210,8 +2218,8 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
 .about p.hit,.about li.hit{background:var(--navon);box-shadow:inset 2px 0 0 var(--hi);padding-left:7px}
 .about p.warn{color:var(--amber);border-left:2px solid var(--amber);padding-left:9px}
 .about b{font-weight:var(--wb);text-shadow:var(--glow)}
-.about .wh{color:var(--green);font-weight:var(--wb);font-size:13px;letter-spacing:0;margin:18px 0 6px;border-bottom:1px solid var(--soft);padding-bottom:4px}
-.deprow{padding:9px 0;border-bottom:1px solid var(--soft);font-size:12px}
+.about .wh{color:var(--green);font-weight:var(--wb);font-size:13px;letter-spacing:0;margin:18px 0 6px;border-bottom:1px solid var(--soft);padding-bottom:7px}
+.deprow{padding:9px 0 7.5px;border-bottom:1px solid var(--soft);font-size:12px}
 .deprow:last-child{border-bottom:0}
 .dphead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
 .dphead .dn{color:var(--green);font-weight:var(--wb);font-size:12.5px}
@@ -2771,7 +2779,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
    <div class="row"><label>{{S_UPD_AUTO}}<span class="sub">{{S_SUB_UPD}}</span></label><input type="checkbox" id="check_updates"></div>
    <div class="row"><label>{{S_UPD}}</label>
     <button class="mini pri eq" id="upd_check">{{S_UPD_CHECK}}</button></div>
-   <div id="upd_out" style="font-size:12px;min-height:18px;color:var(--amber)"></div>
+   <div id="upd_out" style="font-size:12px;color:var(--amber)"></div>
   </div>
   <div class="grp">
    <div class="row"><label>{{S_LOG}}<span class="sub">{{S_LOG_SUB}}</span></label>
