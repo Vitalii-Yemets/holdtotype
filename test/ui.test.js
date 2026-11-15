@@ -1692,8 +1692,19 @@ function check(name, actual, expected) {
   await change(sv("subtitles_lines"), "5");
   check("and only that once", w.lastSaveForm.subtitles_box, null);
   check("the size row explains the mouse and the rows", sv("subs_box_reset").closest(".row").querySelector(".sub").textContent, "S_SUBS_BOX_SUB");
-  await change(sv("subtitles_size"), "l");
+  const tiles = () => [...d.querySelectorAll("#subs_size_tiles .sizetile")];
+  check("the text size is three tiles of letters, the chosen one marked, the list hidden", [tiles().map((t) => [t.dataset.v, t.querySelector(".sizeaa").textContent, t.querySelector(".sizeaa").style.fontSize, t.querySelector("input").getAttribute("aria-label"), t.title || t.dataset.tip]), tiles().filter((t) => t.classList.contains("on")).map((t) => t.dataset.v), sv("subtitles_size").hidden],
+    [[["s", "Aa", "15px", "S_SUBS_SIZE_S", "S_SUBS_SIZE_S"], ["m", "Aa", "19px", "S_SUBS_SIZE_M", "S_SUBS_SIZE_M"], ["l", "Aa", "25px", "S_SUBS_SIZE_L", "S_SUBS_SIZE_L"]], ["m"], true]);
+  check("the tiles are a group of radio buttons named for screen readers", [sv("subs_size_tiles").getAttribute("role"), sv("subs_size_tiles").getAttribute("aria-label"), tiles().every((t) => t.querySelector('input[type="radio"]').name === "subs_size_pick")], ["radiogroup", "S_SUBS_SIZE", true]);
+  check("the chosen size is named beside the tiles", sv("subs_size_name").textContent, "S_SUBS_SIZE_M");
+  tiles()[2].click(); await sleep(450);
+  check("a click on a tile chooses the size and saves it", [w.lastSaveForm.subtitles_size, sv("subtitles_size").value, sv("subs_size_name").textContent, tiles()[2].classList.contains("on"), tiles()[1].classList.contains("on")], ["l", "l", "S_SUBS_SIZE_L", true, false]);
+  const sizeRadio = tiles()[0].querySelector("input");
+  sizeRadio.checked = true; sizeRadio.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(450);
+  check("the keys move the choice the same way: the radio that gets checked chooses", [w.lastSaveForm.subtitles_size, sv("subs_size_name").textContent], ["s", "S_SUBS_SIZE_S"]);
+  tiles()[2].click(); await sleep(450);
   check("the text size reaches the save form", w.lastSaveForm.subtitles_size, "l");
+  check("the focus on a tile is visible", css.includes("#subs_size_row .sizetile input:focus-visible+.sizebox{outline:1px solid var(--green);outline-offset:2px}"), true);
   check("an ordinary save leaves the window place alone", [w.lastSaveForm.subtitles_custom, w.lastSaveForm.subtitles_position], [null, null]);
   check("the button that forgot the place is gone", !!sv("subs_place"), false);
   const swZones = d.querySelectorAll("#swscheme .ovzone");
@@ -1854,11 +1865,15 @@ function check(name, actual, expected) {
     ["", false, true, false, false, false, false],
     ["subs_tr_card", false, false, true, false, false, false],
     ["subs_who_card", false, false, false, true, false, false],
-    ["", false, false, false, false, true, false],
+    ["subs_win_card", false, false, false, false, true, false],
     ["", false, false, false, false, false, true],
   ]);
-  check("the shortcut row closes the first block, after the notice", [sv("subs_key").closest(".row").previousElementSibling.id, sv("subs_key").closest(".row") === sv("subs_main").lastElementChild], ["subs_notice", true]);
-  check("blocks are divided as on Post-processing, the language row and the cards stay one block", [css.includes("#p-subs .card+.card{margin-top:18px;border-top:1px solid var(--soft);padding-top:18px}"), css.includes("#p-subs #subs_who_card{margin-top:0;border-top:0;padding-top:0}")], [true, true]);
+  check("the start button stands below the heading, after the notice, and the shortcut row closes the block", [sv("subs_go").previousElementSibling.id, sv("subs_key").closest(".row").previousElementSibling.id, sv("subs_key").closest(".row") === sv("subs_main").lastElementChild, sv("subs_state").closest(".row").contains(sv("subs_go"))], ["subs_notice", "subs_go", true, false]);
+  check("the start button sits on the right of the text, over the shortcut field", css.includes("#subs_main>#subs_go{grid-column:2;grid-row:1/4;align-self:end;margin-bottom:6px}"), true);
+  check("blocks are divided as on Post-processing, and the translators are a block of their own now", [css.includes("#p-subs .card+.card{margin-top:18px;border-top:1px solid var(--soft);padding-top:18px}"), css.includes("#p-subs #subs_who_card{margin-top:0;border-top:0;padding-top:0}")], [true, false]);
+  check("the translators carry the heading of their block", [sv("subs_who_card").firstElementChild.className, sv("subs_who_card").querySelector(".whohead .blklbl").textContent], ["row noline whohead", "S_SUBS_WHO_TITLE"]);
+  check("the translation block holds only its heading and the language row", [...sv("subs_tr_card").children].map((e) => e.id || e.className), ["row noline", "subs_tr_lang_row"]);
+  check("the window block starts with only the translation, then the rows, the size and the rest", [...sv("subs_win_card").children].map((e) => e.id || (e.querySelector("label") ? e.querySelector("label").firstChild.textContent : e.className)).slice(0, 5), ["blklbl", "subs_tr_only_row", "S_SUBS_ROWS", "subs_size_row", "S_SUBS_BOX"]);
   check("no line between the speech language and its explanation", sv("subtitles_language").closest(".row").classList.contains("noline"), true);
   check("the original text switch is gone", !!sv("subtitles_original"), false);
   check("so is the list of who translates", [!!sv("subtitles_translator"), !!sv("subs_who_row"), !!sv("subs_tr_none_row")], [false, false, false]);
@@ -1866,7 +1881,7 @@ function check(name, actual, expected) {
 
   const trOn = sv("subtitles_translate_on"), trLang = sv("subtitles_translate"), whoCard = sv("subs_who_card");
   const warnLine = () => sv("subs_tr_warn").style.display === "none" ? "" : sv("subs_tr_warn").textContent;
-  check("the heading is a switch built like the one on Post-processing", [trOn.type, trOn.closest(".row").classList.contains("noline"), trOn.closest(".row").querySelector("label.blklbl").firstChild.textContent, trOn.closest(".row").nextElementSibling.className], ["checkbox", true, "S_SUBS_TR", "hint"]);
+  check("the heading is a switch built like the one on Post-processing", [trOn.type, trOn.closest(".row").classList.contains("noline"), trOn.closest(".row").querySelector("label.blklbl").firstChild.textContent, trOn.closest(".row").nextElementSibling.id], ["checkbox", true, "S_SUBS_TR", "subs_tr_lang_row"]);
   check("the warning lives in the heading label, where Post-processing keeps its own", sv("subs_tr_warn").parentElement.classList.contains("blklbl") && sv("subs_tr_warn").classList.contains("warn"), true);
   check("the translation language lists the eight languages and nothing else", [...trLang.options].map((o) => o.value), ["de", "en", "es", "fr", "it", "pl", "uk", "ru"]);
   check("the languages carry their own names in the order of the speech language list", [...trLang.options].map((o) => o.textContent), [...sv("subtitles_language").options].slice(1).map((o) => o.textContent));
@@ -1874,7 +1889,7 @@ function check(name, actual, expected) {
   check("the controls carry the config", [trOn.checked, trLang.value], [false, "de"]);
   check("off: the language row is dimmed and its list disabled", [trLang.closest(".row").classList.contains("dimmed"), trLang.disabled], [true, true]);
   check("off: the cards dim as a whole and their marks are disabled", [whoCard.classList.contains("offdim"), [...whoCard.querySelectorAll("input.srcpick")].every((p) => p.disabled)], [true, true]);
-  check("off: the hint stays", trOn.closest(".row").nextElementSibling.textContent, "S_SUBS_TR_HINT");
+  check("there is no hint under the translation heading", [sv("subs_tr_card").querySelectorAll(".hint").length, sv("p-subs").textContent.includes("S_SUBS_TR_HINT")], [0, false]);
   const savesOff = w.saveCalls;
   sv("subs_src_api").click(); await sleep(300);
   check("off: a click on a card chooses nothing", [w.saveCalls, sv("subs_src_api").classList.contains("on")], [savesOff, false]);
@@ -1896,7 +1911,7 @@ function check(name, actual, expected) {
   await change(trOn, true);
   check("and turning it on again returns to it", [w.lastSaveForm.subtitles_translate_on, w.lastSaveForm.subtitles_translate, trLang.value], [true, "ru", "ru"]);
   const onlyBox = sv("subtitles_translation_only");
-  check("showing only the translation is a switch right after the translation language", [onlyBox.type, onlyBox.closest(".row").id, onlyBox.closest(".row").previousElementSibling.id, onlyBox.closest(".row").querySelector("label").firstChild.textContent, onlyBox.closest(".row").querySelector(".sub").textContent, onlyBox.closest(".card").id], ["checkbox", "subs_tr_only_row", "subs_tr_lang_row", "S_SUBS_TR_ONLY", "S_SUBS_TR_ONLY_SUB", "subs_tr_card"]);
+  check("showing only the translation is a switch at the top of the window block", [onlyBox.type, onlyBox.closest(".row").id, onlyBox.closest(".row").previousElementSibling.className, onlyBox.closest(".row").querySelector("label").firstChild.textContent, onlyBox.closest(".row").querySelector(".sub").textContent, onlyBox.closest(".card").id], ["checkbox", "subs_tr_only_row", "blklbl", "S_SUBS_TR_ONLY", "S_SUBS_TR_ONLY_SUB", "subs_win_card"]);
   check("it carries the config, off", onlyBox.checked, false);
   await change(onlyBox, true);
   check("turning it on is saved", w.lastSaveForm.subtitles_translation_only, true);
@@ -1906,7 +1921,34 @@ function check(name, actual, expected) {
   check("translation on wakes it up", [onlyBox.closest(".row").classList.contains("dimmed"), onlyBox.disabled], [false, false]);
   await change(onlyBox, false);
   check("turning it off is saved", w.lastSaveForm.subtitles_translation_only, false);
-  check("the search finds it", w.searchMatches("s_subs_tr_only").some((el) => el.closest("#subs_tr_only_row")), true);
+  check("the search finds it in its new place", w.searchMatches("s_subs_tr_only").some((el) => el.closest("#subs_win_card #subs_tr_only_row")), true);
+  check("and the search finds the translator block", w.searchMatches("s_subs_who_title").some((el) => el.closest("#subs_who_card")), true);
+  check("and the text size row", w.searchMatches("s_subs_size").some((el) => el.closest("#subs_win_card #subs_size_row")), true);
+  tab("state"); await sleep(150);
+  const stTr = sv("st_tr_on"), stOnly = sv("st_tr_only"), stOnlyLbl = sv("st_tr_only_lbl");
+  const stSw = () => [stTr.checked, stOnly.checked, stOnly.disabled, stOnlyLbl.classList.contains("dimmed"), trOn.checked, onlyBox.checked];
+  check("status: the subtitles block carries the two switches of the tab", [...d.querySelectorAll("#subs_hero .stsubsw .stsw span")].map((s) => s.textContent), ["S_SUBS_TR", "S_SUBS_TR_ONLY"]);
+  check("status: they show the settings as they are", stSw(), [true, false, false, false, true, false]);
+  const saveSt = w.saveCalls;
+  stOnly.click(); await sleep(450);
+  check("status: only the translation turned on here is on on the tab and saved", [stSw(), w.lastSaveForm.subtitles_translation_only, w.saveCalls > saveSt], [[true, true, false, false, true, true], true, true]);
+  stTr.click(); await sleep(450);
+  check("status: translation off here is off on the tab, saved, and the second switch is dimmed and disabled", [stSw(), w.lastSaveForm.subtitles_translate_on], [[false, true, true, true, false, true], false]);
+  tab("subs"); await sleep(150);
+  check("the tab shows the same", [onlyBox.disabled, onlyBox.closest(".row").classList.contains("dimmed")], [true, true]);
+  await change(trOn, true);
+  await change(onlyBox, false);
+  tab("state"); await sleep(150);
+  check("status: switches turned on the tab follow there without a reload", stSw(), [true, false, false, false, true, false]);
+  w.subsState = { phase: "listening", mode: "live", model: "Nemotron 3.5", lang: "en" };
+  await w.refreshState(); await sleep(150);
+  check("status: with subtitles running the block keeps its switches", [sv("subs_hero").dataset.phase, !!d.querySelector("#subs_hero .stsubsw"), stSw()], ["listening", true, [true, false, false, false, true, false]]);
+  stOnly.click(); await sleep(450);
+  check("status: and they still work", [stSw(), w.lastSaveForm.subtitles_translation_only], [[true, true, false, false, true, true], true]);
+  stOnly.click(); await sleep(450);
+  w.subsState = { phase: "off" };
+  await w.refreshState(); await sleep(150);
+  tab("subs"); await sleep(150);
   await change(trLang, "de");
 
   const PL = w.eval("L");
@@ -2187,9 +2229,9 @@ function check(name, actual, expected) {
   }
   {
     const ru = stringsOf("ru");
-    check("Russian: the texts of the task, letter for letter", [ru.S_NAV_SUBS, ru.S_SUBS_TR_HINT, ru.S_SUBS_TR_MISS_SERVER, ru.S_SUBS_TR_MISS_MODEL_GET, ru.S_SUBS_TR_MISS_PACK_GET, ru.S_SUBS_TR_MISS_PACKS, ru.S_SUBS_TR_MISS_PACKS_GET, ru.S_SUBS_PACK_DLG, ru.S_SUBS_PACK_ASK, ru.S_SUBS_Q_HINT, ru.S_SUBS_Q_NEED, ru.S_SUBS_F_HINT, ru.S_SUBS_F_AUTO, ru.S_SUBS_ADD_HINT, ru.S_SUBS_API_HINT, ru.S_SUBS_API_NONE, ru.S_SUBS_API_WARN, ru.S_SUBS_API_CLEAR_MORE, ru.S_SUBS_ROWS_SUB], [
+    check("Russian: the texts of the task, letter for letter", [ru.S_NAV_SUBS, ru.S_SUBS_WHO_TITLE, ru.S_SUBS_TR_MISS_SERVER, ru.S_SUBS_TR_MISS_MODEL_GET, ru.S_SUBS_TR_MISS_PACK_GET, ru.S_SUBS_TR_MISS_PACKS, ru.S_SUBS_TR_MISS_PACKS_GET, ru.S_SUBS_PACK_DLG, ru.S_SUBS_PACK_ASK, ru.S_SUBS_Q_HINT, ru.S_SUBS_Q_NEED, ru.S_SUBS_F_HINT, ru.S_SUBS_F_AUTO, ru.S_SUBS_ADD_HINT, ru.S_SUBS_API_HINT, ru.S_SUBS_API_NONE, ru.S_SUBS_API_WARN, ru.S_SUBS_API_CLEAR_MORE, ru.S_SUBS_ROWS_SUB], [
       "Субтитры и перевод",
-      "Окно делится на две части: сверху услышанное, снизу перевод; границу между ними можно тянуть мышью. Выключено — окно показывает только услышанное.",
+      "Переводчик",
       "Выбран «Внешний сервер», но он не настроен, поэтому текст показывается так, как был услышан.",
       "Выбран «Качественный», но модель перевода ещё скачивается, поэтому пока текст показывается так, как был услышан.",
       "Выбран «Быстрый», но языковой пакет %s ещё скачивается, поэтому пока текст показывается так, как был услышан.",

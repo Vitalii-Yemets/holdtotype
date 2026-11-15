@@ -1957,7 +1957,6 @@ input.srcpick:disabled,input.srvpick:disabled{opacity:.4;cursor:default}
 #post_model_card .srccard.idle>*,#post_model_card .srccard.idle>.acts,#post_model_card .srccard.idle>.srchead{opacity:1}
 #p-post .card+.card{margin-top:18px;border-top:1px solid var(--soft);padding-top:18px}
 #p-subs .card+.card{margin-top:18px;border-top:1px solid var(--soft);padding-top:18px}
-#p-subs #subs_who_card{margin-top:0;border-top:0;padding-top:0}
 #subs_who_card .srccard.idle>*,#subs_who_card .srccard.idle>.acts,#subs_who_card .srccard.idle>.srchead{opacity:1}
 #subs_who_card .trcard{min-height:172px;display:flex;flex-direction:column}
 #subs_who_card .trcard .sum{flex:1;display:flex;flex-direction:column;gap:6px;margin:8px 0 10px}
@@ -1966,6 +1965,26 @@ input.srcpick:disabled,input.srvpick:disabled{opacity:.4;cursor:default}
 #subs_who_card .trcard .plates{display:flex;gap:8px;flex-wrap:wrap}
 #subs_who_card .trcard .pmt{border:1px solid var(--line);border-radius:calc(var(--r) * .4);padding:1px 8px;font-size:10px;letter-spacing:.06em;white-space:nowrap;color:var(--lbl,var(--dim));text-shadow:var(--lblglow,none)}
 #subs_who_card #subs_src_quality.trcard{min-height:0}
+#subs_main{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:16px}
+#subs_main>*{grid-column:1/-1}
+#subs_main>.row:first-child,#subs_main>.hint,#subs_main>#subs_notice{grid-column:1}
+#subs_main>#subs_go{grid-column:2;grid-row:1/4;align-self:end;margin-bottom:6px}
+#subs_size_row .sizectl{display:flex;align-items:center;gap:12px}
+#subs_size_row #subs_size_name{margin:0}
+#subs_size_row .sizetiles{display:flex;gap:8px;align-items:center}
+#subs_size_row .sizetile{flex:none;min-width:0;position:relative;display:block;cursor:pointer}
+#subs_size_row .sizetile input{position:absolute;top:0;left:0;width:1px;height:1px;margin:0;opacity:0;pointer-events:none}
+#subs_size_row .sizebox{position:relative;display:block;width:46px;height:36px;border:1px solid var(--line);border-radius:var(--r);background:var(--bg)}
+#subs_size_row .sizetile.on .sizebox{border-color:var(--hi);box-shadow:var(--higlow)}
+#subs_size_row .sizetile input:focus-visible+.sizebox{outline:1px solid var(--green);outline-offset:2px}
+#subs_size_row .sizeaa{position:absolute;left:50%;transform:translateX(-50%);line-height:1;font-family:var(--font);font-weight:400;color:var(--green);white-space:nowrap}
+#subtitles_size[hidden]{display:none}
+#subs_hero{flex-wrap:wrap}
+#subs_hero>.stsubsw{flex:0 0 calc(100% - 22px);margin-left:22px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 24px}
+#subs_hero .stsw{display:inline-flex;align-items:center;gap:12px;cursor:pointer}
+#subs_hero .stsw span{font-size:13px;font-weight:var(--wb);color:var(--green)}
+#subs_hero .stsw.dimmed{cursor:default}
+#subs_hero .stsw.dimmed span{color:var(--dim)}
 #subs_src_quality .plates{align-items:center}
 #subs_src_quality .plates .hfhome{margin-left:0}
 #subs_src_quality .plates .acts{margin-left:auto}
@@ -2000,6 +2019,7 @@ button.mini.eq{min-width:186px}
 .librow.hit{background:var(--navon);border-color:var(--dim);box-shadow:inset 2px 0 0 var(--hi)}
 .srccard.idle:hover{border-color:var(--dim)}
 .card.offdim>:not(h2):not(.blklbl){opacity:.38;pointer-events:none}
+#subs_who_card.offdim>.whohead{opacity:1}
 .srchrow{display:flex;align-items:center;gap:8px}
 .srchrow>button.mini{flex:none;height:var(--ctlh,30px)}
 .fitleg{margin-top:0}
@@ -2242,6 +2262,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
    </div>
    <button type="button" class="mini pri" id="subs_hero_go" title="{{S_SUBS_START}}">{{S_SUBS_HERO_START}}</button>
   </div>
+  <div class="stsubsw"><label class="stsw"><input type="checkbox" id="st_tr_on"><span>{{S_SUBS_TR}}</span></label><label class="stsw" id="st_tr_only_lbl"><input type="checkbox" id="st_tr_only"><span>{{S_SUBS_TR_ONLY}}</span></label></div>
  </div>
  <div class="stalerts" id="state_alerts"></div>
  <div class="stplate stusage" id="state_usage"></div>
@@ -2552,10 +2573,10 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
 
 <div class="page" role="tabpanel" aria-hidden="true" id="p-subs">
  <div class="card" id="subs_main">
-  <div class="row noline"><label class="blklbl"><span id="subs_state">{{S_SUBS_OFF}}</span></label>
-   <button type="button" class="mini pri" id="subs_go">{{S_SUBS_START}}</button></div>
+  <div class="row noline"><label class="blklbl"><span id="subs_state">{{S_SUBS_OFF}}</span></label></div>
   <div class="hint">{{S_SUBS_HINT}}</div>
   <div class="note warn" id="subs_notice">{{S_SUBS_NOTICE}}</div>
+  <button type="button" class="mini pri" id="subs_go">{{S_SUBS_START}}</button>
   <div class="row"><label>{{S_SUBS_KEY}}<span class="sub">{{S_SUBS_KEY_SUB}}</span></label>
    <button type="button" class="hotkey-val" id="subs_key" title="{{S_CHANGE}}"></button></div>
  </div>
@@ -2575,7 +2596,6 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
  </div>
  <div class="card" id="subs_tr_card">
   <div class="row noline"><label class="blklbl">{{S_SUBS_TR}}<span class="sub warn" id="subs_tr_warn" style="display:none"></span></label><input type="checkbox" id="subtitles_translate_on"></div>
-  <div class="hint">{{S_SUBS_TR_HINT}}</div>
   <div class="row" id="subs_tr_lang_row"><label>{{S_SUBS_TR_LANG}}</label>
    <select id="subtitles_translate">
     <option value="de">Deutsch</option><option value="en">English</option>
@@ -2583,9 +2603,9 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
     <option value="it">Italiano</option><option value="pl">Polski</option>
     <option value="uk">Українська</option><option value="ru">Русский</option>
    </select></div>
-  <div class="row" id="subs_tr_only_row"><label>{{S_SUBS_TR_ONLY}}<span class="sub">{{S_SUBS_TR_ONLY_SUB}}</span></label><input type="checkbox" id="subtitles_translation_only"></div>
  </div>
  <div class="card" id="subs_who_card">
+  <div class="row noline whohead"><label class="blklbl">{{S_SUBS_WHO_TITLE}}</label></div>
   <div class="srccard trcard idle" id="subs_src_quality" data-who="quality">
    <h3 class="srchead"><input type="radio" name="subssrc" class="srcpick" id="subs_pick_quality">{{S_SUBS_WHO_QUALITY}}</h3>
    <div class="hint">{{S_SUBS_Q_HINT}}</div>
@@ -2614,12 +2634,14 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
    <div class="acts"><button type="button" class="mini" id="subs_api_test">{{S_API_TEST}}</button><button type="button" class="mini danger" id="subs_api_clear" style="display:none">{{S_API_CLEAR}}</button><button type="button" class="mini" id="subs_api_edit">{{S_POSTAPI_SETUP}}</button></div>
   </div>
  </div>
- <div class="card">
+ <div class="card" id="subs_win_card">
   <label class="blklbl">{{S_SUBS_WINDOW}}</label>
+  <div class="row" id="subs_tr_only_row"><label>{{S_SUBS_TR_ONLY}}<span class="sub">{{S_SUBS_TR_ONLY_SUB}}</span></label><input type="checkbox" id="subtitles_translation_only"></div>
   <div class="row"><label>{{S_SUBS_ROWS}}<span class="sub">{{S_SUBS_ROWS_SUB}}</span></label>
    <select id="subtitles_lines"><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option></select></div>
-  <div class="row"><label>{{S_SUBS_SIZE}}</label>
-   <select id="subtitles_size"><option value="s">{{S_SUBS_SIZE_S}}</option><option value="m">{{S_SUBS_SIZE_M}}</option><option value="l">{{S_SUBS_SIZE_L}}</option></select></div>
+  <div class="row" id="subs_size_row"><label>{{S_SUBS_SIZE}}</label>
+   <div class="sizectl"><span class="sub" id="subs_size_name"></span><div class="sizetiles" id="subs_size_tiles" role="radiogroup" aria-label="{{S_SUBS_SIZE}}"><label class="sizetile" data-v="s" title="{{S_SUBS_SIZE_S}}"><input type="radio" name="subs_size_pick" value="s" aria-label="{{S_SUBS_SIZE_S}}"><span class="sizebox"><span class="sizeaa" style="font-size:15px;bottom:6.400px">Aa</span></span></label><label class="sizetile" data-v="m" title="{{S_SUBS_SIZE_M}}"><input type="radio" name="subs_size_pick" value="m" aria-label="{{S_SUBS_SIZE_M}}"><span class="sizebox"><span class="sizeaa" style="font-size:19px;bottom:5.900px">Aa</span></span></label><label class="sizetile" data-v="l" title="{{S_SUBS_SIZE_L}}"><input type="radio" name="subs_size_pick" value="l" aria-label="{{S_SUBS_SIZE_L}}"><span class="sizebox"><span class="sizeaa" style="font-size:25px;bottom:5.150px">Aa</span></span></label></div></div>
+   <select id="subtitles_size" hidden><option value="s">{{S_SUBS_SIZE_S}}</option><option value="m">{{S_SUBS_SIZE_M}}</option><option value="l">{{S_SUBS_SIZE_L}}</option></select></div>
   <div class="row"><label>{{S_SUBS_BOX}}<span class="sub">{{S_SUBS_BOX_SUB}}</span></label>
    <button type="button" class="mini" id="subs_box_reset">{{S_SUBS_BOX_BTN}}</button></div>
   <div class="row noline"><label>{{S_SUBS_FREE}}<span class="sub">{{S_SUBS_FREE_SUB}}</span></label><input type="checkbox" id="subs_free"></div>
@@ -4256,6 +4278,7 @@ function renderSubsTr(){
   });
   renderSubsQuality();
   renderSubsFast();
+  syncStateSwitches();
   const warn = subsWarnText();
   const wl = subsEl("subs_tr_warn");
   wl.textContent = warn;
@@ -4387,6 +4410,49 @@ function subsGotoModels(){
   const target = document.querySelector('#langlist .lrow[data-lang="' + lang + '"]');
   if(target && target.scrollIntoView) target.scrollIntoView({block: "center"});
 }
+function syncSizeTiles(){
+  const sel = subsEl("subtitles_size"), box = subsEl("subs_size_tiles");
+  if(!sel || !box) return;
+  box.querySelectorAll("input").forEach(i=>{
+    i.checked = i.value === sel.value;
+    i.closest(".sizetile").classList.toggle("on", i.checked);
+    if(i.checked) subsEl("subs_size_name").textContent = i.getAttribute("aria-label");
+  });
+}
+function syncStateSwitches(){
+  const tr = subsEl("st_tr_on"), only = subsEl("st_tr_only");
+  const rTr = subsEl("subtitles_translate_on"), rOnly = subsEl("subtitles_translation_only");
+  if(!tr || !only || !rTr || !rOnly) return;
+  tr.checked = rTr.checked;
+  only.checked = rOnly.checked;
+  only.disabled = rOnly.disabled;
+  subsEl("st_tr_only_lbl").classList.toggle("dimmed", rOnly.disabled);
+}
+function initSubsExtras(){
+  const sel = subsEl("subtitles_size"), box = subsEl("subs_size_tiles");
+  if(sel && box){
+    box.addEventListener("change", e=>{
+      e.stopPropagation();
+      sel.value = e.target.value;
+      sel.dispatchEvent(new Event("change", {bubbles: true}));
+      syncSizeTiles();
+    });
+    sel.addEventListener("change", syncSizeTiles);
+    syncSizeTiles();
+  }
+  [["st_tr_on", "subtitles_translate_on"], ["st_tr_only", "subtitles_translation_only"]].forEach(([mine, real])=>{
+    const a = subsEl(mine), b = subsEl(real);
+    if(!a || !b) return;
+    a.addEventListener("change", e=>{
+      e.stopPropagation();
+      b.checked = a.checked;
+      b.dispatchEvent(new Event("change", {bubbles: true}));
+      syncStateSwitches();
+    });
+    b.addEventListener("change", syncStateSwitches);
+  });
+  syncStateSwitches();
+}
 function initSubs(){
   const sel = subsEl("subtitles_language");
   if(!sel) return;
@@ -4400,6 +4466,7 @@ function initSubs(){
   trSel.value = CFG.subtitles_translate || "en";
   if(!trSel.value) trSel.value = "en";
   subsEl("subtitles_translation_only").checked = !!CFG.subtitles_translation_only;
+  initSubsExtras();
   paintSubsKey();
   sel.addEventListener("change", refreshSubsModel);
   sel.addEventListener("change", renderSubsTr);
