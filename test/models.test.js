@@ -430,6 +430,49 @@ function open(lang, cfgPatch, setup) {
     w.searchSettings("");
   }
 
+  for (const keep of [true, false]) {
+    const sdom = open("en", { subtitles_save: keep, subtitles_translate_on: true, subtitles_translator: "fast" });
+    const sw = sdom.window, sd = sw.document, SS = sw.S;
+    const sweepErrors = [];
+    sw.addEventListener("error", (e) => sweepErrors.push(e.message));
+    await sleep(700);
+    const said = () => SS.saves.map((f) => f.subtitles_save);
+    check("save switch " + keep + ": both switches show the setting when the window opens", [sd.getElementById("subtitles_save").checked, sd.getElementById("st_save_on").checked], [keep, keep]);
+    const box = sd.getElementById("subtitles_save");
+    box.checked = !keep;
+    await sw.doSave();
+    box.checked = keep;
+    check("save switch " + keep + ": a save does not take the value from a box the page has not filled", SS.saves[SS.saves.length - 1].subtitles_save, keep);
+    const own = new Set(["subtitles_save", "st_save_on"]);
+    const pick = () => [...sd.querySelectorAll("#p-state input, #p-state select, #p-state textarea, #p-subs input, #p-subs select, #p-subs textarea")].filter((el) => !own.has(el.id));
+    const before = SS.saves.length;
+    let touched = 0;
+    for (const el of pick()) {
+      if (!el.isConnected) continue;
+      if (el.type === "checkbox") el.checked = !el.checked;
+      else if (el.type === "radio") el.checked = true;
+      else if (el.tagName === "SELECT") { if (el.options.length > 1) el.selectedIndex = (el.selectedIndex + 1) % el.options.length; }
+      else el.value = el.value ? el.value : "1";
+      el.dispatchEvent(new sw.Event("input", { bubbles: true }));
+      el.dispatchEvent(new sw.Event("change", { bubbles: true }));
+      touched++;
+      await sleep(140);
+    }
+    for (const el of [...sd.querySelectorAll("#p-state button, #p-subs button")]) {
+      if (!el.isConnected) continue;
+      el.click();
+      touched++;
+      await sleep(140);
+    }
+    await sleep(500);
+    const sent = said().slice(before);
+    check("save switch " + keep + ": every control of Status and Subtitles & translation was touched and saves were sent", [touched > 40, sent.length > 10], [true, true]);
+    check("save switch " + keep + ": no save sent while touching them changes it", sent.filter((v) => v !== keep), []);
+    check("save switch " + keep + ": both switches still show it", [sd.getElementById("subtitles_save").checked, sd.getElementById("st_save_on").checked], [keep, keep]);
+    check("save switch " + keep + ": touching every control raised no JavaScript error", sweepErrors, []);
+    sdom.window.close();
+  }
+
   check("no JavaScript errors", errors, []);
   if (failures.length) {
     console.error(`\n${failures.length} check(s) failed: ${failures.join(", ")}`);

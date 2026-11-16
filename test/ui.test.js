@@ -2010,8 +2010,8 @@ function check(name, actual, expected) {
   const stCards = () => [...stLays.querySelectorAll(".stlay")];
   const stPick = () => stCards().map((c) => c.classList.contains("on"));
   const tabPick = () => [...d.querySelectorAll("#subs_lays .lay")].map((c) => c.classList.contains("on"));
-  check("status: the subtitles block carries the translation switch and the three cards of the tab in a smaller size", [[...d.querySelectorAll("#subs_hero .stsubsw .stsw span")].map((s) => s.textContent), stLays.getAttribute("role"), stLays.getAttribute("aria-label"), stCards().map((c) => [c.dataset.v, c.title || c.dataset.tip, c.querySelector("input").type, c.querySelector("input").name, c.querySelector("input").getAttribute("aria-label"), !!c.querySelector("svg.laythumb")])],
-    [["S_SUBS_TR"], "radiogroup", "S_SUBS_LAYOUT", [["rows", "S_SUBS_LAYOUT_ROWS", "radio", "st_layout", "S_SUBS_LAYOUT_ROWS", true], ["columns", "S_SUBS_LAYOUT_COLS", "radio", "st_layout", "S_SUBS_LAYOUT_COLS", true], ["only", "S_SUBS_LAYOUT_ONLY", "radio", "st_layout", "S_SUBS_LAYOUT_ONLY", true]]]);
+  check("status: the subtitles block carries the translation switch, the three cards of the tab in a smaller size and the save switch", [[...d.querySelectorAll("#subs_hero .stsubsw .stsw span")].map((s) => s.textContent), stLays.getAttribute("role"), stLays.getAttribute("aria-label"), stCards().map((c) => [c.dataset.v, c.title || c.dataset.tip, c.querySelector("input").type, c.querySelector("input").name, c.querySelector("input").getAttribute("aria-label"), !!c.querySelector("svg.laythumb")])],
+    [["S_SUBS_TR", "S_SUBS_SAVE"], "radiogroup", "S_SUBS_LAYOUT", [["rows", "S_SUBS_LAYOUT_ROWS", "radio", "st_layout", "S_SUBS_LAYOUT_ROWS", true], ["columns", "S_SUBS_LAYOUT_COLS", "radio", "st_layout", "S_SUBS_LAYOUT_COLS", true], ["only", "S_SUBS_LAYOUT_ONLY", "radio", "st_layout", "S_SUBS_LAYOUT_ONLY", true]]]);
   check("status: the small cards are drawn small, the chosen one framed, dim ones take no clicks, the focus is visible", [css.includes("#subs_hero .stlay svg{display:block;width:64px;height:auto}"), css.includes("#subs_hero .stlay.on,#skin_cards .stlay.on{border-color:var(--hi);box-shadow:var(--higlow)}"), css.includes("#subs_hero .stlays.off{opacity:.38;pointer-events:none}"), css.includes("#subs_hero .stlay:has(input:focus-visible),#skin_cards .stlay:has(input:focus-visible){outline:1px solid var(--green);outline-offset:2px}")], [true, true, true, true]);
   check("status: they show the settings as they are", [stTr.checked, stPick(), stLays.classList.contains("off")], [true, [true, false, false], false]);
   const saveSt = w.saveCalls;
@@ -2022,6 +2022,22 @@ function check(name, actual, expected) {
   check("status: the keys pick a layout here the same way", [stPick(), tabPick(), w.lastSaveForm.subtitles_layout, w.lastSaveForm.subtitles_translation_only], [[false, true, false], [false, true, false], "columns", false]);
   stTr.click(); await sleep(450);
   check("status: translation off here is off on the tab, saved, and the small cards are dimmed and disabled", [stTr.checked, trOn.checked, w.lastSaveForm.subtitles_translate_on, stLays.classList.contains("off"), stCards().every((c) => c.querySelector("input").disabled)], [false, false, false, true, true]);
+  const stSave = sv("st_save_on");
+  check("status: the save switch comes after the small cards, looks like the translation switch and shows the setting", [[...d.querySelectorAll("#subs_hero .stsubsw > *")].map((e) => e.id || e.querySelector("input").id), stSave.closest("label").className, stSave.type, stSave.checked, sv("subtitles_save").checked], [["st_tr_on", "st_lays", "st_save_on"], "stsw", "checkbox", true, true]);
+  check("status: the save switch stays awake while translation is off", [stSave.disabled, stSave.closest(".stsw").classList.contains("dimmed")], [false, false]);
+  const savesSv = w.saveCalls;
+  stSave.click(); await sleep(450);
+  check("status: saving turned off here is off on the tab and saved once", [stSave.checked, sv("subtitles_save").checked, w.lastSaveForm.subtitles_save, w.saveCalls - savesSv], [false, false, false, 1]);
+  stSave.click(); await sleep(450);
+  check("status: and turned on again here is on there and saved", [stSave.checked, sv("subtitles_save").checked, w.lastSaveForm.subtitles_save], [true, true, true]);
+  tab("subs"); await sleep(150);
+  await change(sv("subtitles_save"), false);
+  tab("state"); await sleep(150);
+  check("status: saving turned off on the tab is off here without a reload", [stSave.checked, w.lastSaveForm.subtitles_save], [false, false]);
+  tab("subs"); await sleep(150);
+  await change(sv("subtitles_save"), true);
+  tab("state"); await sleep(150);
+  check("status: and on again", [stSave.checked, w.lastSaveForm.subtitles_save], [true, true]);
   tab("subs"); await sleep(150);
   check("the tab shows the same", [sv("subs_lays").classList.contains("off"), tabPick()], [true, [false, true, false]]);
   await change(trOn, true);

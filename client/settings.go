@@ -2367,7 +2367,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
    </div>
    <button type="button" class="mini pri" id="subs_hero_go" title="{{S_SUBS_START}}">{{S_SUBS_HERO_START}}</button>
   </div>
-  <div class="stsubsw"><label class="stsw"><input type="checkbox" id="st_tr_on"><span>{{S_SUBS_TR}}</span></label><div class="stlays" id="st_lays" role="radiogroup" aria-label="{{S_SUBS_LAYOUT}}"><label class="stlay" data-v="rows" title="{{S_SUBS_LAYOUT_ROWS}}"><input type="radio" name="st_layout" value="rows" aria-label="{{S_SUBS_LAYOUT_ROWS}}"><svg class="laythumb" width="251" height="60" viewBox="0 0 251 60" aria-hidden="true"><rect x="0.5" y="0.50" width="250" height="59.00" rx="2.33" style="fill:var(--bg);stroke:var(--line)"/><circle cx="7.30" cy="7.59" r="2.4" style="fill:var(--ok)"/><path d="M242.67 5.39L247.07 9.79M247.07 5.39L242.67 9.79" style="stroke:var(--dim);stroke-width:1;fill:none"/><rect x="2.92" y="15.00" width="245.16" height="1.00" style="fill:var(--line)"/><rect x="4.67" y="19.87" width="188.50" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="4.67" y="30.35" width="91.83" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="4.67" y="40.83" width="217.49" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="4.67" y="51.30" width="145.00" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="2.92" y="38.00" width="245.16" height="1.00" style="fill:var(--line)"/><rect x="116.50" y="36.50" width="18" height="4" rx="2" style="fill:var(--bg);stroke:var(--dim);stroke-width:1"/></svg></label><label class="stlay" data-v="columns" title="{{S_SUBS_LAYOUT_COLS}}"><input type="radio" name="st_layout" value="columns" aria-label="{{S_SUBS_LAYOUT_COLS}}"><svg class="laythumb" width="251" height="60" viewBox="0 0 251 60" aria-hidden="true"><rect x="0.5" y="0.50" width="250" height="59.00" rx="2.33" style="fill:var(--bg);stroke:var(--line)"/><circle cx="7.30" cy="7.59" r="2.4" style="fill:var(--ok)"/><path d="M242.67 5.39L247.07 9.79M247.07 5.39L242.67 9.79" style="stroke:var(--dim);stroke-width:1;fill:none"/><rect x="2.92" y="15.00" width="245.16" height="1.00" style="fill:var(--line)"/><rect x="4.67" y="19.87" width="107.33" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="4.67" y="30.35" width="77.00" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="4.67" y="40.83" width="97.99" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="4.67" y="51.30" width="58.33" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="130.67" y="19.87" width="92.53" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="130.67" y="30.35" width="108.72" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="130.67" y="40.83" width="69.40" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="130.67" y="51.30" width="83.28" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="126.00" y="15.00" width="1.00" height="42.08" style="fill:var(--line)"/><rect x="124.50" y="28.59" width="4" height="18" rx="2" style="fill:var(--bg);stroke:var(--dim);stroke-width:1"/></svg></label><label class="stlay" data-v="only" title="{{S_SUBS_LAYOUT_ONLY}}"><input type="radio" name="st_layout" value="only" aria-label="{{S_SUBS_LAYOUT_ONLY}}"><svg class="laythumb" width="251" height="60" viewBox="0 0 251 60" aria-hidden="true"><rect x="0.5" y="0.50" width="250" height="59.00" rx="2.33" style="fill:var(--bg);stroke:var(--line)"/><circle cx="7.30" cy="7.59" r="2.4" style="fill:var(--ok)"/><path d="M242.67 5.39L247.07 9.79M247.07 5.39L242.67 9.79" style="stroke:var(--dim);stroke-width:1;fill:none"/><rect x="2.92" y="15.00" width="245.16" height="1.00" style="fill:var(--line)"/><rect x="4.67" y="19.87" width="217.49" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="4.67" y="30.35" width="174.00" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="4.67" y="40.83" width="203.00" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="4.67" y="51.30" width="145.00" height="4.00" rx="2.00" style="fill:var(--green)"/></svg></label></div></div>
+  <div class="stsubsw"><label class="stsw"><input type="checkbox" id="st_tr_on"><span>{{S_SUBS_TR}}</span></label><div class="stlays" id="st_lays" role="radiogroup" aria-label="{{S_SUBS_LAYOUT}}"><label class="stlay" data-v="rows" title="{{S_SUBS_LAYOUT_ROWS}}"><input type="radio" name="st_layout" value="rows" aria-label="{{S_SUBS_LAYOUT_ROWS}}"><svg class="laythumb" width="251" height="60" viewBox="0 0 251 60" aria-hidden="true"><rect x="0.5" y="0.50" width="250" height="59.00" rx="2.33" style="fill:var(--bg);stroke:var(--line)"/><circle cx="7.30" cy="7.59" r="2.4" style="fill:var(--ok)"/><path d="M242.67 5.39L247.07 9.79M247.07 5.39L242.67 9.79" style="stroke:var(--dim);stroke-width:1;fill:none"/><rect x="2.92" y="15.00" width="245.16" height="1.00" style="fill:var(--line)"/><rect x="4.67" y="19.87" width="188.50" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="4.67" y="30.35" width="91.83" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="4.67" y="40.83" width="217.49" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="4.67" y="51.30" width="145.00" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="2.92" y="38.00" width="245.16" height="1.00" style="fill:var(--line)"/><rect x="116.50" y="36.50" width="18" height="4" rx="2" style="fill:var(--bg);stroke:var(--dim);stroke-width:1"/></svg></label><label class="stlay" data-v="columns" title="{{S_SUBS_LAYOUT_COLS}}"><input type="radio" name="st_layout" value="columns" aria-label="{{S_SUBS_LAYOUT_COLS}}"><svg class="laythumb" width="251" height="60" viewBox="0 0 251 60" aria-hidden="true"><rect x="0.5" y="0.50" width="250" height="59.00" rx="2.33" style="fill:var(--bg);stroke:var(--line)"/><circle cx="7.30" cy="7.59" r="2.4" style="fill:var(--ok)"/><path d="M242.67 5.39L247.07 9.79M247.07 5.39L242.67 9.79" style="stroke:var(--dim);stroke-width:1;fill:none"/><rect x="2.92" y="15.00" width="245.16" height="1.00" style="fill:var(--line)"/><rect x="4.67" y="19.87" width="107.33" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="4.67" y="30.35" width="77.00" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="4.67" y="40.83" width="97.99" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="4.67" y="51.30" width="58.33" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="130.67" y="19.87" width="92.53" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="130.67" y="30.35" width="108.72" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="130.67" y="40.83" width="69.40" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="130.67" y="51.30" width="83.28" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="126.00" y="15.00" width="1.00" height="42.08" style="fill:var(--line)"/><rect x="124.50" y="28.59" width="4" height="18" rx="2" style="fill:var(--bg);stroke:var(--dim);stroke-width:1"/></svg></label><label class="stlay" data-v="only" title="{{S_SUBS_LAYOUT_ONLY}}"><input type="radio" name="st_layout" value="only" aria-label="{{S_SUBS_LAYOUT_ONLY}}"><svg class="laythumb" width="251" height="60" viewBox="0 0 251 60" aria-hidden="true"><rect x="0.5" y="0.50" width="250" height="59.00" rx="2.33" style="fill:var(--bg);stroke:var(--line)"/><circle cx="7.30" cy="7.59" r="2.4" style="fill:var(--ok)"/><path d="M242.67 5.39L247.07 9.79M247.07 5.39L242.67 9.79" style="stroke:var(--dim);stroke-width:1;fill:none"/><rect x="2.92" y="15.00" width="245.16" height="1.00" style="fill:var(--line)"/><rect x="4.67" y="19.87" width="217.49" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="4.67" y="30.35" width="174.00" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="4.67" y="40.83" width="203.00" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="4.67" y="51.30" width="145.00" height="4.00" rx="2.00" style="fill:var(--green)"/></svg></label></div><label class="stsw"><input type="checkbox" id="st_save_on"><span>{{S_SUBS_SAVE}}</span></label></div>
  </div>
  <div class="stalerts" id="state_alerts"></div>
  <div class="stplate stusage" id="state_usage"></div>
@@ -3020,6 +3020,7 @@ let translateDefault = !!CFG.translate_default;
 let translateHotkey = CFG.translate_hotkey || "";
 let langKeys = Object.assign({}, CFG.lang_hotkeys || {});
 let subsKey = CFG.subtitles_hotkey || "";
+let subsSave = CFG.subtitles_save !== false;
 let subsRunning = false;
 let subsTr = null;
 let subsBoxReset = false;
@@ -4636,6 +4637,8 @@ function pickLayout(v){
   syncLayout();
 }
 function syncStateSwitches(){
+  const sv = subsEl("st_save_on"), rSv = subsEl("subtitles_save");
+  if(sv && rSv) sv.checked = rSv.checked;
   const tr = subsEl("st_tr_on"), rTr = subsEl("subtitles_translate_on");
   if(!tr || !rTr) return;
   tr.checked = rTr.checked;
@@ -4664,7 +4667,7 @@ function initSubsExtras(){
   const onlyBox = subsEl("subtitles_translation_only");
   if(onlyBox) onlyBox.addEventListener("change", syncLayout);
   syncLayout();
-  [["st_tr_on", "subtitles_translate_on"]].forEach(([mine, real])=>{
+  [["st_tr_on", "subtitles_translate_on"], ["st_save_on", "subtitles_save"]].forEach(([mine, real])=>{
     const a = subsEl(mine), b = subsEl(real);
     if(!a || !b) return;
     a.addEventListener("change", e=>{
@@ -4681,7 +4684,9 @@ function initSubs(){
   const sel = subsEl("subtitles_language");
   if(!sel) return;
   sel.value = CFG.subtitles_language || "auto";
-  subsEl("subtitles_save").checked = CFG.subtitles_save !== false;
+  const saveBox = subsEl("subtitles_save");
+  saveBox.checked = subsSave;
+  saveBox.addEventListener("change", ()=>{ subsSave = saveBox.checked; });
   subsEl("subtitles_lines").value = String(CFG.subtitles_lines || 3);
   subsEl("subtitles_size").value = CFG.subtitles_size || "m";
   const trOn = subsEl("subtitles_translate_on");
@@ -6388,7 +6393,7 @@ async function doSave(){
     profiles: profiles,
     subtitles_language: (subsEl("subtitles_language")||{}).value || "auto",
     subtitles_hotkey: subsKey,
-    subtitles_save: !!(subsEl("subtitles_save")||{}).checked,
+    subtitles_save: subsSave,
     subtitles_lines: parseInt((subsEl("subtitles_lines")||{}).value) || 3,
     subtitles_size: (subsEl("subtitles_size")||{}).value || "m",
     subtitles_custom: OVS.customDirty ? OVS.custom : null,
