@@ -40,7 +40,10 @@ type Spec struct {
 
 func Fixed() Spec { return Spec{Name: File, Size: Size, Hash: SHA256} }
 
-func Is(name string) bool { return strings.EqualFold(filepath.Base(name), File) }
+func Is(name string) bool {
+	_, ok := ByFile(name)
+	return ok
+}
 
 func stamp(spec Spec, fi os.FileInfo) string {
 	return spec.Hash + " " + strconv.FormatInt(fi.Size(), 10) + " " + strconv.FormatInt(fi.ModTime().UnixNano(), 10)

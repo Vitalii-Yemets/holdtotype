@@ -81,3 +81,24 @@ func TestTheDeviceIsPinnedByName(t *testing.T) {
 		t.Fatalf("no devices: %+v", got)
 	}
 }
+
+func TestTheCardRuleFollowsTheModel(t *testing.T) {
+	list := []Adapter{{Name: "RTX 3070 Ti Laptop", DedicatedMB: 8192, Hardware: true}, {Name: "Iris Xe", DedicatedMB: 128, Integrated: true, Hardware: true}}
+	if got, why := PickFor(list, 8192); why != "" || got.Name != "RTX 3070 Ti Laptop" {
+		t.Fatalf("an 8 GB card does not fit an 8 GB model: %q %q", got.Name, why)
+	}
+	small := []Adapter{{Name: "RTX 3050 Laptop", DedicatedMB: 4096, Hardware: true}}
+	if _, why := PickFor(small, 4096); why != "" {
+		t.Fatalf("a 4 GB card does not fit a 4 GB model: %q", why)
+	}
+	_, why := PickFor(small, 8192)
+	if why != "the graphics card has 4096 MB of its own memory, 8192 MB are needed" {
+		t.Fatalf("why: %q", why)
+	}
+	if code, mb := ReasonFor(small, 8192); code != ReasonSmall || mb != 4096 {
+		t.Fatalf("reason: %s %d", code, mb)
+	}
+	if code, mb := ReasonFor(small, 4096); code != "" || mb != 4096 {
+		t.Fatalf("reason when it fits: %s %d", code, mb)
+	}
+}

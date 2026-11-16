@@ -20,14 +20,18 @@ type Adapter struct {
 	Hardware    bool
 }
 
-func Fits(a Adapter) bool {
-	return a.Hardware && !a.Integrated && a.DedicatedMB >= NeedMB-SlackMB
+func Fits(a Adapter) bool { return FitsFor(a, NeedMB) }
+
+func FitsFor(a Adapter, need int) bool {
+	return a.Hardware && !a.Integrated && a.DedicatedMB >= need-SlackMB
 }
 
-func Pick(list []Adapter) (Adapter, string) {
+func Pick(list []Adapter) (Adapter, string) { return PickFor(list, NeedMB) }
+
+func PickFor(list []Adapter, need int) (Adapter, string) {
 	var fit []Adapter
 	for _, a := range list {
-		if Fits(a) {
+		if FitsFor(a, need) {
 			fit = append(fit, a)
 		}
 	}
@@ -35,7 +39,7 @@ func Pick(list []Adapter) (Adapter, string) {
 		sort.SliceStable(fit, func(i, j int) bool { return fit[i].DedicatedMB > fit[j].DedicatedMB })
 		return fit[0], ""
 	}
-	return Adapter{}, Why(list)
+	return Adapter{}, WhyFor(list, need)
 }
 
 const (
@@ -45,8 +49,10 @@ const (
 	ReasonUnknown    = "unknown"
 )
 
-func Reason(list []Adapter) (string, int) {
-	if pick, why := Pick(list); why == "" {
+func Reason(list []Adapter) (string, int) { return ReasonFor(list, NeedMB) }
+
+func ReasonFor(list []Adapter, need int) (string, int) {
+	if pick, why := PickFor(list, need); why == "" {
 		return "", pick.DedicatedMB
 	}
 	best := -1
@@ -72,7 +78,9 @@ func Reason(list []Adapter) (string, int) {
 	return ReasonNone, 0
 }
 
-func Why(list []Adapter) string {
+func Why(list []Adapter) string { return WhyFor(list, NeedMB) }
+
+func WhyFor(list []Adapter, need int) string {
 	best := -1
 	integrated := false
 	for _, a := range list {
@@ -89,7 +97,7 @@ func Why(list []Adapter) string {
 	}
 	switch {
 	case best >= 0:
-		return fmt.Sprintf("the graphics card has %d MB of its own memory, %d MB are needed", best, NeedMB)
+		return fmt.Sprintf("the graphics card has %d MB of its own memory, %d MB are needed", best, need)
 	case integrated:
 		return "only integrated graphics, which share the computer's memory"
 	}
