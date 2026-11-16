@@ -168,6 +168,8 @@ type Config struct {
 	SubtitlesTranslateOn     bool     `json:"subtitles_translate_on"`
 	SubtitlesTranslate       string   `json:"subtitles_translate"`
 	SubtitlesTranslator      string   `json:"subtitles_translator"`
+	SubtitlesModel           string   `json:"subtitles_model"`
+	SubtitlesTopic           bool     `json:"subtitles_topic"`
 	SubtitlesTranslationOnly bool     `json:"subtitles_translation_only"`
 	SubtitlesPairs           []string `json:"subtitles_pairs"`
 	TranslatePort            int      `json:"translate_port"`
@@ -269,6 +271,7 @@ func defaultConfig() *Config {
 		SubtitlesSave:     true,
 		SubtitlesLines:    defaultSubtitlesLines,
 		SubtitlesSize:     "m",
+		SubtitlesTopic:    true,
 		TranslatePort:     defaultTranslatePort,
 	}
 }
@@ -802,7 +805,7 @@ func settleSubtitles(cfg *Config, data []byte) bool {
 		was := cfg.SubtitlesTranslator
 		cfg.SubtitlesTranslator = subtitles.SettleTranslator(subtitles.Have{
 			CardFits:   fits,
-			ModelReady: trModelReady(),
+			ModelReady: trModelReady(cfg),
 			Server:     postAPISet(cfg),
 			PairReady:  pairOnDiskInto(cfg.SubtitlesTranslate),
 		})

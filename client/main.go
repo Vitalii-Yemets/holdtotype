@@ -882,7 +882,7 @@ func main() {
 	go cleanupWebViewProfiles()
 	go app.startupUpdateCheck()
 	go cleanupStaleParts()
-	go trModelState()
+	go checkTrModels()
 	go app.sweepIdleEngine()
 	args := os.Args[1:]
 	if relaunch.Updated(args) {

@@ -94,3 +94,17 @@ var errBroken = errors.New("connection reset")
 type errReader struct{}
 
 func (errReader) Read([]byte) (int, error) { return 0, errBroken }
+
+func TestCompletionStream(t *testing.T) {
+	body := "data: {\"content\":\"Итак,\",\"stop\":false}\n\n" +
+		"data: {\"content\":\" мы\",\"stop\":false}\n\n" +
+		"data: {\"content\":\"\",\"stop\":true,\"stopped_eos\":true}\n\n"
+	out, seen, err := collect(body)
+	if err != nil || out != "Итак, мы" || !reflect.DeepEqual(seen, []string{"Итак,", "Итак, мы"}) {
+		t.Fatalf("got %q %q %v", out, seen, err)
+	}
+	whole, _, err := collect("{\"content\":\"Итак, мы\",\"stop\":true}")
+	if err != nil || whole != "Итак, мы" {
+		t.Fatalf("whole: %q %v", whole, err)
+	}
+}

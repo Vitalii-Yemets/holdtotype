@@ -18,14 +18,15 @@ type chunk struct {
 			Content string `json:"content"`
 		} `json:"message"`
 	} `json:"choices"`
-	Error *struct {
+	Content string `json:"content"`
+	Error   *struct {
 		Message string `json:"message"`
 	} `json:"error"`
 }
 
 func (c chunk) text() string {
 	if len(c.Choices) == 0 {
-		return ""
+		return c.Content
 	}
 	if t := c.Choices[0].Delta.Content; t != "" {
 		return t
@@ -52,7 +53,7 @@ func whole(raw string, onText func(string)) (string, error) {
 	if err := c.failure(); err != nil {
 		return "", err
 	}
-	if len(c.Choices) == 0 {
+	if len(c.Choices) == 0 && c.Content == "" {
 		return "", fmt.Errorf("empty answer: %.200s", strings.TrimSpace(raw))
 	}
 	text := c.text()

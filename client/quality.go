@@ -15,6 +15,7 @@ import (
 	"syscall"
 	"time"
 
+	"holdtotype/internal/editormodel"
 	"holdtotype/internal/gpucard"
 	"holdtotype/internal/subtitles"
 	"holdtotype/internal/trmodel"
@@ -23,7 +24,6 @@ import (
 const (
 	gpuExeName    = "llama-server-gpu.exe"
 	trModelKey    = "trmodel"
-	qualityNeedMB = 3300
 	qualityThread = 4
 )
 
@@ -36,6 +36,8 @@ func (f *qualityFail) Error() string { return f.detail }
 
 var (
 	cardOnce sync.Once
+	cardList []gpucard.Adapter
+	cardErr  string
 	cardBest gpucard.Adapter
 	cardFits bool
 	cardWhy  string
@@ -47,6 +49,7 @@ func readCard() {
 	cardOnce.Do(func() {
 		list, err := gpucard.Adapters()
 		if err != nil {
+			cardErr = err.Error()
 			cardWhy, cardCode = err.Error(), gpucard.ReasonUnknown
 			log.Printf("graphics card: %s", cardWhy)
 			return
@@ -61,6 +64,7 @@ func readCard() {
 				names = append(names, fmt.Sprintf("%s (%d MB, %s)", a.Name, a.DedicatedMB, kind))
 			}
 		}
+		cardList = list
 		best, why := gpucard.Pick(list)
 		cardBest, cardFits, cardWhy = best, why == "", why
 		cardCode, cardMB = gpucard.Reason(list)
@@ -77,8 +81,25 @@ func qualityCard() (gpucard.Adapter, bool) {
 	return cardBest, cardFits
 }
 
-var trm struct {
-	mu       sync.Mutex
+type cardFit struct {
+	card   gpucard.Adapter
+	fits   bool
+	why    string
+	code   string
+	cardMB int
+}
+
+func cardFor(m trmodel.Model) cardFit {
+	readCard()
+	if cardErr != "" {
+		return cardFit{why: cardErr, code: gpucard.ReasonUnknown}
+	}
+	best, why := gpucard.PickFor(cardList, m.CardMB)
+	code, mb := gpucard.ReasonFor(cardList, m.CardMB)
+	return cardFit{card: best, fits: why == "", why: why, code: code, cardMB: mb}
+}
+
+type trCheck struct {
 	checking bool
 	checked  bool
 	size     int64
@@ -87,55 +108,111 @@ var trm struct {
 	err      string
 }
 
+var trm struct {
+	mu    sync.Mutex
+	files map[string]*trCheck
+}
+
 func forgetTrModelCheck() {
 	trm.mu.Lock()
-	trm.checked = false
+	trm.files = nil
 	trm.mu.Unlock()
 }
 
-func trModelState() trmodel.State {
-	if st, ok := trmodel.Known("models", trmodel.Fixed()); ok {
+func trModelStateOf(m trmodel.Model) trmodel.State {
+	path := filepath.Join("models", m.File)
+	if m.Own {
+		if fi, err := os.Stat(path); err == nil && fi.Mode().IsRegular() {
+			return trmodel.Ready
+		}
+		return trmodel.Absent
+	}
+	if st, ok := trmodel.Known("models", m.Spec()); ok {
 		return st
 	}
-	fi, err := os.Stat(filepath.Join("models", trmodel.File))
+	fi, err := os.Stat(path)
 	if err != nil {
 		return trmodel.Absent
 	}
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
-	if trm.checked && trm.size == fi.Size() && trm.mod.Equal(fi.ModTime()) {
-		if trm.err != "" {
+	if trm.files == nil {
+		trm.files = map[string]*trCheck{}
+	}
+	c := trm.files[m.File]
+	if c == nil {
+		c = &trCheck{}
+		trm.files[m.File] = c
+	}
+	if c.checked && c.size == fi.Size() && c.mod.Equal(fi.ModTime()) {
+		if c.err != "" {
 			return "unreadable"
 		}
-		return trm.state
+		return c.state
 	}
-	if !trm.checking {
-		trm.checking = true
+	if !c.checking {
+		c.checking = true
 		size, mod := fi.Size(), fi.ModTime()
 		go func() {
 			started := time.Now()
-			st, err := trmodel.Check("models", trmodel.Fixed())
+			st, err := trmodel.Check("models", m.Spec())
 			trm.mu.Lock()
-			trm.checking = false
-			trm.checked = true
-			trm.size, trm.mod = size, mod
-			trm.state = st
-			trm.err = ""
+			c.checking = false
+			c.checked = true
+			c.size, c.mod = size, mod
+			c.state = st
+			c.err = ""
 			if err != nil {
-				trm.err = humanError(err)
+				c.err = humanError(err)
 			}
 			trm.mu.Unlock()
 			if err != nil {
-				log.Printf("translation model: the file cannot be checked: %v", err)
+				log.Printf("translation model %s: the file cannot be checked: %v", m.Name, err)
 			} else {
-				log.Printf("translation model: the file found in the models folder is checked in %.1f s: %s", time.Since(started).Seconds(), st)
+				log.Printf("translation model %s: the file found in the models folder is checked in %.1f s: %s", m.Name, time.Since(started).Seconds(), st)
 			}
 		}()
 	}
 	return "checking"
 }
 
-func trModelReady() bool { return trModelState() == trmodel.Ready }
+func trCheckErr(m trmodel.Model) string {
+	trm.mu.Lock()
+	defer trm.mu.Unlock()
+	if c := trm.files[m.File]; c != nil {
+		return c.err
+	}
+	return ""
+}
+
+func trModelReadyOf(m trmodel.Model) bool { return trModelStateOf(m) == trmodel.Ready }
+
+func checkTrModels() {
+	for _, m := range trmodel.Catalog {
+		trModelStateOf(m)
+	}
+}
+
+func ownTrFiles() []trmodel.OwnFile {
+	var out []trmodel.OwnFile
+	for _, f := range editormodel.List("models") {
+		out = append(out, trmodel.OwnFile{Name: f.Name, SizeMB: f.SizeMB})
+	}
+	return out
+}
+
+func currentTrModel(cfg *Config) (trmodel.Model, bool) {
+	return trmodel.Resolve(cfg.SubtitlesModel, trModelReadyOf, ownTrFiles())
+}
+
+func shownTrModel(cfg *Config) trmodel.Model {
+	return trmodel.Shown(cfg.SubtitlesModel, trModelReadyOf, ownTrFiles())
+}
+
+func trModelReady(cfg *Config) bool {
+	_, ok := currentTrModel(cfg)
+	return ok
+}
 
 var qualityFailed atomic.Pointer[qualityFail]
 
@@ -163,17 +240,19 @@ func listGPUDevices(exe string) ([]gpucard.Device, error) {
 }
 
 func gpuEngine(cfg *Config) (engineSpec, error) {
-	if st := trModelState(); st != trmodel.Ready {
-		return engineSpec{}, &qualityFail{"model", fmt.Sprintf("the translation model is not ready (%s)", st)}
+	m, ok := currentTrModel(cfg)
+	if !ok {
+		return engineSpec{}, &qualityFail{"model", "no translation model is ready"}
 	}
-	return gpuEngineFor(cfg, filepath.Join("models", trmodel.File), qualityNeedMB)
+	return gpuEngineFor(cfg, m, filepath.Join("models", m.File))
 }
 
-func gpuEngineFor(cfg *Config, model string, needMB int) (engineSpec, error) {
-	card, fits := qualityCard()
-	if !fits {
-		return engineSpec{}, &qualityFail{"card", "no graphics card fits: " + cardWhy}
+func gpuEngineFor(cfg *Config, m trmodel.Model, path string) (engineSpec, error) {
+	fit := cardFor(m)
+	if !fit.fits {
+		return engineSpec{}, &qualityFail{"card", "no graphics card fits " + m.Name + ": " + fit.why}
 	}
+	card := fit.card
 	exe := gpuExePath(cfg)
 	if _, err := os.Stat(exe); err != nil {
 		return engineSpec{}, &qualityFail{"exe", gpuExeName + " is missing next to the program"}
@@ -193,22 +272,25 @@ func gpuEngineFor(cfg *Config, model string, needMB int) (engineSpec, error) {
 		}
 		return engineSpec{}, &qualityFail{"device", fmt.Sprintf("the graphics card %s is not among the Vulkan devices (%s)", card.Name, strings.Join(seen, ", "))}
 	}
-	if dev.FreeMB < needMB {
-		return engineSpec{}, &qualityFail{"memory", fmt.Sprintf("%d MB of the memory of %s are free, %d MB are needed", dev.FreeMB, card.Name, needMB)}
+	if dev.FreeMB < m.FreeMB {
+		return engineSpec{}, &qualityFail{"memory", fmt.Sprintf("%d MB of the memory of %s are free, %d MB are needed for %s", dev.FreeMB, card.Name, m.FreeMB, m.Name)}
 	}
-	log.Printf("graphics card engine: device %s (%s), %d MB of %d MB free", dev.ID, dev.Name, dev.FreeMB, dev.TotalMB)
+	log.Printf("graphics card engine: device %s (%s), %d MB of %d MB free, model %s", dev.ID, dev.Name, dev.FreeMB, dev.TotalMB, m.Name)
+	args := []string{
+		"-m", path,
+		"--device", dev.ID,
+		"-ngl", "999",
+		"-t", strconv.Itoa(min(cfg.Threads, qualityThread)),
+		"-c", "4096",
+	}
+	args = append(args, m.ChatArgs...)
 	return engineSpec{
 		label: "llama-server-gpu",
+		tag:   m.Key(),
 		exe:   exe,
 		port:  cfg.TranslatePort,
-		args: []string{
-			"-m", model,
-			"--device", dev.ID,
-			"-ngl", "999",
-			"-t", strconv.Itoa(min(cfg.Threads, qualityThread)),
-			"-c", "4096",
-		},
-		wait: 2 * time.Minute,
+		args:  args,
+		wait:  2 * time.Minute,
 	}, nil
 }
 
@@ -239,57 +321,107 @@ func (a *App) qualityShutdown() {
 	}
 }
 
-type trModelUI struct {
+type trModelRow struct {
+	ID      string `json:"id"`
 	Name    string `json:"name"`
+	File    string `json:"file"`
 	State   string `json:"state"`
 	Pct     int    `json:"pct"`
 	Err     string `json:"err"`
 	SizeMB  int    `json:"size"`
+	VramMB  int    `json:"vram"`
+	CardMB  int    `json:"card_need"`
 	Fits    bool   `json:"fits"`
-	Card    string `json:"card"`
-	Reason  string `json:"reason"`
-	CardMB  int    `json:"card_mb"`
-	NeedMB  int    `json:"need_mb"`
-	Down    string `json:"down"`
+	Service bool   `json:"service"`
+	Rec     bool   `json:"rec"`
+	Acc     int    `json:"accuracy"`
+	Speed   int    `json:"speed"`
+	Own     bool   `json:"own"`
+	Chosen  bool   `json:"chosen"`
 	Running bool   `json:"running"`
+	License string `json:"license"`
 }
 
-func (a *App) trModelView() trModelUI {
-	card, fits := qualityCard()
-	v := trModelUI{Name: trmodel.Name, SizeMB: trmodel.SizeMB(), Fits: fits, Card: card.Name, Reason: cardCode, CardMB: cardMB, NeedMB: gpucard.NeedMB}
-	if f := qualityDown(); f != nil {
-		v.Down = f.code
-	}
-	v.Running = a.gpuEng.live() != nil
+type trModelUI struct {
+	ID      string       `json:"id"`
+	Name    string       `json:"name"`
+	State   string       `json:"state"`
+	Pct     int          `json:"pct"`
+	Err     string       `json:"err"`
+	SizeMB  int          `json:"size"`
+	Fits    bool         `json:"fits"`
+	Card    string       `json:"card"`
+	Reason  string       `json:"reason"`
+	CardMB  int          `json:"card_mb"`
+	NeedMB  int          `json:"need_mb"`
+	Down    string       `json:"down"`
+	Running bool         `json:"running"`
+	Models  []trModelRow `json:"models"`
+}
+
+func trDlKey(m trmodel.Model) string { return trModelKey + ":" + m.ID }
+
+func trModelRowOf(a *App, m trmodel.Model, chosen string) trModelRow {
+	fit := cardFor(m)
+	row := trModelRow{ID: m.Key(), Name: m.Name, File: m.File, SizeMB: m.SizeMB(), VramMB: m.VramMB, CardMB: m.CardMB, Fits: fit.fits,
+		Service: m.Service, Rec: m.Recommended, Acc: m.Accuracy, Speed: m.Speed, Own: m.Own, Chosen: m.Key() == chosen, License: m.License}
+	row.Running = row.Chosen && a.gpuEng.liveTag() == m.Key()
 	dlMu.Lock()
-	st := dl[trModelKey]
+	st := dl[trDlKey(m)]
 	if st != nil {
 		switch {
 		case st.active && st.pct >= 100:
-			v.State = "checking"
+			row.State = "checking"
 		case st.active:
-			v.State, v.Pct = "downloading", st.pct
+			row.State, row.Pct = "downloading", st.pct
 		case st.err != "":
-			v.State, v.Err = "error", st.err
+			row.State, row.Err = "error", st.err
 		}
 	}
 	dlMu.Unlock()
-	if v.State != "" {
-		return v
+	if row.State != "" {
+		return row
 	}
-	switch s := trModelState(); s {
+	switch s := trModelStateOf(m); s {
 	case trmodel.Ready:
-		v.State = "ready"
+		row.State = "ready"
 	case trmodel.WrongSize, trmodel.WrongHash:
-		v.State = "bad"
+		row.State = "bad"
 	case trmodel.Absent:
-		v.State = "absent"
+		row.State = "absent"
 	case "unreadable":
-		trm.mu.Lock()
-		v.State, v.Err = "error", trm.err
-		trm.mu.Unlock()
+		row.State, row.Err = "error", trCheckErr(m)
 	default:
-		v.State = "checking"
+		row.State = "checking"
+	}
+	return row
+}
+
+func (a *App) trModelView(cfg *Config) trModelUI {
+	shown := shownTrModel(cfg)
+	chosen := ""
+	if m, ok := currentTrModel(cfg); ok {
+		chosen = m.Key()
+	}
+	var rows []trModelRow
+	for _, m := range trmodel.Catalog {
+		rows = append(rows, trModelRowOf(a, m, chosen))
+	}
+	for _, f := range trmodel.SortOwn(ownTrFiles()) {
+		rows = append(rows, trModelRowOf(a, trmodel.Own(f.Name, f.SizeMB), chosen))
+	}
+	fit := cardFor(shown)
+	v := trModelUI{ID: shown.Key(), Name: shown.Name, SizeMB: shown.SizeMB(), Fits: fit.fits, Card: fit.card.Name, Reason: fit.code, CardMB: fit.cardMB, NeedMB: shown.CardMB, Models: rows}
+	if !fit.fits {
+		v.Card = cardBest.Name
+	}
+	if f := qualityDown(); f != nil {
+		v.Down = f.code
+	}
+	for _, r := range rows {
+		if r.ID == shown.Key() {
+			v.State, v.Pct, v.Err, v.Running = r.State, r.Pct, r.Err, r.Running
+		}
 	}
 	return v
 }
@@ -311,30 +443,63 @@ func verifyTrModel(spec trmodel.Spec) func(string) error {
 	}
 }
 
-func (a *App) trModelDownloadSpec(spec trmodel.Spec, url string) {
-	a.startDownloadWith(trModelKey, spec.Name, url, int(spec.Size/(1024*1024)), verifyTrModel(spec))
+func (a *App) trModelDownloadSpec(key string, spec trmodel.Spec, url string) {
+	a.startDownloadWith(key, spec.Name, url, int(spec.Size/(1024*1024)), verifyTrModel(spec))
 }
 
-func (a *App) trModelDownload() {
-	if st, ok := trmodel.Known("models", trmodel.Fixed()); ok && st == trmodel.Ready {
+func trModelByKey(cfg *Config, id string) (trmodel.Model, bool) {
+	if id == "" {
+		return shownTrModel(cfg), true
+	}
+	return trmodel.ByID(id)
+}
+
+func (a *App) trModelDownload(id string) {
+	m, ok := trModelByKey(a.snapshot(), id)
+	if !ok || m.Own {
 		return
 	}
-	log.Printf("translation model: download started")
-	a.trModelDownloadSpec(trmodel.Fixed(), trmodel.URL)
+	if st, ok := trmodel.Known("models", m.Spec()); ok && st == trmodel.Ready {
+		return
+	}
+	log.Printf("translation model %s: download started", m.Name)
+	a.trModelDownloadSpec(trDlKey(m), m.Spec(), m.URL)
 }
 
-func (a *App) trModelDelete() string {
-	a.qualityShutdown()
-	err := trmodel.Remove("models", trmodel.Fixed())
+func (a *App) trModelCancel(id string) bool {
+	m, ok := trModelByKey(a.snapshot(), id)
+	if !ok {
+		return false
+	}
+	return cancelDownload(trDlKey(m))
+}
+
+func (a *App) trModelDelete(id string) string {
+	m, ok := trModelByKey(a.snapshot(), id)
+	if !ok || m.Own {
+		return ""
+	}
+	if a.gpuEng.liveTag() == m.Key() {
+		a.qualityShutdown()
+	}
+	err := trmodel.Remove("models", m.Spec())
 	forgetTrModelCheck()
 	if err != nil {
 		return humanError(err)
 	}
 	dlMu.Lock()
-	delete(dl, trModelKey)
+	delete(dl, trDlKey(m))
 	dlMu.Unlock()
-	log.Printf("translation model deleted")
+	log.Printf("translation model %s deleted", m.Name)
 	return tr("model.del.ok")
+}
+
+func trModelTerms(cfg *Config, id string) string {
+	m, ok := trModelByKey(cfg, id)
+	if !ok || m.TermsURL == "" {
+		return trmodel.TermsURL
+	}
+	return m.TermsURL
 }
 
 func runTrDownload(args []string) {
@@ -349,7 +514,7 @@ func runTrDownload(args []string) {
 	}
 	spec := trmodel.Spec{Name: args[3], Size: size, Hash: args[1]}
 	app := &App{cfg: defaultConfig(), enabled: true}
-	app.trModelDownloadSpec(spec, args[0])
+	app.trModelDownloadSpec(trModelKey, spec, args[0])
 	for {
 		time.Sleep(200 * time.Millisecond)
 		dlMu.Lock()
@@ -387,10 +552,13 @@ func runGPUCheck(args []string) {
 		log.Printf("gpucheck: %v", err)
 		return
 	}
-	need := int(fi.Size()/(1024*1024)) + 1000
+	m, known := trmodel.ByFile(args[0])
+	if !known {
+		m = trmodel.Own(filepath.Base(args[0]), int(fi.Size()/(1024*1024)))
+	}
 	app := &App{cfg: cfg, enabled: true}
 	started := time.Now()
-	f := app.warmEngine(&app.gpuEng, func(c *Config) (engineSpec, error) { return gpuEngineFor(c, args[0], need) })
+	f := app.warmEngine(&app.gpuEng, func(c *Config) (engineSpec, error) { return gpuEngineFor(c, m, args[0]) })
 	<-f.done
 	srv, err := asLlama(f.srv, f.err)
 	if err != nil {

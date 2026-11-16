@@ -33,7 +33,6 @@ import (
 	"holdtotype/internal/plexfont"
 	"holdtotype/internal/subtitles"
 	"holdtotype/internal/theme"
-	"holdtotype/internal/trmodel"
 )
 
 var (
@@ -423,15 +422,16 @@ func (a *App) settingsThread(tab string, attempt int) {
 			return a.fastPackAction(action, pair)
 		})
 		_ = w.Bind("appTrModel", func(action string) string {
-			switch action {
+			act, id, _ := strings.Cut(action, ":")
+			switch act {
 			case "download":
-				a.trModelDownload()
+				a.trModelDownload(id)
 			case "cancel":
-				cancelDownload(trModelKey)
+				a.trModelCancel(id)
 			case "delete":
-				return a.trModelDelete()
+				return a.trModelDelete(id)
 			case "terms":
-				shellOpenURL(trmodel.TermsURL)
+				shellOpenURL(trModelTerms(a.snapshot(), id))
 			}
 			return ""
 		})

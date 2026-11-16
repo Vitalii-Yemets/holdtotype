@@ -59,6 +59,8 @@
   "subtitles_original": false,
   "subtitles_translate": "",
   "subtitles_translator": "",
+  "subtitles_model": "",
+  "subtitles_topic": true,
   "translate_port": 8914,
   "wizard_done": false
 }

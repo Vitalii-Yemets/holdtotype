@@ -238,6 +238,7 @@ type subRun struct {
 	trSeen   string
 	trLang   string
 	trSrc    string
+	trModel  string
 	coldFail sync.Map
 	trShown  atomic.Bool
 	trTo     atomic.Value
@@ -699,7 +700,7 @@ type subTrState struct {
 
 func (a *App) subtitlesTranslator(cfg *Config) subTrState {
 	src := translationSource(cfg)
-	st := subTrState{Choice: cfg.SubtitlesTranslator, Missing: src.missing, Model: a.trModelView(), Fast: a.fastView(cfg)}
+	st := subTrState{Choice: cfg.SubtitlesTranslator, Missing: src.missing, Model: a.trModelView(cfg), Fast: a.fastView(cfg)}
 	if src.missing == subtitles.MissingPack {
 		if lang := fastAvail(cfg).lang; lang != "" {
 			st.Pair = fastpack.PairKey(lang, cfg.SubtitlesTranslate)
@@ -711,7 +712,7 @@ func (a *App) subtitlesTranslator(cfg *Config) subTrState {
 func missingText(src editorSource) string {
 	switch src.missing {
 	case subtitles.MissingCard:
-		return "the graphics card does not fit: " + cardWhy
+		return "the graphics card does not fit: " + src.detail
 	case subtitles.MissingModel:
 		return "the translation model is not downloaded"
 	case subtitles.MissingStart:
@@ -735,8 +736,16 @@ func missingText(src editorSource) string {
 
 func (r *subRun) syncTranslation(cfg *Config, t *subTarget) {
 	to := translateTo(cfg)
+	model := shownTrModel(cfg).Key()
+	r.trMu.Lock()
+	prevModel := r.trModel
+	r.trModel = model
+	r.trMu.Unlock()
+	if prevModel != "" && prevModel != model {
+		setQualityDown(nil)
+	}
 	src := translationSource(cfg)
-	key := cfg.SubtitlesTranslator + "/" + src.kind + "/" + src.missing
+	key := cfg.SubtitlesTranslator + "/" + src.kind + "/" + src.missing + "/" + src.model.Key()
 	r.trMu.Lock()
 	prev, prevLang, prevSrc := r.trSeen, r.trLang, r.trSrc
 	r.trSeen, r.trLang, r.trSrc = to, t.lang, key
@@ -745,6 +754,9 @@ func (r *subRun) syncTranslation(cfg *Config, t *subTarget) {
 		return
 	}
 	if to == "" || to == t.lang || src.kind != editorQuality || !src.ok() {
+		r.app.qualityShutdown()
+	} else if tag := r.app.gpuEng.liveTag(); tag != "" && tag != src.model.Key() {
+		log.Printf("subtitles: the translation model becomes %s, the graphics card engine restarts with it", src.model.Name)
 		r.app.qualityShutdown()
 	}
 	if to == "" || to == t.lang || src.kind != editorFast || !src.ok() {
@@ -897,6 +909,7 @@ type subTranslator struct {
 	histKind   string
 	histTarget string
 	histReset  atomic.Bool
+	topic      *subtitles.Topic
 
 	pieces     atomic.Int64
 	translated atomic.Int64
@@ -941,6 +954,10 @@ func (w *subTranslator) push(ph subtitles.TextPhrase, text, to string) {
 		return
 	}
 	w.target = to
+	if w.topic == nil || w.topic.Target() != to {
+		w.topic = subtitles.NewTopic(to)
+	}
+	w.topic.Heard(text, ph.Heard)
 	r.board.AddPiece(ph.Seq, ph.Para, text)
 	r.pieceQueued(ph.Seq)
 	dropped := w.q.Push(subtitles.Pending{Seq: ph.Seq, Text: text, Words: len(strings.Fields(text)), Target: to, Para: ph.Para, Start: ph.Start, Heard: ph.Heard})
@@ -1086,6 +1103,9 @@ func (w *subTranslator) loop() {
 				w.noteDrop(fmt.Sprintf("%d phrase(s) waited more than %.0f s for translation and are shown as heard", len(stale), subtitles.TranslateMaxWait.Seconds()))
 			}
 			if !ok {
+				if w.serviceStep() {
+					continue
+				}
 				break
 			}
 			w.handle(b)
@@ -1164,6 +1184,11 @@ func (w *subTranslator) handle(b subtitles.Batch) {
 	}
 	hist := w.history(src.kind, b.Target)
 	prior := hist.Turns()
+	from := ""
+	if t := r.target(); t != nil {
+		from = speechLang(t.lang)
+	}
+	req := trRequestFor(src, from, b.Target, prior, b.Text, w.topicContext(cfg, src, b.Target))
 	var first time.Time
 	var out string
 	var err error
@@ -1171,7 +1196,7 @@ func (w *subTranslator) handle(b subtitles.Batch) {
 	for attempt := 1; ; attempt++ {
 		ctx, cancel := context.WithTimeout(w.ctx, subtitles.TranslateTimeout)
 		first = time.Time{}
-		out, err = r.app.editorStream(ctx, cfg, src, subtitles.TranslateMessages(b.Target, prior, b.Text), subtitles.TranslateTokens(b.Words), func(sofar string) {
+		out, err = r.app.translateStream(ctx, cfg, src, req, subtitles.TranslateTokens(b.Words), func(sofar string) {
 			if first.IsZero() {
 				first = time.Now()
 			}
@@ -1212,6 +1237,11 @@ func (w *subTranslator) handle(b subtitles.Batch) {
 	}
 	r.board.SetPiece(seq, text, subtitles.PieceDone)
 	hist.Add(subtitles.Turn{Source: b.Text, Translation: text})
+	w.mu.Lock()
+	if w.topic != nil && w.topic.Target() == b.Target {
+		w.topic.Translated(b.Text, text, done)
+	}
+	w.mu.Unlock()
 	r.pieceFinished(seq, subPieceOut{at: b.Start, source: b.Text, translation: text, target: b.Target, by: src.label()})
 	w.translated.Add(1)
 	w.mu.Lock()
@@ -1228,6 +1258,92 @@ func (w *subTranslator) handle(b subtitles.Batch) {
 		}
 		log.Printf("subtitles: piece %d translated with %d earlier piece(s): first word after %.1f s, complete after %.1f s, %d waiting%s: %q", seq, len(prior), first.Sub(b.Heard).Seconds(), done.Sub(b.Heard).Seconds(), waiting, same, text)
 	}
+}
+
+func topicEnabled(cfg *Config, src editorSource) bool {
+	return cfg.SubtitlesTopic && src.kind == editorQuality && src.ok() && src.model.Service
+}
+
+func (w *subTranslator) topicContext(cfg *Config, src editorSource, target string) string {
+	if !topicEnabled(cfg, src) {
+		return ""
+	}
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	if w.topic == nil || w.topic.Target() != target {
+		return ""
+	}
+	return w.topic.Context()
+}
+
+func (w *subTranslator) serviceStep() bool {
+	r := w.run
+	cfg := r.app.snapshot()
+	src := translationSource(cfg)
+	if !topicEnabled(cfg, src) || r.app.gpuEng.liveTag() != src.model.Key() {
+		return false
+	}
+	srv, ok := r.app.gpuEng.live().(*llamaServer)
+	if !ok || srv == nil || !srv.primed.Load() {
+		return false
+	}
+	now := time.Now()
+	w.mu.Lock()
+	tp := w.topic
+	if tp == nil || w.q.Len() > 0 {
+		w.mu.Unlock()
+		return false
+	}
+	step := tp.Due(now)
+	var msgs []subtitles.Message
+	grammar, tokens := subtitles.TopicGrammar, subtitles.TopicTokens
+	switch step {
+	case subtitles.StepTopic:
+		msgs = tp.TopicMessages(now)
+	case subtitles.StepTerms:
+		msgs = tp.TermsMessages(now)
+		grammar, tokens = subtitles.TermsGrammar, subtitles.TermsTokens
+	default:
+		w.mu.Unlock()
+		return false
+	}
+	w.mu.Unlock()
+	ctx, cancel := context.WithTimeout(w.ctx, subtitles.TopicTimeout)
+	out, err := srv.chatStream(ctx, msgs, tokens, grammar, nil)
+	cancel()
+	took := time.Since(now).Seconds()
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	if w.topic != tp {
+		return true
+	}
+	if err != nil {
+		tp.Failed(step, time.Now())
+		log.Printf("subtitles: the request for the topic of the conversation failed after %.1f s: %s", took, logText(err))
+		return true
+	}
+	switch step {
+	case subtitles.StepTopic:
+		if !tp.TakeTopic(out, now) {
+			log.Printf("subtitles: the answer about the topic of the conversation is not one line, it is skipped")
+		} else if tp.Updates() == 1 {
+			log.Printf("subtitles: the topic of the conversation is known after %.1f s of asking", took)
+		} else {
+			log.Printf("subtitles: the topic of the conversation is updated (%d) after %.1f s of asking", tp.Updates(), took)
+		}
+	case subtitles.StepTerms:
+		n := tp.TakeTerms(out, now)
+		log.Printf("subtitles: the term memory holds %d term(s), %d new, after %.1f s of asking", len(tp.Terms()), n, took)
+	}
+	return true
+}
+
+func speechLang(lang string) string {
+	if l := strings.ToLower(strings.TrimSpace(lang)); l != "" && l != "auto" {
+		return l
+	}
+	g, _, _ := fastRun.snapshot()
+	return g
 }
 
 func (w *subTranslator) stop() {

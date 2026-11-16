@@ -124,6 +124,52 @@ func TranslateMessages(target string, history []Turn, text string) []Message {
 	return append(out, Message{Role: "user", Content: oneLine(text)})
 }
 
+func TranslateMessagesWith(target, context string, history []Turn, text string) []Message {
+	out := TranslateMessages(target, history, text)
+	if context != "" && len(out) > 0 {
+		out[0].Content += context
+	}
+	return out
+}
+
+func gemmaTurn(from, to, text string) string {
+	sl, tl := LanguageName(from), LanguageName(to)
+	return "<start_of_turn>user\nYou are a professional " + sl + " (" + from + ") to " + tl + " (" + to + ") translator. Your goal is to accurately convey the meaning and " +
+		"nuances of the original " + sl + " text while adhering to " + tl + " grammar, vocabulary, and cultural sensitivities.\n" +
+		"Produce only the " + tl + " translation, without any additional explanations or commentary. Please translate the following " + sl + " text into " + tl + ":\n\n\n" +
+		strings.TrimSpace(oneLine(text)) + "<end_of_turn>\n<start_of_turn>model\n"
+}
+
+func TranslateGemmaPrompt(from, target string, history []Turn, text string) string {
+	answers, ok := shotAnswers[target]
+	if !ok || LanguageName(target) == "" {
+		return ""
+	}
+	if LanguageName(from) == "" || from == target {
+		from = "en"
+		if target == "en" {
+			from = "es"
+		}
+	}
+	shotFrom, sources := "en", shotSources
+	if target == "en" {
+		shotFrom, sources = "es", shotSourcesForEnglish
+	}
+	var b strings.Builder
+	for i := range sources {
+		b.WriteString(gemmaTurn(shotFrom, target, sources[i]))
+		b.WriteString(strings.TrimSpace(answers[i]))
+		b.WriteString("<end_of_turn>\n")
+	}
+	for _, t := range history {
+		b.WriteString(gemmaTurn(from, target, t.Source))
+		b.WriteString(strings.TrimSpace(oneLine(t.Translation)))
+		b.WriteString("<end_of_turn>\n")
+	}
+	b.WriteString(gemmaTurn(from, target, text))
+	return b.String()
+}
+
 const (
 	HistoryLimit = 8
 	HistoryKeep  = 3

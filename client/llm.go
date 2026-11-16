@@ -139,6 +139,7 @@ type engineProc interface {
 
 type engineSpec struct {
 	label  string
+	tag    string
 	exe    string
 	port   int
 	args   []string
@@ -291,6 +292,38 @@ func (s *llamaServer) chatWith(ctx context.Context, system, user string, maxToke
 		return "", fmt.Errorf("llama-server: empty answer (%d): %.200s", resp.StatusCode, string(raw))
 	}
 	return parsed.Choices[0].Message.Content, nil
+}
+
+func (s *llamaServer) completeStream(ctx context.Context, prompt string, maxTokens int, onText func(string)) (string, error) {
+	payload := map[string]any{
+		"prompt":       prompt,
+		"temperature":  0.2,
+		"n_predict":    maxTokens,
+		"stream":       true,
+		"cache_prompt": true,
+	}
+	body, _ := json.Marshal(payload)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, s.baseURL+"/completion", bytes.NewReader(body))
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "text/event-stream")
+	req.Header.Set("Authorization", "Bearer "+llmAPIKey)
+	resp, err := s.client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		raw, _ := io.ReadAll(io.LimitReader(resp.Body, 2048))
+		return "", fmt.Errorf("llama-server (%d): %.200s", resp.StatusCode, strings.TrimSpace(string(raw)))
+	}
+	out, err := chatstream.Read(io.LimitReader(resp.Body, maxResponseBytes), onText)
+	if err != nil {
+		return out, fmt.Errorf("llama-server: %w", err)
+	}
+	return out, nil
 }
 
 func (s *llamaServer) chatStream(ctx context.Context, msgs []subtitles.Message, maxTokens int, grammar string, onText func(string)) (string, error) {
@@ -549,6 +582,7 @@ func (a *App) llmRepoFiles(repo string) string {
 type engineSlot struct {
 	mu       sync.Mutex
 	cur      engineProc
+	tag      string
 	startMu  sync.Mutex
 	flightMu sync.Mutex
 	flight   *llmFlight
@@ -561,6 +595,15 @@ func (e *engineSlot) live() engineProc {
 		return e.cur
 	}
 	return nil
+}
+
+func (e *engineSlot) liveTag() string {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	if e.cur != nil && e.cur.alive() {
+		return e.tag
+	}
+	return ""
 }
 
 func (e *engineSlot) shutdown() bool {
@@ -609,6 +652,7 @@ func (a *App) ensureEngine(e *engineSlot, prepare func(*Config) (engineSpec, err
 	}
 	e.mu.Lock()
 	e.cur = s
+	e.tag = spec.tag
 	e.mu.Unlock()
 	a.mu.Unlock()
 	log.Printf("%s ready", spec.label)
@@ -673,6 +717,7 @@ type editorSource struct {
 	name    string
 	missing string
 	detail  string
+	model   trmodel.Model
 }
 
 func (s editorSource) ok() bool { return s.kind != "" && s.missing == "" }
@@ -682,6 +727,9 @@ func (s editorSource) label() string {
 	case editorAPI:
 		return s.name + " (post-processing server)"
 	case editorQuality:
+		if s.model.Name != "" {
+			return "the translation model " + s.model.Name + " (graphics card " + s.name + ")"
+		}
 		return "the built-in translation model (graphics card " + s.name + ")"
 	case editorFast:
 		return "the light translation engine (" + s.name + ")"
@@ -690,11 +738,12 @@ func (s editorSource) label() string {
 }
 
 func translationSource(cfg *Config) editorSource {
-	card, fits := qualityCard()
+	model := shownTrModel(cfg)
+	fit := cardFor(model)
 	fast := fastAvail(cfg)
 	pick := subtitles.ChooseTranslator(cfg.SubtitlesTranslator, subtitles.Avail{
-		ModelReady:  trModelReady(),
-		CardFits:    fits,
+		ModelReady:  trModelReady(cfg),
+		CardFits:    fit.fits,
 		QualityDown: qualityDown() != nil,
 		Server:      postAPISet(cfg),
 		Fast:        fast.ok,
@@ -705,7 +754,11 @@ func translationSource(cfg *Config) editorSource {
 	case editorAPI:
 		src.name = postAPIName(cfg)
 	case editorQuality:
-		src.name = card.Name
+		src.name = fit.card.Name
+		src.model = model
+		if !fit.fits {
+			src.detail = fit.why
+		}
 	case editorFast:
 		src.name = routeName(fast.lang, cfg.SubtitlesTranslate)
 		src.detail = fast.detail
@@ -714,6 +767,29 @@ func translationSource(cfg *Config) editorSource {
 }
 
 var errNoTranslator = errors.New("this translator does not translate by a language model")
+
+type trRequest struct {
+	msgs   []subtitles.Message
+	prompt string
+}
+
+func trRequestFor(src editorSource, from, target string, prior []subtitles.Turn, text, context string) trRequest {
+	if src.kind == editorQuality && src.model.Prompt == trmodel.PromptTranslate {
+		return trRequest{prompt: subtitles.TranslateGemmaPrompt(from, target, prior, text)}
+	}
+	return trRequest{msgs: subtitles.TranslateMessagesWith(target, context, prior, text)}
+}
+
+func (a *App) translateStream(ctx context.Context, cfg *Config, src editorSource, req trRequest, maxTokens int, onText func(string)) (string, error) {
+	if req.prompt != "" {
+		srv, err := a.qualityWait(ctx)
+		if err != nil {
+			return "", err
+		}
+		return srv.completeStream(ctx, req.prompt, maxTokens, onText)
+	}
+	return a.editorStream(ctx, cfg, src, req.msgs, maxTokens, onText)
+}
 
 func (a *App) editorStream(ctx context.Context, cfg *Config, src editorSource, msgs []subtitles.Message, maxTokens int, onText func(string)) (string, error) {
 	switch src.kind {
