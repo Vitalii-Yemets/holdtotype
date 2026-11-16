@@ -672,6 +672,10 @@ func main() {
 			runTrDownload(os.Args[1:][i+1:])
 			return
 		}
+		if arg == "-trcheck" {
+			runTrCheck(os.Args[1:][i+1:])
+			return
+		}
 		if arg == "-subcheck" {
 			runSubcheck(os.Args[1:][i+1:])
 			return
