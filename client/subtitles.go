@@ -230,15 +230,7 @@ type subRun struct {
 	engShared bool
 	engModel  string
 
-	fileMu   sync.Mutex
-	file     *os.File
-	filePath string
-	fileErr  bool
-	fileDone bool
-	trFile   *os.File
-	trFileTo string
-	trPaths  []string
-	trErr    bool
+	files *subtitles.Files
 
 	trMu     sync.Mutex
 	tr       *subTranslator
@@ -288,6 +280,7 @@ func startSubtitlesRun(a *App, cfg *Config, opts subOptions) (*subRun, error) {
 		app:       a,
 		opts:      opts,
 		started:   now,
+		files:     subtitles.NewFiles(subtitles.Folder, now, log.Printf),
 		cap:       lb,
 		fromFile:  opts.sound != nil,
 		pacer:     subtitles.NewPacer(sampleRate, now),
@@ -535,9 +528,7 @@ func (r *subRun) finishLine(at time.Time, text string, t *subTarget) {
 	}
 	ln := r.board.Add(at, text)
 	log.Printf("subtitles: line %q", text)
-	if cfg.SubtitlesSave {
-		r.writeOriginal(t, translationTarget(cfg, t) != "", subtitles.Entry(ln.Start, ln.Text))
-	}
+	r.files.Original(cfg.SubtitlesSave, t.lang, t.name, translationTarget(cfg, t) != "", subtitles.Entry(ln.Start, ln.Text))
 }
 
 func (r *subRun) hear(t *subTarget, cut func(*subtitles.Phraser, time.Time) []subtitles.TextPhrase) {
@@ -577,76 +568,6 @@ func (r *subRun) translationPaused() {
 	if w != nil {
 		w.histReset.Store(true)
 	}
-}
-
-func openTranscript(name, header string) (*os.File, string, error) {
-	if err := os.MkdirAll(subtitles.Folder, 0o755); err != nil {
-		return nil, "", fmt.Errorf("the transcript folder was not created: %w", err)
-	}
-	p := filepath.Join(subtitles.Folder, name)
-	f, err := os.OpenFile(p, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
-	if err != nil {
-		return nil, "", fmt.Errorf("the transcript was not created: %w", err)
-	}
-	if _, err := f.WriteString(subtitles.Opening(header)); err != nil {
-		log.Printf("subtitles: writing the transcript: %v", err)
-	}
-	if abs, aerr := filepath.Abs(p); aerr == nil {
-		p = abs
-	}
-	return f, p, nil
-}
-
-func writeEntry(f *os.File, entry string) {
-	if _, err := f.WriteString(entry); err != nil {
-		log.Printf("subtitles: writing the transcript: %v", err)
-		return
-	}
-	_ = f.Sync()
-}
-
-func (r *subRun) writeOriginal(t *subTarget, translating bool, entry string) {
-	r.fileMu.Lock()
-	defer r.fileMu.Unlock()
-	if r.fileErr || r.fileDone {
-		return
-	}
-	if r.file == nil {
-		name := subtitles.OriginalFileName(r.started, t.lang, translating)
-		f, p, err := openTranscript(name, subtitles.OriginalHeader(r.started, t.lang, t.name, translating))
-		if err != nil {
-			log.Printf("subtitles: %v", err)
-			r.fileErr = true
-			return
-		}
-		r.file, r.filePath = f, p
-		log.Printf("subtitles: transcript %s", p)
-	}
-	writeEntry(r.file, entry)
-}
-
-func (r *subRun) writeTranslation(t *subTarget, to, by, entry string) {
-	r.fileMu.Lock()
-	defer r.fileMu.Unlock()
-	if r.trErr || r.fileDone {
-		return
-	}
-	if r.trFile != nil && r.trFileTo != to {
-		_ = r.trFile.Close()
-		r.trFile = nil
-	}
-	if r.trFile == nil {
-		f, p, err := openTranscript(subtitles.TranslationFileName(r.started, to), subtitles.TranslationHeader(r.started, t.lang, to, by))
-		if err != nil {
-			log.Printf("subtitles: %v", err)
-			r.trErr = true
-			return
-		}
-		r.trFile, r.trFileTo = f, to
-		r.trPaths = append(r.trPaths, p)
-		log.Printf("subtitles: translation transcript %s", p)
-	}
-	writeEntry(r.trFile, entry)
 }
 
 type subPieceOut struct {
@@ -692,14 +613,14 @@ func (r *subRun) pieceFinished(seq int, out subPieceOut) {
 		}
 		delete(r.outDone, r.outOrder[0])
 		r.outOrder = r.outOrder[1:]
-		if !cfg.SubtitlesSave || t == nil {
+		if t == nil {
 			continue
 		}
 		text := e.translation
 		if text == "" {
 			text = e.source
 		}
-		r.writeTranslation(t, e.target, e.by, subtitles.Entry(e.at, text))
+		r.files.Translation(cfg.SubtitlesSave, t.lang, e.target, e.by, subtitles.Entry(e.at, text))
 	}
 }
 
@@ -723,17 +644,7 @@ func (r *subRun) finish() {
 		fastRun.end()
 	}
 	r.board.SetHearing(false)
-	r.fileMu.Lock()
-	if r.file != nil {
-		_ = r.file.Close()
-	}
-	if r.trFile != nil {
-		_ = r.trFile.Close()
-	}
-	r.fileDone = true
-	path := r.filePath
-	trPaths := strings.Join(r.trPaths, ", ")
-	r.fileMu.Unlock()
+	path, trPaths := r.files.Close()
 	r.mu.Lock()
 	name, port, shared, model := r.engName, r.engPort, r.engShared, r.engModel
 	r.mu.Unlock()
