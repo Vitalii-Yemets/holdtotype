@@ -78,6 +78,7 @@ function namesOf(tab) {
   all("label.blklbl", "block");
   all(".srchead", "card");
   all("button", "button");
+  all("label.stsw > span", "switch");
   ((EXTRA[tab] || {}).keys || []).forEach((k) => out.set(k, "script"));
   return out;
 }
@@ -113,7 +114,7 @@ for (const lang of LANGS) {
       if (!parts.every((p) => labels.some((l) => l === p || l.startsWith(p + " ") || p.startsWith(l)))) strange.push("«" + m[1].replace(/<[^>]+>/g, "") + "»");
     }
     report[lang + " " + tab] = { missing, strange };
-    check(lang + ": the help section of the " + tab + " tab names every row, block, card and button of the tab", missing, []);
+    check(lang + ": the help section of the " + tab + " tab names every row, block, card, switch and button of the tab", missing, []);
     check(lang + ": every row of the help tables of the " + tab + " tab names something on the tab", strange, []);
   }
 }
