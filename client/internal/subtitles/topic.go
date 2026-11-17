@@ -326,6 +326,9 @@ func (t *Topic) TakeTerms(raw string, now time.Time) int {
 	added := 0
 	for _, line := range strings.Split(text, "\n") {
 		src, dst, ok := strings.Cut(strings.TrimSpace(line), " = ")
+		if i := strings.Index(dst, " ("); i > 0 {
+			dst = dst[:i]
+		}
 		src, dst = strings.TrimSpace(src), strings.TrimRight(strings.TrimSpace(dst), ",;.")
 		if !ok || src == "" || dst == "" {
 			t.Counts.TermsBad++

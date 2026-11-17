@@ -68,7 +68,7 @@ func TestTheTermsAreFilteredAndKept(t *testing.T) {
 	tp.Heard("the user goes into charge off and the approval rate is low, cohorts of borrowings, an X credit", t0)
 	tp.TopicMessages(t0)
 	tp.TakeTopic("Topic: Lending.", t0)
-	added := tp.TakeTerms("charge-off = списание\napproval rate = коэффициент одобрения\nis = артериальное давление, for example\nblood pressure = давление\nthe = это\nX = икс\ncohort = когорта\nloan origination = выдача кредита\nbroken line", t0)
+	added := tp.TakeTerms("charge-off = списание\napproval rate = коэффициент одобрения (or процент одобрения)\nis = артериальное давление, for example\nblood pressure = давление\nthe = это\nX = икс\ncohort = когорта (или группа)\nloan origination = выдача кредита\nbroken line", t0)
 	if added != 3 {
 		t.Fatalf("added %d: %+v", added, tp.Terms())
 	}
