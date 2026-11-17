@@ -17,6 +17,8 @@ const (
 	fnCreateEnv                        = 3
 	fnCreateSession                    = 7
 	fnRun                              = 9
+	fnDisableMemPattern                = 17
+	fnDisableCpuMemArena               = 19
 	fnCreateSessionOptions             = 10
 	fnSetSessionGraphOptimizationLevel = 23
 	fnSetIntraOpNumThreads             = 24
@@ -55,6 +57,7 @@ func (s *Session) fn(i int) uintptr {
 	return *(*uintptr)(unsafe.Pointer(s.api + uintptr(i)*unsafe.Sizeof(uintptr(0))))
 }
 
+//go:uintptrescapes
 func (s *Session) call(i int, args ...uintptr) error {
 	st, _, _ := syscall.SyscallN(s.fn(i), args...)
 	if st == 0 {
@@ -66,6 +69,7 @@ func (s *Session) call(i int, args ...uintptr) error {
 	return errors.New(text)
 }
 
+//go:uintptrescapes
 func (s *Session) release(i int, p uintptr) {
 	if p != 0 {
 		syscall.SyscallN(s.fn(i), p)
@@ -89,7 +93,13 @@ func cString(p uintptr) string {
 
 func cBytes(s string) []byte { return append([]byte(s), 0) }
 
-func Open(dll, model string, threads int) (*Session, error) {
+type Options struct {
+	Threads   int
+	NoArena   bool
+	NoPattern bool
+}
+
+func Open(dll, model string, o Options) (*Session, error) {
 	d, err := windows.LoadDLL(dll)
 	if err != nil {
 		return nil, fmt.Errorf("%s cannot be loaded: %w", dll, err)
@@ -118,6 +128,7 @@ func Open(dll, model string, threads int) (*Session, error) {
 		return nil, err
 	}
 	defer s.release(fnReleaseSessionOptions, opts)
+	threads := o.Threads
 	if threads < 1 {
 		threads = 1
 	}
@@ -126,6 +137,18 @@ func Open(dll, model string, threads int) (*Session, error) {
 		arg uintptr
 	}{{fnSetIntraOpNumThreads, uintptr(threads)}, {fnSetInterOpNumThreads, 1}, {fnSetSessionGraphOptimizationLevel, optimizeAll}} {
 		if err := s.call(step.fn, opts, step.arg); err != nil {
+			s.Close()
+			return nil, err
+		}
+	}
+	if o.NoArena {
+		if err := s.call(fnDisableCpuMemArena, opts); err != nil {
+			s.Close()
+			return nil, err
+		}
+	}
+	if o.NoPattern {
+		if err := s.call(fnDisableMemPattern, opts); err != nil {
 			s.Close()
 			return nil, err
 		}
@@ -169,6 +192,12 @@ func (s *Session) Logits(ids []int64) ([]float32, []int64, error) {
 		mask[i] = 1
 	}
 	shape := []int64{1, int64(len(ids))}
+	n0, n1, o0 := cBytes("input_ids"), cBytes("attention_mask"), cBytes("logits")
+	var pin runtime.Pinner
+	defer pin.Unpin()
+	for _, p := range []unsafe.Pointer{unsafe.Pointer(&ids[0]), unsafe.Pointer(&mask[0]), unsafe.Pointer(&shape[0]), unsafe.Pointer(&n0[0]), unsafe.Pointer(&n1[0]), unsafe.Pointer(&o0[0])} {
+		pin.Pin(p)
+	}
 	in0, err := s.tensor(ids, shape)
 	if err != nil {
 		return nil, nil, err
@@ -179,22 +208,15 @@ func (s *Session) Logits(ids []int64) ([]float32, []int64, error) {
 		return nil, nil, err
 	}
 	defer s.release(fnReleaseValue, in1)
-	n0, n1, o0 := cBytes("input_ids"), cBytes("attention_mask"), cBytes("logits")
 	inNames := []uintptr{uintptr(unsafe.Pointer(&n0[0])), uintptr(unsafe.Pointer(&n1[0]))}
 	outNames := []uintptr{uintptr(unsafe.Pointer(&o0[0]))}
 	inVals := []uintptr{in0, in1}
 	outVals := []uintptr{0}
+	for _, p := range []unsafe.Pointer{unsafe.Pointer(&inNames[0]), unsafe.Pointer(&outNames[0]), unsafe.Pointer(&inVals[0]), unsafe.Pointer(&outVals[0])} {
+		pin.Pin(p)
+	}
 	err = s.call(fnRun, s.sess, 0, uintptr(unsafe.Pointer(&inNames[0])), uintptr(unsafe.Pointer(&inVals[0])), 2,
 		uintptr(unsafe.Pointer(&outNames[0])), 1, uintptr(unsafe.Pointer(&outVals[0])))
-	runtime.KeepAlive(ids)
-	runtime.KeepAlive(mask)
-	runtime.KeepAlive(shape)
-	runtime.KeepAlive(n0)
-	runtime.KeepAlive(n1)
-	runtime.KeepAlive(o0)
-	runtime.KeepAlive(inNames)
-	runtime.KeepAlive(outNames)
-	runtime.KeepAlive(inVals)
 	if err != nil {
 		return nil, nil, err
 	}
