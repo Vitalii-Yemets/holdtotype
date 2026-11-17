@@ -95,6 +95,19 @@ func TestTheChosenModelFollowsTheRules(t *testing.T) {
 	}
 }
 
+func TestOnlyKnownChoicesAreSaved(t *testing.T) {
+	for _, c := range []string{"", "gemma-4-e4b", "eurollm-9b", "own:my-model.gguf"} {
+		if !ValidChoice(c) {
+			t.Fatalf("%q is refused", c)
+		}
+	}
+	for _, c := range []string{"gemma-5", "own:", "own:../x.gguf", `own:a\b.gguf`, "own:notes.txt", "own:" + File} {
+		if ValidChoice(c) {
+			t.Fatalf("%q is taken", c)
+		}
+	}
+}
+
 func TestTheShownModelIsTheChosenOneEvenWhenItIsMissing(t *testing.T) {
 	if m := Shown("eurollm-9b", readyOf(), nil); m.ID != "eurollm-9b" {
 		t.Fatalf("got %s", m.ID)

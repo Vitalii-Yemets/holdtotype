@@ -461,6 +461,9 @@ func (a *App) llmDelete(file string) string {
 	if active {
 		a.llmShutdown()
 	}
+	if a.gpuEng.liveTag() == trmodel.Own(file, 0).Key() {
+		a.qualityShutdown()
+	}
 	path := filepath.Join("models", file)
 	var err error
 	for i := 0; i < 10; i++ {

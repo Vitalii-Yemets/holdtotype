@@ -124,6 +124,17 @@ func OwnChoice(choice string) (string, bool) {
 	return "", false
 }
 
+func ValidChoice(choice string) bool {
+	if choice == "" {
+		return true
+	}
+	if f, ok := OwnChoice(choice); ok {
+		return strings.HasSuffix(strings.ToLower(f), ".gguf") && !Is(f)
+	}
+	_, ok := ByID(choice)
+	return ok
+}
+
 type OwnFile struct {
 	Name   string
 	SizeMB int
