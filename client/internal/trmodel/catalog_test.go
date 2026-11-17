@@ -1,6 +1,10 @@
 package trmodel
 
-import "testing"
+import (
+	"regexp"
+	"strings"
+	"testing"
+)
 
 func readyOf(ids ...string) func(Model) bool {
 	return func(m Model) bool {
@@ -140,6 +144,15 @@ func TestTheTopicTermsAndBarsFollowTheMeasurement(t *testing.T) {
 		}
 		if m.Terms && !m.Topic {
 			t.Fatalf("%s keeps terms without the topic", m.ID)
+		}
+	}
+}
+
+func TestEveryDownloadIsPinnedToARevision(t *testing.T) {
+	pinned := regexp.MustCompile(`/resolve/[0-9a-f]{40}/`)
+	for _, m := range Catalog {
+		if !pinned.MatchString(m.URL) || !strings.HasSuffix(m.URL, "/"+m.File) {
+			t.Fatalf("%s is not pinned to a revision: %s", m.ID, m.URL)
 		}
 	}
 }

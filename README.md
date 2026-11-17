@@ -287,8 +287,8 @@ Everything shipped in the archive, and every model the app offers to download ex
 | [golang.org/x/sys](https://pkg.go.dev/golang.org/x/sys) | Windows API bindings | BSD-3-Clause |
 | [go-winloader](https://github.com/jchv/go-winloader) | loading the WebView2 libraries, used by go-webview2 | MIT |
 | [ggml](https://github.com/ggml-org/ggml) | the maths inside whisper.cpp and llama.cpp | MIT |
-| The translation models for subtitles: Gemma 4 E4B and EuroLLM-9B | downloaded on request from Hugging Face and checked against their checksums | Apache 2.0 |
-| The translation models for subtitles: Gemma 3 4B and TranslateGemma 4B | downloaded on request from Hugging Face and checked against their checksums | their own [terms of use](https://ai.google.dev/gemma/terms) |
+| The translation models for subtitles: Gemma 4 E4B and EuroLLM-9B | downloaded on request from Hugging Face, each at a pinned revision, and checked against their checksums | Apache 2.0 |
+| The translation models for subtitles: Gemma 3 4B and TranslateGemma 4B | downloaded on request from Hugging Face, each at a pinned revision, and checked against their checksums | their own [terms of use](https://ai.google.dev/gemma/terms) |
 | [bergamot-translator](https://github.com/browsermt/bergamot-translator) with [Marian](https://github.com/browsermt/marian-dev) | `fast-translator.exe` — the light translation engine | MPL 2.0 (bergamot-translator), MIT (Marian) |
 | [Language packs of the light engine](https://github.com/mozilla/firefox-translations-models) | English to and from German, Spanish, French, Italian, Polish, Ukrainian and Russian, downloaded on request from Mozilla's model registry at pinned addresses and checked against their checksums | MPL 2.0 |
 | [ONNX Runtime](https://github.com/microsoft/onnxruntime) | runs the models inside sherpa-onnx | MIT |

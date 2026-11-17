@@ -39,7 +39,7 @@ type Model struct {
 var Catalog = []Model{
 	{
 		ID: "gemma-4-e4b", Name: "Gemma 4 E4B", File: "gemma-4-E4B_q4_0-it.gguf",
-		URL:  "https://huggingface.co/google/gemma-4-E4B-it-qat-q4_0-gguf/resolve/main/gemma-4-E4B_q4_0-it.gguf",
+		URL:  "https://huggingface.co/google/gemma-4-E4B-it-qat-q4_0-gguf/resolve/4b4a2c1d584be7264f87aac328a1bc739ce81b6c/gemma-4-E4B_q4_0-it.gguf",
 		Size: 5154941280, SHA256: "676c35070db6dbe52f93e9c864ee0fba4eddea94b9c875d9cb10daff453fbaee",
 		License: "Apache 2.0", TermsURL: ApacheTermsURL,
 		CardMB: 4096, FreeMB: 3300, VramMB: 3015, Prompt: PromptChat, Topic: true, Terms: true, Recommended: true, Accuracy: 5, Speed: 5,
@@ -51,14 +51,14 @@ var Catalog = []Model{
 	},
 	{
 		ID: "translategemma-4b", Name: "TranslateGemma 4B", File: "translategemma-4b-it-Q4_K_M.gguf",
-		URL:  "https://huggingface.co/bullerwins/translategemma-4b-it-GGUF/resolve/main/translategemma-4b-it-Q4_K_M.gguf",
+		URL:  "https://huggingface.co/bullerwins/translategemma-4b-it-GGUF/resolve/7c938465a870d8624bcfa98a8e4a3510053c19a8/translategemma-4b-it-Q4_K_M.gguf",
 		Size: 2489909312, SHA256: "7f7357c14abd9da4eb200b38b05da502cd6e10d7e1d403fbc9f78c19f3209b72",
 		License: "Gemma", TermsURL: GemmaTermsURL,
 		CardMB: 4096, FreeMB: 3300, VramMB: 3022, Prompt: PromptTranslate, ChatArgs: []string{"--chat-template", "gemma"}, Accuracy: 2, Speed: 5,
 	},
 	{
 		ID: "eurollm-9b", Name: "EuroLLM-9B", File: "EuroLLM-9B-Instruct-2512.Q4_K_M.gguf",
-		URL:  "https://huggingface.co/mradermacher/EuroLLM-9B-Instruct-2512-GGUF/resolve/main/EuroLLM-9B-Instruct-2512.Q4_K_M.gguf",
+		URL:  "https://huggingface.co/mradermacher/EuroLLM-9B-Instruct-2512-GGUF/resolve/5138603fccb9dc1f35c25cfd1a4981a78617e9ff/EuroLLM-9B-Instruct-2512.Q4_K_M.gguf",
 		Size: 5582838912, SHA256: "fe9b50d4ba67eb0131f1ceeaab2e56ea8fb6b2bbc37391d3219c791c3b140a28",
 		License: "Apache 2.0", TermsURL: ApacheTermsURL,
 		CardMB: 8192, FreeMB: 6100, VramMB: 5828, Prompt: PromptChat, Topic: true, Terms: true, Accuracy: 3, Speed: 4,
