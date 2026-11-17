@@ -47,21 +47,21 @@ var Catalog = []Model{
 	{
 		ID: "gemma-3-4b", Name: Name, File: File, URL: URL, Size: Size, SHA256: SHA256,
 		License: "Gemma", TermsURL: TermsURL,
-		CardMB: 4096, FreeMB: 3300, VramMB: 3022, Prompt: PromptChat, Topic: true, Terms: true, Accuracy: 3, Speed: 5,
+		CardMB: 4096, FreeMB: 3300, VramMB: 3022, Prompt: PromptChat, Topic: true, Terms: true, Accuracy: 4, Speed: 5,
 	},
 	{
 		ID: "translategemma-4b", Name: "TranslateGemma 4B", File: "translategemma-4b-it-Q4_K_M.gguf",
 		URL:  "https://huggingface.co/bullerwins/translategemma-4b-it-GGUF/resolve/main/translategemma-4b-it-Q4_K_M.gguf",
 		Size: 2489909312, SHA256: "7f7357c14abd9da4eb200b38b05da502cd6e10d7e1d403fbc9f78c19f3209b72",
 		License: "Gemma", TermsURL: GemmaTermsURL,
-		CardMB: 4096, FreeMB: 3300, VramMB: 3022, Prompt: PromptTranslate, ChatArgs: []string{"--chat-template", "gemma"}, Accuracy: 4, Speed: 5,
+		CardMB: 4096, FreeMB: 3300, VramMB: 3022, Prompt: PromptTranslate, ChatArgs: []string{"--chat-template", "gemma"}, Accuracy: 2, Speed: 5,
 	},
 	{
 		ID: "eurollm-9b", Name: "EuroLLM-9B", File: "EuroLLM-9B-Instruct-2512.Q4_K_M.gguf",
 		URL:  "https://huggingface.co/mradermacher/EuroLLM-9B-Instruct-2512-GGUF/resolve/main/EuroLLM-9B-Instruct-2512.Q4_K_M.gguf",
 		Size: 5582838912, SHA256: "fe9b50d4ba67eb0131f1ceeaab2e56ea8fb6b2bbc37391d3219c791c3b140a28",
 		License: "Apache 2.0", TermsURL: ApacheTermsURL,
-		CardMB: 8192, FreeMB: 6100, VramMB: 5828, Prompt: PromptChat, Topic: true, Terms: true, Accuracy: 4, Speed: 4,
+		CardMB: 8192, FreeMB: 6100, VramMB: 5828, Prompt: PromptChat, Topic: true, Terms: true, Accuracy: 3, Speed: 4,
 	},
 }
 

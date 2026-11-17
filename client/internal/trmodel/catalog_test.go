@@ -119,3 +119,27 @@ func TestTheShownModelIsTheChosenOneEvenWhenItIsMissing(t *testing.T) {
 		t.Fatalf("got %s", m.ID)
 	}
 }
+
+func TestTheTopicTermsAndBarsFollowTheMeasurement(t *testing.T) {
+	want := map[string][4]int{
+		"gemma-4-e4b":       {1, 1, 5, 5},
+		"gemma-3-4b":        {1, 1, 4, 5},
+		"translategemma-4b": {0, 0, 2, 5},
+		"eurollm-9b":        {1, 1, 3, 4},
+	}
+	b := func(v bool) int {
+		if v {
+			return 1
+		}
+		return 0
+	}
+	for _, m := range Catalog {
+		got := [4]int{b(m.Topic), b(m.Terms), m.Accuracy, m.Speed}
+		if got != want[m.ID] {
+			t.Fatalf("%s: topic, terms, accuracy, speed %v, want %v", m.ID, got, want[m.ID])
+		}
+		if m.Terms && !m.Topic {
+			t.Fatalf("%s keeps terms without the topic", m.ID)
+		}
+	}
+}
