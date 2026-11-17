@@ -20,14 +20,18 @@ import (
 	"holdtotype/internal/subtitles"
 )
 
-const punctExeName = "punct-engine.exe"
+const (
+	punctExeName    = "punct-engine.exe"
+	punctStartWait  = 20 * time.Second
+	punctAnswerWait = 1500 * time.Millisecond
+)
 
 var punctModelDir = filepath.Join("models", "punct", "horizon")
 
 type punctEngine struct {
 	cmd    *exec.Cmd
 	in     io.WriteCloser
-	out    *bufio.Reader
+	lines  chan []byte
 	LoadMS float64
 }
 
@@ -59,8 +63,21 @@ func startPunctEngine(threads int) (*punctEngine, error) {
 	if err := cmd.Start(); err != nil {
 		return nil, fmt.Errorf("starting %s: %w", punctExeName, err)
 	}
-	e := &punctEngine{cmd: cmd, in: in, out: bufio.NewReaderSize(outPipe, 1<<16)}
-	a, err := e.read()
+	e := &punctEngine{cmd: cmd, in: in, lines: make(chan []byte, 1)}
+	go func() {
+		r := bufio.NewReaderSize(outPipe, 1<<16)
+		for {
+			line, err := r.ReadBytes('\n')
+			if len(line) > 0 {
+				e.lines <- line
+			}
+			if err != nil {
+				close(e.lines)
+				return
+			}
+		}
+	}()
+	a, err := e.read(punctStartWait)
 	if err != nil || !a.Ready {
 		e.stop()
 		if err == nil {
@@ -72,10 +89,17 @@ func startPunctEngine(threads int) (*punctEngine, error) {
 	return e, nil
 }
 
-func (e *punctEngine) read() (punctAnswer, error) {
-	line, err := e.out.ReadBytes('\n')
-	if err != nil {
-		return punctAnswer{}, err
+func (e *punctEngine) read(wait time.Duration) (punctAnswer, error) {
+	var line []byte
+	select {
+	case l, ok := <-e.lines:
+		if !ok {
+			return punctAnswer{}, errors.New("the engine process ended")
+		}
+		line = l
+	case <-time.After(wait):
+		e.kill()
+		return punctAnswer{}, fmt.Errorf("no answer within %.1f s, the engine is stopped", wait.Seconds())
 	}
 	var a punctAnswer
 	if err := json.Unmarshal(line, &a); err != nil {
@@ -92,7 +116,7 @@ func (e *punctEngine) judge(words []string) (punctAnswer, error) {
 	if _, err := e.in.Write(append(body, '\n')); err != nil {
 		return punctAnswer{}, err
 	}
-	a, err := e.read()
+	a, err := e.read(punctAnswerWait)
 	if err != nil {
 		return a, err
 	}
@@ -100,6 +124,12 @@ func (e *punctEngine) judge(words []string) (punctAnswer, error) {
 		return a, fmt.Errorf("the engine answered for %d word(s) instead of %d", len(a.End), len(words))
 	}
 	return a, nil
+}
+
+func (e *punctEngine) kill() {
+	if e.cmd != nil && e.cmd.Process != nil {
+		_ = e.cmd.Process.Kill()
+	}
 }
 
 func (e *punctEngine) stop() {
