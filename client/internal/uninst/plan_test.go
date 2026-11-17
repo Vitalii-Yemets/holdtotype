@@ -19,6 +19,9 @@ func TestKeepingDataLeavesTranscriptsAlone(t *testing.T) {
 	if !slices.Contains(files, "fast-translator.exe") {
 		t.Fatal("the light translation engine is not removed")
 	}
+	if !slices.Contains(files, "punct-engine.exe") || !slices.Contains(files, "onnxruntime.dll") {
+		t.Fatal("the sentence end engine and its runtime are not removed")
+	}
 	if !slices.Contains(files, "llama-server-gpu.exe") {
 		t.Fatal("the graphics card engine is not removed")
 	}

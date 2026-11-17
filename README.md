@@ -211,6 +211,8 @@ The result lands in `dist/`:
 | `llama-server.exe` | post-processing (llama.cpp), static build |
 | `llama-server-gpu.exe` | translation of subtitles on the graphics card (llama.cpp with Vulkan), static build |
 | `fast-translator.exe` | the light translation engine for subtitles (bergamot-translator), static build, talks to the program over its standard input and output |
+| `punct-engine.exe` | finds where a sentence ends in the words heard, with the Horizon punctuation model; for now only the `-punctcheck` check mode starts it, and it talks to the program over its standard input and output |
+| `onnxruntime.dll` | ONNX Runtime 1.20.1, which `punct-engine.exe` runs the model with |
 | `holdtotype-setup.exe` | installer (Go + WebView2, payload embedded) |
 | `models/ggml-*.bin` | the Whisper model |
 | `models/gigaam-v3/` | the GigaAM v3 model: encoder, decoder, joiner, tokens |
@@ -218,6 +220,7 @@ The result lands in `dist/`:
 | `models/parakeet-v3/` | the Parakeet TDT 0.6B v3 model, when downloaded |
 | `models/*.gguf` | the subtitle translation models of the Quality translator — `gemma-4-E4B_q4_0-it.gguf`, `gemma-3-4b-it-Q4_K_M.gguf`, `translategemma-4b-it-Q4_K_M.gguf`, `EuroLLM-9B-Instruct-2512.Q4_K_M.gguf` — when downloaded, and any other `.gguf` file: an editor model for post-processing that can also be picked for translation |
 | `models/fast/` | the language packs of the Fast translator, one folder per direction, when added |
+| `models/punct/horizon/` | the sentence end model for `punct-engine.exe` — `model_quantized.onnx` and `tokenizer.json` — when put there |
 | `config.default.json` | default settings |
 
 The pipeline: MinGW-w64 cross-compilation of whisper.cpp and llama.cpp inside a Linux container, the Go client with cgo (microphone capture), icon generation, installer packaging — all in `build/Dockerfile`. Both engines are pinned to specific upstream versions (`WHISPER_CPP_VERSION`, `LLAMA_CPP_VERSION` build args), so builds stay reproducible.
@@ -291,7 +294,7 @@ Everything shipped in the archive, and every model the app offers to download ex
 | The translation models for subtitles: Gemma 3 4B and TranslateGemma 4B | downloaded on request from Hugging Face, each at a pinned revision, and checked against their checksums | their own [terms of use](https://ai.google.dev/gemma/terms) |
 | [bergamot-translator](https://github.com/browsermt/bergamot-translator) with [Marian](https://github.com/browsermt/marian-dev) | `fast-translator.exe` — the light translation engine | MPL 2.0 (bergamot-translator), MIT (Marian) |
 | [Language packs of the light engine](https://github.com/mozilla/firefox-translations-models) | English to and from German, Spanish, French, Italian, Polish, Ukrainian and Russian, downloaded on request from Mozilla's model registry at pinned addresses and checked against their checksums | MPL 2.0 |
-| [ONNX Runtime](https://github.com/microsoft/onnxruntime) | runs the models inside sherpa-onnx | MIT |
+| [ONNX Runtime](https://github.com/microsoft/onnxruntime) | runs the models inside sherpa-onnx, and as `onnxruntime.dll` the sentence end model of `punct-engine.exe` | MIT |
 | [IBM Plex](https://github.com/IBM/plex) | Mono, the one face every design is set in, carried inside the exe | SIL Open Font License 1.1 |
 | Whisper models — Tiny, Base, Small, Medium, Turbo | [ggerganov/whisper.cpp](https://huggingface.co/ggerganov/whisper.cpp) on Hugging Face | MIT |
 | [GigaAM v3](https://github.com/salute-developers/GigaAM) | a single-language model, converted for sherpa-onnx | MIT |
