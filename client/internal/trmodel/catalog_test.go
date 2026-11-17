@@ -43,11 +43,11 @@ func TestTheCatalogKnowsFourCheckedModels(t *testing.T) {
 		t.Fatalf("Gemma 3 4B changed: %+v", g3)
 	}
 	tg, _ := ByID("translategemma-4b")
-	if tg.Service || tg.Prompt != PromptTranslate || len(tg.ChatArgs) != 2 || tg.ChatArgs[1] != "gemma" {
+	if tg.Topic || tg.Terms || tg.Prompt != PromptTranslate || len(tg.ChatArgs) != 2 || tg.ChatArgs[1] != "gemma" {
 		t.Fatalf("TranslateGemma: %+v", tg)
 	}
 	eu, _ := ByID("eurollm-9b")
-	if eu.CardMB != 8192 || !eu.Service {
+	if eu.CardMB != 8192 || !eu.Topic {
 		t.Fatalf("EuroLLM: %+v", eu)
 	}
 }
@@ -90,7 +90,7 @@ func TestTheChosenModelFollowsTheRules(t *testing.T) {
 		}
 	}
 	m, _ := Resolve("own:my-model.gguf", readyOf(), own)
-	if !m.Own || m.Prompt != PromptChat || m.Service || m.FreeMB != 5000 || m.CardMB < m.FreeMB {
+	if !m.Own || m.Prompt != PromptChat || m.Topic || m.Terms || m.FreeMB != 5000 || m.CardMB < m.FreeMB {
 		t.Fatalf("own model: %+v", m)
 	}
 }

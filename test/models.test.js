@@ -23,17 +23,17 @@ const CATALOG = [
 ];
 
 const TRM = [
-  { id: "gemma-4-e4b", name: "Gemma 4 E4B", file: "gemma-4-E4B_q4_0-it.gguf", size: 4916, vram: 3015, card_need: 4096, service: true, rec: true, accuracy: 5, speed: 5, license: "Apache 2.0" },
-  { id: "gemma-3-4b", name: "Gemma 3 4B", file: "gemma-3-4b-it-Q4_K_M.gguf", size: 2374, vram: 3022, card_need: 4096, service: true, rec: false, accuracy: 3, speed: 5, license: "Gemma" },
-  { id: "translategemma-4b", name: "TranslateGemma 4B", file: "translategemma-4b-it-Q4_K_M.gguf", size: 2374, vram: 3022, card_need: 4096, service: false, rec: false, accuracy: 4, speed: 5, license: "Gemma" },
-  { id: "eurollm-9b", name: "EuroLLM-9B", file: "EuroLLM-9B-Instruct-2512.Q4_K_M.gguf", size: 5324, vram: 5828, card_need: 8192, service: true, rec: false, accuracy: 4, speed: 4, license: "Apache 2.0" },
+  { id: "gemma-4-e4b", name: "Gemma 4 E4B", file: "gemma-4-E4B_q4_0-it.gguf", size: 4916, vram: 3015, card_need: 4096, topic: true, terms: true, rec: true, accuracy: 5, speed: 5, license: "Apache 2.0" },
+  { id: "gemma-3-4b", name: "Gemma 3 4B", file: "gemma-3-4b-it-Q4_K_M.gguf", size: 2374, vram: 3022, card_need: 4096, topic: true, terms: true, rec: false, accuracy: 3, speed: 5, license: "Gemma" },
+  { id: "translategemma-4b", name: "TranslateGemma 4B", file: "translategemma-4b-it-Q4_K_M.gguf", size: 2374, vram: 3022, card_need: 4096, topic: false, terms: false, rec: false, accuracy: 4, speed: 5, license: "Gemma" },
+  { id: "eurollm-9b", name: "EuroLLM-9B", file: "EuroLLM-9B-Instruct-2512.Q4_K_M.gguf", size: 5324, vram: 5828, card_need: 8192, topic: true, terms: true, rec: false, accuracy: 4, speed: 4, license: "Apache 2.0" },
 ];
 
 function trmView(S) {
   const st = (id) => (id === "gemma-3-4b" ? S.trm : (S.trms[id] = S.trms[id] || { state: "absent" }));
   const card = S.card === undefined ? 8192 : S.card;
   const rows = TRM.map((r) => Object.assign({}, r, { state: st(r.id).state, pct: st(r.id).pct || 0, err: st(r.id).err || "", fits: !S.cardWhy && card >= r.card_need - 256, reason: S.cardWhy || (card >= r.card_need - 256 ? "" : "small"), own: false, running: !!st(r.id).running }));
-  S.llm.forEach((f) => rows.push({ id: "own:" + f.file, name: f.file.replace(/\.gguf$/, ""), file: f.file, size: f.size, vram: f.size + 1000, card_need: f.size + 1256, service: false, rec: false, accuracy: 0, speed: 0, own: true, state: "ready", pct: 0, err: "", fits: card >= f.size + 1000, running: false, license: "" }));
+  S.llm.forEach((f) => rows.push({ id: "own:" + f.file, name: f.file.replace(/\.gguf$/, ""), file: f.file, size: f.size, vram: f.size + 1000, card_need: f.size + 1256, topic: false, terms: false, rec: false, accuracy: 0, speed: 0, own: true, state: "ready", pct: 0, err: "", fits: card >= f.size + 1000, running: false, license: "" }));
   const chosen = rows.find((r) => r.id === S.chosen && r.state === "ready") || rows.find((r) => r.rec && r.state === "ready") || rows.find((r) => !r.own && r.state === "ready");
   rows.forEach((r) => { r.chosen = !!chosen && r.id === chosen.id; });
   const shown = chosen || TRM.map((r) => rows.find((x) => x.id === r.id)).find((r) => r.id === S.chosen) || rows[0];

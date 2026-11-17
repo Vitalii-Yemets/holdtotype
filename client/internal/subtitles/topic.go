@@ -54,6 +54,7 @@ type Topic struct {
 	last    time.Time
 	asked   time.Time
 	updates int
+	noTerms bool
 	Counts  TopicCounts
 }
 
@@ -81,6 +82,17 @@ func (t *Topic) Text() string { return t.text }
 func (t *Topic) Terms() []Term { return append([]Term(nil), t.terms...) }
 
 func (t *Topic) Updates() int { return t.updates }
+
+func (t *Topic) UseTerms(on bool, now time.Time) {
+	t.noTerms = !on
+	if on {
+		return
+	}
+	t.terms = nil
+	if t.pending == StepTerms {
+		t.finish(now)
+	}
+}
 
 func (t *Topic) Heard(text string, at time.Time) {
 	for _, w := range strings.Fields(text) {
@@ -186,6 +198,10 @@ func (t *Topic) TakeTopic(raw string, now time.Time) bool {
 	}
 	t.text = strings.TrimSpace(strings.TrimPrefix(line, "Topic: "))
 	t.updates++
+	if t.noTerms {
+		t.finish(now)
+		return true
+	}
 	t.pending = StepTerms
 	return true
 }

@@ -4331,7 +4331,7 @@ function trmCard(r){
   else if(!r.fits) note = '<span class="pdesc" style="color:var(--amber)">'+esc(trmNoFit(r))+'</span>';
   let meta = "";
   if(!r.own) meta += '<span class="pmt">'+esc(fmtText(L.trmvram, trmGB(r.vram)))+'</span>';
-  if(!r.own && !r.service) meta += '<span class="pmt">'+esc(L.trmnotopic)+'</span>';
+  if(!r.own && !r.topic) meta += '<span class="pmt">'+esc(L.trmnotopic)+'</span>';
   meta += '<span class="pram">'+esc(fmtText(L.trmdisk, sizeLabel(r.size || 0)))+'</span>';
   let act = "";
   if(busy) act = '<span class="mpct">'+(r.pct > 0 ? r.pct + "%" : "…")+'</span><button class="iconbtn danger" title="'+esc(L.dlcancel)+'" data-a="cancel" data-id="'+esc(r.id)+'">&#10005;</button>';

@@ -43,7 +43,7 @@ func percentile(xs []float64, q float64) float64 {
 
 func runTrCheck(args []string) {
 	if len(args) < 3 {
-		log.Printf("trcheck: needs <text file> <run start hh:mm:ss or all> <output file> [model id or own:file] [target language]")
+		log.Printf("trcheck: needs <text file> <run start hh:mm:ss or all> <output file> [model id or own:file] [target language] [off, topic or terms]")
 		return
 	}
 	raw, err := os.ReadFile(args[0])
@@ -102,9 +102,23 @@ func runTrCheck(args []string) {
 	pieces := subtitles.PhraseCall(lines, lang, base)
 	from := speechLang(lang)
 	src := editorSource{kind: editorQuality, model: m}
+	useTopic, useTerms := cfg.SubtitlesTopic && m.Topic, m.Terms
+	mode := ""
+	if len(args) > 5 {
+		mode = args[5]
+	}
+	switch mode {
+	case "off":
+		useTopic, useTerms = false, false
+	case "topic":
+		useTopic, useTerms = true, false
+	case "terms":
+		useTopic, useTerms = true, true
+	}
 	var topic *subtitles.Topic
-	if cfg.SubtitlesTopic && m.Service {
+	if useTopic {
 		topic = subtitles.NewTopic(target)
+		topic.UseTerms(useTerms, base)
 	}
 	calls := subtitles.CheckCalls{
 		Translate: func(b subtitles.Batch, prior []subtitles.Turn, context string) (string, subtitles.Verdict, time.Duration, error) {
@@ -183,7 +197,7 @@ func runTrCheck(args []string) {
 		"loaded_s": loaded.Seconds(), "pieces": len(pieces), "requests": count["piece"], "stale": count["stale"],
 		"topic_requests": count["topic"], "terms_requests": count["terms"],
 		"delay_median_s": percentile(delays, 0.5), "delay_p90_s": percentile(delays, 0.9), "delay_worst_s": percentile(delays, 1),
-		"speech_minutes": speech, "gpu_s_per_min": gpu / speech, "topic_on": topic != nil,
+		"speech_minutes": speech, "gpu_s_per_min": gpu / speech, "topic_on": topic != nil, "terms_on": topic != nil && useTerms, "mode": mode,
 	}
 	if topic != nil {
 		summary["topic"] = topic.Text()

@@ -1261,7 +1261,7 @@ func (w *subTranslator) handle(b subtitles.Batch) {
 }
 
 func topicEnabled(cfg *Config, src editorSource) bool {
-	return cfg.SubtitlesTopic && src.kind == editorQuality && src.ok() && src.model.Service
+	return cfg.SubtitlesTopic && src.kind == editorQuality && src.ok() && src.model.Topic
 }
 
 func (w *subTranslator) topicContext(cfg *Config, src editorSource, target string) string {
@@ -1294,6 +1294,7 @@ func (w *subTranslator) serviceStep() bool {
 		w.mu.Unlock()
 		return false
 	}
+	tp.UseTerms(src.model.Terms, now)
 	step := tp.Due(now)
 	var msgs []subtitles.Message
 	grammar, tokens := subtitles.TopicGrammar, subtitles.TopicTokens

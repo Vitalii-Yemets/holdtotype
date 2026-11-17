@@ -45,6 +45,44 @@ func TestTheTopicComesAfterTheFirstWordsAndThenEveryThreeMinutes(t *testing.T) {
 	}
 }
 
+func TestAModelWithoutTermMemoryAsksOnlyTheTopic(t *testing.T) {
+	t0 := time.Now()
+	tp := NewTopic("ru")
+	tp.Heard("the approval rate of the cohort "+words(200, "x"), t0)
+	tp.TopicMessages(t0)
+	tp.TakeTopic("Topic: Lending.", t0)
+	tp.TakeTerms("approval rate = коэффициент одобрения", t0)
+	if len(tp.Terms()) != 1 {
+		t.Fatalf("the term is not kept: %+v", tp.Terms())
+	}
+	tp.UseTerms(false, t0)
+	if len(tp.Terms()) != 0 || tp.Context() != " The conversation: Lending." {
+		t.Fatalf("the terms stay after the memory is switched off: %+v %q", tp.Terms(), tp.Context())
+	}
+	at := t0.Add(TopicEvery)
+	if s := tp.Due(at); s != StepTopic {
+		t.Fatalf("the topic is not due: %v", s)
+	}
+	tp.TopicMessages(at)
+	if !tp.TakeTopic("Topic: Lending and credit risk.", at) {
+		t.Fatal("a good topic line is refused")
+	}
+	if s := tp.Due(at.Add(time.Second)); s != StepNone {
+		t.Fatalf("the terms are asked after the topic: %v", s)
+	}
+	if tp.Context() != " The conversation: Lending and credit risk." || tp.Counts.TermsCalls != 1 {
+		t.Fatalf("context %q, counts %+v", tp.Context(), tp.Counts)
+	}
+	if s := tp.Due(at.Add(TopicEvery)); s != StepTopic {
+		t.Fatalf("the next topic round never comes: %v", s)
+	}
+	tp.pending = StepTerms
+	tp.UseTerms(false, at)
+	if s := tp.Due(at.Add(time.Second)); s != StepNone {
+		t.Fatalf("a pending terms request survives: %v", s)
+	}
+}
+
 func TestABrokenTopicAnswerSkipsTheRound(t *testing.T) {
 	t0 := time.Now()
 	tp := NewTopic("ru")

@@ -28,7 +28,8 @@ type Model struct {
 	VramMB      int
 	Prompt      string
 	ChatArgs    []string
-	Service     bool
+	Topic       bool
+	Terms       bool
 	Recommended bool
 	Accuracy    int
 	Speed       int
@@ -41,12 +42,12 @@ var Catalog = []Model{
 		URL:  "https://huggingface.co/google/gemma-4-E4B-it-qat-q4_0-gguf/resolve/main/gemma-4-E4B_q4_0-it.gguf",
 		Size: 5154941280, SHA256: "676c35070db6dbe52f93e9c864ee0fba4eddea94b9c875d9cb10daff453fbaee",
 		License: "Apache 2.0", TermsURL: ApacheTermsURL,
-		CardMB: 4096, FreeMB: 3300, VramMB: 3015, Prompt: PromptChat, Service: true, Recommended: true, Accuracy: 5, Speed: 5,
+		CardMB: 4096, FreeMB: 3300, VramMB: 3015, Prompt: PromptChat, Topic: true, Terms: true, Recommended: true, Accuracy: 5, Speed: 5,
 	},
 	{
 		ID: "gemma-3-4b", Name: Name, File: File, URL: URL, Size: Size, SHA256: SHA256,
 		License: "Gemma", TermsURL: TermsURL,
-		CardMB: 4096, FreeMB: 3300, VramMB: 3022, Prompt: PromptChat, Service: true, Accuracy: 3, Speed: 5,
+		CardMB: 4096, FreeMB: 3300, VramMB: 3022, Prompt: PromptChat, Topic: true, Terms: true, Accuracy: 3, Speed: 5,
 	},
 	{
 		ID: "translategemma-4b", Name: "TranslateGemma 4B", File: "translategemma-4b-it-Q4_K_M.gguf",
@@ -60,7 +61,7 @@ var Catalog = []Model{
 		URL:  "https://huggingface.co/mradermacher/EuroLLM-9B-Instruct-2512-GGUF/resolve/main/EuroLLM-9B-Instruct-2512.Q4_K_M.gguf",
 		Size: 5582838912, SHA256: "fe9b50d4ba67eb0131f1ceeaab2e56ea8fb6b2bbc37391d3219c791c3b140a28",
 		License: "Apache 2.0", TermsURL: ApacheTermsURL,
-		CardMB: 8192, FreeMB: 6100, VramMB: 5828, Prompt: PromptChat, Service: true, Accuracy: 4, Speed: 4,
+		CardMB: 8192, FreeMB: 6100, VramMB: 5828, Prompt: PromptChat, Topic: true, Terms: true, Accuracy: 4, Speed: 4,
 	},
 }
 

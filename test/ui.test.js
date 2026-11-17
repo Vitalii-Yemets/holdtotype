@@ -1990,8 +1990,8 @@ function check(name, actual, expected) {
   const model = (o) => {
     const m = { id: "gemma-3-4b", name: "Gemma 3 4B", state: "absent", pct: 0, err: "", size: 2374, fits: true, card, reason: "", card_mb: 8017, need_mb: 4096, down: "", running: false, ...o };
     m.models = [
-      { id: "gemma-4-e4b", name: "Gemma 4 E4B", file: "gemma-4-E4B_q4_0-it.gguf", state: "absent", pct: 0, err: "", size: 4916, vram: 3015, card_need: 4096, fits: m.fits, reason: m.fits ? "" : m.reason, service: true, rec: true, accuracy: 5, speed: 5, own: false, chosen: false, running: false },
-      { id: "gemma-3-4b", name: "Gemma 3 4B", file: "gemma-3-4b-it-Q4_K_M.gguf", state: m.state, pct: m.pct, err: m.err, size: 2374, vram: 3022, card_need: 4096, fits: m.fits, reason: m.fits ? "" : m.reason, service: true, rec: false, accuracy: 3, speed: 5, own: false, chosen: m.state === "ready", running: m.running },
+      { id: "gemma-4-e4b", name: "Gemma 4 E4B", file: "gemma-4-E4B_q4_0-it.gguf", state: "absent", pct: 0, err: "", size: 4916, vram: 3015, card_need: 4096, fits: m.fits, reason: m.fits ? "" : m.reason, topic: true, terms: true, rec: true, accuracy: 5, speed: 5, own: false, chosen: false, running: false },
+      { id: "gemma-3-4b", name: "Gemma 3 4B", file: "gemma-3-4b-it-Q4_K_M.gguf", state: m.state, pct: m.pct, err: m.err, size: 2374, vram: 3022, card_need: 4096, fits: m.fits, reason: m.fits ? "" : m.reason, topic: true, terms: true, rec: false, accuracy: 3, speed: 5, own: false, chosen: m.state === "ready", running: m.running },
     ];
     return m;
   };
