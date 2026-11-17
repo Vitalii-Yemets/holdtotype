@@ -2118,9 +2118,25 @@ func runSubcheck(args []string) {
 	}
 	var words []string
 	file := ""
+	switchTo, switchAt := "", 0
 	for _, a := range args[min(1, len(args)):] {
 		if strings.HasSuffix(strings.ToLower(a), ".wav") {
 			file = a
+			continue
+		}
+		if v, ok := strings.CutPrefix(a, "model="); ok {
+			cfg.SubtitlesModel = v
+			log.Printf("subcheck: the translation model is %q", v)
+			continue
+		}
+		if v, ok := strings.CutPrefix(a, "switch="); ok {
+			id, at, _ := strings.Cut(v, "@")
+			n, err := strconv.Atoi(at)
+			if id == "" || err != nil || n <= 0 {
+				log.Printf("subcheck: %q is not model@seconds", v)
+				return
+			}
+			switchTo, switchAt = id, n
 			continue
 		}
 		if a == "guess" {
@@ -2165,6 +2181,22 @@ func runSubcheck(args []string) {
 	if err != nil {
 		log.Printf("subtitles: did not start: %s", logText(err))
 		return
+	}
+	if switchTo != "" {
+		go func() {
+			select {
+			case <-time.After(time.Duration(switchAt) * time.Second):
+			case <-r.done():
+				return
+			}
+			app.mu.Lock()
+			c := *app.cfg
+			c.SubtitlesModel = switchTo
+			app.cfg = &c
+			app.mu.Unlock()
+			log.Printf("subcheck: after %d s the translation model is switched to %q", switchAt, switchTo)
+			app.subtitlesConfigChanged()
+		}()
 	}
 	select {
 	case <-time.After(time.Duration(seconds) * time.Second):
