@@ -910,6 +910,7 @@ type subTranslator struct {
 	histTarget string
 	histReset  atomic.Bool
 	topic      *subtitles.Topic
+	giveWay    context.CancelCauseFunc
 
 	pieces     atomic.Int64
 	translated atomic.Int64
@@ -961,6 +962,7 @@ func (w *subTranslator) push(ph subtitles.TextPhrase, text, to string) {
 	r.board.AddPiece(ph.Seq, ph.Para, text)
 	r.pieceQueued(ph.Seq)
 	dropped := w.q.Push(subtitles.Pending{Seq: ph.Seq, Text: text, Words: len(strings.Fields(text)), Target: to, Para: ph.Para, Start: ph.Start, Heard: ph.Heard})
+	w.yieldLocked()
 	w.mu.Unlock()
 	if len(dropped) > 0 {
 		w.drop(dropped, "the queue is full")
@@ -986,9 +988,17 @@ func (w *subTranslator) wake() {
 	}
 }
 
+func (w *subTranslator) yieldLocked() {
+	if w.giveWay != nil && w.q.Len() > 0 {
+		w.giveWay(errGiveWay)
+		w.giveWay = nil
+	}
+}
+
 func (w *subTranslator) release(gen int) (int, bool) {
 	w.mu.Lock()
 	n, ok := w.q.Release(gen, time.Now())
+	w.yieldLocked()
 	w.mu.Unlock()
 	if ok {
 		w.wake()
@@ -1000,6 +1010,7 @@ func (w *subTranslator) releaseAll() (string, int, bool) {
 	w.mu.Lock()
 	_, label, _ := w.q.Holding()
 	n, ok := w.q.ReleaseAll(time.Now())
+	w.yieldLocked()
 	w.mu.Unlock()
 	if ok {
 		w.wake()
@@ -1308,35 +1319,83 @@ func (w *subTranslator) serviceStep() bool {
 		w.mu.Unlock()
 		return false
 	}
+	yctx, giveWay := context.WithCancelCause(w.ctx)
+	w.giveWay = giveWay
 	w.mu.Unlock()
-	ctx, cancel := context.WithTimeout(w.ctx, subtitles.TopicTimeout)
-	out, err := srv.chatStream(ctx, msgs, tokens, grammar, nil)
+	ctx, cancel := context.WithTimeout(yctx, subtitles.TopicTimeout)
+	var sofar string
+	out, finish, err := srv.chatStreamEnd(ctx, msgs, tokens, grammar, func(s string) { sofar = s })
+	timedOut := ctx.Err() == context.DeadlineExceeded && yctx.Err() == nil
 	cancel()
+	yielded := errors.Is(context.Cause(yctx), errGiveWay)
+	giveWay(nil)
 	took := time.Since(now).Seconds()
 	w.mu.Lock()
 	defer w.mu.Unlock()
-	if w.topic != tp {
+	w.giveWay = nil
+	if w.topic != tp || w.ctx.Err() != nil {
 		return true
 	}
-	if err != nil {
+	if out == "" {
+		out = sofar
+	}
+	end := subtitles.EndWhole
+	switch {
+	case err == nil && finish == "length":
+		end = subtitles.EndLimit
+	case err == nil:
+	case yielded:
+		end = subtitles.EndYield
+	case timedOut:
+		end = subtitles.EndTimeout
+	default:
 		tp.Failed(step, time.Now())
-		log.Printf("subtitles: the request for the topic of the conversation failed after %.1f s: %s", took, logText(err))
+		log.Printf("subtitles: the request for the %s failed after %.1f s: %s", serviceName(step), took, logText(err))
 		return true
 	}
-	switch step {
-	case subtitles.StepTopic:
-		if !tp.TakeTopic(out, now) {
-			log.Printf("subtitles: the answer about the topic of the conversation is not one line, it is skipped")
-		} else if tp.Updates() == 1 {
+	res := tp.Answer(step, out, end, now)
+	switch {
+	case end == subtitles.EndYield && step == subtitles.StepTopic && res.GaveUp:
+		log.Printf("subtitles: the request for the topic gives way to a new piece after %.1f s, the round is given up after %d tries", took, subtitles.ServiceTries)
+	case end == subtitles.EndYield && step == subtitles.StepTopic:
+		log.Printf("subtitles: the request for the topic gives way to a new piece after %.1f s, it is asked again", took)
+	case end == subtitles.EndYield && res.Lines > 0:
+		log.Printf("subtitles: the request for the terms gives way to a new piece after %.1f s, %d complete line(s) kept", took, res.Lines)
+	case end == subtitles.EndYield && res.GaveUp:
+		log.Printf("subtitles: the request for the terms gives way to a new piece after %.1f s, no complete line, the round is given up after %d tries", took, subtitles.ServiceTries)
+	case end == subtitles.EndYield:
+		log.Printf("subtitles: the request for the terms gives way to a new piece after %.1f s, no complete line, it is asked again", took)
+	case end == subtitles.EndTimeout && res.Failed:
+		log.Printf("subtitles: the request for the %s failed after %.1f s: no answer within %.0f s", serviceName(step), took, subtitles.TopicTimeout.Seconds())
+	case end == subtitles.EndTimeout:
+		log.Printf("subtitles: the request for the terms ran out of %.0f s, %d complete line(s) kept", subtitles.TopicTimeout.Seconds(), res.Lines)
+	case step == subtitles.StepTopic && res.Failed:
+		log.Printf("subtitles: the answer about the topic of the conversation is not one line, it is skipped")
+	}
+	if step == subtitles.StepTopic && !res.Failed && end != subtitles.EndYield {
+		if tp.Updates() == 1 {
 			log.Printf("subtitles: the topic of the conversation is known after %.1f s of asking", took)
 		} else {
 			log.Printf("subtitles: the topic of the conversation is updated (%d) after %.1f s of asking", tp.Updates(), took)
 		}
-	case subtitles.StepTerms:
-		n := tp.TakeTerms(out, now)
-		log.Printf("subtitles: the term memory holds %d term(s), %d new, after %.1f s of asking", len(tp.Terms()), n, took)
+	}
+	if step == subtitles.StepTerms && (end != subtitles.EndYield && end != subtitles.EndTimeout || res.Lines > 0) {
+		cut := ""
+		if end == subtitles.EndLimit {
+			cut = ", the answer was cut by the token limit"
+		}
+		log.Printf("subtitles: the term memory holds %d term(s), %d new, after %.1f s of asking%s", len(tp.Terms()), res.Added, took, cut)
 	}
 	return true
+}
+
+var errGiveWay = errors.New("a new piece came")
+
+func serviceName(step subtitles.Step) string {
+	if step == subtitles.StepTerms {
+		return "terms"
+	}
+	return "topic of the conversation"
 }
 
 func speechLang(lang string) string {

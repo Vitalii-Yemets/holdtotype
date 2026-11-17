@@ -117,11 +117,14 @@ type CheckEvent struct {
 	Context  string
 	Terms    int
 	Err      string
+	Yielded  bool
+	Lines    int
+	Hold     time.Duration
 }
 
 type CheckCalls struct {
 	Translate func(b Batch, prior []Turn, context string) (string, Verdict, time.Duration, error)
-	Service   func(step Step, msgs []Message) (string, time.Duration, error)
+	Service   func(step Step, msgs []Message, limit time.Duration) (string, ServiceEnd, time.Duration, error)
 }
 
 func RunCheck(pieces []CheckPiece, target string, topic *Topic, calls CheckCalls) []CheckEvent {
@@ -175,17 +178,24 @@ func RunCheck(pieces []CheckPiece, target string, topic *Topic, calls CheckCalls
 					msgs = topic.TermsMessages(free)
 					kind = "terms"
 				}
-				res, d, err := calls.Service(step, msgs)
+				var limit time.Duration
+				if i < len(pieces) {
+					limit = pieces[i].Release.Sub(free)
+				}
+				res, how, d, err := calls.Service(step, msgs, limit)
 				end := free.Add(d)
-				ev := CheckEvent{Kind: kind, Result: res, Ready: free, Start: free, End: end, Duration: d}
-				switch {
-				case err != nil:
+				ev := CheckEvent{Kind: kind, Result: res, Ready: free, Start: free, End: end, Duration: d, Yielded: how == EndYield}
+				if i < len(pieces) && end.After(pieces[i].Release) {
+					ev.Hold = end.Sub(pieces[i].Release)
+				}
+				if err != nil && how != EndYield && how != EndTimeout {
 					ev.Err = err.Error()
 					topic.Failed(step, end)
-				case step == StepTopic:
-					topic.TakeTopic(res, free)
-				default:
-					topic.TakeTerms(res, free)
+				} else {
+					if err != nil {
+						ev.Err = err.Error()
+					}
+					ev.Lines = topic.Answer(step, res, how, free).Lines
 				}
 				ev.Context = topic.Context()
 				ev.Terms = len(topic.Terms())

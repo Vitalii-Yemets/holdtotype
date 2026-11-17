@@ -221,3 +221,118 @@ func TestAServiceRequestHoldsPiecesNoLongerThanATranslation(t *testing.T) {
 		t.Fatalf("timeout %s, translation %s", TopicTimeout, TranslateTimeout)
 	}
 }
+
+func termsDue(t *testing.T) (*Topic, time.Time) {
+	t0 := time.Now()
+	tp := NewTopic("ru")
+	tp.Heard("the approval rate of the cohort and the charge off of the borrowing "+words(200, "x"), t0)
+	tp.TopicMessages(t0)
+	if !tp.TakeTopic("Topic: Lending.", t0) {
+		t.Fatal("a good topic line is refused")
+	}
+	if s := tp.Due(t0); s != StepTerms {
+		t.Fatalf("the terms are not due: %v", s)
+	}
+	return tp, t0
+}
+
+func TestATermsRequestThatGivesWayKeepsItsCompleteLines(t *testing.T) {
+	tp, t0 := termsDue(t)
+	out := tp.Answer(StepTerms, "approval rate = коэффициент одобрения\ncohort = когорта\ncharge off = спис", EndYield, t0)
+	if out.Lines != 2 || out.Added != 2 || out.Again || out.GaveUp {
+		t.Fatalf("outcome %+v", out)
+	}
+	if got := tp.Terms(); len(got) != 2 || got[1] != (Term{"cohort", "когорта"}) {
+		t.Fatalf("terms %+v", got)
+	}
+	if s := tp.Due(t0.Add(time.Second)); s != StepNone {
+		t.Fatalf("the round is not closed: %v", s)
+	}
+	if tp.Counts.Yielded != 1 {
+		t.Fatalf("counts %+v", tp.Counts)
+	}
+}
+
+func TestATermsRequestThatGivesWayWithoutALineIsAskedAgainThreeTimesAtMost(t *testing.T) {
+	tp, t0 := termsDue(t)
+	for i := 1; i < ServiceTries; i++ {
+		out := tp.Answer(StepTerms, "approval rate = коэфф", EndYield, t0)
+		if !out.Again || out.Lines != 0 || len(tp.Terms()) != 0 {
+			t.Fatalf("try %d: %+v %+v", i, out, tp.Terms())
+		}
+		if s := tp.Due(t0); s != StepTerms {
+			t.Fatalf("try %d: the terms are not due again: %v", i, s)
+		}
+	}
+	out := tp.Answer(StepTerms, "", EndYield, t0)
+	if out.Again || !out.GaveUp || tp.Counts.GaveUp != 1 || tp.Counts.Yielded != ServiceTries {
+		t.Fatalf("after the last try: %+v %+v", out, tp.Counts)
+	}
+	if s := tp.Due(t0.Add(time.Second)); s != StepNone {
+		t.Fatalf("the round is not closed: %v", s)
+	}
+	if s := tp.Due(t0.Add(TopicEvery)); s != StepTopic {
+		t.Fatalf("the next round never comes: %v", s)
+	}
+}
+
+func TestACutLastLineIsNotTakenAndAWholeAnswerIs(t *testing.T) {
+	tp, t0 := termsDue(t)
+	out := tp.Answer(StepTerms, "approval rate = коэффициент одобрения\ncohort = ког", EndLimit, t0)
+	if out.Added != 1 || len(tp.Terms()) != 1 || tp.Terms()[0].Source != "approval rate" {
+		t.Fatalf("a cut answer: %+v %+v", out, tp.Terms())
+	}
+	tp2, t1 := termsDue(t)
+	out = tp2.Answer(StepTerms, "approval rate = коэффициент одобрения\ncohort = когорта", EndWhole, t1)
+	if out.Added != 2 || out.Lines != 2 || len(tp2.Terms()) != 2 {
+		t.Fatalf("a whole answer: %+v %+v", out, tp2.Terms())
+	}
+	tp3, t2 := termsDue(t)
+	out = tp3.Answer(StepTerms, "approval rate = коэффициент одобрения\ncoh", EndTimeout, t2)
+	if out.Added != 1 || out.Failed || tp3.Counts.TermsFailed != 0 {
+		t.Fatalf("a timed out answer with a complete line: %+v %+v", out, tp3.Counts)
+	}
+	tp4, t3 := termsDue(t)
+	out = tp4.Answer(StepTerms, "approval", EndTimeout, t3)
+	if !out.Failed || tp4.Counts.TermsFailed != 1 || tp4.Due(t3.Add(time.Second)) != StepNone {
+		t.Fatalf("a timed out answer without a line: %+v %+v", out, tp4.Counts)
+	}
+}
+
+func TestATopicRequestThatGivesWayIsAskedAgain(t *testing.T) {
+	t0 := time.Now()
+	tp := NewTopic("ru")
+	tp.Heard(words(200, "credit"), t0)
+	tp.TopicMessages(t0)
+	out := tp.Answer(StepTopic, "Topic: Credit risk in a lend", EndYield, t0)
+	if !out.Again || tp.Text() != "" {
+		t.Fatalf("outcome %+v, text %q", out, tp.Text())
+	}
+	if s := tp.Due(t0.Add(time.Second)); s != StepTopic {
+		t.Fatalf("the topic is not asked again: %v", s)
+	}
+	tp.TopicMessages(t0.Add(time.Second))
+	out = tp.Answer(StepTopic, "Topic: Credit risk in a lending company.", EndWhole, t0.Add(2*time.Second))
+	if out.Failed || tp.Text() != "Credit risk in a lending company." || tp.Due(t0.Add(3*time.Second)) != StepTerms {
+		t.Fatalf("outcome %+v, text %q", out, tp.Text())
+	}
+	tp.Answer(StepTerms, "", EndYield, t0)
+	tp.Answer(StepTerms, "", EndYield, t0)
+	if out := tp.Answer(StepTerms, "none", EndWhole, t0); out.Lines != 1 || out.Again {
+		t.Fatalf("the tries of the topic step are counted for the terms: %+v", out)
+	}
+	if tp.Counts.GaveUp != 0 {
+		t.Fatalf("counts %+v", tp.Counts)
+	}
+}
+
+func TestATimedOutTopicIsAFailure(t *testing.T) {
+	t0 := time.Now()
+	tp := NewTopic("ru")
+	tp.Heard(words(200, "credit"), t0)
+	tp.TopicMessages(t0)
+	out := tp.Answer(StepTopic, "Topic: Credit", EndTimeout, t0)
+	if !out.Failed || tp.Counts.TopicFailed != 1 || tp.Text() != "" || tp.Due(t0.Add(time.Second)) != StepNone {
+		t.Fatalf("outcome %+v, counts %+v", out, tp.Counts)
+	}
+}

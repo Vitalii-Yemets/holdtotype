@@ -330,6 +330,11 @@ func (s *llamaServer) completeStream(ctx context.Context, prompt string, maxToke
 }
 
 func (s *llamaServer) chatStream(ctx context.Context, msgs []subtitles.Message, maxTokens int, grammar string, onText func(string)) (string, error) {
+	out, _, err := s.chatStreamEnd(ctx, msgs, maxTokens, grammar, onText)
+	return out, err
+}
+
+func (s *llamaServer) chatStreamEnd(ctx context.Context, msgs []subtitles.Message, maxTokens int, grammar string, onText func(string)) (string, string, error) {
 	payload := map[string]any{
 		"messages":    msgs,
 		"temperature": 0.2,
@@ -342,25 +347,25 @@ func (s *llamaServer) chatStream(ctx context.Context, msgs []subtitles.Message, 
 	body, _ := json.Marshal(payload)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, s.baseURL+"/v1/chat/completions", bytes.NewReader(body))
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "text/event-stream")
 	req.Header.Set("Authorization", "Bearer "+llmAPIKey)
 	resp, err := s.client.Do(req)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		raw, _ := io.ReadAll(io.LimitReader(resp.Body, 2048))
-		return "", fmt.Errorf("llama-server (%d): %.200s", resp.StatusCode, strings.TrimSpace(string(raw)))
+		return "", "", fmt.Errorf("llama-server (%d): %.200s", resp.StatusCode, strings.TrimSpace(string(raw)))
 	}
-	out, err := chatstream.Read(io.LimitReader(resp.Body, maxResponseBytes), onText)
+	out, end, err := chatstream.ReadEnd(io.LimitReader(resp.Body, maxResponseBytes), onText)
 	if err != nil {
-		return out, fmt.Errorf("llama-server: %w", err)
+		return out, end, fmt.Errorf("llama-server: %w", err)
 	}
-	return out, nil
+	return out, end, nil
 }
 
 var (

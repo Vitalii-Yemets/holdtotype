@@ -108,3 +108,17 @@ func TestCompletionStream(t *testing.T) {
 		t.Fatalf("whole: %q %v", whole, err)
 	}
 }
+
+func TestTheReasonTheAnswerEnded(t *testing.T) {
+	for _, c := range []struct{ body, text, end string }{
+		{"data: {\"choices\":[{\"delta\":{\"content\":\"a = б\\nc\"}}]}\n\ndata: {\"choices\":[{\"delta\":{},\"finish_reason\":\"length\"}]}\n\ndata: [DONE]\n\n", "a = б\nc", "length"},
+		{"data: {\"choices\":[{\"delta\":{\"content\":\"none\"}}]}\n\ndata: {\"choices\":[{\"delta\":{},\"finish_reason\":\"stop\"}]}\n\ndata: [DONE]\n\n", "none", "stop"},
+		{"data: {\"choices\":[{\"delta\":{\"content\":\"a = б\\n\"}}]}\n\n", "a = б\n", ""},
+		{"{\"choices\":[{\"message\":{\"content\":\"whole\"},\"finish_reason\":\"stop\"}]}", "whole", "stop"},
+	} {
+		text, end, err := ReadEnd(strings.NewReader(c.body), nil)
+		if err != nil || text != c.text || end != c.end {
+			t.Fatalf("%q: %q %q %v", c.body, text, end, err)
+		}
+	}
+}

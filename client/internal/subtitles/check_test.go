@@ -1,6 +1,7 @@
 package subtitles
 
 import (
+	"context"
 	"strings"
 	"testing"
 	"time"
@@ -65,11 +66,11 @@ func TestServiceRequestsOnlyRunWhenNoPieceWaits(t *testing.T) {
 		Translate: func(b Batch, prior []Turn, context string) (string, Verdict, time.Duration, error) {
 			return "перевод", TrOK, 500 * time.Millisecond, nil
 		},
-		Service: func(step Step, msgs []Message) (string, time.Duration, error) {
+		Service: func(step Step, msgs []Message, limit time.Duration) (string, ServiceEnd, time.Duration, error) {
 			if step == StepTopic {
-				return "Topic: Something.", 2500 * time.Millisecond, nil
+				return "Topic: Something.", EndWhole, 2500 * time.Millisecond, nil
 			}
-			return "word = слово", 2500 * time.Millisecond, nil
+			return "word = слово", EndWhole, 2500 * time.Millisecond, nil
 		},
 	}
 	ev := RunCheck(pieces, "ru", tp, calls)
@@ -130,4 +131,43 @@ func containsSeq(seqs []int, s int) bool {
 		}
 	}
 	return false
+}
+
+func TestAServiceRequestGivesWayToTheNextPieceAndKeepsItsLines(t *testing.T) {
+	t0 := time.Date(2026, 11, 16, 19, 27, 0, 0, time.Local)
+	pieces := checkPieces(t0, 60, 3*time.Second, 10)
+	tp := NewTopic("ru")
+	calls := CheckCalls{
+		Translate: func(b Batch, prior []Turn, context string) (string, Verdict, time.Duration, error) {
+			return "перевод", TrOK, 500 * time.Millisecond, nil
+		},
+		Service: func(step Step, msgs []Message, limit time.Duration) (string, ServiceEnd, time.Duration, error) {
+			if step == StepTopic {
+				return "Topic: Something.", EndWhole, time.Second, nil
+			}
+			if limit > 0 && limit < 4*time.Second {
+				return "word = слово\nwor", EndYield, limit, context.Canceled
+			}
+			return "word = слово", EndWhole, 4 * time.Second, nil
+		},
+	}
+	ev := RunCheck(pieces, "ru", tp, calls)
+	yielded := 0
+	for _, e := range ev {
+		if e.Kind != "terms" {
+			continue
+		}
+		if e.Yielded {
+			yielded++
+		}
+		if e.Hold > 0 {
+			t.Fatalf("a piece waited for a request that gave way: %+v", e)
+		}
+		if e.Yielded && e.Lines != 1 {
+			t.Fatalf("the complete line is not counted: %+v", e)
+		}
+	}
+	if yielded == 0 || len(tp.Terms()) != 1 || tp.Counts.Yielded != yielded {
+		t.Fatalf("yielded %d, terms %+v, counts %+v", yielded, tp.Terms(), tp.Counts)
+	}
 }

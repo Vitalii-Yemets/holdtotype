@@ -29,6 +29,9 @@ type trCheckRow struct {
 	Context  string  `json:"context,omitempty"`
 	Terms    int     `json:"terms,omitempty"`
 	Err      string  `json:"err,omitempty"`
+	Yielded  bool    `json:"yielded,omitempty"`
+	Lines    int     `json:"lines,omitempty"`
+	Hold     float64 `json:"hold,omitempty"`
 }
 
 func percentile(xs []float64, q float64) float64 {
@@ -150,16 +153,37 @@ func runTrCheck(args []string) {
 		},
 	}
 	if topic != nil {
-		calls.Service = func(step subtitles.Step, msgs []subtitles.Message) (string, time.Duration, error) {
+		calls.Service = func(step subtitles.Step, msgs []subtitles.Message, limit time.Duration) (string, subtitles.ServiceEnd, time.Duration, error) {
 			grammar, tokens := subtitles.TopicGrammar, subtitles.TopicTokens
 			if step == subtitles.StepTerms {
 				grammar, tokens = subtitles.TermsGrammar(target), subtitles.TermsTokens
 			}
 			ctx, cancel := ctxTimeout(subtitles.TopicTimeout)
 			defer cancel()
+			yctx := ctx
+			if limit > 0 && limit < subtitles.TopicTimeout {
+				var stop context.CancelFunc
+				yctx, stop = context.WithTimeout(ctx, limit)
+				defer stop()
+			}
+			var sofar string
 			t0 := time.Now()
-			out, err := srv.chatStream(ctx, msgs, tokens, grammar, nil)
-			return out, time.Since(t0), err
+			out, finish, err := srv.chatStreamEnd(yctx, msgs, tokens, grammar, func(s string) { sofar = s })
+			d := time.Since(t0)
+			if out == "" {
+				out = sofar
+			}
+			switch {
+			case err == nil && finish == "length":
+				return out, subtitles.EndLimit, d, nil
+			case err == nil:
+				return out, subtitles.EndWhole, d, nil
+			case ctx.Err() == context.DeadlineExceeded:
+				return out, subtitles.EndTimeout, d, err
+			case yctx.Err() == context.DeadlineExceeded:
+				return out, subtitles.EndYield, d, err
+			}
+			return out, subtitles.EndWhole, d, err
 		}
 	}
 	events := subtitles.RunCheck(pieces, target, topic, calls)
@@ -172,9 +196,16 @@ func runTrCheck(args []string) {
 	var delays []float64
 	gpu := 0.0
 	count := map[string]int{}
+	yields, hold := 0, 0.0
 	for _, e := range events {
-		row := trCheckRow{Kind: e.Kind, Seqs: e.Seqs, Source: e.Text, Result: e.Result, Verdict: string(e.Verdict), Ready: secs(e.Ready), Start: secs(e.Start), End: secs(e.End), Seconds: e.Duration.Seconds(), Context: e.Context, Terms: e.Terms, Err: e.Err}
+		row := trCheckRow{Kind: e.Kind, Seqs: e.Seqs, Source: e.Text, Result: e.Result, Verdict: string(e.Verdict), Ready: secs(e.Ready), Start: secs(e.Start), End: secs(e.End), Seconds: e.Duration.Seconds(), Context: e.Context, Terms: e.Terms, Err: e.Err, Yielded: e.Yielded, Lines: e.Lines, Hold: e.Hold.Seconds()}
 		count[e.Kind]++
+		if e.Yielded {
+			yields++
+		}
+		if e.Hold.Seconds() > hold {
+			hold = e.Hold.Seconds()
+		}
 		gpu += e.Duration.Seconds()
 		if e.Kind == "piece" {
 			for _, s := range e.Seqs {
@@ -198,6 +229,7 @@ func runTrCheck(args []string) {
 		"topic_requests": count["topic"], "terms_requests": count["terms"],
 		"delay_median_s": percentile(delays, 0.5), "delay_p90_s": percentile(delays, 0.9), "delay_worst_s": percentile(delays, 1),
 		"speech_minutes": speech, "gpu_s_per_min": gpu / speech, "topic_on": topic != nil, "terms_on": topic != nil && useTerms, "mode": mode,
+		"service_yielded": yields, "service_hold_max_s": hold,
 	}
 	if topic != nil {
 		summary["topic"] = topic.Text()

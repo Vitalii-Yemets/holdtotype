@@ -55,6 +55,7 @@ type Topic struct {
 	asked   time.Time
 	updates int
 	noTerms bool
+	tries   int
 	Counts  TopicCounts
 }
 
@@ -71,6 +72,90 @@ type TopicCounts struct {
 	TermsAdded  int
 	TopicFailed int
 	TermsFailed int
+	Yielded     int
+	GaveUp      int
+}
+
+const ServiceTries = 3
+
+type ServiceEnd int
+
+const (
+	EndWhole ServiceEnd = iota
+	EndLimit
+	EndYield
+	EndTimeout
+)
+
+type ServiceOutcome struct {
+	Lines  int
+	Added  int
+	Again  bool
+	GaveUp bool
+	Failed bool
+}
+
+func CompleteLines(raw string, whole bool) string {
+	if whole {
+		return strings.TrimSpace(raw)
+	}
+	i := strings.LastIndex(raw, "\n")
+	if i < 0 {
+		return ""
+	}
+	return strings.TrimSpace(raw[:i])
+}
+
+func countLines(text string) int {
+	if text == "" {
+		return 0
+	}
+	return len(strings.Split(text, "\n"))
+}
+
+func (t *Topic) Answer(step Step, raw string, end ServiceEnd, now time.Time) ServiceOutcome {
+	var out ServiceOutcome
+	if end == EndYield {
+		t.Counts.Yielded++
+	}
+	if step == StepTopic {
+		switch end {
+		case EndWhole, EndLimit:
+			out.Lines = 1
+			if !t.TakeTopic(raw, now) {
+				out.Failed = true
+			}
+		case EndTimeout:
+			t.Failed(step, now)
+			out.Failed = true
+		case EndYield:
+			t.yieldAgain(now, &out)
+		}
+		return out
+	}
+	lines := CompleteLines(raw, end == EndWhole)
+	out.Lines = countLines(lines)
+	switch {
+	case end == EndWhole || end == EndLimit || out.Lines > 0:
+		out.Added = t.TakeTerms(lines, now)
+	case end == EndTimeout:
+		t.Failed(step, now)
+		out.Failed = true
+	default:
+		t.yieldAgain(now, &out)
+	}
+	return out
+}
+
+func (t *Topic) yieldAgain(now time.Time, out *ServiceOutcome) {
+	t.tries++
+	if t.tries >= ServiceTries {
+		t.Counts.GaveUp++
+		t.finish(now)
+		out.GaveUp = true
+		return
+	}
+	out.Again = true
 }
 
 func NewTopic(target string) *Topic { return &Topic{target: target} }
@@ -198,6 +283,7 @@ func (t *Topic) TakeTopic(raw string, now time.Time) bool {
 	}
 	t.text = strings.TrimSpace(strings.TrimPrefix(line, "Topic: "))
 	t.updates++
+	t.tries = 0
 	if t.noTerms {
 		t.finish(now)
 		return true
@@ -217,6 +303,7 @@ func (t *Topic) Failed(step Step, now time.Time) {
 
 func (t *Topic) finish(now time.Time) {
 	t.pending = StepNone
+	t.tries = 0
 	if t.asked.IsZero() {
 		t.asked = now
 	}
