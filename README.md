@@ -212,7 +212,7 @@ The result lands in `dist/`:
 | `llama-server-gpu.exe` | translation of subtitles on the graphics card (llama.cpp with Vulkan), static build |
 | `fast-translator.exe` | the light translation engine for subtitles (bergamot-translator), static build, talks to the program over its standard input and output |
 | `punct-engine.exe` | finds where a sentence ends in the words heard, with the Horizon punctuation model; for now only the `-punctcheck` check mode starts it, and it talks to the program over its standard input and output |
-| `onnxruntime.dll` | ONNX Runtime 1.20.1, which `punct-engine.exe` runs the model with |
+| `onnxruntime.dll` | ONNX Runtime 1.20.1, which `punct-engine.exe` runs the model with; it needs the Microsoft Visual C++ runtime (`VCRUNTIME140.dll`, `VCRUNTIME140_1.dll`, `MSVCP140.dll`, `MSVCP140_1.dll`) installed in Windows, and without it the engine says which file is missing |
 | `holdtotype-setup.exe` | installer (Go + WebView2, payload embedded) |
 | `models/ggml-*.bin` | the Whisper model |
 | `models/gigaam-v3/` | the GigaAM v3 model: encoder, decoder, joiner, tokens |
@@ -294,7 +294,7 @@ Everything shipped in the archive, and every model the app offers to download ex
 | The translation models for subtitles: Gemma 3 4B and TranslateGemma 4B | downloaded on request from Hugging Face, each at a pinned revision, and checked against their checksums | their own [terms of use](https://ai.google.dev/gemma/terms) |
 | [bergamot-translator](https://github.com/browsermt/bergamot-translator) with [Marian](https://github.com/browsermt/marian-dev) | `fast-translator.exe` — the light translation engine | MPL 2.0 (bergamot-translator), MIT (Marian) |
 | [Language packs of the light engine](https://github.com/mozilla/firefox-translations-models) | English to and from German, Spanish, French, Italian, Polish, Ukrainian and Russian, downloaded on request from Mozilla's model registry at pinned addresses and checked against their checksums | MPL 2.0 |
-| [ONNX Runtime](https://github.com/microsoft/onnxruntime) | runs the models inside sherpa-onnx, and as `onnxruntime.dll` the sentence end model of `punct-engine.exe` | MIT |
+| [ONNX Runtime](https://onnxruntime.ai) | runs the models inside sherpa-onnx, and as `onnxruntime.dll` the sentence end model of `punct-engine.exe` | MIT |
 | [IBM Plex](https://github.com/IBM/plex) | Mono, the one face every design is set in, carried inside the exe | SIL Open Font License 1.1 |
 | Whisper models — Tiny, Base, Small, Medium, Turbo | [ggerganov/whisper.cpp](https://huggingface.co/ggerganov/whisper.cpp) on Hugging Face | MIT |
 | [GigaAM v3](https://github.com/salute-developers/GigaAM) | a single-language model, converted for sherpa-onnx | MIT |
