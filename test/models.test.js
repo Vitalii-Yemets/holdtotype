@@ -22,6 +22,24 @@ const CATALOG = [
   { id: "local:my-model", name: "my-model", desc: "found in the models folder", size: 900, engine: "whisper", langs: "*", custom: true },
 ];
 
+const TRM = [
+  { id: "gemma-4-e4b", name: "Gemma 4 E4B", file: "gemma-4-E4B_q4_0-it.gguf", size: 4916, vram: 3015, card_need: 4096, service: true, rec: true, accuracy: 5, speed: 5, license: "Apache 2.0" },
+  { id: "gemma-3-4b", name: "Gemma 3 4B", file: "gemma-3-4b-it-Q4_K_M.gguf", size: 2374, vram: 3022, card_need: 4096, service: true, rec: false, accuracy: 3, speed: 5, license: "Gemma" },
+  { id: "translategemma-4b", name: "TranslateGemma 4B", file: "translategemma-4b-it-Q4_K_M.gguf", size: 2374, vram: 3022, card_need: 4096, service: false, rec: false, accuracy: 4, speed: 5, license: "Gemma" },
+  { id: "eurollm-9b", name: "EuroLLM-9B", file: "EuroLLM-9B-Instruct-2512.Q4_K_M.gguf", size: 5324, vram: 5828, card_need: 8192, service: true, rec: false, accuracy: 4, speed: 4, license: "Apache 2.0" },
+];
+
+function trmView(S) {
+  const st = (id) => (id === "gemma-3-4b" ? S.trm : (S.trms[id] = S.trms[id] || { state: "absent" }));
+  const card = S.card === undefined ? 8192 : S.card;
+  const rows = TRM.map((r) => Object.assign({}, r, { state: st(r.id).state, pct: st(r.id).pct || 0, err: st(r.id).err || "", fits: card >= r.card_need - 256, own: false, running: !!st(r.id).running }));
+  S.llm.forEach((f) => rows.push({ id: "own:" + f.file, name: f.file.replace(/\.gguf$/, ""), file: f.file, size: f.size, vram: f.size + 1000, card_need: f.size + 1256, service: false, rec: false, accuracy: 0, speed: 0, own: true, state: "ready", pct: 0, err: "", fits: card >= f.size + 1000, running: false, license: "" }));
+  const chosen = rows.find((r) => r.id === S.chosen && r.state === "ready") || rows.find((r) => r.rec && r.state === "ready") || rows.find((r) => !r.own && r.state === "ready");
+  rows.forEach((r) => { r.chosen = !!chosen && r.id === chosen.id; });
+  const shown = chosen || TRM.map((r) => rows.find((x) => x.id === r.id)).find((r) => r.id === S.chosen) || rows[0];
+  return { id: shown.id, name: shown.name, state: shown.state, pct: shown.pct, err: shown.err, size: shown.size, fits: shown.fits, card: "", reason: shown.fits ? "" : "small", card_mb: card, need_mb: shown.card_need, down: "", running: shown.running, models: rows };
+}
+
 function pageFor(lang, cfgPatch) {
   let html = fs.readFileSync(path.join(__dirname, lang === "en" ? "page.html" : "page-" + lang + ".html"), "utf8");
   const at = html.indexOf("const CFG = ") + "const CFG = ".length;
@@ -41,6 +59,7 @@ function open(lang, cfgPatch, setup) {
     llm: [{ file: "a.gguf", size: 1066, need: 2743, active: true, loaded: true }, { file: "b.gguf", size: 1950, need: 3775, active: false, loaded: false }],
     llmDl: [],
     trm: { name: "Gemma 3 4B", state: "ready", size: 2374, fits: true, running: false, pct: 0 },
+    trms: {}, chosen: "",
     calls: [], saves: [], searches: [],
   };
   if (setup) setup(S);
@@ -63,9 +82,19 @@ function open(lang, cfgPatch, setup) {
         appLLMSearch: async (q) => { S.searches.push(q); return json({ repos: [{ id: "org/Repo-GGUF", downloads: 1234, updated: "2026-01-01" }] }); },
         appLLMFiles: async () => json({ files: [{ file: "c.gguf", size: 900, fit: "ok", need: 2550 }, { file: "a.gguf", size: 1066, fit: "ok", need: 2743 }] }),
         appLLMDlFile: async (repo, file, size) => { S.calls.push("llmdl:" + file); S.llmDl.push({ file, pct: 10, err: "" }); },
-        appTrModel: async (action) => { S.calls.push("trm:" + action); if (action === "delete") S.trm.state = "absent"; if (action === "download") S.trm.state = "downloading"; return ""; },
-        appSave: async (f) => { S.saves.push(JSON.parse(f)); return json({ ok: true, severity: "ok", message: "Saved" }); },
-        appState: async () => json({ subtitles: { phase: "off" }, subs_tr: { choice: "quality", missing: "", pair: "", model: S.trm, fast: { exe: true, pairs: [], offer: [], used: 0 } },
+        appTrModel: async (action) => {
+          S.calls.push("trm:" + action);
+          const at = action.indexOf(":");
+          const act = at < 0 ? action : action.slice(0, at);
+          const id = (at < 0 ? "" : action.slice(at + 1)) || "gemma-3-4b";
+          const s = id === "gemma-3-4b" ? S.trm : (S.trms[id] = S.trms[id] || { state: "absent" });
+          if (act === "delete") s.state = "absent";
+          if (act === "download") s.state = "downloading";
+          if (act === "cancel") s.state = "absent";
+          return "";
+        },
+        appSave: async (f) => { const v = JSON.parse(f); S.saves.push(v); if (typeof v.subtitles_model === "string") S.chosen = v.subtitles_model; return json({ ok: true, severity: "ok", message: "Saved" }); },
+        appState: async () => json({ subtitles: { phase: "off" }, subs_tr: { choice: "quality", missing: "", pair: "", model: trmView(S), fast: { exe: true, pairs: [], offer: [], used: 0 } },
           subs_place: { position: "bottom", custom: {} }, hotkey: "ctrl+win", mic: "Mic", engine: "", llm: "a.gguf", ram: "", last: "", last_meta: "", ready: S.ready !== false, status: S.status || "Ready",
           status_line: S.statusLine || "Ready", active_model: "Nemotron 3.5", active_state: "ready", active_lang: "RU", assigned: [], installed_models: S.installedModels || [], loaded_now: Object.keys(S.loaded).length ? "Nemotron 3.5" : "", week_line: "",
           llm_ok: true, mic_ok: true, last_at: 0, last_app: "", remote: false, backend_err: "", post_err: "", stt_broken: false, whisper_now: false, enabled: true, autostart: false,
@@ -114,7 +143,7 @@ function open(lang, cfgPatch, setup) {
   check("four blocks in their order", [...d.querySelectorAll("#p-library > .card")].map((c) => c.id), ["lib_have", "lib_get", "lib_hf", "lib_own"]);
   check("no lead line above the blocks", d.querySelector("#p-library > .hint"), null);
   check("the installed models come in their order: recognition by name, editors, the translation model", rows("lib_have_list").map((r) => r.dataset.key),
-    ["asr:gigaam-v3", "asr:medium-q5_0", "asr:local:my-model", "asr:nemotron-3.5", "asr:small", "llm:a.gguf", "llm:b.gguf", "trm"]);
+    ["asr:gigaam-v3", "asr:medium-q5_0", "asr:local:my-model", "asr:nemotron-3.5", "asr:small", "llm:a.gguf", "llm:b.gguf", "trm:gemma-3-4b"]);
   check("the total counts the models and their size", d.getElementById("lib_have_total").textContent, "8 models · 8.0 GB");
   check("a recognition model names the languages it dictates", use("asr:gigaam-v3"), "used for dictation: русский");
   check("auto-detect, the languages that follow it and the subtitles are named", use("asr:nemotron-3.5"), "used for dictation: auto-detect, en, es, fr, it, pl, uk, and for subtitles");
@@ -124,15 +153,15 @@ function open(lang, cfgPatch, setup) {
   check("the plate names the place in its tip", (row("asr:medium-q5_0").querySelector(".jump").dataset.tip || row("asr:medium-q5_0").querySelector(".jump").title), "The “Languages” tab, the “Which model serves which language” block");
   check("the editor in use is named for post-processing", use("llm:a.gguf"), "used for post-processing");
   check("an unused editor leads to post-processing", row("llm:b.gguf").querySelector(".libturn").textContent, "turn on: Post-processing →");
-  check("the translation model in use is named for translation", use("trm"), "used for translating subtitles");
+  check("the translation model in use is named for translation", use("trm:gemma-3-4b"), "used for translating subtitles");
   check("recognition models carry the info badge, accuracy and speed", [!!row("asr:gigaam-v3").querySelector(".pinfo"), row("asr:gigaam-v3").querySelectorAll(".mbar").length], [true, 2]);
   check("a hand-copied model has no bars", row("asr:local:my-model").querySelectorAll(".mbar").length, 0);
-  check("editors and the translation model have no bars either", [row("llm:a.gguf").querySelectorAll(".mbar").length, row("trm").querySelectorAll(".mbar").length], [0, 0]);
+  check("editors and the translation model have no bars either", [row("llm:a.gguf").querySelectorAll(".mbar").length, row("trm:gemma-3-4b").querySelectorAll(".mbar").length], [0, 0]);
   check("the model in memory wears the chip and the unload icon", [row("asr:nemotron-3.5").querySelector(".pchip").textContent, !!row("asr:nemotron-3.5").querySelector('button[data-lib="unload"]')], ["in memory", true]);
   check("a model not in memory has neither", [!!row("asr:small").querySelector(".pchip"), !!row("asr:small").querySelector('button[data-lib="unload"]')], [false, false]);
   check("every installed model has its size and a cross", rows("lib_have_list").every((r) => r.querySelector(".psize").textContent && r.querySelector('button[data-lib="del"]')), true);
   check("the editor in memory says how much memory it takes", row("llm:a.gguf").querySelector(".pram").textContent, "≈2.7 GB RAM");
-  check("the translation model has its plates and the terms plate", [...row("trm").querySelectorAll(".libl2 > *")].map((e) => e.textContent), ["graphics card with 4 GB of its own memory or more", "Terms of use ↗"]);
+  check("the translation model has its plates and the terms plate", [...row("trm:gemma-3-4b").querySelectorAll(".libl2 > *")].map((e) => e.textContent), ["graphics card memory: 3 GB", "fits your graphics card", "Terms of use ↗"]);
   const checkRow = d.getElementById("mcheck").closest(".row");
   check("the check row closes the block", [checkRow.querySelector("label").firstChild.textContent, [...d.querySelectorAll("#lib_have > .row")].pop() === checkRow], ["S_MCHECK", true]);
   const pageCss = [...d.querySelectorAll("style")].map((s) => s.textContent).join(" ");
@@ -151,8 +180,8 @@ function open(lang, cfgPatch, setup) {
   check("and never as 0", lastSave().models_idle_minutes, 0);
   check("the search finds the row", w.searchMatches("s_idle_unload").some((el) => el === idleRow), true);
 
-  check("the models to download, by name", rows("lib_get_list").map((r) => r.dataset.key), ["asr:base", "asr:moonshine-uk", "asr:parakeet-v3"]);
-  check("the hint says what they are for", d.getElementById("lib_get_hint").textContent, "For dictation and subtitles — models that turn speech into text. A downloaded model moves to “Installed models”.");
+  check("the models to download, by name", rows("lib_get_list").map((r) => r.dataset.key), ["asr:base", "asr:moonshine-uk", "asr:parakeet-v3", "trm:gemma-4-e4b", "trm:translategemma-4b", "trm:eurollm-9b"]);
+  check("the hint says what they are for", d.getElementById("lib_get_hint").textContent, "For dictation and subtitles — models that turn speech into text. For translating subtitles — translation models, we recommend Gemma 4 E4B. A downloaded model moves to “Installed models”.");
   check("a model to download shows its description, size and the arrow", [use("asr:base"), row("asr:base").querySelector(".psize").textContent, !!row("asr:base").querySelector('button[data-lib="dl"]')], ["fast", "142 MB", true]);
   check("the licence-bound one offers its own link and explains why", [!!row("asr:moonshine-uk").querySelector('button[data-lib="dl"]'), row("asr:moonshine-uk").querySelector('button[data-lib="link"]').textContent.trim().startsWith("Download yourself"), !!row("asr:moonshine-uk").querySelector(".pdesc")], [false, true, true]);
 
@@ -252,16 +281,16 @@ function open(lang, cfgPatch, setup) {
   check("with no editor left the card says so and leads to the search", [d.querySelector("#llm_sum .postnone .nonote").textContent, d.querySelector("#llm_sum .postnone .jump").textContent], ["There is no editor model on this computer.", "Models: Search on Hugging Face →"]);
 
   tab("library"); await refresh();
-  row("trm").querySelector('button[data-lib="del"]').click(); await sleep(150);
+  row("trm:gemma-3-4b").querySelector('button[data-lib="del"]').click(); await sleep(150);
   check("deleting the translation model in use names its use", modalText(), "The “Gemma 3 4B” model is used for translating subtitles. Delete it? Another model will have to be chosen there.");
   await answer(true); await refresh(); await sleep(200);
-  check("the translation model goes to the ones to download", [!!d.querySelector('#lib_get_list .librow[data-key="trm"]'), use("trm")], [true, "for translating subtitles"]);
-  check("and the hint names it", d.getElementById("lib_get_hint").textContent.includes("For translating subtitles — Gemma 3 4B."), true);
+  check("the translation model goes to the ones to download", [!!d.querySelector('#lib_get_list .librow[data-key="trm:gemma-3-4b"]'), use("trm:gemma-3-4b")], [true, "for translating subtitles: the earlier model"]);
+  check("and the hint names the recommended one", d.getElementById("lib_get_hint").textContent.includes("For translating subtitles — translation models, we recommend Gemma 4 E4B."), true);
   tab("subs"); await sleep(200);
-  check("the quality card says it is not installed", d.getElementById("subs_q_size").textContent, "not installed · 2.3 GB");
+  check("the quality card says the recommended one is not installed", d.getElementById("subs_q_size").textContent, "not installed · 4.8 GB");
   tab("library"); await refresh();
-  row("trm").querySelector('button[data-lib="dl"]').click(); await sleep(200);
-  check("the arrow downloads the translation model", S.calls.includes("trm:download"), true);
+  row("trm:gemma-3-4b").querySelector('button[data-lib="dl"]').click(); await sleep(200);
+  check("the arrow downloads that translation model", S.calls.includes("trm:download:gemma-3-4b"), true);
 
   const q = d.getElementById("hf_q");
   check("before a search only the field is shown", ["hf_ramline", "hf_fitline", "hf_results"].map((id) => d.getElementById(id).style.display), ["none", "none", "none"]);
@@ -359,7 +388,7 @@ function open(lang, cfgPatch, setup) {
   rw.S.llm = rw.S.llm.slice(0, 1); rw.S.trm.state = "absent"; await rw.refreshLLM(); await rw.refreshState(); await sleep(150);
   check("Russian: the total follows what is left", rd.getElementById("lib_have_total").textContent, "6 моделей · 3.8 ГБ");
   check("Russian: plural forms", [1, 2, 5, 21, 22].map((n) => rw.pluralCount(n)), ["1 модель", "2 модели", "5 моделей", "21 модель", "22 модели"]);
-  check("Russian: the missing one is not installed in words", rrow("trm").querySelector(".lmodel").textContent, "для перевода субтитров");
+  check("Russian: the missing one is not installed in words", rrow("trm:gemma-3-4b").querySelector(".lmodel").textContent, "для перевода субтитров: прежняя модель");
   check("English: plural forms", [1, 2].map((n) => w.pluralCount(n)), ["1 model", "2 models"]);
   const memLine = async (win, n) => { win.S.installedModels = Array.from({ length: n }, (_, i) => "m" + i); await win.refreshState(); await sleep(120); return win.document.getElementById("state_mem_sub").textContent; };
   check("Russian: the memory line on Status counts the models on disk with the right form", [await memLine(rw, 1), await memLine(rw, 2), await memLine(rw, 5), await memLine(rw, 21)].map((t) => t.split("·")[1].trim().split(",")[0]),
@@ -471,6 +500,107 @@ function open(lang, cfgPatch, setup) {
     check("save switch " + keep + ": both switches still show it", [sd.getElementById("subtitles_save").checked, sd.getElementById("st_save_on").checked], [keep, keep]);
     check("save switch " + keep + ": touching every control raised no JavaScript error", sweepErrors, []);
     sdom.window.close();
+  }
+
+  {
+    const quality = { subtitles_translate_on: true, subtitles_translator: "quality", subtitles_language: "en", llm_model: "a.gguf" };
+    const view = async (setup, cfg) => {
+      const v = open("en", Object.assign({}, quality, cfg || {}), setup);
+      const vw = v.window, vd = v.window.document;
+      await sleep(700);
+      vd.querySelector('.nav[data-p="subs"]').click();
+      await vw.refreshModels(); await vw.refreshLLM(); await vw.refreshState(); await sleep(200);
+      return { v, vw, vd, S: vw.S };
+    };
+    const cards = (vd) => [...vd.querySelectorAll("#subs_q_models .pcard")];
+    const card = (vd, id) => vd.querySelector('#subs_q_models .pcard[data-id="' + id + '"]');
+    const sw = (vd, id) => card(vd, id).querySelector("input.psw");
+    const texts = (el, sel) => [...el.querySelectorAll(sel)].map((e) => e.textContent);
+
+    let t = await view((S) => { S.trms["gemma-4-e4b"] = { state: "ready" }; S.trms["translategemma-4b"] = { state: "ready" }; });
+    let vd = t.vd;
+    const quals = [...vd.querySelectorAll("#subs_src_quality > .hint")].map((e) => e.textContent);
+    check("models: the quality card says the topic and the terms are found by the translator itself", quals, ["S_SUBS_Q_HINT", "S_SUBS_Q_AUTO"]);
+    check("models: the old plates of the card are gone", [!!vd.getElementById("subs_q_name"), !!vd.getElementById("subs_trm_terms"), !!vd.getElementById("subs_q_note"), vd.querySelectorAll("#subs_src_quality .sum .pmt").length], [false, false, false, 0]);
+    check("models: the downloaded models and the own files are cards of the Languages scheme", cards(vd).map((c) => c.dataset.id), ["gemma-4-e4b", "gemma-3-4b", "translategemma-4b", "own:a.gguf", "own:b.gguf"]);
+    const g4 = card(vd, "gemma-4-e4b");
+    check("models: the recommended one is chosen: the card is current, its switch on, a tick and the chip", [g4.classList.contains("cur"), sw(vd, "gemma-4-e4b").checked, !!g4.querySelector(".pcur"), texts(g4, ".pchip")], [true, true, true, ["recommended"]]);
+    check("models: a card has the parts of the Languages cards", ["ptop", "pname", "pnm", "pinfo", "mbars", "pmeta", "pact"].map((c) => !!g4.querySelector("." + c)), [true, true, true, true, true, true, true]);
+    check("models: its tip, bars, plates and size", [g4.querySelector(".pinfo").dataset.tip, g4.querySelectorAll(".mbar").length, texts(g4, ".pmeta .pmt"), g4.querySelector(".pram").textContent], ["more precise with terms", 2, ["graphics card memory: 3 GB"], "4.8 GB on disk"]);
+    const tg = card(vd, "translategemma-4b");
+    check("models: TranslateGemma says it ignores the topic", [tg.querySelector(".pinfo").dataset.tip, texts(tg, ".pmeta .pmt")], ["the smoothest text; ignores the topic of the conversation", ["graphics card memory: 3 GB", "ignores the topic of the conversation"]]);
+    const own = card(vd, "own:a.gguf");
+    check("models: an own model has no bars and no memory plate, and says it is not checked", [own.querySelector(".pinfo").dataset.tip, own.querySelectorAll(".mbar").length, texts(own, ".pmeta .pmt"), own.querySelector(".pdesc").textContent], ["the file a.gguf from the models folder", 0, [], "not checked: the translation may not work"]);
+    check("models: under the cards a line leads to the models to download", [vd.querySelector("#subs_q_models .jumpline span").textContent, vd.querySelector("#subs_q_models .jumpline .jump").textContent, vd.querySelector("#subs_q_models .jumpline .jump").dataset.jump], ["Download another model:", "Models: Models to download →", "library:lib_get"]);
+    const saves = t.S.saves.length;
+    sw(vd, "gemma-4-e4b").checked = false; sw(vd, "gemma-4-e4b").dispatchEvent(new t.vw.Event("change", { bubbles: true })); await sleep(300);
+    check("models: the chosen one cannot be switched off", [sw(vd, "gemma-4-e4b").checked, t.S.saves.length], [true, saves]);
+    sw(vd, "gemma-3-4b").checked = true; sw(vd, "gemma-3-4b").dispatchEvent(new t.vw.Event("change", { bubbles: true })); await sleep(400);
+    check("models: switching on another one saves subtitles_model", t.S.saves[t.S.saves.length - 1].subtitles_model, "gemma-3-4b");
+    await t.vw.refreshState(); await sleep(200);
+    check("models: and it becomes the only one on", cards(vd).filter((c) => c.querySelector("input.psw").checked).map((c) => c.dataset.id), ["gemma-3-4b"]);
+    sw(vd, "own:a.gguf").checked = true; sw(vd, "own:a.gguf").dispatchEvent(new t.vw.Event("change", { bubbles: true })); await sleep(400);
+    await t.vw.refreshState(); await sleep(200);
+    check("models: an own model can be chosen too", [t.S.saves[t.S.saves.length - 1].subtitles_model, sw(vd, "own:a.gguf").checked], ["own:a.gguf", true]);
+    vd.querySelector('.nav[data-p="library"]').click(); await sleep(200);
+    const lrow = (k) => vd.querySelector('#p-library .librow[data-key="' + k + '"]');
+    check("models: the own model chosen for translation says so on Models", lrow("llm:a.gguf").querySelector(".lmodel").textContent, "used for post-processing; used for translating subtitles");
+    lrow("llm:a.gguf").querySelector('button[data-lib="del"]').click(); await sleep(150);
+    check("models: and deleting it names the translation", vd.querySelector(".modal p").textContent, "The “a.gguf” model is used for post-processing; used for translating subtitles. Delete it? Another model will have to be chosen there.");
+    vd.querySelector(".modal .btn.ghost").click(); await sleep(300);
+    t.v.window.close();
+
+    t = await view((S) => { S.trms["gemma-4-e4b"] = { state: "ready" }; S.trms["eurollm-9b"] = { state: "downloading", pct: 37 }; S.llm = []; });
+    vd = t.vd;
+    const eu = card(vd, "eurollm-9b");
+    check("models: a model being downloaded is a card with its percent, a cross and a switch that cannot be used", [eu.querySelector(".mpct").textContent, !!eu.querySelector("button[data-a=cancel]"), sw(vd, "eurollm-9b").disabled], ["37%", true, true]);
+    eu.querySelector("button[data-a=cancel]").click(); await sleep(200);
+    check("models: the cross cancels that download", t.S.calls.includes("trm:cancel:eurollm-9b"), true);
+    t.v.window.close();
+
+    t = await view((S) => { S.card = 4096; S.trms["gemma-4-e4b"] = { state: "ready" }; S.trms["eurollm-9b"] = { state: "ready" }; S.trm.state = "absent"; S.llm = []; });
+    vd = t.vd;
+    const big = card(vd, "eurollm-9b");
+    check("models: a model that does not fit has a switch that cannot be used and says why", [sw(vd, "eurollm-9b").disabled, big.querySelector(".pdesc").textContent], [true, "does not fit in the graphics card memory: 8 GB are needed, yours has 4 GB"]);
+    vd.querySelector('.nav[data-p="library"]').click(); await sleep(200);
+    const lr = (k) => vd.querySelector('#p-library .librow[data-key="' + k + '"]');
+    check("models: on Models the installed one that does not fit says so too", texts(lr("trm:eurollm-9b"), ".libl2 > *"), ["graphics card memory: 6 GB", "does not fit: your graphics card has 4 GB", "Terms of use ↗"]);
+    check("models: and it does not lead to the subtitles card, where it cannot be switched on", [lr("trm:eurollm-9b").querySelector(".libidle").textContent, !!lr("trm:eurollm-9b").querySelector(".libturn")], ["not in use", false]);
+    check("models: a model to download that fits has the arrow, one that does not has none", [!!lr("trm:gemma-3-4b").querySelector('button[data-lib="dl"]'), lr("trm:gemma-3-4b").parentNode.id], [true, "lib_get_list"]);
+    t.v.window.close();
+
+    t = await view((S) => { S.trm.state = "absent"; S.llm = []; });
+    vd = t.vd;
+    check("models: with no model the card says so and offers the recommended one", [vd.querySelector("#subs_q_models .postnone .nonote").textContent, vd.getElementById("subs_q_get").textContent, vd.querySelector("#subs_q_models .jumpline .jump").textContent], ["There is no translation model yet.", "Download Gemma 4 E4B · 4.8 GB", "Models: Models to download →"]);
+    vd.querySelector('.nav[data-p="library"]').click(); await sleep(200);
+    const gl = (k) => vd.querySelector('#lib_get_list .librow[data-key="' + k + '"]');
+    check("models: every translation model is to download, each with its use, plates and size", ["gemma-4-e4b", "gemma-3-4b", "translategemma-4b", "eurollm-9b"].map((id) => [gl("trm:" + id).querySelector(".lmodel").textContent, texts(gl("trm:" + id), ".libl2 > *"), gl("trm:" + id).querySelector(".psize").textContent]), [
+      ["for translating subtitles: more precise with terms", ["recommended", "graphics card memory: 3 GB", "fits your graphics card", "Terms of use ↗"], "4.8 GB"],
+      ["for translating subtitles: the earlier model", ["graphics card memory: 3 GB", "fits your graphics card", "Terms of use ↗"], "2.3 GB"],
+      ["for translating subtitles: the smoothest text; ignores the topic of the conversation", ["graphics card memory: 3 GB", "fits your graphics card", "Terms of use ↗"], "2.3 GB"],
+      ["for translating subtitles: European languages; needs a graphics card with 8 GB or more", ["graphics card memory: 6 GB", "fits your graphics card", "Terms of use ↗"], "5.2 GB"]]);
+    check("models: the tip of a row to download names the model", gl("trm:gemma-4-e4b").querySelector(".pinfo").dataset.tip, "a translation model on the graphics card: more precise with terms");
+    const before = t.S.calls.length;
+    for (const id of ["gemma-4-e4b", "gemma-3-4b", "translategemma-4b", "eurollm-9b"]) { gl("trm:" + id).querySelector("[data-terms]").click(); await sleep(50); }
+    check("models: each terms plate opens the terms of its own model", t.S.calls.slice(before), ["trm:terms:gemma-4-e4b", "trm:terms:gemma-3-4b", "trm:terms:translategemma-4b", "trm:terms:eurollm-9b"]);
+    vd.querySelector('.nav[data-p="subs"]').click(); await sleep(200);
+    vd.getElementById("subs_q_get").click(); await sleep(200);
+    check("models: the button downloads the recommended model", t.S.calls.includes("trm:download:gemma-4-e4b"), true);
+    await t.vw.refreshState(); await sleep(200);
+    check("models: and it becomes a card with its percent", [cards(vd).map((c) => c.dataset.id), sw(vd, "gemma-4-e4b").disabled], [["gemma-4-e4b"], true]);
+    t.v.window.close();
+
+    t = await view((S) => { S.trms["gemma-4-e4b"] = { state: "ready" }; S.llm = []; });
+    vd = t.vd;
+    vd.querySelector('.nav[data-p="library"]').click(); await sleep(200);
+    const hr = (k) => vd.querySelector('#lib_have_list .librow[data-key="' + k + '"]');
+    check("models: the chosen installed one is used for translating, the other is not and leads to the subtitles card", [hr("trm:gemma-4-e4b").querySelector(".lmodel").textContent, hr("trm:gemma-3-4b").querySelector(".libidle").textContent, hr("trm:gemma-3-4b").querySelector(".libturn .jump").textContent], ["used for translating subtitles", "not in use", "Subtitles & translation →"]);
+    check("models: the total counts every installed translation model", vd.getElementById("lib_have_total").textContent, "7 models · 9.8 GB");
+    hr("trm:gemma-4-e4b").querySelector('button[data-lib="del"]').click(); await sleep(150);
+    check("models: deleting the one in use names its use", vd.querySelector(".modal p").textContent, "The “Gemma 4 E4B” model is used for translating subtitles. Delete it? Another model will have to be chosen there.");
+    vd.querySelector(".modal .btn.yes").click(); await sleep(300);
+    check("models: and it is deleted by its id", t.S.calls.includes("trm:delete:gemma-4-e4b"), true);
+    t.v.window.close();
   }
 
   check("no JavaScript errors", errors, []);

@@ -1987,7 +1987,14 @@ function check(name, actual, expected) {
   check("off: a click on a card chooses nothing", [w.saveCalls, sv("subs_src_api").classList.contains("on")], [savesOff, false]);
 
   const card = "NVIDIA GeForce RTX 3070 Ti Laptop GPU";
-  const model = (o) => ({ name: "Gemma 3 4B", state: "absent", pct: 0, err: "", size: 2374, fits: true, card, reason: "", card_mb: 8017, need_mb: 4096, down: "", running: false, ...o });
+  const model = (o) => {
+    const m = { id: "gemma-3-4b", name: "Gemma 3 4B", state: "absent", pct: 0, err: "", size: 2374, fits: true, card, reason: "", card_mb: 8017, need_mb: 4096, down: "", running: false, ...o };
+    m.models = [
+      { id: "gemma-4-e4b", name: "Gemma 4 E4B", file: "gemma-4-E4B_q4_0-it.gguf", state: "absent", pct: 0, err: "", size: 4916, vram: 3015, card_need: 4096, fits: m.fits, service: true, rec: true, accuracy: 5, speed: 5, own: false, chosen: false, running: false },
+      { id: "gemma-3-4b", name: "Gemma 3 4B", file: "gemma-3-4b-it-Q4_K_M.gguf", state: m.state, pct: m.pct, err: m.err, size: 2374, vram: 3022, card_need: 4096, fits: m.fits, service: true, rec: false, accuracy: 3, speed: 5, own: false, chosen: m.state === "ready", running: m.running },
+    ];
+    return m;
+  };
   const viaEn = (from, to) => from !== "en" && to !== "en";
   const pair = (from, to, o) => ({ key: from + "-" + to, from, to, packs: viaEn(from, to) ? [from + "-en", "en-" + to] : [from + "-" + to], size: viaEn(from, to) ? 74 : 37, need: 0, state: "ready", pct: 0, err: "", ...o });
   const fast = (o) => ({ exe: true, pairs: [], offer: [], used: 0, ...o });
@@ -2076,7 +2083,7 @@ function check(name, actual, expected) {
   await setTr("quality", "model", { model: model({ state: "checking" }) });
   check("warning: Quality while the model is checked", warnLine(), PL.subsmissmodelget);
   await setTr("quality", "start", { model: model({ state: "ready", down: "memory" }) });
-  check("warning: Quality that did not start", warnLine(), PL.subsmissstart);
+  check("warning: Quality that did not start, with the reason", warnLine(), PL.subsmissstart + " Did not start: not enough free memory on the graphics card");
   await setTr("quality", "", { model: model({ state: "ready" }) });
   check("warning: Quality ready says nothing", warnLine(), "");
   w.eval('subsWho = "fast"');
@@ -2149,7 +2156,7 @@ function check(name, actual, expected) {
   check("a click outside keeps it and redraws the marks", [!!dlg(), chosen(), w.lastSaveForm.subtitles_translator], [false, ["server"], "server"]);
   sv("subs_src_quality").click(); await sleep(250);
   d.querySelector(".modal .btn.yes").click(); await sleep(400);
-  check("Download switches and downloads", [chosen(), w.lastSaveForm.subtitles_translator, w.trCalls.slice(trBefore)], [["quality"], "quality", ["download"]]);
+  check("Download switches and downloads", [chosen(), w.lastSaveForm.subtitles_translator, w.trCalls.slice(trBefore)], [["quality"], "quality", ["download:gemma-3-4b"]]);
 
   await change(sv("subtitles_language"), "fr");
   await setTr("quality", "", { model: model({ state: "ready" }), fast: fast({ pairs: [pair("en", "de")], offer: [{ from: "fr", via: true, need: 37 }, { from: "es", via: true, need: 74 }] }) });
@@ -2180,41 +2187,34 @@ function check(name, actual, expected) {
     pct: sv("subs_q_pct").style.display === "none" ? "" : sv("subs_q_pct").textContent,
     state: sv("subs_q_state").style.display === "none" ? "" : sv("subs_q_state").textContent,
     x: sv("subs_q_x").style.display === "none" ? "" : sv("subs_q_x").dataset.tip,
-    note: sv("subs_q_note").style.display === "none" ? "" : sv("subs_q_note").textContent,
   });
+  const qcards = () => [...sv("subs_q_models").querySelectorAll(".pcard")].map((c) => [c.dataset.id, c.querySelector("input.psw").checked, c.querySelector("input.psw").disabled, (c.querySelector(".pdesc") || { textContent: "" }).textContent]);
   await setTr("fast", "", { model: model() });
-  check("Quality: the hint, the model name and the card it needs", [sv("subs_src_quality").querySelector(".hint").textContent, [...sv("subs_src_quality").querySelectorAll(".pmt")].map((e) => e.textContent)], ["S_SUBS_Q_HINT", ["Gemma 3 4B", "S_SUBS_Q_NEED"]]);
-  check("Quality has no download arrow of its own", !!sv("subs_q_dl"), false);
-  check("Quality absent: says in words that it is not installed, and its size", q(), { size: "not installed · 2.3 GB", pct: "", state: "", x: "", note: "" });
-  check("the state stands in the line of the plates, on the right", sv("subs_q_size").closest(".plates") === sv("subs_q_name").parentNode, true);
-  check("the terms are a plate beside the others", [sv("subs_trm_terms").className, sv("subs_trm_terms").textContent, sv("subs_trm_terms").parentNode.className], ["hfhome", "S_TERMS_PLATE", "plates"]);
-  await setTr("fast", "", { model: model({ state: "downloading", pct: 42 }) });
-  check("Quality downloading: the percent and a cross that cancels", q(), { size: "", pct: "42%", state: "", x: "Cancel", note: "" });
+  check("Quality: the hint and the line on the topic and the terms, then the models", [[...sv("subs_src_quality").querySelectorAll(":scope > .hint")].map((e) => e.textContent), !!sv("subs_q_models")], [["S_SUBS_Q_HINT", "S_SUBS_Q_AUTO"], true]);
+  check("Quality has no download arrow of its own and no old plates", [!!sv("subs_q_dl"), !!sv("subs_q_name"), !!sv("subs_trm_terms"), !!sv("subs_q_note")], [false, false, false, false]);
+  check("Quality absent: says in words that it is not installed, and its size", q(), { size: "not installed · 2.3 GB", pct: "", state: "", x: "" });
+  check("and with no model the card offers the recommended one", [sv("subs_q_models").querySelector(".nonote").textContent, sv("subs_q_get").textContent], ["There is no translation model yet.", "Download Gemma 4 E4B · 4.8 GB"]);
   let tc = w.trCalls.length;
+  sv("subs_q_get").click(); await sleep(150);
+  check("the button downloads it", w.trCalls.slice(tc), ["download:gemma-4-e4b"]);
+  check("the state stands on the right in its own line", !!sv("subs_q_size").closest(".plates .acts"), true);
+  await setTr("fast", "", { model: model({ state: "downloading", pct: 42 }) });
+  check("Quality downloading: the percent and a cross that cancels", q(), { size: "", pct: "42%", state: "", x: "Cancel" });
+  check("and the model being downloaded is a card that cannot be switched on", qcards(), [["gemma-3-4b", false, true, ""]]);
+  tc = w.trCalls.length;
   sv("subs_q_x").click(); await sleep(150);
-  check("the cross cancels at once", w.trCalls.slice(tc), ["cancel"]);
+  check("the cross cancels at once", w.trCalls.slice(tc), ["cancel:gemma-3-4b"]);
   await setTr("fast", "", { model: model({ state: "checking" }) });
-  check("Quality checking: words and no control", q(), { size: "", pct: "", state: "Checking the file…", x: "", note: "" });
+  check("Quality checking: words and no control", q(), { size: "", pct: "", state: "Checking the file…", x: "" });
   await setTr("fast", "", { model: model({ state: "ready" }) });
-  check("Quality ready: words and no cross — the model is deleted on the models tab", q(), { size: "", pct: "", state: "Ready", x: "", note: "" });
+  check("Quality ready: words and no cross — the model is deleted on the models tab", q(), { size: "", pct: "", state: "Ready", x: "" });
+  check("and the ready model is the chosen card", qcards(), [["gemma-3-4b", true, false, ""]]);
   await setTr("fast", "", { model: model({ state: "ready", running: true }) });
   check("Quality loaded says so", q().state, "Ready, loaded on the graphics card");
   await setTr("fast", "", { model: model({ state: "bad" }) });
-  check("Quality damaged: the hint says so and the cross removes the damaged file", q(), { size: "not installed · 2.3 GB", pct: "", state: "", x: PL.trmdel, note: "The file in the models folder is damaged or incomplete" });
-  await setTr("fast", "", { model: model({ state: "error", err: "the downloaded file does not match its checksum" }) });
-  check("Quality failed download: the reason", q(), { size: "not installed · 2.3 GB", pct: "", state: "", x: "", note: "Not downloaded: the downloaded file does not match its checksum" });
-  await setTr("fast", "", { model: model({ state: "ready", down: "memory" }) });
-  check("Quality that did not start: the reason in the hint", q().note, "Did not start: not enough free memory on the graphics card");
-  for (const [reason, text] of [["small", "This computer cannot run it: its graphics card has 2048 MB of its own memory, and 4 GB are needed."], ["integrated", "This computer cannot run it: it has only integrated graphics, which share the computer's memory."], ["none", "This computer cannot run it: Windows reports no graphics card."], ["unknown", "This computer cannot run it: this version of Windows does not describe its graphics card."]]) {
-    await setTr("fast", "", { model: model({ fits: false, reason, card_mb: 2048 }) });
-    check("Quality on a card that does not fit (" + reason + "): no size, the reason", [q().size, q().note], ["", text]);
-  }
-  tc = w.trCalls.length;
-  sv("subs_trm_terms").click(); await sleep(100);
-  check("the terms plate opens the terms", w.trCalls.slice(tc), ["terms"]);
-  tc = w.trCalls.length;
-  sv("subs_trm_terms").dispatchEvent(new w.KeyboardEvent("keydown", { key: "Enter", bubbles: true })); await sleep(100);
-  check("and so does Enter on it", w.trCalls.slice(tc), ["terms"]);
+  check("Quality damaged: the cross removes the damaged file", q(), { size: "not installed · 2.3 GB", pct: "", state: "", x: PL.trmdel });
+  await setTr("fast", "", { model: model({ fits: false, reason: "small", card_mb: 2048, state: "ready" }) });
+  check("Quality on a card that does not fit: no size, the card says why", [q().size, qcards()], ["", [["gemma-3-4b", true, true, "does not fit in the graphics card memory: 4 GB are needed, yours has 2 GB"]]]);
 
   const entries = () => [...sv("subs_f_pairs").querySelectorAll(".flang")].map((e) => [e.querySelector(".fname").textContent, e.dataset.tip]);
   await setTr("fast", "", { fast: fast() });

@@ -11,6 +11,7 @@ import (
 	"holdtotype/internal/preset"
 	"holdtotype/internal/replace"
 	"holdtotype/internal/subwin"
+	"holdtotype/internal/trmodel"
 	"io"
 	"log"
 	"net/http"
@@ -183,6 +184,7 @@ type settingsForm struct {
 	SubtitlesTranslateOn     *bool   `json:"subtitles_translate_on"`
 	SubtitlesTranslate       *string `json:"subtitles_translate"`
 	SubtitlesTranslator      *string `json:"subtitles_translator"`
+	SubtitlesModel           *string `json:"subtitles_model"`
 	SubtitlesTranslationOnly *bool   `json:"subtitles_translation_only"`
 }
 
@@ -1035,6 +1037,9 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	if f.SubtitlesTranslator != nil && subtitles.ValidTranslatorChoice(*f.SubtitlesTranslator) {
 		c.SubtitlesTranslator = *f.SubtitlesTranslator
 	}
+	if f.SubtitlesModel != nil && trmodel.ValidChoice(*f.SubtitlesModel) {
+		c.SubtitlesModel = *f.SubtitlesModel
+	}
 	llmChanged := false
 	if f.LLMModelFile != "" && !strings.ContainsAny(f.LLMModelFile, "/\\") && strings.HasSuffix(f.LLMModelFile, ".gguf") {
 		if _, err := os.Stat(filepath.Join("models", f.LLMModelFile)); err == nil {
@@ -1179,6 +1184,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"subtitles_translate_on":  cfg.SubtitlesTranslateOn,
 		"subtitles_translate":     cfg.SubtitlesTranslate,
 		"subtitles_translator":    cfg.SubtitlesTranslator,
+		"subtitles_model":         cfg.SubtitlesModel,
 		"translate_target":        cfg.TranslateTarget,
 		"translate_ask":           cfg.TranslateAsk,
 		"translate_ask_seconds":   cfg.TranslateAskSeconds,
@@ -1284,6 +1290,10 @@ func settingsHTML(cfg *Config, tab string) string {
 		"libusepost": "S_LIB_USE_POST", "libusetr": "S_LIB_USE_TR", "libunused": "S_LIB_UNUSED", "libturnon": "S_LIB_TURN_ON", "libfortr": "S_LIB_FOR_TR",
 		"libdelused": "S_LIB_DEL_USED", "libdellangs": "S_LIB_DEL_LANGS", "libdelnoauto": "S_LIB_DEL_NOAUTO", "libdelauto": "S_LIB_DEL_AUTO", "libdellast": "S_LIB_DEL_LAST",
 		"jumpblock": "S_JUMP_BLOCK", "jumpcard": "S_JUMP_CARD", "termsplate": "S_TERMS_PLATE", "hfclear": "S_HF_CLEAR", "hfhave": "S_HF_HAVE",
+		"trmauto": "S_SUBS_Q_AUTO", "trmfg4": "S_TRM_F_G4", "trmfg3": "S_TRM_F_G3", "trmftg": "S_TRM_F_TG", "trmfeu": "S_TRM_F_EU",
+		"trmowntip": "S_TRM_OWN_TIP", "trmownwarn": "S_TRM_OWN_WARN", "trmnofit": "S_TRM_NOFIT", "trmnofitnone": "S_TRM_NOFIT_NONE",
+		"trmvram": "S_TRM_VRAM", "trmnotopic": "S_TRM_NOTOPIC", "trmdisk": "S_TRM_DISK", "trmnone": "S_TRM_NONE", "trmget": "S_TRM_GET",
+		"trmlibtip": "S_TRM_LIB_TIP", "trmlibfor": "S_TRM_LIB_FOR", "trmrec": "S_TRM_REC", "trmfits": "S_TRM_FITS", "trmnofitlib": "S_TRM_NOFIT_LIB",
 		"langgetother": "S_LANG_GET_OTHER", "langnone": "S_LANG_NONE", "notinstsize": "S_NOT_INST_SIZE",
 		"postfind": "S_POST_FIND", "postdrop": "S_POST_DROP", "postnone": "S_POST_NONE", "postfindone": "S_POST_FIND_ONE",
 		"navlib": "S_NAV_LIBRARY", "navlangs": "S_NAV_MODELS", "navpost": "S_NAV_POST", "navsubs": "S_NAV_SUBS", "presets": "S_PRESETS",
@@ -2079,8 +2089,8 @@ input.srcpick:disabled,input.srvpick:disabled{opacity:.4;cursor:default}
 #subs_src_quality .plates{align-items:center}
 #subs_src_quality .plates .hfhome{margin-left:0}
 #subs_src_quality .plates .acts{margin-left:auto}
-#subs_src_quality.idle .plates .acts,#subs_src_quality.idle #subs_trm_terms{pointer-events:auto}
-#subs_trm_terms:focus-visible{outline:1px solid var(--green);outline-offset:2px}
+#subs_src_quality.idle .plates .acts{pointer-events:auto}
+#subs_q_models .postnone .acts{justify-content:flex-start;margin:0 0 9px}
 #subs_who_card .srccard.nofit{cursor:default}
 #subs_who_card .srccard.nofit:hover{border-color:var(--line)}
 #subs_who_card .srccard.idle .flang .iconbtn{pointer-events:auto}
@@ -2716,9 +2726,10 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
   <div class="srccard trcard idle" id="subs_src_quality" data-who="quality">
    <h3 class="srchead"><input type="radio" name="subssrc" class="srcpick" id="subs_pick_quality">{{S_SUBS_WHO_QUALITY}}</h3>
    <div class="hint">{{S_SUBS_Q_HINT}}</div>
-   <div class="hint" id="subs_q_note" style="display:none"></div>
+   <div class="hint">{{S_SUBS_Q_AUTO}}</div>
+   <div id="subs_q_models"></div>
    <div class="sum">
-    <div class="plates"><span class="pmt" id="subs_q_name"></span><span class="pmt">{{S_SUBS_Q_NEED}}</span><span class="hfhome" id="subs_trm_terms" role="link" tabindex="0" title="{{S_SUBS_TRM_TERMS}}">{{S_TERMS_PLATE}}</span><div class="acts"><span class="psize" id="subs_q_size" style="display:none"></span><span class="mpct" id="subs_q_pct" style="display:none"></span><span class="psize" id="subs_q_state" style="display:none"></span><button type="button" class="iconbtn danger" id="subs_q_x" style="display:none">&#10005;</button></div></div>
+    <div class="plates"><div class="acts"><span class="psize" id="subs_q_size" style="display:none"></span><span class="mpct" id="subs_q_pct" style="display:none"></span><span class="psize" id="subs_q_state" style="display:none"></span><button type="button" class="iconbtn danger" id="subs_q_x" style="display:none">&#10005;</button></div></div>
    </div>
   </div>
   <div class="srccard trcard idle" id="subs_src_fast" data-who="fast">
@@ -4285,19 +4296,80 @@ async function refreshSubsModel(){
 function trmWhy(code){
   return ({vulkan: L.trmwvulkan, device: L.trmwdevice, memory: L.trmwmemory, timeout: L.trmwtimeout, port: L.trmwport, exe: L.trmwexe})[code] || L.trmwcrash;
 }
-function trmCardText(m){
-  if(m.fits) return "";
-  if(m.reason === "small") return L.trmsmall.replace("%s", ()=>String(m.card_mb || 0));
-  if(m.reason === "integrated") return L.trmint;
-  if(m.reason === "unknown") return L.trmunknown;
-  return L.trmnocard;
-}
 let subsWho = CFG.subtitles_translator || "fast";
+let subsModelPick = CFG.subtitles_model || "";
 let subsArmed = "", subsArmTimer = 0;
 function subsOn(){ return !!(subsEl("subtitles_translate_on")||{}).checked; }
 function subsTo(){ return (subsEl("subtitles_translate")||{}).value || "en"; }
 function subsSpeech(){ return (subsEl("subtitles_language")||{}).value || "auto"; }
-function subsModel(){ return (subsTr && subsTr.model) || {state: "absent", size: 0, fits: false, name: ""}; }
+function subsModel(){ return (subsTr && subsTr.model) || {state: "absent", size: 0, fits: false, name: "", models: []}; }
+function trmRows(){ return subsModel().models || []; }
+function trmGB(mb){ return String(Math.round((mb || 0) / 1024)); }
+function trmFeat(r){
+  if(r.own) return fmtText(L.trmowntip, r.file);
+  return ({"gemma-4-e4b": L.trmfg4, "gemma-3-4b": L.trmfg3, "translategemma-4b": L.trmftg, "eurollm-9b": L.trmfeu})[r.id] || "";
+}
+function trmNoFit(r){
+  const card = subsModel().card_mb || 0;
+  return card ? fmtText(L.trmnofit, trmGB(r.card_need), trmGB(card)) : fmtText(L.trmnofitnone, trmGB(r.card_need));
+}
+function trmCard(r){
+  const cur = !!r.chosen;
+  const busy = r.state === "downloading" || r.state === "checking";
+  const off = busy || !r.fits;
+  const chip = r.rec ? '<span class="pchip">'+esc(L.recchip)+'</span>' : "";
+  const info = '<span class="pinfo" data-tip="'+esc(trmFeat(r))+'">i</span>';
+  const bars = r.own ? "" : modelBarsHtml(r);
+  let note = "";
+  if(r.own) note = '<span class="pdesc" style="color:var(--amber)">'+esc(L.trmownwarn)+'</span>';
+  else if(!r.fits) note = '<span class="pdesc" style="color:var(--amber)">'+esc(trmNoFit(r))+'</span>';
+  let meta = "";
+  if(!r.own) meta += '<span class="pmt">'+esc(fmtText(L.trmvram, trmGB(r.vram)))+'</span>';
+  if(!r.own && !r.service) meta += '<span class="pmt">'+esc(L.trmnotopic)+'</span>';
+  meta += '<span class="pram">'+esc(fmtText(L.trmdisk, sizeLabel(r.size || 0)))+'</span>';
+  let act = "";
+  if(busy) act = '<span class="mpct">'+(r.pct > 0 ? r.pct + "%" : "…")+'</span><button class="iconbtn danger" title="'+esc(L.dlcancel)+'" data-a="cancel" data-id="'+esc(r.id)+'">&#10005;</button>';
+  else if(cur) act = '<span class="pcur">&#10003;</span>';
+  const sw = '<input type="checkbox" class="psw"'+(cur ? ' checked' : '')+(off ? ' disabled' : '')+' data-sw="'+esc(r.id)+'">';
+  return '<div class="pcard'+(cur ? ' cur' : '')+'" data-id="'+esc(r.id)+'"><span class="ptop">'+sw+'<span class="pname"><span class="pnm">'+esc(r.name)+'</span>'+chip+info+'</span>'+bars+'</span>'+
+    note+'<span class="pmeta">'+meta+'<span class="pact">'+act+'</span></span></div>';
+}
+async function pickTrModel(id){
+  subsModelPick = id;
+  trmRows().forEach(r=>{ r.chosen = r.id === id; });
+  renderSubsTr();
+  await doSave();
+  refreshState();
+}
+function renderSubsModels(){
+  const box = subsEl("subs_q_models");
+  if(!box) return;
+  const rows = trmRows().filter(r=>r.own || r.state === "ready" || r.state === "downloading" || r.state === "checking");
+  const sig = JSON.stringify([rows.map(r=>[r.id, r.state, r.pct, r.chosen, r.fits]), subsModel().card_mb, L.recchip]);
+  if(box.dataset.sig === sig) return;
+  box.dataset.sig = sig;
+  const more = '<div class="hint jumpline"><span>'+esc(L.langgetother)+'</span>'+blockChip("lib_get", L.libget)+'</div>';
+  if(!rows.length){
+    const rec = trmRows().find(r=>r.rec);
+    const get = rec ? '<div class="acts"><button type="button" class="mini pri" id="subs_q_get">'+esc(fmtText(L.trmget, rec.name, sizeLabel(rec.size || 0)))+'</button></div>' : "";
+    box.innerHTML = '<div class="postnone"><div class="hint nonote">'+esc(L.trmnone)+'</div>'+get+more+'</div>';
+    const b = subsEl("subs_q_get");
+    if(b) b.onclick = e=>{ e.stopPropagation(); trModelAct("download:" + rec.id); };
+    return;
+  }
+  box.innerHTML = rows.map(trmCard).join("") + more;
+  box.querySelectorAll("button[data-a=cancel]").forEach(b=>{
+    b.onclick = e=>{ e.stopPropagation(); trModelAct("cancel:" + b.dataset.id); };
+  });
+  box.querySelectorAll("input.psw").forEach(sw=>{
+    sw.addEventListener("click", e=>e.stopPropagation());
+    sw.addEventListener("change", e=>{
+      e.stopPropagation();
+      if(sw.checked) pickTrModel(sw.dataset.sw);
+      else sw.checked = true;
+    });
+  });
+}
 function subsFast(){ return (subsTr && subsTr.fast) || {exe: true, pairs: [], offer: [], used: 0}; }
 function langName(code){
   const o = document.querySelector('#subtitles_translate option[value="' + code + '"]');
@@ -4334,7 +4406,7 @@ function subsWarnText(){
     const st = subsModel().state;
     if(miss === "card") return L.subsmisscard;
     if(miss === "model") return st === "downloading" || st === "checking" ? L.subsmissmodelget : L.subsmissmodel;
-    if(miss === "start") return L.subsmissstart;
+    if(miss === "start") return subsModel().down ? L.subsmissstart + " " + L.trmdown.replace("%s", ()=>trmWhy(subsModel().down)) : L.subsmissstart;
     return "";
   }
   if(subsWho === "fast"){
@@ -4353,7 +4425,6 @@ function subsWarnText(){
 function renderSubsQuality(){
   const m = subsModel(), st = m.state || "absent", fits = !!m.fits;
   const show = (id, on)=>{ const el = subsEl(id); if(el) el.style.display = on ? "" : "none"; return el; };
-  subsEl("subs_q_name").textContent = m.name || "";
   subsEl("subs_src_quality").classList.toggle("nofit", !fits);
   const canGet = fits && (st === "absent" || st === "bad" || st === "error");
   show("subs_q_size", canGet).textContent = fmtText(L.notinstsize, sizeLabel(m.size || 0));
@@ -4366,12 +4437,7 @@ function renderSubsQuality(){
   x.textContent = armed ? L.trmdelsure : "✕";
   x.classList.toggle("armed", armed);
   subsTip(x, st === "downloading" ? L.trmcancel : L.trmdel);
-  const notes = [trmCardText(m)];
-  if(st === "bad") notes.push(L.trmbad);
-  if(st === "error") notes.push(L.trmerr.replace("%s", ()=>m.err || ""));
-  if(ready && m.down) notes.push(L.trmdown.replace("%s", ()=>trmWhy(m.down)));
-  const note = notes.filter(Boolean).join(" ");
-  show("subs_q_note", !!note).textContent = note;
+  renderSubsModels();
 }
 function renderSubsFast(){
   const f = subsFast(), to = subsTo(), sp = subsSpeech(), box = subsEl("subs_f_pairs");
@@ -4491,7 +4557,7 @@ async function subsChoose(who){
       subsWho = who;
       renderSubsTr();
       await doSave();
-      trModelAct("download");
+      trModelAct("download:" + (m.id || ""));
       return;
     }
   }
@@ -4731,11 +4797,10 @@ function initSubs(){
   subsEl("subs_f_add").onclick = e=>{ e.stopPropagation(); openAddPack(); };
   subsEl("subs_q_x").onclick = e=>{
     e.stopPropagation();
-    if(subsModel().state === "downloading"){ trModelAct("cancel"); return; }
-    subsArm("q", ()=>trModelAct("delete"));
+    const id = subsModel().id || "";
+    if(subsModel().state === "downloading"){ trModelAct("cancel:" + id); return; }
+    subsArm("q", ()=>trModelAct("delete:" + id));
   };
-  subsEl("subs_trm_terms").onclick = e=>{ e.stopPropagation(); appTrModel("terms"); };
-  subsEl("subs_trm_terms").onkeydown = e=>{ if(e.key === "Enter" || e.key === " "){ e.preventDefault(); e.stopPropagation(); appTrModel("terms"); } };
   subsEl("subs_go").onclick = ()=>subsToggle(subsEl("subs_go"));
   const heroGo = subsEl("subs_hero_go");
   if(heroGo) heroGo.onclick = ()=>subsToggle(heroGo);
@@ -5542,8 +5607,8 @@ function libraryRow(m, o){
     };
   });
   row.querySelectorAll("[data-terms]").forEach(t=>{
-    t.onclick = e=>{ e.stopPropagation(); appTrModel("terms"); };
-    t.onkeydown = e=>{ if(e.key === "Enter" || e.key === " "){ e.preventDefault(); appTrModel("terms"); } };
+    t.onclick = e=>{ e.stopPropagation(); appTrModel("terms:" + t.dataset.terms); };
+    t.onkeydown = e=>{ if(e.key === "Enter" || e.key === " "){ e.preventDefault(); appTrModel("terms:" + t.dataset.terms); } };
   });
   return row;
 }
@@ -5595,16 +5660,17 @@ function renderLibrary(){
   if(!have || !get) return;
   const asr = modelRowsCache.slice().sort((a, b)=>a.name.localeCompare(b.name));
   const llm = ((llmRam && llmRam.installed) || []).slice().sort((a, b)=>a.file.localeCompare(b.file));
-  const trm = subsModel();
+  const trms = trmRows().filter(r=>!r.own);
   const trmUsed = subsOn() && subsWho === "quality";
-  const sig = JSON.stringify([asr.map(m=>[m.id, m.state, m.pct, m.loaded, m.err, asrUse(m)]), llm, selLLM, trm.name, trm.state, trm.pct, trm.fits, trm.size, trm.running, trm.err, trmUsed]);
+  const ownUse = file=>trmUsed && trmRows().some(r=>r.own && r.chosen && r.file === file);
+  const sig = JSON.stringify([asr.map(m=>[m.id, m.state, m.pct, m.loaded, m.err, asrUse(m)]), llm, selLLM, trms.map(r=>[r.id, r.state, r.pct, r.fits, r.running, r.err, r.chosen]), trmRows().filter(r=>r.own && r.chosen).map(r=>r.file), subsModel().card_mb, trmUsed]);
   if(sig === librarySig) return;
   librarySig = sig;
 
   const asrHave = asr.filter(m=>m.state === "installed" || m.state === "active");
-  const trReady = trm.state === "ready";
-  const count = asrHave.length + llm.length + (trReady ? 1 : 0);
-  const mb = asrHave.reduce((s, m)=>s + (m.size || 0), 0) + llm.reduce((s, m)=>s + (m.size || 0), 0) + (trReady ? (trm.size || 0) : 0);
+  const trHave = trms.filter(r=>r.state === "ready");
+  const count = asrHave.length + llm.length + trHave.length;
+  const mb = asrHave.reduce((s, m)=>s + (m.size || 0), 0) + llm.reduce((s, m)=>s + (m.size || 0), 0) + trHave.reduce((s, r)=>s + (r.size || 0), 0);
   document.getElementById("lib_have_total").textContent = count ? pluralCount(count) + " · " + sizeLabel(mb) : "";
 
   const haveList = [], getList = [];
@@ -5615,7 +5681,7 @@ function renderLibrary(){
     }}]);
   });
   llm.forEach(f=>{
-    const use = selLLM === f.file ? L.libusepost : "";
+    const use = [selLLM === f.file ? L.libusepost : "", ownUse(f.file) ? L.libusetr : ""].filter(Boolean).join("; ");
     const m = {id: "llm:" + f.file, name: f.file, size: f.size, state: "installed", loaded: f.loaded};
     haveList.push([m, {key: "llm:" + f.file, kind: "llm", meta: f.need ? '<span class="pram">'+esc(fmtText(L.ramabout, sizeLabel(f.need)))+'</span>' : "", note: libUse(use, "llm"), on: {
       unload: async ()=>{ await appLLMUnload(); refreshLLM(); },
@@ -5628,18 +5694,22 @@ function renderLibrary(){
       }
     }}]);
   });
-  const trmState = trReady ? "installed" : (trm.state === "downloading" || trm.state === "checking" ? "downloading" : "absent");
-  const trmRow = {id: "trm", name: trm.name || "", desc: L.qhint, size: trm.size, pct: trm.state === "checking" ? 0 : trm.pct, loaded: !!trm.running, state: trmState};
-  const trmMeta = '<span class="pmt">'+esc(L.qneed)+'</span><span class="hfhome" role="link" tabindex="0" data-terms="1" title="'+esc(L.trmterms)+'">'+esc(L.termsplate)+'</span>';
-  if(trReady){
-    const use = trmUsed ? L.libusetr : "";
-    haveList.push([trmRow, {key: "trm", kind: "trm", info: true, meta: trmMeta, note: libUse(use, "trm"), on: {
+  const card = subsModel().card_mb || 0;
+  const trmItem = r=>({id: "trm:" + r.id, name: r.name, desc: fmtText(L.trmlibtip, trmFeat(r)), size: r.size, pct: r.state === "checking" ? 0 : r.pct, loaded: !!r.running,
+    state: r.state === "ready" ? "installed" : (r.state === "downloading" || r.state === "checking" ? "downloading" : "absent")});
+  const trmMeta = r=>(r.rec ? '<span class="pmt">'+esc(L.trmrec)+'</span>' : "") + '<span class="pmt">'+esc(fmtText(L.trmvram, trmGB(r.vram)))+'</span>' +
+    (r.fits ? '<span class="pmt">'+esc(L.trmfits)+'</span>' : '<span class="pdesc libwarn">'+esc(card ? fmtText(L.trmnofitlib, trmGB(card)) : trmNoFit(r))+'</span>') +
+    '<span class="hfhome" role="link" tabindex="0" data-terms="'+esc(r.id)+'" title="'+esc(L.trmterms)+'">'+esc(L.termsplate)+'</span>';
+  trHave.forEach(r=>{
+    const m = trmItem(r);
+    const use = r.chosen && trmUsed ? L.libusetr : "";
+    haveList.push([m, {key: m.id, kind: "trm", info: true, meta: trmMeta(r), note: use || r.fits ? libUse(use, "trm") : '<span class="libidle">'+esc(L.libunused)+'</span>', on: {
       del: async ()=>{
-        if(!await askConfirm(use ? fmtText(L.libdelused, trmRow.name, use) : fmtText(L.confirmdel, trmRow.name), L.del, null, L.mtdel)) return;
-        trModelAct("delete");
+        if(!await askConfirm(use ? fmtText(L.libdelused, r.name, use) : fmtText(L.confirmdel, r.name), L.del, null, L.mtdel)) return;
+        trModelAct("delete:" + r.id);
       }
     }}]);
-  }
+  });
   asr.filter(m=>!m.custom && (m.state === "absent" || m.state === "downloading")).forEach(m=>{
     const notes = [];
     if(m.state === "absent" && m.manual) notes.push('<div class="libnote"><span class="pdesc libwarn">'+esc(L.manualnote)+'</span><button type="button" class="mini" data-lib="link">'+esc(L.manuallink)+' &#8599;</button></div>');
@@ -5650,15 +5720,16 @@ function renderLibrary(){
       link: async ()=>{ appModelLink(m.id); }
     }}]);
   });
-  if(!trReady && trm.name){
+  trms.filter(r=>r.state !== "ready").forEach(r=>{
+    const m = trmItem(r);
     const notes = [];
-    if(trm.state === "bad") notes.push('<span class="pdesc perr">'+esc(L.trmbad)+'</span>');
-    if(trm.state === "error") notes.push('<span class="pdesc perr">'+esc(fmtText(L.trmerr, trm.err || ""))+'</span>');
-    getList.push([trmRow, {key: "trm", kind: "trm", info: true, meta: trmMeta, note: esc(L.libfortr), extra: notes.join(""), canGet: !!trm.fits, on: {
-      dl: async ()=>{ trModelAct("download"); },
-      cancel: async ()=>{ trModelAct("cancel"); }
+    if(r.state === "bad") notes.push('<span class="pdesc perr">'+esc(L.trmbad)+'</span>');
+    if(r.state === "error") notes.push('<span class="pdesc perr">'+esc(fmtText(L.trmerr, r.err || ""))+'</span>');
+    getList.push([m, {key: m.id, kind: "trm", info: true, meta: trmMeta(r), note: esc(fmtText(L.trmlibfor, trmFeat(r))), extra: notes.join(""), canGet: !!r.fits, on: {
+      dl: async ()=>{ trModelAct("download:" + r.id); },
+      cancel: async ()=>{ trModelAct("cancel:" + r.id); }
     }}]);
-  }
+  });
 
   [[have, haveList], [get, getList]].forEach(([box, list])=>{
     box.innerHTML = "";
@@ -5667,8 +5738,9 @@ function renderLibrary(){
   });
   document.getElementById("lib_have_none").style.display = haveList.length ? "none" : "";
   const hint = [];
-  if(getList.some(([m])=>m.id !== "trm")) hint.push(L.libgetasr);
-  if(getList.some(([m])=>m.id === "trm")) hint.push(fmtText(L.libgettrm, trm.name));
+  const isTrm = m=>String(m.id).indexOf("trm:") === 0;
+  if(getList.some(([m])=>!isTrm(m))) hint.push(L.libgetasr);
+  if(getList.some(([m])=>isTrm(m))) hint.push(fmtText(L.libgettrm, (trmRows().find(r=>r.rec) || {}).name || ""));
   if(getList.length) hint.push(L.libgetmove);
   const hintEl = document.getElementById("lib_get_hint");
   hintEl.textContent = hint.join(" ");
@@ -6405,7 +6477,8 @@ async function doSave(){
     subtitles_layout: subsLayout(),
     models_idle_minutes: parseInt((document.getElementById("models_idle_minutes")||{}).value) || 0,
     subtitles_translate: subsTo(),
-    subtitles_translator: subsWho};
+    subtitles_translator: subsWho,
+    subtitles_model: subsModelPick};
   OVS.posDirty = false;
   OVS.customDirty = false;
   subsBoxReset = false;
