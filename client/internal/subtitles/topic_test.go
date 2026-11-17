@@ -164,7 +164,16 @@ func TestTheGrammarsAreTheOnesOfTheExperiment(t *testing.T) {
 	if TopicGrammar != "root ::= \"Topic: \" [^\\n\\r*#]+\n" {
 		t.Fatalf("topic grammar: %q", TopicGrammar)
 	}
-	if !strings.HasPrefix(TermsGrammar, "root ::= \"none\" | entry (\"\\n\" entry){0,5}\n") || !strings.Contains(TermsGrammar, "entry ::= src \" = \" dst\n") {
-		t.Fatalf("terms grammar: %q", TermsGrammar)
+	ru := TermsGrammar("ru")
+	if !strings.HasPrefix(ru, "root ::= \"none\" | entry (\"\\n\" entry){0,5}\n") || !strings.Contains(ru, "entry ::= src \" = \" dst\n") {
+		t.Fatalf("terms grammar: %q", ru)
+	}
+	if !strings.Contains(ru, "dst ::= [\\u0400-\\u04FF] [") || !strings.Contains(TermsGrammar("de"), "dst ::= [a-zA-Z\\u00C0-\\u024F] [") {
+		t.Fatalf("the translation starts in the script of the target: %q", ru)
+	}
+	for _, g := range []string{ru, TermsGrammar("de")} {
+		if strings.Contains(g, "→") || strings.Contains(g, "^") || strings.Count(g, ":") != 8 {
+			t.Fatalf("the grammar lets anything in: %q", g)
+		}
 	}
 }

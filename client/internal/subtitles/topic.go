@@ -149,10 +149,22 @@ const topicSystem = "You read part of a live transcript of a conversation. The s
 
 const TopicGrammar = "root ::= \"Topic: \" [^\\n\\r*#]+\n"
 
-const TermsGrammar = "root ::= \"none\" | entry (\"\\n\" entry){0,5}\n" +
-	"entry ::= src \" = \" dst\n" +
-	"src ::= [^\\n\\r= ] [^\\n\\r=]{0,40}\n" +
-	"dst ::= [^\\n\\r= ] [^\\n\\r=]{0,60}\n"
+const (
+	letters  = `a-zA-Z\u00C0-\u024F\u0400-\u04FF`
+	cyrillic = `\u0400-\u04FF`
+	latin    = `a-zA-Z\u00C0-\u024F`
+)
+
+func TermsGrammar(target string) string {
+	first := latin
+	if target == "ru" || target == "uk" {
+		first = cyrillic
+	}
+	return "root ::= \"none\" | entry (\"\\n\" entry){0,5}\n" +
+		"entry ::= src \" = \" dst\n" +
+		"src ::= [" + letters + "] [" + letters + "0-9 '/&-]{0,40}\n" +
+		"dst ::= [" + first + "] [" + letters + "0-9 ,'()/&-]{0,60}\n"
+}
 
 func (t *Topic) TopicMessages(now time.Time) []Message {
 	user := ""
@@ -221,7 +233,7 @@ func termsSystem(target string) string {
 		"would translate in a particular way, not everyday words. Skip terms that are already in the glossary. For each term give the " +
 		name + " term a specialist in this field would use. Do not copy the machine translation: it is often a literal guess, so think how " +
 		"the term is really called in " + name + " in this field. " +
-		"Write one entry per line as: term = translation, for example: " + ex[0] + " = " + ex[1] + ". " +
+		"Write one entry per line: the term, an equals sign and its translation, for example: " + ex[0] + " = " + ex[1] + ". " +
 		"Write at most six entries. If there is nothing to add, write none."
 }
 

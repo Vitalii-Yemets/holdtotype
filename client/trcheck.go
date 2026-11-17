@@ -139,7 +139,7 @@ func runTrCheck(args []string) {
 		calls.Service = func(step subtitles.Step, msgs []subtitles.Message) (string, time.Duration, error) {
 			grammar, tokens := subtitles.TopicGrammar, subtitles.TopicTokens
 			if step == subtitles.StepTerms {
-				grammar, tokens = subtitles.TermsGrammar, subtitles.TermsTokens
+				grammar, tokens = subtitles.TermsGrammar(target), subtitles.TermsTokens
 			}
 			ctx, cancel := ctxTimeout(subtitles.TopicTimeout)
 			defer cancel()

@@ -1302,7 +1302,7 @@ func (w *subTranslator) serviceStep() bool {
 		msgs = tp.TopicMessages(now)
 	case subtitles.StepTerms:
 		msgs = tp.TermsMessages(now)
-		grammar, tokens = subtitles.TermsGrammar, subtitles.TermsTokens
+		grammar, tokens = subtitles.TermsGrammar(tp.Target()), subtitles.TermsTokens
 	default:
 		w.mu.Unlock()
 		return false
