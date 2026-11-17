@@ -2182,6 +2182,9 @@ func runSubcheck(args []string) {
 		log.Printf("subtitles: did not start: %s", logText(err))
 		return
 	}
+	app.subMu.Lock()
+	app.sub = r
+	app.subMu.Unlock()
 	if switchTo != "" {
 		go func() {
 			select {

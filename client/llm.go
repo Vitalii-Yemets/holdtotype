@@ -88,6 +88,9 @@ func (a *App) translatorWarm(kind string) bool {
 	case editorFast:
 		return a.fastWarm()
 	case editorQuality:
+		if m, ok := currentTrModel(a.snapshot()); !ok || a.gpuEng.liveTag() != m.Key() {
+			return false
+		}
 		p = a.gpuEng.live()
 	default:
 		return true
