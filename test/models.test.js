@@ -581,14 +581,14 @@ function open(lang, cfgPatch, setup) {
 
     t = await view((S) => { S.card = 0; S.cardWhy = "integrated"; S.trm.state = "absent"; S.llm = []; });
     vd = t.vd;
-    check("models: no model and integrated graphics: no download button, the reason", [!!vd.getElementById("subs_q_get"), vd.querySelector("#subs_q_models .nowhy").textContent], [false, "This computer cannot run it: it has only integrated graphics, which share the computer's memory."]);
+    check("models: no model and integrated graphics: no download button, the reason, no plate to the models to download", [!!vd.getElementById("subs_q_get"), vd.querySelector("#subs_q_models .nowhy").textContent, !!vd.querySelector("#subs_q_models .jumpline")], [false, "This computer cannot run it: it has only integrated graphics, which share the computer's memory.", false]);
     vd.querySelector('.nav[data-p="library"]').click(); await sleep(200);
     check("models: and on Models no translation model can be downloaded, each says why", ["gemma-4-e4b", "eurollm-9b"].map((id) => [!!g6v(vd, id).querySelector('button[data-lib="dl"]'), g6v(vd, id).querySelector(".libwarn").textContent]), [[false, "This computer cannot run it: it has only integrated graphics, which share the computer's memory."], [false, "This computer cannot run it: it has only integrated graphics, which share the computer's memory."]]);
     t.v.window.close();
 
     t = await view((S) => { S.card = 3072; S.trm.state = "absent"; S.llm = []; });
     vd = t.vd;
-    check("models: no model and a 3 GB card: the numbers come from the model", [!!vd.getElementById("subs_q_get"), vd.querySelector("#subs_q_models .nowhy").textContent], [false, "This computer cannot run it: it needs a graphics card with 4 GB of its own memory or more, yours has 3 GB."]);
+    check("models: no model and a 3 GB card: the numbers come from the model, no plate to the models to download", [!!vd.getElementById("subs_q_get"), !!vd.querySelector("#subs_q_models .jumpline"), vd.querySelector("#subs_q_models .nowhy").textContent], [false, false, "This computer cannot run it: it needs a graphics card with 4 GB of its own memory or more, yours has 3 GB."]);
     t.v.window.close();
 
     t = await view((S) => { S.trm.state = "absent"; S.llm = []; });

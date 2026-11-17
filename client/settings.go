@@ -4360,7 +4360,7 @@ function renderSubsModels(){
     let get = "";
     if(rec && rec.fits) get = '<div class="acts"><button type="button" class="mini pri" id="subs_q_get">'+esc(fmtText(L.trmget, rec.name, sizeLabel(rec.size || 0)))+'</button></div>';
     else if(rec) get = '<div class="hint nonote nowhy" style="color:var(--amber)">'+esc(trmNoFit(rec, true))+'</div>';
-    box.innerHTML = '<div class="postnone"><div class="hint nonote">'+esc(L.trmnone)+'</div>'+get+more+'</div>';
+    box.innerHTML = '<div class="postnone"><div class="hint nonote">'+esc(L.trmnone)+'</div>'+get+(rec && !rec.fits ? '' : more)+'</div>';
     const b = subsEl("subs_q_get");
     if(b) b.onclick = e=>{ e.stopPropagation(); trModelAct("download:" + rec.id); };
     return;

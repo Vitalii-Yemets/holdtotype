@@ -2218,10 +2218,10 @@ function check(name, actual, expected) {
   for (const [reason, cardMb, text] of [["small", 2048, "This computer cannot run it: it needs a graphics card with 4 GB of its own memory or more, yours has 2 GB."], ["small", 3900, "This computer cannot run it: it needs a graphics card with 4 GB of its own memory or more, yours has 3.8 GB."], ["integrated", 0, "This computer cannot run it: it has only integrated graphics, which share the computer's memory."], ["none", 0, "This computer cannot run it: Windows reports no graphics card."], ["unknown", 0, "This computer cannot run it: this version of Windows does not describe its graphics card."]]) {
     await setTr("fast", "", { model: model({ fits: false, reason, card_mb: cardMb }) });
     const none = sv("subs_q_models").querySelector(".postnone");
-    check("no model and a card that does not fit (" + reason + ", " + cardMb + " MB): no download button, the reason instead", [!!sv("subs_q_get"), none.querySelector(".nowhy").textContent, !!none.querySelector(".jumpline .jump")], [false, text, true]);
+    check("no model and a card that does not fit (" + reason + ", " + cardMb + " MB): no download button, the reason instead", [!!sv("subs_q_get"), none.querySelector(".nowhy").textContent, !!none.querySelector(".jumpline")], [false, text, false]);
   }
   await setTr("fast", "", { model: model() });
-  check("and with a card that fits the button is back", [!!sv("subs_q_get"), !!sv("subs_q_models").querySelector(".nowhy")], [true, false]);
+  check("and with a card that fits the button and the plate to the models to download are back", [!!sv("subs_q_get"), !!sv("subs_q_models").querySelector(".nowhy"), !!sv("subs_q_models").querySelector(".jumpline .jump")], [true, false, true]);
 
   const entries = () => [...sv("subs_f_pairs").querySelectorAll(".flang")].map((e) => [e.querySelector(".fname").textContent, e.dataset.tip]);
   await setTr("fast", "", { fast: fast() });
