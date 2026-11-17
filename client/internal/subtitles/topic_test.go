@@ -177,3 +177,9 @@ func TestTheGrammarsAreTheOnesOfTheExperiment(t *testing.T) {
 		}
 	}
 }
+
+func TestAServiceRequestHoldsPiecesNoLongerThanATranslation(t *testing.T) {
+	if TopicTimeout > TranslateTimeout {
+		t.Fatalf("timeout %s, translation %s", TopicTimeout, TranslateTimeout)
+	}
+}

@@ -15,7 +15,7 @@ const (
 	TermsPerCall     = 6
 	TermsPairs       = 25
 	TermsTokens      = 220
-	TopicTimeout     = 30 * time.Second
+	TopicTimeout     = TranslateTimeout
 )
 
 type Step int
