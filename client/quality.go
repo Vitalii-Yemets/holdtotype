@@ -332,6 +332,7 @@ type trModelRow struct {
 	VramMB  int    `json:"vram"`
 	CardMB  int    `json:"card_need"`
 	Fits    bool   `json:"fits"`
+	Reason  string `json:"reason"`
 	Service bool   `json:"service"`
 	Rec     bool   `json:"rec"`
 	Acc     int    `json:"accuracy"`
@@ -363,7 +364,7 @@ func trDlKey(m trmodel.Model) string { return trModelKey + ":" + m.ID }
 
 func trModelRowOf(a *App, m trmodel.Model, chosen string) trModelRow {
 	fit := cardFor(m)
-	row := trModelRow{ID: m.Key(), Name: m.Name, File: m.File, SizeMB: m.SizeMB(), VramMB: m.VramMB, CardMB: m.CardMB, Fits: fit.fits,
+	row := trModelRow{ID: m.Key(), Name: m.Name, File: m.File, SizeMB: m.SizeMB(), VramMB: m.VramMB, CardMB: m.CardMB, Fits: fit.fits, Reason: fit.code,
 		Service: m.Service, Rec: m.Recommended, Acc: m.Accuracy, Speed: m.Speed, Own: m.Own, Chosen: m.Key() == chosen, License: m.License}
 	row.Running = row.Chosen && a.gpuEng.liveTag() == m.Key()
 	dlMu.Lock()

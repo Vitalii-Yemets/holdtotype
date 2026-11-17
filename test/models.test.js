@@ -32,12 +32,12 @@ const TRM = [
 function trmView(S) {
   const st = (id) => (id === "gemma-3-4b" ? S.trm : (S.trms[id] = S.trms[id] || { state: "absent" }));
   const card = S.card === undefined ? 8192 : S.card;
-  const rows = TRM.map((r) => Object.assign({}, r, { state: st(r.id).state, pct: st(r.id).pct || 0, err: st(r.id).err || "", fits: card >= r.card_need - 256, own: false, running: !!st(r.id).running }));
+  const rows = TRM.map((r) => Object.assign({}, r, { state: st(r.id).state, pct: st(r.id).pct || 0, err: st(r.id).err || "", fits: !S.cardWhy && card >= r.card_need - 256, reason: S.cardWhy || (card >= r.card_need - 256 ? "" : "small"), own: false, running: !!st(r.id).running }));
   S.llm.forEach((f) => rows.push({ id: "own:" + f.file, name: f.file.replace(/\.gguf$/, ""), file: f.file, size: f.size, vram: f.size + 1000, card_need: f.size + 1256, service: false, rec: false, accuracy: 0, speed: 0, own: true, state: "ready", pct: 0, err: "", fits: card >= f.size + 1000, running: false, license: "" }));
   const chosen = rows.find((r) => r.id === S.chosen && r.state === "ready") || rows.find((r) => r.rec && r.state === "ready") || rows.find((r) => !r.own && r.state === "ready");
   rows.forEach((r) => { r.chosen = !!chosen && r.id === chosen.id; });
   const shown = chosen || TRM.map((r) => rows.find((x) => x.id === r.id)).find((r) => r.id === S.chosen) || rows[0];
-  return { id: shown.id, name: shown.name, state: shown.state, pct: shown.pct, err: shown.err, size: shown.size, fits: shown.fits, card: "", reason: shown.fits ? "" : "small", card_mb: card, need_mb: shown.card_need, down: "", running: shown.running, models: rows };
+  return { id: shown.id, name: shown.name, state: shown.state, pct: shown.pct, err: shown.err, size: shown.size, fits: shown.fits, card: "", reason: shown.reason, card_mb: card, need_mb: shown.card_need, down: "", running: shown.running, models: rows };
 }
 
 function pageFor(lang, cfgPatch) {
@@ -513,6 +513,7 @@ function open(lang, cfgPatch, setup) {
       return { v, vw, vd, S: vw.S };
     };
     const cards = (vd) => [...vd.querySelectorAll("#subs_q_models .pcard")];
+    const g6v = (vd, id) => vd.querySelector('#lib_get_list .librow[data-key="trm:' + id + '"]');
     const card = (vd, id) => vd.querySelector('#subs_q_models .pcard[data-id="' + id + '"]');
     const sw = (vd, id) => card(vd, id).querySelector("input.psw");
     const texts = (el, sel) => [...el.querySelectorAll(sel)].map((e) => e.textContent);
@@ -561,12 +562,33 @@ function open(lang, cfgPatch, setup) {
     t = await view((S) => { S.card = 4096; S.trms["gemma-4-e4b"] = { state: "ready" }; S.trms["eurollm-9b"] = { state: "ready" }; S.trm.state = "absent"; S.llm = []; });
     vd = t.vd;
     const big = card(vd, "eurollm-9b");
-    check("models: a model that does not fit has a switch that cannot be used and says why", [sw(vd, "eurollm-9b").disabled, big.querySelector(".pdesc").textContent], [true, "does not fit in the graphics card memory: 8 GB are needed, yours has 4 GB"]);
+    check("models: a model that does not fit has a switch that cannot be used and says why", [sw(vd, "eurollm-9b").disabled, big.querySelector(".pdesc").textContent], [true, "does not fit: it needs a graphics card with 8 GB or more, yours has 4 GB"]);
     vd.querySelector('.nav[data-p="library"]').click(); await sleep(200);
     const lr = (k) => vd.querySelector('#p-library .librow[data-key="' + k + '"]');
-    check("models: on Models the installed one that does not fit says so too", texts(lr("trm:eurollm-9b"), ".libl2 > *"), ["graphics card memory: 6 GB", "does not fit: your graphics card has 4 GB", "Terms of use ↗"]);
+    check("models: on Models the installed one that does not fit says so too", texts(lr("trm:eurollm-9b"), ".libl2 > *"), ["graphics card memory: 6 GB", "does not fit: it needs a graphics card with 8 GB or more, yours has 4 GB", "Terms of use ↗"]);
     check("models: and it does not lead to the subtitles card, where it cannot be switched on", [lr("trm:eurollm-9b").querySelector(".libidle").textContent, !!lr("trm:eurollm-9b").querySelector(".libturn")], ["not in use", false]);
     check("models: a model to download that fits has the arrow, one that does not has none", [!!lr("trm:gemma-3-4b").querySelector('button[data-lib="dl"]'), lr("trm:gemma-3-4b").parentNode.id], [true, "lib_get_list"]);
+    t.v.window.close();
+
+    t = await view((S) => { S.card = 6144; S.trm.state = "absent"; S.llm = []; });
+    vd = t.vd;
+    vd.querySelector('.nav[data-p="library"]').click(); await sleep(200);
+    const g6 = (k) => vd.querySelector('#lib_get_list .librow[data-key="' + k + '"]');
+    check("models: EuroLLM on a 6 GB card names the card it needs, the others fit", [texts(g6("trm:eurollm-9b"), ".libl2 > *"), !!g6("trm:eurollm-9b").querySelector('button[data-lib="dl"]'), !!g6("trm:gemma-4-e4b").querySelector('button[data-lib="dl"]')], [["graphics card memory: 6 GB", "does not fit: it needs a graphics card with 8 GB or more, yours has 6 GB", "Terms of use ↗"], false, true]);
+    vd.querySelector('.nav[data-p="subs"]').click(); await sleep(200);
+    check("models: and the quality card still offers the recommended one", !!vd.getElementById("subs_q_get"), true);
+    t.v.window.close();
+
+    t = await view((S) => { S.card = 0; S.cardWhy = "integrated"; S.trm.state = "absent"; S.llm = []; });
+    vd = t.vd;
+    check("models: no model and integrated graphics: no download button, the reason", [!!vd.getElementById("subs_q_get"), vd.querySelector("#subs_q_models .nowhy").textContent], [false, "This computer cannot run it: it has only integrated graphics, which share the computer's memory."]);
+    vd.querySelector('.nav[data-p="library"]').click(); await sleep(200);
+    check("models: and on Models no translation model can be downloaded, each says why", ["gemma-4-e4b", "eurollm-9b"].map((id) => [!!g6v(vd, id).querySelector('button[data-lib="dl"]'), g6v(vd, id).querySelector(".libwarn").textContent]), [[false, "This computer cannot run it: it has only integrated graphics, which share the computer's memory."], [false, "This computer cannot run it: it has only integrated graphics, which share the computer's memory."]]);
+    t.v.window.close();
+
+    t = await view((S) => { S.card = 3072; S.trm.state = "absent"; S.llm = []; });
+    vd = t.vd;
+    check("models: no model and a 3 GB card: the numbers come from the model", [!!vd.getElementById("subs_q_get"), vd.querySelector("#subs_q_models .nowhy").textContent], [false, "This computer cannot run it: it needs a graphics card with 4 GB of its own memory or more, yours has 3 GB."]);
     t.v.window.close();
 
     t = await view((S) => { S.trm.state = "absent"; S.llm = []; });

@@ -1990,8 +1990,8 @@ function check(name, actual, expected) {
   const model = (o) => {
     const m = { id: "gemma-3-4b", name: "Gemma 3 4B", state: "absent", pct: 0, err: "", size: 2374, fits: true, card, reason: "", card_mb: 8017, need_mb: 4096, down: "", running: false, ...o };
     m.models = [
-      { id: "gemma-4-e4b", name: "Gemma 4 E4B", file: "gemma-4-E4B_q4_0-it.gguf", state: "absent", pct: 0, err: "", size: 4916, vram: 3015, card_need: 4096, fits: m.fits, service: true, rec: true, accuracy: 5, speed: 5, own: false, chosen: false, running: false },
-      { id: "gemma-3-4b", name: "Gemma 3 4B", file: "gemma-3-4b-it-Q4_K_M.gguf", state: m.state, pct: m.pct, err: m.err, size: 2374, vram: 3022, card_need: 4096, fits: m.fits, service: true, rec: false, accuracy: 3, speed: 5, own: false, chosen: m.state === "ready", running: m.running },
+      { id: "gemma-4-e4b", name: "Gemma 4 E4B", file: "gemma-4-E4B_q4_0-it.gguf", state: "absent", pct: 0, err: "", size: 4916, vram: 3015, card_need: 4096, fits: m.fits, reason: m.fits ? "" : m.reason, service: true, rec: true, accuracy: 5, speed: 5, own: false, chosen: false, running: false },
+      { id: "gemma-3-4b", name: "Gemma 3 4B", file: "gemma-3-4b-it-Q4_K_M.gguf", state: m.state, pct: m.pct, err: m.err, size: 2374, vram: 3022, card_need: 4096, fits: m.fits, reason: m.fits ? "" : m.reason, service: true, rec: false, accuracy: 3, speed: 5, own: false, chosen: m.state === "ready", running: m.running },
     ];
     return m;
   };
@@ -2214,7 +2214,14 @@ function check(name, actual, expected) {
   await setTr("fast", "", { model: model({ state: "bad" }) });
   check("Quality damaged: the cross removes the damaged file", q(), { size: "not installed · 2.3 GB", pct: "", state: "", x: PL.trmdel });
   await setTr("fast", "", { model: model({ fits: false, reason: "small", card_mb: 2048, state: "ready" }) });
-  check("Quality on a card that does not fit: no size, the card says why", [q().size, qcards()], ["", [["gemma-3-4b", true, true, "does not fit in the graphics card memory: 4 GB are needed, yours has 2 GB"]]]);
+  check("Quality on a card that does not fit: no size, the card says why", [q().size, qcards()], ["", [["gemma-3-4b", true, true, "does not fit: it needs a graphics card with 4 GB or more, yours has 2 GB"]]]);
+  for (const [reason, cardMb, text] of [["small", 2048, "This computer cannot run it: it needs a graphics card with 4 GB of its own memory or more, yours has 2 GB."], ["small", 3900, "This computer cannot run it: it needs a graphics card with 4 GB of its own memory or more, yours has 3.8 GB."], ["integrated", 0, "This computer cannot run it: it has only integrated graphics, which share the computer's memory."], ["none", 0, "This computer cannot run it: Windows reports no graphics card."], ["unknown", 0, "This computer cannot run it: this version of Windows does not describe its graphics card."]]) {
+    await setTr("fast", "", { model: model({ fits: false, reason, card_mb: cardMb }) });
+    const none = sv("subs_q_models").querySelector(".postnone");
+    check("no model and a card that does not fit (" + reason + ", " + cardMb + " MB): no download button, the reason instead", [!!sv("subs_q_get"), none.querySelector(".nowhy").textContent, !!none.querySelector(".jumpline .jump")], [false, text, true]);
+  }
+  await setTr("fast", "", { model: model() });
+  check("and with a card that fits the button is back", [!!sv("subs_q_get"), !!sv("subs_q_models").querySelector(".nowhy")], [true, false]);
 
   const entries = () => [...sv("subs_f_pairs").querySelectorAll(".flang")].map((e) => [e.querySelector(".fname").textContent, e.dataset.tip]);
   await setTr("fast", "", { fast: fast() });
@@ -2328,15 +2335,15 @@ function check(name, actual, expected) {
       ["S_SUBS_TR_MISS_PACK", "S_SUBS_TR_MISS_PACK_GET", "S_SUBS_TR_MISS_PACKS", "S_SUBS_TR_MISS_PACKS_GET", "S_SUBS_TR_MISS_LANG", "S_SUBS_TR_MISS_FAST"].filter((k) => !t[k].includes(fName)),
       ["S_SUBS_TR_MISS_SERVER"].filter((k) => !t[k].includes(sName)),
     ], [[], [], []]);
-    check(lang + ": the texts keep their places for the values", [["S_SUBS_TR_MISS_PACK", 1], ["S_SUBS_TR_MISS_PACK_GET", 1], ["S_SUBS_F_TWO", 2], ["S_SUBS_PACK_ASK", 2], ["S_SUBS_F_GETTING", 1], ["S_SUBS_TRM_ERR", 1], ["S_SUBS_TRM_DOWN", 1], ["S_SUBS_TRM_SMALL", 1]].filter(([k, n]) => typeof t[k] !== "string" || t[k].split("%s").length !== n + 1).map(([k]) => k), []);
+    check(lang + ": the texts keep their places for the values", [["S_SUBS_TR_MISS_PACK", 1], ["S_SUBS_TR_MISS_PACK_GET", 1], ["S_SUBS_F_TWO", 2], ["S_SUBS_PACK_ASK", 2], ["S_SUBS_F_GETTING", 1], ["S_SUBS_TRM_ERR", 1], ["S_SUBS_TRM_DOWN", 1], ["S_SUBS_TRM_SMALL", 2], ["S_TRM_NOFIT", 2]].filter(([k, n]) => typeof t[k] !== "string" || t[k].split("%s").length !== n + 1).map(([k]) => k), []);
     check(lang + ": the translation-only card has its texts", ["S_SUBS_LAYOUT_ONLY", "S_SUBS_TR_ONLY_SUB", "S_SUBS_ROWS_SUB_ONLY"].filter((k) => typeof t[k] !== "string" || !t[k]), []);
     check(lang + ": the layout has its texts", ["S_SUBS_LAYOUT", "S_SUBS_LAYOUT_ROWS", "S_SUBS_LAYOUT_COLS", "S_SUBS_LAYOUT_TIP", "S_SUBS_ROWS_SUB_COLS"].filter((k) => typeof t[k] !== "string" || !t[k]), []);
-    check(lang + ": the removed texts are gone", ["S_SUBS_ORIG", "S_SUBS_WHO_AUTO", "S_SUBS_TR_NONE", "S_SUBS_TR_LOCAL", "S_SUBS_TRM_DOWN_NEXT", "S_SUBS_TR_FAST_ONE", "S_SUBS_FPK_SUB"].filter((k) => k in t), []);
+    check(lang + ": the removed texts are gone", ["S_SUBS_ORIG", "S_SUBS_WHO_AUTO", "S_SUBS_TR_NONE", "S_SUBS_TR_LOCAL", "S_SUBS_TRM_DOWN_NEXT", "S_SUBS_TR_FAST_ONE", "S_SUBS_FPK_SUB", "S_SUBS_Q_NEED", "S_TRM_NOFIT_NONE", "S_TRM_NOFIT_LIB", "S_LIB_FOR_TR"].filter((k) => k in t), []);
     check(lang + ": no text names the light engine's origin", Object.entries(t).filter(([k, v]) => /^S_SUBS_/.test(k) && /bergamot|firefox|mozilla|marian/i.test(v)).map(([k]) => k), []);
   }
   {
     const ru = stringsOf("ru");
-    check("Russian: the texts of the task, letter for letter", [ru.S_NAV_SUBS, ru.S_SUBS_WHO_TITLE, ru.S_SUBS_TR_MISS_SERVER, ru.S_SUBS_TR_MISS_MODEL_GET, ru.S_SUBS_TR_MISS_PACK_GET, ru.S_SUBS_TR_MISS_PACKS, ru.S_SUBS_TR_MISS_PACKS_GET, ru.S_SUBS_PACK_DLG, ru.S_SUBS_PACK_ASK, ru.S_SUBS_Q_HINT, ru.S_SUBS_Q_NEED, ru.S_SUBS_F_HINT, ru.S_SUBS_F_AUTO, ru.S_SUBS_ADD_HINT, ru.S_SUBS_API_HINT, ru.S_SUBS_API_NONE, ru.S_SUBS_API_WARN, ru.S_SUBS_API_CLEAR_MORE, ru.S_SUBS_ROWS_SUB, ru.S_SUBS_ROWS_SUB_COLS, ru.S_SUBS_LAYOUT, ru.S_SUBS_LAYOUT_ROWS, ru.S_SUBS_LAYOUT_COLS, ru.S_SUBS_LAYOUT_TIP], [
+    check("Russian: the texts of the task, letter for letter", [ru.S_NAV_SUBS, ru.S_SUBS_WHO_TITLE, ru.S_SUBS_TR_MISS_SERVER, ru.S_SUBS_TR_MISS_MODEL_GET, ru.S_SUBS_TR_MISS_PACK_GET, ru.S_SUBS_TR_MISS_PACKS, ru.S_SUBS_TR_MISS_PACKS_GET, ru.S_SUBS_PACK_DLG, ru.S_SUBS_PACK_ASK, ru.S_SUBS_Q_HINT, ru.S_SUBS_F_HINT, ru.S_SUBS_F_AUTO, ru.S_SUBS_ADD_HINT, ru.S_SUBS_API_HINT, ru.S_SUBS_API_NONE, ru.S_SUBS_API_WARN, ru.S_SUBS_API_CLEAR_MORE, ru.S_SUBS_ROWS_SUB, ru.S_SUBS_ROWS_SUB_COLS, ru.S_SUBS_LAYOUT, ru.S_SUBS_LAYOUT_ROWS, ru.S_SUBS_LAYOUT_COLS, ru.S_SUBS_LAYOUT_TIP], [
       "Субтитры и перевод",
       "Переводчик",
       "Выбран «Внешний сервер», но он не настроен, поэтому текст показывается так, как был услышан.",
@@ -2347,7 +2354,6 @@ function check(name, actual, expected) {
       "Загрузка языкового пакета",
       "Языковой пакет «%s» не загружен (%s). Начать загрузку?",
       "модель на видеокарте: перевод идёт фраза за фразой, через мгновение после речи",
-      "видеокарта от 4 ГБ своей памяти",
       "лёгкий движок, работает без видеокарты: переводит за сотые доли секунды на фразу и дословнее модели",
       "Язык речи определяется по первым словам; переводится речь, для которой есть пакет.",
       "Пакеты у лёгкого движка есть только с английским. Остальные пары переводятся в два шага — сначала на английский, потом с него, — и для них нужны оба пакета.",

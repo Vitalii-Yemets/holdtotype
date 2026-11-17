@@ -1287,17 +1287,17 @@ func settingsHTML(cfg *Config, tab string) string {
 		"stmem": "S_ST_MEM", "stmemsub": "S_ST_MEM_SUB", "ramabout": "S_RAM_ABOUT",
 		"libcount": "S_LIB_COUNT", "libget": "S_LIB_GET", "libgetasr": "S_LIB_GET_ASR", "libgettrm": "S_LIB_GET_TRM", "libgetmove": "S_LIB_GET_MOVE",
 		"libhf": "S_LIB_HF", "libusedict": "S_LIB_USE_DICT", "libusedictsubs": "S_LIB_USE_DICT_SUBS", "libusesubs": "S_LIB_USE_SUBS",
-		"libusepost": "S_LIB_USE_POST", "libusetr": "S_LIB_USE_TR", "libunused": "S_LIB_UNUSED", "libturnon": "S_LIB_TURN_ON", "libfortr": "S_LIB_FOR_TR",
+		"libusepost": "S_LIB_USE_POST", "libusetr": "S_LIB_USE_TR", "libunused": "S_LIB_UNUSED", "libturnon": "S_LIB_TURN_ON",
 		"libdelused": "S_LIB_DEL_USED", "libdellangs": "S_LIB_DEL_LANGS", "libdelnoauto": "S_LIB_DEL_NOAUTO", "libdelauto": "S_LIB_DEL_AUTO", "libdellast": "S_LIB_DEL_LAST",
 		"jumpblock": "S_JUMP_BLOCK", "jumpcard": "S_JUMP_CARD", "termsplate": "S_TERMS_PLATE", "hfclear": "S_HF_CLEAR", "hfhave": "S_HF_HAVE",
-		"trmauto": "S_SUBS_Q_AUTO", "trmfg4": "S_TRM_F_G4", "trmfg3": "S_TRM_F_G3", "trmftg": "S_TRM_F_TG", "trmfeu": "S_TRM_F_EU",
-		"trmowntip": "S_TRM_OWN_TIP", "trmownwarn": "S_TRM_OWN_WARN", "trmnofit": "S_TRM_NOFIT", "trmnofitnone": "S_TRM_NOFIT_NONE",
+		"trmfg4": "S_TRM_F_G4", "trmfg3": "S_TRM_F_G3", "trmftg": "S_TRM_F_TG", "trmfeu": "S_TRM_F_EU",
+		"trmowntip": "S_TRM_OWN_TIP", "trmownwarn": "S_TRM_OWN_WARN", "trmnofit": "S_TRM_NOFIT",
 		"trmvram": "S_TRM_VRAM", "trmnotopic": "S_TRM_NOTOPIC", "trmdisk": "S_TRM_DISK", "trmnone": "S_TRM_NONE", "trmget": "S_TRM_GET",
-		"trmlibtip": "S_TRM_LIB_TIP", "trmlibfor": "S_TRM_LIB_FOR", "trmrec": "S_TRM_REC", "trmfits": "S_TRM_FITS", "trmnofitlib": "S_TRM_NOFIT_LIB",
+		"trmlibtip": "S_TRM_LIB_TIP", "trmlibfor": "S_TRM_LIB_FOR", "trmrec": "S_TRM_REC", "trmfits": "S_TRM_FITS",
 		"langgetother": "S_LANG_GET_OTHER", "langnone": "S_LANG_NONE", "notinstsize": "S_NOT_INST_SIZE",
 		"postfind": "S_POST_FIND", "postdrop": "S_POST_DROP", "postnone": "S_POST_NONE", "postfindone": "S_POST_FIND_ONE",
 		"navlib": "S_NAV_LIBRARY", "navlangs": "S_NAV_MODELS", "navpost": "S_NAV_POST", "navsubs": "S_NAV_SUBS", "presets": "S_PRESETS",
-		"srclocal": "S_SRC_LOCAL", "whoq": "S_SUBS_WHO_QUALITY", "qneed": "S_SUBS_Q_NEED", "qhint": "S_SUBS_Q_HINT", "trmterms": "S_SUBS_TRM_TERMS",
+		"srclocal": "S_SRC_LOCAL", "whoq": "S_SUBS_WHO_QUALITY", "trmterms": "S_SUBS_TRM_TERMS",
 		"alllangs": "S_ALL_LANGS", "stmemnone": "S_ST_MEM_NONE", "stlang": "S_ST_LANG", "stasr": "S_ST_ASR",
 		"ston": "S_ST_ON", "stoffw": "S_ST_OFF_W", "stonf": "S_ST_ON_F", "stofff": "S_ST_OFF_F", "stactive": "S_ST_ACTIVE",
 		"stidle": "S_ST_IDLE", "stdisk": "S_ST_DISK", "stusagesub": "S_ST_USAGE_SUB", "stnoweek": "S_ST_NO_WEEK",
@@ -4309,9 +4309,15 @@ function trmFeat(r){
   if(r.own) return fmtText(L.trmowntip, r.file);
   return ({"gemma-4-e4b": L.trmfg4, "gemma-3-4b": L.trmfg3, "translategemma-4b": L.trmftg, "eurollm-9b": L.trmfeu})[r.id] || "";
 }
-function trmNoFit(r){
+function trmNoFit(r, whole){
+  const why = r.reason || "small";
   const card = subsModel().card_mb || 0;
-  return card ? fmtText(L.trmnofit, trmGB(r.card_need), trmGB(card)) : fmtText(L.trmnofitnone, trmGB(r.card_need));
+  if(why === "integrated") return L.trmint;
+  if(why === "none") return L.trmnocard;
+  if(why === "unknown" || !card) return L.trmunknown;
+  const need = Math.round((r.card_need || 0) / 1024);
+  const have = Math.round(card / 1024) < need ? String(Math.round(card / 1024)) : (card / 1024).toFixed(1);
+  return fmtText(whole ? L.trmsmall : L.trmnofit, need, have);
 }
 function trmCard(r){
   const cur = !!r.chosen;
@@ -4345,13 +4351,15 @@ function renderSubsModels(){
   const box = subsEl("subs_q_models");
   if(!box) return;
   const rows = trmRows().filter(r=>r.own || r.state === "ready" || r.state === "downloading" || r.state === "checking");
-  const sig = JSON.stringify([rows.map(r=>[r.id, r.state, r.pct, r.chosen, r.fits]), subsModel().card_mb, L.recchip]);
+  const rec = trmRows().find(r=>r.rec);
+  const sig = JSON.stringify([rows.map(r=>[r.id, r.state, r.pct, r.chosen, r.fits, r.reason]), rec && [rec.fits, rec.reason], subsModel().card_mb, L.recchip]);
   if(box.dataset.sig === sig) return;
   box.dataset.sig = sig;
   const more = '<div class="hint jumpline"><span>'+esc(L.langgetother)+'</span>'+blockChip("lib_get", L.libget)+'</div>';
   if(!rows.length){
-    const rec = trmRows().find(r=>r.rec);
-    const get = rec ? '<div class="acts"><button type="button" class="mini pri" id="subs_q_get">'+esc(fmtText(L.trmget, rec.name, sizeLabel(rec.size || 0)))+'</button></div>' : "";
+    let get = "";
+    if(rec && rec.fits) get = '<div class="acts"><button type="button" class="mini pri" id="subs_q_get">'+esc(fmtText(L.trmget, rec.name, sizeLabel(rec.size || 0)))+'</button></div>';
+    else if(rec) get = '<div class="hint nonote nowhy" style="color:var(--amber)">'+esc(trmNoFit(rec, true))+'</div>';
     box.innerHTML = '<div class="postnone"><div class="hint nonote">'+esc(L.trmnone)+'</div>'+get+more+'</div>';
     const b = subsEl("subs_q_get");
     if(b) b.onclick = e=>{ e.stopPropagation(); trModelAct("download:" + rec.id); };
@@ -5694,11 +5702,10 @@ function renderLibrary(){
       }
     }}]);
   });
-  const card = subsModel().card_mb || 0;
   const trmItem = r=>({id: "trm:" + r.id, name: r.name, desc: fmtText(L.trmlibtip, trmFeat(r)), size: r.size, pct: r.state === "checking" ? 0 : r.pct, loaded: !!r.running,
     state: r.state === "ready" ? "installed" : (r.state === "downloading" || r.state === "checking" ? "downloading" : "absent")});
   const trmMeta = r=>(r.rec ? '<span class="pmt">'+esc(L.trmrec)+'</span>' : "") + '<span class="pmt">'+esc(fmtText(L.trmvram, trmGB(r.vram)))+'</span>' +
-    (r.fits ? '<span class="pmt">'+esc(L.trmfits)+'</span>' : '<span class="pdesc libwarn">'+esc(card ? fmtText(L.trmnofitlib, trmGB(card)) : trmNoFit(r))+'</span>') +
+    (r.fits ? '<span class="pmt">'+esc(L.trmfits)+'</span>' : '<span class="pdesc libwarn">'+esc(trmNoFit(r))+'</span>') +
     '<span class="hfhome" role="link" tabindex="0" data-terms="'+esc(r.id)+'" title="'+esc(L.trmterms)+'">'+esc(L.termsplate)+'</span>';
   trHave.forEach(r=>{
     const m = trmItem(r);
