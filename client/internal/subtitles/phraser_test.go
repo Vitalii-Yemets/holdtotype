@@ -600,3 +600,13 @@ func TestThePhraserTakesOverFromTheGivenWord(t *testing.T) {
 		t.Fatalf("got %q", got)
 	}
 }
+
+func TestThePhraserTellsItsState(t *testing.T) {
+	t0 := time.Date(2026, 11, 18, 10, 0, 0, 0, time.Local)
+	p := NewPhraser()
+	p.Update(1, "So we looked at the numbers", false, t0)
+	st := p.State()
+	if st.Seg != 1 || st.Done != -1 || len(st.Words) != 6 || st.Words[5] != "numbers" || st.Given > 5 || len(st.Carry) != 0 {
+		t.Fatalf("state %+v", st)
+	}
+}

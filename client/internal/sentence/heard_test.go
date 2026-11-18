@@ -137,3 +137,25 @@ func TestAbandonGivesTheOpenWordsBack(t *testing.T) {
 		t.Fatalf("pieces %+v", got)
 	}
 }
+
+func TestStartingMidwayTakesTheCarryAndTheRestOfTheSegment(t *testing.T) {
+	t0 := time.Date(2026, 11, 18, 10, 0, 0, 0, time.Local)
+	h := NewHeard()
+	c := NewCutter(Params{Ahead: 3, Limit: 40, Context: 30}, endsAfter())
+	got := run(t, c, h.Seed(4, 3, []string{"already", "sent", "still", "open"}, 2, []string{"left", "over"}, t0))
+	if len(got) != 0 {
+		t.Fatalf("pieces before any word: %+v", got)
+	}
+	if h.Given() != 2 || h.Waiting() != 2 {
+		t.Fatalf("given %d, waiting %d", h.Given(), h.Waiting())
+	}
+	if ops := h.Update(3, "an old segment", true, t0); len(ops) != 0 {
+		t.Fatalf("a finished segment came back: %+v", ops)
+	}
+	got = append(got, run(t, c, h.Update(4, "already sent still open words", true, t0.Add(time.Second)))...)
+	got = append(got, run(t, c, h.Flush(t0.Add(2*time.Second)))...)
+	got = append(got, c.Flush()...)
+	if strings.Join(texts(got), " ") != "left over still open words" {
+		t.Fatalf("pieces %q", texts(got))
+	}
+}

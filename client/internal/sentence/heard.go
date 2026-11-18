@@ -37,6 +37,29 @@ func NewHeard() *Heard { return &Heard{cur: -1, done: -1} }
 
 func (h *Heard) Given() int { return h.given }
 
+func (h *Heard) Seed(seg, done int, words []string, given int, carry []string, at time.Time) []Op {
+	h.cur, h.done = seg, done
+	h.words = nil
+	for _, w := range words {
+		h.words = append(h.words, heardWord{raw: w, index: -1})
+	}
+	if given > len(h.words) {
+		given = len(h.words)
+	}
+	h.given = given
+	var out []Op
+	for _, w := range carry {
+		norm := punct.Norm(w)
+		if norm == "" {
+			out = append(out, Op{Kind: OpAdd, Index: -1, Raw: w, At: at})
+			continue
+		}
+		out = append(out, Op{Kind: OpAdd, Index: h.next, Raw: w, Word: norm, At: at})
+		h.next++
+	}
+	return out
+}
+
 func (h *Heard) Waiting() int { return len(h.words) - h.given }
 
 func (h *Heard) give(upto int, at time.Time, out []Op) []Op {

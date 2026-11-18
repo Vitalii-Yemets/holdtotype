@@ -394,6 +394,25 @@ func (p *Phraser) Flush(now time.Time) []TextPhrase {
 
 func (p *Phraser) Seq() int { return p.seq }
 
+type PhraserState struct {
+	Seg   int
+	Done  int
+	Words []string
+	Given int
+	Carry []string
+}
+
+func (p *Phraser) State() PhraserState {
+	st := PhraserState{Seg: p.cur, Done: p.done, Given: p.given}
+	for _, w := range p.words {
+		st.Words = append(st.Words, w.text)
+	}
+	for _, w := range p.carry {
+		st.Carry = append(st.Carry, w.text)
+	}
+	return st
+}
+
 func (p *Phraser) Resume(given, seq int) {
 	p.carry = nil
 	if given > len(p.words) {

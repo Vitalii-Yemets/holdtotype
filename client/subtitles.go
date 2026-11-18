@@ -300,7 +300,7 @@ func startSubtitlesRun(a *App, cfg *Config, opts subOptions) (*subRun, error) {
 	fastRun.begin()
 	r.syncTranslation(cfg, t)
 	r.refreshShown()
-	r.sent = newSentRun(r, cfg, t)
+	r.sent = newSentRun(r, cfg, t, subtitles.PhraserState{Seg: -1, Done: -1}, 0)
 	go r.loop(t)
 	return r, nil
 }
@@ -421,8 +421,11 @@ func (r *subRun) loop(t *subTarget) {
 		select {
 		case <-r.stopCh:
 			pipe.stop(time.Duration(r.drain.Load()))
-			if r.sent != nil {
-				r.sent.close()
+			r.phMu.Lock()
+			s := r.sent
+			r.phMu.Unlock()
+			if s != nil {
+				s.close()
 			}
 			r.finish()
 			return
@@ -2182,7 +2185,38 @@ func (a *App) subtitlesConfigChanged() {
 		r.restart(t)
 	}
 	r.syncTranslation(cfg, t)
+	r.syncSentences(cfg, t)
 	r.refreshShown()
+}
+
+func (r *subRun) syncSentences(cfg *Config, t *subTarget) {
+	if r.ended() {
+		return
+	}
+	r.phMu.Lock()
+	defer r.phMu.Unlock()
+	s := r.sent
+	on := s != nil && s.active()
+	want := sentencesWanted(cfg, t)
+	if on && !want {
+		s.halt("translation is off")
+		if given, seq, ok := s.takeOver(); ok {
+			r.phraser.Resume(given, seq)
+		}
+		r.sent = nil
+		return
+	}
+	if on || !want {
+		return
+	}
+	if s != nil {
+		if given, seq, ok := s.takeOver(); ok {
+			r.phraser.Resume(given, seq)
+		}
+	}
+	if n := newSentRun(r, cfg, t, r.phraser.State(), r.phraser.Seq()); n != nil {
+		r.sent = n
+	}
 }
 
 func runSubcheck(args []string) {
@@ -2200,6 +2234,11 @@ func runSubcheck(args []string) {
 	var words []string
 	file := ""
 	switchTo, switchAt := "", 0
+	type trToggle struct {
+		on bool
+		at int
+	}
+	var toggles []trToggle
 	for _, a := range args[min(1, len(args)):] {
 		if strings.HasSuffix(strings.ToLower(a), ".wav") {
 			file = a
@@ -2208,6 +2247,16 @@ func runSubcheck(args []string) {
 		if v, ok := strings.CutPrefix(a, "model="); ok {
 			cfg.SubtitlesModel = v
 			log.Printf("subcheck: the translation model is %q", v)
+			continue
+		}
+		if v, ok := strings.CutPrefix(a, "translate="); ok {
+			state, at, _ := strings.Cut(v, "@")
+			n, err := strconv.Atoi(at)
+			if (state != "on" && state != "off") || err != nil || n <= 0 {
+				log.Printf("subcheck: %q is not on@seconds or off@seconds", v)
+				return
+			}
+			toggles = append(toggles, trToggle{on: state == "on", at: n})
 			continue
 		}
 		if v, ok := strings.CutPrefix(a, "switch="); ok {
@@ -2271,6 +2320,22 @@ func runSubcheck(args []string) {
 	app.subMu.Lock()
 	app.sub = r
 	app.subMu.Unlock()
+	for _, tg := range toggles {
+		go func() {
+			select {
+			case <-time.After(time.Duration(tg.at) * time.Second):
+			case <-r.done():
+				return
+			}
+			app.mu.Lock()
+			c := *app.cfg
+			c.SubtitlesTranslateOn = tg.on
+			app.cfg = &c
+			app.mu.Unlock()
+			log.Printf("subcheck: after %d s translation is switched %s", tg.at, map[bool]string{true: "on", false: "off"}[tg.on])
+			app.subtitlesConfigChanged()
+		}()
+	}
 	if switchTo != "" {
 		go func() {
 			select {

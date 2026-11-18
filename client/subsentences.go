@@ -80,7 +80,11 @@ func punctModelMissing() string {
 	return ""
 }
 
-func newSentRun(r *subRun, cfg *Config, t *subTarget) *sentRun {
+func sentencesWanted(cfg *Config, t *subTarget) bool {
+	return cfg.SubtitlesSentences && translationTarget(cfg, t) != ""
+}
+
+func newSentRun(r *subRun, cfg *Config, t *subTarget, from subtitles.PhraserState, seq int) *sentRun {
 	if !cfg.SubtitlesSentences {
 		return nil
 	}
@@ -92,7 +96,10 @@ func newSentRun(r *subRun, cfg *Config, t *subTarget) *sentRun {
 		log.Printf("subtitles: sentences are not cut by the punctuation model: %s", why)
 		return nil
 	}
-	s := &sentRun{r: r, params: sentence.Defaults(), heard: sentence.NewHeard(), wake: make(chan struct{}, 1), done: make(chan struct{}), counts: map[string]int{}}
+	s := &sentRun{r: r, params: sentence.Defaults(), heard: sentence.NewHeard(), wake: make(chan struct{}, 1), done: make(chan struct{}), counts: map[string]int{}, seq: seq}
+	for _, op := range s.heard.Seed(from.Seg, from.Done, from.Words, from.Given, from.Carry, time.Now()) {
+		s.queue = append(s.queue, sentItem{op: op})
+	}
 	p := s.params
 	log.Printf("subtitles: sentence ends come from the punctuation model: %d word(s) ahead, silence %.1f s, limit %d words, shortest %d words", p.Ahead, p.Silence.Seconds(), p.Limit, p.MinWords)
 	go s.loop()
@@ -267,6 +274,15 @@ func (s *sentRun) loop() {
 			}
 		}
 	}
+}
+
+func (s *sentRun) halt(why string) {
+	s.mu.Lock()
+	s.failed = true
+	s.why = why
+	s.mu.Unlock()
+	log.Printf("subtitles: the punctuation engine stops: %s", why)
+	s.close()
 }
 
 func (s *sentRun) close() {
