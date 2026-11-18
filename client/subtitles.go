@@ -245,6 +245,7 @@ type subRun struct {
 
 	phMu     sync.Mutex
 	phraser  *subtitles.Phraser
+	sent     *sentRun
 	outMu    sync.Mutex
 	outOrder []int
 	outDone  map[int]subPieceOut
@@ -298,6 +299,7 @@ func startSubtitlesRun(a *App, cfg *Config, opts subOptions) (*subRun, error) {
 	fastRun.begin()
 	r.syncTranslation(cfg, t)
 	r.refreshShown()
+	r.sent = newSentRun(r, cfg, t)
 	go r.loop(t)
 	return r, nil
 }
@@ -418,6 +420,9 @@ func (r *subRun) loop(t *subTarget) {
 		select {
 		case <-r.stopCh:
 			pipe.stop(time.Duration(r.drain.Load()))
+			if r.sent != nil {
+				r.sent.close()
+			}
 			r.finish()
 			return
 		case next := <-r.restartCh:
@@ -445,7 +450,7 @@ func (r *subRun) loop(t *subTarget) {
 			if len(out) > 0 {
 				pipe.feed(out)
 			}
-			r.hear(pipe.target, func(ph *subtitles.Phraser, at time.Time) []subtitles.TextPhrase { return ph.Tick(at) })
+			r.hear(pipe.target, heardEvent{kind: heardTick})
 		case <-dev.C:
 			if !r.fromFile {
 				r.checkDevice(time.Now())
@@ -532,10 +537,25 @@ func (r *subRun) finishLine(at time.Time, text string, t *subTarget) {
 	r.files.Original(cfg.SubtitlesSave, t.lang, t.name, translationTarget(cfg, t) != "", subtitles.Entry(ln.Start, ln.Text))
 }
 
-func (r *subRun) hear(t *subTarget, cut func(*subtitles.Phraser, time.Time) []subtitles.TextPhrase) {
+func (r *subRun) hear(t *subTarget, ev heardEvent) {
 	r.phMu.Lock()
 	defer r.phMu.Unlock()
-	out := cut(r.phraser, time.Now())
+	now := time.Now()
+	if s := r.sent; s != nil {
+		if ev.kind != heardTick && s.feed(ev, now) {
+			ev.cut(r.phraser, now)
+			r.noteSpeechLangLocked()
+			r.board.SetHearing(s.waiting() > 0)
+			return
+		}
+		if given, seq, ok := s.takeOver(); ok {
+			r.phraser.Resume(given, seq)
+		} else if ev.kind == heardTick && s.active() {
+			ev.cut(r.phraser, now)
+			return
+		}
+	}
+	out := ev.cut(r.phraser, now)
 	r.noteSpeechLangLocked()
 	r.board.SetHearing(r.phraser.Waiting() > 0)
 	for _, ph := range out {
@@ -1828,9 +1848,7 @@ func (p *subPipe) phraseLoop() {
 		}
 		p.run.finishLine(ph.At, text, p.target)
 		from, to := ph.At, ph.At.Add(ph.Duration(sampleRate))
-		p.run.hear(p.target, func(x *subtitles.Phraser, at time.Time) []subtitles.TextPhrase {
-			return x.Whole(segments.Join(text), from, to, at)
-		})
+		p.run.hear(p.target, heardEvent{kind: heardWhole, text: segments.Join(text), from: from, to: to})
 	}
 }
 
@@ -1846,9 +1864,7 @@ func (p *subPipe) onSegment(seg int, text string, final bool) {
 		p.run.finishLine(f.Start, f.Text, p.target)
 	}
 	p.run.setLive(cur)
-	p.run.hear(p.target, func(ph *subtitles.Phraser, at time.Time) []subtitles.TextPhrase {
-		return ph.Update(seg, text, final, at)
-	})
+	p.run.hear(p.target, heardEvent{kind: heardUpdate, seg: seg, text: text, final: final})
 }
 
 func (p *subPipe) flushLive() {
@@ -1862,7 +1878,7 @@ func (p *subPipe) flushLive() {
 		p.run.finishLine(f.Start, f.Text, p.target)
 	}
 	p.run.setLive("")
-	p.run.hear(p.target, func(ph *subtitles.Phraser, at time.Time) []subtitles.TextPhrase { return ph.Flush(at) })
+	p.run.hear(p.target, heardEvent{kind: heardFlush})
 }
 
 func (p *subPipe) liveLoop() {
@@ -2196,6 +2212,11 @@ func runSubcheck(args []string) {
 				return
 			}
 			switchTo, switchAt = id, n
+			continue
+		}
+		if a == "sentences" {
+			cfg.SubtitlesSentences = true
+			log.Printf("subcheck: sentence ends come from the punctuation model")
 			continue
 		}
 		if a == "guess" {

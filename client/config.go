@@ -170,6 +170,7 @@ type Config struct {
 	SubtitlesTranslator      string   `json:"subtitles_translator"`
 	SubtitlesModel           string   `json:"subtitles_model"`
 	SubtitlesTopic           bool     `json:"subtitles_topic"`
+	SubtitlesSentences       bool     `json:"subtitles_sentences"`
 	SubtitlesTranslationOnly bool     `json:"subtitles_translation_only"`
 	SubtitlesPairs           []string `json:"subtitles_pairs"`
 	TranslatePort            int      `json:"translate_port"`
