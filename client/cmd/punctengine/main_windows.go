@@ -10,8 +10,6 @@ import (
 	"runtime/debug"
 	"time"
 
-	"golang.org/x/sys/windows"
-
 	"holdtotype/internal/ort"
 	"holdtotype/internal/punct"
 )
@@ -43,10 +41,6 @@ func main() {
 		*dll = filepath.Join(filepath.Dir(exe), "onnxruntime.dll")
 	}
 	start := time.Now()
-	if err := punct.CheckRuntime(loadSystem); err != nil {
-		_ = out.Encode(answer{Error: err.Error()})
-		os.Exit(1)
-	}
 	tok, err := punct.LoadTokenizer(filepath.Join(*dir, "tokenizer.json"))
 	if err != nil {
 		_ = out.Encode(answer{Error: err.Error()})
@@ -89,14 +83,6 @@ func main() {
 		end, prob := punct.Decide(logits, last)
 		_ = out.Encode(answer{End: end, Prob: prob, MS: ms(t0), Tokens: len(ids)})
 	}
-}
-
-func loadSystem(name string) error {
-	h, err := windows.LoadLibraryEx(name, 0, windows.LOAD_LIBRARY_SEARCH_SYSTEM32)
-	if err != nil {
-		return err
-	}
-	return windows.FreeLibrary(h)
 }
 
 func ms(t time.Time) float64 { return float64(time.Since(t).Microseconds()) / 1000 }

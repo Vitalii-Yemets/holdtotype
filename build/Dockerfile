@@ -157,17 +157,18 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 
 FROM debian:bookworm-slim AS ort-fetch
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        curl ca-certificates unzip \
+        curl ca-certificates bzip2 \
     && rm -rf /var/lib/apt/lists/*
-ARG ORT_VERSION=1.20.1
-ARG ORT_SHA256=9c32108e9a1c78b090a95c2a219f244dd5f067d4caf68fb0f967103f3f20839c
-ARG ORT_DLL_SHA256=4cb41e89b8bf30578e1dd95e9c40292d61974a4bfcd666409302c4f0c5aa8ce0
-RUN curl -fL --retry 3 -o /ort.nupkg \
-        "https://api.nuget.org/v3-flatcontainer/microsoft.ml.onnxruntime/${ORT_VERSION}/microsoft.ml.onnxruntime.${ORT_VERSION}.nupkg" \
-    && echo "${ORT_SHA256}  /ort.nupkg" | sha256sum -c - \
-    && unzip -p /ort.nupkg runtimes/win-x64/native/onnxruntime.dll > /onnxruntime.dll \
+ARG ORT_VERSION=1.31.0
+ARG ORT_SHA256=2da4b547127e58f18478beccee92c2958d6b8748a65e7b8628dedaea3df700fa
+ARG ORT_DLL_SHA256=e89b09383f1cb0f2fff9b7e0028e56e8c805479834870deb117bf979836a8f71
+RUN curl -fL --retry 3 -o /ort.tar.bz2 \
+        "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v${ORT_VERSION}/onnxruntime-win-x64-MT-Release-${ORT_VERSION}.tar.bz2" \
+    && echo "${ORT_SHA256}  /ort.tar.bz2" | sha256sum -c - \
+    && mkdir /x && tar -xjf /ort.tar.bz2 -C /x --strip-components=1 \
+    && cp /x/lib/onnxruntime.dll /onnxruntime.dll \
     && echo "${ORT_DLL_SHA256}  /onnxruntime.dll" | sha256sum -c - \
-    && rm /ort.nupkg
+    && rm -rf /x /ort.tar.bz2
 
 FROM debian:bookworm-slim AS sherpa-fetch
 RUN apt-get update && apt-get install -y --no-install-recommends \

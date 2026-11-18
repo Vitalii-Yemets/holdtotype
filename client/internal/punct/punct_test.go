@@ -2,11 +2,9 @@ package punct
 
 import (
 	"encoding/json"
-	"errors"
 	"math"
 	"os"
 	"reflect"
-	"strings"
 	"testing"
 )
 
@@ -112,26 +110,5 @@ func TestDecideTakesTheLastTokenOfEachWord(t *testing.T) {
 	}
 	if prob[1] < 0.9 || math.Abs(prob[2]-(math.E+1)/(2*math.E+4)) > 1e-9 {
 		t.Fatalf("probabilities %v", prob)
-	}
-}
-
-func TestAMissingVisualCRuntimeIsNamed(t *testing.T) {
-	var asked []string
-	err := CheckRuntime(func(name string) error {
-		asked = append(asked, name)
-		if name == "MSVCP140.dll" {
-			return os.ErrNotExist
-		}
-		return nil
-	})
-	var m *MissingRuntime
-	if !errors.As(err, &m) || m.File != "MSVCP140.dll" || !strings.Contains(err.Error(), "Microsoft Visual C++") || !strings.Contains(err.Error(), "MSVCP140.dll") {
-		t.Fatalf("error %v", err)
-	}
-	if len(asked) != 3 {
-		t.Fatalf("asked %v", asked)
-	}
-	if err := CheckRuntime(func(string) error { return nil }); err != nil {
-		t.Fatal(err)
 	}
 }
