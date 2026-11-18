@@ -2,6 +2,7 @@ package subtitles
 
 import (
 	"context"
+	"holdtotype/internal/sentence"
 	"strings"
 	"testing"
 	"time"
@@ -180,7 +181,7 @@ func TestADraftOnlyFillsTheTimeBeforeTheSentenceCloses(t *testing.T) {
 		p := CheckPiece{Seq: s}
 		n := 6
 		if s == 2 {
-			n = 30
+			n = 40
 		}
 		for k := 0; k < n; k++ {
 			p.Parts = append(p.Parts, "word")
@@ -222,7 +223,7 @@ func TestADraftOnlyFillsTheTimeBeforeTheSentenceCloses(t *testing.T) {
 			t.Fatalf("a whole sentence waited: %+v", e)
 		}
 	}
-	if len(draftEv) < 2 || draftEv[0].Lines < 6 || !draftEv[0].Start.Equal(pieces[1].Times[0].Add(4*time.Second)) {
+	if len(draftEv) < 2 || draftEv[0].Lines < 6 || !draftEv[0].Start.Equal(pieces[1].Times[0].Add(sentence.DraftAfter)) {
 		t.Fatalf("drafts %+v", draftEv)
 	}
 	if draftEv[1].Lines < draftEv[0].Lines+6 || draftEv[1].Start.Sub(draftEv[0].Start) < 3*time.Second {

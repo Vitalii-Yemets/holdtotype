@@ -3,7 +3,7 @@ package sentence
 import "time"
 
 const (
-	DraftAfter     = 4 * time.Second
+	DraftAfter     = 8 * time.Second
 	DraftMinWords  = 6
 	DraftMoreWords = 6
 	DraftEvery     = 3 * time.Second
