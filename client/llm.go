@@ -55,8 +55,9 @@ type llamaServer struct {
 	client  *http.Client
 	job     uintptr
 
-	mu     sync.Mutex
-	exited bool
+	mu       sync.Mutex
+	exited   bool
+	stopping bool
 
 	primeMu sync.Mutex
 	primed  atomic.Bool
@@ -204,10 +205,18 @@ func startLlamaServer(spec engineSpec, logw io.Writer) (*llamaServer, error) {
 	s.cmd = cmd
 	s.job = uintptr(attachProcessToJob(cmd.Process.Pid))
 	go func() {
-		_ = cmd.Wait()
+		err := cmd.Wait()
 		s.mu.Lock()
 		s.exited = true
+		stopping := s.stopping
 		s.mu.Unlock()
+		if !stopping {
+			code := -1
+			if cmd.ProcessState != nil {
+				code = cmd.ProcessState.ExitCode()
+			}
+			log.Printf("%s ended by itself with exit code %d (0x%08X): %v", s.label, code, uint32(code), err)
+		}
 	}()
 	return s, nil
 }
@@ -240,6 +249,9 @@ func (s *llamaServer) waitReady(timeout time.Duration) error {
 }
 
 func (s *llamaServer) stop() {
+	s.mu.Lock()
+	s.stopping = true
+	s.mu.Unlock()
 	if s.cmd != nil && s.cmd.Process != nil {
 		_ = s.cmd.Process.Kill()
 	}

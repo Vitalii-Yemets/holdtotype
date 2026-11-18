@@ -232,16 +232,17 @@ type subRun struct {
 
 	files *subtitles.Files
 
-	trMu     sync.Mutex
-	tr       *subTranslator
-	trClosed bool
-	trSeen   string
-	trLang   string
-	trSrc    string
-	trModel  string
-	coldFail sync.Map
-	trShown  atomic.Bool
-	trTo     atomic.Value
+	trMu       sync.Mutex
+	tr         *subTranslator
+	trClosed   bool
+	trSeen     string
+	trLang     string
+	trSrc      string
+	trModel    string
+	coldFail   sync.Map
+	gpuRetried atomic.Bool
+	trShown    atomic.Bool
+	trTo       atomic.Value
 
 	phMu     sync.Mutex
 	phraser  *subtitles.Phraser
@@ -846,6 +847,11 @@ func (r *subRun) startWarm(src editorSource, to string) {
 	go func() {
 		started := time.Now()
 		err := r.app.warmTranslator(src.kind, to)
+		if err != nil && src.kind == editorQuality && asQualityFail(err).code == "crash" && r.gpuRetried.CompareAndSwap(false, true) {
+			log.Printf("subtitles: the graphics card engine stopped while starting, it is started once more: %s", asQualityFail(err).detail)
+			r.app.qualityShutdown()
+			err = r.app.warmTranslator(src.kind, to)
+		}
 		if err != nil {
 			var ff *fastFail
 			switch {
