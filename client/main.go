@@ -676,6 +676,10 @@ func main() {
 			runTrCheck(os.Args[1:][i+1:])
 			return
 		}
+		if arg == "-punctdownload" {
+			runPunctDownload(os.Args[1:][i+1:])
+			return
+		}
 		if arg == "-punctcheck" {
 			runPunctCheck(os.Args[1:][i+1:])
 			return

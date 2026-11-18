@@ -26,7 +26,7 @@ const (
 	punctAnswerWait = 1500 * time.Millisecond
 )
 
-var punctModelDir = filepath.Join("models", "punct", "horizon")
+var punctModelDir = filepath.Join("models", filepath.FromSlash(punct.ModelDir))
 
 type punctEngine struct {
 	cmd    *exec.Cmd

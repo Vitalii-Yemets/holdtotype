@@ -33,6 +33,7 @@ type modelInfo struct {
 	Dir       string
 	Files     []string
 	BaseURL   string
+	Remote    map[string]string
 	Langs     string
 	Punct     bool
 	Translate bool
@@ -433,6 +434,10 @@ func (a *App) downloadModel(id string) {
 }
 
 func (a *App) startMultiDownload(key string, m *modelInfo) {
+	a.startMultiDownloadThen(key, m, nil)
+}
+
+func (a *App) startMultiDownloadThen(key string, m *modelInfo, then func()) {
 	dlMu.Lock()
 	if st := dl[key]; st != nil && st.active {
 		dlMu.Unlock()
@@ -458,6 +463,9 @@ func (a *App) startMultiDownload(key string, m *modelInfo) {
 			dl[key] = &dlState{pct: 100}
 		}
 		dlMu.Unlock()
+		if err == nil && then != nil {
+			then()
+		}
 	}()
 }
 
@@ -496,7 +504,11 @@ func (a *App) doMultiDownload(ctx context.Context, key string, m *modelInfo) err
 				return uiErr("mkdir "+sub+": "+err.Error(), trf("err.model.dir", sub))
 			}
 		}
-		written, err := downloadFile(ctx, m.BaseURL+f, filepath.Join(dir, f), func(n int64) {
+		src := f
+		if r := m.Remote[f]; r != "" {
+			src = r
+		}
+		written, err := downloadFile(ctx, m.BaseURL+src, filepath.Join(dir, f), func(n int64) {
 			dlMu.Lock()
 			if st := dl[key]; st != nil && total > 0 {
 				pct := int((doneBytes + n) * 100 / total)
@@ -676,7 +688,7 @@ func cleanupStaleParts() {
 	if activeAny {
 		return
 	}
-	dirs := []string{"models"}
+	dirs := []string{"models", punctModelDir}
 	for _, e := range entries {
 		if e.IsDir() {
 			dirs = append(dirs, filepath.Join("models", e.Name()))
@@ -870,6 +882,7 @@ type stateOut struct {
 	PostPrompts int             `json:"post_prompts"`
 	PostRemote  bool            `json:"post_remote"`
 	SubsTr      subTrState      `json:"subs_tr"`
+	Punct       punctState      `json:"punct"`
 	SubsPlace   subPlaceState   `json:"subs_place"`
 	UpdChecked  int64           `json:"upd_checked"`
 	UpdVersion  string          `json:"upd_version"`
@@ -1009,6 +1022,9 @@ func installedModelNames() []string {
 			out = append(out, modelCatalog[i].NameKey)
 		}
 	}
+	if punctInstalled() {
+		out = append(out, punctModel.NameKey)
+	}
 	return out
 }
 
@@ -1133,6 +1149,7 @@ func (a *App) stateSnapshot() string {
 		PostRemote:  postAPIOn(cfg),
 		Subtitles:   a.subtitlesState(),
 		SubsTr:      a.subtitlesTranslator(cfg),
+		Punct:       punctStateNow(cfg),
 		SubsPlace:   subPlaceState{Position: cfg.SubtitlesPos, Custom: cfg.SubtitlesXY},
 	}
 	a.mu.Lock()
@@ -1363,8 +1380,12 @@ func (a *App) verifyModels() string {
 		Note string `json:"note"`
 	}
 	var rows []row
+	checkList := make([]*modelInfo, 0, len(modelCatalog)+1)
 	for i := range modelCatalog {
-		m := &modelCatalog[i]
+		checkList = append(checkList, &modelCatalog[i])
+	}
+	checkList = append(checkList, &punctModel)
+	for _, m := range checkList {
 		if !m.installed() || len(m.Hashes) == 0 {
 			continue
 		}

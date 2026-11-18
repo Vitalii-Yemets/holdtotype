@@ -3,11 +3,10 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
-	"path/filepath"
 	"sync"
 	"time"
 
+	"holdtotype/internal/punct"
 	"holdtotype/internal/sentence"
 	"holdtotype/internal/subtitles"
 )
@@ -75,16 +74,18 @@ type sentRun struct {
 }
 
 func punctModelMissing() string {
-	for _, f := range []string{"model_quantized.onnx", "tokenizer.json"} {
-		if _, err := os.Stat(filepath.Join(punctModelDir, f)); err != nil {
-			return fmt.Sprintf("the punctuation model is missing: %s", filepath.Join(punctModelDir, f))
-		}
+	if punctDeleting.Load() {
+		return "the punctuation model is being deleted"
 	}
-	return ""
+	return punct.Missing(punctModelDir)
 }
 
 func sentencesWanted(cfg *Config, t *subTarget) bool {
-	return cfg.SubtitlesSentences && translationTarget(cfg, t) != ""
+	return sentencesOff(cfg, t) == ""
+}
+
+func sentencesOff(cfg *Config, t *subTarget) string {
+	return punct.OffReason(cfg.SubtitlesSentences, translationTarget(cfg, t) != "", punctModelMissing())
 }
 
 func newSentRun(r *subRun, cfg *Config, t *subTarget, from subtitles.PhraserState, seq int) *sentRun {
@@ -229,6 +230,8 @@ func (s *sentRun) loop() {
 		return
 	}
 	defer eng.stop()
+	punctLive.Add(1)
+	defer punctLive.Add(-1)
 	log.Printf("subtitles: the punctuation engine is ready after %.1f s", time.Since(started).Seconds())
 	broken := false
 	judge := func(ws []string) ([]bool, []float64, error) {

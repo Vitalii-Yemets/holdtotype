@@ -2209,9 +2209,10 @@ func (r *subRun) syncSentences(cfg *Config, t *subTarget) {
 	defer r.phMu.Unlock()
 	s := r.sent
 	on := s != nil && s.active()
-	want := sentencesWanted(cfg, t)
+	why := sentencesOff(cfg, t)
+	want := why == ""
 	if on && !want {
-		s.halt("translation is off")
+		s.halt(why)
 		if given, seq, ok := s.takeOver(); ok {
 			r.phraser.Resume(given, seq)
 		}
