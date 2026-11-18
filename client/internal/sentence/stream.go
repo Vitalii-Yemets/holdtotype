@@ -10,14 +10,15 @@ const (
 )
 
 type Params struct {
-	Ahead   int
-	Silence time.Duration
-	Limit   int
-	Context int
+	Ahead    int
+	Silence  time.Duration
+	Limit    int
+	Context  int
+	MinWords int
 }
 
 func Defaults() Params {
-	return Params{Ahead: 3, Silence: 2 * time.Second, Limit: 40, Context: 30}
+	return Params{Ahead: 3, Silence: 2 * time.Second, Limit: 40, Context: 30, MinWords: 3}
 }
 
 type Judge func(words []string) ([]bool, []float64, error)
@@ -55,6 +56,21 @@ func New(p Params, judge Judge) *Stream {
 
 func (s *Stream) Open() int { return len(s.words) - s.start }
 
+func (s *Stream) Len() int { return len(s.words) }
+
+func (s *Stream) Start() int { return s.start }
+
+func (s *Stream) Replace(i int, word string) bool {
+	if i < s.start || i >= len(s.words) {
+		return false
+	}
+	if s.words[i] != word {
+		s.words[i] = word
+		s.lastLo, s.lastJ = -1, -1
+	}
+	return true
+}
+
 func (s *Stream) Quiet(now time.Time) []Close {
 	j := len(s.words) - 1
 	if s.p.Silence <= 0 || j < s.start || now.Sub(s.times[j]) < s.p.Silence {
@@ -81,7 +97,10 @@ func (s *Stream) Add(word string, at time.Time) ([]Close, error) {
 			s.end, s.prob, s.lastLo, s.lastJ = end, prob, lo, j
 		}
 		hit := -1
-		for i := s.start; i <= j-s.p.Ahead; i++ {
+		for i := s.start + s.p.MinWords - 1; i <= j-s.p.Ahead; i++ {
+			if i < s.start {
+				continue
+			}
 			if i-lo < len(s.end) && s.end[i-lo] {
 				hit = i
 				break
