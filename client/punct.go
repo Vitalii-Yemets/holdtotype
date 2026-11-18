@@ -340,7 +340,7 @@ func sentencePieces(lines []subtitles.CallLine, base time.Time) ([]subtitles.Che
 	out := make([]subtitles.CheckPiece, 0, len(ps))
 	for i, p := range ps {
 		how[p.How]++
-		out = append(out, subtitles.CheckPiece{Seq: i + 1, Text: p.Text, Words: p.Words, Release: p.At, LastWord: p.Last})
+		out = append(out, subtitles.CheckPiece{Seq: i + 1, Text: p.Text, Words: p.Words, Release: p.At, LastWord: p.Last, Parts: p.Parts, Times: p.Times})
 	}
 	return out, how, nil
 }

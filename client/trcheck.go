@@ -104,6 +104,7 @@ func runTrCheck(args []string) {
 	log.Printf("trcheck: %s loaded in %.1f s, warm after %.1f s", m.Name, loaded.Seconds(), time.Since(started).Seconds())
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.Local)
 	pieces := subtitles.PhraseCall(lines, lang, base)
+	drafts := len(args) > 6 && args[6] == "sentences" && cfg.SubtitlesSentenceDraft && !(len(args) > 7 && args[7] == "nodraft")
 	if len(args) > 6 && args[6] == "sentences" {
 		ps, how, err := sentencePieces(lines, base)
 		if err != nil {
@@ -161,6 +162,39 @@ func runTrCheck(args []string) {
 			}
 			return text, verdict, d, nil
 		},
+	}
+	if drafts {
+		calls.Draft = func(text string, prior []subtitles.Turn, about string, limit time.Duration) (string, subtitles.Verdict, subtitles.ServiceEnd, time.Duration, error) {
+			req := trRequestFor(src, from, target, prior, text, about)
+			ctx, cancel := ctxTimeout(subtitles.TranslateTimeout)
+			defer cancel()
+			yctx := ctx
+			if limit > 0 && limit < subtitles.TranslateTimeout {
+				var stop context.CancelFunc
+				yctx, stop = context.WithTimeout(ctx, limit)
+				defer stop()
+			}
+			words := len(strings.Fields(text))
+			t0 := time.Now()
+			var out string
+			var err error
+			if req.prompt != "" {
+				out, err = srv.completeStream(yctx, req.prompt, subtitles.TranslateTokens(words), nil)
+			} else {
+				out, err = srv.chatStream(yctx, req.msgs, subtitles.TranslateTokens(words), "", nil)
+			}
+			d := time.Since(t0)
+			switch {
+			case err == nil:
+				res, verdict := subtitles.CleanTranslation(text, out, target)
+				return res, verdict, subtitles.EndWhole, d, nil
+			case ctx.Err() == context.DeadlineExceeded:
+				return "", subtitles.TrEmpty, subtitles.EndTimeout, d, err
+			case yctx.Err() == context.DeadlineExceeded:
+				return "", subtitles.TrEmpty, subtitles.EndYield, d, err
+			}
+			return "", subtitles.TrEmpty, subtitles.EndWhole, d, err
+		}
 	}
 	if topic != nil {
 		calls.Service = func(step subtitles.Step, msgs []subtitles.Message, limit time.Duration) (string, subtitles.ServiceEnd, time.Duration, error) {
@@ -246,6 +280,60 @@ func runTrCheck(args []string) {
 		summary["terms"] = topic.Terms()
 		summary["topic_counts"] = topic.Counts
 	}
+	summary["drafts_on"] = drafts
+	if drafts {
+		shownAt, finalAt := map[int]time.Time{}, map[int]time.Time{}
+		asked, shown := 0, 0
+		for _, e := range events {
+			switch e.Kind {
+			case "draft":
+				asked++
+				if e.Err == "" && e.Verdict == subtitles.TrOK {
+					shown++
+					if _, ok := shownAt[e.Seqs[0]]; !ok {
+						shownAt[e.Seqs[0]] = e.End
+					}
+				}
+			case "piece":
+				for _, q := range e.Seqs {
+					if _, ok := finalAt[q]; !ok {
+						finalAt[q] = e.End
+					}
+				}
+			}
+		}
+		var stand []float64
+		for q, at := range shownAt {
+			if f, ok := finalAt[q]; ok {
+				stand = append(stand, f.Sub(at).Seconds())
+			}
+		}
+		summary["drafts_asked"], summary["drafts_shown"], summary["drafted_sentences"] = asked, shown, len(shownAt)
+		summary["draft_stand_median_s"], summary["draft_stand_p90_s"], summary["draft_stand_max_s"] = percentile(stand, 0.5), percentile(stand, 0.9), percentile(stand, 1)
+	}
+	longest := 0
+	for k, p := range pieces {
+		if p.Words > pieces[longest].Words {
+			longest = k
+		}
+	}
+	if len(pieces) > 0 {
+		p := pieces[longest]
+		first := p.LastWord
+		if len(p.Times) > 0 {
+			first = p.Times[0]
+		}
+		line := time.Time{}
+		for _, e := range events {
+			if (e.Kind == "piece" || e.Kind == "draft" && e.Err == "" && e.Verdict == subtitles.TrOK) && containsInt(e.Seqs, p.Seq) && (line.IsZero() || e.End.Before(line)) {
+				line = e.End
+			}
+		}
+		summary["longest_words"] = p.Words
+		if !line.IsZero() {
+			summary["longest_first_line_s"] = line.Sub(first).Seconds()
+		}
+	}
 	out, _ := json.MarshalIndent(map[string]any{"summary": summary, "events": rows}, "", " ")
 	if err := os.WriteFile(args[2], out, 0o644); err != nil {
 		log.Printf("trcheck: %v", err)
@@ -256,4 +344,13 @@ func runTrCheck(args []string) {
 
 func ctxTimeout(d time.Duration) (context.Context, context.CancelFunc) {
 	return context.WithTimeout(context.Background(), d)
+}
+
+func containsInt(xs []int, x int) bool {
+	for _, v := range xs {
+		if v == x {
+			return true
+		}
+	}
+	return false
 }
