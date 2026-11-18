@@ -392,6 +392,22 @@ func (p *Phraser) Flush(now time.Time) []TextPhrase {
 	return out
 }
 
+func (p *Phraser) Seq() int { return p.seq }
+
+func (p *Phraser) Resume(given, seq int) {
+	p.carry = nil
+	if given > len(p.words) {
+		given = len(p.words)
+	}
+	if given < 0 {
+		given = 0
+	}
+	p.given = given
+	if seq > p.seq {
+		p.seq = seq
+	}
+}
+
 func (p *Phraser) Waiting() int {
 	return len(p.carry) + len(p.words) - p.given
 }

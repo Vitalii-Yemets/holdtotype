@@ -582,3 +582,21 @@ func TestFlush(t *testing.T) {
 		t.Fatalf("an empty flush %v", textsOf(got))
 	}
 }
+
+func TestThePhraserTakesOverFromTheGivenWord(t *testing.T) {
+	t0 := time.Date(2026, 11, 18, 10, 0, 0, 0, time.Local)
+	p := NewPhraser()
+	p.Update(1, "one two three four five six", false, t0)
+	p.Resume(3, 40)
+	out := p.Update(1, "one two three four five six seven.", true, t0.Add(time.Second))
+	var words []string
+	for _, ph := range out {
+		words = append(words, ph.Text)
+		if ph.Seq <= 40 {
+			t.Fatalf("a phrase number was given twice: %+v", ph)
+		}
+	}
+	if got := strings.Join(words, " "); got != "four five six seven." {
+		t.Fatalf("got %q", got)
+	}
+}
