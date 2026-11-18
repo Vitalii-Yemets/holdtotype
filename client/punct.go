@@ -177,7 +177,7 @@ func spread(xs []float64) map[string]float64 {
 
 func runPunctCheck(args []string) {
 	if len(args) < 3 {
-		log.Printf("punctcheck: needs <text file> <run start hh:mm:ss or all> <output file> [words ahead] [silence, s] [limit, words]")
+		log.Printf("punctcheck: needs <text file> <run start hh:mm:ss or all> <output file> [words ahead] [silence, s] [limit, words] [shortest, words]")
 		return
 	}
 	raw, err := os.ReadFile(args[0])
@@ -204,6 +204,11 @@ func runPunctCheck(args []string) {
 	if len(args) > 5 {
 		if n, err := strconv.Atoi(args[5]); err == nil && n >= 0 {
 			p.Limit = n
+		}
+	}
+	if len(args) > 6 {
+		if n, err := strconv.Atoi(args[6]); err == nil && n >= 0 {
+			p.MinWords = n
 		}
 	}
 	threads := 1
@@ -234,7 +239,7 @@ func runPunctCheck(args []string) {
 	log.Printf("punctcheck: the engine is ready after %.1f s (model loaded in %.1f s), %d word(s), %d thread(s)", time.Since(started).Seconds(), eng.LoadMS/1000, len(words), threads)
 	secs := func(t time.Time) float64 { return t.Sub(base).Seconds() }
 	result := map[string]any{"run": args[1], "words": len(words), "threads": threads, "load_ms": eng.LoadMS,
-		"params": map[string]any{"ahead": p.Ahead, "silence_s": p.Silence.Seconds(), "limit": p.Limit, "context": p.Context}}
+		"params": map[string]any{"ahead": p.Ahead, "silence_s": p.Silence.Seconds(), "limit": p.Limit, "context": p.Context, "shortest": p.MinWords}}
 	if os.Getenv("HT_PUNCT_BENCH") != "" {
 		bench := map[string]any{}
 		for _, size := range []int{20, 40, 70} {
@@ -303,4 +308,39 @@ func runPunctCheck(args []string) {
 		return
 	}
 	log.Printf("punctcheck: %d sentence(s) from %d word(s) in %d run(s) of the model, %.1f ms each (median), by %v", len(out), len(words), len(runs), spread(ms)["median"], how)
+}
+
+func sentencePieces(lines []subtitles.CallLine, base time.Time) ([]subtitles.CheckPiece, map[string]int, error) {
+	eng, err := startPunctEngine(1)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer eng.stop()
+	judge := func(ws []string) ([]bool, []float64, error) {
+		a, err := eng.judge(ws)
+		if err != nil {
+			return nil, nil, err
+		}
+		return a.End, a.Prob, nil
+	}
+	c := sentence.NewCutter(sentence.Defaults(), judge)
+	var ps []sentence.Piece
+	for _, l := range lines {
+		for k, w := range l.Words {
+			back := time.Duration(float64(len(l.Words)-1-k) / subtitles.CheckRate * float64(time.Second))
+			out, err := c.Apply(sentence.Op{Kind: sentence.OpAdd, Raw: w, Word: punct.Norm(w), At: base.Add(l.At - back)})
+			if err != nil {
+				return nil, nil, err
+			}
+			ps = append(ps, out...)
+		}
+	}
+	ps = append(ps, c.Flush()...)
+	how := map[string]int{}
+	out := make([]subtitles.CheckPiece, 0, len(ps))
+	for i, p := range ps {
+		how[p.How]++
+		out = append(out, subtitles.CheckPiece{Seq: i + 1, Text: p.Text, Words: p.Words, Release: p.At, LastWord: p.Last})
+	}
+	return out, how, nil
 }

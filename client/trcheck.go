@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"holdtotype/internal/sentence"
 	"holdtotype/internal/subtitles"
 	"holdtotype/internal/trmodel"
 )
@@ -46,7 +47,7 @@ func percentile(xs []float64, q float64) float64 {
 
 func runTrCheck(args []string) {
 	if len(args) < 3 {
-		log.Printf("trcheck: needs <text file> <run start hh:mm:ss or all> <output file> [model id or own:file] [target language] [off, topic or terms]")
+		log.Printf("trcheck: needs <text file> <run start hh:mm:ss or all> <output file> [model id or own:file] [target language] [off, topic or terms] [sentences]")
 		return
 	}
 	raw, err := os.ReadFile(args[0])
@@ -103,6 +104,15 @@ func runTrCheck(args []string) {
 	log.Printf("trcheck: %s loaded in %.1f s, warm after %.1f s", m.Name, loaded.Seconds(), time.Since(started).Seconds())
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.Local)
 	pieces := subtitles.PhraseCall(lines, lang, base)
+	if len(args) > 6 && args[6] == "sentences" {
+		ps, how, err := sentencePieces(lines, base)
+		if err != nil {
+			log.Printf("trcheck: the sentences cannot be cut: %v", err)
+			return
+		}
+		pieces = ps
+		log.Printf("trcheck: %d sentence(s): %d closed by the model, %d by silence, %d by the limit, %d at the end", len(ps), how[sentence.ByModel], how[sentence.BySilence], how[sentence.ByLimit], how[sentence.ByEnd])
+	}
 	from := speechLang(lang)
 	src := editorSource{kind: editorQuality, model: m}
 	useTopic, useTerms := cfg.SubtitlesTopic && m.Topic, m.Terms
