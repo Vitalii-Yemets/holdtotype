@@ -39,15 +39,15 @@ Every shot below is the Editor design, the default: dark grey with a blue accent
 
 | Status | System |
 |---|---|
-| [![Status: is everything ready, at a glance](docs/shot-state.png)](docs/shot-state.png) | [![System: language, design, updates, maintenance and the recognition server](docs/shot-system.png)](docs/shot-system.png) |
+| [![Status: is everything ready, at a glance, with the subtitles switches for translation, the window layout and saving the transcript](docs/shot-state.png)](docs/shot-state.png) | [![System: language, design, updates, maintenance and the recognition server](docs/shot-system.png)](docs/shot-system.png) |
 | **Models** | **Microphone** |
-| [![Every model in one place: installed, to download, the Hugging Face search, unloading when idle](docs/shot-library.png)](docs/shot-library.png) | [![Device, level meter and the microphone test](docs/shot-mic.png)](docs/shot-mic.png) |
+| [![Every model in one place: recognition, editing, subtitle translation and the sentence end model, unloading when idle and the checksum check](docs/shot-library.png)](docs/shot-library.png) | [![Device, level meter and the microphone test](docs/shot-mic.png)](docs/shot-mic.png) |
 | **History** | **Controls & behaviour** |
 | [![History with its retention and its exclusions](docs/shot-history.png)](docs/shot-history.png) | [![The shortcut, insertion and the on-screen plate](docs/shot-dictation.png)](docs/shot-dictation.png) |
 | **Languages** | **Rules** |
 | [![A model per language](docs/shot-models.png)](docs/shot-models.png) | [![Dictionary, replacements and voice commands](docs/shot-rules.png)](docs/shot-rules.png) |
 | **Post-processing** | **Subtitles & translation** |
-| [![The editor model and the prompt chain](docs/shot-post.png)](docs/shot-post.png) | [![Subtitles for what the computer plays: translation, the three translators and the window](docs/shot-subs.png)](docs/shot-subs.png) |
+| [![The editor model and the prompt chain](docs/shot-post.png)](docs/shot-post.png) | [![Subtitles for what the computer plays: translation in whole sentences and the Quality translator with its downloaded models](docs/shot-subs.png)](docs/shot-subs.png) |
 | **Help** | **About** |
 | [![The guide with its contents pinned to the right](docs/shot-help.png)](docs/shot-help.png) | [![Version and every external dependency with its licence](docs/shot-about.png)](docs/shot-about.png) |
 | **Contacts** | **Installer** |
@@ -93,7 +93,7 @@ Every shot below is the Editor design, the default: dark grey with a blue accent
 
 ### Option A — installer
 
-Download `holdtotype-setup.exe` from [Releases](https://github.com/Vitalii-Yemets/holdtotype/releases) and run it. The themed installer (~16 MB):
+Download `holdtotype-setup.exe` from [Releases](https://github.com/Vitalii-Yemets/holdtotype/releases) and run it. The themed installer (~68 MB):
 
 - installs without admin rights to `%LOCALAPPDATA%\Programs\HoldToType` (pick any folder via the browse button);
 - can download the recognition model right during installation (Nemotron 3.5, Parakeet TDT 0.6B v3, GigaAM v3, or Whisper Base / Small / Medium / Turbo) — by default it downloads nothing and the app fetches what its wizard proposes for the recognition language (GigaAM v3 for Russian, Parakeet for Polish, Nemotron 3.5 for English, Ukrainian, German, French, Spanish, Italian and several more, Whisper Medium for the rest; the download can be put off and picked up later on the Models tab); a download in progress can be stopped, and the installation still finishes;
