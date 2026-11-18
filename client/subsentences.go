@@ -63,12 +63,15 @@ type sentRun struct {
 	failed  bool
 	resumed bool
 	why     string
-	seq     int
+	nums    *sentence.Numbers
 	closed  bool
 	wake    chan struct{}
 	done    chan struct{}
 	counts  map[string]int
 	lastEnd time.Time
+
+	draftPara bool
+	lastDraft sentence.Draft
 }
 
 func punctModelMissing() string {
@@ -96,7 +99,7 @@ func newSentRun(r *subRun, cfg *Config, t *subTarget, from subtitles.PhraserStat
 		log.Printf("subtitles: sentences are not cut by the punctuation model: %s", why)
 		return nil
 	}
-	s := &sentRun{r: r, params: sentence.Defaults(), heard: sentence.NewHeard(), wake: make(chan struct{}, 1), done: make(chan struct{}), counts: map[string]int{}, seq: seq}
+	s := &sentRun{r: r, params: sentence.Defaults(), heard: sentence.NewHeard(), wake: make(chan struct{}, 1), done: make(chan struct{}), counts: map[string]int{}, nums: sentence.NewNumbers(seq)}
 	for _, op := range s.heard.Seed(from.Seg, from.Done, from.Words, from.Given, from.Carry, time.Now()) {
 		s.queue = append(s.queue, sentItem{op: op})
 	}
@@ -168,15 +171,17 @@ func (s *sentRun) takeOver() (int, int, bool) {
 		return 0, 0, false
 	}
 	s.resumed = true
-	return s.heard.Given(), s.seq, true
+	return s.heard.Given(), s.nums.Last(), true
 }
 
 func (s *sentRun) emit(ps []sentence.Piece) {
 	for _, p := range ps {
 		s.mu.Lock()
-		s.seq++
-		seq := s.seq
+		seq, had := s.nums.Take()
 		para := s.lastEnd.IsZero() || p.Start.Sub(s.lastEnd) >= subtitles.PhrasePause
+		if had {
+			para, s.lastDraft = s.draftPara, sentence.Draft{}
+		}
 		s.lastEnd = p.Last
 		s.counts[p.How]++
 		s.mu.Unlock()
@@ -245,6 +250,7 @@ func (s *sentRun) loop() {
 		case <-s.wake:
 		case <-tick.C:
 			s.emit(c.Quiet(time.Now()))
+			s.checkDraft(c)
 			continue
 		}
 		for {
@@ -272,6 +278,7 @@ func (s *sentRun) loop() {
 				s.fail(c, err.Error())
 				return
 			}
+			s.checkDraft(c)
 		}
 	}
 }
@@ -283,6 +290,27 @@ func (s *sentRun) halt(why string) {
 	s.mu.Unlock()
 	log.Printf("subtitles: the punctuation engine stops: %s", why)
 	s.close()
+}
+
+func (s *sentRun) checkDraft(c *sentence.Cutter) {
+	if cfg := s.r.app.snapshot(); !cfg.SubtitlesSentenceDraft || translationSource(cfg).kind == editorFast {
+		return
+	}
+	text, words, first := c.OpenText()
+	now := time.Now()
+	s.mu.Lock()
+	if words == 0 || !sentence.DraftDue(words, first, s.lastDraft, now) {
+		s.mu.Unlock()
+		return
+	}
+	seq, fresh := s.nums.Reserve()
+	if fresh {
+		s.draftPara = s.lastEnd.IsZero() || first.Sub(s.lastEnd) >= subtitles.PhrasePause
+	}
+	s.lastDraft = sentence.Draft{Words: words, At: now}
+	para := s.draftPara
+	s.mu.Unlock()
+	s.r.offerDraft(seq, para, text)
 }
 
 func (s *sentRun) close() {

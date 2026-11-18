@@ -171,6 +171,7 @@ type Config struct {
 	SubtitlesModel           string   `json:"subtitles_model"`
 	SubtitlesTopic           bool     `json:"subtitles_topic"`
 	SubtitlesSentences       bool     `json:"subtitles_sentences"`
+	SubtitlesSentenceDraft   bool     `json:"subtitles_sentence_draft"`
 	SubtitlesTranslationOnly bool     `json:"subtitles_translation_only"`
 	SubtitlesPairs           []string `json:"subtitles_pairs"`
 	TranslatePort            int      `json:"translate_port"`
@@ -273,6 +274,7 @@ func defaultConfig() *Config {
 		SubtitlesLines:    defaultSubtitlesLines,
 		SubtitlesSize:     "m",
 		SubtitlesTopic:    true,
+		SubtitlesSentenceDraft: true,
 		TranslatePort:     defaultTranslatePort,
 	}
 }

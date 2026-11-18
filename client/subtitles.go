@@ -578,6 +578,7 @@ func (r *subRun) phraseCut(ph subtitles.TextPhrase, t *subTarget) {
 	}
 	to := translationTarget(cfg, t)
 	if to == "" {
+		r.dropDraft(ph.Seq, ph.Para, text)
 		r.translationPaused()
 		return
 	}
@@ -659,6 +660,7 @@ func (r *subRun) finish() {
 	if w != nil {
 		w.stop()
 		trSummary = w.summary()
+		w.logDrafts()
 	}
 	r.app.subMu.Lock()
 	cur := r.app.sub
@@ -940,6 +942,9 @@ type subTranslator struct {
 	histReset  atomic.Bool
 	topic      *subtitles.Topic
 	giveWay    context.CancelCauseFunc
+	draft      *draftReq
+	draftLines subtitles.DraftLines
+	drafts     draftCounts
 
 	pieces     atomic.Int64
 	translated atomic.Int64
@@ -989,6 +994,10 @@ func (w *subTranslator) push(ph subtitles.TextPhrase, text, to string) {
 	}
 	w.topic.Heard(text, ph.Heard)
 	r.board.AddPiece(ph.Seq, ph.Para, text)
+	w.draftLines.Final(ph.Seq)
+	if w.draft != nil && w.draft.seq == ph.Seq {
+		w.draft = nil
+	}
 	r.pieceQueued(ph.Seq)
 	dropped := w.q.Push(subtitles.Pending{Seq: ph.Seq, Text: text, Words: len(strings.Fields(text)), Target: to, Para: ph.Para, Start: ph.Start, Heard: ph.Heard})
 	w.yieldLocked()
@@ -1143,7 +1152,7 @@ func (w *subTranslator) loop() {
 				w.noteDrop(fmt.Sprintf("%d phrase(s) waited more than %.0f s for translation and are shown as heard", len(stale), subtitles.TranslateMaxWait.Seconds()))
 			}
 			if !ok {
-				if w.serviceStep() {
+				if w.draftStep() || w.serviceStep() {
 					continue
 				}
 				break
@@ -1216,8 +1225,11 @@ func (w *subTranslator) handle(b subtitles.Batch) {
 	}
 	w.mu.Lock()
 	w.used = src.label()
+	shown := w.draftLines.TakeShown(seq)
 	w.mu.Unlock()
-	r.board.SetPiece(seq, "", subtitles.PieceRunning)
+	if !shown {
+		r.board.SetPiece(seq, "", subtitles.PieceRunning)
+	}
 	if src.kind == editorFast {
 		w.handleFastBatch(b, src)
 		return
