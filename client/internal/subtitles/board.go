@@ -180,6 +180,10 @@ func (b *Board) findPiece(seq int) int {
 func (b *Board) AddPiece(seq int, para bool, source string) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
+	if i := b.findPiece(seq); i >= 0 {
+		b.pieces[i].source = oneLine(source)
+		return
+	}
 	b.pieces = append(b.pieces, piece{seq: seq, para: para, source: oneLine(source)})
 	if over := len(b.pieces) - b.keep; over > 0 {
 		n := copy(b.pieces, b.pieces[over:])

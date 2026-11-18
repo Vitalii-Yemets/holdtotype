@@ -171,3 +171,61 @@ func TestAServiceRequestGivesWayToTheNextPieceAndKeepsItsLines(t *testing.T) {
 		t.Fatalf("yielded %d, terms %+v, counts %+v", yielded, tp.Terms(), tp.Counts)
 	}
 }
+
+func TestADraftOnlyFillsTheTimeBeforeTheSentenceCloses(t *testing.T) {
+	t0 := time.Date(2026, 11, 18, 10, 0, 0, 0, time.Local)
+	var pieces []CheckPiece
+	at := t0
+	for s := 1; s <= 3; s++ {
+		p := CheckPiece{Seq: s}
+		n := 6
+		if s == 2 {
+			n = 30
+		}
+		for k := 0; k < n; k++ {
+			p.Parts = append(p.Parts, "word")
+			p.Times = append(p.Times, at)
+			at = at.Add(400 * time.Millisecond)
+		}
+		p.Text = strings.Join(p.Parts, " ")
+		p.Words = n
+		p.LastWord = p.Times[n-1]
+		p.Release = p.LastWord.Add(500 * time.Millisecond)
+		pieces = append(pieces, p)
+	}
+	drafts := 0
+	calls := CheckCalls{
+		Translate: func(b Batch, prior []Turn, context string) (string, Verdict, time.Duration, error) {
+			return "перевод", TrOK, 300 * time.Millisecond, nil
+		},
+		Draft: func(text string, prior []Turn, about string, limit time.Duration) (string, Verdict, ServiceEnd, time.Duration, error) {
+			drafts++
+			if limit < time.Second {
+				return "", TrEmpty, EndYield, limit, context.DeadlineExceeded
+			}
+			return "черновик", TrOK, EndWhole, 700 * time.Millisecond, nil
+		},
+	}
+	ev := RunCheck(pieces, "ru", nil, calls)
+	var draftEv []CheckEvent
+	for _, e := range ev {
+		if e.Kind == "draft" {
+			draftEv = append(draftEv, e)
+			if e.Seqs[0] != 2 {
+				t.Fatalf("a draft for a short sentence: %+v", e)
+			}
+			if e.End.After(pieces[1].Release) {
+				t.Fatalf("a draft ran past the end of its sentence: %+v", e)
+			}
+		}
+		if e.Kind == "piece" && e.Start.After(pieces[e.Seqs[0]-1].Release.Add(time.Millisecond)) && e.Seqs[0] != 3 {
+			t.Fatalf("a whole sentence waited: %+v", e)
+		}
+	}
+	if len(draftEv) < 2 || draftEv[0].Lines < 6 || !draftEv[0].Start.Equal(pieces[1].Times[0].Add(4*time.Second)) {
+		t.Fatalf("drafts %+v", draftEv)
+	}
+	if draftEv[1].Lines < draftEv[0].Lines+6 || draftEv[1].Start.Sub(draftEv[0].Start) < 3*time.Second {
+		t.Fatalf("the update came too soon: %+v", draftEv)
+	}
+}

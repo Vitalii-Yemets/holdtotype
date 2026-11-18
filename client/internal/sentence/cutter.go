@@ -14,6 +14,8 @@ type Piece struct {
 	Last  time.Time
 	At    time.Time
 	How   string
+	Parts []string
+	Times []time.Time
 }
 
 type token struct {
@@ -37,6 +39,18 @@ func NewCutter(p Params, judge Judge) *Cutter {
 
 func (c *Cutter) Open() int { return c.st.Open() }
 
+func (c *Cutter) OpenText() (string, int, time.Time) {
+	start := c.st.Start()
+	if start >= len(c.toks) {
+		return "", 0, time.Time{}
+	}
+	parts := make([]string, 0, len(c.toks)-start)
+	for _, t := range c.toks[start:] {
+		parts = append(parts, t.text())
+	}
+	return strings.Join(parts, " "), len(c.toks) - start, c.times[start]
+}
+
 func (c *Cutter) pieces(cl []Close) []Piece {
 	out := make([]Piece, 0, len(cl))
 	for _, x := range cl {
@@ -45,7 +59,8 @@ func (c *Cutter) pieces(cl []Close) []Piece {
 			parts = append(parts, c.toks[i].text())
 		}
 		text := strings.Join(parts, " ")
-		out = append(out, Piece{Text: text, Words: len(strings.Fields(text)), Start: c.times[x.First], Last: c.times[x.End], At: x.At, How: x.How})
+		times := append([]time.Time(nil), c.times[x.First:x.End+1]...)
+		out = append(out, Piece{Text: text, Words: len(strings.Fields(text)), Start: c.times[x.First], Last: c.times[x.End], At: x.At, How: x.How, Parts: parts, Times: times})
 	}
 	return out
 }
@@ -83,7 +98,7 @@ func (c *Cutter) Flush() []Piece {
 		if n := len(c.times); n > 0 {
 			at = c.times[n-1]
 		}
-		out = append(out, Piece{Text: text, Words: len(strings.Fields(text)), Start: at, Last: at, At: at, How: ByEnd})
+		out = append(out, Piece{Text: text, Words: len(strings.Fields(text)), Start: at, Last: at, At: at, How: ByEnd, Parts: []string{text}, Times: []time.Time{at}})
 	}
 	c.lead = ""
 	return out

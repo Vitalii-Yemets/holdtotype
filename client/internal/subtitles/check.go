@@ -1,6 +1,7 @@
 package subtitles
 
 import (
+	"holdtotype/internal/sentence"
 	"regexp"
 	"strconv"
 	"strings"
@@ -65,6 +66,8 @@ type CheckPiece struct {
 	Para     bool
 	Release  time.Time
 	LastWord time.Time
+	Parts    []string
+	Times    []time.Time
 }
 
 func wordTime(base time.Time, l CallLine, k int) time.Time {
@@ -125,6 +128,17 @@ type CheckEvent struct {
 type CheckCalls struct {
 	Translate func(b Batch, prior []Turn, context string) (string, Verdict, time.Duration, error)
 	Service   func(step Step, msgs []Message, limit time.Duration) (string, ServiceEnd, time.Duration, error)
+	Draft     func(text string, prior []Turn, context string, limit time.Duration) (string, Verdict, ServiceEnd, time.Duration, error)
+}
+
+func heardBy(times []time.Time, at time.Time) int {
+	n := 0
+	for _, t := range times {
+		if !t.After(at) {
+			n++
+		}
+	}
+	return n
 }
 
 func RunCheck(pieces []CheckPiece, target string, topic *Topic, calls CheckCalls) []CheckEvent {
@@ -136,6 +150,21 @@ func RunCheck(pieces []CheckPiece, target string, topic *Topic, calls CheckCalls
 	}
 	free := pieces[0].Release
 	i := 0
+	draftFor := -1
+	var last sentence.Draft
+	draftDue := func() (time.Time, bool) {
+		if calls.Draft == nil || i >= len(pieces) || len(pieces[i].Times) == 0 || len(pieces[i].Parts) != len(pieces[i].Times) {
+			return time.Time{}, false
+		}
+		if draftFor != i {
+			draftFor, last = i, sentence.Draft{}
+		}
+		at, ok := sentence.DraftAt(pieces[i].Times, last)
+		if !ok || !at.Before(pieces[i].Release) {
+			return time.Time{}, false
+		}
+		return at, true
+	}
 	for i < len(pieces) || q.Len() > 0 {
 		for i < len(pieces) && !pieces[i].Release.After(free) {
 			p := pieces[i]
@@ -165,6 +194,24 @@ func RunCheck(pieces []CheckPiece, target string, topic *Topic, calls CheckCalls
 				}
 			}
 			out = append(out, ev)
+			free = ev.End
+			continue
+		}
+		if at, due := draftDue(); due && q.Len() == 0 && !at.After(free) {
+			p := pieces[i]
+			k := heardBy(p.Times, free)
+			text := strings.Join(p.Parts[:k], " ")
+			ctx := ""
+			if topic != nil {
+				ctx = topic.Context()
+			}
+			res, verdict, how, d, err := calls.Draft(text, hist.Turns(), ctx, p.Release.Sub(free))
+			ev := CheckEvent{Kind: "draft", Seqs: []int{p.Seq}, Text: text, Result: res, Verdict: verdict, Ready: free, Start: free, End: free.Add(d), Duration: d, Yielded: how == EndYield, Lines: k}
+			if err != nil {
+				ev.Err = err.Error()
+			}
+			out = append(out, ev)
+			last = sentence.Draft{Words: k, At: free}
 			free = ev.End
 			continue
 		}
@@ -205,8 +252,12 @@ func RunCheck(pieces []CheckPiece, target string, topic *Topic, calls CheckCalls
 			}
 		}
 		if i < len(pieces) {
-			if pieces[i].Release.After(free) {
-				free = pieces[i].Release
+			next := pieces[i].Release
+			if at, due := draftDue(); due && at.After(free) && at.Before(next) {
+				next = at
+			}
+			if next.After(free) {
+				free = next
 			}
 			continue
 		}
