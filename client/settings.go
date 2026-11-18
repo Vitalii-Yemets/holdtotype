@@ -186,6 +186,7 @@ type settingsForm struct {
 	SubtitlesTranslator      *string `json:"subtitles_translator"`
 	SubtitlesModel           *string `json:"subtitles_model"`
 	SubtitlesTranslationOnly *bool   `json:"subtitles_translation_only"`
+	SubtitlesSentences       *bool   `json:"subtitles_sentences"`
 }
 
 func (a *App) openSettings(tab string) {
@@ -436,6 +437,9 @@ func (a *App) settingsThread(tab string, attempt int) {
 				shellOpenURL(trModelTerms(a.snapshot(), id))
 			}
 			return ""
+		})
+		_ = w.Bind("appPunctModel", func(action string) string {
+			return a.punctAction(action)
 		})
 		_ = w.Bind("appPreviewSound", func(theme string) {
 			previewTheme(theme)
@@ -1031,6 +1035,9 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	if f.SubtitlesTranslationOnly != nil {
 		c.SubtitlesTranslationOnly = *f.SubtitlesTranslationOnly
 	}
+	if f.SubtitlesSentences != nil {
+		c.SubtitlesSentences = *f.SubtitlesSentences
+	}
 	if f.SubtitlesTranslate != nil && validTranslateLang(*f.SubtitlesTranslate) {
 		c.SubtitlesTranslate = *f.SubtitlesTranslate
 	}
@@ -1185,6 +1192,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"subtitles_translate":     cfg.SubtitlesTranslate,
 		"subtitles_translator":    cfg.SubtitlesTranslator,
 		"subtitles_model":         cfg.SubtitlesModel,
+		"subtitles_sentences":     cfg.SubtitlesSentences,
 		"translate_target":        cfg.TranslateTarget,
 		"translate_ask":           cfg.TranslateAsk,
 		"translate_ask_seconds":   cfg.TranslateAskSeconds,
@@ -1197,6 +1205,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"_cpus":                   runtime.NumCPU(),
 		"_wizard":                 !cfg.WizardDone,
 		"_rec_models":             recommendedModels(),
+		"_punct":                  punctStateNow(cfg),
 		"_default_model":          defaultPresetModel,
 		"_legacy_model":           legacyDefaultModel,
 		"_ui_lang":                lang(),
@@ -1293,6 +1302,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"trmfg4": "S_TRM_F_G4", "trmfg3": "S_TRM_F_G3", "trmftg": "S_TRM_F_TG", "trmfeu": "S_TRM_F_EU",
 		"trmowntip": "S_TRM_OWN_TIP", "trmownwarn": "S_TRM_OWN_WARN", "trmnofit": "S_TRM_NOFIT",
 		"trmvram": "S_TRM_VRAM", "trmnotopic": "S_TRM_NOTOPIC", "trmdisk": "S_TRM_DISK", "trmnone": "S_TRM_NONE", "trmget": "S_TRM_GET",
+		"subssentnone": "S_SUBS_SENT_NONE", "punctfor": "S_PUNCT_FOR", "punctused": "S_PUNCT_USED", "puncttip": "S_PUNCT_TIP", "punctdelused": "S_PUNCT_DEL_USED",
 		"trmlibtip": "S_TRM_LIB_TIP", "trmlibfor": "S_TRM_LIB_FOR", "trmrec": "S_TRM_REC", "trmfits": "S_TRM_FITS",
 		"langgetother": "S_LANG_GET_OTHER", "langnone": "S_LANG_NONE", "notinstsize": "S_NOT_INST_SIZE",
 		"postfind": "S_POST_FIND", "postdrop": "S_POST_DROP", "postnone": "S_POST_NONE", "postfindone": "S_POST_FIND_ONE",
@@ -2090,7 +2100,7 @@ input.srcpick:disabled,input.srvpick:disabled{opacity:.4;cursor:default}
 #subs_src_quality .plates .hfhome{margin-left:0}
 #subs_src_quality .plates .acts{margin-left:auto}
 #subs_src_quality.idle .plates .acts{pointer-events:auto}
-#subs_q_models .postnone .acts{justify-content:flex-start;margin:0 0 9px}
+.postnone .acts{justify-content:flex-start;margin:0 0 9px}
 #subs_who_card .srccard.nofit{cursor:default}
 #subs_who_card .srccard.nofit:hover{border-color:var(--line)}
 #subs_who_card .srccard.idle .flang .iconbtn{pointer-events:auto}
@@ -2720,6 +2730,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
     <option value="it">Italiano</option><option value="pl">Polski</option>
     <option value="uk">Українська</option><option value="ru">Русский</option>
    </select></div>
+  <div id="subs_sent"><div class="row" id="subs_sent_row"><label>{{S_SUBS_SENT}}<span class="sub">{{S_SUBS_SENT_SUB}}</span></label><input type="checkbox" id="subtitles_sentences"><span class="pact" id="subs_sent_dl" style="display:none"><span class="mpct" id="subs_sent_pct"></span><button type="button" class="iconbtn danger" id="subs_sent_x">&#10005;</button></span></div><div class="postnone" id="subs_sent_none"><div class="hint nonote">{{S_SUBS_SENT_NONE}}</div><div class="acts"><button type="button" class="mini pri"></button></div></div></div>
  </div>
  <div class="card" id="subs_who_card">
   <div class="row noline whohead"><label class="blklbl">{{S_SUBS_WHO_TITLE}}</label></div>
@@ -4300,6 +4311,39 @@ let subsWho = CFG.subtitles_translator || "fast";
 let subsModelPick = CFG.subtitles_model || "";
 let subsArmed = "", subsArmTimer = 0;
 function subsOn(){ return !!(subsEl("subtitles_translate_on")||{}).checked; }
+let punctNow = CFG._punct || null;
+let sentDirty = false;
+let sentNone = null;
+function punctInfo(){ return punctNow || {name: "Horizon Punctuation Small", state: "absent", pct: 0, err: "", size: 289, ram: 340, langs: 89, on: !!CFG.subtitles_sentences, running: false}; }
+async function punctAct(action){
+  const r = await appPunctModel(action);
+  if(r) toast(r, "ok");
+  refreshState();
+}
+function renderSubsSent(){
+  const row = subsEl("subs_sent_row"), sw = subsEl("subtitles_sentences");
+  if(!row || !sw) return;
+  const p = punctInfo(), st = p.state, ready = st === "ready", dl = st === "downloading", on = subsOn();
+  if(!sentDirty) sw.checked = !!p.on;
+  sw.style.display = ready ? "" : "none";
+  sw.disabled = !ready || !on;
+  row.classList.toggle("noline", !ready && !dl);
+  row.classList.toggle("dimmed", !on);
+  subsEl("subs_sent_dl").style.display = dl ? "" : "none";
+  subsEl("subs_sent_pct").textContent = p.pct > 0 ? p.pct + "%" : "…";
+  const x = subsEl("subs_sent_x");
+  x.title = L.dlcancel;
+  x.setAttribute("aria-label", L.dlcancel);
+  if(!sentNone) sentNone = subsEl("subs_sent_none");
+  if(!sentNone) return;
+  const offer = !ready && !dl;
+  if(offer && !sentNone.isConnected) subsEl("subs_sent").appendChild(sentNone);
+  if(!offer && sentNone.isConnected) sentNone.remove();
+  const note = sentNone.querySelector(".nonote");
+  note.textContent = p.err ? fmtText(L.trmerr, p.err) : L.subssentnone;
+  note.style.color = p.err ? "var(--amber)" : "";
+  sentNone.querySelector("button").textContent = fmtText(L.trmget, p.name, sizeLabel(p.size || 0));
+}
 function subsTo(){ return (subsEl("subtitles_translate")||{}).value || "en"; }
 function subsSpeech(){ return (subsEl("subtitles_language")||{}).value || "auto"; }
 function subsModel(){ return (subsTr && subsTr.model) || {state: "absent", size: 0, fits: false, name: "", models: []}; }
@@ -4536,6 +4580,7 @@ function renderSubsTr(){
   });
   renderSubsQuality();
   renderSubsFast();
+  renderSubsSent();
   syncStateSwitches();
   syncLayout();
   const warn = subsWarnText();
@@ -4769,6 +4814,12 @@ function initSubs(){
   trSel.value = CFG.subtitles_translate || "en";
   if(!trSel.value) trSel.value = "en";
   subsEl("subtitles_translation_only").checked = !!CFG.subtitles_translation_only;
+  const sentSw = subsEl("subtitles_sentences");
+  sentSw.checked = !!CFG.subtitles_sentences;
+  sentSw.addEventListener("change", ()=>{ sentDirty = true; });
+  sentNone = subsEl("subs_sent_none");
+  sentNone.querySelector("button").onclick = e=>{ e.stopPropagation(); punctAct("download:on"); };
+  subsEl("subs_sent_x").onclick = e=>{ e.stopPropagation(); punctAct("cancel"); };
   initSubsExtras();
   paintSubsKey();
   sel.addEventListener("change", refreshSubsModel);
@@ -4840,6 +4891,7 @@ async function refreshState(){
   renderSubsHero(s);
   subsPlaceFromState(s.subs_place);
   subsTr = s.subs_tr || null;
+  if(s.punct) punctNow = s.punct;
   renderSubsTr();
 
   const hero = document.getElementById("state_hero");
@@ -5615,8 +5667,9 @@ function libraryRow(m, o){
     };
   });
   row.querySelectorAll("[data-terms]").forEach(t=>{
-    t.onclick = e=>{ e.stopPropagation(); appTrModel("terms:" + t.dataset.terms); };
-    t.onkeydown = e=>{ if(e.key === "Enter" || e.key === " "){ e.preventDefault(); appTrModel("terms:" + t.dataset.terms); } };
+    const terms = ()=>o.terms ? o.terms() : appTrModel("terms:" + t.dataset.terms);
+    t.onclick = e=>{ e.stopPropagation(); terms(); };
+    t.onkeydown = e=>{ if(e.key === "Enter" || e.key === " "){ e.preventDefault(); terms(); } };
   });
   return row;
 }
@@ -5671,14 +5724,17 @@ function renderLibrary(){
   const trms = trmRows().filter(r=>!r.own);
   const trmUsed = subsOn() && subsWho === "quality";
   const ownUse = file=>trmUsed && trmRows().some(r=>r.own && r.chosen && r.file === file);
-  const sig = JSON.stringify([asr.map(m=>[m.id, m.state, m.pct, m.loaded, m.err, asrUse(m)]), llm, selLLM, trms.map(r=>[r.id, r.state, r.pct, r.fits, r.running, r.err, r.chosen]), trmRows().filter(r=>r.own && r.chosen).map(r=>r.file), subsModel().card_mb, trmUsed]);
+  const pn = punctInfo();
+  const punctUsed = pn.state === "ready" && !!pn.on;
+  const sig = JSON.stringify([asr.map(m=>[m.id, m.state, m.pct, m.loaded, m.err, asrUse(m)]), llm, selLLM, trms.map(r=>[r.id, r.state, r.pct, r.fits, r.running, r.err, r.chosen]), trmRows().filter(r=>r.own && r.chosen).map(r=>r.file), subsModel().card_mb, trmUsed, [pn.state, pn.pct, pn.err, pn.running, punctUsed]]);
   if(sig === librarySig) return;
   librarySig = sig;
 
   const asrHave = asr.filter(m=>m.state === "installed" || m.state === "active");
   const trHave = trms.filter(r=>r.state === "ready");
-  const count = asrHave.length + llm.length + trHave.length;
-  const mb = asrHave.reduce((s, m)=>s + (m.size || 0), 0) + llm.reduce((s, m)=>s + (m.size || 0), 0) + trHave.reduce((s, r)=>s + (r.size || 0), 0);
+  const punctHave = pn.state === "ready";
+  const count = asrHave.length + llm.length + trHave.length + (punctHave ? 1 : 0);
+  const mb = asrHave.reduce((s, m)=>s + (m.size || 0), 0) + llm.reduce((s, m)=>s + (m.size || 0), 0) + trHave.reduce((s, r)=>s + (r.size || 0), 0) + (punctHave ? pn.size || 0 : 0);
   document.getElementById("lib_have_total").textContent = count ? pluralCount(count) + " · " + sizeLabel(mb) : "";
 
   const haveList = [], getList = [];
@@ -5717,6 +5773,18 @@ function renderLibrary(){
       }
     }}]);
   });
+  const punctItem = {id: "punct", name: pn.name, desc: L.puncttip, size: pn.size, pct: pn.pct, loaded: !!pn.running,
+    state: punctHave ? "installed" : (pn.state === "downloading" ? "downloading" : "absent")};
+  const punctMeta = '<span class="pmt">'+esc(String(L.langsc || "").replace("%d", String(pn.langs || 0)))+'</span>' +
+    '<span class="pram">'+esc(fmtText(L.ramabout, sizeLabel(pn.ram || 0)))+'</span>' +
+    '<span class="hfhome" role="link" tabindex="0" data-terms="punct" title="'+esc(L.trmterms)+'">'+esc(L.termsplate)+'</span>';
+  const punctTerms = ()=>appPunctModel("terms");
+  if(punctHave) haveList.push([punctItem, {key: "punct", kind: "punct", info: true, meta: punctMeta, terms: punctTerms, note: esc(punctUsed ? L.punctused : L.punctfor), on: {
+    del: async ()=>{
+      if(!await askConfirm(punctUsed ? fmtText(L.punctdelused, pn.name, L.punctused) : fmtText(L.confirmdel, pn.name), L.del, null, L.mtdel)) return;
+      await punctAct("delete");
+    }
+  }}]);
   asr.filter(m=>!m.custom && (m.state === "absent" || m.state === "downloading")).forEach(m=>{
     const notes = [];
     if(m.state === "absent" && m.manual) notes.push('<div class="libnote"><span class="pdesc libwarn">'+esc(L.manualnote)+'</span><button type="button" class="mini" data-lib="link">'+esc(L.manuallink)+' &#8599;</button></div>');
@@ -5737,6 +5805,11 @@ function renderLibrary(){
       cancel: async ()=>{ trModelAct("cancel:" + r.id); }
     }}]);
   });
+  if(!punctHave) getList.push([punctItem, {key: "punct", kind: "punct", info: true, meta: punctMeta, terms: punctTerms, note: esc(L.punctfor),
+    extra: pn.state === "absent" && pn.err ? '<span class="pdesc perr">'+esc(fmtText(L.trmerr, pn.err))+'</span>' : "", on: {
+    dl: async ()=>{ await punctAct("download"); },
+    cancel: async ()=>{ await punctAct("cancel"); }
+  }}]);
 
   [[have, haveList], [get, getList]].forEach(([box, list])=>{
     box.innerHTML = "";
@@ -5746,7 +5819,7 @@ function renderLibrary(){
   document.getElementById("lib_have_none").style.display = haveList.length ? "none" : "";
   const hint = [];
   const isTrm = m=>String(m.id).indexOf("trm:") === 0;
-  if(getList.some(([m])=>!isTrm(m))) hint.push(L.libgetasr);
+  if(getList.some(([m])=>!isTrm(m) && m.id !== "punct")) hint.push(L.libgetasr);
   if(getList.some(([m])=>isTrm(m))) hint.push(fmtText(L.libgettrm, (trmRows().find(r=>r.rec) || {}).name || ""));
   if(getList.length) hint.push(L.libgetmove);
   const hintEl = document.getElementById("lib_get_hint");
@@ -6481,6 +6554,7 @@ async function doSave(){
     subtitles_box: subsBoxReset ? {} : null,
     subtitles_translate_on: subsOn(),
     subtitles_translation_only: !!(subsEl("subtitles_translation_only")||{}).checked,
+    subtitles_sentences: sentDirty ? !!(subsEl("subtitles_sentences")||{}).checked : null,
     subtitles_layout: subsLayout(),
     models_idle_minutes: parseInt((document.getElementById("models_idle_minutes")||{}).value) || 0,
     subtitles_translate: subsTo(),
@@ -6500,6 +6574,7 @@ async function doSave(){
   if(!trOnNow) f.translate_ask = "never";
   const langChanged = f.ui_language !== (CFG.ui_language || "auto");
   const r = JSON.parse(await appSave(JSON.stringify(f)));
+  if(f.subtitles_sentences !== null) sentDirty = false;
   if(langChanged){ appReload(wizOn ? "wizard" : curTab); return null; }
   toast(r.message, r.severity);
   refreshModels();

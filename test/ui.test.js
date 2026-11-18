@@ -1932,7 +1932,7 @@ function check(name, actual, expected) {
   check("the start button sits on the right of the text, over the shortcut field", css.includes("#subs_main>#subs_go{grid-column:2;grid-row:1/4;align-self:end;margin-bottom:6px}"), true);
   check("blocks are divided as on Post-processing, and the translators are a block of their own now", [css.includes("#p-subs .card+.card{margin-top:18px;border-top:1px solid var(--soft);padding-top:18px}"), css.includes("#p-subs #subs_who_card{margin-top:0;border-top:0;padding-top:0}")], [true, false]);
   check("the translators carry the heading of their block", [sv("subs_who_card").firstElementChild.className, sv("subs_who_card").querySelector(".whohead .blklbl").textContent], ["row noline whohead", "S_SUBS_WHO_TITLE"]);
-  check("the translation block holds only its heading and the language row", [...sv("subs_tr_card").children].map((e) => e.id || e.className), ["row noline", "subs_tr_lang_row"]);
+  check("the translation block holds its heading, the language row and the whole-sentences row with its empty state", [...sv("subs_tr_card").children].map((e) => e.id || e.className), ["row noline", "subs_tr_lang_row", "subs_sent"]);
   check("the window block starts with the layout, then the rows, the size and the rest, with no switch for the translation alone", [...sv("subs_win_card").children].filter((e) => !e.hidden).map((e) => e.id || (e.querySelector("label") ? e.querySelector("label").firstChild.textContent : e.className)).slice(0, 5), ["blklbl", "subs_lay_row", "S_SUBS_ROWS", "subs_size_row", "S_SUBS_BOX"]);
   check("the switch for the translation alone is gone from every tab, its key lives on in a hidden field", [!!sv("subs_tr_only_row"), !!sv("st_tr_only"), sv("subtitles_translation_only").hidden, sv("p-subs").textContent.includes("S_SUBS_TR_ONLY\u0020")], [false, false, true, false]);
   check("no line between the speech language and its explanation", sv("subtitles_language").closest(".row").classList.contains("noline"), true);
@@ -1981,7 +1981,7 @@ function check(name, actual, expected) {
   check("the controls carry the config", [trOn.checked, trLang.value], [false, "de"]);
   check("off: the language row is dimmed and its list disabled", [trLang.closest(".row").classList.contains("dimmed"), trLang.disabled], [true, true]);
   check("off: the cards dim as a whole and their marks are disabled", [whoCard.classList.contains("offdim"), [...whoCard.querySelectorAll("input.srcpick")].every((p) => p.disabled)], [true, true]);
-  check("there is no hint under the translation heading", [sv("subs_tr_card").querySelectorAll(".hint").length, sv("p-subs").textContent.includes("S_SUBS_TR_HINT")], [0, false]);
+  check("there is no hint under the translation heading", [[...sv("subs_tr_card").querySelectorAll(".hint")].filter((h) => !h.closest("#subs_sent")).length, sv("p-subs").textContent.includes("S_SUBS_TR_HINT")], [0, false]);
   const savesOff = w.saveCalls;
   sv("subs_src_api").click(); await sleep(300);
   check("off: a click on a card chooses nothing", [w.saveCalls, sv("subs_src_api").classList.contains("on")], [savesOff, false]);

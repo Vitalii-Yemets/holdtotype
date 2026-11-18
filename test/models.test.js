@@ -60,6 +60,7 @@ function open(lang, cfgPatch, setup) {
     llmDl: [],
     trm: { name: "Gemma 3 4B", state: "ready", size: 2374, fits: true, running: false, pct: 0 },
     trms: {}, chosen: "",
+    punct: { name: "Horizon Punctuation Small", state: "absent", pct: 0, err: "", size: 289, ram: 340, langs: 89, on: false, running: false },
     calls: [], saves: [], searches: [],
   };
   if (setup) setup(S);
@@ -93,13 +94,21 @@ function open(lang, cfgPatch, setup) {
           if (act === "cancel") s.state = "absent";
           return "";
         },
-        appSave: async (f) => { const v = JSON.parse(f); S.saves.push(v); if (typeof v.subtitles_model === "string") S.chosen = v.subtitles_model; return json({ ok: true, severity: "ok", message: "Saved" }); },
+        appSave: async (f) => { const v = JSON.parse(f); S.saves.push(v); if (typeof v.subtitles_model === "string") S.chosen = v.subtitles_model; if (typeof v.subtitles_sentences === "boolean") S.punct.on = v.subtitles_sentences; return json({ ok: true, severity: "ok", message: "Saved" }); },
+        appPunctModel: async (action) => {
+          S.calls.push("punct:" + action);
+          const p = S.punct;
+          if (action.indexOf("download") === 0) { p.state = "downloading"; p.pct = 0; p.err = ""; p.turnOn = p.turnOn || action === "download:on"; }
+          if (action === "cancel") { p.state = "absent"; p.turnOn = false; }
+          if (action === "delete") { p.state = "absent"; p.running = false; return "Model deleted"; }
+          return "";
+        },
         appState: async () => json({ subtitles: { phase: "off" }, subs_tr: { choice: "quality", missing: "", pair: "", model: trmView(S), fast: { exe: true, pairs: [], offer: [], used: 0 } },
           subs_place: { position: "bottom", custom: {} }, hotkey: "ctrl+win", mic: "Mic", engine: "", llm: "a.gguf", ram: "", last: "", last_meta: "", ready: S.ready !== false, status: S.status || "Ready",
           status_line: S.statusLine || "Ready", active_model: "Nemotron 3.5", active_state: "ready", active_lang: "RU", assigned: [], installed_models: S.installedModels || [], loaded_now: Object.keys(S.loaded).length ? "Nemotron 3.5" : "", week_line: "",
           llm_ok: true, mic_ok: true, last_at: 0, last_app: "", remote: false, backend_err: "", post_err: "", stt_broken: false, whisper_now: false, enabled: true, autostart: false,
           disk_mb: 0, ram_mb: 16384, ram_free_mb: 9000, week_count: 0, week_chars: 0, today_count: 0, week_apps: [], badges: { mic: "", models: "", system: "" },
-          post_on: true, post_model: "a", post_size: 1066, post_installed: S.llm.length, post_remote: false, post_prompts: 1 }),
+          post_on: true, post_model: "a", post_size: 1066, post_installed: S.llm.length, post_remote: false, post_prompts: 1, punct: Object.assign({}, S.punct) }),
         appSubtitlesModel: async (l) => json({ lang: l, id: "nemotron-3.5", name: "Nemotron 3.5", engine: "stream", mode: "live", installed: true, whisper: false, remote: false }),
         appMics: async () => "[]",
         appMicLevel: async () => 0,
@@ -180,7 +189,7 @@ function open(lang, cfgPatch, setup) {
   check("and never as 0", lastSave().models_idle_minutes, 0);
   check("the search finds the row", w.searchMatches("s_idle_unload").some((el) => el === idleRow), true);
 
-  check("the models to download, by name", rows("lib_get_list").map((r) => r.dataset.key), ["asr:base", "asr:moonshine-uk", "asr:parakeet-v3", "trm:gemma-4-e4b", "trm:translategemma-4b", "trm:eurollm-9b"]);
+  check("the models to download, by name", rows("lib_get_list").map((r) => r.dataset.key), ["asr:base", "asr:moonshine-uk", "asr:parakeet-v3", "trm:gemma-4-e4b", "trm:translategemma-4b", "trm:eurollm-9b", "punct"]);
   check("the hint says what they are for", d.getElementById("lib_get_hint").textContent, "For dictation and subtitles — models that turn speech into text. For translating subtitles — translation models, we recommend Gemma 4 E4B. A downloaded model moves to “Installed models”.");
   check("a model to download shows its description, size and the arrow", [use("asr:base"), row("asr:base").querySelector(".psize").textContent, !!row("asr:base").querySelector('button[data-lib="dl"]')], ["fast", "142 MB", true]);
   check("the licence-bound one offers its own link and explains why", [!!row("asr:moonshine-uk").querySelector('button[data-lib="dl"]'), row("asr:moonshine-uk").querySelector('button[data-lib="link"]').textContent.trim().startsWith("Download yourself"), !!row("asr:moonshine-uk").querySelector(".pdesc")], [false, true, true]);
@@ -622,6 +631,87 @@ function open(lang, cfgPatch, setup) {
     check("models: deleting the one in use names its use", vd.querySelector(".modal p").textContent, "The “Gemma 4 E4B” model is used for translating subtitles. Delete it? Another model will have to be chosen there.");
     vd.querySelector(".modal .btn.yes").click(); await sleep(300);
     check("models: and it is deleted by its id", t.S.calls.includes("trm:delete:gemma-4-e4b"), true);
+    t.v.window.close();
+
+    const sent = (vd) => ({
+      row: vd.getElementById("subs_sent_row").className,
+      sw: [vd.getElementById("subtitles_sentences").style.display !== "none", vd.getElementById("subtitles_sentences").disabled, vd.getElementById("subtitles_sentences").checked],
+      dl: vd.getElementById("subs_sent_dl").style.display !== "none" ? [vd.getElementById("subs_sent_pct").textContent, vd.getElementById("subs_sent_x").title] : null,
+      none: vd.getElementById("subs_sent_none") ? [vd.querySelector("#subs_sent_none .nonote").textContent, vd.querySelector("#subs_sent_none button").textContent] : null,
+      last: vd.getElementById("subs_sent").lastElementChild.id,
+    });
+    t = await view((S) => { S.llm = []; });
+    vd = t.vd;
+    const label = vd.querySelector("#subs_sent_row > label");
+    check("sentences: the row stands right under the translation language", [vd.getElementById("subs_tr_lang_row").nextElementSibling.firstElementChild.id, label.firstChild.textContent, label.querySelector(".sub").textContent], ["subs_sent_row", "S_SUBS_SENT", "S_SUBS_SENT_SUB"]);
+    check("sentences: without the model the row says so and offers the download, the switch is hidden", sent(vd), { row: "row noline", sw: [false, true, false], dl: null, none: ["There is no model for this yet.", "Download Horizon Punctuation Small · 289 MB"], last: "subs_sent_none" });
+    check("sentences: the empty state uses the general empty-state rule of the window", [vd.getElementById("subs_sent_none").className, vd.querySelector("#subs_sent_none .acts .mini.pri") !== null, vd.getElementById("subs_sent").parentNode.lastElementChild.id], ["postnone", true, "subs_sent"]);
+    vd.querySelector("#subs_sent_none button").click(); await sleep(150);
+    check("sentences: the button downloads the model and asks to turn the setting on after it", t.S.calls.filter((c) => c.indexOf("punct:") === 0), ["punct:download:on"]);
+    await t.vw.refreshState(); await sleep(150);
+    check("sentences: while it downloads the row shows the percent and a cross", sent(vd), { row: "row", sw: [false, true, false], dl: ["…", "Cancel the download"], none: null, last: "subs_sent_row" });
+    t.S.punct.pct = 37; await t.vw.refreshState(); await sleep(150);
+    check("sentences: the percent follows the download", sent(vd).dl, ["37%", "Cancel the download"]);
+    vd.getElementById("subs_sent_x").click(); await sleep(150);
+    check("sentences: the cross cancels the download and the row goes back to the offer", [t.S.calls.slice(-1)[0], sent(vd).none], ["punct:cancel", ["There is no model for this yet.", "Download Horizon Punctuation Small · 289 MB"]]);
+    vd.querySelector("#subs_sent_none button").click(); await sleep(150);
+    t.S.punct.state = "ready"; if (t.S.punct.turnOn) t.S.punct.on = true;
+    await t.vw.refreshState(); await sleep(150);
+    check("sentences: after the download the switch is there and on", sent(vd), { row: "row", sw: [true, false, true], dl: null, none: null, last: "subs_sent_row" });
+    const savesBefore = t.S.saves.length;
+    vd.getElementById("subtitles_lines").value = "4";
+    vd.getElementById("subtitles_lines").dispatchEvent(new vd.defaultView.Event("change", { bubbles: true }));
+    await sleep(400);
+    check("sentences: a save of another setting leaves it alone", t.S.saves.slice(savesBefore).map((v) => v.subtitles_sentences), [null]);
+    const swEl = vd.getElementById("subtitles_sentences");
+    swEl.checked = false;
+    swEl.dispatchEvent(new vd.defaultView.Event("change", { bubbles: true }));
+    await sleep(400);
+    check("sentences: turning the switch off saves subtitles_sentences right away", [t.S.saves.slice(-1)[0].subtitles_sentences, t.S.punct.on], [false, false]);
+    await t.vw.refreshState(); await sleep(150);
+    check("sentences: and the switch stays off", sent(vd).sw, [true, false, false]);
+    swEl.checked = true;
+    swEl.dispatchEvent(new vd.defaultView.Event("change", { bubbles: true }));
+    await sleep(400);
+    check("sentences: turning it on saves it too", t.S.saves.slice(-1)[0].subtitles_sentences, true);
+    vd.getElementById("subtitles_translate_on").click(); await sleep(400);
+    check("sentences: with translation off the row is dimmed and the switch cannot be used", [sent(vd).row, sent(vd).sw], ["row dimmed", [true, true, true]]);
+    vd.getElementById("subtitles_translate_on").click(); await sleep(400);
+
+    t.S.punct.running = true;
+    vd.querySelector('.nav[data-p="library"]').click(); await sleep(200);
+    await t.vw.refreshState(); await sleep(150);
+    const ph = vd.querySelector('#lib_have_list .librow[data-key="punct"]');
+    check("sentences: on Models the installed model is among the installed ones, used, with its plates, size and tip", [ph.querySelector(".pnm").textContent, ph.querySelector(".lmodel").textContent, texts(ph, ".libl2 > *"), ph.querySelector(".psize").textContent, ph.querySelector(".pinfo").dataset.tip, !!ph.querySelector('button[data-lib="del"]'), !!vd.querySelector('#lib_get_list .librow[data-key="punct"]')],
+      ["Horizon Punctuation Small", "used for subtitles: finds where a sentence ends", ["in memory", "languages: 89", "≈340 MB RAM", "Terms of use ↗"], "289 MB", "a punctuation model on the processor: finds by meaning where a sentence ends, in 89 languages", true, false]);
+    check("sentences: the total counts it", vd.getElementById("lib_have_total").textContent, "7 models · 5.3 GB");
+    ph.querySelector("[data-terms]").click(); await sleep(50);
+    check("sentences: its terms plate opens its own terms", t.S.calls.slice(-1)[0], "punct:terms");
+    ph.querySelector('button[data-lib="del"]').click(); await sleep(150);
+    check("sentences: deleting it while the setting is on names its use", vd.querySelector(".modal p").textContent, "The “Horizon Punctuation Small” model is used for subtitles: finds where a sentence ends. Delete it? Subtitles will be translated by pauses in speech again.");
+    vd.querySelector(".modal .btn.yes").click(); await sleep(400);
+    const pg = vd.querySelector('#lib_get_list .librow[data-key="punct"]');
+    check("sentences: after the delete it is a model to download with the arrow", [t.S.calls.slice(-1)[0], !!pg, pg && pg.querySelector(".lmodel").textContent, pg && !!pg.querySelector('button[data-lib="dl"]'), !!vd.querySelector('#lib_have_list .librow[data-key="punct"]')], ["punct:delete", true, "for subtitles: finds where a sentence ends", true, false]);
+    vd.querySelector('.nav[data-p="subs"]').click(); await sleep(200);
+    check("sentences: and the subtitles row is back to the offer", sent(vd), { row: "row noline", sw: [false, true, true], dl: null, none: ["There is no model for this yet.", "Download Horizon Punctuation Small · 289 MB"], last: "subs_sent_none" });
+    vd.querySelector('.nav[data-p="library"]').click(); await sleep(200);
+    vd.querySelector('#lib_get_list .librow[data-key="punct"] button[data-lib="dl"]').click(); await sleep(150);
+    check("sentences: the arrow on Models downloads it without turning the setting on", t.S.calls.slice(-1)[0], "punct:download");
+    await t.vw.refreshState(); await sleep(150);
+    check("sentences: on Models it shows its percent and a cross while it downloads", [vd.querySelector('#lib_get_list .librow[data-key="punct"] .mpct').textContent, !!vd.querySelector('#lib_get_list .librow[data-key="punct"] button[data-lib="cancel"]')], ["…", true]);
+    vd.querySelector('#lib_get_list .librow[data-key="punct"] button[data-lib="cancel"]').click(); await sleep(150);
+    check("sentences: and the cross there cancels it", t.S.calls.slice(-1)[0], "punct:cancel");
+    t.S.punct.err = "no connection"; await t.vw.refreshState(); await sleep(150);
+    check("sentences: a failed download is named on Models and in the row", [vd.querySelector('#lib_get_list .librow[data-key="punct"] .perr').textContent, vd.querySelector("#subs_sent_none .nonote").textContent], ["Not downloaded: no connection", "Not downloaded: no connection"]);
+    t.v.window.close();
+
+    t = await view((S) => { S.llm = []; S.punct.state = "ready"; S.punct.on = false; });
+    vd = t.vd;
+    vd.querySelector('.nav[data-p="library"]').click(); await sleep(200);
+    const pi = vd.querySelector('#lib_have_list .librow[data-key="punct"]');
+    check("sentences: installed but turned off it says what it is for", pi.querySelector(".lmodel").textContent, "for subtitles: finds where a sentence ends");
+    pi.querySelector('button[data-lib="del"]').click(); await sleep(150);
+    check("sentences: and deleting it asks the plain question", vd.querySelector(".modal p").textContent, "Delete the \"Horizon Punctuation Small\" model? It can be downloaded again.");
     t.v.window.close();
   }
 
