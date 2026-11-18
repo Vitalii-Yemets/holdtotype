@@ -157,18 +157,22 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 
 FROM debian:bookworm-slim AS ort-fetch
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        curl ca-certificates bzip2 \
+        curl ca-certificates bzip2 binutils-mingw-w64-x86-64 \
     && rm -rf /var/lib/apt/lists/*
-ARG ORT_VERSION=1.31.0
-ARG ORT_SHA256=2da4b547127e58f18478beccee92c2958d6b8748a65e7b8628dedaea3df700fa
-ARG ORT_DLL_SHA256=e89b09383f1cb0f2fff9b7e0028e56e8c805479834870deb117bf979836a8f71
+ARG ORT_VERSION=1.30.0
+ARG ORT_SHA256=8b7b1609eea5f539e2bf1c9ef1d526c6ff9ed1de031258c36c4d835839c9af30
+ARG ORT_DLL_SHA256=8c65a1642a1da403a4964cfbecc0fdf82c4732759e92e091334538c8b9babb6c
 RUN curl -fL --retry 3 -o /ort.tar.bz2 \
         "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v${ORT_VERSION}/onnxruntime-win-x64-MT-Release-${ORT_VERSION}.tar.bz2" \
     && echo "${ORT_SHA256}  /ort.tar.bz2" | sha256sum -c - \
     && mkdir /x && tar -xjf /ort.tar.bz2 -C /x --strip-components=1 \
     && cp /x/lib/onnxruntime.dll /onnxruntime.dll \
     && echo "${ORT_DLL_SHA256}  /onnxruntime.dll" | sha256sum -c - \
-    && rm -rf /x /ort.tar.bz2
+    && rm -rf /x /ort.tar.bz2 \
+    && x86_64-w64-mingw32-objdump -p /onnxruntime.dll | grep 'DLL Name' > /imports.txt \
+    && ! grep -iE 'WINHTTP|WININET|WS2_32|CRYPT32|IPHLPAPI|DNSAPI|MSVCP140|VCRUNTIME140' /imports.txt \
+    && ! grep -aiE 'OneCollector|events\.data\.microsoft\.com|OneDsTelemetry' /onnxruntime.dll \
+    && ! x86_64-w64-mingw32-strings -el /onnxruntime.dll | grep -iE 'OneCollector|events\.data\.microsoft\.com|OneDsTelemetry'
 
 FROM debian:bookworm-slim AS sherpa-fetch
 RUN apt-get update && apt-get install -y --no-install-recommends \

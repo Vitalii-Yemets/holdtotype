@@ -212,7 +212,7 @@ The result lands in `dist/`:
 | `llama-server-gpu.exe` | translation of subtitles on the graphics card (llama.cpp with Vulkan), static build |
 | `fast-translator.exe` | the light translation engine for subtitles (bergamot-translator), static build, talks to the program over its standard input and output |
 | `punct-engine.exe` | finds where a sentence ends in the words heard, with the Horizon punctuation model; for now only the `-punctcheck` check mode starts it, and it talks to the program over its standard input and output |
-| `onnxruntime.dll` | ONNX Runtime 1.31.0, which `punct-engine.exe` runs the model with; the build of the sherpa-onnx author ([csukuangfj/onnxruntime-libs](https://github.com/csukuangfj/onnxruntime-libs), `onnxruntime-win-x64-MT-Release`) with the C runtime built in, so the Microsoft Visual C++ runtime is not needed |
+| `onnxruntime.dll` | ONNX Runtime 1.30.0, which `punct-engine.exe` runs the model with; the build of the sherpa-onnx author ([csukuangfj/onnxruntime-libs](https://github.com/csukuangfj/onnxruntime-libs), `onnxruntime-win-x64-MT-Release`) with the C runtime built in, so the Microsoft Visual C++ runtime is not needed; it has no network code — the build checks that it imports no network library and carries no telemetry sender |
 | `holdtotype-setup.exe` | installer (Go + WebView2, payload embedded) |
 | `models/ggml-*.bin` | the Whisper model |
 | `models/gigaam-v3/` | the GigaAM v3 model: encoder, decoder, joiner, tokens |
