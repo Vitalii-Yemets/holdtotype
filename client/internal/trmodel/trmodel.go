@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"holdtotype/internal/checksum"
+	"holdtotype/internal/partfile"
 )
 
 const (
@@ -101,6 +102,6 @@ func Remove(dir string, spec Spec) error {
 		time.Sleep(200 * time.Millisecond)
 	}
 	_ = os.Remove(path + Mark)
-	_ = os.Remove(path + ".part")
+	partfile.Remove(path + ".part")
 	return err
 }

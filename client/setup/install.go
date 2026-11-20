@@ -20,6 +20,7 @@ import (
 	"golang.org/x/sys/windows/registry"
 
 	"holdtotype/internal/appid"
+	"holdtotype/internal/modelsrc"
 	"holdtotype/internal/theme"
 )
 
@@ -71,18 +72,18 @@ const (
 	engineStream  = "stream"
 )
 
-const whisperBaseURL = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/"
+const whisperBaseURL = modelsrc.Whisper
 
 var modelOpts = []modelOpt{
 	{ID: "nemotron", Name: "Nemotron 3.5", Engine: engineStream, SizeMB: 651, Dir: "nemotron-3.5", PresetID: "nemotron-3.5",
 		Files:   []string{"encoder.int8.onnx", "decoder.int8.onnx", "joiner.int8.onnx", "tokens.txt"},
-		BaseURL: "https://huggingface.co/Masterx/sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-560ms-2026-06-11/resolve/main/"},
+		BaseURL: modelsrc.Nemotron},
 	{ID: "parakeet", Name: "Parakeet TDT 0.6B v3", Engine: engineSherpa, SizeMB: 670, Dir: "parakeet-v3", PresetID: "parakeet-v3",
 		Files:   []string{"encoder.int8.onnx", "decoder.int8.onnx", "joiner.int8.onnx", "tokens.txt"},
-		BaseURL: "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8/resolve/main/"},
+		BaseURL: modelsrc.Parakeet},
 	{ID: "gigaam-v3", Name: "GigaAM v3", Engine: engineSherpa, SizeMB: 232, Dir: "gigaam-v3", Lang: "ru", PresetID: "gigaam-v3",
 		Files:   []string{"encoder.int8.onnx", "decoder.onnx", "joiner.onnx", "tokens.txt"},
-		BaseURL: "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-transducer-punct-giga-am-v3-russian-2025-12-16/resolve/main/"},
+		BaseURL: modelsrc.GigaAMv3},
 	{ID: "base", Name: "Base", Engine: engineWhisper, File: "ggml-base.bin", SizeMB: 142, BaseURL: whisperBaseURL, PresetID: "base"},
 	{ID: "small", Name: "Small", Engine: engineWhisper, File: "ggml-small.bin", SizeMB: 466, BaseURL: whisperBaseURL, PresetID: "small"},
 	{ID: "medium", Name: "Medium (q5)", Engine: engineWhisper, File: "ggml-medium-q5_0.bin", SizeMB: 539, BaseURL: whisperBaseURL, PresetID: "medium-q5_0"},

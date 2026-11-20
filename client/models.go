@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"holdtotype/internal/checksum"
 	"holdtotype/internal/editormodel"
+	"holdtotype/internal/modelsrc"
+	"holdtotype/internal/partfile"
 	"holdtotype/internal/preset"
 	"io"
 	"log"
@@ -79,7 +81,7 @@ var modelCatalog = []modelInfo{
 			"joiner.onnx":       "602ff7017a93311aad34df1437c8d7f49911353c13d6eae7a6ee7b041339465c",
 			"tokens.txt":        "39abae20e692998290c574e606f11a9edef2902a1995463fcff63d1490cf22b7",
 		},
-		BaseURL: "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-transducer-punct-giga-am-v3-russian-2025-12-16/resolve/main/"},
+		BaseURL: modelsrc.GigaAMv3},
 	{ID: "gigaam-v2", SizeMB: 231, NameKey: "GigaAM v2", DescKey: "S_M_GIGAAM2",
 		Engine: engineSherpa, Dir: "gigaam-v2", Langs: "ru", Speed: 5, Accuracy: 4,
 		Files: []string{"encoder.int8.onnx", "decoder.onnx", "joiner.onnx", "tokens.txt"},
@@ -89,7 +91,7 @@ var modelCatalog = []modelInfo{
 			"joiner.onnx":       "4b02eced18e033fc5173e6c47b6ab166b5efea8d35c3f33a6755ff0d622fb5b0",
 			"tokens.txt":        "17cc514451bcceac9c280068c71502f8448f99e9fb1456b8d0761651fd0392f2",
 		},
-		BaseURL: "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19/resolve/main/"},
+		BaseURL: modelsrc.GigaAMv2},
 	{ID: "parakeet-v3", SizeMB: 670, NameKey: "Parakeet TDT 0.6B v3", DescKey: "S_M_PARAKEET",
 		Engine: engineSherpa, Dir: "parakeet-v3", Auto: true,
 		Langs: "en,es,fr,de,bg,hr,cs,da,nl,et,fi,el,hu,it,lv,lt,mt,pl,pt,ro,sk,sl,sv,ru,uk",
@@ -101,7 +103,7 @@ var modelCatalog = []modelInfo{
 			"joiner.int8.onnx":  "3164c13fc2821009440d20fcb5fdc78bff28b4db2f8d0f0b329101719c0948b3",
 			"tokens.txt":        "d58544679ea4bc6ac563d1f545eb7d474bd6cfa467f0a6e2c1dc1c7d37e3c35d",
 		},
-		BaseURL: "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8/resolve/main/"},
+		BaseURL: modelsrc.Parakeet},
 	{ID: "nemotron-3.5", SizeMB: 651, NameKey: "Nemotron 3.5", DescKey: "S_M_NEMOTRON",
 		Engine: engineStream, Dir: "nemotron-3.5", Auto: true, Punct: true,
 		Langs: "ar,bg,cs,da,de,el,en,es,et,fi,fr,he,hi,hr,hu,it,ja,ko,lt,lv,mt,nb,nl,nn,pl,pt,ro,ru,sk,sl,sv,th,tr,uk,vi,zh",
@@ -113,7 +115,7 @@ var modelCatalog = []modelInfo{
 			"joiner.int8.onnx":  "4101c7c679a0bc30483794b27a059e34e79232aa2068d78d51231a22c8b0d7ce",
 			"tokens.txt":        "32be3ebfabfff475d64d7829b435f1c7856a1c497907def5c41d54ca9f1eccfd",
 		},
-		BaseURL: "https://huggingface.co/Masterx/sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-560ms-2026-06-11/resolve/main/"},
+		BaseURL: modelsrc.Nemotron},
 	{ID: "canary-180m", SizeMB: 198, NameKey: "Canary 180M Flash", DescKey: "S_M_CANARY",
 		Engine: engineSherpa, Dir: "canary-180m", Langs: "en,de,es,fr", Punct: true,
 		Translate: true, TrLangs: "en,de,es,fr", Speed: 5, Accuracy: 3,
@@ -123,7 +125,7 @@ var modelCatalog = []modelInfo{
 			"decoder.int8.onnx": "e41a2ab9c0c2fe81a1e8ade5a45fb02a74bc4db7d1f91b89a54a25e2cf79cba2",
 			"tokens.txt":        "2dae6fc7815f9640645e0c765522b278ee0cef49b482d91f6913e334628d3e77",
 		},
-		BaseURL: "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8/resolve/main/"},
+		BaseURL: modelsrc.Canary},
 	{ID: "qwen3-asr", SizeMB: 937, NameKey: "Qwen3 ASR 0.6B", DescKey: "S_M_QWEN3",
 		Engine: engineSherpa, Dir: "qwen3-asr", Langs: "*", Auto: true, Punct: true,
 		Speed: 2, Accuracy: 5,
@@ -137,7 +139,7 @@ var modelCatalog = []modelInfo{
 			"tokenizer/tokenizer_config.json": "4942d005604266809309cabc9f4e9cb89ce855d59b14681fdc0e1cc62ea26c4c",
 			"tokenizer/vocab.json":            "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910",
 		},
-		BaseURL: "https://huggingface.co/csukuangfj2/sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/resolve/main/"},
+		BaseURL: modelsrc.Qwen3ASR},
 	{ID: "moonshine-uk", SizeMB: 135, NameKey: "Moonshine Base uk", DescKey: "S_M_MOONUK",
 		Engine: engineSherpa, Dir: "moonshine-uk", Langs: "uk", Speed: 5, Accuracy: 3,
 		Manual:  true,
@@ -166,7 +168,7 @@ func recommendedModels() map[string]string {
 	return out
 }
 
-const modelBaseURL = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/"
+const modelBaseURL = modelsrc.Whisper
 
 var localScanOnce sync.Once
 
@@ -469,6 +471,13 @@ func (a *App) startMultiDownloadThen(key string, m *modelInfo, then func()) {
 	}()
 }
 
+func (m *modelInfo) fileURL(f string) string {
+	if r := m.Remote[f]; r != "" {
+		return m.BaseURL + r
+	}
+	return m.BaseURL + f
+}
+
 func modelNeedMB(dir string, m *modelInfo) int {
 	need := m.SizeMB
 	for _, f := range m.Files {
@@ -477,9 +486,7 @@ func modelNeedMB(dir string, m *modelInfo) int {
 			need -= int(fi.Size() / (1024 * 1024))
 			continue
 		}
-		if fi, err := os.Stat(p + ".part"); err == nil {
-			need -= int(fi.Size() / (1024 * 1024))
-		}
+		need -= int(partfile.Kept(p+".part", m.fileURL(f)) / (1024 * 1024))
 	}
 	if need < 0 {
 		need = 0
@@ -504,11 +511,7 @@ func (a *App) doMultiDownload(ctx context.Context, key string, m *modelInfo) err
 				return uiErr("mkdir "+sub+": "+err.Error(), trf("err.model.dir", sub))
 			}
 		}
-		src := f
-		if r := m.Remote[f]; r != "" {
-			src = r
-		}
-		written, err := downloadFile(ctx, m.BaseURL+src, filepath.Join(dir, f), func(n int64) {
+		written, err := downloadFile(ctx, m.fileURL(f), filepath.Join(dir, f), func(n int64) {
 			dlMu.Lock()
 			if st := dl[key]; st != nil && total > 0 {
 				pct := int((doneBytes + n) * 100 / total)
@@ -540,9 +543,9 @@ func (a *App) doMultiDownload(ctx context.Context, key string, m *modelInfo) err
 
 func downloadFile(ctx context.Context, url, final string, progress func(written int64)) (int64, error) {
 	tmp := final + ".part"
-	have := int64(0)
-	if fi, err := os.Stat(tmp); err == nil {
-		have = fi.Size()
+	have, dropped := partfile.Resumable(tmp, url)
+	if dropped {
+		log.Printf("%s: the unfinished download was not from %s, it starts over", filepath.Base(final), url)
 	}
 	client := &http.Client{Timeout: 0}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
@@ -571,6 +574,13 @@ func downloadFile(ctx context.Context, url, final string, progress func(written 
 		f, err = os.OpenFile(tmp, os.O_WRONLY|os.O_APPEND, 0o644)
 	} else {
 		f, err = os.Create(tmp)
+		if err == nil {
+			if terr := partfile.Begin(tmp, url); terr != nil {
+				f.Close()
+				partfile.Remove(tmp)
+				return 0, terr
+			}
+		}
 	}
 	if err != nil {
 		return 0, err
@@ -587,7 +597,7 @@ func downloadFile(ctx context.Context, url, final string, progress func(written 
 		if n > 0 {
 			if _, werr := f.Write(buf[:n]); werr != nil {
 				f.Close()
-				os.Remove(tmp)
+				partfile.Remove(tmp)
 				return 0, werr
 			}
 			written += int64(n)
@@ -604,22 +614,23 @@ func downloadFile(ctx context.Context, url, final string, progress func(written 
 			if ctx.Err() != nil {
 				return written, ctx.Err()
 			}
-			os.Remove(tmp)
+			partfile.Remove(tmp)
 			return 0, rerr
 		}
 	}
 	if err := f.Close(); err != nil {
-		os.Remove(tmp)
+		partfile.Remove(tmp)
 		return 0, err
 	}
 	if expected > 0 && written != expected {
-		os.Remove(tmp)
+		partfile.Remove(tmp)
 		return 0, fmt.Errorf("the file was not received in full: %d of %d bytes", written, expected)
 	}
 	os.Remove(final)
 	if err := os.Rename(tmp, final); err != nil {
 		return 0, err
 	}
+	partfile.Finish(tmp)
 	if progress != nil {
 		progress(written)
 	}
@@ -700,13 +711,20 @@ func cleanupStaleParts() {
 			continue
 		}
 		for _, e := range items {
+			if !e.IsDir() && partfile.IsTag(e.Name()) {
+				p := filepath.Join(dir, e.Name())
+				if _, serr := os.Stat(strings.TrimSuffix(p, ".src")); serr != nil {
+					_ = os.Remove(p)
+				}
+				continue
+			}
 			if e.IsDir() || !strings.HasSuffix(e.Name(), ".part") {
 				continue
 			}
 			p := filepath.Join(dir, e.Name())
 			info, ierr := e.Info()
 			if ierr != nil {
-				_ = os.Remove(p)
+				partfile.Remove(p)
 				continue
 			}
 			if time.Since(info.ModTime()) < partKeep {
@@ -714,7 +732,7 @@ func cleanupStaleParts() {
 				continue
 			}
 			log.Printf("removing the unfinished download %s (%d MB)", p, info.Size()/(1024*1024))
-			_ = os.Remove(p)
+			partfile.Remove(p)
 		}
 	}
 }
@@ -729,12 +747,12 @@ func (a *App) doDownload(ctx context.Context, key, file, url string, sizeMB int,
 	}
 	if sizeMB > 0 {
 		need := sizeMB
-		if fi, serr := os.Stat(final + ".part"); serr == nil {
-			need -= int(fi.Size() / (1024 * 1024))
+		if kept := partfile.Kept(final+".part", url); kept > 0 {
+			need -= int(kept / (1024 * 1024))
 			if need < 0 {
 				need = 0
 			}
-			log.Printf("%s: %d MB downloaded, ~%d MB to go", file, int(fi.Size()/(1024*1024)), need)
+			log.Printf("%s: %d MB downloaded, ~%d MB to go", file, int(kept/(1024*1024)), need)
 		}
 		if free := freeDiskMB("models"); free >= 0 && free < need+512 {
 			return uiErr(fmt.Sprintf("not enough disk space: %d MB free, %d MB needed", free, need), trf("err.disk.space", free, need))
@@ -1432,4 +1450,55 @@ func (a *App) verifyModels() string {
 	log.Printf("model check: %d checked, %d broken", checked, broken)
 	out, _ := json.Marshal(map[string]any{"rows": rows, "text": text, "ok": broken == 0})
 	return string(out)
+}
+
+func runModelDownload(args []string) {
+	if len(args) < 1 || findModel(args[0]) == nil {
+		var ids []string
+		for i := range modelCatalog {
+			ids = append(ids, modelCatalog[i].ID)
+		}
+		log.Printf("modeldownload: needs the id of a catalog model: %s", strings.Join(ids, ", "))
+		return
+	}
+	cfg, err := loadConfig("config.json")
+	if err != nil {
+		log.Printf("modeldownload: config: %v", err)
+		return
+	}
+	id := args[0]
+	app := &App{cfg: cfg, enabled: true}
+	started := time.Now()
+	app.downloadModel(id)
+	last := -1
+	for {
+		time.Sleep(200 * time.Millisecond)
+		dlMu.Lock()
+		d := dl[id]
+		active := d != nil && d.active
+		pct := 0
+		if d != nil {
+			pct = d.pct
+		}
+		dlMu.Unlock()
+		if pct/10 != last/10 {
+			log.Printf("modeldownload: %d%%", pct)
+			last = pct
+		}
+		if !active {
+			break
+		}
+	}
+	dlMu.Lock()
+	d := dl[id]
+	dlMu.Unlock()
+	failed := ""
+	if d != nil {
+		failed = d.err
+	}
+	m := findModel(id)
+	log.Printf("modeldownload: %s installed %v, error %q, %.0f s", id, m.installed(), failed, time.Since(started).Seconds())
+	if m.installed() {
+		log.Printf("modeldownload: model check: %s", app.verifyModels())
+	}
 }
