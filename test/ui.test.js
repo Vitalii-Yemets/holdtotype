@@ -2030,7 +2030,33 @@ function check(name, actual, expected) {
   stTr.click(); await sleep(450);
   check("status: translation off here is off on the tab, saved, and the small cards are dimmed and disabled", [stTr.checked, trOn.checked, w.lastSaveForm.subtitles_translate_on, stLays.classList.contains("off"), stCards().every((c) => c.querySelector("input").disabled)], [false, false, false, true, true]);
   const stSave = sv("st_save_on");
-  check("status: the save switch comes after the small cards, looks like the translation switch and shows the setting", [[...d.querySelectorAll("#subs_hero .stsubsw > *")].map((e) => e.id || e.querySelector("input").id), stSave.closest("label").className, stSave.type, stSave.checked, sv("subtitles_save").checked], [["st_tr_on", "st_lays", "st_save_on"], "stsw", "checkbox", true, true]);
+  check("status: the two switches stand in a column, translation over saving, and the small cards come after the column", [[...d.querySelectorAll("#subs_hero .stsubsw > *")].map((e) => e.id || e.className), [...d.querySelectorAll("#subs_hero .stsubsw > .stswcol > *")].map((e) => e.className + ":" + e.querySelector("input").id)], [["stswcol", "st_lays"], ["stsw:st_tr_on", "stsw:st_save_on"]]);
+  check("status: the keyboard goes translation, saving, then the small cards", [...d.querySelectorAll("#subs_hero .stsubsw input")].map((i) => i.id || i.name + ":" + i.value), ["st_tr_on", "st_save_on", "st_layout:rows", "st_layout:columns", "st_layout:only"]);
+  check("status: the save switch looks like the translation switch and shows the setting", [stSave.closest("label").className, stSave.type, stSave.checked, sv("subtitles_save").checked], ["stsw", "checkbox", true, true]);
+  check("status: outside the terminal design the cards grow up to the height of the switch column and shrink when the width runs out", [
+    css.includes("#subs_hero .stswcol{display:flex;flex-direction:column;align-items:flex-start;gap:8px;flex:none}"),
+    css.includes('html:not([data-skin="terminal"]) #subs_hero>.stsubsw{flex-wrap:nowrap}'),
+    css.includes('html:not([data-skin="terminal"]) #subs_hero .stsubsw>.stlays{flex:0 1 auto;min-width:0}'),
+    css.includes('html:not([data-skin="terminal"]) #subs_hero .stlay{flex:0 1 var(--cardw,74px);min-width:0}'),
+    css.includes('html:not([data-skin="terminal"]) #subs_hero .stlay svg{width:100%}')], [true, true, true, true, true]);
+  check("status: the terminal design keeps the old order: translation, the small cards, saving", [
+    css.includes('html[data-skin="terminal"] #subs_hero .stswcol{display:contents}'),
+    css.includes('html[data-skin="terminal"] #subs_hero .stsubsw>.stlays{order:1}'),
+    css.includes('html[data-skin="terminal"] #subs_hero .stswcol>.stsw+.stsw{order:2}')], [true, true, true]);
+  const stColumn = d.querySelector("#subs_hero .stswcol");
+  const realRect = stColumn.getBoundingClientRect;
+  stLays.style.removeProperty("--cardw");
+  stColumn.getBoundingClientRect = () => ({ top: 0, left: 0, right: 200, bottom: 0, width: 200, height: 0 });
+  w.fitStateLays();
+  const hiddenWidth = stLays.style.getPropertyValue("--cardw");
+  stColumn.getBoundingClientRect = () => ({ top: 0, left: 0, right: 200, bottom: 46, width: 200, height: 46 });
+  w.fitStateLays();
+  const cardW = stLays.style.getPropertyValue("--cardw");
+  stColumn.getBoundingClientRect = realRect;
+  const cardCs = w.getComputedStyle(stCards()[0]);
+  const cssPx = (k) => parseFloat(cardCs[k]) || 0;
+  const wantW = Math.round((46 - cssPx("paddingTop") - cssPx("paddingBottom") - cssPx("borderTopWidth") - cssPx("borderBottomWidth")) * 251 / 60 + cssPx("paddingLeft") + cssPx("paddingRight") + cssPx("borderLeftWidth") + cssPx("borderRightWidth"));
+  check("status: the card width follows the height of the switch column by the proportions of the drawing and stays unset while the column is hidden", [hiddenWidth, cardW, cssPx("paddingTop")], ["", wantW + "px", 4]);
   check("status: the save switch stays awake while translation is off", [stSave.disabled, stSave.closest(".stsw").classList.contains("dimmed")], [false, false]);
   const savesSv = w.saveCalls;
   stSave.click(); await sleep(450);
