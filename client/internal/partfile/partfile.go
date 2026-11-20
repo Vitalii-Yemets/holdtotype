@@ -28,12 +28,20 @@ func Kept(part, url string) int64 {
 }
 
 func Resumable(part, url string) (int64, bool) {
-	if n := Kept(part, url); n > 0 {
-		return n, false
+	fi, err := os.Stat(part)
+	if err != nil {
+		Remove(part)
+		return 0, false
 	}
-	_, err := os.Stat(part)
+	if src, err := os.ReadFile(Tag(part)); err == nil && string(src) == url {
+		if fi.Size() > 0 {
+			return fi.Size(), false
+		}
+		Remove(part)
+		return 0, false
+	}
 	Remove(part)
-	return 0, err == nil
+	return 0, true
 }
 
 func Begin(part, url string) error {

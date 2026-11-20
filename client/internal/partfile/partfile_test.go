@@ -65,6 +65,20 @@ func TestAPartOfTheSameAddressIsResumed(t *testing.T) {
 	}
 }
 
+func TestAnEmptyPartOfTheSameAddressStartsOverQuietly(t *testing.T) {
+	part := filepath.Join(t.TempDir(), "encoder.int8.onnx.part")
+	if err := os.WriteFile(part, nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := Begin(part, newURL); err != nil {
+		t.Fatal(err)
+	}
+	have, dropped := Resumable(part, newURL)
+	if have != 0 || dropped || exists(part) || exists(Tag(part)) {
+		t.Fatalf("an empty part of the same address: have %d, dropped %v, part there %v, record there %v", have, dropped, exists(part), exists(Tag(part)))
+	}
+}
+
 func TestNoPartLeavesNoRecord(t *testing.T) {
 	part := filepath.Join(t.TempDir(), "tokens.txt.part")
 	if err := os.WriteFile(Tag(part), []byte(newURL), 0o644); err != nil {
