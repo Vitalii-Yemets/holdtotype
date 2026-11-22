@@ -1,0 +1,62 @@
+name: Bug report
+description: Something does not work as it should
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The version and a few lines from the log are usually what makes a problem possible to find. For a personal question, write to holdtotype@outlook.com instead.
+  - type: input
+    id: version
+    attributes:
+      label: HoldToType version
+      description: Shown at the bottom right of the settings window.
+      placeholder: v0.90.2
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: How you installed it
+      options:
+        - Installer (holdtotype-setup.exe)
+        - Portable archive (holdtotype-portable.zip)
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      description: Windows shows it in Settings → System → About.
+      placeholder: Windows 11 24H2
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: What you did
+      description: Step by step, as precisely as you can. Which shortcut, which language, which program you dictated into.
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: What happened
+      description: What you saw, and any message from the program, word for word.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+  - type: textarea
+    id: log
+    attributes:
+      label: Log lines
+      description: In the settings window open System and press Open the log next to Log. Copy the lines from around the time of the problem. The log can contain recognised text, subtitles for example, so remove anything private before posting.
+      render: text
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Drag images here if they help.

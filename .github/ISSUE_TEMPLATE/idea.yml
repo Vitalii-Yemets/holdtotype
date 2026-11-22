@@ -1,0 +1,20 @@
+name: Idea
+description: Something you would like HoldToType to do
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: What do you want to do?
+      description: The situation, and what gets in the way today.
+    validations:
+      required: true
+  - type: textarea
+    id: how
+    attributes:
+      label: How do you imagine it?
+  - type: textarea
+    id: others
+    attributes:
+      label: Does another program do this?
+      description: Its name, if you know one.
