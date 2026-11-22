@@ -5489,6 +5489,12 @@ function statsChart(box, p, key){
     dates.appendChild(s);
   });
   box.appendChild(dates);
+  const last = dates.lastElementChild;
+  if(last && !last.classList.contains("end") && last.getBoundingClientRect().right > dates.getBoundingClientRect().right + 0.5){
+    last.classList.add("end");
+    last.style.left = "";
+    last.style.right = "0";
+  }
 }
 function statsRows(box, list){
   box.innerHTML = "";
