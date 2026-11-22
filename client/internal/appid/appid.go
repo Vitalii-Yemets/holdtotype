@@ -8,6 +8,7 @@ const (
 	SetupExe    = Slug + "-setup.exe"
 	LogFile     = Slug + ".log"
 	HistoryFile = Slug + "-history.json"
+	StatsFile   = Slug + "-stats.json"
 	Portable    = Slug + "-portable.zip"
 
 	InstallDirName = Name

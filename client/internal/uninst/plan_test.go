@@ -13,6 +13,11 @@ func TestKeepingDataLeavesTranscriptsAlone(t *testing.T) {
 	if slices.Contains(files, "config.json") {
 		t.Fatal("the settings are removed without asking")
 	}
+	for _, f := range []string{"holdtotype-history.json", "holdtotype-stats.json"} {
+		if slices.Contains(files, f) {
+			t.Fatalf("%s is removed without asking", f)
+		}
+	}
 	if !slices.Contains(files, "sherpa-online-server.exe") {
 		t.Fatal("the program files are not removed")
 	}
@@ -34,7 +39,7 @@ func TestDeletingDataTakesTranscriptsWithIt(t *testing.T) {
 			t.Fatalf("%s is not removed with the data: %v", d, dirs)
 		}
 	}
-	for _, f := range []string{"config.json", "holdtotype.log", "holdtotype-history.json"} {
+	for _, f := range []string{"config.json", "holdtotype.log", "holdtotype-history.json", "holdtotype-stats.json"} {
 		if !slices.Contains(files, f) {
 			t.Fatalf("%s is not removed with the data", f)
 		}

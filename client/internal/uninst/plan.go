@@ -9,7 +9,7 @@ func Plan(delData bool) (files, dirs []string) {
 	if !delData {
 		return files, nil
 	}
-	files = append(files, "config.json", appid.LogFile, appid.LogFile+".old", appid.HistoryFile)
+	files = append(files, "config.json", appid.LogFile, appid.LogFile+".old", appid.HistoryFile, appid.StatsFile)
 	dirs = []string{"models", "transcripts"}
 	return files, dirs
 }

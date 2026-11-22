@@ -930,7 +930,7 @@ func main() {
 				}
 				log.Printf("testpaste: target captured, pasting in 6 seconds")
 				time.Sleep(6 * time.Second)
-				app.insertResult(context.Background(), app.snapshot(), time.Now(), text, "", tw, false)
+				app.insertResult(context.Background(), app.snapshot(), time.Now(), text, "", tw, false, dictMeta{})
 			}()
 		}
 		if arg == "-testundo" && i+1 < len(args) {
@@ -939,7 +939,7 @@ func main() {
 				time.Sleep(5 * time.Second)
 				tw, _, _ := procGetForegroundWindow.Call()
 				log.Printf("testundo: target captured, pasting now, undo in 3 seconds")
-				app.insertResult(context.Background(), app.snapshot(), time.Now(), text, "", tw, false)
+				app.insertResult(context.Background(), app.snapshot(), time.Now(), text, "", tw, false, dictMeta{})
 				time.Sleep(3 * time.Second)
 				log.Printf("testundo: running the undo command")
 				app.undoLast(context.Background(), app.snapshot())
@@ -1593,6 +1593,7 @@ func (a *App) handleStop(expectGen int, why stopReason) {
 	rec := a.rec
 	a.mu.Unlock()
 	pcm := rec.Stop()
+	stopAt := time.Now()
 	if why == stopSilence {
 		a.silenceStopAt = time.Now()
 		pcm = trimAfterSpeech(pcm, a.silenceEv)
@@ -1615,7 +1616,7 @@ func (a *App) handleStop(expectGen int, why stopReason) {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	a.sessionCancel = cancel
-	go a.process(ctx, pcm, a.gen, a.sessionCfg, a.sessionProfile, a.sessionTarget, a.wakeSess)
+	go a.process(ctx, pcm, a.gen, a.sessionCfg, a.sessionProfile, a.sessionTarget, a.wakeSess, stopAt)
 }
 
 func (a *App) handleSilence(ev ptEvent) {
@@ -1699,7 +1700,7 @@ func (a *App) handleDone(gen int) {
 
 var onlyNoise = regexp.MustCompile(`^[\s.,!?\*\[\]\(\)«»"'…·♪♫~-]*$|^\[[^\]]*\]$|^\([^\)]*\)$`)
 
-func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, profileID string, targetWnd uintptr, wake bool) {
+func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, profileID string, targetWnd uintptr, wake bool, stopAt time.Time) {
 	defer a.post(ptEvent{kind: evDone, gen: gen})
 	defer a.dropLiveIf(gen)
 	a.touchModels()
@@ -1970,7 +1971,8 @@ func (a *App) process(ctx context.Context, pcm []byte, gen int, cfg *Config, pro
 		log.Printf("empty result after shaping, nothing to paste")
 		return
 	}
-	a.insertResult(ctx, cfg, start, text, skipped, targetWnd, liveSess != nil)
+	meta := dictMeta{stopAt: stopAt, speechMs: int64(len(pcm)) * 1000 / (sampleRate * 2), model: statsModelKey(srv, active), lang: outLang}
+	a.insertResult(ctx, cfg, start, text, skipped, targetWnd, liveSess != nil, meta)
 }
 
 const shapeArmTTL = 60 * time.Second
@@ -2180,7 +2182,7 @@ func (a *App) undoLast(ctx context.Context, cfg *Config) {
 	}
 }
 
-func (a *App) insertResult(ctx context.Context, cfg *Config, start time.Time, text, skipped string, targetWnd uintptr, liveShown bool) {
+func (a *App) insertResult(ctx context.Context, cfg *Config, start time.Time, text, skipped string, targetWnd uintptr, liveShown bool, meta dictMeta) {
 	a.mu.Lock()
 	a.lastResult = text
 	a.lastResultAt = time.Now()
@@ -2231,6 +2233,7 @@ func (a *App) insertResult(ctx context.Context, cfg *Config, start time.Time, te
 		return
 	}
 	mode, err := pasteTextMode(cfg, text, expect)
+	insertedAt := time.Now()
 	if err != nil {
 		playCue(cfg.Beep, cfg.SoundTheme, cueError)
 		if errors.Is(err, errFocusMoved) {
@@ -2262,6 +2265,7 @@ func (a *App) insertResult(ctx context.Context, cfg *Config, start time.Time, te
 		}
 	}
 	a.recordInsertion(text, expect, mode, enterSent, histAt)
+	a.countDictation(cfg, text, targetApp, meta, insertedAt)
 	log.Printf("done in %.1fs: %d characters", time.Since(start).Seconds(), len([]rune(text)))
 	if cfg.Overlay {
 		switch {

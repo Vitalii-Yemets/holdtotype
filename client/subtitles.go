@@ -263,6 +263,7 @@ type subRun struct {
 	devLogged bool
 
 	phase atomic.Int32
+	stat  subTally
 }
 
 func startSubtitlesRun(a *App, cfg *Config, opts subOptions) (*subRun, error) {
@@ -420,6 +421,7 @@ func (r *subRun) loop(t *subTarget) {
 	for {
 		select {
 		case <-r.stopCh:
+			r.tally(time.Now(), true)
 			pipe.stop(time.Duration(r.drain.Load()))
 			r.phMu.Lock()
 			s := r.sent
@@ -460,6 +462,7 @@ func (r *subRun) loop(t *subTarget) {
 				r.checkDevice(time.Now())
 			}
 			r.refreshShown()
+			r.tally(time.Now(), false)
 		}
 	}
 }
