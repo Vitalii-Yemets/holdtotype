@@ -688,6 +688,10 @@ func main() {
 			runPunctCheck(os.Args[1:][i+1:])
 			return
 		}
+		if arg == "-appnamecheck" {
+			runAppNameCheck(os.Args[1:][i+1:])
+			return
+		}
 		if arg == "-subcheck" {
 			runSubcheck(os.Args[1:][i+1:])
 			return
@@ -2188,7 +2192,8 @@ func (a *App) insertResult(ctx context.Context, cfg *Config, start time.Time, te
 	a.lastResultAt = time.Now()
 	a.lastWnd = targetWnd
 	a.lastTarget = windowTitle(targetWnd)
-	a.lastProcess = processNameOf(targetWnd)
+	targetPath := processPathOf(targetWnd)
+	a.lastProcess = processFileOf(targetPath)
 	a.lastIns = nil
 	targetApp := a.lastProcess
 	a.mu.Unlock()
@@ -2265,7 +2270,7 @@ func (a *App) insertResult(ctx context.Context, cfg *Config, start time.Time, te
 		}
 	}
 	a.recordInsertion(text, expect, mode, enterSent, histAt)
-	a.countDictation(cfg, text, targetApp, meta, insertedAt)
+	a.countDictation(cfg, text, targetApp, targetPath, meta, insertedAt)
 	log.Printf("done in %.1fs: %d characters", time.Since(start).Seconds(), len([]rune(text)))
 	if cfg.Overlay {
 		switch {

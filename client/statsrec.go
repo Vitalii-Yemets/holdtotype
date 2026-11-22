@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"holdtotype/internal/appid"
+	"holdtotype/internal/appname"
 	"holdtotype/internal/stats"
 	"holdtotype/internal/subtitles"
 )
@@ -75,13 +76,38 @@ func statsLang(lang, text string) string {
 	return statsLangFallback
 }
 
-func (a *App) countDictation(cfg *Config, text, app string, meta dictMeta, insertedAt time.Time) {
+var statsAppNames = appname.NewCache(appname.ReadVersion)
+
+func statsProgram(cfg *Config, app, path string) string {
+	prog := stats.Program(app, cfg.HistorySkip)
+	if prog == stats.OtherApp || strings.TrimSpace(path) == "" {
+		return prog
+	}
+	if name := statsAppNames.Name(path); name != "" {
+		return name
+	}
+	return prog
+}
+
+func runAppNameCheck(paths []string) {
+	if len(paths) == 0 {
+		log.Printf("appnamecheck: needs one or more paths to .exe files")
+		return
+	}
+	for _, p := range paths {
+		desc, product := appname.ReadVersion(p)
+		log.Printf("appnamecheck: %s -> %q (description %q, product %q)", p, statsAppNames.Name(p), desc, product)
+	}
+	log.Printf("appnamecheck: done")
+}
+
+func (a *App) countDictation(cfg *Config, text, app, path string, meta dictMeta, insertedAt time.Time) {
 	d := stats.Dictation{
 		Text:     text,
 		SpeechMs: meta.speechMs,
 		Model:    meta.model,
 		Lang:     statsLang(meta.lang, text),
-		App:      stats.Program(app, cfg.HistorySkip),
+		App:      statsProgram(cfg, app, path),
 	}
 	if !meta.stopAt.IsZero() && insertedAt.After(meta.stopAt) {
 		d.WaitMs = insertedAt.Sub(meta.stopAt).Milliseconds()

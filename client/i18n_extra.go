@@ -1382,7 +1382,7 @@ func init() {
 			"<tr><td>Wenn Sie tippen</td><td>Ihr Tipptempo, von 10 bis 150 Wörtern pro Minute, standardmäßig 40. Davon hängt nur „Gespart“ auf dieser Registerkarte und auf „Status“ ab. Dauert das Tippen nicht länger als das Sprechen, ist die Ersparnis 0, und die Zeile sagt das.</td></tr>" +
 			"<tr><td>Nach Tagen</td><td>Ein Balken Wörter für jeden Tag des Zeitraums, heute hervorgehoben; für die gesamte Zeit nach Monaten. Zeigen Sie auf einen Balken, um Datum und Zahl zu sehen.</td></tr>" +
 			"<tr><td>Sprachen</td><td>In welchen Sprachen Sie diktiert haben: Anteil und Zahl der Wörter. Wird die Sprache automatisch erkannt, bestimmt das Programm sie aus den Wörtern des Diktats selbst; gelingt das nicht, steht dort „Automatisch“.</td></tr>" +
-			"<tr><td>Programme</td><td>Wohin der Text ging: die fünf Programme mit dem größten Anteil an Wörtern, unter denselben Namen wie im Verlauf, der Rest als eine Zeile „Andere“.</td></tr>" +
+			"<tr><td>Programme</td><td>Wohin der Text ging: die fünf Programme mit dem größten Anteil an Wörtern, unter dem Namen, den das Programm selbst angibt, etwa Google Chrome, der Rest als eine Zeile „Andere“.</td></tr>" +
 			"<tr><td>Tempo</td><td>Wie lange es im Schnitt vom Loslassen der Tasten bis zum Einfügen des Textes dauert, für jedes Erkennungsmodell einzeln, und wie viele Diktate es erkannt hat.</td></tr>" +
 			"<tr><td>Untertitel</td><td>Wie lange die Untertitel dem Ton zugehört haben und wie viel davon übersetzt wurde, darunter die Übersetzung nach Sprachpaaren. Der Block erscheint, wenn im Zeitraum Untertitel liefen.</td></tr>" +
 			"<tr><td>Statistik zurücksetzen</td><td>Löscht alle Zahlen aller Tage. Vorher fragt das Programm nach.</td></tr>" +
@@ -2243,7 +2243,7 @@ func init() {
 			"<tr><td>Si vous tapez</td><td>Votre vitesse de frappe, de 10 à 150 mots par minute, 40 par défaut. Elle ne change que « Temps gagné » sur cet onglet et sur « État ». Si la frappe ne prend pas plus de temps que la parole, le gain est 0 et la ligne le dit.</td></tr>" +
 			"<tr><td>Par jour</td><td>Une barre de mots pour chaque jour de la période, aujourd'hui en évidence ; depuis le début, par mois. Pointez une barre pour voir sa date et son nombre.</td></tr>" +
 			"<tr><td>Langues</td><td>Dans quelles langues vous avez dicté : la part des mots et leur nombre. Quand la langue est détectée automatiquement, le programme la reconnaît aux mots de la dictée elle-même et, s'il n'y arrive pas, écrit « Auto ».</td></tr>" +
-			"<tr><td>Programmes</td><td>Où le texte est allé : les cinq programmes avec la plus grande part de mots, sous les mêmes noms que dans l'historique, et le reste sur une ligne « Autres ».</td></tr>" +
+			"<tr><td>Programmes</td><td>Où le texte est allé : les cinq programmes avec la plus grande part de mots, sous le nom que le programme se donne, par exemple Google Chrome, et le reste sur une ligne « Autres ».</td></tr>" +
 			"<tr><td>Vitesse</td><td>Combien de temps il faut en moyenne entre le relâchement des touches et l'insertion du texte, pour chaque modèle de reconnaissance séparément, et combien de dictées il a reconnues.</td></tr>" +
 			"<tr><td>Sous-titres</td><td>Combien de temps les sous-titres ont écouté le son et quelle part a été traduite, et en dessous la traduction par paire de langues. Le bloc apparaît quand des sous-titres ont tourné pendant la période.</td></tr>" +
 			"<tr><td>Réinitialiser les statistiques</td><td>Efface tous les nombres de tous les jours. Le programme demande d'abord confirmation.</td></tr>" +
@@ -3104,7 +3104,7 @@ func init() {
 			"<tr><td>Si escribes</td><td>Tu velocidad de escritura, de 10 a 150 palabras por minuto, 40 por defecto. Solo cambia «Ahorrado» en esta pestaña y en «Estado». Si escribir no lleva más que hablar, el ahorro es 0 y la línea lo dice.</td></tr>" +
 			"<tr><td>Por días</td><td>Una barra de palabras por cada día del periodo, con hoy resaltado; para todo el tiempo, por meses. Señala una barra para ver su fecha y su número.</td></tr>" +
 			"<tr><td>Idiomas</td><td>En qué idiomas dictaste: la proporción de palabras y cuántas. Cuando el idioma se detecta solo, el programa lo reconoce por las palabras del propio dictado y, si no lo consigue, escribe «Auto».</td></tr>" +
-			"<tr><td>Programas</td><td>Adónde fue el texto: los cinco programas con más proporción de palabras, con los mismos nombres que en el historial, y el resto en una línea «Otros».</td></tr>" +
+			"<tr><td>Programas</td><td>Adónde fue el texto: los cinco programas con más proporción de palabras, con el nombre que da el propio programa, por ejemplo Google Chrome, y el resto en una línea «Otros».</td></tr>" +
 			"<tr><td>Velocidad</td><td>Cuánto pasa de media desde que sueltas las teclas hasta que se inserta el texto, para cada modelo de reconocimiento por separado, y cuántos dictados reconoció.</td></tr>" +
 			"<tr><td>Subtítulos</td><td>Cuánto tiempo escucharon el sonido los subtítulos y cuánto de él se tradujo, y debajo la traducción por par de idiomas. El bloque aparece si hubo subtítulos en el periodo.</td></tr>" +
 			"<tr><td>Restablecer estadísticas</td><td>Borra todos los números de todos los días. Antes, el programa pide confirmación.</td></tr>" +
@@ -3965,7 +3965,7 @@ func init() {
 			"<tr><td>Se digiti</td><td>La tua velocità di digitazione, da 10 a 150 parole al minuto, 40 di default. Cambia solo «Risparmiato» in questa scheda e in «Stato». Se digitare non richiede più tempo che parlare, il risparmio è 0 e la riga lo dice.</td></tr>" +
 			"<tr><td>Per giorno</td><td>Una barra di parole per ogni giorno del periodo, con oggi evidenziato; da sempre, per mesi. Punta una barra per vederne la data e il numero.</td></tr>" +
 			"<tr><td>Lingue</td><td>In quali lingue hai dettato: la quota di parole e quante. Quando la lingua è rilevata automaticamente, il programma la riconosce dalle parole della dettatura stessa e, se non ci riesce, scrive «Auto».</td></tr>" +
-			"<tr><td>Programmi</td><td>Dove è andato il testo: i cinque programmi con la quota di parole più alta, con gli stessi nomi della cronologia, e il resto in una riga «Altri».</td></tr>" +
+			"<tr><td>Programmi</td><td>Dove è andato il testo: i cinque programmi con la quota di parole più alta, con il nome che il programma stesso si dà, ad esempio Google Chrome, e il resto in una riga «Altri».</td></tr>" +
 			"<tr><td>Velocità</td><td>Quanto passa in media dal rilascio dei tasti all'inserimento del testo, per ogni modello di riconoscimento separatamente, e quante dettature ha riconosciuto.</td></tr>" +
 			"<tr><td>Sottotitoli</td><td>Per quanto tempo i sottotitoli hanno ascoltato l'audio e quanto ne hanno tradotto, e sotto la traduzione per coppia di lingue. Il blocco compare se nel periodo ci sono stati sottotitoli.</td></tr>" +
 			"<tr><td>Azzera le statistiche</td><td>Cancella tutti i numeri di tutti i giorni. Prima il programma chiede conferma.</td></tr>" +
@@ -4826,7 +4826,7 @@ func init() {
 			"<tr><td>Gdyby pisać</td><td>Twoja szybkość pisania, od 10 do 150 słów na minutę, domyślnie 40. Zależy od niej tylko „Zaoszczędzone” na tej zakładce i na „Stan”. Jeśli pisanie nie trwa dłużej niż mówienie, oszczędność wynosi 0 i linijka to mówi.</td></tr>" +
 			"<tr><td>Według dni</td><td>Słupek słów za każdy dzień okresu, dzisiejszy wyróżniony; dla całego czasu — według miesięcy. Wskaż słupek, aby zobaczyć datę i liczbę.</td></tr>" +
 			"<tr><td>Języki</td><td>W jakich językach dyktowano: udział słów i ich liczba. Gdy język jest rozpoznawany automatycznie, program ustala go na podstawie słów samego dyktowania, a gdy się nie da, pisze „Auto”.</td></tr>" +
-			"<tr><td>Programy</td><td>Dokąd trafiał tekst: pięć programów z największym udziałem słów, pod tymi samymi nazwami co w historii, a reszta jako linijka „Inne”.</td></tr>" +
+			"<tr><td>Programy</td><td>Dokąd trafiał tekst: pięć programów z największym udziałem słów, pod nazwą, którą podaje sam program, na przykład Google Chrome, a reszta jako linijka „Inne”.</td></tr>" +
 			"<tr><td>Szybkość</td><td>Ile średnio mija od zwolnienia klawiszy do wstawienia tekstu, osobno dla każdego modelu rozpoznawania, i ile dyktowań rozpoznał.</td></tr>" +
 			"<tr><td>Napisy</td><td>Jak długo napisy słuchały dźwięku i ile z tego tłumaczono, a niżej tłumaczenie według par języków. Blok pojawia się, gdy w okresie działały napisy.</td></tr>" +
 			"<tr><td>Wyzeruj statystyki</td><td>Usuwa wszystkie liczby ze wszystkich dni. Wcześniej program prosi o potwierdzenie.</td></tr>" +
@@ -5806,7 +5806,7 @@ func init() {
 			"<tr><td>Якщо друкувати</td><td>Ваша швидкість набору, від 10 до 150 слів на хвилину, типово 40. Від неї залежить лише «Заощаджено» на цій вкладці та на «Стан». Якщо набір виходить не довшим за мовлення, заощаджено 0, і рядок так і скаже.</td></tr>" +
 			"<tr><td>По днях</td><td>Стовпчик слів за кожен день періоду, сьогоднішній виділено; за весь час — по місяцях. Наведіть на стовпчик, щоб побачити дату й число.</td></tr>" +
 			"<tr><td>Мови</td><td>Якими мовами ви диктували: частка слів і скільки їх. Коли мова визначається автоматично, програма впізнає її за словами самого диктування, а якщо не впізнала, пише «Автовизначення».</td></tr>" +
-			"<tr><td>Програми</td><td>Куди вставлявся текст: п'ять програм із найбільшою часткою слів, під тими самими назвами, що в історії, а решта — рядком «Інші».</td></tr>" +
+			"<tr><td>Програми</td><td>Куди вставлявся текст: п'ять програм із найбільшою часткою слів, під назвою, яку дає собі сама програма, наприклад Google Chrome, а решта — рядком «Інші».</td></tr>" +
 			"<tr><td>Швидкість</td><td>Скільки в середньому минає від того, як ви відпустили клавіші, до вставлення тексту, окремо для кожної моделі розпізнавання, і скільки диктувань вона розпізнала.</td></tr>" +
 			"<tr><td>Субтитри</td><td>Скільки часу субтитри слухали звук і скільки з нього перекладали, а нижче — переклад за парами мов. Блок з'являється, якщо за період субтитри були.</td></tr>" +
 			"<tr><td>Скинути статистику</td><td>Стирає всі числа за всі дні. Перед цим програма просить підтвердження.</td></tr>" +

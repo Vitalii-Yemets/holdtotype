@@ -652,7 +652,17 @@ func listOpenApps() []openApp {
 }
 
 func processNameOf(hwnd uintptr) string {
+	return processFileOf(processPathOf(hwnd))
+}
 
+func processFileOf(full string) string {
+	if i := strings.LastIndexAny(full, `\/`); i >= 0 {
+		return full[i+1:]
+	}
+	return full
+}
+
+func processPathOf(hwnd uintptr) string {
 	if hwnd == 0 || hwnd == 1 {
 		return ""
 	}
@@ -673,11 +683,7 @@ func processNameOf(hwnd uintptr) string {
 	if ok == 0 {
 		return ""
 	}
-	full := windows.UTF16ToString(buf[:size])
-	if i := strings.LastIndexAny(full, `\/`); i >= 0 {
-		return full[i+1:]
-	}
-	return full
+	return windows.UTF16ToString(buf[:size])
 }
 
 func ownWindow(hwnd uintptr) bool {

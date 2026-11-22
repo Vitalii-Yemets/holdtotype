@@ -86,7 +86,7 @@ const dom = new JSDOM(html, {
       from, to, bars, dictations: bars.reduce((n, b) => n + b.dictations, 0), words: bars.reduce((n, b) => n + b.words, 0),
       speech_ms: 60000 * 7, today_words: bars[bars.length - 1].words,
       langs: [{ code: "ru", words: 2 }, { code: "en", words: 1 }],
-      apps: [{ name: "Telegram.exe", words: 6 }, { name: "chrome.exe", words: 3 }, { name: "", words: 1, other: true }],
+      apps: [{ name: "Telegram Desktop", words: 6 }, { name: "Google Chrome", words: 3 }, { name: "", words: 1, other: true }],
       models: [{ key: "nemotron-3.5", name: "Nemotron 3.5", dictations: 4, wait_ms: 1200 }, { key: "large-v3-turbo-q5_0", name: "Whisper Large v3 Turbo (q5)", dictations: 2, wait_ms: 3600 }],
       subs_ms: 0, tr_ms: 0, pairs: [],
     }, extra || {});
@@ -2593,7 +2593,7 @@ function check(name, actual, expected) {
   check("statistics: a bar names its day and words under the pointer", cols[0].dataset.tip, "October 24: 100 words");
   const rowsOf = (id) => { const out = []; const kids = [...stEl(id).children]; for (let i = 0; i < kids.length;) { const r = [kids[i].textContent, kids[i + 1].querySelector("i").style.width, kids[i + 2].textContent]; i += 3; if (kids[i] && kids[i].className === "statcnt") { r.push(kids[i].textContent); i++; } out.push(r); } return out; };
   check("statistics: languages as the window names them, shares that add up to 100", rowsOf("stats_langs_rows"), [["Русский", "67%", "67%", "2 words"], ["English", "33%", "33%", "1 word"]]);
-  check("statistics: programs as the history names them, the rest as Other", rowsOf("stats_apps_rows"), [["Telegram.exe", "60%", "60%", "6 words"], ["chrome.exe", "30%", "30%", "3 words"], ["Other", "10%", "10%", "1 word"]]);
+  check("statistics: programs by their own names, the rest as Other", rowsOf("stats_apps_rows"), [["Telegram Desktop", "60%", "60%", "6 words"], ["Google Chrome", "30%", "30%", "3 words"], ["Other", "10%", "10%", "1 word"]]);
   check("statistics: the Other row is drawn apart", d.querySelectorAll("#stats_apps_rows .mtrack.other").length, 1);
   check("statistics: the wait per model with the dictations it took", rowsOf("stats_speed_rows").map((r) => [r[0], Math.round(parseFloat(r[1])), r[2], r[3]]), [["Nemotron 3.5", 17, "0.3" + NBS + "s", "4 dictations"], ["Whisper Large v3 Turbo (q5)", 100, "1.8" + NBS + "s", "2 dictations"]]);
   check("statistics: subtitles listened and translated", [stEl("stats_subs").style.display, stTxt("stats_listen"), stTxt("stats_tr"), stTxt("stats_tr_u")], ["", "6" + NBS + "h 40" + NBS + "min", "5" + NBS + "h 10" + NBS + "min", "78% of the time"]);

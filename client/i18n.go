@@ -1415,7 +1415,7 @@ var settingsStrings = map[string]map[string]string{
 			"<tr><td>Если печатать</td><td>Ваша скорость набора, от 10 до 150 слов в минуту, по умолчанию 40. От неё зависит только «Сэкономлено» на этой вкладке и на «Состоянии». Если набор выходит не дольше речи, сэкономлено 0, и строка так и скажет.</td></tr>" +
 			"<tr><td>По дням</td><td>Столбик слов за каждый день периода, сегодняшний выделен; за всё время — по месяцам. Наведите на столбик, чтобы увидеть дату и число.</td></tr>" +
 			"<tr><td>Языки</td><td>На каких языках вы диктовали: доля слов и сколько их. Когда язык определяется автоматически, программа узнаёт его по словам самой диктовки, а если не узнала, пишет «Автоопределение».</td></tr>" +
-			"<tr><td>Программы</td><td>Куда вставлялся текст: пять программ с наибольшей долей слов, под теми же именами, что в истории, а остальное — строкой «Другие».</td></tr>" +
+			"<tr><td>Программы</td><td>Куда вставлялся текст: пять программ с наибольшей долей слов, под названиями, которые дают себе сами программы, например Google Chrome, а остальное — строкой «Другие».</td></tr>" +
 			"<tr><td>Скорость</td><td>Сколько в среднем проходит от того, как вы отпустили клавиши, до вставки текста, отдельно для каждой модели распознавания, и сколько диктовок она распознала.</td></tr>" +
 			"<tr><td>Субтитры</td><td>Сколько времени субтитры слушали звук и сколько из него переводили, а ниже — перевод по парам языков. Блок появляется, если за период субтитры были.</td></tr>" +
 			"<tr><td>Сбросить статистику</td><td>Стирает все числа за все дни. Перед этим программа спрашивает подтверждение.</td></tr>" +
@@ -2406,7 +2406,7 @@ var settingsStrings = map[string]map[string]string{
 			"<tr><td>If you type</td><td>Your typing speed, from 10 to 150 words a minute, 40 by default. It changes nothing but “Saved” on this tab and on “Status”. When typing would take no longer than speaking, the saving is 0 and the line says so.</td></tr>" +
 			"<tr><td>By day</td><td>A bar of words for every day of the period, today highlighted; for all time, by month. Point at a bar to see its date and number.</td></tr>" +
 			"<tr><td>Languages</td><td>Which languages you dictated in: the share of words and how many. When the language is detected automatically, the program tells it from the words of the dictation itself, and when it cannot, it writes “Auto-detect”.</td></tr>" +
-			"<tr><td>Programs</td><td>Where the text went: the five programs with the largest share of words, under the same names as in the history, and the rest as one “Other” line.</td></tr>" +
+			"<tr><td>Programs</td><td>Where the text went: the five programs with the largest share of words, under the names the programs give themselves, such as Google Chrome, and the rest as one “Other” line.</td></tr>" +
 			"<tr><td>Speed</td><td>How long it takes on average from releasing the keys to the text being inserted, for each recognition model separately, and how many dictations it recognized.</td></tr>" +
 			"<tr><td>Subtitles</td><td>How long subtitles listened to the sound and how much of it was translated, and below, translation by language pair. The block appears when subtitles ran in the period.</td></tr>" +
 			"<tr><td>Reset statistics</td><td>Erases every number for every day. The program asks for confirmation first.</td></tr>" +
