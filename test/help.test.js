@@ -8,7 +8,7 @@ const settings = fs.readFileSync(path.join(root, "settings.go"), "utf8");
 const LANGS = ["en", "ru", "uk", "de", "fr", "es", "it", "pl"];
 const NAMES = { "{app}": "HoldToType", "{exe}": "holdtotype.exe", "{setup}": "holdtotype-setup.exe", "{log}": "holdtotype.log", "{zip}": "holdtotype-portable.zip" };
 
-const TABS = { state: "s-state", system: "s-system", library: "s-library", mic: "s-mic", history: "s-hist", dictation: "s-dict", models: "s-models", text: "s-rules", post: "s-post", subs: "s-subs" };
+const TABS = { state: "s-state", system: "s-system", library: "s-library", mic: "s-mic", history: "s-hist", dictation: "s-dict", models: "s-models", text: "s-rules", post: "s-post", subs: "s-subs", stats: "s-stats" };
 
 const SKIP = {
   S_SUBS_OFF: "the heading of the subtitles block on its tab is their state, not a setting",

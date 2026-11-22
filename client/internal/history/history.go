@@ -128,18 +128,6 @@ func (s *Store) Count() int {
 	return len(s.items)
 }
 
-func (s *Store) Stats(sinceMs int64) (count, chars int) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	for _, it := range s.items {
-		if it.At >= sinceMs {
-			count++
-			chars += len([]rune(it.Text))
-		}
-	}
-	return count, chars
-}
-
 func (s *Store) save() error {
 	items := s.Items()
 	s.mu.Lock()

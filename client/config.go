@@ -12,6 +12,7 @@ import (
 	"holdtotype/internal/preset"
 	"holdtotype/internal/profiles"
 	"holdtotype/internal/replace"
+	"holdtotype/internal/stats"
 	"holdtotype/internal/subtitles"
 	"holdtotype/internal/subwin"
 	"holdtotype/internal/theme"
@@ -145,6 +146,7 @@ type Config struct {
 	HistoryKeepMin      int                `json:"history_keep_min"`
 	HistoryMax          int                `json:"history_max"`
 	HistorySkip         string             `json:"history_skip"`
+	StatsTypingWPM      int                `json:"stats_typing_wpm"`
 	PostEnabled         bool               `json:"post_enabled"`
 	PostSource          string             `json:"post_source"`
 	PostAPIURL          string             `json:"post_api_url"`
@@ -268,6 +270,7 @@ func defaultConfig() *Config {
 		HistoryDays:      history.DefaultKeepDays,
 		HistoryKeepMin:   history.DefaultKeepMinutes,
 		HistoryMax:       history.DefaultMax,
+		StatsTypingWPM:   stats.DefaultWPM,
 
 		SubtitlesLanguage: "auto",
 		SubtitlesSave:     true,
@@ -541,6 +544,7 @@ func loadConfig(path string) (*Config, error) {
 		cfg.HistoryMax = history.MaxAllowed
 		migrated = true
 	}
+	cfg.StatsTypingWPM = stats.TypingWPM(cfg.StatsTypingWPM)
 	if cfg.SttSource != "local" && cfg.SttSource != "remote" {
 		if strings.TrimSpace(cfg.ServerURL) != "" {
 			cfg.SttSource = "remote"

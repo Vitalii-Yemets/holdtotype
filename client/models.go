@@ -10,6 +10,7 @@ import (
 	"holdtotype/internal/modelsrc"
 	"holdtotype/internal/partfile"
 	"holdtotype/internal/preset"
+	"holdtotype/internal/stats"
 	"io"
 	"log"
 	"net/http"
@@ -873,7 +874,6 @@ type stateOut struct {
 	Assigned    []stateModelRow `json:"assigned"`
 	InstalledMs []string        `json:"installed_models"`
 	Loaded      string          `json:"loaded_now"`
-	WeekLine    string          `json:"week_line"`
 	LLMOK       bool            `json:"llm_ok"`
 	MicOK       bool            `json:"mic_ok"`
 	StatusLine  string          `json:"status_line"`
@@ -886,10 +886,7 @@ type stateOut struct {
 	Enabled     bool            `json:"enabled"`
 	Autostart   bool            `json:"autostart"`
 	DiskMB      int             `json:"disk_mb"`
-	WeekChars   int             `json:"week_chars"`
-	WeekCount   int             `json:"week_count"`
-	TodayCount  int             `json:"today_count"`
-	WeekApps    []appShare      `json:"week_apps"`
+	Stats       stats.Card      `json:"stats"`
 	RAMFreeMB   int             `json:"ram_free_mb"`
 	RAMTotalMB  int             `json:"ram_mb"`
 	Idle        []idleModel     `json:"idle_models"`
@@ -1145,7 +1142,6 @@ func (a *App) stateSnapshot() string {
 		Assigned:    assignedModelRows(cfg),
 		InstalledMs: installedModelNames(),
 		Loaded:      a.loadedModelsLine(),
-		WeekLine:    weekLine(),
 		LLMOK:       postReady(cfg),
 		MicOK:       rec != nil,
 		StatusLine:  statusLine(cfg, ready, parked, backendErr, free),
@@ -1175,9 +1171,7 @@ func (a *App) stateSnapshot() string {
 	st.UpdChecked = a.updChecked.UnixMilli()
 	a.mu.Unlock()
 	st.PostModel, st.PostSizeMB = postModelNow(cfg)
-	st.WeekCount, st.WeekChars = histStore.Stats(time.Now().Add(-7 * 24 * time.Hour).UnixMilli())
-	st.TodayCount, _ = histStore.Stats(startOfDayMs())
-	st.WeekApps = weekByApp()
+	st.Stats = statsStore.Card(time.Now())
 	st.Badges.Mic = micBadge(mic)
 	st.Badges.Models = itoaSafe(installedModelCount())
 	st.Badges.History = histBadge()
@@ -1218,49 +1212,6 @@ func (a *App) loadedModelsLine() string {
 	return strings.Join(names, " + ")
 }
 
-type appShare struct {
-	App   string `json:"app"`
-	Count int    `json:"count"`
-}
-
-func startOfDayMs() int64 {
-	now := time.Now()
-	return time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location()).UnixMilli()
-}
-
-func weekByApp() []appShare {
-	since := time.Now().Add(-7 * 24 * time.Hour).UnixMilli()
-	counts := map[string]int{}
-	for _, it := range histStore.Items() {
-		if it.At < since {
-			continue
-		}
-		app := strings.TrimSpace(it.App)
-		if app == "" {
-			app = "—"
-		}
-		counts[app]++
-	}
-	out := make([]appShare, 0, len(counts))
-	for app, n := range counts {
-		out = append(out, appShare{App: app, Count: n})
-	}
-	sort.Slice(out, func(i, j int) bool {
-		if out[i].Count != out[j].Count {
-			return out[i].Count > out[j].Count
-		}
-		return out[i].App < out[j].App
-	})
-	if len(out) > 6 {
-		rest := 0
-		for _, s := range out[5:] {
-			rest += s.Count
-		}
-		out = append(out[:5], appShare{App: strS("S_WEEK_OTHER"), Count: rest})
-	}
-	return out
-}
-
 func installedDiskMB() int {
 	total := 0
 	for _, dir := range []string{"models"} {
@@ -1287,16 +1238,6 @@ func dirSizeMB(dir string) int {
 		return nil
 	})
 	return int(total / (1024 * 1024))
-}
-
-func weekLine() string {
-
-	since := time.Now().Add(-7 * 24 * time.Hour).UnixMilli()
-	n, chars := histStore.Stats(since)
-	if n == 0 {
-		return ""
-	}
-	return trf("state.week", n, chars)
 }
 
 func shortLabel(s string, max int) string {

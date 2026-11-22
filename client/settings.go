@@ -10,6 +10,7 @@ import (
 	"holdtotype/internal/ovplace"
 	"holdtotype/internal/preset"
 	"holdtotype/internal/replace"
+	"holdtotype/internal/stats"
 	"holdtotype/internal/subwin"
 	"holdtotype/internal/trmodel"
 	"io"
@@ -180,6 +181,7 @@ type settingsForm struct {
 	SubtitlesBox      *map[string]subwin.Box   `json:"subtitles_box"`
 	SubtitlesLayout   *string                  `json:"subtitles_layout"`
 	ModelsIdleMin     *int                     `json:"models_idle_minutes"`
+	StatsTypingWPM    *int                     `json:"stats_typing_wpm"`
 
 	SubtitlesTranslateOn     *bool   `json:"subtitles_translate_on"`
 	SubtitlesTranslate       *string `json:"subtitles_translate"`
@@ -665,6 +667,17 @@ func (a *App) settingsThread(tab string, attempt int) {
 				log.Printf("history: clearing: %v", err)
 			}
 		})
+		_ = w.Bind("appStats", func() string {
+			out, _ := json.Marshal(statsStore.Report(time.Now(), statsModelName))
+			return string(out)
+		})
+		_ = w.Bind("appStatsReset", func() {
+			if err := statsStore.Reset(); err != nil {
+				log.Printf("statistics: resetting: %v", err)
+				return
+			}
+			log.Printf("statistics: reset from the settings window")
+		})
 		_ = w.Bind("appHistoryCopy", func(at float64) string {
 			for _, it := range histStore.Items() {
 				if it.At == int64(at) {
@@ -1029,6 +1042,9 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	if f.ModelsIdleMin != nil {
 		c.ModelsIdleMin = idleunload.Minutes(*f.ModelsIdleMin)
 	}
+	if f.StatsTypingWPM != nil {
+		c.StatsTypingWPM = stats.TypingWPM(*f.StatsTypingWPM)
+	}
 	if f.SubtitlesTranslateOn != nil {
 		c.SubtitlesTranslateOn = *f.SubtitlesTranslateOn
 	}
@@ -1213,6 +1229,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"subtitles_translation_only": cfg.SubtitlesTranslationOnly,
 		"subtitles_layout":           subwin.Layout(cfg.SubtitlesLayout),
 		"models_idle_minutes":        idleunload.Minutes(cfg.ModelsIdleMin),
+		"stats_typing_wpm":           stats.TypingWPM(cfg.StatsTypingWPM),
 	}
 	cfgJSON, _ := json.Marshal(cfgMap)
 
@@ -1290,7 +1307,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"depminiaudio": "S_DEP_MINIAUDIO", "depws": "S_DEP_WS", "depxsys": "S_DEP_XSYS", "depwinloader": "S_DEP_WINLOADER",
 		"depplex": "S_DEP_PLEX", "dephf": "S_DEP_HF",
 		"histempty": "S_HIST_EMPTY", "histcopy": "S_HIST_COPY", "histask": "S_HIST_ASK", "histclear": "S_HIST_CLEAR",
-		"stsummary": "S_ST_SUMMARY", "stquick": "S_ST_QUICK", "stmodels": "S_ST_MODELS", "stusage": "S_ST_USAGE",
+		"stsummary": "S_ST_SUMMARY", "stquick": "S_ST_QUICK", "stmodels": "S_ST_MODELS",
 		"stready": "S_ST_READY", "stoff": "S_ST_OFF", "stoffsub": "S_ST_OFF_SUB", "stenable": "S_ST_ENABLE",
 		"stgoto": "S_ST_GOTO", "sthotkeygo": "S_ST_HOTKEY_GO", "stupdlast": "S_ST_UPD_LAST", "stupdhave": "S_ST_UPD_HAVE",
 		"stmem": "S_ST_MEM", "stmemsub": "S_ST_MEM_SUB", "ramabout": "S_RAM_ABOUT",
@@ -1310,7 +1327,7 @@ func settingsHTML(cfg *Config, tab string) string {
 		"srclocal": "S_SRC_LOCAL", "whoq": "S_SUBS_WHO_QUALITY", "trmterms": "S_SUBS_TRM_TERMS",
 		"alllangs": "S_ALL_LANGS", "stmemnone": "S_ST_MEM_NONE", "stlang": "S_ST_LANG", "stasr": "S_ST_ASR",
 		"ston": "S_ST_ON", "stoffw": "S_ST_OFF_W", "stonf": "S_ST_ON_F", "stofff": "S_ST_OFF_F", "stactive": "S_ST_ACTIVE",
-		"stidle": "S_ST_IDLE", "stdisk": "S_ST_DISK", "stusagesub": "S_ST_USAGE_SUB", "stnoweek": "S_ST_NO_WEEK",
+		"stidle": "S_ST_IDLE", "stdisk": "S_ST_DISK",
 		"stautorunsub": "S_ST_AUTORUN_SUB", "stoverlaysub": "S_ST_OVERLAY_SUB", "sthint": "S_STATE_HINT",
 		"stoverlay": "S_ST_OVERLAY", "stbeep": "S_ST_BEEP", "stautorun": "S_ST_AUTORUN", "stpost": "S_ST_POST",
 		"stonm": "S_ST_ON_M", "stoffm": "S_ST_OFF_M", "stmicok": "S_ST_MIC_OK", "stmicbad": "S_ST_MIC_BAD",
@@ -1362,6 +1379,11 @@ func settingsHTML(cfg *Config, tab string) string {
 		"subsmisspacks": "S_SUBS_TR_MISS_PACKS", "subsmisspacksget": "S_SUBS_TR_MISS_PACKS_GET",
 		"subsmisslang": "S_SUBS_TR_MISS_LANG", "subsmissfast": "S_SUBS_TR_MISS_FAST", "depbergamot": "S_DEP_BERGAMOT",
 		"updatedto": "S_UPDATED_TO",
+		"statstoday": "S_STATS_TODAY", "statsatwpm": "S_STATS_AT_WPM", "statsper": "S_STATS_PER",
+		"statstodayn": "S_STATS_TODAY_N", "statswpm": "S_STATS_WPM", "statswhy": "S_STATS_WHY", "statswhynone": "S_STATS_WHY_NONE",
+		"statsdayhint": "S_STATS_BYDAY_HINT", "statsmonthhint": "S_STATS_BYMONTH_HINT", "statsother": "S_STATS_OTHER",
+		"statstrshare": "S_STATS_TR_SHARE", "statsreset": "S_STATS_RESET", "statsresetask": "S_STATS_RESET_ASK", "mtstats": "S_MT_STATS",
+		"statswords": "S_STATS_WORDS", "statsdicts": "S_STATS_DICTS", "statssec": "S_STATS_SEC", "statsh": "S_STATS_H", "statsm": "S_STATS_M", "statshm": "S_STATS_HM",
 	} {
 		lMap[jsKey] = str(sKey)
 	}
@@ -1595,18 +1617,54 @@ button.btn.ghost:hover{color:var(--green);border-color:var(--dim);background:non
 .stbdg{flex:none;border:1px solid var(--tagline);border-radius:var(--badger);color:var(--tagfg);background:var(--tagbg);text-shadow:var(--lblglow,none);font-size:10px;letter-spacing:.06em;padding:1px 7px;white-space:nowrap;margin-left:2px}
 .stbdg.on{border-color:var(--dim)}
 .stbdg.warn{border-color:var(--amber)}
-.stusage{margin-top:12px}
-.stusage .stptop{align-items:center;gap:18px}
-.stufoot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px}
-.stufoot .stpsub{margin:0}
-.stpie{flex:none;line-height:0}
-.stpie svg{display:block}
-.stpie .stslice{stroke:var(--field);stroke-width:1.5}
-.stuchips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.cmdchip.stuchip{padding:2px 9px;color:var(--dim);letter-spacing:0;text-transform:none;max-width:100%}
-.cmdchip.stuchip i{width:8px;height:8px;border-radius:var(--dotr);flex:none}
-.cmdchip.stuchip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cmdchip.stuchip b{font-weight:var(--wb);font-variant-numeric:tabular-nums;color:var(--lbl,var(--green));text-shadow:var(--lblglow,none)}
+.stplate.ststats{margin-top:12px}
+.ststats .sthsub{margin:0}
+.statfigs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.statfig{display:flex;flex-direction:column;gap:1px;min-width:0}
+.statk{color:var(--dim);font-size:11.5px;line-height:1.45;white-space:nowrap}
+.statnum{display:block;font-size:16px;line-height:1.35;font-weight:var(--wb);color:var(--green);text-shadow:var(--glow);white-space:nowrap;font-variant-numeric:tabular-nums}
+.statnum.faint{color:var(--faint);text-shadow:none}
+.statu{white-space:nowrap}
+.statu:empty{display:none}
+#p-stats .card+.card{margin-top:18px;border-top:1px solid var(--soft);padding-top:18px}
+.stattop>.blklbl{margin-bottom:8px}
+.statper{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;margin:0 0 12px}
+.statchips{display:flex;gap:6px;flex-wrap:wrap}
+.cmdchip.appchip.statchip{padding-left:9px;font:inherit;font-size:12px}
+.statrange{color:var(--faint);font-size:11px;white-space:nowrap}
+.stgrid.statthree{grid-template-columns:repeat(3,minmax(0,1fr))}
+.stgrid.stattwo{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:8px}
+.statfcard{gap:3px}
+.statsaved{margin-top:12px}
+.statsavedv{display:flex;align-items:baseline;gap:6px 14px;flex-wrap:wrap}
+.row.statwpm{padding:6px 0 0;flex-wrap:nowrap}
+.row.statwpm>label{min-width:0}
+.row.statwpm>.val{flex:none;white-space:nowrap}
+.row.statwpm>input[type=range]{flex:none}
+.statchart{margin-top:10px;--axis:44px}
+.statplot{position:relative;height:112px;border-bottom:1px solid var(--line);margin-left:var(--axis)}
+.statguide{position:absolute;left:0;right:0;border-top:1px dashed var(--line);z-index:0}
+.statguide span{position:absolute;right:100%;margin-right:6px;top:-7px;font-size:10px;line-height:14px;color:var(--faint);white-space:nowrap;font-variant-numeric:tabular-nums}
+.statcols{position:absolute;inset:0;display:flex;align-items:flex-end;gap:var(--g,3px);z-index:1}
+.statcol{flex:1;min-width:0;height:100%;display:flex;align-items:flex-end}
+.statcol i{display:block;width:100%;min-height:1px;background:color-mix(in srgb,var(--hi) 38%,var(--soft));border-radius:var(--barr,0) var(--barr,0) 0 0}
+.statcol.cur i{background:var(--hi);box-shadow:var(--higlow)}
+.statcol:hover i{background:color-mix(in srgb,var(--hi) 62%,var(--soft))}
+.statcol.cur:hover i{background:var(--hi)}
+.statdates{position:relative;height:16px;margin:5px 0 0 var(--axis)}
+.statdates span{position:absolute;top:0;transform:translateX(-50%);font-size:10.5px;line-height:16px;color:var(--faint);white-space:nowrap}
+.statdates span.end{transform:none}
+.statdates span.cur{color:var(--hi)}
+.statrows{display:grid;grid-template-columns:max-content minmax(40px,1fr) max-content max-content;align-items:center;gap:7px 12px;margin-top:8px}
+.statrows.pairs{grid-template-columns:max-content minmax(40px,1fr) max-content}
+.statnm{font-size:12.5px;line-height:1.45;color:var(--green);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:230px}
+.statrows .mtrack{height:6px}
+.statrows .mtrack.other i{background:var(--faint)}
+.statpct{font-size:12.5px;font-weight:var(--wb);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--green)}
+.statcnt{font-size:11px;color:var(--faint);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+#p-stats .card>.hint.statpairs{margin:12px 0 0}
+.statfoot .blkhead .hint{margin:0}
+.stathero{margin-bottom:12px}
 
 .berr{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:1px solid var(--bad);border-radius:var(--r);background:var(--panel);padding:10px 12px;margin-bottom:10px}
 .berr.upd{border-color:var(--amber)}
@@ -2360,6 +2418,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
  <button class="nav" role="tab" aria-selected="false" data-p="post"><span class="nlabel">{{S_NAV_POST}}</span></button>
  <button class="nav" role="tab" aria-selected="false" data-p="subs"><span class="nlabel">{{S_NAV_SUBS}}</span></button>
  <span class="ngrp">{{S_GRP_INFO}}</span>
+ <button class="nav" role="tab" aria-selected="false" data-p="stats"><span class="nlabel">{{S_NAV_STATS}}</span></button>
  <button class="nav" role="tab" aria-selected="false" data-p="help"><span class="nlabel">{{S_NAV_HELP}}</span></button>
  <button class="nav" role="tab" aria-selected="false" data-p="about"><span class="nlabel">{{S_NAV_ABOUT}}</span></button>
  <button class="nav" role="tab" aria-selected="false" data-p="contacts"><span class="nlabel">{{S_NAV_CONTACTS}}</span></button>
@@ -2398,7 +2457,6 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
   <div class="stsubsw"><div class="stswcol"><label class="stsw"><input type="checkbox" id="st_tr_on"><span>{{S_SUBS_TR}}</span></label><label class="stsw"><input type="checkbox" id="st_save_on"><span>{{S_SUBS_SAVE}}</span></label></div><div class="stlays" id="st_lays" role="radiogroup" aria-label="{{S_SUBS_LAYOUT}}"><label class="stlay" data-v="rows" title="{{S_SUBS_LAYOUT_ROWS}}"><input type="radio" name="st_layout" value="rows" aria-label="{{S_SUBS_LAYOUT_ROWS}}"><svg class="laythumb" width="251" height="60" viewBox="0 0 251 60" aria-hidden="true"><rect x="0.5" y="0.50" width="250" height="59.00" rx="2.33" style="fill:var(--bg);stroke:var(--line)"/><circle cx="7.30" cy="7.59" r="2.4" style="fill:var(--ok)"/><path d="M242.67 5.39L247.07 9.79M247.07 5.39L242.67 9.79" style="stroke:var(--dim);stroke-width:1;fill:none"/><rect x="2.92" y="15.00" width="245.16" height="1.00" style="fill:var(--line)"/><rect x="4.67" y="19.87" width="188.50" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="4.67" y="30.35" width="91.83" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="4.67" y="40.83" width="217.49" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="4.67" y="51.30" width="145.00" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="2.92" y="38.00" width="245.16" height="1.00" style="fill:var(--line)"/><rect x="116.50" y="36.50" width="18" height="4" rx="2" style="fill:var(--bg);stroke:var(--dim);stroke-width:1"/></svg></label><label class="stlay" data-v="columns" title="{{S_SUBS_LAYOUT_COLS}}"><input type="radio" name="st_layout" value="columns" aria-label="{{S_SUBS_LAYOUT_COLS}}"><svg class="laythumb" width="251" height="60" viewBox="0 0 251 60" aria-hidden="true"><rect x="0.5" y="0.50" width="250" height="59.00" rx="2.33" style="fill:var(--bg);stroke:var(--line)"/><circle cx="7.30" cy="7.59" r="2.4" style="fill:var(--ok)"/><path d="M242.67 5.39L247.07 9.79M247.07 5.39L242.67 9.79" style="stroke:var(--dim);stroke-width:1;fill:none"/><rect x="2.92" y="15.00" width="245.16" height="1.00" style="fill:var(--line)"/><rect x="4.67" y="19.87" width="107.33" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="4.67" y="30.35" width="77.00" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="4.67" y="40.83" width="97.99" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="4.67" y="51.30" width="58.33" height="4.00" rx="2.00" style="fill:var(--dim)"/><rect x="130.67" y="19.87" width="92.53" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="130.67" y="30.35" width="108.72" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="130.67" y="40.83" width="69.40" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="130.67" y="51.30" width="83.28" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="126.00" y="15.00" width="1.00" height="42.08" style="fill:var(--line)"/><rect x="124.50" y="28.59" width="4" height="18" rx="2" style="fill:var(--bg);stroke:var(--dim);stroke-width:1"/></svg></label><label class="stlay" data-v="only" title="{{S_SUBS_LAYOUT_ONLY}}"><input type="radio" name="st_layout" value="only" aria-label="{{S_SUBS_LAYOUT_ONLY}}"><svg class="laythumb" width="251" height="60" viewBox="0 0 251 60" aria-hidden="true"><rect x="0.5" y="0.50" width="250" height="59.00" rx="2.33" style="fill:var(--bg);stroke:var(--line)"/><circle cx="7.30" cy="7.59" r="2.4" style="fill:var(--ok)"/><path d="M242.67 5.39L247.07 9.79M247.07 5.39L242.67 9.79" style="stroke:var(--dim);stroke-width:1;fill:none"/><rect x="2.92" y="15.00" width="245.16" height="1.00" style="fill:var(--line)"/><rect x="4.67" y="19.87" width="217.49" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="4.67" y="30.35" width="174.00" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="4.67" y="40.83" width="203.00" height="4.00" rx="2.00" style="fill:var(--green)"/><rect x="4.67" y="51.30" width="145.00" height="4.00" rx="2.00" style="fill:var(--green)"/></svg></label></div></div>
  </div>
  <div class="stalerts" id="state_alerts"></div>
- <div class="stplate stusage" id="state_usage"></div>
  <div class="stpair">
   <div class="stplate">
    <div class="stptop"><i class="led" id="state_upd_led"></i>
@@ -2412,6 +2470,15 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
     <div class="stptxt"><div class="stpttl" id="state_mem_title">—</div><div class="stpsub" id="state_mem_sub"></div></div>
    </div>
    <button type="button" class="mini pri" id="state_unload">{{S_UNLOAD_GO}}</button>
+  </div>
+ </div>
+ <div class="stplate ststats" id="state_stats">
+  <div class="sthead"><span class="stcap">{{S_NAV_STATS}}</span><button type="button" class="iconbtn stgo" data-goto="stats" title="{{S_ST_GOTO}}">&#8599;</button></div>
+  <div class="sthsub" id="state_stats_empty">{{S_STATS_CARD_EMPTY}}</div>
+  <div class="statfigs" id="state_stats_figs" style="display:none">
+   <div class="statfig"><span class="statk">{{S_STATS_TODAY}}</span><b class="statnum" id="state_stats_today"></b><span class="stunder statu" id="state_stats_today_u"></span></div>
+   <div class="statfig"><span class="statk">{{S_STATS_WEEK}}</span><b class="statnum" id="state_stats_week"></b><span class="stunder statu" id="state_stats_week_u"></span></div>
+   <div class="statfig"><span class="statk">{{S_STATS_SAVED_WEEK}}</span><b class="statnum" id="state_stats_saved"></b><span class="stunder statu" id="state_stats_saved_u"></span></div>
   </div>
  </div>
 
@@ -2869,6 +2936,49 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
    <input type="text" id="server_url">
   </div>
  </div>
+</div>
+
+<div class="page" role="tabpanel" aria-hidden="true" id="p-stats">
+ <div class="card stattop">
+  <label class="blklbl">{{S_STATS_SUMMARY}}</label>
+  <div class="sthero stathero" id="stats_hero" style="display:none">
+   <i class="led"></i>
+   <div class="sthtxt"><div class="sthbig">{{S_STATS_EMPTY_TITLE}}</div><div class="sthsub">{{S_STATS_EMPTY_SUB}}</div></div>
+   <div class="stkeys"><span class="stcombo" id="stats_combo"></span></div>
+  </div>
+  <div class="statper" id="stats_per">
+   <div class="statchips" id="stats_chips" role="radiogroup" aria-label="{{S_STATS_PERIOD}}">
+    <button type="button" class="cmdchip appchip statchip" role="radio" aria-checked="false" data-v="7">{{S_STATS_P7}}</button>
+    <button type="button" class="cmdchip appchip statchip on" role="radio" aria-checked="true" data-v="30">{{S_STATS_P30}}</button>
+    <button type="button" class="cmdchip appchip statchip" role="radio" aria-checked="false" data-v="all">{{S_STATS_PALL}}</button>
+   </div>
+   <span class="statrange" id="stats_range"></span>
+  </div>
+  <div class="stgrid statthree">
+   <div class="stcard statfcard"><div class="sthead"><span class="stcap">{{S_STATS_F_COUNT}}</span></div><b class="statnum" id="stats_count">0</b><div class="stunder statu" id="stats_count_u"></div></div>
+   <div class="stcard statfcard"><div class="sthead"><span class="stcap">{{S_STATS_F_WORDS}}</span></div><b class="statnum" id="stats_words">0</b><div class="stunder statu" id="stats_words_u"></div></div>
+   <div class="stcard statfcard"><div class="sthead"><span class="stcap">{{S_STATS_F_SPEECH}}</span></div><b class="statnum" id="stats_speech">0</b><div class="stunder statu" id="stats_speech_u"></div></div>
+  </div>
+  <div class="stcard statfcard statsaved">
+   <div class="sthead"><span class="stcap">{{S_STATS_F_SAVED}}</span></div>
+   <div class="statsavedv"><b class="statnum" id="stats_saved"></b><span class="stunder statu" id="stats_saved_u"></span></div>
+   <div class="row noline statwpm"><label for="stats_typing_wpm">{{S_STATS_WPM_LBL}}<span class="sub">{{S_STATS_WPM_SUB}}</span></label><span class="val" id="stats_wpm_v"></span><input type="range" id="stats_typing_wpm" min="10" max="150" step="5" value="40"></div>
+  </div>
+ </div>
+ <div class="card" id="stats_days"><label class="blklbl">{{S_STATS_BYDAY}}</label><div class="hint" id="stats_days_hint">{{S_STATS_BYDAY_HINT}}</div><div class="statchart" id="stats_chart"></div></div>
+ <div class="card" id="stats_langs"><label class="blklbl">{{S_STATS_LANGS}}</label><div class="hint">{{S_STATS_LANGS_HINT}}</div><div class="statrows" id="stats_langs_rows"></div></div>
+ <div class="card" id="stats_apps"><label class="blklbl">{{S_STATS_APPS}}</label><div class="hint">{{S_STATS_APPS_HINT}}</div><div class="statrows" id="stats_apps_rows"></div></div>
+ <div class="card" id="stats_speed"><label class="blklbl">{{S_STATS_SPEED}}</label><div class="hint">{{S_STATS_SPEED_HINT}}</div><div class="statrows speed" id="stats_speed_rows"></div></div>
+ <div class="card" id="stats_subs">
+  <label class="blklbl">{{S_STATS_SUBS}}</label>
+  <div class="stgrid stattwo">
+   <div class="stcard statfcard"><div class="sthead"><span class="stcap">{{S_STATS_LISTENED}}</span></div><b class="statnum" id="stats_listen"></b></div>
+   <div class="stcard statfcard"><div class="sthead"><span class="stcap">{{S_STATS_TRANSLATED}}</span></div><b class="statnum" id="stats_tr"></b><div class="stunder statu" id="stats_tr_u"></div></div>
+  </div>
+  <div class="hint statpairs" id="stats_pairs_hint">{{S_STATS_PAIRS_HINT}}</div>
+  <div class="statrows pairs" id="stats_pairs"></div>
+ </div>
+ <div class="card statfoot"><div class="blkhead"><div><div class="hint">{{S_STATS_PRIVACY}}</div></div><button type="button" class="mini danger" id="stats_reset">{{S_STATS_RESET}}</button></div></div>
 </div>
 
 <div class="page about" role="tabpanel" aria-hidden="true" id="p-about">
@@ -4933,23 +5043,7 @@ async function refreshState(){
   if(heroLed) heroLed.classList.toggle("bad", down);
   const heroFix = document.getElementById("state_srv_go");
   if(heroFix) heroFix.style.display = down ? "" : "none";
-  const keyBox = document.getElementById("state_hotkey");
-  if(keyBox && keyBox.dataset.combo !== s.hotkey){
-    keyBox.dataset.combo = s.hotkey;
-    keyBox.innerHTML = "";
-    (s.hotkey || "").split("+").forEach((part, idx)=>{
-      if(idx){
-        const plus = document.createElement("span");
-        plus.className = "stplus";
-        plus.textContent = "+";
-        keyBox.appendChild(plus);
-      }
-      const key = document.createElement("span");
-      key.className = "herokey";
-      key.textContent = part.trim();
-      keyBox.appendChild(key);
-    });
-  }
+  paintCombo(document.getElementById("state_hotkey"), s.hotkey);
 
   const keys = document.getElementById("state_keys");
   if(keys) keys.style.display = off || down ? "none" : "";
@@ -5018,7 +5112,7 @@ async function refreshState(){
 
   renderQuickCards(s);
   renderStateModels(s);
-  renderUsage(s);
+  renderStatsCard(s);
 
   const sttDown = !!(s.stt_broken && s.whisper_now);
   const mainText = sttDown ? L.srvdown : (s.status_line || s.status);
@@ -5218,187 +5312,310 @@ function renderStateModels(s){
   post.appendChild(modelRow(postName, marks.join(" · "), postOn ? "" : L.stidle, postOn ? "" : "warn", postLive));
   box.appendChild(post);
 }
-const PIE_FALLBACK = { hi: "#3cff6e", amber: "#ffb347", rec: "#ff5b4d", bg: "#0b0f0c", lbl: "#f2fff5", soft: "#12241a", faint: "#14803a" };
-function cssColour(name){
-  let v = "";
-  try{ v = getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }catch(e){ v = ""; }
-  return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(v) ? v : PIE_FALLBACK[name.slice(2)];
+let statsData = null;
+let statsPeriod = "30";
+let statsCardNow = null;
+let statsWpm = 40;
+const STATS_NB = " ";
+function statsUI(){ return CFG._ui_lang || "en"; }
+function statsClampWpm(v){
+  v = parseInt(v, 10);
+  if(!(v > 0)) return 40;
+  return Math.min(150, Math.max(10, Math.round(v / 5) * 5));
 }
-function hex2rgb(h){
-  const s = h.replace("#", "");
-  const n = s.length === 3 ? s.split("").map(c=>c + c).join("") : s;
-  return [parseInt(n.slice(0, 2), 16), parseInt(n.slice(2, 4), 16), parseInt(n.slice(4, 6), 16)];
+function statsNum(n, digits){
+  const d = digits || 0;
+  try{ return new Intl.NumberFormat(statsUI(), {minimumFractionDigits: d, maximumFractionDigits: d}).format(n); }
+  catch(e){ return d ? Number(n).toFixed(d) : String(Math.round(n)); }
 }
-function rgb2hex(c){
-  return "#" + c.map(v=>Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0")).join("");
+function statsPct(p){
+  try{ return new Intl.NumberFormat(statsUI(), {style: "percent", maximumFractionDigits: 0}).format(p / 100); }
+  catch(e){ return Math.round(p) + "%"; }
 }
-function rgb2hsl(c){
-  const r = c[0] / 255, g = c[1] / 255, b = c[2] / 255;
-  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
-  let h = 0;
-  if(d){
-    if(mx === r) h = ((g - b) / d) % 6;
-    else if(mx === g) h = (b - r) / d + 2;
-    else h = (r - g) / d + 4;
-  }
-  h = (h * 60 + 360) % 360;
-  const l = (mx + mn) / 2;
-  return [h, d ? d / (1 - Math.abs(2 * l - 1)) : 0, l];
-}
-function hsl2rgb(h, s, l){
-  const c = (1 - Math.abs(2 * l - 1)) * s, x = c * (1 - Math.abs(((h / 60) % 2) - 1)), m = l - c / 2;
-  let t;
-  if(h < 60) t = [c, x, 0];
-  else if(h < 120) t = [x, c, 0];
-  else if(h < 180) t = [0, c, x];
-  else if(h < 240) t = [0, x, c];
-  else if(h < 300) t = [x, 0, c];
-  else t = [c, 0, x];
-  return t.map(v=>(v + m) * 255);
-}
-function hueDist(a, b){
-  const d = Math.abs(a - b) % 360;
-  return d > 180 ? 360 - d : d;
-}
-function luma(colour){
-  const c = hex2rgb(colour).map(v=>{
-    const x = v / 255;
-    return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
+function pluralOf(forms, n){
+  const map = {};
+  String(forms || "").split("|").forEach(p=>{
+    const at = p.indexOf(":");
+    if(at > 0) map[p.slice(0, at)] = p.slice(at + 1);
   });
-  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  let cat = "other";
+  try{ cat = new Intl.PluralRules(statsUI()).select(n); }catch(e){ cat = n === 1 ? "one" : "other"; }
+  return (map[cat] || map.other || "%d").replace("%d", statsNum(n));
 }
-function weekPalette(){
-  const hi = cssColour("--hi"), used = [], out = [];
-  [hi, cssColour("--amber"), cssColour("--rec")].forEach(c=>{
-    const h = rgb2hsl(hex2rgb(c))[0];
-    if(used.every(u=>hueDist(h, u) >= 34)){
-      used.push(h);
-      out.push(c);
-    }
-  });
-  const base = rgb2hsl(hex2rgb(hi)), light = luma(cssColour("--bg")) > 0.5;
-  for(let d = 30; d < 360 && out.length < 6; d += 8){
-    const h = (base[0] + d) % 360;
-    if(used.every(u=>hueDist(h, u) >= 36)){
-      used.push(h);
-      const sat = light ? Math.min(0.62, Math.max(0.42, base[1] * 0.8)) : Math.max(0.55, Math.min(0.9, base[1]));
-      const lit = light ? 0.46 : Math.min(0.7, Math.max(0.5, base[2] + 0.04));
-      out.push(rgb2hex(hsl2rgb(h, sat, lit)));
-    }
-  }
+function statsHM(min){
+  min = Math.max(0, Math.round(min));
+  const h = Math.floor(min / 60), m = min % 60;
+  if(!h) return fmtText(L.statsm, statsNum(m));
+  if(!m) return fmtText(L.statsh, statsNum(h));
+  return fmtText(L.statshm, statsNum(h), statsNum(m));
+}
+function statsSaved(words, speechMs, wpm){
+  const typing = Math.round((words || 0) / statsClampWpm(wpm));
+  const speech = Math.round((speechMs || 0) / 60000);
+  return { typing: typing, speech: speech, saved: Math.max(0, typing - speech) };
+}
+function statsWhy(sv){
+  return fmtText(sv.typing > sv.speech ? L.statswhy : L.statswhynone, statsHM(sv.typing), statsHM(sv.speech));
+}
+function statsShares(values){
+  const total = values.reduce((n, v)=>n + v, 0);
+  if(!total) return values.map(()=>0);
+  const raw = values.map(v=>v * 100 / total);
+  const out = raw.map(Math.floor);
+  let left = 100 - out.reduce((n, v)=>n + v, 0);
+  raw.map((v, i)=>[v - Math.floor(v), i]).sort((a, b)=>b[0] - a[0] || a[1] - b[1]).forEach(([, i])=>{ if(left > 0){ out[i]++; left--; } });
   return out;
 }
-function svgTag(tag, attrs){
-  const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
-  Object.keys(attrs).forEach(k=>el.setAttribute(k, attrs[k]));
-  return el;
+function statsDay(key){
+  const p = String(key || "").split("-").map(Number);
+  return new Date(p[0] || 1970, (p[1] || 1) - 1, p[2] || 1);
 }
-function piePoint(cx, cy, r, a){
-  const rad = (a - 90) * Math.PI / 180;
-  return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
+function statsDate(d, opts){
+  try{ return new Intl.DateTimeFormat(statsUI(), opts).format(d); }catch(e){ return d.toDateString(); }
 }
-function pieSlice(cx, cy, r, from, to){
-  const p1 = piePoint(cx, cy, r, from), p2 = piePoint(cx, cy, r, to);
-  if(to - from >= 359.99) return "M " + cx + " " + (cy - r) + " A " + r + " " + r + " 0 1 1 " + (cx - 0.01) + " " + (cy - r) + " Z";
-  return "M " + cx + " " + cy + " L " + p1[0] + " " + p1[1] + " A " + r + " " + r + " 0 " + (to - from > 180 ? 1 : 0) + " 1 " + p2[0] + " " + p2[1] + " Z";
+function statsCap(s){ return s ? s.charAt(0).toLocaleUpperCase(statsUI()) + s.slice(1) : s; }
+function statsRange(p, key){
+  const a = statsDay(p.from), b = statsDay(p.to);
+  const opts = key === "all" ? {day: "numeric", month: "long", year: "numeric"} : {day: "numeric", month: "long"};
+  try{
+    const f = new Intl.DateTimeFormat(statsUI(), opts);
+    if(p.from === p.to) return f.format(b);
+    return f.formatRange ? f.formatRange(a, b) : f.format(a) + " – " + f.format(b);
+  }catch(e){ return p.from + " – " + p.to; }
 }
-function weekPie(apps, total, pal){
-  const size = 92, r = size / 2 - 4, cx = size / 2, cy = size / 2;
-  const svg = svgTag("svg", { width: size, height: size, viewBox: "0 0 " + size + " " + size });
-  const bg = cssColour("--bg"), lbl = cssColour("--lbl"), soft = cssColour("--soft");
-  let acc = 0;
-  apps.forEach((a, idx)=>{
-    const from = acc / total * 360;
-    acc += a.count;
-    const to = acc / total * 360;
-    const fill = pal[idx] || soft;
-    const full = to - from >= 359.99;
-    svg.appendChild(svgTag("path", { d: pieSlice(cx, cy, r, from, to), fill: fill, class: "stslice" }));
-    if(full || (to - from) / 360 >= 0.12){
-      const p = full ? [cx, cy + size / 15 - 4] : piePoint(cx, cy, r * 0.62, (from + to) / 2);
-      const t = svgTag("text", { x: p[0], y: p[1] + 4, "text-anchor": "middle", "font-size": full ? 15 : 11, "font-weight": 600, fill: luma(fill) > 0.34 ? bg : lbl });
-      t.textContent = String(a.count);
-      svg.appendChild(t);
-    }
+function statsEl(tag, cls, text){
+  const e = document.createElement(tag);
+  if(cls) e.className = cls;
+  if(text !== undefined) e.textContent = text;
+  return e;
+}
+function statsSet(id, text, faint){
+  const e = document.getElementById(id);
+  if(!e) return;
+  e.textContent = text;
+  if(faint !== undefined) e.classList.toggle("faint", !!faint);
+}
+function statsShow(id, on){
+  const e = document.getElementById(id);
+  if(e) e.style.display = on ? "" : "none";
+}
+function paintCombo(box, combo){
+  if(!box || box.dataset.combo === combo) return;
+  box.dataset.combo = combo || "";
+  box.innerHTML = "";
+  (combo || "").split("+").forEach((part, idx)=>{
+    if(idx) box.appendChild(statsEl("span", "stplus", "+"));
+    box.appendChild(statsEl("span", "herokey", part.trim()));
   });
-  return svg;
 }
-function weekZero(){
-  const size = 92, r = size / 2 - 4, cx = size / 2, cy = size / 2;
-  const svg = svgTag("svg", { width: size, height: size, viewBox: "0 0 " + size + " " + size });
-  svg.appendChild(svgTag("circle", { cx: cx, cy: cy, r: r, fill: cssColour("--soft") }));
-  const t = svgTag("text", { x: cx, y: cy + size / 15, "text-anchor": "middle", "font-size": 15, "font-weight": 600, fill: cssColour("--faint") });
-  t.textContent = "0";
-  svg.appendChild(t);
-  return svg;
+function renderStatsCard(s){
+  if(s) statsCardNow = s.stats || {};
+  const c = statsCardNow || {};
+  const any = !!c.any;
+  statsShow("state_stats_empty", !any);
+  statsShow("state_stats_figs", any);
+  if(!any) return;
+  statsSet("state_stats_today", pluralOf(L.statswords, c.today_words || 0));
+  statsSet("state_stats_today_u", pluralOf(L.statsdicts, c.today_dictations || 0));
+  statsSet("state_stats_week", pluralOf(L.statswords, c.week_words || 0));
+  statsSet("state_stats_week_u", pluralOf(L.statsdicts, c.week_dictations || 0));
+  statsSet("state_stats_saved", "≈" + STATS_NB + statsHM(statsSaved(c.week_words, c.week_speech_ms, statsWpm).saved));
+  statsSet("state_stats_saved_u", pluralOf(L.statsatwpm, statsWpm));
 }
-function renderUsage(s){
-  const box = document.getElementById("state_usage");
-  if(!box) return;
-  const keeping = !!(document.getElementById("history") || {}).checked;
-  box.style.display = keeping ? "" : "none";
-  if(!keeping){
-    box.dataset.sig = "off";
-    box.innerHTML = "";
+function statsGuide(max){
+  const step = Math.pow(10, Math.floor(Math.log10(max)));
+  let best = 0;
+  [0.5, 1, 2, 2.5, 5, 10].map(k=>k * step).forEach(c=>{
+    const g = Math.floor(max / c) * c;
+    if(g <= max && g > best && g >= max * 0.6) best = g;
+  });
+  return best || Math.floor(max / step) * step;
+}
+function statsChart(box, p, key){
+  box.innerHTML = "";
+  const months = key === "all";
+  const today = statsDay(p.to);
+  const bars = (p.bars || []).map((b, i, all)=>{
+    const cur = i === all.length - 1;
+    const date = statsDay(b.key);
+    const words = pluralOf(L.statswords, b.words || 0);
+    return { v: b.words || 0, cur: cur, date: date,
+      tip: months ? statsCap(statsDate(date, {month: "long", year: date.getFullYear() === today.getFullYear() ? undefined : "numeric"})) + ": " + words : statsDate(date, {day: "numeric", month: "long"}) + ": " + words };
+  });
+  const n = bars.length;
+  if(!n) return;
+  const max = Math.max.apply(null, bars.map(b=>b.v));
+  const top = max * 1.08 || 1;
+  box.classList.toggle("months", months);
+  box.classList.toggle("week", key === "7");
+  const plot = statsEl("div", "statplot");
+  if(max > 0){
+    const guide = statsGuide(max);
+    const gl = statsEl("div", "statguide");
+    gl.style.bottom = (guide / top * 100) + "%";
+    gl.appendChild(statsEl("span", "", statsNum(guide)));
+    plot.appendChild(gl);
+  }
+  const cols = statsEl("div", "statcols");
+  bars.forEach(b=>{
+    const c = statsEl("span", "statcol" + (b.cur ? " cur" : ""));
+    const i = statsEl("i");
+    i.style.height = (b.v / top * 100) + "%";
+    c.appendChild(i);
+    c.dataset.tip = b.tip;
+    cols.appendChild(c);
+  });
+  plot.appendChild(cols);
+  box.appendChild(plot);
+  const gap = key === "30" ? 3 : 14;
+  box.style.setProperty("--g", gap + "px");
+  let pick;
+  if(key === "30") pick = [0, 7, 14, 21, n - 1].filter(i=>i < n);
+  else if(n <= 7) pick = bars.map((b, i)=>i);
+  else {
+    const every = Math.ceil(n / 6);
+    pick = bars.map((b, i)=>i).filter(i=>(n - 1 - i) % every === 0);
+  }
+  const long = months && n <= 7;
+  const dates = statsEl("div", "statdates");
+  pick.forEach(i=>{
+    const b = bars[i];
+    let text;
+    if(months) text = statsDate(b.date, long ? {month: "long"} : {month: "short", year: "2-digit"});
+    else text = b.cur ? String(L.statstoday || "").toLocaleLowerCase(statsUI()) : statsDate(b.date, {day: "numeric", month: "short"});
+    const s = statsEl("span", b.cur ? "cur" : "", text);
+    if(i === n - 1 && key === "30"){ s.classList.add("end"); s.style.right = "0"; }
+    else s.style.left = "calc((100% - " + (n - 1) + " * var(--g)) / " + n + " * " + (i + 0.5) + " + " + i + " * var(--g))";
+    dates.appendChild(s);
+  });
+  box.appendChild(dates);
+}
+function statsRows(box, list){
+  box.innerHTML = "";
+  list.forEach(r=>{
+    const nm = statsEl("span", "statnm", r.name);
+    nm.dataset.tip = r.name;
+    const tr = statsEl("span", "mtrack" + (r.other ? " other" : ""));
+    const i = statsEl("i");
+    i.style.width = Math.max(0, Math.min(100, r.bar)) + "%";
+    tr.appendChild(i);
+    box.appendChild(nm);
+    box.appendChild(tr);
+    box.appendChild(statsEl("b", "statpct", r.main));
+    if(r.extra !== undefined) box.appendChild(statsEl("span", "statcnt", r.extra));
+  });
+}
+function statsFigures(p){
+  const saved = document.getElementById("stats_saved");
+  if(!p){
+    ["stats_count", "stats_words", "stats_speech"].forEach(id=>statsSet(id, statsNum(0), true));
+    ["stats_count_u", "stats_words_u", "stats_speech_u", "stats_saved_u"].forEach(id=>statsSet(id, ""));
+    if(saved) statsSet("stats_saved", statsHM(0), true);
     return;
   }
-  const apps = s.week_apps || [];
-  const total = s.week_count || 0;
-  const sig = JSON.stringify([apps, total, s.week_chars, s.today_count, cssColour("--hi"), cssColour("--bg")]);
-  if(box.dataset.sig === sig) return;
-  box.dataset.sig = sig;
-  box.innerHTML = "";
-  const head = document.createElement("div");
-  head.className = "sthead";
-  const cap = document.createElement("span");
-  cap.className = "stcap";
-  cap.textContent = L.stusage;
-  const headGo = document.createElement("button");
-  headGo.type = "button"; headGo.className = "iconbtn stgo"; headGo.title = L.stgoto;
-  headGo.innerHTML = "&#8599;";
-  headGo.onclick = ()=>jumpTo("models");
-  head.appendChild(cap); head.appendChild(headGo);
-  box.appendChild(head);
-  const top = document.createElement("div");
-  top.className = "stptop";
-  const chart = document.createElement("div");
-  chart.className = "stpie";
-  const txt = document.createElement("div");
-  txt.className = "stptxt";
-  if(!total){
-    chart.appendChild(weekZero());
-    const none = document.createElement("div");
-    none.className = "stpsub";
-    none.textContent = L.stnoweek;
-    txt.appendChild(none);
-  } else {
-    const pal = weekPalette();
-    chart.appendChild(weekPie(apps, total, pal));
-    const chips = document.createElement("div");
-    chips.className = "stuchips";
-    apps.forEach((a, idx)=>{
-      const chip = document.createElement("span");
-      chip.className = "cmdchip stuchip";
-      const sw = document.createElement("i");
-      sw.style.background = pal[idx] || cssColour("--soft");
-      const nm = document.createElement("span");
-      nm.textContent = a.app;
-      nm.dataset.tip = a.app;
-      const cnt = document.createElement("b");
-      cnt.textContent = String(a.count);
-      chip.appendChild(sw); chip.appendChild(nm); chip.appendChild(cnt);
-      chips.appendChild(chip);
-    });
-    const sub = document.createElement("div");
-    sub.className = "stpsub";
-    sub.textContent = L.stusagesub
-      .replace("%d", s.week_chars || 0)
-      .replace("%d", s.today_count || 0)
-      .replace("%d", total ? Math.round((s.week_chars || 0) / total) : 0);
-    txt.appendChild(chips); txt.appendChild(sub);
+  const count = p.dictations || 0, words = p.words || 0, speechMs = p.speech_ms || 0;
+  const sv = statsSaved(words, speechMs, statsWpm);
+  statsSet("stats_count", statsNum(count), false);
+  statsSet("stats_count_u", count ? pluralOf(L.statsper, Math.round(words / count)) : "");
+  statsSet("stats_words", statsNum(words), false);
+  statsSet("stats_words_u", fmtText(L.statstodayn, statsNum(p.today_words || 0)));
+  statsSet("stats_speech", statsNum(sv.speech), false);
+  statsSet("stats_speech_u", speechMs > 0 ? pluralOf(L.statswpm, Math.round(words / (speechMs / 60000))) : "");
+  statsSet("stats_saved", "≈" + STATS_NB + statsHM(sv.saved), false);
+  statsSet("stats_saved_u", statsWhy(sv));
+}
+function renderStats(){
+  const page = document.getElementById("p-stats");
+  if(!page) return;
+  const rep = statsData || {};
+  const p = rep.periods ? rep.periods[statsPeriod] : null;
+  const empty = rep.empty !== false || !p;
+  statsShow("stats_hero", empty);
+  statsShow("stats_per", !empty);
+  ["stats_days", "stats_langs", "stats_apps", "stats_speed", "stats_subs"].forEach(id=>statsShow(id, false));
+  const wpm = document.getElementById("stats_typing_wpm");
+  if(wpm){
+    wpm.value = String(statsWpm);
+    wpm.disabled = empty;
   }
-  top.appendChild(chart); top.appendChild(txt);
-  box.appendChild(top);
+  statsSet("stats_wpm_v", pluralOf(L.statswpm, statsWpm));
+  const reset = document.getElementById("stats_reset");
+  if(reset) reset.disabled = empty;
+  if(empty){
+    paintCombo(document.getElementById("stats_combo"), CFG.hotkey || "");
+    statsFigures(null);
+    return;
+  }
+  document.querySelectorAll("#stats_chips .statchip").forEach(b=>{
+    const on = b.dataset.v === statsPeriod;
+    b.classList.toggle("on", on);
+    b.setAttribute("aria-checked", on ? "true" : "false");
+  });
+  statsSet("stats_range", statsRange(p, statsPeriod));
+  statsFigures(p);
+  statsShow("stats_days", true);
+  statsSet("stats_days_hint", statsPeriod === "all" ? L.statsmonthhint : L.statsdayhint);
+  statsChart(document.getElementById("stats_chart"), p, statsPeriod);
+  const has = (p.dictations || 0) > 0;
+  const langs = p.langs || [];
+  const langPct = statsShares(langs.map(l=>l.words));
+  statsShow("stats_langs", has && langs.length > 0);
+  statsRows(document.getElementById("stats_langs_rows"), langs.map((l, i)=>({ name: langName(l.code), bar: langPct[i], main: statsPct(langPct[i]), extra: pluralOf(L.statswords, l.words) })));
+  const apps = p.apps || [];
+  const appPct = statsShares(apps.map(a=>a.words));
+  statsShow("stats_apps", has && apps.length > 0);
+  statsRows(document.getElementById("stats_apps_rows"), apps.map((a, i)=>({ name: a.other ? L.statsother : a.name, bar: appPct[i], main: statsPct(appPct[i]), extra: pluralOf(L.statswords, a.words), other: !!a.other })));
+  const models = (p.models || []).filter(m=>m.dictations > 0);
+  const avg = models.map(m=>m.wait_ms / m.dictations / 1000);
+  const slow = Math.max.apply(null, avg.concat([0.001]));
+  statsShow("stats_speed", models.length > 0);
+  statsRows(document.getElementById("stats_speed_rows"), models.map((m, i)=>({ name: m.name || m.key, bar: avg[i] / slow * 100, main: fmtText(L.statssec, statsNum(avg[i], 1)), extra: pluralOf(L.statsdicts, m.dictations) })));
+  const listen = p.subs_ms || 0, trMs = p.tr_ms || 0;
+  statsShow("stats_subs", listen > 0);
+  statsSet("stats_listen", statsHM(listen / 60000));
+  statsSet("stats_tr", statsHM(trMs / 60000));
+  statsSet("stats_tr_u", listen > 0 && trMs > 0 ? fmtText(L.statstrshare, statsPct(Math.round(trMs / listen * 100))) : "");
+  const pairs = p.pairs || [];
+  statsShow("stats_pairs_hint", pairs.length > 0);
+  statsShow("stats_pairs", pairs.length > 0);
+  statsRows(document.getElementById("stats_pairs"), pairs.map(x=>({ name: langName(x.from) + " → " + langName(x.to), bar: trMs ? x.ms / trMs * 100 : 0, main: statsHM(x.ms / 60000) })));
+}
+async function refreshStats(){
+  try{ statsData = JSON.parse(await appStats()); }catch(e){ statsData = null; }
+  renderStats();
+}
+function statsWpmInput(v){
+  statsWpm = statsClampWpm(v);
+  CFG.stats_typing_wpm = statsWpm;
+  statsSet("stats_wpm_v", pluralOf(L.statswpm, statsWpm));
+  const rep = statsData || {};
+  const p = rep.periods ? rep.periods[statsPeriod] : null;
+  if(p && rep.empty === false){
+    const sv = statsSaved(p.words, p.speech_ms, statsWpm);
+    statsSet("stats_saved", "≈" + STATS_NB + statsHM(sv.saved), false);
+    statsSet("stats_saved_u", statsWhy(sv));
+  }
+  renderStatsCard(null);
+}
+function initStats(){
+  statsWpm = statsClampWpm(CFG.stats_typing_wpm);
+  const wpm = document.getElementById("stats_typing_wpm");
+  if(wpm){
+    wpm.value = String(statsWpm);
+    wpm.addEventListener("input", ()=>statsWpmInput(wpm.value));
+  }
+  document.querySelectorAll("#stats_chips .statchip").forEach(b=>{
+    b.onclick = ()=>{ statsPeriod = b.dataset.v; renderStats(); };
+  });
+  const reset = document.getElementById("stats_reset");
+  if(reset) reset.onclick = async ()=>{
+    if(!await askConfirm(L.statsresetask, L.statsreset, null, L.mtstats)) return;
+    await appStatsReset();
+    await refreshStats();
+    refreshState();
+  };
+  renderStats();
+  refreshStats();
 }
 function initStateScreen(){
   const enable = document.getElementById("state_enable");
@@ -5553,14 +5770,7 @@ async function setLangKey(lang, combo){
   renderLangs();
 }
 function pluralCount(n){
-  const forms = {};
-  String(L.libcount || "").split("|").forEach(p=>{
-    const at = p.indexOf(":");
-    if(at > 0) forms[p.slice(0, at)] = p.slice(at + 1);
-  });
-  let cat = "other";
-  try{ cat = new Intl.PluralRules(CFG._ui_lang || "en").select(n); }catch(e){ cat = n === 1 ? "one" : "other"; }
-  return (forms[cat] || forms.other || "%d").replace("%d", String(n));
+  return pluralOf(L.libcount, n);
 }
 function fmtText(text, ...vals){
   let out = String(text || "");
@@ -6581,6 +6791,7 @@ async function doSave(){
     subtitles_sentences: sentDirty ? !!(subsEl("subtitles_sentences")||{}).checked : null,
     subtitles_layout: subsLayout(),
     models_idle_minutes: parseInt((document.getElementById("models_idle_minutes")||{}).value) || 0,
+    stats_typing_wpm: statsWpm,
     subtitles_translate: subsTo(),
     subtitles_translator: subsWho,
     subtitles_model: subsModelPick};
@@ -6627,6 +6838,7 @@ function show(p){
   if(p==="system") setTimeout(equalizeEq, 0);
   if(p==="state") refreshState();
   if(p==="history") refreshHistory();
+  if(p==="stats") refreshStats();
   if(p==="subs"){ refreshSubsModel(); renderSubsTr(); }
   if(p==="post") refreshLLM();
   if(p==="library"){ refreshLLM(); refreshModels(); }
@@ -7803,6 +8015,7 @@ load();
   initRepls();
   initCmds();
   initHistory();
+  initStats();
   bindLabels();
   ariaFromTitle(document);
   initTips();
@@ -7836,7 +8049,7 @@ load();
   await refreshLLM();
   if(window.appReady) appReady();
 })();
-const tabAlias = {library:"library", general:"state", rec:"models", proc:"text", server:"system", about:"about", state:"state", dictation:"dictation", history:"history", mic:"mic", models:"models", text:"text", translate:"dictation", system:"system", post:"post", subs:"subs", subtitles:"subs", help:"help", contacts:"contacts"};
+const tabAlias = {library:"library", general:"state", rec:"models", proc:"text", server:"system", about:"about", state:"state", dictation:"dictation", history:"history", mic:"mic", models:"models", text:"text", translate:"dictation", system:"system", post:"post", subs:"subs", subtitles:"subs", help:"help", contacts:"contacts", stats:"stats", statistics:"stats"};
 if(String(CFG._tab || "").indexOf(":") > 0) setTimeout(()=>jumpTo(CFG._tab), 0);
 show(tabAlias[String(CFG._tab || "").split(":")[0]] || "state");
 if(CFG._wizard || CFG._tab === "wizard") wizStart();

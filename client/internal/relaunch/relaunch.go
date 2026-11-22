@@ -11,7 +11,7 @@ const (
 	TabFlag     = "-tab"
 )
 
-var Tabs = []string{"state", "system", "library", "mic", "history", "dictation", "models", "text", "post", "subs", "help", "about", "contacts"}
+var Tabs = []string{"state", "system", "library", "mic", "history", "dictation", "models", "text", "post", "subs", "stats", "help", "about", "contacts"}
 
 func ValidTab(tab string) bool {
 	return slices.Contains(Tabs, tab)

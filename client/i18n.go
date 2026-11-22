@@ -132,7 +132,6 @@ var msgs = map[string]map[string]string{
 		"tf.no": "Как есть",
 		"hk.lone": "%s — одиночная клавиша: пока она назначена, набрать её обычным способом не получится",
 		"state.loaded.none": "ничего не загружено",
-		"state.week": "%d диктовок · %d знаков",
 		"snd.ok": "уровень в норме",
 		"snd.quiet": "тихо — говорите ближе к микрофону",
 		"snd.clipped": "слишком громко, звук обрезался",
@@ -331,7 +330,6 @@ var msgs = map[string]map[string]string{
 		"tf.no": "As recognized",
 		"hk.lone": "%s is a single key: while it is the shortcut, it cannot be typed as usual",
 		"state.loaded.none": "nothing loaded",
-		"state.week": "%d dictations · %d characters",
 		"snd.ok": "sound level fine",
 		"snd.quiet": "quiet — speak closer to the microphone",
 		"snd.clipped": "too loud, the sound clipped",
@@ -887,12 +885,60 @@ var settingsStrings = map[string]map[string]string{
 		"S_ST_SUMMARY": "Сводка", "S_ST_OVERLAY": "Плашка на экране", "S_ST_BEEP": "Звуковой сигнал", "S_ST_AUTORUN": "Запуск с Windows", "S_ST_POST": "Постобработка", "S_ST_LOCAL": "локально", "S_ST_CHECKED": "проверено %s", "S_ST_GB": "%s ГБ", "S_ST_MB": "%s МБ", "S_ST_ON_M": "включён", "S_ST_OFF_M": "выключен", "S_ST_MIC_OK": "сигнал в норме", "S_ST_MIC_BAD": "микрофон не отвечает", "S_ST_CHECK": "Проверить", "S_ST_RECOG": "распознаёт %s", "S_ST_VER": "Версия %s", "S_ST_LATEST": "последняя", "S_ST_OUTDATED": "не последняя", "S_ST_UPD_OK": "у вас последняя версия", "S_ST_UPD_DL": "Загружаю обновление…",
 		"S_ST_QUICK": "Быстрые настройки",
 		"S_ST_MODELS": "Модели",
-		"S_ST_USAGE": "Использование за неделю",
 		"S_ST_READY": "Готово к диктовке",
 		"S_ST_OFF": "Выключено в трее",
 		"S_ST_OFF_SUB": "сочетание не работает, пока не включите обратно",
 		"S_ST_ENABLE": "Включить",
 		"S_ST_GOTO": "Открыть настройку на её вкладке",
+		"S_NAV_STATS": "Статистика",
+		"S_STATS_TODAY": "Сегодня",
+		"S_STATS_WEEK": "За 7 дней",
+		"S_STATS_SAVED_WEEK": "Сэкономлено за 7 дней",
+		"S_STATS_CARD_EMPTY": "Пока ни одной диктовки. Здесь будет видно, сколько вы надиктовали и сколько времени сэкономили.",
+		"S_STATS_AT_WPM": "one:при %d слове в минуту|few:при %d словах в минуту|many:при %d словах в минуту|other:при %d слова в минуту",
+		"S_STATS_SUMMARY": "Итоги",
+		"S_STATS_PERIOD": "Период",
+		"S_STATS_P7": "7 дней",
+		"S_STATS_P30": "30 дней",
+		"S_STATS_PALL": "Всё время",
+		"S_STATS_F_COUNT": "Диктовок",
+		"S_STATS_F_WORDS": "Слов",
+		"S_STATS_F_SPEECH": "Минут речи",
+		"S_STATS_F_SAVED": "Сэкономлено",
+		"S_STATS_PER": "one:≈ %d слово в каждой|few:≈ %d слова в каждой|many:≈ %d слов в каждой|other:≈ %d слова в каждой",
+		"S_STATS_TODAY_N": "сегодня %s",
+		"S_STATS_WPM": "one:%d слово в минуту|few:%d слова в минуту|many:%d слов в минуту|other:%d слова в минуту",
+		"S_STATS_WPM_LBL": "Если печатать",
+		"S_STATS_WPM_SUB": "время набора минус время речи",
+		"S_STATS_WHY": "набор %s − речь %s",
+		"S_STATS_WHY_NONE": "набор %s не дольше речи %s",
+		"S_STATS_BYDAY": "По дням",
+		"S_STATS_BYDAY_HINT": "Слов за день; сегодняшний день выделен",
+		"S_STATS_BYMONTH_HINT": "Слов за месяц; текущий месяц выделен",
+		"S_STATS_LANGS": "Языки",
+		"S_STATS_LANGS_HINT": "Доля слов на каждом языке",
+		"S_STATS_APPS": "Программы",
+		"S_STATS_APPS_HINT": "Куда диктовали: доля слов",
+		"S_STATS_OTHER": "Другие",
+		"S_STATS_SPEED": "Скорость",
+		"S_STATS_SPEED_HINT": "Сколько в среднем ждать текста после того, как отпустили клавишу",
+		"S_STATS_SUBS": "Субтитры",
+		"S_STATS_LISTENED": "Слушали",
+		"S_STATS_TRANSLATED": "Переводили",
+		"S_STATS_TR_SHARE": "%s времени",
+		"S_STATS_PAIRS_HINT": "Перевод по парам языков",
+		"S_STATS_PRIVACY": "Статистика хранится только на этом компьютере: числа по дням, без текста диктовок.",
+		"S_STATS_RESET": "Сбросить статистику",
+		"S_STATS_RESET_ASK": "Сбросить всю статистику? Числа за все дни будут удалены, вернуть их нельзя.",
+		"S_MT_STATS": "Сброс статистики",
+		"S_STATS_EMPTY_TITLE": "Пока ни одной диктовки",
+		"S_STATS_EMPTY_SUB": "Зажмите сочетание клавиш и говорите. После первой диктовки здесь появятся слова по дням, языки, программы и скорость распознавания.",
+		"S_STATS_WORDS": "one:%d слово|few:%d слова|many:%d слов|other:%d слова",
+		"S_STATS_DICTS": "one:%d диктовка|few:%d диктовки|many:%d диктовок|other:%d диктовки",
+		"S_STATS_SEC": "%s с",
+		"S_STATS_H": "%s ч",
+		"S_STATS_M": "%s мин",
+		"S_STATS_HM": "%s ч %s мин",
 		"S_ST_HOTKEY_GO": "Сменить сочетание",
 		"S_ST_UPD_LAST": "Версия %s — последняя",
 		"S_ST_UPD_HAVE": "Доступна версия %s",
@@ -908,9 +954,6 @@ var settingsStrings = map[string]map[string]string{
 		"S_ST_ACTIVE": "активна",
 		"S_ST_IDLE": "не запускается",
 		"S_ST_DISK": "лежит на диске, %s",
-		"S_ST_USAGE_SUB": "%d знаков · сегодня %d · в среднем %d знаков",
-		"S_WEEK_OTHER": "прочие",
-		"S_ST_NO_WEEK": "диктовок за неделю не было",
 		"S_ST_AUTORUN_SUB": "приложение не поднимется само",
 		"S_ST_OVERLAY_SUB": "видна при записи",
 		"S_REPL_LANG": "Язык правила",
@@ -1170,7 +1213,7 @@ var settingsStrings = map[string]map[string]string{
 			"</ul>" +
 			"<p class=\"hdim\">Плашку можно выключить, поставить в любой угол, привязать к курсору или просто перетащить мышкой туда, где она не мешает. Это на вкладке «Управление и поведение».</p>" +
 			"<p class=\"wh\" id=\"s-state\">Экран «Состояние»</p>" +
-			"<p>Этот экран отвечает на один вопрос: можно ли прямо сейчас диктовать. Если нет — говорит почему и даёт кнопку, которая ведёт туда, где это чинится. Первый блок — «Сводка»: готовность к диктовке, субтитры, версия и память. Любой переход в окне настроек — кнопка, стрелка или плашка — открывает нужную вкладку и на пару секунд подсвечивает место, куда привёл, так же как поиск по настройкам подсвечивает найденное.</p>" +
+			"<p>Этот экран отвечает на один вопрос: можно ли прямо сейчас диктовать. Если нет — говорит почему и даёт кнопку, которая ведёт туда, где это чинится. Первый блок — «Сводка»: готовность к диктовке, субтитры, версия, память и статистика. Любой переход в окне настроек — кнопка, стрелка или плашка — открывает нужную вкладку и на пару секунд подсвечивает место, куда привёл, так же как поиск по настройкам подсвечивает найденное.</p>" +
 			"<div class=\"hshot\">" +
 			"<div class=\"hcard\"><span class=\"hled\"></span><div class=\"ht\"><b>Готово к диктовке</b><span>зажмите и говорите — текст появится там, где курсор</span></div><span class=\"hkey\">ctrl</span><span style=\"color:var(--dim)\">+</span><span class=\"hkey\">win</span></div>" +
 			"<div class=\"hcap\">зелёный квадрат означает, что приложение слушает клавиши</div>" +
@@ -1179,9 +1222,9 @@ var settingsStrings = map[string]map[string]string{
 			"<p>Ниже — то, на что обычно смотрят мельком:</p>" +
 			"<ul>" +
 			"<li><b>Субтитры.</b> Карточка сразу под верхней: выключены ли субтитры, загружают модель, идут или перезапускаются, с моделью и тем, как приходит текст, их сочетание клавиш, если оно задано, кнопка, которая их запускает или останавливает, и стрелка на вкладку «Субтитры и перевод». Под строкой состояния — переключатели «Перевод» и «Сохранять расшифровку», а также три маленькие карточки расположения, те же, что на вкладке «Субтитры и перевод»: в две строки, в две колонки или только перевод. Пока переключатель «Сохранять расшифровку» включён, услышанное и перевод записываются в текстовые файлы. Он действует сразу, даже когда субтитры уже идут. Кнопка «Запустить вручную» запускает субтитры прямо отсюда; если своего сочетания у них нет, на его месте кнопка «Назначить…», которая его задаёт.</li>" +
-			"<li><b>Использование за неделю.</b> Круговая диаграмма: в какие программы уходили ваши диктовки и сколько знаков вы наговорили.</li>" +
 			"<li><b>Версия.</b> Номер сборки и кнопка «Проверить»: она спрашивает, не вышла ли версия новее. Если вышла, приложение скажет об этом здесь же.</li>" +
 			"<li><b>Память.</b> Сколько её свободно, какая модель сейчас в ней сидит и сколько все модели весят на диске. Кнопка «Выгрузить» освобождает память немедленно — например, перед тяжёлой игрой. Следующая диктовка после выгрузки не теряется: запись начинается сразу, модель тем временем загружается, и текст появляется на несколько секунд позже.</li>" +
+			"<li><b>Статистика.</b> Карточка под версией и памятью: сколько слов и диктовок сегодня и за 7 дней и сколько времени сэкономлено за 7 дней при вашей скорости набора. До первой диктовки в ней одна строка о том, что здесь появится. Стрелка открывает вкладку «Статистика».</li>" +
 			"<li><b>Быстрые настройки.</b> Пять карточек с самым ходовым: микрофон, язык, плашка, звук, автозапуск. Показывают, как настроено сейчас, а стрелка ведёт на вкладку, где это меняется. Переключателей здесь намеренно нет, чтобы ничего не задеть мимоходом.</li>" +
 			"<li><b>Модели.</b> Что установлено, что работает прямо сейчас, за какие языки отвечает и что просто лежит на диске.</li>" +
 			"</ul>" +
@@ -1365,6 +1408,19 @@ var settingsStrings = map[string]map[string]string{
 			"<tr><td>Сохранять расшифровку</td><td>Каждый запуск пишет текстовый файл в папку transcripts рядом с программой: первая строка с датой, языком и моделью, затем каждая готовая строка со временем, когда она началась. Пока первая строка не готова, ничего не пишется. Когда перевод включён, в имени файла расшифровки стоят original и код языка речи, а рядом появляется второй файл, с translation и кодом языка перевода, например 2026-11-12_10-18-29_original_EN.txt и 2026-11-12_10-18-29_translation_RU.txt. Строка «Папка расшифровок» показывает, где они лежат, а кнопка «Открыть папку» открывает эту папку.</td></tr>" +
 			"</table>" +
 			"<div class=\"hwarn\">Собеседники должны знать, что их речь записывается текстом.</div>" +
+			"<p class=\"wh\" id=\"s-stats\">Вкладка «Статистика»</p>" +
+			"<p>Сколько вы надиктовали и сколько времени это сэкономило. Программа хранит только числа по дням: диктовки, слова, секунды речи, языки, программы, модели и время субтитров; текста диктовок здесь нет. Статистика ведётся всегда, даже когда история выключена. Слова, надиктованные в программы из списка «Не записывать из программ» на вкладке «История», считаются, но попадают в «Другие», а не под именем программы.</p>" +
+			"<table class=\"hopt\">" +
+			"<tr><td>Итоги</td><td>Период выбирается кнопками «7 дней», «30 дней» и «Всё время», рядом написаны его даты. Три числа: сколько было диктовок, сколько в них слов и сколько минут вы говорили. «Сэкономлено» — сколько заняло бы набрать эти слова минус сколько вы говорили, в целых минутах; строка рядом показывает обе части.</td></tr>" +
+			"<tr><td>Если печатать</td><td>Ваша скорость набора, от 10 до 150 слов в минуту, по умолчанию 40. От неё зависит только «Сэкономлено» на этой вкладке и на «Состоянии». Если набор выходит не дольше речи, сэкономлено 0, и строка так и скажет.</td></tr>" +
+			"<tr><td>По дням</td><td>Столбик слов за каждый день периода, сегодняшний выделен; за всё время — по месяцам. Наведите на столбик, чтобы увидеть дату и число.</td></tr>" +
+			"<tr><td>Языки</td><td>На каких языках вы диктовали: доля слов и сколько их. Когда язык определяется автоматически, программа узнаёт его по словам самой диктовки, а если не узнала, пишет «Автоопределение».</td></tr>" +
+			"<tr><td>Программы</td><td>Куда вставлялся текст: пять программ с наибольшей долей слов, под теми же именами, что в истории, а остальное — строкой «Другие».</td></tr>" +
+			"<tr><td>Скорость</td><td>Сколько в среднем проходит от того, как вы отпустили клавиши, до вставки текста, отдельно для каждой модели распознавания, и сколько диктовок она распознала.</td></tr>" +
+			"<tr><td>Субтитры</td><td>Сколько времени субтитры слушали звук и сколько из него переводили, а ниже — перевод по парам языков. Блок появляется, если за период субтитры были.</td></tr>" +
+			"<tr><td>Сбросить статистику</td><td>Стирает все числа за все дни. Перед этим программа спрашивает подтверждение.</td></tr>" +
+			"</table>" +
+			"<p class=\"hdim\">До первой диктовки вкладка показывает, что здесь появится, и сочетание клавиш, которым диктовать.</p>" +
 			"<p class=\"wh\" id=\"s-about\">«О программе» и «Контакты»</p>" +
 			"<p>На вкладке «О программе» — короткий рассказ, что это и как устроено, и список всех чужих библиотек, из которых собрано приложение, с их лицензиями. Названия кликабельны и ведут на страницы этих проектов. Там же ссылка на репозиторий, где лежат исходный код и все версии.</p>" +
 			"<p>«Контакты» — три карточки: почта, репозиторий и страница для ошибок и идей. В каждой сказано, для чего она, и написан адрес — его можно выделить и скопировать. Внизу одна кнопка: «Написать» откроет вашу почтовую программу с уже заполненным получателем, «Открыть» — репозиторий в браузере, «Сообщить» — страницу ошибок и идей. Значок рядом с адресом почты копирует адрес.</p>" +
@@ -1374,6 +1430,7 @@ var settingsStrings = map[string]map[string]string{
 			"<tr><td>config.json</td><td>Все ваши настройки одним текстовым файлом. Его можно скопировать на другой компьютер, чтобы не настраивать заново.</td></tr>" +
 			"<tr><td>holdtotype.log</td><td>Журнал работы. Первое, куда стоит заглянуть, если приложение ведёт себя странно.</td></tr>" +
 			"<tr><td>holdtotype-history.json</td><td>История диктовок, если вы её включили. Обычный текст: при желании файл можно просто удалить.</td></tr>" +
+			"<tr><td>holdtotype-stats.json</td><td>Статистика: числа по дням, без текста; удалите файл, чтобы начать заново.</td></tr>" +
 			"<tr><td>models</td><td>Папка со скачанными моделями — самая тяжёлая часть, несколько гигабайт: модели распознавания, модели-редакторы, модель перевода субтитров, а в папке models/fast — языковые пакеты «Быстрого» переводчика. Её тоже можно перенести на другой компьютер, чтобы не качать заново.</td></tr>" +
 			"<tr><td>transcripts</td><td>Расшифровки субтитров, по текстовому файлу на запуск, и переводы к ним, когда перевод включён. Это ваши документы: программа удаления стирает их, только если вы попросите удалить и настройки с данными.</td></tr>" +
 			"<tr><td>whisper-server, sherpa-server, llama-server, fast-translator</td><td>Маленькие программы, которые запускают модели: whisper-server и sherpa-server с sherpa-online-server — распознавание, llama-server — модель-редактор, llama-server-gpu — модель перевода на видеокарте, fast-translator — «Быстрый» переводчик. Без них модель — просто файл, читать его нечем.</td></tr>" +
@@ -1819,12 +1876,60 @@ var settingsStrings = map[string]map[string]string{
 		"S_ST_SUMMARY": "Summary", "S_ST_OVERLAY": "Plate on screen", "S_ST_BEEP": "Sound cue", "S_ST_AUTORUN": "Start with Windows", "S_ST_POST": "Post-processing", "S_ST_LOCAL": "local", "S_ST_CHECKED": "checked %s", "S_ST_GB": "%s GB", "S_ST_MB": "%s MB", "S_ST_ON_M": "on", "S_ST_OFF_M": "off", "S_ST_MIC_OK": "signal is fine", "S_ST_MIC_BAD": "the microphone is silent", "S_ST_CHECK": "Check", "S_ST_RECOG": "recognized by %s", "S_ST_VER": "Version %s", "S_ST_LATEST": "latest", "S_ST_OUTDATED": "outdated", "S_ST_UPD_OK": "you have the latest version", "S_ST_UPD_DL": "Downloading the update…",
 		"S_ST_QUICK": "Quick settings",
 		"S_ST_MODELS": "Models",
-		"S_ST_USAGE": "This week",
 		"S_ST_READY": "Ready to dictate",
 		"S_ST_OFF": "Switched off in the tray",
 		"S_ST_OFF_SUB": "the shortcut does nothing until you switch it back on",
 		"S_ST_ENABLE": "Switch on",
 		"S_ST_GOTO": "Open this setting on its own tab",
+		"S_NAV_STATS": "Statistics",
+		"S_STATS_TODAY": "Today",
+		"S_STATS_WEEK": "Last 7 days",
+		"S_STATS_SAVED_WEEK": "Saved in 7 days",
+		"S_STATS_CARD_EMPTY": "No dictations yet. This is where you will see how much you have dictated and how much time it saved.",
+		"S_STATS_AT_WPM": "one:at %d word a minute|other:at %d words a minute",
+		"S_STATS_SUMMARY": "Totals",
+		"S_STATS_PERIOD": "Period",
+		"S_STATS_P7": "7 days",
+		"S_STATS_P30": "30 days",
+		"S_STATS_PALL": "All time",
+		"S_STATS_F_COUNT": "Dictations",
+		"S_STATS_F_WORDS": "Words",
+		"S_STATS_F_SPEECH": "Minutes of speech",
+		"S_STATS_F_SAVED": "Saved",
+		"S_STATS_PER": "one:≈ %d word each|other:≈ %d words each",
+		"S_STATS_TODAY_N": "%s today",
+		"S_STATS_WPM": "one:%d word a minute|other:%d words a minute",
+		"S_STATS_WPM_LBL": "If you type",
+		"S_STATS_WPM_SUB": "typing time minus speaking time",
+		"S_STATS_WHY": "typing %s − speech %s",
+		"S_STATS_WHY_NONE": "typing %s is no longer than speech %s",
+		"S_STATS_BYDAY": "By day",
+		"S_STATS_BYDAY_HINT": "Words per day; today is highlighted",
+		"S_STATS_BYMONTH_HINT": "Words per month; this month is highlighted",
+		"S_STATS_LANGS": "Languages",
+		"S_STATS_LANGS_HINT": "Share of words in each language",
+		"S_STATS_APPS": "Programs",
+		"S_STATS_APPS_HINT": "Where you dictated: share of words",
+		"S_STATS_OTHER": "Other",
+		"S_STATS_SPEED": "Speed",
+		"S_STATS_SPEED_HINT": "How long the text takes on average after you release the keys",
+		"S_STATS_SUBS": "Subtitles",
+		"S_STATS_LISTENED": "Listened",
+		"S_STATS_TRANSLATED": "Translated",
+		"S_STATS_TR_SHARE": "%s of the time",
+		"S_STATS_PAIRS_HINT": "Translation by language pair",
+		"S_STATS_PRIVACY": "Statistics stay on this computer only: numbers per day, never the text of your dictations.",
+		"S_STATS_RESET": "Reset statistics",
+		"S_STATS_RESET_ASK": "Reset all statistics? The numbers for every day will be deleted and cannot be brought back.",
+		"S_MT_STATS": "Resetting statistics",
+		"S_STATS_EMPTY_TITLE": "No dictations yet",
+		"S_STATS_EMPTY_SUB": "Hold the shortcut and speak. After the first dictation this tab shows words per day, languages, programs and recognition speed.",
+		"S_STATS_WORDS": "one:%d word|other:%d words",
+		"S_STATS_DICTS": "one:%d dictation|other:%d dictations",
+		"S_STATS_SEC": "%s s",
+		"S_STATS_H": "%s h",
+		"S_STATS_M": "%s min",
+		"S_STATS_HM": "%s h %s min",
 		"S_ST_HOTKEY_GO": "Change the shortcut",
 		"S_ST_UPD_LAST": "Version %s — the latest",
 		"S_ST_UPD_HAVE": "Version %s is available",
@@ -1840,9 +1945,6 @@ var settingsStrings = map[string]map[string]string{
 		"S_ST_ACTIVE": "active",
 		"S_ST_IDLE": "not started",
 		"S_ST_DISK": "on disk, %s",
-		"S_ST_USAGE_SUB": "%d characters · %d today · %d characters on average",
-		"S_WEEK_OTHER": "other",
-		"S_ST_NO_WEEK": "no dictations this week",
 		"S_ST_AUTORUN_SUB": "the app will not start by itself",
 		"S_ST_OVERLAY_SUB": "shown while recording",
 		"S_REPL_LANG": "Rule language",
@@ -2102,7 +2204,7 @@ var settingsStrings = map[string]map[string]string{
 			"</ul>" +
 			"<p class=\"hdim\">The plate can be turned off, put in any corner, tied to the cursor, or simply dragged with the mouse to where it is out of the way. That is on the “Controls & behaviour” tab.</p>" +
 			"<p class=\"wh\" id=\"s-state\">The “Status” screen</p>" +
-			"<p>This screen answers one question: can you dictate right now? If not, it tells you why and gives you a button that takes you to where it gets fixed. The first block is “Summary”: readiness to dictate, subtitles, the version and memory. Every jump in the settings window, whether a button, an arrow or a plate, opens the right tab and highlights the place it led to for a couple of seconds, the way the settings search highlights what it found.</p>" +
+			"<p>This screen answers one question: can you dictate right now? If not, it tells you why and gives you a button that takes you to where it gets fixed. The first block is “Summary”: readiness to dictate, subtitles, the version, memory and statistics. Every jump in the settings window, whether a button, an arrow or a plate, opens the right tab and highlights the place it led to for a couple of seconds, the way the settings search highlights what it found.</p>" +
 			"<div class=\"hshot\">" +
 			"<div class=\"hcard\"><span class=\"hled\"></span><div class=\"ht\"><b>Ready to dictate</b><span>hold it and speak — the text lands where the cursor is</span></div><span class=\"hkey\">ctrl</span><span style=\"color:var(--dim)\">+</span><span class=\"hkey\">win</span></div>" +
 			"<div class=\"hcap\">the green square means the app is listening for its keys</div>" +
@@ -2111,9 +2213,9 @@ var settingsStrings = map[string]map[string]string{
 			"<p>Below it is what you will usually just glance at:</p>" +
 			"<ul>" +
 			"<li><b>Subtitles.</b> The card right under the top one: whether subtitles are off, loading their model, running or restarting, with the model and how the text arrives, their shortcut when one is set, a button that starts or stops them, and an arrow to the “Subtitles & translation” tab. Under it are the “Translation” and “Save the transcript” switches and three small layout cards, the same as on the “Subtitles & translation” tab: in two rows, in two columns or translation only. While the “Save the transcript” switch is on, what is heard and its translation are written to text files. It takes effect at once, even while subtitles are running. The “Start manually” button starts subtitles right here; when they have no shortcut of their own, an “Assign…” button stands in its place and sets one.</li>" +
-			"<li><b>This week.</b> A pie chart: which programs your dictations went to and how many characters you dictated.</li>" +
 			"<li><b>Version.</b> The build number and the “Check” button, which asks whether a newer version is out. If one is, the app says so right here.</li>" +
 			"<li><b>Memory.</b> How much of it is free, which model is sitting in it now, and how much all the models take up on disk. The “Unload” button frees the memory at once, for example before a heavy game. The next dictation after an unload is not lost: the recording starts at once, the model loads meanwhile, and the text appears a few seconds later.</li>" +
+			"<li><b>Statistics.</b> The card under the version and memory: how many words and dictations today and in the last 7 days, and how much time the last 7 days saved at your typing speed. Before the first dictation it holds one line saying what will appear there. The arrow opens the “Statistics” tab.</li>" +
 			"<li><b>Quick settings.</b> Five cards with the things you use most: microphone, language, plate, sound, start with Windows. They show how things are set right now, and the arrow takes you to the tab where that is changed. There are deliberately no switches here, so nothing gets flipped in passing.</li>" +
 			"<li><b>Models.</b> What is installed, what is working right now, which languages each one is responsible for, and what is just sitting on disk.</li>" +
 			"</ul>" +
@@ -2297,6 +2399,19 @@ var settingsStrings = map[string]map[string]string{
 			"<tr><td>Save the transcript</td><td>Every run writes a text file into the transcripts folder next to the program: a first line with the date, the language and the model, then each finished line with the time it began. Nothing is written until the first line is finished. When translation is on, the transcript's name carries original and the code of the speech language, and a second file appears beside it with translation and the code of the target language, for example 2026-11-12_10-18-29_original_EN.txt and 2026-11-12_10-18-29_translation_RU.txt. The “Transcripts folder” row shows where they are, and the “Open the folder” button opens that folder.</td></tr>" +
 			"</table>" +
 			"<div class=\"hwarn\">The people you talk to should know they are being transcribed.</div>" +
+			"<p class=\"wh\" id=\"s-stats\">The “Statistics” tab</p>" +
+			"<p>How much you have dictated and how much time it saved. The program keeps only numbers per day: dictations, words, seconds of speech, languages, programs, models and subtitle time; the text of your dictations is not here. Statistics are always kept, even with the history switched off. Words dictated into programs on the “Never record from these programs” list of the “History” tab are counted, but they go to “Other” rather than under the program's name.</p>" +
+			"<table class=\"hopt\">" +
+			"<tr><td>Totals</td><td>The period is picked with the “7 days”, “30 days” and “All time” buttons, with its dates written beside them. Three numbers: how many dictations, how many words they held and how many minutes you spoke. “Saved” is how long typing these words would take minus how long you spoke, in whole minutes; the line beside it shows both parts.</td></tr>" +
+			"<tr><td>If you type</td><td>Your typing speed, from 10 to 150 words a minute, 40 by default. It changes nothing but “Saved” on this tab and on “Status”. When typing would take no longer than speaking, the saving is 0 and the line says so.</td></tr>" +
+			"<tr><td>By day</td><td>A bar of words for every day of the period, today highlighted; for all time, by month. Point at a bar to see its date and number.</td></tr>" +
+			"<tr><td>Languages</td><td>Which languages you dictated in: the share of words and how many. When the language is detected automatically, the program tells it from the words of the dictation itself, and when it cannot, it writes “Auto-detect”.</td></tr>" +
+			"<tr><td>Programs</td><td>Where the text went: the five programs with the largest share of words, under the same names as in the history, and the rest as one “Other” line.</td></tr>" +
+			"<tr><td>Speed</td><td>How long it takes on average from releasing the keys to the text being inserted, for each recognition model separately, and how many dictations it recognized.</td></tr>" +
+			"<tr><td>Subtitles</td><td>How long subtitles listened to the sound and how much of it was translated, and below, translation by language pair. The block appears when subtitles ran in the period.</td></tr>" +
+			"<tr><td>Reset statistics</td><td>Erases every number for every day. The program asks for confirmation first.</td></tr>" +
+			"</table>" +
+			"<p class=\"hdim\">Before the first dictation the tab shows what will appear there and the shortcut to dictate with.</p>" +
 			"<p class=\"wh\" id=\"s-about\">“About” and “Contacts”</p>" +
 			"<p>The “About” tab has a short account of what this is and how it is built, and a list of all the third-party libraries the app is made from, with their licences. The names are clickable and lead to the pages of those projects. There is also a link to the repository, where the source code and all the versions live.</p>" +
 			"<p>“Contacts” has three cards: email, the repository, and a page for bugs and ideas. Each says what it is for and spells out the address, which you can select and copy. At the bottom is one button: “Write” opens your mail program with the recipient already filled in, “Open” opens the repository in the browser, and “Report” opens the page for bugs and ideas. The icon next to the email address copies it.</p>" +
@@ -2306,6 +2421,7 @@ var settingsStrings = map[string]map[string]string{
 			"<tr><td>config.json</td><td>All your settings in one text file. You can copy it to another computer so you do not have to set things up again.</td></tr>" +
 			"<tr><td>holdtotype.log</td><td>The log. The first place to look if the app behaves strangely.</td></tr>" +
 			"<tr><td>holdtotype-history.json</td><td>The dictation history, if you turned it on. Plain text: you can simply delete the file if you want.</td></tr>" +
+			"<tr><td>holdtotype-stats.json</td><td>Statistics: numbers per day, no text; delete the file to start over.</td></tr>" +
 			"<tr><td>models</td><td>The folder with the downloaded models, the heaviest part at several gigabytes: recognition models, editor models, the subtitle translation model, and in models/fast the language packs of the “Fast” translator. It too can be moved to another computer so you do not have to download everything again.</td></tr>" +
 			"<tr><td>transcripts</td><td>The subtitle transcripts, one text file per run, and their translations when translation is on. They are your documents: the uninstaller removes them only when you also ask it to delete settings and data.</td></tr>" +
 			"<tr><td>whisper-server, sherpa-server, llama-server, fast-translator</td><td>The small programs that run the models: whisper-server and sherpa-server with sherpa-online-server for recognition, llama-server for the editor model, llama-server-gpu for the translation model on the graphics card, fast-translator for the “Fast” translator. Without them a model is just a file with nothing to read it.</td></tr>" +

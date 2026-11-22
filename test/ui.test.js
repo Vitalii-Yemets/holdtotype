@@ -69,14 +69,43 @@ const dom = new JSDOM(html, {
           { model: "Small", langs: "Detect itself, EN", state: otherState, current: false },
         ],
         installed_models: ["Small", "my-model"],
-        loaded_now: "GigaAM v3", week_line: "12 dictations · 3400 characters",
+        loaded_now: "GigaAM v3",
         llm_ok: true, mic_ok: true, last_at: lastAt, last_app: "chrome.exe",
         remote: remote, backend_err: backendErr, post_err: postErr,
         stt_broken: sttBroken, whisper_now: whisperNow,
         enabled: true, autostart: false, disk_mb: 3400, ram_mb: 16384, ram_free_mb: 9000,
-        week_count: 12, week_chars: 3400, today_count: 4,
-        week_apps: [{ app: "chrome.exe", count: 8 }, { app: "Telegram.exe", count: 4 }],
+        stats: window.statsReport.card,
         badges: { mic: micBadge, models: "2", system: "" } });
+    const statsBars = (from, n, step) => Array.from({ length: n }, (_, i) => {
+      const t = new Date(from[0], from[1] - 1, from[2] + (step === "m" ? 0 : i));
+      if (step === "m") t.setMonth(from[1] - 1 + i, 1);
+      const key = t.getFullYear() + "-" + String(t.getMonth() + 1).padStart(2, "0") + (step === "m" ? "" : "-" + String(t.getDate()).padStart(2, "0"));
+      return { key, words: i === 3 ? 0 : 100 * (i + 1), dictations: i === 3 ? 0 : i + 1 };
+    });
+    const statsPeriod = (from, to, bars, extra) => Object.assign({
+      from, to, bars, dictations: bars.reduce((n, b) => n + b.dictations, 0), words: bars.reduce((n, b) => n + b.words, 0),
+      speech_ms: 60000 * 7, today_words: bars[bars.length - 1].words,
+      langs: [{ code: "ru", words: 2 }, { code: "en", words: 1 }],
+      apps: [{ name: "Telegram.exe", words: 6 }, { name: "chrome.exe", words: 3 }, { name: "", words: 1, other: true }],
+      models: [{ key: "nemotron-3.5", name: "Nemotron 3.5", dictations: 4, wait_ms: 1200 }, { key: "large-v3-turbo-q5_0", name: "Whisper Large v3 Turbo (q5)", dictations: 2, wait_ms: 3600 }],
+      subs_ms: 0, tr_ms: 0, pairs: [],
+    }, extra || {});
+    window.statsFull = () => ({
+      empty: false, today: "2026-11-22",
+      card: { any: true, today_words: 1240, today_dictations: 23, week_words: 8930, week_dictations: 164, week_speech_ms: 5595000 },
+      periods: {
+        "7": statsPeriod("2026-11-16", "2026-11-22", statsBars([2026, 11, 16], 7)),
+        "30": statsPeriod("2026-10-24", "2026-11-22", statsBars([2026, 10, 24], 30), { subs_ms: 400 * 60000, tr_ms: 310 * 60000, pairs: [{ from: "en", to: "ru", ms: 250 * 60000 }, { from: "de", to: "ru", ms: 60 * 60000 }] }),
+        all: statsPeriod("2026-06-09", "2026-11-22", statsBars([2026, 6, 1], 6, "m")),
+      },
+    });
+    window.statsEmpty = () => ({ empty: true, today: "2026-11-22", card: { any: false }, periods: {
+      "7": statsPeriod("2026-11-16", "2026-11-22", statsBars([2026, 11, 16], 7).map((b) => ({ ...b, words: 0, dictations: 0 })), { dictations: 0, words: 0, speech_ms: 0, langs: [], apps: [], models: [] }),
+    } });
+    window.statsReport = window.statsEmpty();
+    window.statsResets = 0;
+    window.appStats = async () => JSON.stringify(window.statsReport);
+    window.appStatsReset = async () => { window.statsResets++; window.statsReport = window.statsEmpty(); };
     let modelStates = { base: "absent", small: "active", "medium-q5_0": "absent", "gigaam-v3": "absent", "nemotron-3.5": "absent", "moonshine-uk": "absent" };
     const modelErrs = {};
     const modelPcts = {};
@@ -316,20 +345,20 @@ function check(name, actual, expected) {
   check("and it says what sits in memory", d.getElementById("state_mem_sub").textContent.includes("GigaAM v3"), true);
   check("the update plate names the version", d.getElementById("state_upd_title").textContent, "Version 0.0.0-test");
   check("and marks it as the latest with a badge", d.getElementById("state_upd_badge").textContent, "latest");
-  check("with history off the week keeps quiet", d.getElementById("state_usage").style.display, "none");
+  const statsCardShown = () => [d.getElementById("state_stats_empty").style.display, d.getElementById("state_stats_figs").style.display];
+  check("the statistics card stands right after the update and memory plates", d.getElementById("state_stats").previousElementSibling.className, "stpair");
+  check("before the first dictation it says what will appear there", statsCardShown(), ["", "none"]);
+  check("its arrow leads to the statistics tab", d.querySelector("#state_stats .sthead .iconbtn.stgo").dataset.goto, "stats");
   const histSw = d.getElementById("history");
-  histSw.checked = true; histSw.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(500);
-  check("with history on the week comes back", d.getElementById("state_usage").style.display, "");
-  check("the week is drawn as a pie", d.querySelectorAll("#state_usage .stpie svg path.stslice").length, 2);
-  check("with a chip per program", d.querySelectorAll("#state_usage .stuchips .stuchip").length, 2);
-  check("and the chips carry the colours of their slices", [...d.querySelectorAll("#state_usage .stuchip i")].map(i=>i.style.background).filter(Boolean).length, 2);
-  w.renderUsage({ week_apps: [{ app: "Code.exe", count: 5 }], week_count: 5, week_chars: 300, today_count: 1 });
-  check("a lone program fills the circle", d.querySelectorAll("#state_usage .stpie svg path.stslice").length, 1);
-  const solo = d.querySelector("#state_usage .stpie svg text");
-  check("and its count stands in the middle", solo.getAttribute("x"), "46");
-  check("in the size the empty circle uses", solo.getAttribute("font-size"), "15");
-  histSw.checked = false; histSw.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(500);
-  check("switching history off hides the week again", d.getElementById("state_usage").style.display, "none");
+  histSw.checked = true; histSw.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
+  w.statsReport = w.statsFull();
+  await w.refreshState(); await sleep(50);
+  check("after dictations the card shows its three figures", statsCardShown(), ["none", ""]);
+  check("today in words and dictations", [d.getElementById("state_stats_today").textContent, d.getElementById("state_stats_today_u").textContent], ["1,240 words", "23 dictations"]);
+  check("the last 7 days the same way", [d.getElementById("state_stats_week").textContent, d.getElementById("state_stats_week_u").textContent], ["8,930 words", "164 dictations"]);
+  check("and the time saved in them at the typing speed", [d.getElementById("state_stats_saved").textContent, d.getElementById("state_stats_saved_u").textContent], ["≈ 2 h 10 min", "at 40 words a minute"]);
+  histSw.checked = false; histSw.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
+  check("the card stays with the history switched off", [d.getElementById("state_stats").style.display, statsCardShown()], ["", ["none", ""]]);
   histSw.checked = true; histSw.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(500);
   check("status screen meter follows the microphone", meterMoves(d, "state_mic_bar"), true);
   check("the status meter is drawn as bars", d.querySelectorAll("#state_mic_bar i").length, 7);
@@ -508,10 +537,11 @@ function check(name, actual, expected) {
   check("and it is marked as a warning", d.getElementById("st_saved").className, "stsaved warn");
   w.setHotkey("ctrl+win", "");
 
-  check("thirteen sections in the sidebar", d.querySelectorAll(".nav").length, 13);
+  check("fourteen sections in the sidebar", d.querySelectorAll(".nav").length, 14);
   check("in three groups", d.querySelectorAll(".ngrp").length, 3);
   check("in the agreed order", [...d.querySelectorAll(".nav")].map(b=>b.dataset.p),
-    ["state", "system", "library", "mic", "history", "dictation", "models", "text", "post", "subs", "help", "about", "contacts"]);
+    ["state", "system", "library", "mic", "history", "dictation", "models", "text", "post", "subs", "stats", "help", "about", "contacts"]);
+  check("statistics open the info group", d.querySelector('.nav[data-p="stats"]').previousElementSibling.textContent, "S_GRP_INFO");
   check("the models tab carries its own name", d.querySelector('.nav[data-p="library"] .nlabel').textContent, "S_NAV_LIBRARY");
   check("no mode switch in the header", !!d.querySelector(".lvlsw"), false);
   check("no disclosure buttons anywhere", d.querySelectorAll(".moreb").length, 0);
@@ -2535,6 +2565,101 @@ function check(name, actual, expected) {
   helpCard.innerHTML = helpWas;
   check("the help still reaches search after the picture checks", searchFinds(w, d, "config.json"), true);
 
+  const stEl = (id) => d.getElementById(id);
+  const stTxt = (id) => stEl(id).textContent;
+  const NBS = " ";
+  w.statsReport = w.statsEmpty();
+  tab("stats"); await sleep(150);
+  check("statistics: the tab opens", shown("stats"), true);
+  check("statistics: before the first dictation it shows what will appear and the shortcut", [stEl("stats_hero").style.display, stEl("stats_per").style.display, stTxt("stats_combo")], ["", "none", "ctrl+win"]);
+  check("statistics: the figures are zero in the faint colour", [stTxt("stats_count"), stEl("stats_count").classList.contains("faint"), stTxt("stats_saved"), stEl("stats_saved").classList.contains("faint")], ["0", true, "0" + NBS + "min", true]);
+  check("statistics: the typing speed and the reset wait for the first dictation", [stEl("stats_typing_wpm").disabled, stEl("stats_reset").disabled], [true, true]);
+  check("statistics: the other blocks stay hidden", ["stats_days", "stats_langs", "stats_apps", "stats_speed", "stats_subs"].map((id) => stEl(id).style.display), ["none", "none", "none", "none", "none"]);
+  w.statsReport = w.statsFull();
+  tab("state"); await sleep(50); tab("stats"); await sleep(150);
+  check("statistics: with dictations the period chips come, 30 days chosen", [stEl("stats_hero").style.display, stEl("stats_per").style.display, [...d.querySelectorAll("#stats_chips .statchip.on")].map((b) => b.dataset.v)], ["none", "", ["30"]]);
+  check("statistics: the chips are the history's chips", [...d.querySelectorAll("#stats_chips button")].map((b) => b.className), ["cmdchip appchip statchip", "cmdchip appchip statchip on", "cmdchip appchip statchip"]);
+  check("statistics: the dates of the period stand beside them", /October 24/.test(stTxt("stats_range")) && /November 22/.test(stTxt("stats_range")), true);
+  check("statistics: dictations, words and minutes of speech", [stTxt("stats_count"), stTxt("stats_count_u"), stTxt("stats_words"), stTxt("stats_words_u"), stTxt("stats_speech"), stTxt("stats_speech_u")],
+    ["461", "≈" + NBS + "100 words each", "46,100", "3,000 today", "7", "6,586 words a minute"]);
+  check("statistics: the time saved and both of its parts", [stTxt("stats_saved"), stTxt("stats_saved_u")], ["≈" + NBS + "19" + NBS + "h 6" + NBS + "min", "typing 19" + NBS + "h 13" + NBS + "min − speech 7" + NBS + "min"]);
+  check("statistics: the speed is the window's slider with its value", [stEl("stats_typing_wpm").type, stEl("stats_typing_wpm").min, stEl("stats_typing_wpm").max, stEl("stats_typing_wpm").step, stEl("stats_typing_wpm").value, stTxt("stats_wpm_v"), stEl("stats_typing_wpm").closest(".row").querySelector(".val") === stEl("stats_wpm_v")], ["range", "10", "150", "5", "40", "40 words a minute", true]);
+  const cols = [...d.querySelectorAll("#stats_chart .statcol")];
+  check("statistics: thirty bars for thirty days, only today highlighted", [cols.length, d.querySelectorAll("#stats_chart .statcol.cur").length, cols[29].classList.contains("cur")], [30, 1, true]);
+  check("statistics: the bars share one scale", [cols[0].querySelector("i").style.height, cols[29].querySelector("i").style.height].map((h) => Math.round(parseFloat(h) * 100) / 100), [Math.round(100 / 3240 * 10000) / 100, Math.round(3000 / 3240 * 10000) / 100]);
+  check("statistics: a day without words still has its place", cols[3].querySelector("i").style.height, "0%");
+  check("statistics: five date labels, the last one says today", [...d.querySelectorAll("#stats_chart .statdates span")].map((s) => s.textContent), ["Oct 24", "Oct 31", "Nov 7", "Nov 14", "today"]);
+  check("statistics: one guide value on the same scale", [d.querySelectorAll("#stats_chart .statguide").length, stEl("stats_chart").querySelector(".statguide span").textContent], [1, "3,000"]);
+  check("statistics: a bar names its day and words under the pointer", cols[0].dataset.tip, "October 24: 100 words");
+  const rowsOf = (id) => { const out = []; const kids = [...stEl(id).children]; for (let i = 0; i < kids.length;) { const r = [kids[i].textContent, kids[i + 1].querySelector("i").style.width, kids[i + 2].textContent]; i += 3; if (kids[i] && kids[i].className === "statcnt") { r.push(kids[i].textContent); i++; } out.push(r); } return out; };
+  check("statistics: languages as the window names them, shares that add up to 100", rowsOf("stats_langs_rows"), [["Русский", "67%", "67%", "2 words"], ["English", "33%", "33%", "1 word"]]);
+  check("statistics: programs as the history names them, the rest as Other", rowsOf("stats_apps_rows"), [["Telegram.exe", "60%", "60%", "6 words"], ["chrome.exe", "30%", "30%", "3 words"], ["Other", "10%", "10%", "1 word"]]);
+  check("statistics: the Other row is drawn apart", d.querySelectorAll("#stats_apps_rows .mtrack.other").length, 1);
+  check("statistics: the wait per model with the dictations it took", rowsOf("stats_speed_rows").map((r) => [r[0], Math.round(parseFloat(r[1])), r[2], r[3]]), [["Nemotron 3.5", 17, "0.3" + NBS + "s", "4 dictations"], ["Whisper Large v3 Turbo (q5)", 100, "1.8" + NBS + "s", "2 dictations"]]);
+  check("statistics: subtitles listened and translated", [stEl("stats_subs").style.display, stTxt("stats_listen"), stTxt("stats_tr"), stTxt("stats_tr_u")], ["", "6" + NBS + "h 40" + NBS + "min", "5" + NBS + "h 10" + NBS + "min", "78% of the time"]);
+  check("statistics: and the translation by language pair", rowsOf("stats_pairs").map((r) => [r[0], r[2]]), [["English → Русский", "4" + NBS + "h 10" + NBS + "min"], ["Deutsch → Русский", "1" + NBS + "h"]]);
+  const slider = stEl("stats_typing_wpm");
+  const stSaves = w.saveCalls;
+  slider.value = "75"; slider.dispatchEvent(new w.Event("input", { bubbles: true })); await sleep(300);
+  check("statistics: moving the slider recounts the saving at once", [stTxt("stats_wpm_v"), stTxt("stats_saved"), stTxt("stats_saved_u")], ["75 words a minute", "≈" + NBS + "10" + NBS + "h 8" + NBS + "min", "typing 10" + NBS + "h 15" + NBS + "min − speech 7" + NBS + "min"]);
+  check("statistics: and the card on the status screen with it", [stTxt("state_stats_saved"), stTxt("state_stats_saved_u")], ["≈" + NBS + "26" + NBS + "min", "at 75 words a minute"]);
+  check("statistics: moving it saves nothing yet", w.saveCalls, stSaves);
+  slider.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(400);
+  check("statistics: letting it go saves the typing speed once", [w.saveCalls - stSaves, w.lastSaveForm.stats_typing_wpm], [1, 75]);
+  slider.value = "40"; slider.dispatchEvent(new w.Event("input", { bubbles: true })); slider.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(400);
+  d.querySelector('#stats_chips [data-v="7"]').click(); await sleep(50);
+  check("statistics: 7 days give seven bars, each with its date", [d.querySelectorAll("#stats_chart .statcol").length, [...d.querySelectorAll("#stats_chart .statdates span")].map((s) => s.textContent)], [7, ["Nov 16", "Nov 17", "Nov 18", "Nov 19", "Nov 20", "Nov 21", "today"]]);
+  check("statistics: a period without subtitles hides their block", stEl("stats_subs").style.display, "none");
+  d.querySelector('#stats_chips [data-v="all"]').click(); await sleep(50);
+  check("statistics: all time is drawn by months", [d.querySelectorAll("#stats_chart .statcol").length, [...d.querySelectorAll("#stats_chart .statdates span")].map((s) => s.textContent), stTxt("stats_days_hint")], [6, ["June", "July", "August", "September", "October", "November"], w.eval("L.statsmonthhint")]);
+  check("statistics: a month names itself under the pointer", d.querySelector("#stats_chart .statcol").dataset.tip, "June: 100 words");
+  check("statistics: the chips say which one is on", [...d.querySelectorAll("#stats_chips .statchip")].map((b) => b.getAttribute("aria-checked")), ["false", "false", "true"]);
+  d.querySelector('#stats_chips [data-v="30"]').click(); await sleep(50);
+  check("statistics: the search finds the tab's blocks and rows", ["s_stats_summary", "s_stats_byday", "s_stats_wpm_lbl", "s_stats_privacy"].map((q) => w.searchMatches(q).some((el) => el.closest("#p-stats"))), [true, true, true, true]);
+  stEl("stats_reset").click(); await sleep(150);
+  check("statistics: resetting asks first, the way clearing the history does", [!!d.querySelector(".modal-bg"), d.querySelector(".modal p").textContent, d.querySelector(".modal .btn.yes").textContent], [true, w.eval("L.statsresetask"), w.eval("L.statsreset")]);
+  d.querySelector(".modal .btn.ghost").click(); await sleep(150);
+  check("statistics: saying no keeps the numbers", [w.statsResets, stEl("stats_hero").style.display], [0, "none"]);
+  stEl("stats_reset").click(); await sleep(150);
+  d.querySelector(".modal .btn.yes").click(); await sleep(400);
+  check("statistics: saying yes empties them", [w.statsResets, stEl("stats_hero").style.display, d.getElementById("state_stats_empty").style.display], [1, "", ""]);
+
+  const stGoSrc = fs.readFileSync(path.join(__dirname, "..", "client", "i18n.go"), "utf8") + fs.readFileSync(path.join(__dirname, "..", "client", "i18n_extra.go"), "utf8");
+  const localeStr = (lang, key) => {
+    let s = stGoSrc.indexOf('settingsStrings["' + lang + '"] = map[string]string{');
+    if (s < 0) s = stGoSrc.indexOf('\n\t"' + lang + '": {', stGoSrc.indexOf("var settingsStrings"));
+    const m = new RegExp('"' + key + '":\\s*"((?:[^"\\\\]|\\\\.)*)"').exec(stGoSrc.slice(s));
+    return m ? JSON.parse('"' + m[1] + '"') : null;
+  };
+  const inLang = (lang, fn) => { w.eval('CFG._ui_lang = "' + lang + '"'); try { return fn(); } finally { w.eval('CFG._ui_lang = "en"'); } };
+  const plurals = (lang, key, ns) => inLang(lang, () => ns.map((n) => w.pluralOf(localeStr(lang, key), n)));
+  check("plurals: Russian words take three forms", plurals("ru", "S_STATS_WORDS", [1, 2, 5, 11, 12, 14, 21, 22, 25, 101, 111, 1240]),
+    ["1 слово", "2 слова", "5 слов", "11 слов", "12 слов", "14 слов", "21 слово", "22 слова", "25 слов", "101 слово", "111 слов", "1" + NBS + "240 слов"]);
+  check("plurals: Russian dictations too", plurals("ru", "S_STATS_DICTS", [1, 3, 5, 23, 164]), ["1 диктовка", "3 диктовки", "5 диктовок", "23 диктовки", "164 диктовки"]);
+  check("plurals: Russian speed after a preposition", plurals("ru", "S_STATS_AT_WPM", [21, 40, 45]), ["при 21 слове в минуту", "при 40 словах в минуту", "при 45 словах в минуту"]);
+  check("plurals: Ukrainian words take three forms", plurals("uk", "S_STATS_WORDS", [1, 2, 5, 11, 21, 22, 25]), ["1 слово", "2 слова", "5 слів", "11 слів", "21 слово", "22 слова", "25 слів"]);
+  check("plurals: Ukrainian dictations", plurals("uk", "S_STATS_DICTS", [1, 2, 5]), ["1 диктування", "2 диктування", "5 диктувань"]);
+  check("plurals: Polish words take three forms, 21 among the many", plurals("pl", "S_STATS_WORDS", [1, 2, 5, 12, 21, 22, 25, 12345]), ["1 słowo", "2 słowa", "5 słów", "12 słów", "21 słów", "22 słowa", "25 słów", "12" + NBS + "345 słów"]);
+  check("plurals: Polish dictations", plurals("pl", "S_STATS_DICTS", [1, 3, 5]), ["1 dyktowanie", "3 dyktowania", "5 dyktowań"]);
+  check("plurals: English, German, Spanish and Italian take two", ["en", "de", "es", "it"].map((l) => plurals(l, "S_STATS_WORDS", [1, 2, 1240])),
+    [["1 word", "2 words", "1,240 words"], ["1 Wort", "2 Wörter", "1.240 Wörter"], ["1 palabra", "2 palabras", "1240 palabras"], ["1 parola", "2 parole", "1240 parole"]]);
+  check("plurals: French counts zero as one", plurals("fr", "S_STATS_DICTS", [0, 1, 2]), ["0 dictée", "1 dictée", "2 dictées"]);
+  check("numbers: a decimal is written the way the language writes it", ["ru", "de", "en"].map((l) => inLang(l, () => w.fmtText(localeStr(l, "S_STATS_SEC"), w.statsNum(0.25, 1)))), ["0,3" + NBS + "с", "0,3" + NBS + "s", "0.3" + NBS + "s"]);
+  check("numbers: hours and minutes in Russian", inLang("ru", () => { w.eval("L.statsh = " + JSON.stringify(localeStr("ru", "S_STATS_H")) + "; L.statsm = " + JSON.stringify(localeStr("ru", "S_STATS_M")) + "; L.statshm = " + JSON.stringify(localeStr("ru", "S_STATS_HM"))); return [w.statsHM(0), w.statsHM(59), w.statsHM(60), w.statsHM(130), w.statsHM(503)]; }),
+    ["0" + NBS + "мин", "59" + NBS + "мин", "1" + NBS + "ч", "2" + NBS + "ч 10" + NBS + "мин", "8" + NBS + "ч 23" + NBS + "мин"]);
+  w.eval("L.statsh = " + JSON.stringify(localeStr("en", "S_STATS_H")) + "; L.statsm = " + JSON.stringify(localeStr("en", "S_STATS_M")) + "; L.statshm = " + JSON.stringify(localeStr("en", "S_STATS_HM")));
+  check("saved time: the mockup's week", JSON.parse(JSON.stringify(w.statsSaved(8930, 5595000, 40))), { typing: 223, speech: 93, saved: 130 });
+  check("saved time: typing no slower than speech saves nothing and says so", [JSON.parse(JSON.stringify(w.statsSaved(100, 600000, 40))), w.statsWhy(w.statsSaved(100, 600000, 40))], [{ typing: 3, speech: 10, saved: 0 }, "typing 3" + NBS + "min is no longer than speech 10" + NBS + "min"]);
+  check("saved time: a speed out of range is held to 10…150 in steps of 5", [0, -3, 7, 12, 13, 42, 43, 150, 151, 999].map((v) => w.statsClampWpm(v)), [40, 40, 10, 10, 15, 40, 45, 150, 150, 150]);
+  const toMin = (t) => { const m = /^(?:(\d+) h)?\s*(?:(\d+) min)?$/.exec(t); return m ? (+(m[1] || 0)) * 60 + (+(m[2] || 0)) : NaN; };
+  const bad = [];
+  for (const words of [0, 1, 37, 999, 8930, 34421, 123457]) for (const ms of [0, 29999, 30000, 5595000, 21480000]) for (let wpm = 10; wpm <= 150; wpm += 5) {
+    const sv = w.statsSaved(words, ms, wpm);
+    if (sv.saved !== Math.max(0, sv.typing - sv.speech)) bad.push([words, ms, wpm, "rule"]);
+    if (sv.speech !== Math.round(ms / 60000)) bad.push([words, ms, wpm, "speech figure"]);
+    if ([sv.typing, sv.speech, sv.saved].some((m) => toMin(w.statsHM(m)) !== m)) bad.push([words, ms, wpm, "shown parts"]);
+  }
+  check("saved time: the shown parts always add up to the result", bad, []);
   check("no page errors", errors, []);
 
   if (failures.length) {
