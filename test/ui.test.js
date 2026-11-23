@@ -520,7 +520,9 @@ function check(name, actual, expected) {
     check("and so does the space bar", skinSel.value, "terminal");
     check("the cards take the rules of the small layout cards", [html.includes("#subs_hero .stlay,#skin_cards .stlay{position:relative;"), html.includes("#subs_hero .stlay.on,#skin_cards .stlay.on{border-color:var(--hi);box-shadow:var(--higlow)}"), html.includes("#subs_hero .stlay:has(input:focus-visible),#skin_cards .stlay:has(input:focus-visible){outline:1px solid var(--green);outline-offset:2px}")], [true, true, true]);
     check("names are never cut: every column is as wide as the longest name and the cards wrap instead", [html.includes("display:grid;grid-template-columns:repeat(auto-fit,minmax(var(--dmin,68px),1fr));gap:6px;font-size:11px}"), box.style.getPropertyValue("--dmin"), html.includes("#skin_cards .dname{display:block;text-align:center;color:var(--dim);white-space:nowrap}")], [true, "calc(" + Math.max(...[...skinSel.options].map((o) => [...o.textContent].length)) + "ch + 10px)", true]);
-    check("in a wide window the row stops where seven cards of 84 px end and stays on the left", [html.includes("#skin_cards{flex:1 1 100%;min-width:0;max-width:calc(var(--dcount) * 84px + (var(--dcount) - 1) * 6px);"), box.style.getPropertyValue("--dcount"), String(skinSel.options.length)], [true, "7", "7"]);
+    check("in a wide window the row stops where seven cards of 84 px end", [html.includes("#skin_cards{flex:1 1 100%;min-width:0;max-width:calc(var(--dcount) * 84px + (var(--dcount) - 1) * 6px);"), box.style.getPropertyValue("--dcount"), String(skinSel.options.length)], [true, "7", "7"]);
+    check("outside the terminal design the cards stand at the right edge of the row and the free space goes to their left", [html.includes('html:not([data-skin="terminal"]) #skin_cards{margin-left:auto}'), (html.match(/#skin_cards\{[^}]*margin/g) || []).length], [true, 1]);
+    check("the terminal design keeps the cards on the left", [/html\[data-skin="terminal"\][^{]*#skin_cards[^{]*\{/.test(html), /(^|[}\n])#skin_cards\{[^}]*margin/.test(html)], [false, false]);
     check("the scanlines and the paper top edge come with the pictures", [html.includes(".dt-scan{position:absolute;inset:0;pointer-events:none;opacity:var(--scan);"), html.includes('.dthumb[data-skin="paper"] .dt-card{border-top-width:2px}')], [true, true]);
     skinSel.removeEventListener("change", count);
     check("the search still finds the design row", w.searchMatches("s_skin").some((el) => el.closest(".dsrow")), true);
@@ -2066,9 +2068,11 @@ function check(name, actual, expected) {
   check("status: outside the terminal design the cards grow up to the height of the switch column and shrink when the width runs out", [
     css.includes("#subs_hero .stswcol{display:flex;flex-direction:column;align-items:flex-start;gap:8px;flex:none}"),
     css.includes('html:not([data-skin="terminal"]) #subs_hero>.stsubsw{flex-wrap:nowrap}'),
-    css.includes('html:not([data-skin="terminal"]) #subs_hero .stsubsw>.stlays{flex:0 1 auto;min-width:0}'),
+    css.includes('html:not([data-skin="terminal"]) #subs_hero .stsubsw>.stlays{flex:0 1 auto;min-width:0;margin-left:auto;justify-content:flex-end}'),
     css.includes('html:not([data-skin="terminal"]) #subs_hero .stlay{flex:0 1 var(--cardw,74px);min-width:0}'),
     css.includes('html:not([data-skin="terminal"]) #subs_hero .stlay svg{width:100%}')], [true, true, true, true, true]);
+  check("status: outside the terminal design the small cards stand at the right edge of the row and the free space goes between the switch column and them", [css.includes('html:not([data-skin="terminal"]) #subs_hero .stsubsw>.stlays{flex:0 1 auto;min-width:0;margin-left:auto;justify-content:flex-end}'), (css.match(/#subs_hero[^{}]*\.stlays\{[^}]*margin/g) || []).length], [true, 1]);
+  check("status: the terminal design keeps the small cards right after the switches", [/html\[data-skin="terminal"\][^{]*\.stlays\{[^}]*margin/.test(css), /(^|[}\n])#subs_hero \.stlays\{[^}]*margin/.test(css)], [false, false]);
   check("status: the terminal design keeps the old order: translation, the small cards, saving", [
     css.includes('html[data-skin="terminal"] #subs_hero .stswcol{display:contents}'),
     css.includes('html[data-skin="terminal"] #subs_hero .stsubsw>.stlays{order:1}'),

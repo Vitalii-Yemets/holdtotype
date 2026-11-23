@@ -2136,7 +2136,7 @@ input.srcpick:disabled,input.srvpick:disabled{opacity:.4;cursor:default}
 #subs_hero .stlay:has(input:focus-visible),#skin_cards .stlay:has(input:focus-visible){outline:1px solid var(--green);outline-offset:2px}
 #subs_hero .stswcol{display:flex;flex-direction:column;align-items:flex-start;gap:8px;flex:none}
 html:not([data-skin="terminal"]) #subs_hero>.stsubsw{flex-wrap:nowrap}
-html:not([data-skin="terminal"]) #subs_hero .stsubsw>.stlays{flex:0 1 auto;min-width:0}
+html:not([data-skin="terminal"]) #subs_hero .stsubsw>.stlays{flex:0 1 auto;min-width:0;margin-left:auto;justify-content:flex-end}
 html:not([data-skin="terminal"]) #subs_hero .stlay{flex:0 1 var(--cardw,74px);min-width:0}
 html:not([data-skin="terminal"]) #subs_hero .stlay svg{width:100%}
 html[data-skin="terminal"] #subs_hero .stswcol{display:contents}
@@ -2145,6 +2145,7 @@ html[data-skin="terminal"] #subs_hero .stswcol>.stsw+.stsw{order:2}
 .dsrow{row-gap:9px}
 .dsrow>label{flex:1 1 100%}
 #skin_cards{flex:1 1 100%;min-width:0;max-width:calc(var(--dcount) * 84px + (var(--dcount) - 1) * 6px);display:grid;grid-template-columns:repeat(auto-fit,minmax(var(--dmin,68px),1fr));gap:6px;font-size:11px}
+html:not([data-skin="terminal"]) #skin_cards{margin-left:auto}
 #skin_cards .stlay{display:flex;flex-direction:column;gap:5px;padding:4px 4px 5px;line-height:1.3;min-width:0}
 #skin_cards .dname{display:block;text-align:center;color:var(--dim);white-space:nowrap}
 #skin_cards .stlay.on .dname{color:var(--green)}
