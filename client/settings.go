@@ -1731,7 +1731,13 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
 .numbtn:hover{color:var(--green);text-shadow:var(--glow)}
 .numbtn+.numbtn{border-top:1px solid var(--soft)}
 .unitwrap .unit{color:var(--dim);font-size:12px}
-input[type=range]{width:150px;accent-color:var(--dim);background:transparent}
+input[type=range]{-webkit-appearance:none;appearance:none;width:150px;height:16px;margin:0;padding:0;background:transparent;--knob:14px}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border:0;border-radius:var(--barr,0);background:linear-gradient(to right,var(--hi) 0 calc(var(--knob) / 2 + (100% - var(--knob)) * var(--p,0)),var(--line) 0)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;box-sizing:border-box;width:var(--knob);height:var(--knob);margin-top:calc((4px - var(--knob)) / 2);border:2px solid var(--swonbg);border-radius:var(--dotr,calc(var(--r) * .6));background:var(--swknob);box-shadow:var(--higlow)}
+input[type=range]:hover::-webkit-slider-thumb{box-shadow:var(--higlow),0 0 0 3px color-mix(in srgb,var(--hi) 25%,transparent)}
+input[type=range]:focus{outline:none}
+input[type=range]:focus-visible{outline:1px solid var(--green);outline-offset:2px}
+input[type=range]:disabled{opacity:.35;cursor:default}
 input[type=checkbox]{appearance:none;-webkit-appearance:none;width:32px;height:17px;border:1px solid var(--dim);border-radius:var(--switchr);position:relative;cursor:pointer;background:var(--swbg);flex:none;padding:0;margin:0}
 input[type=checkbox]::before,input[type=radio]::before{content:"";position:absolute;top:-11px;bottom:-11px;left:-9px;right:-9px}
 input[type=checkbox]::after{content:"";position:absolute;top:2px;left:2px;width:11px;height:11px;border-radius:var(--dotr,calc(var(--r) * .6));background:var(--dim);transition:.15s}
@@ -5547,6 +5553,7 @@ function renderStats(){
   const wpm = document.getElementById("stats_typing_wpm");
   if(wpm){
     wpm.value = String(statsWpm);
+    statsWpmPaint(wpm);
     wpm.disabled = empty;
   }
   statsSet("stats_wpm_v", pluralOf(L.statswpm, statsWpm));
@@ -5595,9 +5602,15 @@ async function refreshStats(){
   try{ statsData = JSON.parse(await appStats()); }catch(e){ statsData = null; }
   renderStats();
 }
+function statsWpmPaint(el){
+  if(!el) return;
+  const lo = Number(el.min) || 0, hi = Number(el.max) || 100;
+  el.style.setProperty("--p", String(Math.max(0, Math.min(1, (Number(el.value) - lo) / ((hi - lo) || 1)))));
+}
 function statsWpmInput(v){
   statsWpm = statsClampWpm(v);
   CFG.stats_typing_wpm = statsWpm;
+  statsWpmPaint(document.getElementById("stats_typing_wpm"));
   statsSet("stats_wpm_v", pluralOf(L.statswpm, statsWpm));
   const rep = statsData || {};
   const p = rep.periods ? rep.periods[statsPeriod] : null;
@@ -5613,6 +5626,7 @@ function initStats(){
   const wpm = document.getElementById("stats_typing_wpm");
   if(wpm){
     wpm.value = String(statsWpm);
+    statsWpmPaint(wpm);
     wpm.addEventListener("input", ()=>statsWpmInput(wpm.value));
   }
   document.querySelectorAll("#stats_chips .statchip").forEach(b=>{

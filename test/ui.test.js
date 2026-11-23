@@ -2606,10 +2606,13 @@ function check(name, actual, expected) {
   check("statistics: subtitles listened and translated", [stEl("stats_subs").style.display, stTxt("stats_listen"), stTxt("stats_tr"), stTxt("stats_tr_u")], ["", "6" + NBS + "h 40" + NBS + "min", "5" + NBS + "h 10" + NBS + "min", "78% of the time"]);
   check("statistics: and the translation by language pair", rowsOf("stats_pairs").map((r) => [r[0], r[2]]), [["English → Русский", "4" + NBS + "h 10" + NBS + "min"], ["Deutsch → Русский", "1" + NBS + "h"]]);
   const slider = stEl("stats_typing_wpm");
+  check("statistics: the slider is drawn from the design: the track and fill of the bars, the knob of a switched-on switch", [html.includes("input[type=range]{-webkit-appearance:none;appearance:none;width:150px;height:16px;"), html.includes("input[type=range]::-webkit-slider-runnable-track{height:4px;border:0;border-radius:var(--barr,0);background:linear-gradient(to right,var(--hi) 0 calc(var(--knob) / 2 + (100% - var(--knob)) * var(--p,0)),var(--line) 0)}"), html.includes("input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;box-sizing:border-box;width:var(--knob);height:var(--knob);margin-top:calc((4px - var(--knob)) / 2);border:2px solid var(--swonbg);border-radius:var(--dotr,calc(var(--r) * .6));background:var(--swknob);box-shadow:var(--higlow)}"), html.includes("input[type=range]:focus-visible{outline:1px solid var(--green);outline-offset:2px}"), html.includes("accent-color:var(--dim)")], [true, true, true, true, false]);
+  check("statistics: the filled part starts where the value is", slider.style.getPropertyValue("--p"), String(30 / 140));
   const stSaves = w.saveCalls;
   slider.value = "75"; slider.dispatchEvent(new w.Event("input", { bubbles: true })); await sleep(300);
   check("statistics: moving the slider recounts the saving at once", [stTxt("stats_wpm_v"), stTxt("stats_saved"), stTxt("stats_saved_u")], ["75 words a minute", "≈" + NBS + "10" + NBS + "h 8" + NBS + "min", "typing 10" + NBS + "h 15" + NBS + "min − speech 7" + NBS + "min"]);
   check("statistics: and the card on the status screen with it", [stTxt("state_stats_saved"), stTxt("state_stats_saved_u")], ["≈" + NBS + "26" + NBS + "min", "at 75 words a minute"]);
+  check("statistics: and the filled part follows it", slider.style.getPropertyValue("--p"), String(65 / 140));
   check("statistics: moving it saves nothing yet", w.saveCalls, stSaves);
   slider.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(400);
   check("statistics: letting it go saves the typing speed once", [w.saveCalls - stSaves, w.lastSaveForm.stats_typing_wpm], [1, 75]);
