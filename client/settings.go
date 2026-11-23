@@ -1878,6 +1878,10 @@ button.mini.danger:hover{color:var(--dangerfg);border-color:var(--badline);backg
 .cmdchip.appchip.on{color:var(--green);border-color:var(--dim)}
 .cmdchip.appchip.on i{background:var(--on)}
 .cmdchip.appchip.on i::after{background:var(--hi);box-shadow:var(--higlow);transform:translateX(10px)}
+html:not([data-skin="terminal"]) .cmdchip.appchip i{border-color:var(--dim);border-radius:var(--switchr);background:var(--swbg)}
+html:not([data-skin="terminal"]) .cmdchip.appchip i::after{border-radius:var(--dotr,calc(var(--r) * .6))}
+html:not([data-skin="terminal"]) .cmdchip.appchip.on i{border-color:var(--swonline);background:var(--swonbg)}
+html:not([data-skin="terminal"]) .cmdchip.appchip.on i::after{background:var(--swknob)}
 .pickcount{color:var(--dim);font-size:11.5px;padding:8px 0 0}
 .spin{animation:spin .6s linear}
 @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
