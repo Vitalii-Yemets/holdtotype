@@ -1171,7 +1171,7 @@ func (a *App) stateSnapshot() string {
 	st.UpdChecked = a.updChecked.UnixMilli()
 	a.mu.Unlock()
 	st.PostModel, st.PostSizeMB = postModelNow(cfg)
-	st.Stats = statsStore.Card(time.Now())
+	st.Stats = statsStore.Card(time.Now(), stats.Choice{Period: cfg.StatsPeriod, From: cfg.StatsFrom, To: cfg.StatsTo})
 	st.Badges.Mic = micBadge(mic)
 	st.Badges.Models = itoaSafe(installedModelCount())
 	st.Badges.History = histBadge()

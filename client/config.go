@@ -147,6 +147,9 @@ type Config struct {
 	HistoryMax          int                `json:"history_max"`
 	HistorySkip         string             `json:"history_skip"`
 	StatsTypingWPM      int                `json:"stats_typing_wpm"`
+	StatsPeriod         string             `json:"stats_period"`
+	StatsFrom           string             `json:"stats_from,omitempty"`
+	StatsTo             string             `json:"stats_to,omitempty"`
 	PostEnabled         bool               `json:"post_enabled"`
 	PostSource          string             `json:"post_source"`
 	PostAPIURL          string             `json:"post_api_url"`
@@ -271,6 +274,7 @@ func defaultConfig() *Config {
 		HistoryKeepMin:   history.DefaultKeepMinutes,
 		HistoryMax:       history.DefaultMax,
 		StatsTypingWPM:   stats.DefaultWPM,
+		StatsPeriod:      stats.DefaultPeriod,
 
 		SubtitlesLanguage: "auto",
 		SubtitlesSave:     true,
@@ -545,6 +549,8 @@ func loadConfig(path string) (*Config, error) {
 		migrated = true
 	}
 	cfg.StatsTypingWPM = stats.TypingWPM(cfg.StatsTypingWPM)
+	ch := stats.NormalizeChoice(cfg.StatsPeriod, cfg.StatsFrom, cfg.StatsTo)
+	cfg.StatsPeriod, cfg.StatsFrom, cfg.StatsTo = ch.Period, ch.From, ch.To
 	if cfg.SttSource != "local" && cfg.SttSource != "remote" {
 		if strings.TrimSpace(cfg.ServerURL) != "" {
 			cfg.SttSource = "remote"

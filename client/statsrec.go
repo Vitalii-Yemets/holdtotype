@@ -101,6 +101,22 @@ func runAppNameCheck(paths []string) {
 	log.Printf("appnamecheck: done")
 }
 
+func strOr(p *string, def string) string {
+	if p == nil {
+		return def
+	}
+	return *p
+}
+
+func runStatsCheck(args []string) {
+	out, err := stats.CheckReport(appid.StatsFile, args, time.Now(), statsModelName)
+	if err != nil {
+		log.Printf("statscheck: %v", err)
+		return
+	}
+	log.Printf("statscheck: %s", out)
+}
+
 func (a *App) countDictation(cfg *Config, text, app, path string, meta dictMeta, insertedAt time.Time) {
 	d := stats.Dictation{
 		Text:     text,

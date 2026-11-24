@@ -74,37 +74,72 @@ const dom = new JSDOM(html, {
         remote: remote, backend_err: backendErr, post_err: postErr,
         stt_broken: sttBroken, whisper_now: whisperNow,
         enabled: true, autostart: false, disk_mb: 3400, ram_mb: 16384, ram_free_mb: 9000,
-        stats: window.statsReport.card,
+        stats: window.statsCard(),
         badges: { mic: micBadge, models: "2", system: "" } });
-    const statsBars = (from, n, step) => Array.from({ length: n }, (_, i) => {
-      const t = new Date(from[0], from[1] - 1, from[2] + (step === "m" ? 0 : i));
-      if (step === "m") t.setMonth(from[1] - 1 + i, 1);
-      const key = t.getFullYear() + "-" + String(t.getMonth() + 1).padStart(2, "0") + (step === "m" ? "" : "-" + String(t.getDate()).padStart(2, "0"));
-      return { key, words: i === 3 ? 0 : 100 * (i + 1), dictations: i === 3 ? 0 : i + 1 };
-    });
-    const statsPeriod = (from, to, bars, extra) => Object.assign({
-      from, to, bars, dictations: bars.reduce((n, b) => n + b.dictations, 0), words: bars.reduce((n, b) => n + b.words, 0),
-      speech_ms: 60000 * 7, today_words: bars[bars.length - 1].words,
-      langs: [{ code: "ru", words: 2 }, { code: "en", words: 1 }],
-      apps: [{ name: "Telegram Desktop", words: 6 }, { name: "Google Chrome", words: 3 }, { name: "", words: 1, other: true }],
-      models: [{ key: "nemotron-3.5", name: "Nemotron 3.5", dictations: 4, wait_ms: 1200 }, { key: "large-v3-turbo-q5_0", name: "Whisper Large v3 Turbo (q5)", dictations: 2, wait_ms: 3600 }],
-      subs_ms: 0, tr_ms: 0, pairs: [],
-    }, extra || {});
-    window.statsFull = () => ({
-      empty: false, today: "2026-11-22",
-      card: { any: true, today_words: 1240, today_dictations: 23, week_words: 8930, week_dictations: 164, week_speech_ms: 5595000 },
-      periods: {
-        "7": statsPeriod("2026-11-16", "2026-11-22", statsBars([2026, 11, 16], 7)),
-        "30": statsPeriod("2026-10-24", "2026-11-22", statsBars([2026, 10, 24], 30), { subs_ms: 400 * 60000, tr_ms: 310 * 60000, pairs: [{ from: "en", to: "ru", ms: 250 * 60000 }, { from: "de", to: "ru", ms: 60 * 60000 }] }),
-        all: statsPeriod("2026-06-09", "2026-11-22", statsBars([2026, 6, 1], 6, "m")),
-      },
-    });
-    window.statsEmpty = () => ({ empty: true, today: "2026-11-22", card: { any: false }, periods: {
-      "7": statsPeriod("2026-11-16", "2026-11-22", statsBars([2026, 11, 16], 7).map((b) => ({ ...b, words: 0, dictations: 0 })), { dictations: 0, words: 0, speech_ms: 0, langs: [], apps: [], models: [] }),
-    } });
+    const sDay = (k) => { const p = k.split("-").map(Number); return new Date(p[0], p[1] - 1, p[2]); };
+    const sKey = (t) => t.getFullYear() + "-" + String(t.getMonth() + 1).padStart(2, "0") + "-" + String(t.getDate()).padStart(2, "0");
+    const sAdd = (t, n) => new Date(t.getFullYear(), t.getMonth(), t.getDate() + n);
+    const STATS_TODAY = "2026-11-22", STATS_FIRST = "2026-06-09";
+    const statsDayOf = (k) => {
+      const back = Math.round((sDay(STATS_TODAY) - sDay(k)) / 864e5);
+      if (k < STATS_FIRST || back < 0) return { words: 0, dictations: 0 };
+      if (back < 30) { const i = 29 - back; return i === 3 ? { words: 0, dictations: 0 } : { words: 100 * (i + 1), dictations: i + 1 }; }
+      return sDay(k).getDay() === 0 ? { words: 0, dictations: 0 } : { words: 50, dictations: 1 };
+    };
+    const STATS_LEN = { w: 7, m: 30, q: 90, h: 180, y: 365 };
+    const statsChoice = (period, from, to) => {
+      period = String(period || "").trim().toLowerCase();
+      if (!STATS_LEN[period] && period !== "all" && period !== "custom") period = "m";
+      const ok = (s) => /^\d{4}-\d{2}-\d{2}$/.test(s || "") && sKey(sDay(s)) === s;
+      if (!ok(from) || !ok(to)) return { period: period === "custom" ? "m" : period, from: "", to: "" };
+      return from > to ? { period, from: to, to: from } : { period, from, to };
+    };
+    window.statsRequests = [];
+    window.statsPeriodOf = (period, from, to, empty) => {
+      const c = statsChoice(period, from, to);
+      const today = sDay(STATS_TODAY);
+      let a = sAdd(today, 1 - (STATS_LEN[c.period] || 0)), b = today;
+      if (c.period === "all") a = sDay(empty ? STATS_TODAY : STATS_FIRST);
+      if (c.period === "custom") { a = sDay(c.from); b = sDay(c.to); if (b > today) b = today; if (a > b) a = b; }
+      const days = Math.round((b - a) / 864e5) + 1;
+      const unit = c.period === "all" ? "month" : days <= 31 ? "day" : days <= 186 ? "week" : "month";
+      const bars = [];
+      let words = 0, dictations = 0;
+      for (let t = a, end = sAdd(a, -1); t <= b; t = sAdd(t, 1)) {
+        if (t > end) {
+          end = unit === "day" ? t : unit === "week" ? sAdd(t, (7 - t.getDay()) % 7) : new Date(t.getFullYear(), t.getMonth() + 1, 0);
+          if (end > b) end = b;
+          bars.push({ from: sKey(t), to: sKey(end), words: 0, dictations: 0 });
+        }
+        const d = empty ? { words: 0, dictations: 0 } : statsDayOf(sKey(t));
+        bars[bars.length - 1].words += d.words; bars[bars.length - 1].dictations += d.dictations;
+        words += d.words; dictations += d.dictations;
+      }
+      const hasToday = !empty && sKey(b) === STATS_TODAY;
+      return {
+        key: c.period, unit, from: sKey(a), to: sKey(b), bars, words, dictations, speech_ms: hasToday ? 60000 * 7 : 0, today_words: empty ? 0 : 3000,
+        langs: empty ? [] : [{ code: "ru", words: 2 }, { code: "en", words: 1 }],
+        apps: empty ? [] : [{ name: "Telegram Desktop", words: 6 }, { name: "Google Chrome", words: 3 }, { name: "", words: 1, other: true }],
+        models: empty ? [] : [{ key: "nemotron-3.5", name: "Nemotron 3.5", dictations: 4, wait_ms: 1200 }, { key: "large-v3-turbo-q5_0", name: "Whisper Large v3 Turbo (q5)", dictations: 2, wait_ms: 3600 }],
+        subs_ms: !empty && c.period === "m" ? 400 * 60000 : 0, tr_ms: !empty && c.period === "m" ? 310 * 60000 : 0,
+        pairs: !empty && c.period === "m" ? [{ from: "en", to: "ru", ms: 250 * 60000 }, { from: "de", to: "ru", ms: 60 * 60000 }] : [],
+      };
+    };
+    window.statsFull = () => ({ empty: false });
+    window.statsEmpty = () => ({ empty: true });
+    window.statsCard = () => {
+      const f = window.lastSaveForm || {};
+      const empty = window.statsReport.empty;
+      const p = window.statsPeriodOf(f.stats_period || "m", f.stats_from, f.stats_to, empty);
+      return { any: !empty, today: STATS_TODAY, today_words: empty ? 0 : 3000, today_dictations: empty ? 0 : 30, period: p.key, unit: p.unit, from: p.from, to: p.to, words: p.words, dictations: p.dictations, speech_ms: p.speech_ms, bars: p.bars };
+    };
     window.statsReport = window.statsEmpty();
     window.statsResets = 0;
-    window.appStats = async () => JSON.stringify(window.statsReport);
+    window.appStats = async (period, from, to) => {
+      window.statsRequests.push([period, from, to]);
+      const empty = window.statsReport.empty;
+      return JSON.stringify({ empty, today: STATS_TODAY, first: empty ? STATS_TODAY : STATS_FIRST, period: window.statsPeriodOf(period, from, to, empty) });
+    };
     window.appStatsReset = async () => { window.statsResets++; window.statsReport = window.statsEmpty(); };
     let modelStates = { base: "absent", small: "active", "medium-q5_0": "absent", "gigaam-v3": "absent", "nemotron-3.5": "absent", "moonshine-uk": "absent" };
     const modelErrs = {};
@@ -354,9 +389,14 @@ function check(name, actual, expected) {
   w.statsReport = w.statsFull();
   await w.refreshState(); await sleep(50);
   check("after dictations the card shows its three figures", statsCardShown(), ["none", ""]);
-  check("today in words and dictations", [d.getElementById("state_stats_today").textContent, d.getElementById("state_stats_today_u").textContent], ["1,240 words", "23 dictations"]);
-  check("the last 7 days the same way", [d.getElementById("state_stats_week").textContent, d.getElementById("state_stats_week_u").textContent], ["8,930 words", "164 dictations"]);
-  check("and the time saved in them at the typing speed", [d.getElementById("state_stats_saved").textContent, d.getElementById("state_stats_saved_u").textContent], ["≈ 2 h 10 min", "at 40 words a minute"]);
+  check("today in words and dictations", [d.getElementById("state_stats_today").textContent, d.getElementById("state_stats_today_u").textContent], ["3,000 words", "30 dictations"]);
+  check("the chosen period under its own name, a month by default", [d.getElementById("state_stats_per").textContent, d.getElementById("state_stats_words").textContent, d.getElementById("state_stats_words_u").textContent], ["Past month", "46,100 words", "461 dictations"]);
+  check("and the time saved in it at the typing speed", [d.querySelector("#state_stats_figs .statfig:nth-child(3) .statk").textContent, d.getElementById("state_stats_saved").textContent, d.getElementById("state_stats_saved_u").textContent].map((s) => s.replace(/[\u00a0\u202f]/g, " ")), ["S_STATS_F_SAVED", "≈ 19 h 6 min", "at 40 words a minute"].map((s) => s.replace(/[\u00a0\u202f]/g, " ")));
+  check("the header holds the seven period chips of the tab, the month on", [[...d.querySelectorAll("#state_stats_chips .statchip")].map((b) => b.dataset.v + (b.classList.contains("on") ? "*" : "")), d.getElementById("state_stats_chips").getAttribute("role"), d.getElementById("state_stats_chips").style.display], [["w", "m*", "q", "h", "y", "all", "custom"], "radiogroup", ""]);
+  check("the chips are compact in the header", [html.includes(".sthchips .cmdchip.appchip.statchip{font-size:11.5px;padding:2px 6px;line-height:1.35}"), html.includes(".sthchips{flex:none;flex-wrap:nowrap;gap:5px}"), html.includes(".ststats .sthead.wrap .sthchips{order:3;flex:1 1 100%;flex-wrap:wrap}")], [true, true, true]);
+  const miniCols = [...d.querySelectorAll("#state_stats_chart .statcol")];
+  check("under the figures the chart of the month, today highlighted, without guide or dates", [miniCols.length, miniCols[29].classList.contains("cur"), d.querySelectorAll("#state_stats_chart .statcol.cur").length, d.querySelectorAll("#state_stats_chart .statguide").length, d.querySelectorAll("#state_stats_chart .statdates").length, miniCols[0].dataset.tip], [30, true, 1, 0, 0, "October 24: 100 words"]);
+  check("the card's chart spans the card and its bars are capped", [html.includes(".statchart.statmini{grid-column:1/-1;margin-top:2px;--axis:0px}"), html.includes(".statmini .statplot{height:44px}"), html.includes(".statcol i{display:block;flex:none;width:var(--bw,100%);")], [true, true, true]);
   histSw.checked = false; histSw.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(300);
   check("the card stays with the history switched off", [d.getElementById("state_stats").style.display, statsCardShown()], ["", ["none", ""]]);
   histSw.checked = true; histSw.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(500);
@@ -2584,18 +2624,23 @@ function check(name, actual, expected) {
   check("statistics: the other blocks stay hidden", ["stats_days", "stats_langs", "stats_apps", "stats_speed", "stats_subs"].map((id) => stEl(id).style.display), ["none", "none", "none", "none", "none"]);
   w.statsReport = w.statsFull();
   tab("state"); await sleep(50); tab("stats"); await sleep(150);
-  check("statistics: with dictations the period chips come, 30 days chosen", [stEl("stats_hero").style.display, stEl("stats_per").style.display, [...d.querySelectorAll("#stats_chips .statchip.on")].map((b) => b.dataset.v)], ["none", "", ["30"]]);
-  check("statistics: the chips are the history's chips", [...d.querySelectorAll("#stats_chips button")].map((b) => b.className), ["cmdchip appchip statchip", "cmdchip appchip statchip on", "cmdchip appchip statchip"]);
+  const chipState = (sel) => [...d.querySelectorAll(sel + " .statchip")].map((b) => b.dataset.v + (b.classList.contains("on") ? "*" : ""));
+  check("statistics: with dictations the seven period chips come, the month chosen", [stEl("stats_hero").style.display, stEl("stats_per").style.display, chipState("#stats_chips")], ["none", "", ["w", "m*", "q", "h", "y", "all", "custom"]]);
+  check("statistics: the chips are the history's chips with the period names", [[...d.querySelectorAll("#stats_chips button")].map((b) => b.className), [...d.querySelectorAll("#stats_chips button")].map((b) => b.textContent)], [["cmdchip appchip statchip", "cmdchip appchip statchip on", "cmdchip appchip statchip", "cmdchip appchip statchip", "cmdchip appchip statchip", "cmdchip appchip statchip", "cmdchip appchip statchip"], ["S_STATS_PW", "S_STATS_PM", "S_STATS_PQ", "S_STATS_PH", "S_STATS_PY", "S_STATS_PALL", "Custom range"]]);
+  check("statistics: the page asked for the month", w.statsRequests[w.statsRequests.length - 1], ["m", "", ""]);
   check("statistics: the dates of the period stand beside them", /October 24/.test(stTxt("stats_range")) && /November 22/.test(stTxt("stats_range")), true);
+  check("statistics: the date row waits for a range of one's own", stEl("stats_daterow").style.display, "none");
   check("statistics: dictations, words and minutes of speech", [stTxt("stats_count"), stTxt("stats_count_u"), stTxt("stats_words"), stTxt("stats_words_u"), stTxt("stats_speech"), stTxt("stats_speech_u")],
     ["461", "≈" + NBS + "100 words each", "46,100", "3,000 today", "7", "6,586 words a minute"]);
-  check("statistics: the time saved and both of its parts", [stTxt("stats_saved"), stTxt("stats_saved_u")], ["≈" + NBS + "19" + NBS + "h 6" + NBS + "min", "typing 19" + NBS + "h 13" + NBS + "min − speech 7" + NBS + "min"]);
+  check("statistics: the time saved and both of its parts", [stTxt("stats_saved"), stTxt("stats_saved_u")].map((s) => s.replace(/[\u00a0\u202f]/g, " ")), ["≈" + NBS + "19" + NBS + "h 6" + NBS + "min", "typing 19" + NBS + "h 13" + NBS + "min − speech 7" + NBS + "min"].map((s) => s.replace(/[\u00a0\u202f]/g, " ")));
   check("statistics: the speed is the window's slider with its value", [stEl("stats_typing_wpm").type, stEl("stats_typing_wpm").min, stEl("stats_typing_wpm").max, stEl("stats_typing_wpm").step, stEl("stats_typing_wpm").value, stTxt("stats_wpm_v"), stEl("stats_typing_wpm").closest(".row").querySelector(".val") === stEl("stats_wpm_v")], ["range", "10", "150", "5", "40", "40 words a minute", true]);
   const cols = [...d.querySelectorAll("#stats_chart .statcol")];
-  check("statistics: thirty bars for thirty days, only today highlighted", [cols.length, d.querySelectorAll("#stats_chart .statcol.cur").length, cols[29].classList.contains("cur")], [30, 1, true]);
+  check("statistics: thirty bars for thirty days, only today highlighted", [cols.length, d.querySelectorAll("#stats_chart .statcol.cur").length, cols[29].classList.contains("cur"), stTxt("stats_days_lbl"), stTxt("stats_days_hint")], [30, 1, true, w.eval("L.statsbyday"), w.eval("L.statsdayhint")]);
   check("statistics: the bars share one scale", [cols[0].querySelector("i").style.height, cols[29].querySelector("i").style.height].map((h) => Math.round(parseFloat(h) * 100) / 100), [Math.round(100 / 3240 * 10000) / 100, Math.round(3000 / 3240 * 10000) / 100]);
   check("statistics: a day without words still has its place", cols[3].querySelector("i").style.height, "0%");
-  check("statistics: five date labels, the last one says today", [...d.querySelectorAll("#stats_chart .statdates span")].map((s) => s.textContent), ["Oct 24", "Oct 31", "Nov 7", "Nov 14", "today"]);
+  const labels = () => [...d.querySelectorAll("#stats_chart .statdates span")].map((s) => s.textContent);
+  check("statistics: every bar has its date label, the last one says today", [labels().length, labels()[0], labels()[29]], [30, "Oct 24", "today"]);
+  check("statistics: labels are placed by the script so they never touch", [html.includes(".statdates span{position:absolute;top:0;font-size:10.5px;"), html.includes(".statdates span.end"), /function statsSize\(box\)/.test(html)], [true, false, true]);
   check("statistics: one guide value on the same scale", [d.querySelectorAll("#stats_chart .statguide").length, stEl("stats_chart").querySelector(".statguide span").textContent], [1, "3,000"]);
   check("statistics: a bar names its day and words under the pointer", cols[0].dataset.tip, "October 24: 100 words");
   const rowsOf = (id) => { const out = []; const kids = [...stEl(id).children]; for (let i = 0; i < kids.length;) { const r = [kids[i].textContent, kids[i + 1].querySelector("i").style.width, kids[i + 2].textContent]; i += 3; if (kids[i] && kids[i].className === "statcnt") { r.push(kids[i].textContent); i++; } out.push(r); } return out; };
@@ -2610,29 +2655,94 @@ function check(name, actual, expected) {
   check("statistics: the filled part starts where the value is", slider.style.getPropertyValue("--p"), String(30 / 140));
   const stSaves = w.saveCalls;
   slider.value = "75"; slider.dispatchEvent(new w.Event("input", { bubbles: true })); await sleep(300);
-  check("statistics: moving the slider recounts the saving at once", [stTxt("stats_wpm_v"), stTxt("stats_saved"), stTxt("stats_saved_u")], ["75 words a minute", "≈" + NBS + "10" + NBS + "h 8" + NBS + "min", "typing 10" + NBS + "h 15" + NBS + "min − speech 7" + NBS + "min"]);
-  check("statistics: and the card on the status screen with it", [stTxt("state_stats_saved"), stTxt("state_stats_saved_u")], ["≈" + NBS + "26" + NBS + "min", "at 75 words a minute"]);
+  check("statistics: moving the slider recounts the saving at once", [stTxt("stats_wpm_v"), stTxt("stats_saved"), stTxt("stats_saved_u")].map((s) => s.replace(/[\u00a0\u202f]/g, " ")), ["75 words a minute", "≈" + NBS + "10" + NBS + "h 8" + NBS + "min", "typing 10" + NBS + "h 15" + NBS + "min − speech 7" + NBS + "min"].map((s) => s.replace(/[\u00a0\u202f]/g, " ")));
+  check("statistics: and the card on the status screen with it", [stTxt("state_stats_saved"), stTxt("state_stats_saved_u")].map((s) => s.replace(/[\u00a0\u202f]/g, " ")), ["≈" + NBS + "10" + NBS + "h 8" + NBS + "min", "at 75 words a minute"].map((s) => s.replace(/[\u00a0\u202f]/g, " ")));
   check("statistics: and the filled part follows it", slider.style.getPropertyValue("--p"), String(65 / 140));
   check("statistics: moving it saves nothing yet", w.saveCalls, stSaves);
   slider.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(400);
   check("statistics: letting it go saves the typing speed once", [w.saveCalls - stSaves, w.lastSaveForm.stats_typing_wpm], [1, 75]);
   slider.value = "40"; slider.dispatchEvent(new w.Event("input", { bubbles: true })); slider.dispatchEvent(new w.Event("change", { bubbles: true })); await sleep(400);
-  d.querySelector('#stats_chips [data-v="7"]').click(); await sleep(50);
-  check("statistics: 7 days give seven bars, each with its date", [d.querySelectorAll("#stats_chart .statcol").length, [...d.querySelectorAll("#stats_chart .statdates span")].map((s) => s.textContent)], [7, ["Nov 16", "Nov 17", "Nov 18", "Nov 19", "Nov 20", "Nov 21", "today"]]);
+  const pickSaves = w.saveCalls;
+  d.querySelector('#stats_chips [data-v="w"]').click(); await sleep(150);
+  check("statistics: a week gives seven bars, each with its date", [d.querySelectorAll("#stats_chart .statcol").length, labels()], [7, ["Nov 16", "Nov 17", "Nov 18", "Nov 19", "Nov 20", "Nov 21", "today"]]);
   check("statistics: a period without subtitles hides their block", stEl("stats_subs").style.display, "none");
-  d.querySelector('#stats_chips [data-v="all"]').click(); await sleep(50);
-  check("statistics: all time is drawn by months", [d.querySelectorAll("#stats_chart .statcol").length, [...d.querySelectorAll("#stats_chart .statdates span")].map((s) => s.textContent), stTxt("stats_days_hint")], [6, ["June", "July", "August", "September", "October", "November"], w.eval("L.statsmonthhint")]);
-  check("statistics: a month names itself under the pointer", d.querySelector("#stats_chart .statcol").dataset.tip, "June: 100 words");
-  check("statistics: the chips say which one is on", [...d.querySelectorAll("#stats_chips .statchip")].map((b) => b.getAttribute("aria-checked")), ["false", "false", "true"]);
-  d.querySelector('#stats_chips [data-v="30"]').click(); await sleep(50);
-  check("statistics: the search finds the tab's blocks and rows", ["s_stats_summary", "s_stats_byday", "s_stats_wpm_lbl", "s_stats_privacy"].map((q) => w.searchMatches(q).some((el) => el.closest("#p-stats"))), [true, true, true, true]);
+  check("statistics: a chip saves the choice once and asks for that period", [w.saveCalls - pickSaves, w.lastSaveForm.stats_period, w.statsRequests[w.statsRequests.length - 1][0]], [1, "w", "w"]);
+  await w.refreshState(); await sleep(50);
+  check("statistics: the card follows the tab's choice", [chipState("#state_stats_chips"), stTxt("state_stats_per"), d.querySelectorAll("#state_stats_chart .statcol").length], [["w*", "m", "q", "h", "y", "all", "custom"], "Past week", 7]);
+  d.querySelector('#stats_chips [data-v="q"]').click(); await sleep(150);
+  const qBars = [...d.querySelectorAll("#stats_chart .statcol")];
+  check("statistics: a quarter is drawn by weeks, the first one partial", [qBars.length, stTxt("stats_days_lbl"), stTxt("stats_days_hint"), qBars[0].dataset.tip.startsWith("Week of "), /August 25/.test(qBars[0].dataset.tip) && /30/.test(qBars[0].dataset.tip), qBars[12].classList.contains("cur"), labels()[0]], [13, "By week", w.eval("L.statsweekhint"), true, true, true, "Aug 25"]);
+  d.querySelector('#stats_chips [data-v="h"]').click(); await sleep(150);
+  check("statistics: half a year is drawn by weeks too", [d.querySelectorAll("#stats_chart .statcol").length, stTxt("stats_days_lbl")], [26, "By week"]);
+  d.querySelector('#stats_chips [data-v="y"]').click(); await sleep(150);
+  check("statistics: a year is drawn by months and its dates carry the year", [d.querySelectorAll("#stats_chart .statcol").length, stTxt("stats_days_lbl"), /2025/.test(stTxt("stats_range")) && /2026/.test(stTxt("stats_range"))], [13, "By month", true]);
+  d.querySelector('#stats_chips [data-v="all"]').click(); await sleep(150);
+  const allFirst = w.statsPeriodOf("all", "", "", false).bars[0].words;
+  check("statistics: all time is drawn by months", [d.querySelectorAll("#stats_chart .statcol").length, labels(), stTxt("stats_days_hint")], [6, ["Jun", "Jul", "Aug", "Sep", "Oct", "Nov"], w.eval("L.statsmonthhint")]);
+  check("statistics: a month names itself under the pointer", d.querySelector("#stats_chart .statcol").dataset.tip, "June 2026: " + allFirst + " words");
+  check("statistics: the chips say which one is on", [...d.querySelectorAll("#stats_chips .statchip")].map((b) => b.getAttribute("aria-checked")), ["false", "false", "false", "false", "false", "true", "false"]);
+  d.querySelector('#stats_chips [data-v="m"]').click(); await sleep(150);
+  d.querySelector('#stats_chips [data-v="custom"]').click(); await sleep(150);
+  const fromBtn = stEl("stats_from"), toBtn = stEl("stats_to");
+  check("statistics: a range of one's own starts from the period that was on and shows two date fields", [stEl("stats_daterow").style.display, fromBtn.dataset.value, toBtn.dataset.value, fromBtn.querySelector("span").textContent, toBtn.querySelector("span").textContent, w.lastSaveForm.stats_period, w.lastSaveForm.stats_from, w.lastSaveForm.stats_to], ["", "2026-10-24", "2026-11-22", "10/24/2026", "11/22/2026", "custom", "2026-10-24", "2026-11-22"]);
+  check("statistics: on the tab the custom chip keeps its name and is the chosen one", [d.querySelector('#stats_chips [data-v="custom"]').textContent, d.querySelector('#stats_chips [data-v="custom"]').classList.contains("on")], ["Custom range", true]);
+  check("statistics: the date fields are the window's fields, named for a screen reader", [fromBtn.tagName, fromBtn.getAttribute("aria-haspopup"), fromBtn.getAttribute("aria-label"), d.querySelector('label[for="stats_from"]').textContent], ["BUTTON", "dialog", "Start of the period, October 24, 2026", "S_STATS_FROM"]);
+  fromBtn.click(); await sleep(50);
+  const cal = () => d.querySelector(".statcal");
+  const calDays = () => [...cal().querySelectorAll(".statday")];
+  const key = (k) => { d.activeElement.dispatchEvent(new w.KeyboardEvent("keydown", { key: k, bubbles: true })); };
+  check("statistics: the field opens the window's own calendar on its month", [!!cal(), cal().querySelector(".statcaltitle").textContent, cal().getAttribute("role"), fromBtn.getAttribute("aria-expanded"), d.activeElement.dataset.d, calDays().length], [true, "October 2026", "dialog", "true", "2026-10-24", 42]);
+  check("statistics: Monday first, the chosen day filled, the range banded, today outlined", [[...cal().querySelectorAll(".statcalwd span")].map((s) => s.textContent), cal().querySelector(".statday.sel").dataset.d, calDays().filter((b) => b.classList.contains("inrange")).length, calDays().filter((b) => b.classList.contains("today")).length], [["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], "2026-10-24", 16, 0]);
+  check("statistics: the calendar takes the list's look and the window's buttons", [html.includes(".statcal{position:fixed;z-index:9000;box-sizing:border-box;width:max-content;padding:8px;background:var(--bg);border:1px solid var(--line);border-radius:var(--fieldr);box-shadow:var(--shadow);"), [...cal().querySelectorAll(".statcalnav")].map((b) => b.className), cal().querySelector(".statcalfoot button").className, cal().querySelector(".statcalfoot button").textContent], [true, ["iconbtn statcalnav", "iconbtn statcalnav"], "mini", "Today"]);
+  key("ArrowRight"); await sleep(20);
+  const k1 = d.activeElement.dataset.d;
+  key("ArrowDown"); await sleep(20);
+  const k2 = d.activeElement.dataset.d;
+  key("PageUp"); await sleep(20);
+  check("statistics: arrows move by a day and a week, PageUp by a month", [k1, k2, d.activeElement.dataset.d, cal().querySelector(".statcaltitle").textContent], ["2026-10-25", "2026-11-01", "2026-10-01", "October 2026"]);
+  const pickedSaves = w.saveCalls;
+  d.activeElement.click(); await sleep(150);
+  check("statistics: picking a day closes the calendar, gives the focus back and saves the range", [!!cal(), d.activeElement === fromBtn, fromBtn.getAttribute("aria-expanded"), w.lastSaveForm.stats_from, w.lastSaveForm.stats_to, w.saveCalls - pickedSaves, w.statsRequests[w.statsRequests.length - 1]], [false, true, "false", "2026-10-01", "2026-11-22", 1, ["custom", "2026-10-01", "2026-11-22"]]);
+  check("statistics: fifty-three days are drawn by weeks", [stTxt("stats_days_lbl"), d.querySelectorAll("#stats_chart .statcol").length], ["By week", 8]);
+  toBtn.click(); await sleep(50);
+  check("statistics: the last month has no way forward and today is outlined", [cal().querySelector(".statcaltitle").textContent, cal().querySelectorAll(".statcalnav")[1].disabled, cal().querySelector(".statday.today").dataset.d, calDays().filter((b) => b.classList.contains("off") && b.dataset.d > "2026-11-22").length > 0], ["November 2026", true, "2026-11-22", true]);
+  const after = calDays().find((b) => b.dataset.d === "2026-11-23");
+  after.click(); await sleep(50);
+  check("statistics: days after today cannot be picked", [!!cal(), w.lastSaveForm.stats_to], [true, "2026-11-22"]);
+  key("PageUp"); await sleep(20); key("PageUp"); await sleep(20);
+  d.activeElement.click(); await sleep(150);
+  check("statistics: a «to» before «from» swaps them", [w.lastSaveForm.stats_from, w.lastSaveForm.stats_to, fromBtn.dataset.value, toBtn.dataset.value], ["2026-09-22", "2026-10-01", "2026-09-22", "2026-10-01"]);
+  fromBtn.click(); await sleep(50);
+  for (let i = 0; i < 4; i++) { key("PageUp"); await sleep(20); }
+  check("statistics: the first month of the history has no way back and its earlier days are inert", [cal().querySelector(".statcaltitle").textContent, cal().querySelectorAll(".statcalnav")[0].disabled, calDays().find((b) => b.dataset.d === "2026-06-08").classList.contains("off"), calDays().find((b) => b.dataset.d === "2026-06-09").classList.contains("off")], ["June 2026", true, true, false]);
+  key("PageUp"); await sleep(20);
+  check("statistics: the keys stop at the first day of the history", d.activeElement.dataset.d, "2026-06-09");
+  const escSaves = w.saveCalls;
+  key("Escape"); await sleep(50);
+  check("statistics: Esc closes it without a change and gives the focus back", [!!cal(), d.activeElement === fromBtn, w.saveCalls - escSaves, fromBtn.dataset.value], [false, true, 0, "2026-09-22"]);
+  fromBtn.click(); await sleep(50);
+  toBtn.click(); await sleep(50);
+  check("statistics: only one calendar at a time", [d.querySelectorAll(".statcal").length, fromBtn.getAttribute("aria-expanded"), toBtn.getAttribute("aria-expanded")], [1, "false", "true"]);
+  stEl("stats_range").dispatchEvent(new w.MouseEvent("mousedown", { bubbles: true })); await sleep(50);
+  check("statistics: a click outside closes it", !!cal(), false);
+  check("statistics: the window's normal state keeps the range", [w.statsNormal({ period: "custom", from: "2026-10-01", to: "2026-09-22" }), w.statsNormal({ period: "custom", from: "2026-02-30", to: "2026-03-01" }), w.statsNormal({ period: "decade" }), w.statsNormal({ period: "W", from: "", to: "" })], [{ period: "custom", from: "2026-09-22", to: "2026-10-01" }, { period: "m", from: "", to: "" }, { period: "m", from: "", to: "" }, { period: "w", from: "", to: "" }]);
+  await w.refreshState(); await sleep(50);
+  check("statistics: the card names the range by its dates and marks the custom chip", [stTxt("state_stats_per"), d.querySelector('#state_stats_chips [data-v="custom"]').textContent, d.querySelector('#state_stats_chips [data-v="custom"]').classList.contains("on")], [w.statsShort("2026-09-22", "2026-10-01"), w.statsShort("2026-09-22", "2026-10-01"), true]);
+  tab("state"); await sleep(50);
+  d.querySelector('#state_stats_chips [data-v="m"]').click(); await sleep(200);
+  check("statistics: a chip in the card changes the tab too", [chipState("#stats_chips"), w.lastSaveForm.stats_period, w.lastSaveForm.stats_from], [["w", "m*", "q", "h", "y", "all", "custom"], "m", "2026-09-22"]);
+  d.querySelector('#state_stats_chips [data-v="custom"]').click(); await sleep(300);
+  check("statistics: the card's own range chip opens the tab at its top with the date row lit and the focus on «from»", [d.querySelector(".page.active").id, d.querySelector(".content").scrollTop, stEl("stats_daterow").classList.contains("jumphit"), d.activeElement === fromBtn, !!cal(), w.lastSaveForm.stats_period, w.lastSaveForm.stats_from], ["p-stats", 0, true, true, false, "custom", "2026-09-22"]);
+  d.querySelector('#stats_chips [data-v="m"]').click(); await sleep(150);
+  check("statistics: back on a month the date row hides", stEl("stats_daterow").style.display, "none");
+  check("statistics: the search finds the tab's blocks and rows", ["s_stats_summary", w.eval("L.statsbyday").toLowerCase(), "s_stats_wpm_lbl", "s_stats_privacy"].map((q) => w.searchMatches(q).some((el) => el.closest("#p-stats"))), [true, true, true, true]);
   stEl("stats_reset").click(); await sleep(150);
   check("statistics: resetting asks first, the way clearing the history does", [!!d.querySelector(".modal-bg"), d.querySelector(".modal p").textContent, d.querySelector(".modal .btn.yes").textContent], [true, w.eval("L.statsresetask"), w.eval("L.statsreset")]);
   d.querySelector(".modal .btn.ghost").click(); await sleep(150);
   check("statistics: saying no keeps the numbers", [w.statsResets, stEl("stats_hero").style.display], [0, "none"]);
   stEl("stats_reset").click(); await sleep(150);
   d.querySelector(".modal .btn.yes").click(); await sleep(400);
-  check("statistics: saying yes empties them", [w.statsResets, stEl("stats_hero").style.display, d.getElementById("state_stats_empty").style.display], [1, "", ""]);
+  check("statistics: saying yes empties them", [w.statsResets, stEl("stats_hero").style.display, d.getElementById("state_stats_empty").style.display, d.getElementById("state_stats_chips").style.display], [1, "", "", "none"]);
 
   const stGoSrc = fs.readFileSync(path.join(__dirname, "..", "client", "i18n.go"), "utf8") + fs.readFileSync(path.join(__dirname, "..", "client", "i18n_extra.go"), "utf8");
   const localeStr = (lang, key) => {

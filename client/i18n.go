@@ -892,15 +892,35 @@ var settingsStrings = map[string]map[string]string{
 		"S_ST_GOTO": "Открыть настройку на её вкладке",
 		"S_NAV_STATS": "Статистика",
 		"S_STATS_TODAY": "Сегодня",
-		"S_STATS_WEEK": "За 7 дней",
-		"S_STATS_SAVED_WEEK": "Сэкономлено за 7 дней",
 		"S_STATS_CARD_EMPTY": "Пока ни одной диктовки. Здесь будет видно, сколько вы надиктовали и сколько времени сэкономили.",
 		"S_STATS_AT_WPM": "one:при %d слове в минуту|few:при %d словах в минуту|many:при %d словах в минуту|other:при %d слова в минуту",
 		"S_STATS_SUMMARY": "Итоги",
 		"S_STATS_PERIOD": "Период",
-		"S_STATS_P7": "7 дней",
-		"S_STATS_P30": "30 дней",
 		"S_STATS_PALL": "Всё время",
+		"S_STATS_PW": "Неделя",
+		"S_STATS_PM": "Месяц",
+		"S_STATS_PQ": "Квартал",
+		"S_STATS_PH": "Полгода",
+		"S_STATS_PY": "Год",
+		"S_STATS_PCUSTOM": "Свой период",
+		"S_STATS_IN_W": "За неделю",
+		"S_STATS_IN_M": "За месяц",
+		"S_STATS_IN_Q": "За квартал",
+		"S_STATS_IN_H": "За полгода",
+		"S_STATS_IN_Y": "За год",
+		"S_STATS_IN_ALL": "За всё время",
+		"S_STATS_FROM": "с",
+		"S_STATS_TO": "по",
+		"S_STATS_FROM_A": "Начало периода",
+		"S_STATS_TO_A": "Конец периода",
+		"S_STATS_BYWEEK": "По неделям",
+		"S_STATS_BYMONTH": "По месяцам",
+		"S_STATS_BYWEEK_HINT": "Слов за неделю; текущая неделя выделена",
+		"S_STATS_CAL": "Выбор даты",
+		"S_STATS_CAL_PREV": "Предыдущий месяц",
+		"S_STATS_CAL_NEXT": "Следующий месяц",
+		"S_STATS_CAL_TODAY": "Сегодня",
+		"S_STATS_WEEK_TIP": "Неделя %s: %s",
 		"S_STATS_F_COUNT": "Диктовок",
 		"S_STATS_F_WORDS": "Слов",
 		"S_STATS_F_SPEECH": "Минут речи",
@@ -1224,7 +1244,7 @@ var settingsStrings = map[string]map[string]string{
 			"<li><b>Субтитры.</b> Карточка сразу под верхней: выключены ли субтитры, загружают модель, идут или перезапускаются, с моделью и тем, как приходит текст, их сочетание клавиш, если оно задано, кнопка, которая их запускает или останавливает, и стрелка на вкладку «Субтитры и перевод». Под строкой состояния — переключатели «Перевод» и «Сохранять расшифровку», а также три маленькие карточки расположения, те же, что на вкладке «Субтитры и перевод»: в две строки, в две колонки или только перевод. Пока переключатель «Сохранять расшифровку» включён, услышанное и перевод записываются в текстовые файлы. Он действует сразу, даже когда субтитры уже идут. Кнопка «Запустить вручную» запускает субтитры прямо отсюда; если своего сочетания у них нет, на его месте кнопка «Назначить…», которая его задаёт.</li>" +
 			"<li><b>Версия.</b> Номер сборки и кнопка «Проверить»: она спрашивает, не вышла ли версия новее. Если вышла, приложение скажет об этом здесь же.</li>" +
 			"<li><b>Память.</b> Сколько её свободно, какая модель сейчас в ней сидит и сколько все модели весят на диске. Кнопка «Выгрузить» освобождает память немедленно — например, перед тяжёлой игрой. Следующая диктовка после выгрузки не теряется: запись начинается сразу, модель тем временем загружается, и текст появляется на несколько секунд позже.</li>" +
-			"<li><b>Статистика.</b> Карточка под версией и памятью: сколько слов и диктовок сегодня и за 7 дней и сколько времени сэкономлено за 7 дней при вашей скорости набора. До первой диктовки в ней одна строка о том, что здесь появится. Стрелка открывает вкладку «Статистика».</li>" +
+			"<li><b>Статистика.</b> Карточка под версией и памятью: сколько слов и диктовок сегодня и за выбранный период, сколько времени он сэкономил при вашей скорости набора, а под цифрами — столбики слов за этот период. Период выбирается кнопками в шапке карточки: «Неделя», «Месяц», «Квартал», «Полгода», «Год», «Всё время» и «Свой период»; это тот же выбор, что на вкладке «Статистика», и программа его запоминает. «Свой период» открывает вкладку, где задаются даты. До первой диктовки в карточке одна строка о том, что здесь появится. Стрелка открывает вкладку «Статистика».</li>" +
 			"<li><b>Быстрые настройки.</b> Пять карточек с самым ходовым: микрофон, язык, плашка, звук, автозапуск. Показывают, как настроено сейчас, а стрелка ведёт на вкладку, где это меняется. Переключателей здесь намеренно нет, чтобы ничего не задеть мимоходом.</li>" +
 			"<li><b>Модели.</b> Что установлено, что работает прямо сейчас, за какие языки отвечает и что просто лежит на диске.</li>" +
 			"</ul>" +
@@ -1411,9 +1431,9 @@ var settingsStrings = map[string]map[string]string{
 			"<p class=\"wh\" id=\"s-stats\">Вкладка «Статистика»</p>" +
 			"<p>Сколько вы надиктовали и сколько времени это сэкономило. Программа хранит только числа по дням: диктовки, слова, секунды речи, языки, программы, модели и время субтитров; текста диктовок здесь нет. Статистика ведётся всегда, даже когда история выключена. Слова, надиктованные в программы из списка «Не записывать из программ» на вкладке «История», считаются, но попадают в «Другие», а не под именем программы.</p>" +
 			"<table class=\"hopt\">" +
-			"<tr><td>Итоги</td><td>Период выбирается кнопками «7 дней», «30 дней» и «Всё время», рядом написаны его даты. Три числа: сколько было диктовок, сколько в них слов и сколько минут вы говорили. «Сэкономлено» — сколько заняло бы набрать эти слова минус сколько вы говорили, в целых минутах; строка рядом показывает обе части.</td></tr>" +
+			"<tr><td>Итоги</td><td>Период выбирается кнопками «Неделя», «Месяц», «Квартал», «Полгода» и «Год» — последние 7, 30, 90, 180 и 365 дней по сегодня, — «Всё время» и «Свой период»; рядом написаны его даты. Для своего периода появляются поля «с» и «по»: щелчок открывает календарь, выбрать можно любой день от первого дня статистики до сегодня, а если начало окажется позже конца, программа поменяет их местами. Выбор общий с карточкой на «Состоянии» и запоминается. Три числа: сколько было диктовок, сколько в них слов и сколько минут вы говорили. «Сэкономлено» — сколько заняло бы набрать эти слова минус сколько вы говорили, в целых минутах; строка рядом показывает обе части.</td></tr>" +
 			"<tr><td>Если печатать</td><td>Ваша скорость набора, от 10 до 150 слов в минуту, по умолчанию 40. От неё зависит только «Сэкономлено» на этой вкладке и на «Состоянии». Если набор выходит не дольше речи, сэкономлено 0, и строка так и скажет.</td></tr>" +
-			"<tr><td>По дням</td><td>Столбик слов за каждый день периода, сегодняшний выделен; за всё время — по месяцам. Наведите на столбик, чтобы увидеть дату и число.</td></tr>" +
+			"<tr><td>По дням</td><td>Столбики слов за период: до 31 дня — по дням, до полугода — по неделям с понедельника по воскресенье, дольше и за всё время — по месяцам; название блока говорит, что сейчас на столбиках. Текущий день, неделя или месяц выделены. Наведите на столбик, чтобы увидеть даты и число.</td></tr>" +
 			"<tr><td>Языки</td><td>На каких языках вы диктовали: доля слов и сколько их. Когда язык определяется автоматически, программа узнаёт его по словам самой диктовки, а если не узнала, пишет «Автоопределение».</td></tr>" +
 			"<tr><td>Программы</td><td>Куда вставлялся текст: пять программ с наибольшей долей слов, под названиями, которые дают себе сами программы, например Google Chrome, а остальное — строкой «Другие».</td></tr>" +
 			"<tr><td>Скорость</td><td>Сколько в среднем проходит от того, как вы отпустили клавиши, до вставки текста, отдельно для каждой модели распознавания, и сколько диктовок она распознала.</td></tr>" +
@@ -1883,15 +1903,35 @@ var settingsStrings = map[string]map[string]string{
 		"S_ST_GOTO": "Open this setting on its own tab",
 		"S_NAV_STATS": "Statistics",
 		"S_STATS_TODAY": "Today",
-		"S_STATS_WEEK": "Last 7 days",
-		"S_STATS_SAVED_WEEK": "Saved in 7 days",
 		"S_STATS_CARD_EMPTY": "No dictations yet. This is where you will see how much you have dictated and how much time it saved.",
 		"S_STATS_AT_WPM": "one:at %d word a minute|other:at %d words a minute",
 		"S_STATS_SUMMARY": "Totals",
 		"S_STATS_PERIOD": "Period",
-		"S_STATS_P7": "7 days",
-		"S_STATS_P30": "30 days",
 		"S_STATS_PALL": "All time",
+		"S_STATS_PW": "Week",
+		"S_STATS_PM": "Month",
+		"S_STATS_PQ": "Quarter",
+		"S_STATS_PH": "6 months",
+		"S_STATS_PY": "Year",
+		"S_STATS_PCUSTOM": "Custom range",
+		"S_STATS_IN_W": "Past week",
+		"S_STATS_IN_M": "Past month",
+		"S_STATS_IN_Q": "Past quarter",
+		"S_STATS_IN_H": "Past 6 months",
+		"S_STATS_IN_Y": "Past year",
+		"S_STATS_IN_ALL": "All time",
+		"S_STATS_FROM": "from",
+		"S_STATS_TO": "to",
+		"S_STATS_FROM_A": "Start of the period",
+		"S_STATS_TO_A": "End of the period",
+		"S_STATS_BYWEEK": "By week",
+		"S_STATS_BYMONTH": "By month",
+		"S_STATS_BYWEEK_HINT": "Words per week; this week is highlighted",
+		"S_STATS_CAL": "Pick a date",
+		"S_STATS_CAL_PREV": "Previous month",
+		"S_STATS_CAL_NEXT": "Next month",
+		"S_STATS_CAL_TODAY": "Today",
+		"S_STATS_WEEK_TIP": "Week of %s: %s",
 		"S_STATS_F_COUNT": "Dictations",
 		"S_STATS_F_WORDS": "Words",
 		"S_STATS_F_SPEECH": "Minutes of speech",
@@ -2215,7 +2255,7 @@ var settingsStrings = map[string]map[string]string{
 			"<li><b>Subtitles.</b> The card right under the top one: whether subtitles are off, loading their model, running or restarting, with the model and how the text arrives, their shortcut when one is set, a button that starts or stops them, and an arrow to the “Subtitles & translation” tab. Under it are the “Translation” and “Save the transcript” switches and three small layout cards, the same as on the “Subtitles & translation” tab: in two rows, in two columns or translation only. While the “Save the transcript” switch is on, what is heard and its translation are written to text files. It takes effect at once, even while subtitles are running. The “Start manually” button starts subtitles right here; when they have no shortcut of their own, an “Assign…” button stands in its place and sets one.</li>" +
 			"<li><b>Version.</b> The build number and the “Check” button, which asks whether a newer version is out. If one is, the app says so right here.</li>" +
 			"<li><b>Memory.</b> How much of it is free, which model is sitting in it now, and how much all the models take up on disk. The “Unload” button frees the memory at once, for example before a heavy game. The next dictation after an unload is not lost: the recording starts at once, the model loads meanwhile, and the text appears a few seconds later.</li>" +
-			"<li><b>Statistics.</b> The card under the version and memory: how many words and dictations today and in the last 7 days, and how much time the last 7 days saved at your typing speed. Before the first dictation it holds one line saying what will appear there. The arrow opens the “Statistics” tab.</li>" +
+			"<li><b>Statistics.</b> The card under the version and memory: how many words and dictations today and in the chosen period, how much time the period saved at your typing speed, and under the numbers a bar chart of words over that period. The period is picked with the buttons in the card's header: “Week”, “Month”, “Quarter”, “6 months”, “Year”, “All time” and “Custom range”; it is the same choice as on the “Statistics” tab, and the program remembers it. “Custom range” opens the tab, where the dates are set. Before the first dictation the card holds one line saying what will appear there. The arrow opens the “Statistics” tab.</li>" +
 			"<li><b>Quick settings.</b> Five cards with the things you use most: microphone, language, plate, sound, start with Windows. They show how things are set right now, and the arrow takes you to the tab where that is changed. There are deliberately no switches here, so nothing gets flipped in passing.</li>" +
 			"<li><b>Models.</b> What is installed, what is working right now, which languages each one is responsible for, and what is just sitting on disk.</li>" +
 			"</ul>" +
@@ -2402,9 +2442,9 @@ var settingsStrings = map[string]map[string]string{
 			"<p class=\"wh\" id=\"s-stats\">The “Statistics” tab</p>" +
 			"<p>How much you have dictated and how much time it saved. The program keeps only numbers per day: dictations, words, seconds of speech, languages, programs, models and subtitle time; the text of your dictations is not here. Statistics are always kept, even with the history switched off. Words dictated into programs on the “Never record from these programs” list of the “History” tab are counted, but they go to “Other” rather than under the program's name.</p>" +
 			"<table class=\"hopt\">" +
-			"<tr><td>Totals</td><td>The period is picked with the “7 days”, “30 days” and “All time” buttons, with its dates written beside them. Three numbers: how many dictations, how many words they held and how many minutes you spoke. “Saved” is how long typing these words would take minus how long you spoke, in whole minutes; the line beside it shows both parts.</td></tr>" +
+			"<tr><td>Totals</td><td>The period is picked with the “Week”, “Month”, “Quarter”, “6 months” and “Year” buttons — the last 7, 30, 90, 180 and 365 days up to today — and with “All time” and “Custom range”; its dates are written beside them. A custom range adds the “from” and “to” fields: a click opens a calendar, any day from the first day of the statistics up to today can be picked, and if the start comes after the end, the program swaps them. The choice is shared with the card on “Status” and remembered. Three numbers: how many dictations, how many words they held and how many minutes you spoke. “Saved” is how long typing these words would take minus how long you spoke, in whole minutes; the line beside it shows both parts.</td></tr>" +
 			"<tr><td>If you type</td><td>Your typing speed, from 10 to 150 words a minute, 40 by default. It changes nothing but “Saved” on this tab and on “Status”. When typing would take no longer than speaking, the saving is 0 and the line says so.</td></tr>" +
-			"<tr><td>By day</td><td>A bar of words for every day of the period, today highlighted; for all time, by month. Point at a bar to see its date and number.</td></tr>" +
+			"<tr><td>By day</td><td>Bars of words over the period: up to 31 days, by day; up to half a year, by week from Monday to Sunday; longer and for all time, by month. The block's title says which. The current day, week or month is highlighted. Point at a bar to see its dates and number.</td></tr>" +
 			"<tr><td>Languages</td><td>Which languages you dictated in: the share of words and how many. When the language is detected automatically, the program tells it from the words of the dictation itself, and when it cannot, it writes “Auto-detect”.</td></tr>" +
 			"<tr><td>Programs</td><td>Where the text went: the five programs with the largest share of words, under the names the programs give themselves, such as Google Chrome, and the rest as one “Other” line.</td></tr>" +
 			"<tr><td>Speed</td><td>How long it takes on average from releasing the keys to the text being inserted, for each recognition model separately, and how many dictations it recognized.</td></tr>" +

@@ -3,6 +3,7 @@ package stats
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
@@ -21,10 +22,26 @@ const (
 	MaxWPM     = 150
 	StepWPM    = 5
 
+	PeriodWeek    = "w"
+	PeriodMonth   = "m"
+	PeriodQuarter = "q"
+	PeriodHalf    = "h"
+	PeriodYear    = "y"
+	PeriodAll     = "all"
+	PeriodCustom  = "custom"
+	DefaultPeriod = PeriodMonth
+
+	UnitDay   = "day"
+	UnitWeek  = "week"
+	UnitMonth = "month"
+
 	dayLayout   = "2006-01-02"
-	monthLayout = "2006-01"
 	topApps     = 5
+	maxDayBars  = 31
+	maxWeekBars = 186
 )
+
+var periodDays = map[string]int{PeriodWeek: 7, PeriodMonth: 30, PeriodQuarter: 90, PeriodHalf: 180, PeriodYear: 365}
 
 func Program(app, skip string) string {
 	app = strings.TrimSpace(app)
@@ -227,8 +244,46 @@ func (s *Store) saveLocked() error {
 	return nil
 }
 
+type Choice struct {
+	Period string
+	From   string
+	To     string
+}
+
+func NormalizeChoice(period, from, to string) Choice {
+	period = strings.ToLower(strings.TrimSpace(period))
+	if _, ok := periodDays[period]; !ok && period != PeriodAll && period != PeriodCustom {
+		period = DefaultPeriod
+	}
+	a, errA := time.Parse(dayLayout, strings.TrimSpace(from))
+	b, errB := time.Parse(dayLayout, strings.TrimSpace(to))
+	if errA != nil || errB != nil {
+		if period == PeriodCustom {
+			period = DefaultPeriod
+		}
+		return Choice{Period: period}
+	}
+	if a.After(b) {
+		a, b = b, a
+	}
+	return Choice{Period: period, From: a.Format(dayLayout), To: b.Format(dayLayout)}
+}
+
+func UnitFor(period string, days int) string {
+	switch {
+	case period == PeriodAll:
+		return UnitMonth
+	case days <= maxDayBars:
+		return UnitDay
+	case days <= maxWeekBars:
+		return UnitWeek
+	}
+	return UnitMonth
+}
+
 type Bar struct {
-	Key        string `json:"key"`
+	From       string `json:"from"`
+	To         string `json:"to"`
 	Words      int    `json:"words"`
 	Dictations int    `json:"dictations"`
 }
@@ -258,6 +313,8 @@ type Pair struct {
 }
 
 type Period struct {
+	Key        string     `json:"key"`
+	Unit       string     `json:"unit"`
 	From       string     `json:"from"`
 	To         string     `json:"to"`
 	Dictations int        `json:"dictations"`
@@ -274,35 +331,36 @@ type Period struct {
 }
 
 type Card struct {
-	Any             bool  `json:"any"`
-	TodayWords      int   `json:"today_words"`
-	TodayDictations int   `json:"today_dictations"`
-	WeekWords       int   `json:"week_words"`
-	WeekDictations  int   `json:"week_dictations"`
-	WeekSpeechMs    int64 `json:"week_speech_ms"`
+	Any             bool   `json:"any"`
+	TodayWords      int    `json:"today_words"`
+	TodayDictations int    `json:"today_dictations"`
+	Today           string `json:"today"`
+	Period          string `json:"period"`
+	Unit            string `json:"unit"`
+	From            string `json:"from"`
+	To              string `json:"to"`
+	Words           int    `json:"words"`
+	Dictations      int    `json:"dictations"`
+	SpeechMs        int64  `json:"speech_ms"`
+	Bars            []Bar  `json:"bars"`
 }
 
 type Report struct {
-	Empty   bool              `json:"empty"`
-	Today   string            `json:"today"`
-	Periods map[string]Period `json:"periods"`
-	Card    Card              `json:"card"`
+	Empty  bool   `json:"empty"`
+	Today  string `json:"today"`
+	First  string `json:"first"`
+	Period Period `json:"period"`
 }
 
 func dayStart(t time.Time) time.Time {
 	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
 }
 
-func (s *Store) Report(now time.Time, modelName func(string) string) Report {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.loadLocked()
-	today := dayStart(now)
-	rep := Report{Today: today.Format(dayLayout), Periods: map[string]Period{}}
+func (s *Store) firstLocked(today time.Time) (time.Time, bool, bool) {
 	first := today
 	anyDict, anySubs := false, false
 	for key, d := range s.days {
-		t, err := time.ParseInLocation(dayLayout, key, now.Location())
+		t, err := time.ParseInLocation(dayLayout, key, today.Location())
 		if err != nil || t.After(today) {
 			continue
 		}
@@ -316,42 +374,90 @@ func (s *Store) Report(now time.Time, modelName func(string) string) Report {
 			first = t
 		}
 	}
-	rep.Empty = !anyDict && !anySubs
-	rep.Periods["7"] = s.periodLocked(today.AddDate(0, 0, -6), today, false, modelName)
-	rep.Periods["30"] = s.periodLocked(today.AddDate(0, 0, -29), today, false, modelName)
-	rep.Periods["all"] = s.periodLocked(first, today, true, modelName)
-	week := rep.Periods["7"]
-	if t := s.days[rep.Today]; t != nil {
-		rep.Card.TodayWords = t.Words
-		rep.Card.TodayDictations = t.Dictations
+	return first, anyDict, anySubs
+}
+
+func rangeOf(c Choice, today, first time.Time) (string, time.Time, time.Time) {
+	c = NormalizeChoice(c.Period, c.From, c.To)
+	switch c.Period {
+	case PeriodAll:
+		return c.Period, first, today
+	case PeriodCustom:
+		from, _ := time.ParseInLocation(dayLayout, c.From, today.Location())
+		to, _ := time.ParseInLocation(dayLayout, c.To, today.Location())
+		if to.After(today) {
+			to = today
+		}
+		if from.After(to) {
+			from = to
+		}
+		return c.Period, from, to
 	}
-	rep.Card.Any = anyDict
-	rep.Card.WeekWords = week.Words
-	rep.Card.WeekDictations = week.Dictations
-	rep.Card.WeekSpeechMs = week.SpeechMs
-	return rep
+	return c.Period, today.AddDate(0, 0, 1-periodDays[c.Period]), today
 }
 
-func (s *Store) Card(now time.Time) Card {
-	return s.Report(now, nil).Card
+func (s *Store) Report(now time.Time, c Choice, modelName func(string) string) Report {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.loadLocked()
+	today := dayStart(now)
+	first, anyDict, anySubs := s.firstLocked(today)
+	key, from, to := rangeOf(c, today, first)
+	return Report{
+		Empty:  !anyDict && !anySubs,
+		Today:  today.Format(dayLayout),
+		First:  first.Format(dayLayout),
+		Period: s.periodLocked(key, from, to, today, modelName),
+	}
 }
 
-func (s *Store) periodLocked(from, to time.Time, months bool, modelName func(string) string) Period {
-	p := Period{From: from.Format(dayLayout), To: to.Format(dayLayout)}
+func (s *Store) Card(now time.Time, c Choice) Card {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.loadLocked()
+	today := dayStart(now)
+	first, anyDict, _ := s.firstLocked(today)
+	key, from, to := rangeOf(c, today, first)
+	p := s.periodLocked(key, from, to, today, nil)
+	card := Card{Any: anyDict, Today: today.Format(dayLayout), Period: p.Key, Unit: p.Unit, From: p.From, To: p.To, Words: p.Words, Dictations: p.Dictations, SpeechMs: p.SpeechMs, Bars: p.Bars}
+	if t := s.days[today.Format(dayLayout)]; t != nil {
+		card.TodayWords = t.Words
+		card.TodayDictations = t.Dictations
+	}
+	return card
+}
+
+func bucketEnd(t, to time.Time, unit string) time.Time {
+	end := t
+	switch unit {
+	case UnitWeek:
+		end = t.AddDate(0, 0, (7-int(t.Weekday()))%7)
+	case UnitMonth:
+		end = time.Date(t.Year(), t.Month()+1, 0, 0, 0, 0, 0, t.Location())
+	}
+	if end.After(to) {
+		end = to
+	}
+	return end
+}
+
+func (s *Store) periodLocked(key string, from, to, today time.Time, modelName func(string) string) Period {
+	days := int(to.Sub(from).Hours()/24+0.5) + 1
+	p := Period{Key: key, Unit: UnitFor(key, days), From: from.Format(dayLayout), To: to.Format(dayLayout)}
+	if d := s.days[today.Format(dayLayout)]; d != nil {
+		p.TodayWords = d.Words
+	}
 	langs := map[string]int{}
 	apps := map[string]int{}
 	models := map[string]Model{}
 	pairs := map[string]int64{}
+	end := from.AddDate(0, 0, -1)
 	for t := from; !t.After(to); t = t.AddDate(0, 0, 1) {
-		key := t.Format(dayLayout)
-		barKey := key
-		if months {
-			barKey = t.Format(monthLayout)
+		if t.After(end) {
+			end = bucketEnd(t, to, p.Unit)
+			p.Bars = append(p.Bars, Bar{From: t.Format(dayLayout), To: end.Format(dayLayout)})
 		}
-		if n := len(p.Bars); n == 0 || p.Bars[n-1].Key != barKey {
-			p.Bars = append(p.Bars, Bar{Key: barKey})
-		}
-		d := s.days[key]
+		d := s.days[t.Format(dayLayout)]
 		if d == nil {
 			continue
 		}
@@ -361,9 +467,6 @@ func (s *Store) periodLocked(from, to time.Time, months bool, modelName func(str
 		p.Dictations += d.Dictations
 		p.Words += d.Words
 		p.SpeechMs += d.SpeechMs
-		if t.Equal(to) {
-			p.TodayWords = d.Words
-		}
 		for k, v := range d.Langs {
 			langs[k] += v
 		}
@@ -463,4 +566,21 @@ func topAppsOf(apps map[string]int) []App {
 		named = append(named, App{Words: other, Other: true})
 	}
 	return named
+}
+
+func CheckReport(path string, args []string, now time.Time, modelName func(string) string) ([]byte, error) {
+	if len(args) == 0 {
+		return nil, errors.New("needs a period: w, m, q, h, y, all, or custom with two dates YYYY-MM-DD")
+	}
+	c := Choice{Period: args[0]}
+	if len(args) >= 3 {
+		c.From, c.To = args[1], args[2]
+	}
+	var problems []string
+	s := Open(path, func(f string, a ...any) { problems = append(problems, fmt.Sprintf(f, a...)) })
+	rep := s.Report(now, c, modelName)
+	if len(problems) > 0 {
+		return nil, errors.New(strings.Join(problems, "; "))
+	}
+	return json.Marshal(rep)
 }

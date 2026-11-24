@@ -123,66 +123,233 @@ func TestAddKeepsNumbersByDayWithoutText(t *testing.T) {
 	if d.Models["gigaam-v3"] != (Model{1, 300}) || d.Models["nemotron-3.5"] != (Model{1, 500}) {
 		t.Fatalf("models %v", d.Models)
 	}
-	again := Open(path, t.Logf).Report(at("2026-11-22", 23), nil)
-	if again.Card.TodayWords != 6 || again.Card.TodayDictations != 2 {
-		t.Fatalf("the reopened store says %+v", again.Card)
+	again := Open(path, t.Logf).Card(at("2026-11-22", 23), Choice{})
+	if again.TodayWords != 6 || again.TodayDictations != 2 {
+		t.Fatalf("the reopened store says %+v", again)
 	}
+}
+
+func TestNormalizeChoice(t *testing.T) {
+	cases := []struct {
+		in   Choice
+		want Choice
+	}{
+		{Choice{}, Choice{Period: "m"}},
+		{Choice{Period: "fortnight"}, Choice{Period: "m"}},
+		{Choice{Period: " W "}, Choice{Period: "w"}},
+		{Choice{Period: "all"}, Choice{Period: "all"}},
+		{Choice{Period: "custom"}, Choice{Period: "m"}},
+		{Choice{Period: "custom", From: "2026-11-01", To: "tomorrow"}, Choice{Period: "m"}},
+		{Choice{Period: "custom", From: "2026-02-30", To: "2026-03-01"}, Choice{Period: "m"}},
+		{Choice{Period: "custom", From: "2026-11-10", To: "2026-11-01"}, Choice{Period: "custom", From: "2026-11-01", To: "2026-11-10"}},
+		{Choice{Period: "q", From: "2026-11-01", To: "2026-11-10"}, Choice{Period: "q", From: "2026-11-01", To: "2026-11-10"}},
+		{Choice{Period: "y", From: "x", To: "2026-11-10"}, Choice{Period: "y"}},
+	}
+	for _, c := range cases {
+		if got := NormalizeChoice(c.in.Period, c.in.From, c.in.To); got != c.want {
+			t.Errorf("NormalizeChoice(%+v) = %+v, want %+v", c.in, got, c.want)
+		}
+	}
+}
+
+func TestUnitFor(t *testing.T) {
+	cases := []struct {
+		period string
+		days   int
+		want   string
+	}{
+		{"w", 7, UnitDay}, {"m", 30, UnitDay}, {"custom", 31, UnitDay}, {"custom", 32, UnitWeek},
+		{"q", 90, UnitWeek}, {"h", 180, UnitWeek}, {"custom", 186, UnitWeek}, {"custom", 187, UnitMonth},
+		{"y", 365, UnitMonth}, {"all", 1, UnitMonth},
+	}
+	for _, c := range cases {
+		if got := UnitFor(c.period, c.days); got != c.want {
+			t.Errorf("UnitFor(%s, %d) = %s, want %s", c.period, c.days, got, c.want)
+		}
+	}
+}
+
+func addWords(t *testing.T, s *Store, day string, words int) {
+	t.Helper()
+	text := strings.TrimSpace(strings.Repeat("слово ", words))
+	if err := s.AddDictation(at(day, 12), dict(text, "ru", "Code.exe", "gigaam-v3", int64(words)*600, 400)); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func barSum(p Period) (int, int) {
+	w, d := 0, 0
+	for _, b := range p.Bars {
+		w += b.Words
+		d += b.Dictations
+	}
+	return w, d
+}
+
+func spans(p Period) string {
+	out := []string{}
+	for _, b := range p.Bars {
+		out = append(out, b.From+".."+b.To)
+	}
+	return strings.Join(out, " ")
 }
 
 func TestPeriods(t *testing.T) {
 	s, _ := tempStore(t)
-	add := func(day string, words int) {
-		text := strings.TrimSpace(strings.Repeat("слово ", words))
-		if err := s.AddDictation(at(day, 12), dict(text, "ru", "Code.exe", "gigaam-v3", int64(words)*600, 400)); err != nil {
-			t.Fatal(err)
+	addWords(t, s, "2025-09-30", 9)
+	addWords(t, s, "2026-06-09", 5)
+	addWords(t, s, "2026-09-30", 7)
+	addWords(t, s, "2026-10-23", 100)
+	addWords(t, s, "2026-10-24", 11)
+	addWords(t, s, "2026-11-15", 50)
+	addWords(t, s, "2026-11-16", 2)
+	addWords(t, s, "2026-11-22", 3)
+	addWords(t, s, "2026-11-22", 4)
+	addWords(t, s, "2026-11-23", 1000)
+	now := at("2026-11-22", 20)
+	want := []struct {
+		period, from, unit string
+		bars, words        int
+	}{
+		{"w", "2026-11-16", UnitDay, 7, 9},
+		{"m", "2026-10-24", UnitDay, 30, 9 + 50 + 11},
+		{"q", "2026-08-25", UnitWeek, 13, 9 + 50 + 11 + 100 + 7},
+		{"h", "2026-05-27", UnitWeek, 26, 9 + 50 + 11 + 100 + 7 + 5},
+		{"y", "2025-11-23", UnitMonth, 13, 9 + 50 + 11 + 100 + 7 + 5},
+		{"all", "2025-09-30", UnitMonth, 15, 9 + 50 + 11 + 100 + 7 + 5 + 9},
+	}
+	prev := 0
+	for _, w := range want {
+		r := s.Report(now, Choice{Period: w.period}, nil)
+		p := r.Period
+		if r.Empty || p.Key != w.period || p.From != w.from || p.To != "2026-11-22" || p.Unit != w.unit || len(p.Bars) != w.bars || p.Words != w.words {
+			t.Fatalf("%s: key %s, %s..%s, unit %s, %d bars, %d words", w.period, p.Key, p.From, p.To, p.Unit, len(p.Bars), p.Words)
+		}
+		if words, dicts := barSum(p); words != p.Words || dicts != p.Dictations {
+			t.Fatalf("%s: the bars hold %d words and %d dictations, the period %d and %d", w.period, words, dicts, p.Words, p.Dictations)
+		}
+		if p.TodayWords != 7 || p.SpeechMs != int64(p.Words)*600 {
+			t.Fatalf("%s: today %d, speech %d", w.period, p.TodayWords, p.SpeechMs)
+		}
+		if p.Words < prev {
+			t.Fatalf("%s holds fewer words than the shorter period before it", w.period)
+		}
+		prev = p.Words
+		if r.First != "2025-09-30" {
+			t.Fatalf("the history starts %s", r.First)
 		}
 	}
-	add("2026-06-09", 5)
-	add("2026-09-30", 7)
-	add("2026-10-24", 11)
-	add("2026-10-23", 100)
-	add("2026-11-16", 2)
-	add("2026-11-15", 50)
-	add("2026-11-22", 3)
-	add("2026-11-22", 4)
-	add("2026-11-23", 1000)
-	r := s.Report(at("2026-11-22", 20), nil)
-	if r.Empty || !r.Card.Any {
-		t.Fatal("a store with dictations reads as empty")
+	week := s.Report(now, Choice{Period: "w"}, nil).Period
+	if week.Bars[0] != (Bar{From: "2026-11-16", To: "2026-11-16", Words: 2, Dictations: 1}) || week.Bars[6].Words != 7 || week.Bars[3].Words != 0 {
+		t.Fatalf("day bars %+v", week.Bars)
 	}
-	p7, p30, all := r.Periods["7"], r.Periods["30"], r.Periods["all"]
-	if p7.From != "2026-11-16" || p7.To != "2026-11-22" || len(p7.Bars) != 7 {
-		t.Fatalf("7 days: %s…%s, %d bars", p7.From, p7.To, len(p7.Bars))
+	all := s.Report(now, Choice{Period: "all"}, nil).Period
+	if all.Bars[0] != (Bar{From: "2025-09-30", To: "2025-09-30", Words: 9, Dictations: 1}) || all.Bars[1].From != "2025-10-01" || all.Bars[1].To != "2025-10-31" || all.Bars[14].From != "2026-11-01" || all.Bars[14].To != "2026-11-22" {
+		t.Fatalf("month bars %s", spans(all))
 	}
-	if p7.Words != 9 || p7.Dictations != 3 || p7.SpeechMs != 9*600 || p7.TodayWords != 7 {
-		t.Fatalf("7 days sum to %d words, %d dictations, %d ms, today %d", p7.Words, p7.Dictations, p7.SpeechMs, p7.TodayWords)
+}
+
+func TestWeekBuckets(t *testing.T) {
+	s, _ := tempStore(t)
+	addWords(t, s, "2026-08-25", 3)
+	addWords(t, s, "2026-08-30", 4)
+	addWords(t, s, "2026-08-31", 5)
+	addWords(t, s, "2026-11-25", 6)
+	p := s.Report(at("2026-11-25", 9), Choice{Period: "q"}, nil).Period
+	if p.From != "2026-08-28" || p.Unit != UnitWeek {
+		t.Fatalf("a quarter ending on a Wednesday starts %s, unit %s", p.From, p.Unit)
 	}
-	if p7.Bars[0].Key != "2026-11-16" || p7.Bars[0].Words != 2 || p7.Bars[6].Words != 7 || p7.Bars[3].Words != 0 {
-		t.Fatalf("7 day bars %+v", p7.Bars)
+	first, last := p.Bars[0], p.Bars[len(p.Bars)-1]
+	if first.From != "2026-08-28" || first.To != "2026-08-30" || first.Words != 4 {
+		t.Fatalf("the partial first week is %+v", first)
 	}
-	if p30.From != "2026-10-24" || len(p30.Bars) != 30 || p30.Words != 9+50+11 {
-		t.Fatalf("30 days: from %s, %d bars, %d words", p30.From, len(p30.Bars), p30.Words)
+	if p.Bars[1].From != "2026-08-31" || p.Bars[1].To != "2026-09-06" || p.Bars[1].Words != 5 {
+		t.Fatalf("the first full week is %+v", p.Bars[1])
 	}
-	if all.From != "2026-06-09" || all.Words != 5+7+11+100+2+50+3+4 {
-		t.Fatalf("all time: from %s, %d words", all.From, all.Words)
+	if last.From != "2026-11-23" || last.To != "2026-11-25" || last.Words != 6 {
+		t.Fatalf("the partial last week is %+v", last)
 	}
-	keys := []string{}
-	sum := 0
-	for _, b := range all.Bars {
-		keys = append(keys, b.Key)
-		sum += b.Words
+	for i := 1; i < len(p.Bars)-1; i++ {
+		a, _ := time.Parse(dayLayout, p.Bars[i].From)
+		b, _ := time.Parse(dayLayout, p.Bars[i].To)
+		if a.Weekday() != time.Monday || b.Weekday() != time.Sunday || b.Sub(a) != 6*24*time.Hour {
+			t.Fatalf("week %d is %s..%s", i, p.Bars[i].From, p.Bars[i].To)
+		}
 	}
-	if strings.Join(keys, " ") != "2026-06 2026-07 2026-08 2026-09 2026-10 2026-11" {
-		t.Fatalf("months %v", keys)
+	if len(p.Bars) != 14 {
+		t.Fatalf("%d weeks: %s", len(p.Bars), spans(p))
 	}
-	if sum != all.Words || all.Bars[1].Words != 0 || all.Bars[4].Words != 111 {
-		t.Fatalf("month bars %+v", all.Bars)
+}
+
+func TestCustomRanges(t *testing.T) {
+	s, _ := tempStore(t)
+	addWords(t, s, "2025-06-15", 1)
+	addWords(t, s, "2025-12-31", 2)
+	addWords(t, s, "2026-01-01", 3)
+	addWords(t, s, "2026-11-05", 4)
+	addWords(t, s, "2026-11-20", 5)
+	now := at("2026-11-22", 9)
+	in := s.Report(now, Choice{Period: "custom", From: "2026-11-03", To: "2026-11-10"}, nil).Period
+	if in.Unit != UnitDay || len(in.Bars) != 8 || in.Words != 4 || in.Bars[2].Words != 4 || in.From != "2026-11-03" || in.To != "2026-11-10" {
+		t.Fatalf("a range inside one month: %s, %d bars, %d words", in.Unit, len(in.Bars), in.Words)
 	}
-	if r.Card.WeekWords != p7.Words || r.Card.WeekDictations != p7.Dictations || r.Card.WeekSpeechMs != p7.SpeechMs || r.Card.TodayWords != 7 || r.Card.TodayDictations != 2 {
-		t.Fatalf("the card %+v does not match the week", r.Card)
+	across := s.Report(now, Choice{Period: "custom", From: "2025-12-20", To: "2026-01-10"}, nil).Period
+	if across.Unit != UnitDay || len(across.Bars) != 22 || across.Words != 5 {
+		t.Fatalf("a range across the new year: %s, %d bars, %d words", across.Unit, len(across.Bars), across.Words)
 	}
-	if !(p7.Words <= p30.Words && p30.Words <= all.Words) {
-		t.Fatal("periods are not nested")
+	weeks := s.Report(now, Choice{Period: "custom", From: "2025-11-20", To: "2026-02-10"}, nil).Period
+	if weeks.Unit != UnitWeek || weeks.Bars[0].From != "2025-11-20" || weeks.Bars[0].To != "2025-11-23" || weeks.Words != 5 {
+		t.Fatalf("weeks across the year: %s, %s, %d words", weeks.Unit, spans(weeks), weeks.Words)
+	}
+	months := s.Report(now, Choice{Period: "custom", From: "2025-06-10", To: "2026-02-10"}, nil).Period
+	if months.Unit != UnitMonth || len(months.Bars) != 9 || months.Bars[0].From != "2025-06-10" || months.Bars[0].To != "2025-06-30" || months.Bars[8].From != "2026-02-01" || months.Bars[8].To != "2026-02-10" || months.Words != 6 {
+		t.Fatalf("months across the year: %s", spans(months))
+	}
+	future := s.Report(now, Choice{Period: "custom", From: "2026-11-20", To: "2026-12-31"}, nil).Period
+	if future.To != "2026-11-22" || len(future.Bars) != 3 || future.Words != 5 {
+		t.Fatalf("a range into the future: %s..%s, %d bars", future.From, future.To, len(future.Bars))
+	}
+	ahead := s.Report(now, Choice{Period: "custom", From: "2026-12-01", To: "2026-12-31"}, nil).Period
+	if ahead.From != "2026-11-22" || ahead.To != "2026-11-22" || len(ahead.Bars) != 1 {
+		t.Fatalf("a range wholly in the future: %s..%s", ahead.From, ahead.To)
+	}
+	broken := s.Report(now, Choice{Period: "custom", From: "soon"}, nil).Period
+	if broken.Key != "m" || broken.From != "2026-10-24" {
+		t.Fatalf("a broken range gives %s from %s", broken.Key, broken.From)
+	}
+}
+
+func TestShortHistory(t *testing.T) {
+	s, _ := tempStore(t)
+	addWords(t, s, "2026-11-20", 3)
+	addWords(t, s, "2026-11-21", 4)
+	now := at("2026-11-22", 9)
+	y := s.Report(now, Choice{Period: "y"}, nil).Period
+	if len(y.Bars) != 13 || y.Words != 7 || y.Bars[12].Words != 7 || y.Bars[0].Words != 0 {
+		t.Fatalf("a year over two days of history: %d bars, %d words", len(y.Bars), y.Words)
+	}
+	all := s.Report(now, Choice{Period: "all"}, nil).Period
+	if all.From != "2026-11-20" || len(all.Bars) != 1 || all.Words != 7 {
+		t.Fatalf("all time over two days: %s, %d bars", all.From, len(all.Bars))
+	}
+}
+
+func TestCardFollowsThePeriod(t *testing.T) {
+	s, _ := tempStore(t)
+	addWords(t, s, "2026-08-01", 40)
+	addWords(t, s, "2026-11-01", 30)
+	addWords(t, s, "2026-11-22", 3)
+	addWords(t, s, "2026-11-22", 4)
+	now := at("2026-11-22", 20)
+	for _, c := range []Choice{{Period: "w"}, {Period: "m"}, {Period: "q"}, {Period: "all"}, {Period: "custom", From: "2026-10-30", To: "2026-11-02"}} {
+		p := s.Report(now, c, nil).Period
+		card := s.Card(now, c)
+		if !card.Any || card.Today != "2026-11-22" || card.TodayWords != 7 || card.TodayDictations != 2 || card.Period != p.Key || card.Unit != p.Unit || card.From != p.From || card.To != p.To || card.Words != p.Words || card.Dictations != p.Dictations || card.SpeechMs != p.SpeechMs || len(card.Bars) != len(p.Bars) {
+			t.Fatalf("%+v: the card %+v does not match the period", c, card)
+		}
+	}
+	if c := s.Card(now, Choice{Period: "custom", From: "2026-10-30", To: "2026-11-02"}); c.Words != 30 || c.Period != "custom" {
+		t.Fatalf("the card over a range: %+v", c)
 	}
 }
 
@@ -205,7 +372,7 @@ func TestOtherPrograms(t *testing.T) {
 	if strings.Contains(strings.ToLower(string(raw)), "keepass") {
 		t.Fatal("an excluded program is written down by name")
 	}
-	apps := s.Report(day, nil).Periods["7"].Apps
+	apps := s.Report(day, Choice{Period: "w"}, nil).Period.Apps
 	if len(apps) != 6 {
 		t.Fatalf("want five programs and the others, got %+v", apps)
 	}
@@ -234,7 +401,7 @@ func TestModelsAndSubtitles(t *testing.T) {
 	if err := s.AddSubtitles(day.Add(time.Hour), 30000, map[string]int64{PairKey("en", "ru"): 5000, PairKey("de", "ru"): 20000}); err != nil {
 		t.Fatal(err)
 	}
-	p := s.Report(day, func(k string) string { return "name of " + k }).Periods["30"]
+	p := s.Report(day, Choice{Period: "m"}, func(k string) string { return "name of " + k }).Period
 	if len(p.Models) != 2 || p.Models[0].Key != "gigaam-v3" || p.Models[0].Dictations != 2 || p.Models[0].WaitMs != 600 || p.Models[0].Name != "name of gigaam-v3" {
 		t.Fatalf("models %+v", p.Models)
 	}
@@ -249,23 +416,32 @@ func TestModelsAndSubtitles(t *testing.T) {
 func TestSubtitlesAloneAreNotDictations(t *testing.T) {
 	s, _ := tempStore(t)
 	_ = s.AddSubtitles(at("2026-11-20", 9), 1000, nil)
-	r := s.Report(at("2026-11-22", 9), nil)
-	if r.Empty || r.Card.Any {
-		t.Fatalf("empty %v, card says dictated %v", r.Empty, r.Card.Any)
+	now := at("2026-11-22", 9)
+	r := s.Report(now, Choice{Period: "all"}, nil)
+	if r.Empty || s.Card(now, Choice{}).Any {
+		t.Fatalf("empty %v, the card says dictated", r.Empty)
 	}
-	if r.Periods["all"].From != "2026-11-20" {
-		t.Fatalf("all time starts %s", r.Periods["all"].From)
+	if r.Period.From != "2026-11-20" || r.First != "2026-11-20" {
+		t.Fatalf("all time starts %s, the history %s", r.Period.From, r.First)
 	}
 }
 
 func TestEmptyStore(t *testing.T) {
 	s, path := tempStore(t)
-	r := s.Report(at("2026-11-22", 9), nil)
-	if !r.Empty || r.Card.Any {
+	now := at("2026-11-22", 9)
+	r := s.Report(now, Choice{Period: "w"}, nil)
+	if !r.Empty || s.Card(now, Choice{}).Any || r.First != "2026-11-22" {
 		t.Fatal("a new store is not empty")
 	}
-	if len(r.Periods["7"].Bars) != 7 || len(r.Periods["all"].Bars) != 1 || r.Periods["all"].From != "2026-11-22" {
-		t.Fatalf("empty periods %+v", r.Periods)
+	if len(r.Period.Bars) != 7 || r.Period.Words != 0 {
+		t.Fatalf("an empty week %+v", r.Period)
+	}
+	all := s.Report(now, Choice{Period: "all"}, nil).Period
+	if len(all.Bars) != 1 || all.From != "2026-11-22" || all.Unit != UnitMonth {
+		t.Fatalf("empty all time %+v", all)
+	}
+	if card := s.Card(now, Choice{}); len(card.Bars) != 30 || card.Words != 0 || card.Period != "m" {
+		t.Fatalf("an empty card %+v", card)
 	}
 	if _, err := os.Stat(path); !os.IsNotExist(err) {
 		t.Fatal("reading wrote a file")
@@ -284,10 +460,10 @@ func TestReset(t *testing.T) {
 	if _, err := os.Stat(path); !os.IsNotExist(err) {
 		t.Fatal("the file is still there after a reset")
 	}
-	if r := s.Report(at("2026-11-22", 9), nil); !r.Empty {
+	if r := s.Report(at("2026-11-22", 9), Choice{}, nil); !r.Empty {
 		t.Fatal("the store still has numbers after a reset")
 	}
-	if r := Open(path, t.Logf).Report(at("2026-11-22", 9), nil); !r.Empty {
+	if r := Open(path, t.Logf).Report(at("2026-11-22", 9), Choice{}, nil); !r.Empty {
 		t.Fatal("a reopened store still has numbers after a reset")
 	}
 }
@@ -305,7 +481,7 @@ func TestDamagedFile(t *testing.T) {
 			}
 			var logged []string
 			s := Open(path, func(f string, a ...any) { logged = append(logged, fmt.Sprintf(f, a...)) })
-			if r := s.Report(at("2026-11-22", 9), nil); !r.Empty {
+			if r := s.Report(at("2026-11-22", 9), Choice{}, nil); !r.Empty {
 				t.Fatal("a damaged file gave numbers")
 			}
 			if len(logged) != 1 || !strings.Contains(logged[0], "damaged") {
@@ -326,8 +502,8 @@ func TestDamagedFile(t *testing.T) {
 func TestBadDayKeysAreSkipped(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "holdtotype-stats.json")
 	_ = os.WriteFile(path, []byte(`{"version":1,"days":{"yesterday":{"dictations":5,"words":9},"2026-11-21":{"dictations":1,"words":2},"2026-11-20":null}}`), 0o600)
-	r := Open(path, t.Logf).Report(at("2026-11-22", 9), nil)
-	if p := r.Periods["7"]; p.Dictations != 1 || p.Words != 2 {
+	r := Open(path, t.Logf).Report(at("2026-11-22", 9), Choice{Period: "w"}, nil)
+	if p := r.Period; p.Dictations != 1 || p.Words != 2 {
 		t.Fatalf("got %d dictations, %d words", p.Dictations, p.Words)
 	}
 }
@@ -349,15 +525,58 @@ func TestConcurrentAdds(t *testing.T) {
 			if err := s.AddSubtitles(day, 1000, map[string]int64{PairKey("en", "ru"): 500}); err != nil {
 				t.Error(err)
 			}
-			_ = s.Report(day, nil)
+			_ = s.Report(day, Choice{}, nil)
+			_ = s.Card(day, Choice{})
 		}()
 	}
 	wg.Wait()
-	p := Open(path, t.Logf).Report(day, nil).Periods["7"]
+	p := Open(path, t.Logf).Report(day, Choice{Period: "w"}, nil).Period
 	if p.Dictations != 40 || p.Words != 120 || p.SpeechMs != 4000 || p.SubsMs != 40000 || p.TrMs != 20000 {
 		t.Fatalf("after concurrent adds: %d dictations, %d words, %d ms speech, %d ms subtitles, %d ms translated", p.Dictations, p.Words, p.SpeechMs, p.SubsMs, p.TrMs)
 	}
 	if _, err := os.Stat(path + ".tmp"); !os.IsNotExist(err) {
 		t.Fatal("a temporary file is left behind")
+	}
+}
+
+func TestCheckReport(t *testing.T) {
+	s, path := tempStore(t)
+	addWords(t, s, "2026-11-20", 3)
+	addWords(t, s, "2026-11-22", 4)
+	now := at("2026-11-22", 9)
+	if _, err := CheckReport(path, nil, now, nil); err == nil {
+		t.Fatal("no period gave a report")
+	}
+	cases := []struct {
+		args       []string
+		key, from  string
+		bars, word int
+	}{
+		{[]string{"w"}, "w", "2026-11-16", 7, 7},
+		{[]string{"all"}, "all", "2026-11-20", 1, 7},
+		{[]string{"custom", "2026-11-21", "2026-11-20"}, "custom", "2026-11-20", 2, 3},
+		{[]string{"custom"}, "m", "2026-10-24", 30, 7},
+		{[]string{"decade"}, "m", "2026-10-24", 30, 7},
+	}
+	for _, c := range cases {
+		out, err := CheckReport(path, c.args, now, nil)
+		if err != nil {
+			t.Fatalf("%v: %v", c.args, err)
+		}
+		var r Report
+		if err := json.Unmarshal(out, &r); err != nil {
+			t.Fatalf("%v: %v in %s", c.args, err, out)
+		}
+		if r.Period.Key != c.key || r.Period.From != c.from || len(r.Period.Bars) != c.bars || r.Period.Words != c.word || r.Empty {
+			t.Fatalf("%v: %s", c.args, out)
+		}
+	}
+	bad := filepath.Join(t.TempDir(), "holdtotype-stats.json")
+	_ = os.WriteFile(bad, []byte("{broken"), 0o600)
+	if _, err := CheckReport(bad, []string{"w"}, now, nil); err == nil || !strings.Contains(err.Error(), "damaged") {
+		t.Fatalf("a damaged file gave %v", err)
+	}
+	if out, err := CheckReport(filepath.Join(t.TempDir(), "none.json"), []string{"w"}, now, nil); err != nil || !strings.Contains(string(out), `"empty":true`) {
+		t.Fatalf("a missing file gave %s, %v", out, err)
 	}
 }

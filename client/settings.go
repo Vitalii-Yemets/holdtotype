@@ -182,6 +182,9 @@ type settingsForm struct {
 	SubtitlesLayout   *string                  `json:"subtitles_layout"`
 	ModelsIdleMin     *int                     `json:"models_idle_minutes"`
 	StatsTypingWPM    *int                     `json:"stats_typing_wpm"`
+	StatsPeriod       *string                  `json:"stats_period"`
+	StatsFrom         *string                  `json:"stats_from"`
+	StatsTo           *string                  `json:"stats_to"`
 
 	SubtitlesTranslateOn     *bool   `json:"subtitles_translate_on"`
 	SubtitlesTranslate       *string `json:"subtitles_translate"`
@@ -667,8 +670,8 @@ func (a *App) settingsThread(tab string, attempt int) {
 				log.Printf("history: clearing: %v", err)
 			}
 		})
-		_ = w.Bind("appStats", func() string {
-			out, _ := json.Marshal(statsStore.Report(time.Now(), statsModelName))
+		_ = w.Bind("appStats", func(period, from, to string) string {
+			out, _ := json.Marshal(statsStore.Report(time.Now(), stats.NormalizeChoice(period, from, to), statsModelName))
 			return string(out)
 		})
 		_ = w.Bind("appStatsReset", func() {
@@ -1045,6 +1048,10 @@ func (a *App) applySettings(f *settingsForm) saveResult {
 	if f.StatsTypingWPM != nil {
 		c.StatsTypingWPM = stats.TypingWPM(*f.StatsTypingWPM)
 	}
+	if f.StatsPeriod != nil {
+		ch := stats.NormalizeChoice(*f.StatsPeriod, strOr(f.StatsFrom, c.StatsFrom), strOr(f.StatsTo, c.StatsTo))
+		c.StatsPeriod, c.StatsFrom, c.StatsTo = ch.Period, ch.From, ch.To
+	}
 	if f.SubtitlesTranslateOn != nil {
 		c.SubtitlesTranslateOn = *f.SubtitlesTranslateOn
 	}
@@ -1230,6 +1237,9 @@ func settingsHTML(cfg *Config, tab string) string {
 		"subtitles_layout":           subwin.Layout(cfg.SubtitlesLayout),
 		"models_idle_minutes":        idleunload.Minutes(cfg.ModelsIdleMin),
 		"stats_typing_wpm":           stats.TypingWPM(cfg.StatsTypingWPM),
+		"stats_period":               cfg.StatsPeriod,
+		"stats_from":                 cfg.StatsFrom,
+		"stats_to":                   cfg.StatsTo,
 	}
 	cfgJSON, _ := json.Marshal(cfgMap)
 
@@ -1384,6 +1394,9 @@ func settingsHTML(cfg *Config, tab string) string {
 		"statsdayhint": "S_STATS_BYDAY_HINT", "statsmonthhint": "S_STATS_BYMONTH_HINT", "statsother": "S_STATS_OTHER",
 		"statstrshare": "S_STATS_TR_SHARE", "statsreset": "S_STATS_RESET", "statsresetask": "S_STATS_RESET_ASK", "mtstats": "S_MT_STATS",
 		"statswords": "S_STATS_WORDS", "statsdicts": "S_STATS_DICTS", "statssec": "S_STATS_SEC", "statsh": "S_STATS_H", "statsm": "S_STATS_M", "statshm": "S_STATS_HM",
+		"statsinw": "S_STATS_IN_W", "statsinm": "S_STATS_IN_M", "statsinq": "S_STATS_IN_Q", "statsinh": "S_STATS_IN_H", "statsiny": "S_STATS_IN_Y", "statsinall": "S_STATS_IN_ALL",
+		"statspcustom": "S_STATS_PCUSTOM", "statsbyday": "S_STATS_BYDAY", "statsbyweek": "S_STATS_BYWEEK", "statsbymonth": "S_STATS_BYMONTH", "statsweekhint": "S_STATS_BYWEEK_HINT",
+		"statsfroma": "S_STATS_FROM_A", "statstoa": "S_STATS_TO_A", "statscal": "S_STATS_CAL", "statscalprev": "S_STATS_CAL_PREV", "statscalnext": "S_STATS_CAL_NEXT", "statscaltoday": "S_STATS_CAL_TODAY", "statsweektip": "S_STATS_WEEK_TIP",
 	} {
 		lMap[jsKey] = str(sKey)
 	}
@@ -1631,6 +1644,36 @@ button.btn.ghost:hover{color:var(--green);border-color:var(--dim);background:non
 .statper{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;margin:0 0 12px}
 .statchips{display:flex;gap:6px;flex-wrap:wrap}
 .cmdchip.appchip.statchip{padding-left:9px;font:inherit;font-size:12px}
+.sthchips{flex:none;flex-wrap:nowrap;gap:5px}
+.sthchips .cmdchip.appchip.statchip{font-size:11.5px;padding:2px 6px;line-height:1.35}
+.ststats .sthead.wrap{flex-wrap:wrap;row-gap:8px}
+.ststats .sthead.wrap .sthchips{order:3;flex:1 1 100%;flex-wrap:wrap}
+.ststats .sthead.wrap .stgo{order:2}
+.row.statdaterow{flex:1 1 100%;gap:8px 10px;padding:6px 8px;margin:0;border-radius:var(--r)}
+.row.statdaterow>label{flex:none;min-width:0;margin:0;color:var(--dim);font-size:12px;white-space:nowrap}
+button.statdate{display:inline-flex;align-items:center;gap:10px;height:var(--ctlh,30px);padding:var(--fieldpad);border:1px solid var(--line);border-radius:var(--fieldr);background:var(--field);color:var(--green);font:inherit;font-size:var(--ctlfs);line-height:1.2;cursor:pointer;font-variant-numeric:tabular-nums;white-space:nowrap}
+button.statdate svg{flex:none;color:var(--dim)}
+button.statdate:hover,button.statdate[aria-expanded="true"]{border-color:var(--dim)}
+button.statdate:focus{outline:none}
+button.statdate:focus-visible{border-color:var(--focus);box-shadow:var(--glow)}
+.statcal{position:fixed;z-index:9000;box-sizing:border-box;width:max-content;padding:8px;background:var(--bg);border:1px solid var(--line);border-radius:var(--fieldr);box-shadow:var(--shadow);color:var(--green);font-family:var(--font);font-size:12px;line-height:1.2}
+.statcalhead{display:flex;align-items:center;gap:4px;margin:0 0 6px}
+.statcaltitle{flex:1;text-align:center;font-size:12.5px;font-weight:var(--wb);white-space:nowrap}
+.statcal button.iconbtn{display:inline-flex;align-items:center;justify-content:center;min-width:26px;min-height:26px;padding:0;border-radius:calc(var(--r) * .4)}
+.statcal button.iconbtn:disabled{opacity:.3;cursor:default;filter:none}
+.statcal button.iconbtn:focus-visible{outline:1px solid var(--green);outline-offset:1px}
+.statcalgrid{display:grid;grid-template-columns:repeat(7,34px);row-gap:2px}
+.statcalwd span{text-align:center;color:var(--dim);font-size:10.5px;line-height:20px;white-space:nowrap;overflow:hidden}
+.statday{height:28px;margin:0;padding:0;border:0;border-radius:calc(var(--r) * .4);background:none;color:var(--green);font:inherit;font-size:12px;font-variant-numeric:tabular-nums;cursor:pointer}
+.statday.inrange{background:color-mix(in srgb,var(--on) 45%,transparent);border-radius:0}
+.statday:hover{background:color-mix(in srgb,var(--on) 75%,transparent)}
+.statday.out{color:var(--dim)}
+.statday.sel{background:var(--on);color:var(--green);font-weight:var(--wb);text-shadow:var(--glow);border-radius:calc(var(--r) * .4)}
+.statday.today{box-shadow:inset 0 0 0 1px var(--hi)}
+.statday.off,.statday.off:hover{color:var(--faint);background:none;cursor:default;text-shadow:none}
+.statday:focus{outline:none}
+.statday:focus-visible{outline:1px solid var(--green);outline-offset:-1px}
+.statcalfoot{display:flex;justify-content:flex-end;margin-top:8px}
 .statrange{color:var(--faint);font-size:11px;white-space:nowrap}
 .stgrid.statthree{grid-template-columns:repeat(3,minmax(0,1fr))}
 .stgrid.stattwo{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:8px}
@@ -1642,18 +1685,19 @@ button.btn.ghost:hover{color:var(--green);border-color:var(--dim);background:non
 .row.statwpm>.val{flex:none;white-space:nowrap}
 .row.statwpm>input[type=range]{flex:none}
 .statchart{margin-top:10px;--axis:44px}
+.statchart.statmini{grid-column:1/-1;margin-top:2px;--axis:0px}
+.statmini .statplot{height:44px}
 .statplot{position:relative;height:112px;border-bottom:1px solid var(--line);margin-left:var(--axis)}
 .statguide{position:absolute;left:0;right:0;border-top:1px dashed var(--line);z-index:0}
 .statguide span{position:absolute;right:100%;margin-right:6px;top:-7px;font-size:10px;line-height:14px;color:var(--faint);white-space:nowrap;font-variant-numeric:tabular-nums}
-.statcols{position:absolute;inset:0;display:flex;align-items:flex-end;gap:var(--g,3px);z-index:1}
-.statcol{flex:1;min-width:0;height:100%;display:flex;align-items:flex-end}
-.statcol i{display:block;width:100%;min-height:1px;background:color-mix(in srgb,var(--hi) 38%,var(--soft));border-radius:var(--barr,0) var(--barr,0) 0 0}
+.statcols{position:absolute;inset:0;display:flex;align-items:flex-end;z-index:1}
+.statcol{flex:1;min-width:0;height:100%;display:flex;align-items:flex-end;justify-content:center}
+.statcol i{display:block;flex:none;width:var(--bw,100%);min-height:1px;background:color-mix(in srgb,var(--hi) 38%,var(--soft));border-radius:var(--barr,0) var(--barr,0) 0 0}
 .statcol.cur i{background:var(--hi);box-shadow:var(--higlow)}
 .statcol:hover i{background:color-mix(in srgb,var(--hi) 62%,var(--soft))}
 .statcol.cur:hover i{background:var(--hi)}
 .statdates{position:relative;height:16px;margin:5px 0 0 var(--axis)}
-.statdates span{position:absolute;top:0;transform:translateX(-50%);font-size:10.5px;line-height:16px;color:var(--faint);white-space:nowrap}
-.statdates span.end{transform:none}
+.statdates span{position:absolute;top:0;font-size:10.5px;line-height:16px;color:var(--faint);white-space:nowrap}
 .statdates span.cur{color:var(--hi)}
 .statrows{display:grid;grid-template-columns:max-content minmax(40px,1fr) max-content max-content;align-items:center;gap:7px 12px;margin-top:8px}
 .statrows.pairs{grid-template-columns:max-content minmax(40px,1fr) max-content}
@@ -2484,12 +2528,13 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
   </div>
  </div>
  <div class="stplate ststats" id="state_stats">
-  <div class="sthead"><span class="stcap">{{S_NAV_STATS}}</span><button type="button" class="iconbtn stgo" data-goto="stats" title="{{S_ST_GOTO}}">&#8599;</button></div>
+  <div class="sthead"><span class="stcap">{{S_NAV_STATS}}</span><div class="statchips sthchips" id="state_stats_chips" role="radiogroup" aria-label="{{S_STATS_PERIOD}}" style="display:none"><button type="button" class="cmdchip appchip statchip" role="radio" aria-checked="false" data-v="w">{{S_STATS_PW}}</button><button type="button" class="cmdchip appchip statchip on" role="radio" aria-checked="true" data-v="m">{{S_STATS_PM}}</button><button type="button" class="cmdchip appchip statchip" role="radio" aria-checked="false" data-v="q">{{S_STATS_PQ}}</button><button type="button" class="cmdchip appchip statchip" role="radio" aria-checked="false" data-v="h">{{S_STATS_PH}}</button><button type="button" class="cmdchip appchip statchip" role="radio" aria-checked="false" data-v="y">{{S_STATS_PY}}</button><button type="button" class="cmdchip appchip statchip" role="radio" aria-checked="false" data-v="all">{{S_STATS_PALL}}</button><button type="button" class="cmdchip appchip statchip" role="radio" aria-checked="false" data-v="custom">{{S_STATS_PCUSTOM}}</button></div><button type="button" class="iconbtn stgo" data-goto="stats" title="{{S_ST_GOTO}}">&#8599;</button></div>
   <div class="sthsub" id="state_stats_empty">{{S_STATS_CARD_EMPTY}}</div>
   <div class="statfigs" id="state_stats_figs" style="display:none">
    <div class="statfig"><span class="statk">{{S_STATS_TODAY}}</span><b class="statnum" id="state_stats_today"></b><span class="stunder statu" id="state_stats_today_u"></span></div>
-   <div class="statfig"><span class="statk">{{S_STATS_WEEK}}</span><b class="statnum" id="state_stats_week"></b><span class="stunder statu" id="state_stats_week_u"></span></div>
-   <div class="statfig"><span class="statk">{{S_STATS_SAVED_WEEK}}</span><b class="statnum" id="state_stats_saved"></b><span class="stunder statu" id="state_stats_saved_u"></span></div>
+   <div class="statfig"><span class="statk" id="state_stats_per"></span><b class="statnum" id="state_stats_words"></b><span class="stunder statu" id="state_stats_words_u"></span></div>
+   <div class="statfig"><span class="statk">{{S_STATS_F_SAVED}}</span><b class="statnum" id="state_stats_saved"></b><span class="stunder statu" id="state_stats_saved_u"></span></div>
+   <div class="statchart statmini" id="state_stats_chart"></div>
   </div>
  </div>
 
@@ -2959,11 +3004,10 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
   </div>
   <div class="statper" id="stats_per">
    <div class="statchips" id="stats_chips" role="radiogroup" aria-label="{{S_STATS_PERIOD}}">
-    <button type="button" class="cmdchip appchip statchip" role="radio" aria-checked="false" data-v="7">{{S_STATS_P7}}</button>
-    <button type="button" class="cmdchip appchip statchip on" role="radio" aria-checked="true" data-v="30">{{S_STATS_P30}}</button>
-    <button type="button" class="cmdchip appchip statchip" role="radio" aria-checked="false" data-v="all">{{S_STATS_PALL}}</button>
+    <button type="button" class="cmdchip appchip statchip" role="radio" aria-checked="false" data-v="w">{{S_STATS_PW}}</button><button type="button" class="cmdchip appchip statchip on" role="radio" aria-checked="true" data-v="m">{{S_STATS_PM}}</button><button type="button" class="cmdchip appchip statchip" role="radio" aria-checked="false" data-v="q">{{S_STATS_PQ}}</button><button type="button" class="cmdchip appchip statchip" role="radio" aria-checked="false" data-v="h">{{S_STATS_PH}}</button><button type="button" class="cmdchip appchip statchip" role="radio" aria-checked="false" data-v="y">{{S_STATS_PY}}</button><button type="button" class="cmdchip appchip statchip" role="radio" aria-checked="false" data-v="all">{{S_STATS_PALL}}</button><button type="button" class="cmdchip appchip statchip" role="radio" aria-checked="false" data-v="custom">{{S_STATS_PCUSTOM}}</button>
    </div>
    <span class="statrange" id="stats_range"></span>
+   <div class="row noline statdaterow" id="stats_daterow" style="display:none"><label for="stats_from">{{S_STATS_FROM}}</label><button type="button" class="statdate" id="stats_from" aria-haspopup="dialog" aria-expanded="false"><span></span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="1.5"/><path d="M3.5 10h17"/><path d="M8 3v4"/><path d="M16 3v4"/></svg></button><label for="stats_to">{{S_STATS_TO}}</label><button type="button" class="statdate" id="stats_to" aria-haspopup="dialog" aria-expanded="false"><span></span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="1.5"/><path d="M3.5 10h17"/><path d="M8 3v4"/><path d="M16 3v4"/></svg></button></div>
   </div>
   <div class="stgrid statthree">
    <div class="stcard statfcard"><div class="sthead"><span class="stcap">{{S_STATS_F_COUNT}}</span></div><b class="statnum" id="stats_count">0</b><div class="stunder statu" id="stats_count_u"></div></div>
@@ -2976,7 +3020,7 @@ button.iconbtn.danger:hover{color:var(--bad);filter:var(--badfilter)}
    <div class="row noline statwpm"><label for="stats_typing_wpm">{{S_STATS_WPM_LBL}}<span class="sub">{{S_STATS_WPM_SUB}}</span></label><span class="val" id="stats_wpm_v"></span><input type="range" id="stats_typing_wpm" min="10" max="150" step="5" value="40"></div>
   </div>
  </div>
- <div class="card" id="stats_days"><label class="blklbl">{{S_STATS_BYDAY}}</label><div class="hint" id="stats_days_hint">{{S_STATS_BYDAY_HINT}}</div><div class="statchart" id="stats_chart"></div></div>
+ <div class="card" id="stats_days"><label class="blklbl" id="stats_days_lbl">{{S_STATS_BYDAY}}</label><div class="hint" id="stats_days_hint">{{S_STATS_BYDAY_HINT}}</div><div class="statchart" id="stats_chart"></div></div>
  <div class="card" id="stats_langs"><label class="blklbl">{{S_STATS_LANGS}}</label><div class="hint">{{S_STATS_LANGS_HINT}}</div><div class="statrows" id="stats_langs_rows"></div></div>
  <div class="card" id="stats_apps"><label class="blklbl">{{S_STATS_APPS}}</label><div class="hint">{{S_STATS_APPS_HINT}}</div><div class="statrows" id="stats_apps_rows"></div></div>
  <div class="card" id="stats_speed"><label class="blklbl">{{S_STATS_SPEED}}</label><div class="hint">{{S_STATS_SPEED_HINT}}</div><div class="statrows speed" id="stats_speed_rows"></div></div>
@@ -3162,6 +3206,8 @@ const I_DL = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke
 const I_EJECT = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 4l7 9H5z"/><path d="M5 19h14"/></svg>';
 const I_COPY = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12"/><path d="M5 15V4a1 1 0 0 1 1-1h9"/></svg>';
 const I_PASTE = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 11l5 5 5-5"/><path d="M4 21h16"/></svg>';
+const I_CAL_PREV = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';
+const I_CAL_NEXT = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>';
 const I_REFRESH = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M20 11a8 8 0 1 0-.6 4"/><path d="M20 4v7h-7"/></svg>';
 const I_FIND = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="15.5" y1="15.5" x2="21" y2="21"/></svg>';
 
@@ -5324,10 +5370,11 @@ function renderStateModels(s){
   box.appendChild(post);
 }
 let statsData = null;
-let statsPeriod = "30";
 let statsCardNow = null;
 let statsWpm = 40;
-const STATS_NB = " ";
+let statsSel = {period: "m", from: "", to: ""};
+const STATS_NB = " ";
+const STATS_KEYS = ["w", "m", "q", "h", "y", "all", "custom"];
 function statsUI(){ return CFG._ui_lang || "en"; }
 function statsClampWpm(v){
   v = parseInt(v, 10);
@@ -5381,18 +5428,54 @@ function statsDay(key){
   const p = String(key || "").split("-").map(Number);
   return new Date(p[0] || 1970, (p[1] || 1) - 1, p[2] || 1);
 }
+function statsKey(d){
+  const pad = n=>String(n).padStart(2, "0");
+  return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+}
+function statsAddDays(d, n){ return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n); }
+function statsToday(){
+  const k = (statsData && statsData.today) || (statsCardNow && statsCardNow.today);
+  if(k) return statsDay(k);
+  const n = new Date();
+  return new Date(n.getFullYear(), n.getMonth(), n.getDate());
+}
 function statsDate(d, opts){
   try{ return new Intl.DateTimeFormat(statsUI(), opts).format(d); }catch(e){ return d.toDateString(); }
 }
-function statsCap(s){ return s ? s.charAt(0).toLocaleUpperCase(statsUI()) + s.slice(1) : s; }
-function statsRange(p, key){
-  const a = statsDay(p.from), b = statsDay(p.to);
-  const opts = key === "all" ? {day: "numeric", month: "long", year: "numeric"} : {day: "numeric", month: "long"};
+function statsDates(a, b, opts){
   try{
     const f = new Intl.DateTimeFormat(statsUI(), opts);
-    if(p.from === p.to) return f.format(b);
+    if(statsKey(a) === statsKey(b)) return f.format(a);
     return f.formatRange ? f.formatRange(a, b) : f.format(a) + " – " + f.format(b);
-  }catch(e){ return p.from + " – " + p.to; }
+  }catch(e){ return statsKey(a) + " – " + statsKey(b); }
+}
+function statsCap(s){ return s ? s.charAt(0).toLocaleUpperCase(statsUI()) + s.slice(1) : s; }
+function statsRange(p){
+  const a = statsDay(p.from), b = statsDay(p.to);
+  const years = a.getFullYear() !== b.getFullYear() || p.key === "y" || p.key === "all";
+  return statsDates(a, b, years ? {day: "numeric", month: "long", year: "numeric"} : {day: "numeric", month: "long"});
+}
+function statsShort(from, to){
+  const a = statsDay(from), b = statsDay(to);
+  const o = a.getFullYear() !== b.getFullYear() ? {day: "numeric", month: "short", year: "2-digit"} : {day: "numeric", month: "short"};
+  return statsDates(a, b, o).replace(/\.(?=\s|$| | )/g, "");
+}
+function statsNormal(sel){
+  let period = String(sel.period || "").trim().toLowerCase();
+  if(STATS_KEYS.indexOf(period) < 0) period = "m";
+  const ok = s=>/^\d{4}-\d{2}-\d{2}$/.test(s || "") && statsKey(statsDay(s)) === s;
+  let from = sel.from || "", to = sel.to || "";
+  if(!ok(from) || !ok(to)){
+    from = ""; to = "";
+    if(period === "custom") period = "m";
+  }else if(from > to){
+    const t = from; from = to; to = t;
+  }
+  return {period: period, from: from, to: to};
+}
+function statsInText(period, from, to){
+  if(period === "custom" && from && to) return statsShort(from, to);
+  return L["statsin" + period] || L.statsinm;
 }
 function statsEl(tag, cls, text){
   const e = document.createElement(tag);
@@ -5419,19 +5502,53 @@ function paintCombo(box, combo){
     box.appendChild(statsEl("span", "herokey", part.trim()));
   });
 }
+function statsPaintChips(){
+  document.querySelectorAll("#stats_chips .statchip, #state_stats_chips .statchip").forEach(b=>{
+    const on = b.dataset.v === statsSel.period;
+    b.classList.toggle("on", on);
+    b.setAttribute("aria-checked", on ? "true" : "false");
+    if(b.dataset.v === "custom") b.textContent = b.closest("#state_stats_chips") && statsSel.period === "custom" && statsSel.from ? statsShort(statsSel.from, statsSel.to) : L.statspcustom;
+  });
+}
+function statsFitHead(){
+  const head = document.querySelector("#state_stats .sthead");
+  const chips = document.getElementById("state_stats_chips");
+  if(!head || !chips || !chips.getClientRects().length) return;
+  head.classList.remove("wrap");
+  const cap = head.querySelector(".stcap"), go = head.querySelector(".stgo");
+  const rg = document.createRange();
+  rg.selectNodeContents(cap);
+  const gap = parseFloat(getComputedStyle(head).columnGap) || 8;
+  const chipGap = parseFloat(getComputedStyle(chips).columnGap) || 0;
+  const need = [...chips.children].reduce((n, c)=>n + c.getBoundingClientRect().width, 0) + chipGap * (chips.children.length - 1);
+  const free = head.clientWidth - rg.getBoundingClientRect().width - (go ? go.getBoundingClientRect().width : 0) - gap * 2 - 4;
+  head.classList.toggle("wrap", need > free);
+}
 function renderStatsCard(s){
   if(s) statsCardNow = s.stats || {};
   const c = statsCardNow || {};
   const any = !!c.any;
   statsShow("state_stats_empty", !any);
   statsShow("state_stats_figs", any);
+  statsShow("state_stats_chips", any);
   if(!any) return;
+  statsPaintChips();
   statsSet("state_stats_today", pluralOf(L.statswords, c.today_words || 0));
   statsSet("state_stats_today_u", pluralOf(L.statsdicts, c.today_dictations || 0));
-  statsSet("state_stats_week", pluralOf(L.statswords, c.week_words || 0));
-  statsSet("state_stats_week_u", pluralOf(L.statsdicts, c.week_dictations || 0));
-  statsSet("state_stats_saved", "≈" + STATS_NB + statsHM(statsSaved(c.week_words, c.week_speech_ms, statsWpm).saved));
+  statsSet("state_stats_per", statsInText(c.period, c.from, c.to));
+  statsSet("state_stats_words", pluralOf(L.statswords, c.words || 0));
+  statsSet("state_stats_words_u", pluralOf(L.statsdicts, c.dictations || 0));
+  statsSet("state_stats_saved", "≈" + STATS_NB + statsHM(statsSaved(c.words, c.speech_ms, statsWpm).saved));
   statsSet("state_stats_saved_u", pluralOf(L.statsatwpm, statsWpm));
+  const box = document.getElementById("state_stats_chart");
+  if(box){
+    const sig = JSON.stringify([c.unit, c.from, c.to, c.bars]);
+    if(box.dataset.sig !== sig){
+      box.dataset.sig = sig;
+      statsChart(box, c, {mini: true});
+    }else statsSize(box);
+  }
+  statsFitHead();
 }
 function statsGuide(max){
   const step = Math.pow(10, Math.floor(Math.log10(max)));
@@ -5442,25 +5559,26 @@ function statsGuide(max){
   });
   return best || Math.floor(max / step) * step;
 }
-function statsChart(box, p, key){
+function statsBarTip(unit, a, b, words){
+  if(unit === "week") return fmtText(L.statsweektip, statsDates(a, b, {day: "numeric", month: "long"}), words);
+  if(unit === "month") return statsCap(statsDate(a, {month: "long", year: "numeric"})) + ": " + words;
+  return statsDate(a, {day: "numeric", month: "long"}) + ": " + words;
+}
+function statsChart(box, p, opts){
+  opts = opts || {};
   box.innerHTML = "";
-  const months = key === "all";
-  const today = statsDay(p.to);
-  const bars = (p.bars || []).map((b, i, all)=>{
-    const cur = i === all.length - 1;
-    const date = statsDay(b.key);
-    const words = pluralOf(L.statswords, b.words || 0);
-    return { v: b.words || 0, cur: cur, date: date,
-      tip: months ? statsCap(statsDate(date, {month: "long", year: date.getFullYear() === today.getFullYear() ? undefined : "numeric"})) + ": " + words : statsDate(date, {day: "numeric", month: "long"}) + ": " + words };
+  const unit = p.unit || "day";
+  const today = statsKey(statsToday());
+  const bars = (p.bars || []).map(b=>{
+    const a = statsDay(b.from), z = statsDay(b.to);
+    return { v: b.words || 0, a: a, cur: b.from <= today && today <= b.to, tip: statsBarTip(unit, a, z, pluralOf(L.statswords, b.words || 0)) };
   });
   const n = bars.length;
   if(!n) return;
   const max = Math.max.apply(null, bars.map(b=>b.v));
   const top = max * 1.08 || 1;
-  box.classList.toggle("months", months);
-  box.classList.toggle("week", key === "7");
   const plot = statsEl("div", "statplot");
-  if(max > 0){
+  if(max > 0 && !opts.mini){
     const guide = statsGuide(max);
     const gl = statsEl("div", "statguide");
     gl.style.bottom = (guide / top * 100) + "%";
@@ -5476,36 +5594,58 @@ function statsChart(box, p, key){
     c.dataset.tip = b.tip;
     cols.appendChild(c);
   });
+  cols.setAttribute("role", "img");
+  cols.setAttribute("aria-label", bars.map(b=>b.tip).join("; "));
   plot.appendChild(cols);
   box.appendChild(plot);
-  const gap = key === "30" ? 3 : 14;
-  box.style.setProperty("--g", gap + "px");
-  let pick;
-  if(key === "30") pick = [0, 7, 14, 21, n - 1].filter(i=>i < n);
-  else if(n <= 7) pick = bars.map((b, i)=>i);
-  else {
-    const every = Math.ceil(n / 6);
-    pick = bars.map((b, i)=>i).filter(i=>(n - 1 - i) % every === 0);
+  if(!opts.mini){
+    const years = new Set(bars.map(b=>b.a.getFullYear())).size > 1;
+    const dates = statsEl("div", "statdates");
+    dates.setAttribute("aria-hidden", "true");
+    bars.forEach(b=>{
+      let text;
+      if(unit === "month") text = statsDate(b.a, years ? {month: "short", year: "2-digit"} : {month: "short"});
+      else if(unit === "day" && b.cur) text = String(L.statstoday || "").toLocaleLowerCase(statsUI());
+      else text = statsDate(b.a, {day: "numeric", month: "short"});
+      dates.appendChild(statsEl("span", b.cur ? "cur" : "", text));
+    });
+    box.appendChild(dates);
   }
-  const long = months && n <= 7;
-  const dates = statsEl("div", "statdates");
-  pick.forEach(i=>{
-    const b = bars[i];
-    let text;
-    if(months) text = statsDate(b.date, long ? {month: "long"} : {month: "short", year: "2-digit"});
-    else text = b.cur ? String(L.statstoday || "").toLocaleLowerCase(statsUI()) : statsDate(b.date, {day: "numeric", month: "short"});
-    const s = statsEl("span", b.cur ? "cur" : "", text);
-    if(i === n - 1 && key === "30"){ s.classList.add("end"); s.style.right = "0"; }
-    else s.style.left = "calc((100% - " + (n - 1) + " * var(--g)) / " + n + " * " + (i + 0.5) + " + " + i + " * var(--g))";
-    dates.appendChild(s);
+  box.dataset.n = String(n);
+  statsSize(box);
+}
+function statsSize(box){
+  const plot = box && box.querySelector(".statplot");
+  if(!plot) return;
+  const n = Number(box.dataset.n) || 1;
+  const W = plot.clientWidth;
+  if(!W) return;
+  const slot = W / n;
+  const gap = n <= 7 ? Math.max(4, slot * 0.4) : n <= 16 ? Math.max(3, slot * 0.3) : n <= 31 ? Math.max(1.5, slot * 0.25) : Math.max(1, slot * 0.2);
+  box.style.setProperty("--bw", (Math.round(Math.max(1.5, Math.min(24, slot - gap)) * 10) / 10) + "px");
+  const dates = box.querySelector(".statdates");
+  if(!dates) return;
+  const spans = [...dates.children];
+  const left = plot.getBoundingClientRect().left;
+  const xs = [...plot.querySelectorAll(".statcol")].map(c=>{ const r = c.getBoundingClientRect(); return r.left + r.width / 2 - left; });
+  spans.forEach(s=>{ s.style.display = ""; s.style.left = "0px"; });
+  const ws = spans.map(s=>s.getBoundingClientRect().width);
+  const at = i=>Math.max(0, Math.min(W - ws[i], xs[i] - ws[i] / 2));
+  let picks = [];
+  for(let k = 1; k <= spans.length; k++){
+    picks = [];
+    for(let i = spans.length - 1; i >= 0; i -= k) picks.push(i);
+    let fits = true;
+    for(let j = 1; j < picks.length; j++){
+      const r = picks[j - 1], l = picks[j];
+      if(at(l) + ws[l] + 10 > at(r)){ fits = false; break; }
+    }
+    if(fits) break;
+  }
+  spans.forEach((s, i)=>{
+    if(picks.indexOf(i) >= 0) s.style.left = at(i) + "px";
+    else s.style.display = "none";
   });
-  box.appendChild(dates);
-  const last = dates.lastElementChild;
-  if(last && !last.classList.contains("end") && last.getBoundingClientRect().right > dates.getBoundingClientRect().right + 0.5){
-    last.classList.add("end");
-    last.style.left = "";
-    last.style.right = "0";
-  }
 }
 function statsRows(box, list){
   box.innerHTML = "";
@@ -5541,11 +5681,15 @@ function statsFigures(p){
   statsSet("stats_saved", "≈" + STATS_NB + statsHM(sv.saved), false);
   statsSet("stats_saved_u", statsWhy(sv));
 }
+function statsPeriodNow(){
+  const rep = statsData || {};
+  return rep.period && rep.period.key === statsSel.period ? rep.period : null;
+}
 function renderStats(){
   const page = document.getElementById("p-stats");
   if(!page) return;
   const rep = statsData || {};
-  const p = rep.periods ? rep.periods[statsPeriod] : null;
+  const p = rep.period || null;
   const empty = rep.empty !== false || !p;
   statsShow("stats_hero", empty);
   statsShow("stats_per", !empty);
@@ -5560,20 +5704,25 @@ function renderStats(){
   const reset = document.getElementById("stats_reset");
   if(reset) reset.disabled = empty;
   if(empty){
+    statsCalClose(false);
     paintCombo(document.getElementById("stats_combo"), CFG.hotkey || "");
     statsFigures(null);
     return;
   }
-  document.querySelectorAll("#stats_chips .statchip").forEach(b=>{
-    const on = b.dataset.v === statsPeriod;
-    b.classList.toggle("on", on);
-    b.setAttribute("aria-checked", on ? "true" : "false");
-  });
-  statsSet("stats_range", statsRange(p, statsPeriod));
+  statsPaintChips();
+  statsSet("stats_range", statsRange(p));
+  const custom = statsSel.period === "custom";
+  statsShow("stats_daterow", custom);
+  if(custom){
+    statsField(document.getElementById("stats_from"), p.from);
+    statsField(document.getElementById("stats_to"), p.to);
+  }else statsCalClose(false);
   statsFigures(p);
   statsShow("stats_days", true);
-  statsSet("stats_days_hint", statsPeriod === "all" ? L.statsmonthhint : L.statsdayhint);
-  statsChart(document.getElementById("stats_chart"), p, statsPeriod);
+  const unit = p.unit || "day";
+  statsSet("stats_days_lbl", unit === "week" ? L.statsbyweek : unit === "month" ? L.statsbymonth : L.statsbyday);
+  statsSet("stats_days_hint", unit === "week" ? L.statsweekhint : unit === "month" ? L.statsmonthhint : L.statsdayhint);
+  statsChart(document.getElementById("stats_chart"), p);
   const has = (p.dictations || 0) > 0;
   const langs = p.langs || [];
   const langPct = statsShares(langs.map(l=>l.words));
@@ -5599,8 +5748,193 @@ function renderStats(){
   statsRows(document.getElementById("stats_pairs"), pairs.map(x=>({ name: langName(x.from) + " → " + langName(x.to), bar: trMs ? x.ms / trMs * 100 : 0, main: statsHM(x.ms / 60000) })));
 }
 async function refreshStats(){
-  try{ statsData = JSON.parse(await appStats()); }catch(e){ statsData = null; }
+  try{ statsData = JSON.parse(await appStats(statsSel.period, statsSel.from, statsSel.to)); }catch(e){ statsData = null; }
   renderStats();
+}
+async function statsChoose(sel, jump){
+  statsSel = statsNormal(sel);
+  CFG.stats_period = statsSel.period;
+  CFG.stats_from = statsSel.from;
+  CFG.stats_to = statsSel.to;
+  statsPaintChips();
+  const tab = refreshStats();
+  if(jump){
+    statsShow("stats_daterow", true);
+    statsField(document.getElementById("stats_from"), statsSel.from);
+    statsField(document.getElementById("stats_to"), statsSel.to);
+    jumpTo("stats:stats_from");
+    const c = document.querySelector(".content");
+    if(c) c.scrollTop = 0;
+  }
+  await tab;
+  if(jump){
+    const c = document.querySelector(".content");
+    if(c) c.scrollTop = 0;
+  }
+  await doSave();
+  refreshState();
+}
+function statsPick(k, jump){
+  if(k === "custom"){
+    let from = statsSel.from, to = statsSel.to;
+    if(!from){
+      const c = statsCardNow || {};
+      const p = statsPeriodNow();
+      from = p ? p.from : c.from;
+      to = p ? p.to : c.to;
+    }
+    return statsChoose({period: "custom", from: from, to: to}, jump);
+  }
+  return statsChoose({period: k, from: statsSel.from, to: statsSel.to}, false);
+}
+function statsField(b, v){
+  if(!b) return;
+  b.dataset.value = v;
+  const d = statsDay(v);
+  let text = v;
+  try{ text = new Intl.DateTimeFormat(statsUI(), {day: "2-digit", month: "2-digit", year: "numeric"}).format(d); }catch(e){}
+  b.querySelector("span").textContent = text;
+  b.setAttribute("aria-label", (b.id === "stats_from" ? L.statsfroma : L.statstoa) + ", " + statsDate(d, {day: "numeric", month: "long", year: "numeric"}));
+}
+let statsCal = null;
+function statsMinDay(){
+  const rep = statsData || {};
+  return rep.first ? statsDay(rep.first) : statsToday();
+}
+function statsCalClose(back){
+  if(!statsCal) return;
+  const c = statsCal;
+  statsCal = null;
+  c.el.remove();
+  c.field.setAttribute("aria-expanded", "false");
+  document.removeEventListener("mousedown", c.outside, true);
+  document.removeEventListener("keydown", c.esc, true);
+  window.removeEventListener("resize", c.place);
+  document.removeEventListener("scroll", c.place, true);
+  if(back) c.field.focus();
+}
+function statsCalOpen(field){
+  if(statsCal && statsCal.field === field){ statsCalClose(true); return; }
+  statsCalClose(false);
+  const sel = statsDay(field.dataset.value || statsKey(statsToday()));
+  const el = statsEl("div", "statcal");
+  el.setAttribute("role", "dialog");
+  el.setAttribute("aria-label", L.statscal);
+  document.body.appendChild(el);
+  statsCal = {el: el, field: field, view: new Date(sel.getFullYear(), sel.getMonth(), 1), focus: sel};
+  const c = statsCal;
+  c.outside = e=>{ if(!el.contains(e.target) && !field.contains(e.target)) statsCalClose(false); };
+  c.esc = e=>{ if(e.key === "Escape"){ e.preventDefault(); e.stopPropagation(); statsCalClose(true); } };
+  c.place = ()=>statsCalPlace();
+  document.addEventListener("mousedown", c.outside, true);
+  document.addEventListener("keydown", c.esc, true);
+  window.addEventListener("resize", c.place);
+  document.addEventListener("scroll", c.place, true);
+  field.setAttribute("aria-expanded", "true");
+  el.addEventListener("keydown", statsCalKey);
+  statsCalDraw(true);
+}
+function statsCalPlace(){
+  if(!statsCal) return;
+  const r = statsCal.field.getBoundingClientRect(), el = statsCal.el;
+  const w = el.offsetWidth, h = el.offsetHeight, W = document.documentElement.clientWidth, H = document.documentElement.clientHeight, m = 6;
+  let top = r.bottom + 4;
+  if(top + h > H - m) top = r.top - 4 - h;
+  if(top < m) top = Math.max(m, H - h - m);
+  el.style.left = Math.round(Math.max(m, Math.min(r.left, W - w - m))) + "px";
+  el.style.top = Math.round(top) + "px";
+}
+function statsCalClamp(d){
+  const lo = statsMinDay(), hi = statsToday();
+  return d < lo ? lo : d > hi ? hi : d;
+}
+function statsCalPick(d){
+  if(!statsCal || d < statsMinDay() || d > statsToday()) return;
+  const own = statsCal.field.id;
+  let from = own === "stats_from" ? statsKey(d) : document.getElementById("stats_from").dataset.value;
+  let to = own === "stats_to" ? statsKey(d) : document.getElementById("stats_to").dataset.value;
+  statsCalClose(true);
+  statsChoose({period: "custom", from: from, to: to}, false);
+}
+function statsCalMove(k){
+  const v = statsCal.view;
+  statsCal.view = new Date(v.getFullYear(), v.getMonth() + k, 1);
+  const last = new Date(statsCal.view.getFullYear(), statsCal.view.getMonth() + 1, 0).getDate();
+  statsCal.focus = statsCalClamp(new Date(statsCal.view.getFullYear(), statsCal.view.getMonth(), Math.min(statsCal.focus.getDate(), last)));
+  statsCalDraw(false);
+}
+function statsCalDraw(focus){
+  const el = statsCal.el, v = statsCal.view, lo = statsMinDay(), hi = statsToday();
+  el.innerHTML = "";
+  const head = statsEl("div", "statcalhead");
+  const prev = statsEl("button", "iconbtn statcalnav");
+  prev.type = "button"; prev.innerHTML = I_CAL_PREV; prev.title = L.statscalprev; prev.setAttribute("aria-label", L.statscalprev);
+  const next = statsEl("button", "iconbtn statcalnav");
+  next.type = "button"; next.innerHTML = I_CAL_NEXT; next.title = L.statscalnext; next.setAttribute("aria-label", L.statscalnext);
+  prev.disabled = new Date(v.getFullYear(), v.getMonth(), 0) < lo;
+  next.disabled = new Date(v.getFullYear(), v.getMonth() + 1, 1) > hi;
+  prev.onclick = ()=>statsCalMove(-1);
+  next.onclick = ()=>statsCalMove(1);
+  const title = statsEl("div", "statcaltitle", statsCap(statsDate(v, {month: "long", year: "numeric"})));
+  title.setAttribute("aria-live", "polite");
+  head.append(prev, title, next);
+  el.appendChild(head);
+  const wd = statsEl("div", "statcalgrid statcalwd");
+  wd.setAttribute("aria-hidden", "true");
+  const monday = statsAddDays(hi, -((hi.getDay() + 6) % 7));
+  for(let i = 0; i < 7; i++) wd.appendChild(statsEl("span", "", statsDate(statsAddDays(monday, i), {weekday: "short"}).replace(/\.$/, "")));
+  el.appendChild(wd);
+  const grid = statsEl("div", "statcalgrid");
+  const start = statsAddDays(v, -((v.getDay() + 6) % 7));
+  let a = document.getElementById("stats_from").dataset.value, b = document.getElementById("stats_to").dataset.value;
+  if(a && b && a > b){ const t = a; a = b; b = t; }
+  const own = statsCal.field.dataset.value, todayKey = statsKey(hi), focusKey = statsKey(statsCal.focus);
+  for(let i = 0; i < 42; i++){
+    const d = statsAddDays(start, i), key = statsKey(d);
+    const btn = statsEl("button", "statday", String(d.getDate()));
+    btn.type = "button";
+    btn.dataset.d = key;
+    if(d.getMonth() !== v.getMonth()) btn.classList.add("out");
+    if(d < lo || d > hi){ btn.classList.add("off"); btn.setAttribute("aria-disabled", "true"); }
+    if(a && b && key >= a && key <= b) btn.classList.add("inrange");
+    if(key === own){ btn.classList.add("sel"); btn.setAttribute("aria-pressed", "true"); }
+    if(key === todayKey) btn.classList.add("today");
+    btn.setAttribute("aria-label", statsDate(d, {day: "numeric", month: "long", year: "numeric"}));
+    btn.tabIndex = key === focusKey ? 0 : -1;
+    btn.onclick = ()=>statsCalPick(d);
+    grid.appendChild(btn);
+  }
+  el.appendChild(grid);
+  const foot = statsEl("div", "statcalfoot");
+  const today = statsEl("button", "mini", L.statscaltoday);
+  today.type = "button";
+  today.onclick = ()=>statsCalPick(hi);
+  foot.appendChild(today);
+  el.appendChild(foot);
+  statsCalPlace();
+  if(focus){
+    const f = grid.querySelector('[tabindex="0"]');
+    if(f) f.focus();
+  }
+}
+function statsCalKey(e){
+  if(!statsCal || !e.target.classList || !e.target.classList.contains("statday")) return;
+  const steps = {ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7};
+  const f = statsCal.focus;
+  let d = null;
+  if(steps[e.key] !== undefined) d = statsAddDays(f, steps[e.key]);
+  else if(e.key === "PageUp" || e.key === "PageDown"){
+    const t = new Date(f.getFullYear(), f.getMonth() + (e.key === "PageUp" ? -1 : 1), 1);
+    d = new Date(t.getFullYear(), t.getMonth(), Math.min(f.getDate(), new Date(t.getFullYear(), t.getMonth() + 1, 0).getDate()));
+  }
+  else if(e.key === "Home") d = statsAddDays(f, -((f.getDay() + 6) % 7));
+  else if(e.key === "End") d = statsAddDays(f, 6 - ((f.getDay() + 6) % 7));
+  if(!d) return;
+  e.preventDefault();
+  e.stopPropagation();
+  statsCal.focus = statsCalClamp(d);
+  statsCal.view = new Date(statsCal.focus.getFullYear(), statsCal.focus.getMonth(), 1);
+  statsCalDraw(true);
 }
 function statsWpmPaint(el){
   if(!el) return;
@@ -5613,7 +5947,7 @@ function statsWpmInput(v){
   statsWpmPaint(document.getElementById("stats_typing_wpm"));
   statsSet("stats_wpm_v", pluralOf(L.statswpm, statsWpm));
   const rep = statsData || {};
-  const p = rep.periods ? rep.periods[statsPeriod] : null;
+  const p = rep.period;
   if(p && rep.empty === false){
     const sv = statsSaved(p.words, p.speech_ms, statsWpm);
     statsSet("stats_saved", "≈" + STATS_NB + statsHM(sv.saved), false);
@@ -5623,6 +5957,7 @@ function statsWpmInput(v){
 }
 function initStats(){
   statsWpm = statsClampWpm(CFG.stats_typing_wpm);
+  statsSel = statsNormal({period: CFG.stats_period, from: CFG.stats_from, to: CFG.stats_to});
   const wpm = document.getElementById("stats_typing_wpm");
   if(wpm){
     wpm.value = String(statsWpm);
@@ -5630,8 +5965,23 @@ function initStats(){
     wpm.addEventListener("input", ()=>statsWpmInput(wpm.value));
   }
   document.querySelectorAll("#stats_chips .statchip").forEach(b=>{
-    b.onclick = ()=>{ statsPeriod = b.dataset.v; renderStats(); };
+    b.onclick = ()=>statsPick(b.dataset.v, false);
   });
+  document.querySelectorAll("#state_stats_chips .statchip").forEach(b=>{
+    b.onclick = ()=>statsPick(b.dataset.v, b.dataset.v === "custom");
+  });
+  ["stats_from", "stats_to"].forEach(id=>{
+    const b = document.getElementById(id);
+    if(b) b.addEventListener("click", ()=>statsCalOpen(b));
+  });
+  if(window.ResizeObserver){
+    const ro = new ResizeObserver(()=>{
+      statsSize(document.getElementById("stats_chart"));
+      statsSize(document.getElementById("state_stats_chart"));
+      statsFitHead();
+    });
+    ["stats_chart", "state_stats_chart", "state_stats"].forEach(id=>{ const e = document.getElementById(id); if(e) ro.observe(e); });
+  }
   const reset = document.getElementById("stats_reset");
   if(reset) reset.onclick = async ()=>{
     if(!await askConfirm(L.statsresetask, L.statsreset, null, L.mtstats)) return;
@@ -5639,6 +5989,7 @@ function initStats(){
     await refreshStats();
     refreshState();
   };
+  statsPaintChips();
   renderStats();
   refreshStats();
 }
@@ -6817,6 +7168,9 @@ async function doSave(){
     subtitles_layout: subsLayout(),
     models_idle_minutes: parseInt((document.getElementById("models_idle_minutes")||{}).value) || 0,
     stats_typing_wpm: statsWpm,
+    stats_period: statsSel.period,
+    stats_from: statsSel.from,
+    stats_to: statsSel.to,
     subtitles_translate: subsTo(),
     subtitles_translator: subsWho,
     subtitles_model: subsModelPick};

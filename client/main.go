@@ -688,6 +688,10 @@ func main() {
 			runPunctCheck(os.Args[1:][i+1:])
 			return
 		}
+		if arg == "-statscheck" {
+			runStatsCheck(os.Args[1:][i+1:])
+			return
+		}
 		if arg == "-appnamecheck" {
 			runAppNameCheck(os.Args[1:][i+1:])
 			return
